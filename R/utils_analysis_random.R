@@ -142,7 +142,7 @@ detect_groups <- function(sample_names, sample_info = NULL) {
 
 
 # Clean up gene sets. Remove spaces and other control characters from gene names  
-clean_gene_set <- function (gene_set){
+clean_gene_set <- function (gene_set) {
   # remove duplicate; upper case; remove special characters
   gene_set <- unique(toupper(gsub("\n| ", "", gene_set)))
   # genes should have at least two characters
@@ -151,17 +151,38 @@ clean_gene_set <- function (gene_set){
 }
 
 
-#HOW YOU WORK?????
-# read gene set files in the GMT format, does NO cleaning. Assumes the GMT files are created with cleanGeneSet()
-# See http://software.broadinstitute.org/cancer/software/gsea/wiki/index.php/Data_formats#Gene_Set_Database_Formats
-read_gmt <- function(file_name) {
-  gmt_data <- scan(file = file_name, what = "", sep = "\n")
+# Read gene sets GMT file
+# This functions cleans and converts to upper case
+read_gmt <- function(file_path) { # size restriction
+  # Read in the first file
+  gmt_data <- scan(file = file_path, what = "", sep = "\n")
+  gmt_data <- gsub(pattern = " ",
+    replacement = "",
+    x = gmt_data) 
+  gmt_data <- toupper(gmt_data) 
+
+  #----Process the first file
+  # Separate elements by one or more whitespace
   gmt_data <- strsplit(x = gmt_data, split = "\t")
   # Extract the first vector element and set it as the list element name
-  names(gmt_data) <- sapply(X = gmt_data, `[[`, 1)
-  # 2nd element is comment, ignored
-  gmt_data <- lapply(X = gmt_data, `[`, -c(1, 2)) 
+  extract <- function(x) x[[1]]
+  names(gmt_data) <- sapply(X = gmt_data, FUN = extract) 
+  # Remove the first vector element from each list element
+  extract2 <- function(x) x[-1]
+  gmt_data <- lapply(X = gmt_data, FUN = extract2) 
+  # remove duplicated elements
+  ## need to try to get this to lappy later
+  for (i in 1:length(gmt_data)) {
+    gmt_data[[i]] <- clean_gene_set(gmt_data[[i]])
+  }
+  # check the distribution of the size of gene lists sapply(y, length) hold a vector of sizes
+  gene_size <- max(sapply(X = gmt_data, FUN = length))
+  if (gene_size < 5) {
+    cat("Warning! Gene sets have very small number of genes!\n
+     Please double check format.")
+  }
   # gene sets smaller than 1 is ignored!!!
   gmt_data <- gmt_data[which(sapply(X = gmt_data, FUN = length) > 1)]
   return(gmt_data)
 }
+
