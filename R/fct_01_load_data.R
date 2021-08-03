@@ -1,4 +1,4 @@
-#' fct_01_load_data.R 
+#' fct_01_load_data.R
 #'
 #'
 #' @section fct_01_load_data.R functions:

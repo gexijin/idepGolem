@@ -4,10 +4,10 @@
 #'
 #' @param id,input,output,session Internal parameters for {shiny}.
 #'
-#' @noRd 
+#' @noRd
 #'
-#' @importFrom shiny NS tagList 
-mod_01_load_data_ui <- function(id){
+#' @importFrom shiny NS tagList
+mod_01_load_data_ui <- function(id) {
   ns <- shiny::NS(id)
   tagList(
     selectizeInput(
@@ -18,13 +18,15 @@ mod_01_load_data_ui <- function(id){
       options = list(
         maxItems = 1,
         placeholder = "Best matching species",
-        onInitialize = I("function() { this.setValue(\"\"); }")))
+        onInitialize = I("function() { this.setValue(\"\"); }")
+      )
+    )
   )
 }
-    
+
 #' 01_load_data Server Functions
 #'
-#' @noRd 
+#' @noRd
 mod_01_load_data_server <- function(id, idep_data) {
   species_choice <- setNames(
     object = as.list(idep_data$org_info$id), # values
@@ -58,9 +60,9 @@ mod_01_load_data_server <- function(id, idep_data) {
     }
   )
 }
-    
+
 ## To be copied in the UI
 # mod_01_load_data_ui("01_load_data_ui_1")
-    
+
 ## To be copied in the server
 # mod_01_load_data_server("01_load_data_ui_1")

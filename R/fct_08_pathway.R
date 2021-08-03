@@ -1,4 +1,4 @@
-#' 08_pathway 
+#' 08_pathway
 #'
 #' @description A fct function
 #'

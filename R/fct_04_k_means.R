@@ -1,4 +1,4 @@
-#' 04_k_means 
+#' 04_k_means
 #'
 #' @description A fct function
 #'

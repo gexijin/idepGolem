@@ -129,8 +129,8 @@ detect_groups <- function(sample_names, sample_info = NULL) {
       sample_group <- unlist(apply(
         X = sample_info2,
         MARGIN = 1,
-        FUN = foo)
-      )
+        FUN = foo
+      ))
       names(sample_group) <- row.names(sample_info2)
       if (min(table(sample_group)) == 1) { # no replicates?
         sample_group <- sample_info2[, 1]
@@ -141,8 +141,8 @@ detect_groups <- function(sample_names, sample_info = NULL) {
 }
 
 
-# Clean up gene sets. Remove spaces and other control characters from gene names  
-clean_gene_set <- function (gene_set) {
+# Clean up gene sets. Remove spaces and other control characters from gene names
+clean_gene_set <- function(gene_set) {
   # remove duplicate; upper case; remove special characters
   gene_set <- unique(toupper(gsub("\n| ", "", gene_set)))
   # genes should have at least two characters
@@ -156,20 +156,22 @@ clean_gene_set <- function (gene_set) {
 read_gmt <- function(file_path) { # size restriction
   # Read in the first file
   gmt_data <- scan(file = file_path, what = "", sep = "\n")
-  gmt_data <- gsub(pattern = " ",
+  gmt_data <- gsub(
+    pattern = " ",
     replacement = "",
-    x = gmt_data) 
-  gmt_data <- toupper(gmt_data) 
+    x = gmt_data
+  )
+  gmt_data <- toupper(gmt_data)
 
   #----Process the first file
   # Separate elements by one or more whitespace
   gmt_data <- strsplit(x = gmt_data, split = "\t")
   # Extract the first vector element and set it as the list element name
   extract <- function(x) x[[1]]
-  names(gmt_data) <- sapply(X = gmt_data, FUN = extract) 
+  names(gmt_data) <- sapply(X = gmt_data, FUN = extract)
   # Remove the first vector element from each list element
   extract2 <- function(x) x[-1]
-  gmt_data <- lapply(X = gmt_data, FUN = extract2) 
+  gmt_data <- lapply(X = gmt_data, FUN = extract2)
   # remove duplicated elements
   ## need to try to get this to lappy later
   for (i in 1:length(gmt_data)) {
@@ -186,3 +188,18 @@ read_gmt <- function(file_path) { # size restriction
   return(gmt_data)
 }
 
+### edit later
+# This function convert gene set names
+# x="GOBP_mmu_mgi_GO:0000183_chromatin_silencing_at_rDNA"
+# chromatin silencing at rDNA
+proper <- function(x) paste0(toupper(substr(x, 1, 1)), substring(x, 2))
+
+extract_word <- function(word_list) {
+  words <- unlist(strsplit(word_list, "_"))
+  if (length(words) <= 4) {
+    return(gsub("_", " ", word_list))
+  } else {
+    words <- words[-c(1:4)]
+    return(proper(paste(words, collapse = " ")))
+  }
+}
