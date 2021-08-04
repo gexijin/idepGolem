@@ -1,8 +1,9 @@
-#' fct_07_deg2.R
+#' fct_07_deg2.R This file holds all of the main data analysis functions
+#' associated with seventh tab of the iDEP website.
 #'
 #'
 #' @section fct_07_deg2.R functions:
-#' short_species_names makes short specie names for string api
+#' \code{short_species_names} makes short specie names for string api
 #'
 #'
 #' @name fct_07_deg2.R

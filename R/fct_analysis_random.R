@@ -1,14 +1,19 @@
-#' fct_analysis_random.R
+#' fct_analysis_random.R Miscellaneous data analysis functions here,
+#'  we find a place for them later
 #'
 #'
 #' @section fct_analysis_random.R functions:
 #' \code{gene_group_heatmap} heatmap with color bar define gene groups
+#' 
+#' \code{find_overlap_gmt} Given a gene set,
+#' finds significant overlaps with a gene set database.
 #'
 #'
 #' @name fct_analysis_random.R
 NULL
 
-##### work in process, want to rewrite other code that is relays on first
+
+##### work in process, want to rewrite other code that this function relays on first
 gene_group_heatmap <- function(x, bar = NULL, n = -1, mycolor = 1, clusterNames = NULL, sideColors = NULL) {
   # number of genes to show
   ngenes <- as.character(table(bar))
@@ -66,7 +71,7 @@ gene_group_heatmap <- function(x, bar = NULL, n = -1, mycolor = 1, clusterNames 
   }
 }
 
-# Given a gene set, finds significant overlaps with a gene set database  object
+
 find_overlap_gmt <- function(query, gene_set,
                              min_fdr = .2, min_size = 2, max_size = 10000) {
   total_elements <- 30000 # why 3000?

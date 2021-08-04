@@ -2,7 +2,8 @@
 #'
 #'
 #' @section fct_database.R functions:
-#'  connect_convert_db connects to the converID.db and returns the objects.
+#' \code{connect_convert_db} connects to the converID.db 
+#' and returns the objects.
 #'
 #'
 #'

@@ -1,7 +1,9 @@
-#' 08_pathway
+#' fct_08_pathway.R This file holds all of the main data analysis functions
+#' associated with eighth tab of the iDEP website.
 #'
-#' @description A fct function
 #'
-#' @return The return value, if any, from executing the function.
+#' @section fct_08_pathway.R functions:
 #'
-#' @noRd
+#'
+#' @name fct_08_pathway.R
+NULL

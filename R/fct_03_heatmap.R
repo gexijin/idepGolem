@@ -1,10 +1,14 @@
-#' 03_heatmap
+#' fct_03_heatmap.R This file holds all of the main data analysis functions
+#' associated with third tab of the iDEP website.
+#' 
+#' 
+#' @section fct_03_heatmap.R functions:
+#' \code{add_legend}
 #'
-#' @description A fct function
 #'
-#' @return The return value, if any, from executing the function.
-#'
-#' @noRd
+#' @name fct_03_heatmap.R
+NULL
+
 
 # adding sample legends to heatmap; this is for the main heatmap
 # https://stackoverflow.com/questions/3932038/plot-a-legend-outside-of-the-plotting-area-in-base-graphics

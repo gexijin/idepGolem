@@ -1,8 +1,9 @@
-#' fct_06_deg1.R
+#' fct_06_deg1.R This file holds all of the main data analysis functions
+#' associated with sixth tab of the iDEP website.
 #'
 #'
-#' @section fct_06_deg1.R  functions:
-#'
+#' @section fct_06_deg1.R functions:
+#' \code{change_names}
 #'
 #'
 #' @name fct_06_deg1.R

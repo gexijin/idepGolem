@@ -1,13 +1,14 @@
-#' utils_analysis_random.R
+#' utils_analysis_random.R Miscellaneous helper functions here,
+#' we find a place for them later.These are functions don't manipulate data,
+#' but there were used in data analysis functions for other purposes.
 #'
 #'
 #' @section utils_analysis_random.R functions:
-#'
+#' add later....
 #'
 #'
 #' @name utils_analysis_random.R
 NULL
-
 
 #' hcluster_functions
 #'

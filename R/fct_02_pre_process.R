@@ -1,15 +1,17 @@
-#' mod_02_pre_process.R
+#' fct_02_pre_process.R This file holds all of the main data analysis functions
+#' associated with second tab of the iDEP website.
 #'
 #'
-#' @section mod_02_pre_process.R functions:
+#' @section fct_02_pre_process.R functions:
+#' \code{plot_genes}
 #'
 #'
-#' @name mod_02_pre_process.R
+#' @name fct_02_pre_process.R
 NULL
 
 ##### work in process, want to rewrite other code that is relays on first
 # plot the expression of one or more genes in the preprocess tab
-plotGenes <- function(converted_data, all_gene_info, readSampleInfo, geneSearch, genePlotBox, useSD, selectOrg) {
+plot_genes <- function(converted_data, all_gene_info, readSampleInfo, geneSearch, genePlotBox, useSD, selectOrg) {
   symbols <- rownames(converted_data)
   if (selectOrg != "NEW" && ncol(all_gene_info) != 1) {
     ix <- match(symbols, all_gene_info[, 1])
