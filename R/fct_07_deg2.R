@@ -13,6 +13,15 @@ NULL
 
 # Homo sapies --> hsapiens
 # used for string api
+#' FUNCTION_TITLE
+#'
+#' FUNCTION_DESCRIPTION
+#'
+#' @param specie_mame DESCRIPTION.
+#'
+#' @return RETURN_DESCRIPTION
+#' @examples
+#' # ADD_EXAMPLES_HERE
 short_species_names <- function(specie_mame) {
   specie_mame <- strsplit(x = as.character(specie_mame), split = " ") # nolint
   return(tolower(paste0( # nolint

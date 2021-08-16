@@ -11,6 +11,15 @@ NULL
 
 
 # Change comparison names in limma from "KO_ko-WT_ko" to    "KO-WT_for_ko"
+#' FUNCTION_TITLE
+#'
+#' FUNCTION_DESCRIPTION
+#'
+#' @param comparison DESCRIPTION.
+#'
+#' @return RETURN_DESCRIPTION
+#' @examples
+#' # ADD_EXAMPLES_HERE
 change_names <- function(comparison) {
   # check to see if work needs to be done
   # if no work needs to be done return input

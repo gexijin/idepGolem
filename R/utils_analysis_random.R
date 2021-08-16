@@ -56,7 +56,7 @@ hcluster_functions <- function() {
 }
 
 
-#' hcluster_functions
+#' dist_functions
 #'
 #'
 #' @description
@@ -84,6 +84,15 @@ dist_functions <- function() {
 }
 
 
+#' FUNCTION_TITLE
+#'
+#' FUNCTION_DESCRIPTION
+#'
+#' @param num_set DESCRIPTION.
+#'
+#' @return RETURN_DESCRIPTION
+#' @examples
+#' # ADD_EXAMPLES_HERE
 dynamic_range <- function(num_set) {
   # Given a set of numbers,
   # find the difference between 2nd largest and 2nd smallest
@@ -97,6 +106,16 @@ dynamic_range <- function(num_set) {
 }
 
 
+#' FUNCTION_TITLE
+#'
+#' FUNCTION_DESCRIPTION
+#'
+#' @param sample_names DESCRIPTION.
+#' @param sample_info DESCRIPTION.
+#'
+#' @return RETURN_DESCRIPTION
+#' @examples
+#' # ADD_EXAMPLES_HERE
 detect_groups <- function(sample_names, sample_info = NULL) {
   # sample_names are col names parsing samples by either the name
   # or using a data frame of sample infos.
@@ -143,6 +162,15 @@ detect_groups <- function(sample_names, sample_info = NULL) {
 
 
 # Clean up gene sets. Remove spaces and other control characters from gene names
+#' FUNCTION_TITLE
+#'
+#' FUNCTION_DESCRIPTION
+#'
+#' @param gene_set DESCRIPTION.
+#'
+#' @return RETURN_DESCRIPTION
+#' @examples
+#' # ADD_EXAMPLES_HERE
 clean_gene_set <- function(gene_set) {
   # remove duplicate; upper case; remove special characters
   gene_set <- unique(toupper(gsub("\n| ", "", gene_set)))
@@ -154,6 +182,15 @@ clean_gene_set <- function(gene_set) {
 
 # Read gene sets GMT file
 # This functions cleans and converts to upper case
+#' FUNCTION_TITLE
+#'
+#' FUNCTION_DESCRIPTION
+#'
+#' @param file_path DESCRIPTION.
+#'
+#' @return RETURN_DESCRIPTION
+#' @examples
+#' # ADD_EXAMPLES_HERE
 read_gmt <- function(file_path) { # size restriction
   # Read in the first file
   gmt_data <- scan(file = file_path, what = "", sep = "\n")
@@ -193,8 +230,27 @@ read_gmt <- function(file_path) { # size restriction
 # This function convert gene set names
 # x="GOBP_mmu_mgi_GO:0000183_chromatin_silencing_at_rDNA"
 # chromatin silencing at rDNA
+#' FUNCTION_TITLE
+#'
+#' FUNCTION_DESCRIPTION
+#'
+#' @param x DESCRIPTION.
+#'
+#' @return RETURN_DESCRIPTION
+#' @examples
+#' # ADD_EXAMPLES_HERE
 proper <- function(x) paste0(toupper(substr(x, 1, 1)), substring(x, 2))
 
+
+#' FUNCTION_TITLE
+#'
+#' FUNCTION_DESCRIPTION
+#'
+#' @param word_list DESCRIPTION.
+#'
+#' @return RETURN_DESCRIPTION
+#' @examples
+#' # ADD_EXAMPLES_HERE
 extract_word <- function(word_list) {
   words <- unlist(strsplit(word_list, "_"))
   if (length(words) <= 4) {

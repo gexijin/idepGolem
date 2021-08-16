@@ -1,7 +1,7 @@
 #' fct_05_pca.R This file holds all of the main data analysis functions
 #' associated with fifth tab of the iDEP website.
-#' 
-#' 
+#'
+#'
 #' @section fct_05_pca.R functions:
 #' \code{my_pgsea}
 #'
@@ -12,7 +12,7 @@ NULL
 ## edit later
 # Runs pathway analysis using PGSEA; this is copied and revised from PGSEA package
 my_pgsea <- function(exprs, cl, range = c(25, 500), ref = NULL, center = TRUE,
-                    p.value = 0.005, weighted = TRUE, nPermutation = 100, enforceRange = TRUE, ...) {
+                     p.value = 0.005, weighted = TRUE, nPermutation = 100, enforceRange = TRUE, ...) {
   if (is(exprs, "ExpressionSet")) {
     exprs <- exprs(exprs)
   }

@@ -10,7 +10,9 @@ Description: What the package does (one paragraph).
 License: What license is it under?
 Imports: 
     config (>= 0.3.1),
+    DBI,
     golem (>= 0.3.1),
+    RSQLite,
     shiny (>= 1.6.0)
 Encoding: UTF-8
 LazyData: true

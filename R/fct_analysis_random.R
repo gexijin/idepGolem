@@ -4,7 +4,7 @@
 #'
 #' @section fct_analysis_random.R functions:
 #' \code{gene_group_heatmap} heatmap with color bar define gene groups
-#' 
+#'
 #' \code{find_overlap_gmt} Given a gene set,
 #' finds significant overlaps with a gene set database.
 #'
@@ -14,6 +14,20 @@ NULL
 
 
 ##### work in process, want to rewrite other code that this function relays on first
+#' FUNCTION_TITLE
+#'
+#' FUNCTION_DESCRIPTION
+#'
+#' @param x DESCRIPTION.
+#' @param bar DESCRIPTION.
+#' @param n DESCRIPTION.
+#' @param mycolor DESCRIPTION.
+#' @param clusterNames DESCRIPTION.
+#' @param sideColors DESCRIPTION.
+#'
+#' @return RETURN_DESCRIPTION
+#' @examples
+#' # ADD_EXAMPLES_HERE
 gene_group_heatmap <- function(x, bar = NULL, n = -1, mycolor = 1, clusterNames = NULL, sideColors = NULL) {
   # number of genes to show
   ngenes <- as.character(table(bar))
@@ -71,21 +85,37 @@ gene_group_heatmap <- function(x, bar = NULL, n = -1, mycolor = 1, clusterNames 
   }
 }
 
-
+### work in process
+#' FUNCTION_TITLE
+#'
+#' FUNCTION_DESCRIPTION
+#'
+#' @param query DESCRIPTION.
+#' @param gene_set DESCRIPTION.
+#' @param min_fdr DESCRIPTION.
+#' @param min_size DESCRIPTION.
+#' @param max_size DESCRIPTION.
+#'
+#' @return RETURN_DESCRIPTION
+#' @examples
+#' # ADD_EXAMPLES_HERE
 find_overlap_gmt <- function(query, gene_set,
                              min_fdr = .2, min_size = 2, max_size = 10000) {
   total_elements <- 30000 # why 3000?
   min_overlap <- 1 # nolint
-  max_terms <- 10 # max number of enriched terms
+  max_terms <- 10 # max number of enriched terms should be user input ????
   no_sig <- as.data.frame("No significant enrichment found!")
-  query <- clean_gene_set(query) # convert to upper case, unique()
+  query <- clean_gene_set(gene_set = query) # convert to upper case, unique()
   query_length <- length(query)
 
   if (query_length <= 2 || length(gene_set) < 1) {
     return(no_sig)
   }
-  gene_set <- gene_set[which(sapply(X = gene_set, FUN = length) > min_size)] # gene sets smaller than 1 is ignored!!!
-  gene_set <- gene_set[which(sapply(X = gene_set, FUN = length) < max_size)] # gene sets smaller than 1 is ignored!!!
+
+  # gene sets smaller than 1 is ignored!!!
+  gene_set <- gene_set[which(sapply(X = gene_set, FUN = length) > min_size)]
+  # gene sets smaller than 1 is ignored!!!
+  gene_set <- gene_set[which(sapply(X = gene_set, FUN = length) < max_size)]
 
   foo <- function(x, query) {
     length(intersect(query, x))
@@ -99,19 +129,19 @@ find_overlap_gmt <- function(query, gene_set,
   xx <- result[, 2]
   nn <- total_elements - query_length
   kk <- result[, 1]
-  pval_enrich <- phyper(xx - 1, mm, query_length, kk, lower.tail = FALSE)
+  pval_enrich <- phyper(xx - 1, query_length, nn, kk, lower.tail = FALSE)
   fdr <- p.adjust(pval_enrich, method = "fdr", n = length(gene_set))
   result <- as.data.frame(cbind(fdr, result))
   result <- result[, c(1, 3, 2)]
   result$pathway <- rownames(result)
   result$Genes <- "" # place holder just
-  colnames(result) <- c("Corrected P value (FDR)", "Genes in list", "Total genes in category", "Functional Category", "Genes")
+  colnames(result) <- c(
+    "Corrected P value (FDR)",
+    "Genes in list", "Total genes in category", "Functional Category", "Genes"
+  )
   result <- result[which(result[, 1] < min_fdr), , drop = FALSE]
-  if (nrow(result) == 0) {
-    return(noSig)
-  }
-  if (min(fdr) > min_fdr) {
-    return(noSig)
+  if (nrow(result) == 0 || min(fdr) > min_fdr) {
+    return(no_sig)
   }
   result <- result[order(result[, 1]), ]
   if (nrows(result) > max_terms) {

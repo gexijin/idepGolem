@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils_analysis_random.R
 \name{dist_functions}
 \alias{dist_functions}
-\title{hcluster_functions}
+\title{dist_functions}
 \usage{
 dist_functions()
 }
