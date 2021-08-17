@@ -295,5 +295,3 @@ convert_id <- function(query, species_choice, annotated_species_counts,
   ))
 }
 
-idep_data <- get_idep_data()
-idep_data$
