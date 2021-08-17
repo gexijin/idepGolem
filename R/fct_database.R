@@ -111,6 +111,27 @@ get_idep_data <- function(datapath = DATAPATH) {
     conn = conn_db,
     statement = "select distinct * from idIndex"
   )
+  
+  species_choice <- setNames(as.list( org_info$id ), org_info$name2 )
+  species_choice <- append(
+    setNames("NEW", "**NEW SPECIES**"), 
+    species_choice
+  )
+  species_choice <- append(
+    setNames("BestMatch", "Best matching species"), 
+    species_choice
+  )
+  top_choices <- c(
+    "Best matching species", "**NEW SPECIES**", "Human", "Mouse", "Rat", "Cow", 
+    "Zebrafish", "Pig", "Chicken", "Macaque", "Dog", "Drosophila melanogaster", 
+    "Caenorhabditis elegans", "Saccharomyces cerevisiae", 
+    "Arabidopsis thaliana", "Zea mays", "Glycine max", 
+    "Oryza sativa Indica Group", "Oryza sativa Japonica Group", "Vitis vinifera"
+  )
+  other_choices <- names(species_choice)[
+    !(names(species_choice) %in% top_choices)
+  ]
+  species_choice <- species_choice[c(top_choices, other_choices)]
 
   DBI::dbDisconnect(conn = conn_db)
 
@@ -126,7 +147,8 @@ get_idep_data <- function(datapath = DATAPATH) {
     annotated_species_count = annotated_species_count,
     go_levels = go_levels,
     go_level_2_terms = go_level_2_terms,
-    id_index = id_index
+    id_index = id_index,
+    species_choice = species_choice
   ))
 }
 
