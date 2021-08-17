@@ -8,7 +8,7 @@ fct_database.R: A fie with all functions to deal with database
 }
 \section{fct_database.R functions}{
 
-\code{connect_convert_db} connects to the converID.db 
+\code{connect_convert_db} connects to the converID.db
 and returns the objects.
 }
 
