@@ -96,6 +96,7 @@ get_idep_data <- function(datapath = DATAPATH) {
     con = conn_db,
     statement = "select distinct * from orgInfo"
   )
+  org_info <- org_info[order(org_info$name), ]
 
   annotated_species_count <- sort(table(org_info$group))
 
@@ -111,21 +112,21 @@ get_idep_data <- function(datapath = DATAPATH) {
     conn = conn_db,
     statement = "select distinct * from idIndex"
   )
-  
-  species_choice <- setNames(as.list( org_info$id ), org_info$name2 )
+
+  species_choice <- setNames(as.list(org_info$id), org_info$name2)
   species_choice <- append(
-    setNames("NEW", "**NEW SPECIES**"), 
+    setNames("NEW", "**NEW SPECIES**"),
     species_choice
   )
   species_choice <- append(
-    setNames("BestMatch", "Best matching species"), 
+    setNames("BestMatch", "Best matching species"),
     species_choice
   )
   top_choices <- c(
-    "Best matching species", "**NEW SPECIES**", "Human", "Mouse", "Rat", "Cow", 
-    "Zebrafish", "Pig", "Chicken", "Macaque", "Dog", "Drosophila melanogaster", 
-    "Caenorhabditis elegans", "Saccharomyces cerevisiae", 
-    "Arabidopsis thaliana", "Zea mays", "Glycine max", 
+    "Best matching species", "**NEW SPECIES**", "Human", "Mouse", "Rat", "Cow",
+    "Zebrafish", "Pig", "Chicken", "Macaque", "Dog", "Drosophila melanogaster",
+    "Caenorhabditis elegans", "Saccharomyces cerevisiae",
+    "Arabidopsis thaliana", "Zea mays", "Glycine max",
     "Oryza sativa Indica Group", "Oryza sativa Japonica Group", "Vitis vinifera"
   )
   other_choices <- names(species_choice)[
@@ -212,8 +213,10 @@ convert_id <- function(query, species_choice, annotated_species_counts,
   # |\\.[0-9] remove anything after A35244.1 -> A35244
   #  some gene ids are like Glyma.01G002100
 
-  query_set <- clean_gene_set(unlist(strsplit(x = toupper(query),
-   split = "\t| |\n|\\,")))
+  query_set <- clean_gene_set(unlist(strsplit(
+    x = toupper(query),
+    split = "\t| |\n|\\,"
+  )))
   conn_db <- connect_convert_db()
 
   if (select_org == "BestMatch") { # query all species
@@ -316,4 +319,3 @@ convert_id <- function(query, species_choice, annotated_species_counts,
     conversion_table = conversion_table
   ))
 }
-
