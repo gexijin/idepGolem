@@ -169,6 +169,19 @@ find_species_by_id_name <- function(species_id, org_info) {
 }
 
 
+
+#' FUNCTION_TITLE
+#'
+#' FUNCTION_DESCRIPTION
+#'
+#' @param query DESCRIPTION.
+#' @param species_choice DESCRIPTION.
+#' @param annotated_species_counts DESCRIPTION.
+#' @param select_org DESCRIPTION.
+#'
+#' @return RETURN_DESCRIPTION
+#' @examples
+#' # ADD_EXAMPLES_HERE
 convert_id <- function(query, species_choice, annotated_species_counts,
                        select_org = "BestMatch") {
   query <- gsub(pattern = "\"|\'", "", x = query)
@@ -177,7 +190,8 @@ convert_id <- function(query, species_choice, annotated_species_counts,
   # |\\.[0-9] remove anything after A35244.1 -> A35244
   #  some gene ids are like Glyma.01G002100
 
-  query_set <- clean_gene_set(unlist(strsplit(toupper(query), "\t| |\n|\\,")))
+  query_set <- clean_gene_set(unlist(strsplit(x = toupper(query),
+   split = "\t| |\n|\\,")))
   conn_db <- connect_convert_db()
 
   if (select_org == "BestMatch") { # query all species
@@ -185,7 +199,7 @@ convert_id <- function(query, species_choice, annotated_species_counts,
       conn = conn_db,
       statement = "select distinct id,ens,species,idType
      from mapping where id in (?)",
-      params = query_set
+      params = list(query_set)
     )
   } else { # organism has been selected query specific one
     result <- DBI::dbGetQuery(
@@ -229,10 +243,7 @@ convert_id <- function(query, species_choice, annotated_species_counts,
     }
 
 
-    recognized <-
-      result <- result[which(combination == names(sorted_counts[1])), ]
-
-
+    result <- result[which(combination == names(sorted_counts[1])), ]
     species_matched <- sorted_counts
     tmp <- as.numeric(gsub(pattern = " .*", "", x = names(sorted_counts)))
     names(species_matched) <- sapply(X = tmp, FUN = find_species_by_id_name)
@@ -251,7 +262,8 @@ convert_id <- function(query, species_choice, annotated_species_counts,
       )
       species_matched[1, 1] <- paste(
         species_matched[1, 1],
-        "   ***Used in mapping***  To change, select from above and resubmit query."
+        "***Used in mapping***  To change,
+         select from above and resubmit query."
       )
       species_matched <- as.data.frame(species_matched[, 1])
     }
@@ -273,7 +285,7 @@ convert_id <- function(query, species_choice, annotated_species_counts,
   colnames(species_matched) <- c("Matched Species (genes)")
   conversion_table <- result[, 1:2]
   colnames(conversion_table) <- c("User_input", "ensembl_gene_id")
-  conversion_table$Species <- sapply(result[, 3], findSpeciesByIdName)
+  conversion_table$Species <- sapply(result[, 3], find_species_by_id_name)
   return(list(
     originalIDs = query_set,
     ids = unique(result[, 2]),
@@ -282,3 +294,6 @@ convert_id <- function(query, species_choice, annotated_species_counts,
     conversion_table = conversion_table
   ))
 }
+
+idep_data <- get_idep_data()
+idep_data$
