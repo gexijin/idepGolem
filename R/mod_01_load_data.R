@@ -162,7 +162,7 @@ mod_01_load_data_ui <- function(id) {
                 
                 shiny::tags$h5("Can erase and type in box"),
                 
-                # Select ID type for genes ------------                          
+                # Select ID type for genes ------------
                 selectizeInput(
                   inputId = ns("user_id_type"),
                   label = "What's your ID type? (Optional)", 
@@ -170,7 +170,6 @@ mod_01_load_data_ui <- function(id) {
                 ),
                 
                 shiny::tags$h5("Can erase and type in box"),
-                
                 
                 actionButton(inputId = ns("submit_id_page"), label = "submit"),
                 actionButton(inputId = ns("reset_id_page"), label = "reset"),
@@ -186,28 +185,28 @@ mod_01_load_data_ui <- function(id) {
                 shiny::tags$div(
                   shiny::tags$h1("Instructions for Usage"),
                   shiny::tags$h4(
-                    "This page's purpose is to give the user some interactive 
-                     tools to look at our database IDs. There are two different 
+                    "This page's purpose is to give the user some interactive
+                     tools to look at our database IDs. There are two different
                      uses for this page, see explanation below:"
                   ),
                   shiny::tags$ul(
                     shiny::tags$li(
                       shiny::tags$h4(
-                        "If you only pick a species, you are receiving a table 
-                         with all the different IDs related to that species. 
+                        "If you only pick a species, you are receiving a table
+                         with all the different IDs related to that species.
                          (Shown below)"
                       )
                     ),
                     shiny::tags$li(
                       shiny::tags$h4(
                         "If you pick a species and an ID type, you are receiving
-                         a table with all the IDs of the ID type you pick and 
-                         how they map to ensembl IDs(our preferred ID database), 
+                         a table with all the IDs of the ID type you pick and
+                         how they map to ensembl IDs(our preferred ID database),
                          and you can download a csv file of the mapping ID."
                       )
                     )
                   )
-                ), 
+                ),
                 
                 reactable::reactableOutput(outputId = ns("table_default"))
                 
@@ -216,10 +215,10 @@ mod_01_load_data_ui <- function(id) {
           )
         ),
         
-        a( 
-          h5("Questions?",align = "right"), 
-          href="https://idepsite.wordpress.com/data-format/",
-          target="_blank"
+        a(
+          h5("Questions?",align = "right"),
+          href = "https://idepsite.wordpress.com/data-format/",
+          target = "_blank"
         )
         
      
