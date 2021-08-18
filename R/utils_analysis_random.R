@@ -180,6 +180,23 @@ clean_gene_set <- function(gene_set) {
 }
 
 
+#' FUNCTION_TITLE
+#'
+#' FUNCTION_DESCRIPTION
+#'
+#' @param query_input DESCRIPTION.
+#'
+#' @return RETURN_DESCRIPTION
+#' @examples
+#' # ADD_EXAMPLES_HERE
+clean_query <- function(query_input) {
+  return(clean_gene_set(unlist(strsplit(
+    x = toupper(query_input),
+    split = "\t| |\n|\\,"
+  ))))
+}
+
+
 # Read gene sets GMT file
 # This functions cleans and converts to upper case
 #' FUNCTION_TITLE

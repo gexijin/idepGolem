@@ -198,14 +198,13 @@ find_species_by_id_name <- function(species_id, org_info) {
 #' FUNCTION_DESCRIPTION
 #'
 #' @param query DESCRIPTION.
-#' @param species_choice DESCRIPTION.
-#' @param annotated_species_counts DESCRIPTION.
+#' @param idep_data DESCRIPTION.
 #' @param select_org DESCRIPTION.
 #'
 #' @return RETURN_DESCRIPTION
 #' @examples
 #' # ADD_EXAMPLES_HERE
-convert_id <- function(query, species_choice, annotated_species_counts,
+convert_id <- function(query, idep_data,
                        select_org = "BestMatch") {
   query <- gsub(pattern = "\"|\'", "", x = query)
   # remove " in gene ids, mess up SQL query
@@ -213,10 +212,8 @@ convert_id <- function(query, species_choice, annotated_species_counts,
   # |\\.[0-9] remove anything after A35244.1 -> A35244
   #  some gene ids are like Glyma.01G002100
 
-  query_set <- clean_gene_set(unlist(strsplit(
-    x = toupper(query),
-    split = "\t| |\n|\\,"
-  )))
+  query_set <- clean_query(query_input = query)
+
   conn_db <- connect_convert_db()
 
   if (select_org == "BestMatch") { # query all species
@@ -240,7 +237,7 @@ convert_id <- function(query, species_choice, annotated_species_counts,
     return(NULL)
   }
 
-  if (select_org == species_choice[[1]]) { # if best match species
+  if (select_org == idep_data$species_choice[[1]]) { # if best match species
     combination <- paste(result$species, result$idType)
     sorted_counts <- sort(table(combination), decreasing = T)
 
@@ -249,7 +246,7 @@ convert_id <- function(query, species_choice, annotated_species_counts,
     # if the #1 species and #2 are close
     # 1:3 are Ensembl species
     # and #2 come earlier (ensembl) than #1
-    tmp <- sum(annotated_species_counts[1:3])
+    tmp <- sum(idep_data$annotated_species_counts[1:3])
     if (!is.integer(sorted_counts) &&
       sorted_counts[1] <= sorted_counts[2] * 1.1 &&
       as.numeric(gsub(
@@ -314,8 +311,77 @@ convert_id <- function(query, species_choice, annotated_species_counts,
   return(list(
     originalIDs = query_set,
     ids = unique(result[, 2]),
-    species = findSpeciesById(result$species[1]),
+    species = find_species_by_id(result$species[1]),
     species_matched = species_matched,
     conversion_table = conversion_table
   ))
 }
+
+
+
+#' FUNCTION_TITLE
+#'
+#' FUNCTION_DESCRIPTION
+#'
+#' @param query DESCRIPTION.
+#' @param species DESCRIPTION.
+#' @param idep_date DESCRIPTION.
+#' @param convert_type DESCRIPTION.
+#'
+#' @return RETURN_DESCRIPTION
+#' @examples
+#' # ADD_EXAMPLES_HERE
+convert_ensembl <- function(query, species, idep_date,
+                            convert_type = "entrez") {
+  query_set <- clean_query(query_input = query)
+  # note uses species Identifying
+  species_id <-
+    idep_date$orgInfo$id[which(idep_date$orgInfo$ensembl_dataset == species)]
+
+  conn_db <- connect_convert_db()
+  if (convert_type == "entrez") {
+    id_type_entrez <- DBI::dbGetQuery(
+      conn = conn_db,
+      statement = "select distinct * from idIndex
+      where idType = 'entrezgene_id'"
+    )
+    id_type_entrez <- as.numeric(id_type_entrez[1, 1])
+    result <- DBI::dbGetQuery(
+      conn = conn_db,
+      statement = "select id,ens,species from mapping
+     where ens IN (?) AND idType = ?",
+      params = list(query_set, id_type_entrez)
+    ) # slow
+    # idType 6 for entrez gene ID
+  } else {
+    id_type_kegg <- DBI::dbGetQuery(
+      conn = conn_db,
+      statement = "select distinct * from idIndex
+      where idType = 'kegg'"
+    )
+    id_type_entrez <- as.numeric(id_type_entrez[1, 1])
+    result <- DBI::dbGetQuery(
+      conn = conn_db,
+      statement = "select id,ens,species from mapping
+     where ens IN (?) AND idType = ?",
+      params = list(query_set, id_type_kegg)
+    ) # slow
+  }
+  DBI::dbDisconnect(conn = conn_db)
+
+  if (nrow(result) == 0) {
+    return(NULL)
+  }
+  result <- subset(
+    x = result,
+    subset = species == species_id,
+    select = -species
+  )
+
+  ix <- match(x = result$ens, table = names(query))
+
+  tem <- query[ix]
+  names(tem) <- result$id
+  return(tem)
+}
+
