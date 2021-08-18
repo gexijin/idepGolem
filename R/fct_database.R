@@ -96,6 +96,7 @@ get_idep_data <- function(datapath = DATAPATH) {
     con = conn_db,
     statement = "select distinct * from orgInfo"
   )
+  org_info <- org_info[order(org_info$name), ]
 
   annotated_species_count <- sort(table(org_info$group))
 
@@ -112,6 +113,27 @@ get_idep_data <- function(datapath = DATAPATH) {
     statement = "select distinct * from idIndex"
   )
 
+  species_choice <- setNames(as.list(org_info$id), org_info$name2)
+  species_choice <- append(
+    setNames("NEW", "**NEW SPECIES**"),
+    species_choice
+  )
+  species_choice <- append(
+    setNames("BestMatch", "Best matching species"),
+    species_choice
+  )
+  top_choices <- c(
+    "Best matching species", "**NEW SPECIES**", "Human", "Mouse", "Rat", "Cow",
+    "Zebrafish", "Pig", "Chicken", "Macaque", "Dog", "Drosophila melanogaster",
+    "Caenorhabditis elegans", "Saccharomyces cerevisiae",
+    "Arabidopsis thaliana", "Zea mays", "Glycine max",
+    "Oryza sativa Indica Group", "Oryza sativa Japonica Group", "Vitis vinifera"
+  )
+  other_choices <- names(species_choice)[
+    !(names(species_choice) %in% top_choices)
+  ]
+  species_choice <- species_choice[c(top_choices, other_choices)]
+
   DBI::dbDisconnect(conn = conn_db)
 
   return(list(
@@ -126,7 +148,8 @@ get_idep_data <- function(datapath = DATAPATH) {
     annotated_species_count = annotated_species_count,
     go_levels = go_levels,
     go_level_2_terms = go_level_2_terms,
-    id_index = id_index
+    id_index = id_index,
+    species_choice = species_choice
   ))
 }
 
@@ -190,6 +213,7 @@ convert_id <- function(query, idep_data,
   #  some gene ids are like Glyma.01G002100
 
   query_set <- clean_query(query_input = query)
+
   conn_db <- connect_convert_db()
 
   if (select_org == "BestMatch") { # query all species
@@ -294,6 +318,7 @@ convert_id <- function(query, idep_data,
 }
 
 
+
 #' FUNCTION_TITLE
 #'
 #' FUNCTION_DESCRIPTION
@@ -359,3 +384,4 @@ convert_ensembl <- function(query, species, idep_date,
   names(tem) <- result$id
   return(tem)
 }
+
