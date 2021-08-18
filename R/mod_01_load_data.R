@@ -217,7 +217,7 @@ mod_01_load_data_ui <- function(id) {
         ),
         
         a( 
-          h5("Questions?",align = "right"), 
+          h5("Question?",align = "right"), 
           href="https://idepsite.wordpress.com/data-format/",
           target="_blank"
         )
@@ -317,8 +317,8 @@ mod_01_load_data_server <- function(id, idep_data) {
       striped = TRUE,
       bordered = TRUE,
       width = "auto",
-      hover = T) 
-    
+      hover = T)
+
     # First 20 rows of dataset table -----------
     output$contents <- renderTable({
       inFile <- input$expression_file
