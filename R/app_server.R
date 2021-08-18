@@ -6,5 +6,5 @@
 #' @noRd
 app_server <- function(input, output, session) {
   # Your application server logic
-  mod_01_load_data_server("test")
+  mod_01_load_data_server("load_data")
 }
