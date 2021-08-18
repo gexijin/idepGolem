@@ -153,8 +153,19 @@ get_idep_data <- function(datapath = DATAPATH) {
   ))
 }
 
-# find idType based on index
-find_id_type_by_id <- function(id, id_index) { # find
+
+#' FUNCTION_TITLE
+#'
+#' FUNCTION_DESCRIPTION
+#'
+#' @param id DESCRIPTION.
+#' @param id_index DESCRIPTION.
+#'
+#' @return RETURN_DESCRIPTION
+#' @examples
+#' # ADD_EXAMPLES_HERE
+find_id_type_by_id <- function(id, id_index) {
+  # find idType based on index
   return(id_index$idType[as.numeric(id)])
 }
 
@@ -193,13 +204,15 @@ find_species_by_id_name <- function(species_id, org_info) {
 
 
 
-#' FUNCTION_TITLE
+#' convert_id This function takes gene IDs and converts them to ensembl data.
 #'
 #' FUNCTION_DESCRIPTION
 #'
-#' @param query DESCRIPTION.
-#' @param idep_data DESCRIPTION.
-#' @param select_org DESCRIPTION.
+#' @param query A character vector of gene IDs
+#' @param idep_data A instance of the output from get_idep_data
+#'  (link to documentation)
+#' @param select_org A character of the species that wants to be looked up,
+#'  default to \code{"BestMatch"}
 #'
 #' @return RETURN_DESCRIPTION
 #' @examples
@@ -264,11 +277,14 @@ convert_id <- function(query, idep_data,
       names(sorted_counts)[1] <- names(tem)
     }
 
-
     result <- result[which(combination == names(sorted_counts[1])), ]
     species_matched <- sorted_counts
     tmp <- as.numeric(gsub(pattern = " .*", "", x = names(sorted_counts)))
-    names(species_matched) <- sapply(X = tmp, FUN = find_species_by_id_name)
+    names(species_matched) <- sapply(
+      X = tmp,
+      FUN = find_species_by_id_name,
+      org_info = idep_data$org_info
+    )
     species_matched <- as.data.frame(species_matched)
 
     if (length(sorted_counts) == 1) { # if only  one species matched
@@ -296,7 +312,10 @@ convert_id <- function(query, idep_data,
     } # stop("ID not recognized!")
     species_matched <- as.data.frame(paste(
       "Using selected species ",
-      find_species_by_id_name(select_org)
+      find_species_by_id_name(
+        species_id = select_org,
+        org_info = idep_data$org_info
+      )
     ))
   }
 
@@ -307,11 +326,21 @@ convert_id <- function(query, idep_data,
   colnames(species_matched) <- c("Matched Species (genes)")
   conversion_table <- result[, 1:2]
   colnames(conversion_table) <- c("User_input", "ensembl_gene_id")
-  conversion_table$Species <- sapply(result[, 3], find_species_by_id_name)
+  conversion_table$Species <- sapply(
+    X = result[, 3],
+    FUN = find_species_by_id_name,
+    org_info = idep_data$org_info
+  )
+
+  species <- find_species_by_id(
+    species_id = result$species[1],
+    org_info = idep_data$org_info
+  )
+
   return(list(
-    originalIDs = query_set,
+    origninal_ids = query_set,
     ids = unique(result[, 2]),
-    species = find_species_by_id(result$species[1]),
+    species = species,
     species_matched = species_matched,
     conversion_table = conversion_table
   ))
@@ -384,4 +413,3 @@ convert_ensembl <- function(query, species, idep_date,
   names(tem) <- result$id
   return(tem)
 }
-
