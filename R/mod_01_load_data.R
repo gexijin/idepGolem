@@ -217,7 +217,7 @@ mod_01_load_data_ui <- function(id) {
         ),
         
         a( 
-          h5("Question?",align = "right"), 
+          h5("Questions?",align = "right"), 
           href="https://idepsite.wordpress.com/data-format/",
           target="_blank"
         )
