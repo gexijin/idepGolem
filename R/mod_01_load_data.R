@@ -227,18 +227,57 @@ mod_01_load_data_ui <- function(id) {
       
       # Load Data panel main -----------
       mainPanel(
-        
+  
         shinyjs::useShinyjs(),
         
-        # Test Print -----------
-        textOutput(ns("test")),
+        # Table output for sample tissue type ----------
+        tableOutput(ns("sample_info_table")),
         
-        # Table output for
-        tableOutput('sampleInfoTable')
+        # Display first 20 rows of the data ----------
+        tableOutput(ns("sample_20")),
         
-        
-        
-        
+        # Instructions and flowchart ------------
+        div(
+          id="loadMessage",
+          h4("Loading R packages, please wait ... ... ...")
+        ),
+        htmlOutput('file_format'),
+        h3(
+          "We found an issue with the Gene Onotology database derived from 
+           Ensembl Release 103, which is used in iDEP 0.93. While we are fixing 
+           this issue, we have reverted the database to a previous version used 
+           in iDEP 0.92. "
+        ),
+        h4("Postdoc and GRA positions available!"),
+        h4(
+          "If your gene IDs are not recognized, please let us know. We might be 
+           able to add customized gene mappings to Ensembl gene IDs."
+        ),
+        h3(
+          "New version 0.93 released on 5/23/2021 includes upgrades to R 4.05, 
+           Bioconductor 3.12, larger database (5000+ species) from Ensembl 
+           Release 103 and STRING-db v11. Massive, manually-collected pathway 
+           database for 20 model organisms. Fixed KEGG pathway chart and gene 
+           plot.", style = "color:red"
+        ), 
+        h4(
+          "We recently hired Jenny Qi for database updates and user support.",
+          a(
+            "Email Jenny for questions.",
+            href="mailto:gelabinfo@gmail.com?Subject=iDEP"
+          )
+        ), 
+        h5(
+          "iDEP has not been thoroughly tested. Please let us know if you find 
+           any issue/bug."
+        ),
+        h5("We will be happy to help prepare your data for iDEP."),
+        br(),
+        img(
+          src = "www/flowchart.png", 
+          align = "center",
+          width="562", 
+          height="383")
       )
     )
   )
@@ -249,12 +288,55 @@ mod_01_load_data_ui <- function(id) {
 #' @noRd
 ### testing something, come back to later
 mod_01_load_data_server <- function(id, idep_data) {
+  
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-      
-    output$test <- renderText(
-      "Hello World"
+    
+    # Provide species list for dropdown selection -----------
+    observe({
+      updateSelectizeInput(
+        session = session, 
+        inputId = "select_org", 
+        choices = NULL, #species_choice, 
+        selected = NULL #species_choice[1] 
       )
+    })
+    
+    # Sample information table -----------
+    output$sample_info_table <- renderTable({
+      if(is.null(readSampleInfo()))
+        return(NULL)
+      isolate({
+        tem = t(readSampleInfo())
+        tem = cbind(rownames(tem),tem)
+        colnames(tem)[1] <- "Study_design"
+        return(tem)
+      })
+      }, 
+      include.rownames = FALSE,
+      striped = TRUE,
+      bordered = TRUE,
+      width = "auto",
+      hover = T) 
+    
+    # First 20 rows of dataset table -----------
+    output$contents <- renderTable({
+      inFile <- input$expression_file
+      inFile <- inFile$datapath
+      if (is.null(input$expression_file) && input$go_button == 0)
+        return(NULL)
+      #    if (is.null(input$file1) && input$goButton > 0 )   inFile = "expression1_no_duplicate.csv"
+      if (is.null(input$file1) && input$goButton > 0 )   inFile = demoDataFile
+      
+      tem = input$selectOrg
+      isolate({
+        x <- read.csv(inFile)
+        if(dim(x)[2] <= 2 ) x <- read.table(inFile, sep="\t",header=TRUE)	# not CSV
+        #x <- readData()$data
+        x[1:20,]
+      })
+    },include.rownames=FALSE,striped=TRUE,bordered = TRUE, width = "auto",hover=T)
+    
     
     
     }
