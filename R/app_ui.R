@@ -12,7 +12,7 @@ app_ui <- function(request) {
     navbarPage(
       "idepGolem",
       id = "navbar",
-      
+
       mod_01_load_data_ui("load_data")
     )
   )

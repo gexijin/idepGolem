@@ -19,7 +19,7 @@ mod_01_load_data_ui <- function(id) {
         # Button to load demo dataset ----------
         # Manually namespace the goButton in tag with id in module call
         actionButton(
-          inputId = ns("go_button"), 
+          inputId = ns("go_button"),
           label = "Click here to load demo data"
         ),
         tags$head(tags$style(
