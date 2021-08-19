@@ -33,14 +33,14 @@ mod_01_load_data_ui <- function(id) {
         # Reset Button -----------
         p(HTML(
           "<div align=\"right\"><A HREF=\"javascript:history.go(0)\"
-           >Reset</A></div>" 
+           >Reset</A></div>"
           )
         ),
 
         # Species Match Drop Down ------------
         strong("1. Select or search for your species."),
         selectizeInput(
-          inputId = ns("select_org"), 
+          inputId = ns("select_org"),
           label = NULL,
           choices = " ",
           multiple = TRUE,
@@ -53,10 +53,10 @@ mod_01_load_data_ui <- function(id) {
 
         # Conditional .GMT file input bar ----------
         conditionalPanel(
-          'input.selectOrg == "NEW"',
+          condition = 'input.select_org == "NEW"',
           fileInput(
             inputId = ns("gmt_file"),
-            label = 
+            label =
               "Upload a geneset .GMT file for enrichment analysis (optional)",
             accept = c(
               "text/csv",
@@ -85,7 +85,7 @@ mod_01_load_data_ui <- function(id) {
 
         # Conditional panel for fold changes data file ----------
         conditionalPanel(
-          "input.data_file_format == 3",
+          condition = "input.data_file_format == 3",
           checkboxInput(
             inputId = ns("no_fdr"),
             label = "Fold-changes only, no corrected P values",
@@ -125,7 +125,7 @@ mod_01_load_data_ui <- function(id) {
             "text/plain",
             ".csv",
             ".tsv"
-          ) 
+          )
         ),
 
         # Table output for species loading progress -----------
@@ -140,8 +140,9 @@ mod_01_load_data_ui <- function(id) {
         # ADD GENE ID EXAMPLE CODE FOR BUTTON ----------
         actionButton(
           inputId = ns("gene_id_button"),
-          label =  "Optional: Gene ID Examples"
+          label =  "Optional: COMING SOON!"
         ),
+        ##################################################
 
         a(
           h5("Questions?", align = "right"),
@@ -206,7 +207,6 @@ mod_01_load_data_ui <- function(id) {
           width = "562",
           height = "383"),
 
-        textOutput(ns("test"))
       )
     )
   )
@@ -279,11 +279,14 @@ mod_01_load_data_server <- function(id, idep_data) {
       hover = TRUE
     )
 
+    list(
+      data_file_format = reactive(input$data_file_format)
+    )
   })
 }
 
 ## To be copied in the UI
-# mod_01_load_data_ui("01_load_data_ui_1") # nolint
+# mod_01_load_data_ui("load_data") # nolint
 
 ## To be copied in the server
-# mod_01_load_data_server("01_load_data_ui_1") # nolint
+# mod_01_load_data_server("load_data") # nolint
