@@ -136,83 +136,11 @@ mod_01_load_data_ui <- function(id) {
           "Check this out if you want example of our gene ids, or download gene
           mapping."
         ),
+
+        # ADD GENE ID EXAMPLE CODE FOR BUTTON ----------
         actionButton(
           inputId = ns("gene_id_button"),
           label =  "Optional: Gene ID Examples"
-        ),
-
-        # Gene ID Examples Pop-up -----------
-        shinyBS::bsModal(
-          id = "gene_IDBs", 
-          title = "Gene ID Examples",
-          trigger = ns("gene_id_button"),
-          size = "large",
-          fluidPage(
-            shinyjs::useShinyjs(),
-            sidebarLayout(
-              fluid = TRUE,
-              sidebarPanel(
-
-                # Select the user species ------------
-                selectizeInput(
-                  inputId = ns("user_specie"),
-                  label = "What's your specie name?",
-                  choices = NULL
-                ),
-
-                shiny::tags$h5("Can erase and type in box"),
-
-                # Select ID type for genes ------------
-                selectizeInput(
-                  inputId = ns("user_id_type"),
-                  label = "What's your ID type? (Optional)",
-                  choices = NULL
-                ),
-
-                shiny::tags$h5("Can erase and type in box"),
-
-                actionButton(inputId = ns("submit_id_page"), label = "submit"),
-                actionButton(inputId = ns("reset_id_page"), label = "reset"),
-                downloadButton(
-                  outputId = ns("download_id_page"),
-                  label = "Download mapping.csv")
-              ),
-              mainPanel(
-
-                reactable::reactableOutput(outputId = ns("table_result")),
-
-                # User instructions ------------
-                shiny::tags$div(
-                  shiny::tags$h1("Instructions for Usage"),
-                  shiny::tags$h4(
-                    "This page's purpose is to give the user some interactive
-                     tools to look at our database IDs. There are two different
-                     uses for this page, see explanation below:"
-                  ),
-                  shiny::tags$ul(
-                    shiny::tags$li(
-                      shiny::tags$h4(
-                        "If you only pick a species, you are receiving a table
-                         with all the different IDs related to that species.
-                         (Shown below)"
-                      )
-                    ),
-                    shiny::tags$li(
-                      shiny::tags$h4(
-                        "If you pick a species and an ID type, you are receiving
-                         a table with all the IDs of the ID type you pick and
-                         how they map to ensembl IDs(our preferred ID database),
-                         and you can download a csv file of the mapping ID."
-                      )
-                    )
-                  )
-                ),
-
-                reactable::reactableOutput(outputId = ns("table_default"))
-
-              )
-            )
-          )
         ),
 
         a(
@@ -276,7 +204,9 @@ mod_01_load_data_ui <- function(id) {
           src = "www/flowchart.png",
           align = "center",
           width = "562",
-          height = "383")
+          height = "383"),
+
+        textOutput(ns("test"))
       )
     )
   )
