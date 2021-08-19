@@ -143,7 +143,7 @@ mod_02_pre_process_ui <- function (id) {
           selected = "geneMedian"
         ),
 
-        # Button to plot genes --------------
+        # Button to trigger gene plot modal --------------
         actionButton(
           inputId = ns("gene_plot_1"),
           label = "Plot one or more genes"
@@ -151,9 +151,9 @@ mod_02_pre_process_ui <- function (id) {
         br(),
         br(),
 
-        # Button to search data ----------
+        # Button to trigger examine data modal ----------
         actionButton(
-          inputId = ns("examine_data_b"),
+          inputId = ns("examine_datab"),
           label = "Search processed data"
         ),
         br(),
@@ -215,7 +215,83 @@ mod_02_pre_process_ui <- function (id) {
 
       # Pre-Process Panel Main -----------
       mainPanel(
-        textOutput(ns("data_file_format"))
+
+        h5(
+          "Aspect ratios of figures can be adjusted by changing
+           the width of browser window."
+        ),
+
+        # Conditional panel for plot of read count data ----------
+        conditionalPanel(
+          condition = "output.data_file_format == 1",
+          plotOutput(outputId = ns("total_counts")),
+          ns = ns
+        ),
+
+        # Axis selectors -----------
+        fluidRow(
+          column(
+            width = 4,
+            selectInput(
+              inputId = ns("scatter_x"),
+              label = "Select a sample for x-axis",
+              choices = 1:5,
+              selected = 1
+            )
+          ),
+          column(
+            width = 4,
+            selectInput(
+              inputId = ns("scatter_y"),
+              label = "Select a sample for y-axis",
+              choices = 1:5,
+              selected = 2
+            )
+          )
+        ),
+
+        # EDA scatter plot -----------
+        plotOutput(outputId = "eda"),
+
+        shinyBS::bsModal(
+          id = "modalExample10",
+          title = "Converted data (Most variable genes on top)",
+          trigger = ns("examine_datab"),
+          size = "large",
+          DT::dataTableOutput(outputId = ns("examine_data"))
+        ),
+
+        shinyBS::bsModal(
+          id = "modalExample1021",
+          title = "Search for genes",
+          trigger = "gene_plot_1",
+          size = "large",
+          textInput(
+            inputId = ns("gene_search"),
+            label = "Enter full or partial gene ID, or list of
+                     genes separated by semicolon:",
+            value = "HOXA1;e2f2;tp53"
+          ),
+          checkboxInput(
+            inputId = ns("gene_plot_box"),
+            label = "Show individual samples",
+            value = FALSE
+          ),
+          plotOutput(outputId = "gene_plot"),
+          conditionalPanel(
+            condition = "input.gene_plot_box == 0",
+            checkboxInput(
+              inputId = ns("use_sd"),
+              label = "Use standard deviation instead of standard error",
+              value = FALSE
+            ),
+            ns = ns
+          ),
+          downloadButton(
+            outputId = "downloadGenePlot",
+            label = "Figure"
+          )
+        )
       )
     )
   )
@@ -229,9 +305,12 @@ mod_02_pre_process_server <- function(id, load_data) {
     ns <- session$ns
 
     # Data file format for conditional panels ----------
+    # outputOptions required otherwise the value can only be used
+    # if it is rendered somewhere else in the UI
     output$data_file_format <- reactive({
       load_data$data_file_format()
     })
+    outputOptions(output, "data_file_format", suspendWhenHidden = FALSE)
   })
 }
 
