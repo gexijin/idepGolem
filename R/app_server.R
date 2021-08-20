@@ -5,5 +5,7 @@
 #' @import shiny
 #' @noRd
 app_server <- function(input, output, session) {
-  # Your application server logic
+
+  load_data <- mod_01_load_data_server(id = "load_data")
+  mod_02_pre_process_server(id = "pre_process", load_data)
 }

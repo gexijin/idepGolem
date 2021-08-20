@@ -2,8 +2,12 @@
 % Please edit documentation in R/fct_01_load_data.R
 \name{fct_01_load_data.R}
 \alias{fct_01_load_data.R}
+\alias{geneIDPage}
 \title{fct_01_load_data.R This file holds all of the main data analysis functions
 associated with first tab of the iDEP website.}
+\usage{
+geneIDPage(input, output, session, orgInfo, path)
+}
 \description{
 fct_01_load_data.R This file holds all of the main data analysis functions
 associated with first tab of the iDEP website.
