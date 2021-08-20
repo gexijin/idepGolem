@@ -86,7 +86,7 @@ mod_02_pre_process_ui <- function (id) {
             column(
               width = 6,
               numericInput(
-                inputId = ns("low_filter"),
+                inputId = ns("low_filter_fpkm"),
                 label = h5("Min. level"),
                 value = -1000)
             ),
@@ -107,12 +107,12 @@ mod_02_pre_process_ui <- function (id) {
             "#pre_process-n_min_samples_fpkm { width:100%;   margin-top:-12px}"
           ),
           radioButtons(
-            inputId = ns("log_transform"),
+            inputId = ns("log_transform_fpkm"),
             label = "Log Transformation",
             choices = c("No" = FALSE, "Yes" = TRUE)
           ),
           numericInput(
-            inputId = ns("log_start"),
+            inputId = ns("log_start_fpkm"),
             label = h5("Constant c for started log: log(x+c)"),
             value = 1
           ),
@@ -311,6 +311,19 @@ mod_02_pre_process_server <- function(id, load_data) {
       load_data$data_file_format()
     })
     outputOptions(output, "data_file_format", suspendWhenHidden = FALSE)
+
+    # Return Values -----------
+    list(
+      missing_value = reactive(input$missing_value),
+      min_counts = reactive(input$min_counts),
+      n_min_samples_count = reactive(input$n_min_samples_count),
+      counts_log_start = reactive(input$counts_log_start),
+      counts_transform = reactive(input$counts_transform),
+      log_transform_fpkm = reactive(input$log_transform_fpkm),
+      log_start_fpkm = reactive(input$log_start_fpkm),
+      low_filter_fpkm = reactive(input$low_filter_fpkm),
+      n_min_samples_fpkm = reactive(input$n_min_samples_fpkm),
+    )
   })
 }
 
