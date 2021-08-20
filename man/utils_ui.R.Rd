@@ -10,6 +10,6 @@ shiny code can go in this file
 }
 \section{utils_ui.R functions}{
 
-\cpde{make_pull_down_menu} makes it easy to make pull down menu
+\code{make_pull_down_menu} makes it easy to make pull down menu
 }
 
