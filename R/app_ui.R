@@ -9,8 +9,12 @@ app_ui <- function(request) {
     # Leave this function for adding external resources
     golem_add_external_resources(),
     # Your application UI logic
-    fluidPage(
-      h1("idepGolem")
+    navbarPage(
+      "idepGolem",
+      id = "navbar",
+
+      mod_01_load_data_ui(id = "load_data"),
+      mod_02_pre_process_ui(id = "pre_process")
     )
   )
 }

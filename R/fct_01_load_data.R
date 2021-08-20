@@ -9,7 +9,6 @@
 #' @name fct_01_load_data.R
 NULL
 
-
 # retrieve detailed info on genes
 gene_info <- function(converted, select_org, idep_data) {
   check <- check_object_state(
