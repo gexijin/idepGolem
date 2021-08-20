@@ -2,24 +2,18 @@
 % Please edit documentation in R/fct_database.R
 \name{convert_id}
 \alias{convert_id}
-\title{FUNCTION_TITLE}
+\title{convert_id This function takes gene IDs and converts them to ensembl data.}
 \usage{
-convert_id(
-  query,
-  species_choice,
-  annotated_species_counts,
-  select_org = "BestMatch"
-)
+convert_id(query, idep_data, select_org = "BestMatch")
 }
 \arguments{
-\item{query}{DESCRIPTION.}
+\item{query}{A character vector of gene IDs}
 
-\item{species_choice}{DESCRIPTION.}
+\item{idep_data}{A instance of the output from get_idep_data
+(link to documentation)}
 
-\item{annotated_species_counts}{DESCRIPTION.}
-
-\item{select_org}{DESCRIPTION.}
-}
+\item{select_org}{A character of the species that wants to be looked up,
+default to \code{"BestMatch"}}}
 \value{
 RETURN_DESCRIPTION
 }

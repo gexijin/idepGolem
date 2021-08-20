@@ -7,97 +7,64 @@
 #'
 #'
 #' @name fct_01_load_data.R
-geneIDPage <- function(input, output, session, orgInfo, path) {
-  if (firstTime == TRUE) {
-    #load packages
-    libs <- c('RSQLite','feather') 
-    lapply(libs, library, character.only = TRUE)
-    #set up input and paths at start up
-    SPECIE_LIST <- unique(c("Human", sort(orgInfo$name2)))
-    updateSelectizeInput(session = session, inputId = "userSpecie",
-                         choices = SPECIE_LIST, server = TRUE)
-    PATH <- paste0(path, 'convertIDs.db')
-    PATH2 <- paste0(path, '/feather/example_of_id.feather')
-    default <- getExampleDfID(userSpecie = SPECIE_LIST[1],
-                              path2Database = PATH2)
-    
-    output$tableDefault <- renderReactable({
-      reactable::reactable(data = default,
-                           columns = list(Database = colDef(maxWidth = MAX_WIDTH_COL),
-                                     Example_genes = colDef(maxWidth = EXAMPLE_GENES_WCOL)),
-                           searchable = TRUE, bordered = TRUE, defaultPageSize = 4,
-                           highlight = TRUE, resizable = TRUE, minRows = 5, showPageSizeOptions = TRUE,
-                           pageSizeOptions = c(4, 10, 25, 50, 100))
-    })#end of tableDefault
-    shinyjs::hide(id = "downloadIDPage")
-    firstTime <- FALSE
-  }#end of if 
+NULL
+
+# retrieve detailed info on genes
+gene_info <- function(converted, select_org, idep_data) {
+  check <- check_object_state(
+    check_exp = (is.null(converted)),
+    true_message = as.data.frame("ID not recognized!")
+  )
+  if (check$bool) {
+    return(check)
+  }
+
+  query_set <- converted$ids
+  check <- check_object_state(
+    check_exp = (length(query_set) == 0),
+    true_message = as.data.frame("ID not recognized!")
+  )
+  if (check$bool) {
+    return(check)
+  }
+
+  ix <- grep(
+    pattern = converted$species[1, 1],
+    x = idep_data$gene_info_files
+  )
+  check <- check_object_state(
+    check_exp = (length(ix) == 0),
+    true_message = as.data.frame("No matching gene info file found")
+  )
+  if (check$bool) {
+    return(check)
+  }
   
-  observeEvent(input$userSpecie, { # update userIDtype when userSpecie changes
-    ID_TYPE_LIST <- getExampleDfID(userSpecie = input$userSpecie,
-                                   path2Database = PATH2)
-    ID_TYPE_FILTER <- c("None", sort(ID_TYPE_LIST$Database))
-    
-    updateSelectizeInput(session = session, inputId = "userIDtype",
-                         choices = ID_TYPE_FILTER, server = TRUE)
-  }) # end of observeEvent
-  
-  observeEvent(input$submitIDPage, {
-    #Decide on what to pass to function
-    if (input$userIDtype == "None") {#user just gives species
-      shinyjs::hide(id = "downloadIDPage")
-      getExampleSer <- shiny::reactive({
-        withProgress(message = 'Work be done...', value = 0, {
-          result <- getExampleDfID(userSpecie = input$userSpecie,
-                                   path2Database = PATH2, shiny = TRUE)
-        })#end of withProgress
-        return(result)
-      })#end of reactive
-      col <- list(Database = colDef(maxWidth = MAX_WIDTH_COL), 
-                  Example_genes = colDef(maxWidth = EXAMPLE_GENES_WCOL))
-    } else if (input$userIDtype != "None") { #if user doesn't give genelist
-      ## and give id type
-      getExampleSer <- shiny::reactive({
-        withProgress(message = 'Work be done...', value = 0, {
-          userSpecieNum <- orgInfo$id[orgInfo$name2 == input$userSpecie]
-          result <- getExample(userSpecie = userSpecieNum,
-                               path2Database = PATH,
-                               userIDtype = input$userIDtype, shiny = TRUE)
-        })#end of withProgress
-        return(result)
-      })#end of reactive
-      col <- list(User_ID = colDef(maxWidth = MAX_WIDTH_COL),
-                  Ensembl_ID = colDef(maxWidth = MAX_WIDTH_COL))
-      
-      output$downloadIDPage <- downloadHandler(
-        filename = function() {
-          paste0(input$userIDtype, "_mapped_to_Ensembl_ID.csv")
-        },
-        content = function(file) {
-          downloadFile <- getExampleSer()
-          colnames(downloadFile) <- c(paste(input$userIDtype),
-                                      'Ensembl_ID')
-          write.csv(downloadFile, file)
-        }
-      )#end of downloadIDPage
-      shinyjs::show(id = "downloadIDPage")
-    }#end of if/else
-    
-    res <- getExampleSer()
-    shinyjs::hide(id = "tableDefault")
-    output$tableResult <- renderReactable({
-      reactable::reactable(data = res,
-                           columns = col,
-                           searchable = TRUE, defaultPageSize = 4,
-                           highlight = TRUE, resizable = TRUE, minRows = 5,
-                           showPageSizeOptions = TRUE,
-                           pageSizeOptions = c(4, 10, 25, 50, 100))
-    })#end of tableResult
-    shinyjs::show(id = "tableResult")
-  }) #end of observeEvent
-  
-  observeEvent(input$resetIDPage, {
-    shinyjs::hide(id = "tableResult")
-    shinyjs::hide(id = "downloadIDPage")
-  }) #end of observeEvent
-}# end of GeneIDPage 
+  # If selected species is not the default "bestMatch",
+  # use that species directly
+  if (select_org != idep_date$species_choice[[1]]) {
+    ix <- grep(
+      pattern = find_species_by_id(
+        species_id = select_org,
+        org_info = idep_data$org_info
+      )[1, 1],
+      x = idep_data$gene_info_files
+    )
+  }
+
+  check <- check_object_state(
+    check_exp = (length(ix) != 1),
+    true_message = as.data.frame("Multiple geneInfo file found!")
+  )
+  if (check$bool) {
+    return(check)
+  } else {
+    gene_info_csv <- read.csv(as.character(idep_data$geneInfoFiles[ix]))
+    gene_info_csv[, 1] <- toupper(gene_info_csv[, 1])
+  }
+
+  set <- match(gene_info_csv$ensembl_gene_id, query_set)
+  set[which(is.na(set))] <- "Genome"
+  set[which(set != "Genome")] <- "List"
+  return(cbind(gene_info, set))
+}

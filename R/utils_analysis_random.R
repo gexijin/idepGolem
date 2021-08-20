@@ -277,3 +277,60 @@ extract_word <- function(word_list) {
     return(proper(paste(words, collapse = " ")))
   }
 }
+
+
+#' check_object_state an Utility function to simplify checking object states.
+#'
+#'
+#' This function is a booling utility function,
+#' which helps evaluates the state of objects,
+#' and helps with sending messages from server to UI logic of shiny app.
+#'
+#'
+#' @param check_exp An expression that should be evaluated
+#'
+#' @param true_message Message displayed on console and
+#'  returned if \code{check_exp} is true
+#'
+#' @param false_message Optional message returned if \code{check_exp} is false,
+#'  default to blank string
+#'
+#'
+#' @return A list is returned, with the following elements:
+#'  \code{bool} is either true or false depending on \code{check_exp} evaluation
+#'
+#'  \code{content} either message and depended on \code{check_exp} evaluation
+#' @examples
+#' check <- check_object_state(
+#'   check_exp = (is.null(NULL)),
+#'   true_message = as.data.frame("This is NULL")
+#' )
+#' # will eval to true and display message to console
+#' if (check$bool) {
+#'   return(check)
+#' }
+#'
+#' check <- check_object_state(
+#'   check_exp = (length(c(1, 2)) == 0),
+#'   true_message = "this has 0 elements",
+#'   false_message = "this doesn't have 0 elements"
+#' )
+#' # This will not return check and check$content will be false_message
+#' if (check$bool) {
+#'   return(check)
+#' }
+check_object_state <- function(check_exp, true_message,
+false_message= "") {
+  if (check_exp) {
+    message(true_message)
+    return(list(
+      bool = TRUE,
+      content = true_message
+    ))
+  } else {
+    return(list(
+      bool = FALSE,
+      content = false_message
+    ))
+  }
+}

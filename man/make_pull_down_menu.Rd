@@ -7,7 +7,7 @@
 make_pull_down_menu(funs)
 }
 \arguments{
-\item{datapath}{}
+\item{funs}{}
 }
 \value{
 
