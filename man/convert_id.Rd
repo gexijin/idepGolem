@@ -13,7 +13,8 @@ convert_id(query, idep_data, select_org = "BestMatch")
 (link to documentation)}
 
 \item{select_org}{A character of the species that wants to be looked up,
-default to \code{"BestMatch"}}}
+default to \code{"BestMatch"}}
+}
 \value{
 RETURN_DESCRIPTION
 }
