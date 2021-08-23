@@ -210,7 +210,13 @@ mod_02_pre_process_ui <- function (id) {
           h5("Questions?", align = "right"),
           href = "https://idepsite.wordpress.com/pre-process/",
           target = "_blank"
-        )
+        ),
+
+        selectInput("counts_deg_method", "Method:", 
+                      choices = list("DESeq2"      = 3,
+                                     "limma-voom"  = 2,
+                                     "limma-trend" = 1),
+                      selected = 3)   
       ),
 
       # Pre-Process Panel Main -----------
@@ -323,6 +329,7 @@ mod_02_pre_process_server <- function(id, load_data) {
       log_start_fpkm = reactive(input$log_start_fpkm),
       low_filter_fpkm = reactive(input$low_filter_fpkm),
       n_min_samples_fpkm = reactive(input$n_min_samples_fpkm),
+      counts_deg_method = reactive(input$counts_deg_method)
     )
   })
 }

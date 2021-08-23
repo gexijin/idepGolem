@@ -16,6 +16,9 @@
 ## Dependencies ----
 ## Add one line by package you want to add as dependency
 usethis::use_package( "thinkr" )
+usethis::use_package("DESeq2")
+usethis::use_package("edgeR")
+usethis::use_package("withProgress")
 
 ## Add modules ----
 ## Create a module infrastructure in R/
