@@ -133,7 +133,7 @@ mod_03_heatmap_ui <- function(id) {
           label = "Heatmap data"
         ),
         downloadButton(
-          outputId = "downloadHeatmap1",
+          outputId = ns("download_heatmap"),
           label = "High-resolution figure"
         ),
         br(),
@@ -144,7 +144,28 @@ mod_03_heatmap_ui <- function(id) {
         )
       ),
       mainPanel(
-        NULL
+        plotOutput(outputId = ns("heatmap_main")),
+        shinyBS::bsModal(
+          id = "modalExample8",
+          title = "Correlation matrix using top 75% genes",
+          trigger = ns("show_correlation"),
+          size = "large",
+          downloadButton(
+            outputId = ns("download_correlation_matrix"),
+            label = "Data"
+          ),
+          downloadButton(
+            outputId = ns("download_correlation_matrix_plot"),
+            label = "Figure"
+          ),
+          checkboxInput(
+            inputId = ns("label_PCC"),
+            label = "Label w/ Pearson's correlation coefficients",
+            value = TRUE
+          ),
+          plotOutput(outputId = ns("correlation_matrix"))
+        ),
+
       )
     )
   )
@@ -201,11 +222,14 @@ mod_03_heatmap_server <- function(id) {
       tem <- input$limmaPval
       tem <- input$limmaFC
 
-      if (is.null(readSampleInfo())) # if sample info is uploaded and correctly parsed.
-        {
-          return(NULL)
-        } else {
-        selectInput("selectFactorsHeatmap", label = "Sample color bar:", choices = c(colnames(readSampleInfo()), "Sample_Name"))
+      if (is.null(read_sample_info())) {
+        return(NULL)
+      } else {
+        selectInput(
+          inputId = ns("select_factors_heatmap"),
+          label = "Sample color bar:",
+          choices = c(colnames(read_sample_info()), "Sample_Name")
+        )
       }
     })
   })

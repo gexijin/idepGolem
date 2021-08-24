@@ -226,7 +226,7 @@ mod_02_pre_process_ui <- function(id) {
            the width of browser window."
         ),
 
-        # Conditional panel for plot of read count data ----------
+        # Conditional panel for barplot of read count data ----------
         conditionalPanel(
           condition = "output.data_file_format == 1",
           plotOutput(outputId = ns("total_counts")),
