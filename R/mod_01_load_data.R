@@ -10,7 +10,8 @@
 ### testing something, come back to later
 mod_01_load_data_ui <- function(id) {
   ns <- shiny::NS(id)
-  tabPanel("Load Data",
+  tabPanel(
+    "Load Data",
     sidebarLayout(
 
       # Load Data Panel Sidebar -----------
@@ -26,16 +27,14 @@ mod_01_load_data_ui <- function(id) {
           "#load_data-go_button{color: red;
           font-size: 16px;
           font-style: italic;}"
-          )
-        ),
+        )),
         h5(" and just click the tabs for some magic!", style = "color:red"),
 
         # Reset Button -----------
         p(HTML(
           "<div align=\"right\"><A HREF=\"javascript:history.go(0)\"
            >Reset</A></div>"
-          )
-        ),
+        )),
 
         # Species Match Drop Down ------------
         strong("1. Select or search for your species."),
@@ -140,7 +139,7 @@ mod_01_load_data_ui <- function(id) {
         # ADD GENE ID EXAMPLE CODE FOR BUTTON ----------
         actionButton(
           inputId = ns("gene_id_button"),
-          label =  "Optional: COMING SOON!"
+          label = "Optional: COMING SOON!"
         ),
         ##################################################
 
@@ -149,13 +148,10 @@ mod_01_load_data_ui <- function(id) {
           href = "https://idepsite.wordpress.com/data-format/",
           target = "_blank"
         )
-
-
       ),
 
       # Load Data panel main -----------
       mainPanel(
-
         shinyjs::useShinyjs(),
 
         # Table output for sample tissue type ----------
@@ -186,7 +182,8 @@ mod_01_load_data_ui <- function(id) {
            Bioconductor 3.12, larger database (5000+ species) from Ensembl
            Release 103 and STRING-db v11. Massive, manually-collected pathway
            database for 20 model organisms. Fixed KEGG pathway chart and gene
-           plot.", style = "color:red"
+           plot.",
+          style = "color:red"
         ),
         h4(
           "We recently hired Jenny Qi for database updates and user support.",
@@ -205,8 +202,8 @@ mod_01_load_data_ui <- function(id) {
           src = "www/flowchart.png",
           align = "center",
           width = "562",
-          height = "383"),
-
+          height = "383"
+        ),
       )
     )
   )
@@ -217,7 +214,6 @@ mod_01_load_data_ui <- function(id) {
 #' @noRd
 ### testing something, come back to later
 mod_01_load_data_server <- function(id, idep_data, pre_process) {
-
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -227,21 +223,23 @@ mod_01_load_data_server <- function(id, idep_data, pre_process) {
         session = session,
         inputId = "select_org",
         choices = idep_data$species_choice,
-        selected = idep_data$species_choice[1]
+        selected = idep_data$species_choice[1],
+        server = TRUE
       )
     })
 
     # Sample information table -----------
-    output$sample_info_table <- renderTable({
-      if (is.null(read_sample_info())) {
-        return(NULL)
-      }
-      isolate({
-        tem <- t(read_sample_info())
-        tem <- cbind(rownames(tem), tem)
-        colnames(tem)[1] <- "Study_design"
-        return(tem)
-      })
+    output$sample_info_table <- renderTable(
+      {
+        if (is.null(read_sample_info())) {
+          return(NULL)
+        }
+        isolate({
+          tem <- t(read_sample_info())
+          tem <- cbind(rownames(tem), tem)
+          colnames(tem)[1] <- "Study_design"
+          return(tem)
+        })
       },
       include.rownames = FALSE,
       striped = TRUE,
@@ -251,26 +249,28 @@ mod_01_load_data_server <- function(id, idep_data, pre_process) {
     )
 
     # First 20 rows of dataset table -----------
-    output$sample_20 <- renderTable({
-      in_file <- input$expression_file
-      in_file <- in_file$datapath
-      if (is.null(input$expression_file) && input$go_button == 0) {
-        return(NULL)
-      }
-      if (is.null(input$expression_file) && input$go_button > 0) {
-        in_file <- idep_data$demo_data_file
-      }
-      tem <- input$select_org
-      isolate({
-        x <- read.csv(in_file)
-        if (dim(x)[2] <= 2 ) {
-          x <- read.table(
-            in_file,
-            sep = "\t",
-            header = TRUE)
+    output$sample_20 <- renderTable(
+      {
+        in_file <- input$expression_file
+        in_file <- in_file$datapath
+        if (is.null(input$expression_file) && input$go_button == 0) {
+          return(NULL)
         }
-        x[1:20, ]
-      })
+        if (is.null(input$expression_file) && input$go_button > 0) {
+          in_file <- idep_data$demo_data_file
+        }
+        tem <- input$select_org
+        isolate({
+          x <- read.csv(in_file)
+          if (dim(x)[2] <= 2) {
+            x <- read.table(
+              in_file,
+              sep = "\t",
+              header = TRUE
+            )
+          }
+          x[1:20, ]
+        })
       },
       include.rownames = FALSE,
       striped = TRUE,
@@ -301,25 +301,27 @@ mod_01_load_data_server <- function(id, idep_data, pre_process) {
         in_file <- idep_data$demo_data_file
       }
 
-      tem = input$data_file_format
-      tem = pre_process$missing_value()
+      tem <- input$data_file_format
+      tem <- pre_process$missing_value()
 
       # These are needed to make it responsive to changes
-      if (!is.null(input$data_file_format))
+      if (!is.null(input$data_file_format)) {
         if (input$data_file_format == 1) {
-          tem = pre_process$min_counts()
-          tem = pre_process$n_min_samples_count()
-          tem = pre_process$counts_log_start()
-          tem = pre_process$counts_transform()
+          tem <- pre_process$min_counts()
+          tem <- pre_process$n_min_samples_count()
+          tem <- pre_process$counts_log_start()
+          tem <- pre_process$counts_transform()
         }
+      }
 
-      if (!is.null(input$data_file_format))
+      if (!is.null(input$data_file_format)) {
         if (input$data_file_format == 2) {
-          tem = pre_process$log_transform_fpkm();
-          tem = pre_process$log_start_fpkm();
-          tem = pre_process$low_filter_fpkm()
-          tem = pre_process$n_min_samples_fpkm()
+          tem <- pre_process$log_transform_fpkm()
+          tem <- pre_process$log_start_fpkm()
+          tem <- pre_process$low_filter_fpkm()
+          tem <- pre_process$n_min_samples_fpkm()
         }
+      }
 
       isolate({
         withProgress(message = "Reading and pre-processing ", {
@@ -330,12 +332,12 @@ mod_01_load_data_server <- function(id, idep_data, pre_process) {
           if (is.null(input$data_file_format)) {
             return(NULL)
           }
-          data_type_warning = 0
-          data_type = c(TRUE)
+          data_type_warning <- 0
+          data_type <- c(TRUE)
 
           # Read file ----------
           # CSV attempt
-          data <- read.csv(in_file, quote = "", comment.char = "")	
+          data <- read.csv(in_file, quote = "", comment.char = "")
 
           # Tab-delimented if not CSV
           if (dim(data)[2] <= 2) {
@@ -355,14 +357,17 @@ mod_01_load_data_server <- function(id, idep_data, pre_process) {
           if (sum(data_type) <= 2) {
             return(NULL)
           }
-          data <- data[, data_type]   # only keep numeric columns
+          data <- data[, data_type] # only keep numeric columns
 
           # rows with all missing values
-          missing_filter = which(
-            apply(data[, -1],
-            1,
-            function(y)
-            sum(is.na(y))) != dim(data)[2] - 1
+          missing_filter <- which(
+            apply(
+              data[, -1],
+              1,
+              function(y) {
+                sum(is.na(y))
+              }
+            ) != dim(data)[2] - 1
           )
           data <- data[missing_filter, ]
 
@@ -378,13 +383,11 @@ mod_01_load_data_server <- function(id, idep_data, pre_process) {
           # GLYMA.18G52160 stays the same.
 
           # Sort by standard deviation -----------
-          data = data[order(-apply(
+          data <- data[order(-apply(
             data[, 2:dim(data)[2]],
             1,
             sd
-            )
-            )
-          , ]
+          )), ]
 
           # Remove duplicated genes ----------
           data <- data[!duplicated(data[, 1]), ]
@@ -398,36 +401,37 @@ mod_01_load_data_server <- function(id, idep_data, pre_process) {
           # Missng value in data ----------
           if (sum(is.na(data)) > 0) {
             if (pre_process$missing_value() == "geneMedian") {
-              row_medians <- apply(data, 1, function(y)  median(y, na.rm = T))
-              for(i in 1:dim(data)[2]) {
-                val_miss_row = which(is.na(data[, i]))
+              row_medians <- apply(data, 1, function(y) median(y, na.rm = T))
+              for (i in 1:dim(data)[2]) {
+                val_miss_row <- which(is.na(data[, i]))
                 data[val_miss_row, i] <- row_medians[val_miss_row]
               }
             } else if (pre_process$missing_value() == "treatAsZero") {
               data[is.na(data)] <- 0
             } else if (pre_process$missing_value() == "geneMedianInGroup") {
-              sample_groups = detect_groups(colnames(data))
+              sample_groups <- detect_groups(colnames(data))
               for (group in unique(sample_groups)) {
-                samples = which(sample_groups == group)
+                samples <- which(sample_groups == group)
                 row_medians <- apply(
-                  data[,samples, drop = F],
+                  data[, samples, drop = F],
                   1,
-                  function(y)  median(y, na.rm = T)
+                  function(y) median(y, na.rm = T)
                 )
-                for (i in  samples) {
-                  missing = which(is.na(data[, i]))
-                  if(length(mssing) > 0)
-                  data[missing, i]  <- row_medians[misssing]
+                for (i in samples) {
+                  missing <- which(is.na(data[, i]))
+                  if (length(mssing) > 0) {
+                    data[missing, i] <- row_medians[misssing]
                   }
+                }
               }
               if (sum(is.na(data)) > 0) {
                 row_medians <- apply(
                   data,
                   1,
-                  function(y)  median(y, na.rm = T)
+                  function(y) median(y, na.rm = T)
                 )
-                for(i in 1:dim(data)[2]) {
-                  missing = which(is.na(data[,i]))
+                for (i in 1:dim(data)[2]) {
+                  missing <- which(is.na(data[, i]))
                   data[missing, i] <- row_medians[missing]
                 }
               }
@@ -440,7 +444,7 @@ mod_01_load_data_server <- function(id, idep_data, pre_process) {
           pvals <- NULL
           if (input$data_file_format == 2) {
             incProgress(1 / 3, "Pre-processing data")
-            if (is.integer(data)) data_type_warning = 1;
+            if (is.integer(data)) data_type_warning <- 1
 
             # Filters ----------
 
@@ -449,31 +453,31 @@ mod_01_load_data_server <- function(id, idep_data, pre_process) {
               data,
               1,
               function(y) sum(y >= pre_process$low_filter_fpkm)
-              ) >= input$n_min_samples_fpkm), ]
+            ) >= input$n_min_samples_fpkm), ]
 
             # Same levels in every entry
             data <- data[which(apply(
               data,
               1,
-              function(y) max(y)- min(y)) > 0), ]
+              function(y) max(y) - min(y)
+            ) > 0), ]
 
             # Takes log if log is selected OR kurtosis is bigger than 50
             if (
               (pre_process$log_transform_fpkm == TRUE) |
-              (mean_kurtosis > kurtosis_log)) {
-                data <- log(data + abs(pre_process$log_start_fpkm()), 2)
+                (mean_kurtosis > kurtosis_log)) {
+              data <- log(data + abs(pre_process$log_start_fpkm()), 2)
             }
 
             std_dev <- apply(data, 1, sd)
-            data <- data[order(-tem), ]
-
+            data <- data[order(-std_dev), ]
           } else if (input$data_file_format == 1) {
             incProgress(1 / 3, "Pre-processing counts data")
-            tem = pre_process$counts_deg_method();
-            tem = pre_process$counts_transform()
+            tem <- pre_process$counts_deg_method()
+            tem <- pre_process$counts_transform()
 
             if (!is.integer(data) & mean_kurtosis < kurtosis_log) {
-              data_type_warning = -1
+              data_type_warning <- -1
             }
 
             data <- round(data, 0)
@@ -481,15 +485,16 @@ mod_01_load_data_server <- function(id, idep_data, pre_process) {
             data <- data[which(apply(
               edgeR::cpm(edgeR::DGEList(counts = data)),
               1,
-              function(y) sum(y >= pre_process$min_counts())) >=
+              function(y) sum(y >= pre_process$min_counts())
+            ) >=
               pre_process$n_min_samples_count()), ]
 
-            raw_counts = data; # ???
-            browser()
+            raw_counts <- data # ???
 
             # Construct DESeqExpression Object
-            tem = rep("A", dim(data)[2]); tem[1] <- "B"
-            col_data = cbind(colnames(data), tem)
+            tem <- rep("A", dim(data)[2])
+            tem[1] <- "B"
+            col_data <- cbind(colnames(data), tem)
             colnames(col_data) <- c("sample", "groups")
             dds <- DESeq2::DESeqDataSetFromMatrix(
               countData = data,
@@ -501,26 +506,24 @@ mod_01_load_data_server <- function(id, idep_data, pre_process) {
             incProgress(1 / 2, "transforming raw counts")
 
             # Counts Transformation ------------
-            if(pre_process$counts_transform() == 3) {
-              {rlog_data <- DESeq2::rlog(dds, blind = TRUE);
-              rlog_data <- assay(rlog_data)}
-            } else {
+            if (pre_process$counts_transform() == 3) {{ 
+              rlog_data <- DESeq2::rlog(dds, blind = TRUE)
+              rlog_data <- assay(rlog_data) }} else {
               if (pre_process$counts_transform() == 2) {
-                vst_data <- vst(dds, blind=TRUE)
+                vst_data <- vst(dds, blind = TRUE)
                 vst_data <- assay(vst_data)
               } else {
                 log_2_data <- log2(BiocGenerics::counts(
                   dds,
                   normalized = TRUE
-                  ) + pre_process$counts_log_start()
-                )
+                ) + pre_process$counts_log_start())
               }
             }
           } else if (input$data_file_format == 3) {
-            n2 = (dim(data)[2] %/% 2)
+            n2 <- (dim(data)[2] %/% 2)
             if (!input$no_fdr) {
-              pvals = data[, 2 * (1:n2), drop = FALSE]
-              data = data[, 2 * (1:n2) - 1, drop = FALSE]
+              pvals <- data[, 2 * (1:n2), drop = FALSE]
+              data <- data[, 2 * (1:n2) - 1, drop = FALSE]
               if (dim(data)[2] == 1) {
                 placeholder <- rep(1, dim(data)[1])
                 pvals <- cbind(pvals, placeholder)
@@ -530,7 +533,7 @@ mod_01_load_data_server <- function(id, idep_data, pre_process) {
             }
           }
 
-          data_size = dim(data)
+          data_size <- dim(data)
 
           validate(
             need(
@@ -541,7 +544,7 @@ mod_01_load_data_server <- function(id, idep_data, pre_process) {
 
           incProgress(1, "Done.")
 
-          sample_info_demo = NULL
+          sample_info_demo <- NULL
 
           if (input$go_button > 0) {
             sample_info_demo <- t(read.csv(
@@ -562,15 +565,15 @@ mod_01_load_data_server <- function(id, idep_data, pre_process) {
             pvals = pvals
           )
 
-        return(final_result)
+          return(final_result)
         })
       })
     })
 
     # Read sample info in experiment file -----------
-    read_sample_info <- reactive ({
+    read_sample_info <- reactive({
       if (is.null(input$expression_file) &&
-      !is.null(read_data()$sample_info_demo)) {
+        !is.null(read_data()$sample_info_demo)) {
         return(read_data()$sample_info_demo)
       }
       in_file <- input$experiment_file
@@ -609,45 +612,44 @@ mod_01_load_data_server <- function(id, idep_data, pre_process) {
         }
 
         # remove "-" or "." from sample names ----------
-        colnames(expr) = gsub("-", "", colnames(expr))
-        colnames(expr) = gsub("\\.", "", colnames(expr))
+        colnames(expr) <- gsub("-", "", colnames(expr))
+        colnames(expr) <- gsub("\\.", "", colnames(expr))
 
         # Matching with column names of expression file ----------
-        matches = match(
+        matches <- match(
           toupper(colnames(read_data()$data)), toupper(colnames(expr))
         )
-        matches = matches[which(!is.na(matches))] # remove NA
+        matches <- matches[which(!is.na(matches))] # remove NA
 
         validate(need(
           length(unique(matches)) == dim(read_data()$data)[2] &
-                 dim(expr)[1] >= 1 & dim(expr)[1] < 500,
+            dim(expr)[1] >= 1 & dim(expr)[1] < 500,
           "Error!!! Sample information file not recognized. Sample names
            must be exactly the same. Each row is a factor. Each column
            represent a sample.  Please see documentation on format."
-          )
-        )
+        ))
 
         # Check factor levels, change if needed ----------
         for (i in 1:dim(expr)[1]) {
-          expr[i, ] = gsub("-", "", expr[i, ])
-          expr[i, ] = gsub("\\.", "", expr[i,])
+          expr[i, ] <- gsub("-", "", expr[i, ])
+          expr[i, ] <- gsub("\\.", "", expr[i, ])
         }
 
         # Factor levels match ----------
         if (length(unique(matches)) == dim(read_data()$data)[2]) {
-          expr = expr[, matches]
+          expr <- expr[, matches]
 
-          if(
+          if (
             sum(apply(expr, 1, function(y) length(unique(y)))) >
-            length(unique(unlist(expr)))) {
-              factor_names = apply(
-                expr,
-                2,
-                function(y) paste0(names(y), y)
-              )
-              rownames(factor_names) = rownames(expr)
-              expr <- factor_names
-            }
+              length(unique(unlist(expr)))) {
+            factor_names <- apply(
+              expr,
+              2,
+              function(y) paste0(names(y), y)
+            )
+            rownames(factor_names) <- rownames(expr)
+            expr <- factor_names
+          }
           return(t(expr))
         } else {
           return(NULL)
