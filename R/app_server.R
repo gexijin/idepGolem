@@ -16,4 +16,5 @@ app_server <- function(input, output, session) {
     id = "pre_process",
     load_data = load_data
   )
+  mod_03_heatmap_server(id = "heatmap")
 }

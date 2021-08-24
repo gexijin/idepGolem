@@ -7,9 +7,10 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
-mod_02_pre_process_ui <- function (id) {
+mod_02_pre_process_ui <- function(id) {
   ns <- NS(id)
-  tabPanel("Pre-Process",
+  tabPanel(
+    "Pre-Process",
     sidebarLayout(
 
       # Pre-Process Panel Sidebar ----------
@@ -19,15 +20,15 @@ mod_02_pre_process_ui <- function (id) {
         conditionalPanel(
           condition = "output.data_file_format == 1",
           strong("Keep genes with minimal counts per million (CPM) in at
-                  least n libraries:"
-          ),
+                  least n libraries:"),
           fluidRow(
             column(
               width = 6,
               numericInput(
                 inputId = ns("min_counts"),
                 label = h5("Min. CPM"),
-                value = 0.5)
+                value = 0.5
+              )
             ),
             column(
               width = 6,
@@ -88,14 +89,16 @@ mod_02_pre_process_ui <- function (id) {
               numericInput(
                 inputId = ns("low_filter_fpkm"),
                 label = h5("Min. level"),
-                value = -1000)
+                value = -1000
+              )
             ),
             column(
               width = 6,
               numericInput(
                 inputId = ns("n_min_samples_fpkm"),
                 label = h5("n samples"),
-                value = 1)
+                value = 1
+              )
             )
           ),
           tags$style(
@@ -134,7 +137,7 @@ mod_02_pre_process_ui <- function (id) {
         # Select input for missing value ------------
         selectInput(
           inputId = ns("missing_value"),
-          label   = "Missing values imputation:",
+          label = "Missing values imputation:",
           choices = list(
             "Gene median" = "geneMedian",
             "Treat as zero" = "treatAsZero",
@@ -189,39 +192,41 @@ mod_02_pre_process_ui <- function (id) {
         ),
         br(),
         br(),
-
         textOutput(outputId = ns("n_genes_filter")),
         tags$head(tags$style(
           "#pre_process-n_genes_filter{color: blue;
             font-size: 16px;
             font-style: italic;}"
-          )
-        ),
-
-        textOutput(outputId =  ns("readCountsBias")),
+        )),
+        textOutput(outputId = ns("readCountsBias")),
         tags$head(tags$style(
           "#pre_process-read_counts_bias{color: red;
             font-size: 16px;
             font-style: italic;}"
-          )
-        ),
-
+        )),
         a(
           h5("Questions?", align = "right"),
           href = "https://idepsite.wordpress.com/pre-process/",
           target = "_blank"
+        ),
+        selectInput("counts_deg_method", "Method:",
+          choices = list(
+            "DESeq2" = 3,
+            "limma-voom" = 2,
+            "limma-trend" = 1
+          ),
+          selected = 3
         )
       ),
 
       # Pre-Process Panel Main -----------
       mainPanel(
-
         h5(
           "Aspect ratios of figures can be adjusted by changing
            the width of browser window."
         ),
 
-        # Conditional panel for plot of read count data ----------
+        # Conditional panel for barplot of read count data ----------
         conditionalPanel(
           condition = "output.data_file_format == 1",
           plotOutput(outputId = ns("total_counts")),
@@ -252,7 +257,6 @@ mod_02_pre_process_ui <- function (id) {
 
         # EDA scatter plot -----------
         plotOutput(outputId = "eda"),
-
         shinyBS::bsModal(
           id = "modalExample10",
           title = "Converted data (Most variable genes on top)",
@@ -260,7 +264,6 @@ mod_02_pre_process_ui <- function (id) {
           size = "large",
           DT::dataTableOutput(outputId = ns("examine_data"))
         ),
-
         shinyBS::bsModal(
           id = "modalExample1021",
           title = "Search for genes",
@@ -312,6 +315,27 @@ mod_02_pre_process_server <- function(id, load_data) {
     })
     outputOptions(output, "data_file_format", suspendWhenHidden = FALSE)
 
+    # Update Variable Selection for the Scatter Plots ----------
+    # sample_choice <- stats::setNames(
+    # as.list(1:(dim(read_data()$data)[2])), colnames(read_data()$data)
+    # )
+    # observe({
+    # updateSelectInput(
+    # session,
+    # inputId = "scatter_x",
+    # choices = sample_choice,
+    # selected = sample_choice[1]
+    # )
+    # })
+    # observe({
+    # updateSelectInput(
+    # session,
+    # inputId = "scatter_y",
+    # choices = sample_choice,
+    # selected = sample_choice[2]
+    # )
+    # })
+
     # Return Values -----------
     list(
       missing_value = reactive(input$missing_value),
@@ -323,6 +347,7 @@ mod_02_pre_process_server <- function(id, load_data) {
       log_start_fpkm = reactive(input$log_start_fpkm),
       low_filter_fpkm = reactive(input$low_filter_fpkm),
       n_min_samples_fpkm = reactive(input$n_min_samples_fpkm),
+      counts_deg_method = reactive(input$counts_deg_method)
     )
   })
 }

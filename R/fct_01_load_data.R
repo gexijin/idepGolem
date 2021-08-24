@@ -39,7 +39,7 @@ gene_info <- function(converted, select_org, idep_data) {
   if (check$bool) {
     return(check)
   }
-  
+
   # If selected species is not the default "bestMatch",
   # use that species directly
   if (select_org != idep_date$species_choice[[1]]) {

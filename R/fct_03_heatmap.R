@@ -32,3 +32,37 @@ add_legend <- function(...) {
   plot(x = 0, y = 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
   legend(...)
 }
+
+#' Get color choice list for the heatmap
+#'
+#' get_heatmap_colors
+#'
+#' Calling the function will provide a list of heatmap colors
+#' for the select input bar to use and gives the colors that the
+#' heatmap will use for the selected color set.
+#'
+#' @return Returns a list containing color choices and a data frame
+#' of hex color values.
+get_heatmap_colors <- function() {
+  hmcols <- colorRampPalette(rev(c(
+    "#D73027", "#FC8D59", "#FEE090", "#FFFFBF",
+    "#E0F3F8", "#91BFDB", "#4575B4"
+  )))(75)
+  heat_colors <- rbind(
+    gplots::greenred(75), gplots::bluered(75),
+    gplots::colorpanel(75, "green", "black", "magenta"),
+    gplots::colorpanel(75, "blue", "yellow", "red"), hmcols
+  )
+  rownames(heat_colors) <- c(
+    "Green-Black-Red", "Blue-White-Red", "Green-Black-Magenta",
+    "Blue-Yellow-Red", "Blue-white-brown"
+  )
+  color_choices <- setNames(1:dim(heat_colors)[1], rownames(heat_colors))
+
+  return(
+    list(
+      color_choices = color_choices,
+      heat_colors = heat_colors
+    )
+  )
+}

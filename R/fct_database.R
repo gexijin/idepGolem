@@ -11,7 +11,7 @@
 NULL
 
 
-DATAPATH <- "/mnt/f/data/data103/"
+DATAPATH <- "D:/data/data103/"
 
 
 #' connect_convert_db connects to the converID.db and returns the objects.
