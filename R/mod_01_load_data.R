@@ -162,10 +162,10 @@ mod_01_load_data_ui <- function(id) {
 
         # Instructions and flowchart ------------
         div(
-          id = ns("load_message"),
+          id = "load_message",
           h4("Loading R packages, please wait ... ... ...")
         ),
-        htmlOutput(ns("file_format")),
+        htmlOutput("file_format"),
         h3(
           "We found an issue with the Gene Onotology database derived from
            Ensembl Release 103, which is used in iDEP 0.93. While we are fixing
@@ -223,8 +223,7 @@ mod_01_load_data_server <- function(id, idep_data, pre_process) {
         session = session,
         inputId = "select_org",
         choices = idep_data$species_choice,
-        selected = idep_data$species_choice[1],
-        server = TRUE
+        selected = idep_data$species_choice[1]
       )
     })
 
@@ -279,14 +278,6 @@ mod_01_load_data_server <- function(id, idep_data, pre_process) {
       hover = TRUE
     )
 
-    output$file_format <- renderUI({
-      shinyjs::hideElement(id = "load_message")
-      i <- "<h3>Ready to load data files.</h3>"
-      htmltools::HTML(paste(i, collapse = "<br/>"))
-    })
-
-
-    # Data reactive statement ---------
     read_data <- shiny::reactive({
       kurtosis_log <- 50
 
@@ -326,8 +317,7 @@ mod_01_load_data_server <- function(id, idep_data, pre_process) {
       isolate({
         withProgress(message = "Reading and pre-processing ", {
           # these packages moved here to reduce loading time
-          library(edgeR, verbose = FALSE) # count data D.E.
-          library(DESeq2, verbose = FALSE) # count data analysis
+
 
           if (is.null(input$data_file_format)) {
             return(NULL)
@@ -499,15 +489,14 @@ mod_01_load_data_server <- function(id, idep_data, pre_process) {
             dds <- DESeq2::DESeqDataSetFromMatrix(
               countData = data,
               colData = col_data,
-              design = ~ groups
+              design = ~groups
             )
             dds <- DESeq2::estimateSizeFactors(dds)
 
             incProgress(1 / 2, "transforming raw counts")
 
             # Counts Transformation ------------
-            if (pre_process$counts_transform() == 3) {{ 
-              rlog_data <- DESeq2::rlog(dds, blind = TRUE)
+            if (pre_process$counts_transform() == 3) {{ rlog_data <- DESeq2::rlog(dds, blind = TRUE)
               rlog_data <- assay(rlog_data) }} else {
               if (pre_process$counts_transform() == 2) {
                 vst_data <- vst(dds, blind = TRUE)
@@ -535,6 +524,12 @@ mod_01_load_data_server <- function(id, idep_data, pre_process) {
 
           data_size <- dim(data)
 
+          sample_choice <- stats::setNames(
+            as.list(1:(dim(data)[2])), colnames(data)
+          )
+
+          # observe({updateSelectInput(session, "scatterX", choices = sampleChoice, selected = sampleChoice[1]) })
+          # bserve({updateSelectInput(session, "scatterY", choices = sampleChoice, selected = sampleChoice[2]) })
           validate(
             need(
               dim(data)[1] > 5 & dim(data)[2] >= 1,
@@ -570,7 +565,6 @@ mod_01_load_data_server <- function(id, idep_data, pre_process) {
       })
     })
 
-    # Read sample info in experiment file -----------
     read_sample_info <- reactive({
       if (is.null(input$expression_file) &&
         !is.null(read_data()$sample_info_demo)) {
@@ -659,8 +653,7 @@ mod_01_load_data_server <- function(id, idep_data, pre_process) {
 
 
     list(
-      data_file_format = reactive(input$data_file_format),
-      read_data = reactive(read_data())
+      data_file_format = reactive(input$data_file_format)
     )
   })
 }
