@@ -166,10 +166,10 @@ mod_01_load_data_ui <- function(id) {
 
         # Instructions and flowchart ------------
         div(
-          id = "load_message",
+          id = ns("load_message"),
           h4("Loading R packages, please wait ... ... ...")
         ),
-        htmlOutput("file_format"),
+        htmlOutput(ns("file_format")),
         h3(
           "We found an issue with the Gene Onotology database derived from
            Ensembl Release 103, which is used in iDEP 0.93. While we are fixing
@@ -279,6 +279,14 @@ mod_01_load_data_server <- function(id, idep_data, pre_process) {
       hover = TRUE
     )
 
+    output$file_format <- renderUI({
+      shinyjs::hideElement(id = "load_message")
+      i <- "<h3>Ready to load data files.</h3>"
+      htmltools::HTML(paste(i, collapse = "<br/>"))
+    })
+
+
+    # Data reactive statement ---------
     read_data <- shiny::reactive({
       kurtosis_log <- 50
 
@@ -347,7 +355,7 @@ mod_01_load_data_server <- function(id, idep_data, pre_process) {
           if (sum(data_type) <= 2) {
             return(NULL)
           }
-          data <- data[, data_type]  # only keep numeric columns
+          data <- data[, data_type]   # only keep numeric columns
 
           # rows with all missing values
           missing_filter = which(
@@ -522,17 +530,11 @@ mod_01_load_data_server <- function(id, idep_data, pre_process) {
             }
           }
 
-          data_size = dim(data);
+          data_size = dim(data)
 
-          sample_choice <- stats::setNames(
-            as.list(1:(dim(data)[2])), colnames(data)
-          )
-
-          # observe({updateSelectInput(session, "scatterX", choices = sampleChoice, selected = sampleChoice[1]) })
-          # bserve({updateSelectInput(session, "scatterY", choices = sampleChoice, selected = sampleChoice[2]) })
           validate(
             need(
-              dim(data)[1] > 5 & dim(data)[2] >= 1, 
+              dim(data)[1] > 5 & dim(data)[2] >= 1,
               "Data file not recognized. Please double check."
             )
           )
@@ -565,6 +567,7 @@ mod_01_load_data_server <- function(id, idep_data, pre_process) {
       })
     })
 
+    # Read sample info in experiment file -----------
     read_sample_info <- reactive ({
       if (is.null(input$expression_file) &&
       !is.null(read_data()$sample_info_demo)) {
@@ -654,7 +657,8 @@ mod_01_load_data_server <- function(id, idep_data, pre_process) {
 
 
     list(
-      data_file_format = reactive(input$data_file_format)
+      data_file_format = reactive(input$data_file_format),
+      read_data = reactive(read_data())
     )
   })
 }

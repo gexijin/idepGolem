@@ -318,6 +318,27 @@ mod_02_pre_process_server <- function(id, load_data) {
     })
     outputOptions(output, "data_file_format", suspendWhenHidden = FALSE)
 
+    # Update Variable Selection for the Scatter Plots ----------
+    #sample_choice <- stats::setNames(
+      #as.list(1:(dim(read_data()$data)[2])), colnames(read_data()$data)
+    #)
+    #observe({
+      #updateSelectInput(
+       #session,
+       #inputId = "scatter_x",
+       #choices = sample_choice,
+       #selected = sample_choice[1]
+      #)
+    #})
+    #observe({
+      #updateSelectInput(
+        #session,
+        #inputId = "scatter_y",
+        #choices = sample_choice,
+        #selected = sample_choice[2]
+      #)
+    #})
+
     # Return Values -----------
     list(
       missing_value = reactive(input$missing_value),
