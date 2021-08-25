@@ -213,7 +213,7 @@ mod_01_load_data_ui <- function(id) {
 #'
 #' @noRd
 ### testing something, come back to later
-mod_01_load_data_server <- function(id, idep_data, pre_process) {
+mod_01_load_data_server <- function(id, idep_data, pre_process, read_data) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -223,7 +223,8 @@ mod_01_load_data_server <- function(id, idep_data, pre_process) {
         session = session,
         inputId = "select_org",
         choices = idep_data$species_choice,
-        selected = idep_data$species_choice[1]
+        selected = idep_data$species_choice[1],
+        server = TRUE
       )
     })
 
@@ -497,13 +498,13 @@ mod_01_load_data_server <- function(id, idep_data, pre_process) {
 
             # Counts Transformation ------------
             if (pre_process$counts_transform() == 3) {
-              rlog_data <- DESeq2::rlog(dds, blind = TRUE)
-              rlog_data <- SummarizedExperiment::assay(rlog_data)
+              data <- DESeq2::rlog(dds, blind = TRUE)
+              data <- SummarizedExperiment::assay(data)
             } else if (pre_process$counts_transform() == 2) {
-              vst_data <- DESeq2::vst(dds, blind = TRUE)
-              vst_data <- SummarizedExperiment::assay(vst_data)
+              data <- DESeq2::vst(dds, blind = TRUE)
+              data <- SummarizedExperiment::assay(data)
             } else {
-              log_2_data <- log2(BiocGenerics::counts(
+              data <- log2(BiocGenerics::counts(
                 dds,
                 normalized = TRUE
               ) + pre_process$counts_log_start())
@@ -523,13 +524,7 @@ mod_01_load_data_server <- function(id, idep_data, pre_process) {
           }
 
           data_size <- dim(data)
-
-          sample_choice <- stats::setNames(
-            as.list(1:(dim(data)[2])), colnames(data)
-          )
-
-          # observe({updateSelectInput(session, "scatterX", choices = sampleChoice, selected = sampleChoice[1]) })
-          # bserve({updateSelectInput(session, "scatterY", choices = sampleChoice, selected = sampleChoice[2]) })
+          
           validate(
             need(
               dim(data)[1] > 5 & dim(data)[2] >= 1,
