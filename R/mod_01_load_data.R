@@ -442,7 +442,7 @@ mod_01_load_data_server <- function(id, idep_data, pre_process) {
             data <- data[which(apply(
               data,
               1,
-              function(y) sum(y >= pre_process$low_filter_fpkm)
+              function(y) sum(y >= pre_process$low_filter_fpkm())
             ) >= input$n_min_samples_fpkm), ]
 
             # Same levels in every entry
@@ -454,7 +454,7 @@ mod_01_load_data_server <- function(id, idep_data, pre_process) {
 
             # Takes log if log is selected OR kurtosis is bigger than 50
             if (
-              (pre_process$log_transform_fpkm == TRUE) |
+              (pre_process$log_transform_fpkm() == TRUE) |
                 (mean_kurtosis > kurtosis_log)) {
               data <- log(data + abs(pre_process$log_start_fpkm()), 2)
             }
@@ -496,17 +496,17 @@ mod_01_load_data_server <- function(id, idep_data, pre_process) {
             incProgress(1 / 2, "transforming raw counts")
 
             # Counts Transformation ------------
-            if (pre_process$counts_transform() == 3) {{ rlog_data <- DESeq2::rlog(dds, blind = TRUE)
-              rlog_data <- assay(rlog_data) }} else {
-              if (pre_process$counts_transform() == 2) {
-                vst_data <- vst(dds, blind = TRUE)
-                vst_data <- assay(vst_data)
-              } else {
-                log_2_data <- log2(BiocGenerics::counts(
-                  dds,
-                  normalized = TRUE
-                ) + pre_process$counts_log_start())
-              }
+            if (pre_process$counts_transform() == 3) {
+              rlog_data <- DESeq2::rlog(dds, blind = TRUE)
+              rlog_data <- SummarizedExperiment::assay(rlog_data)
+            } else if (pre_process$counts_transform() == 2) {
+              vst_data <- DESeq2::vst(dds, blind = TRUE)
+              vst_data <- SummarizedExperiment::assay(vst_data)
+            } else {
+              log_2_data <- log2(BiocGenerics::counts(
+                dds,
+                normalized = TRUE
+              ) + pre_process$counts_log_start())
             }
           } else if (input$data_file_format == 3) {
             n2 <- (dim(data)[2] %/% 2)
