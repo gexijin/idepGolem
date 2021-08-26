@@ -221,6 +221,7 @@ mod_02_pre_process_ui <- function(id) {
 
       # Pre-Process Panel Main -----------
       mainPanel(
+        tableOutput(ns("sample_20")),
         h5(
           "Aspect ratios of figures can be adjusted by changing
            the width of browser window."
@@ -314,6 +315,18 @@ mod_02_pre_process_server <- function(id, load_data) {
       load_data$data_file_format()
     })
     outputOptions(output, "data_file_format", suspendWhenHidden = FALSE)
+
+    output$sample_20 <- renderTable({
+      req(!is.null(load_data$data()))
+
+      load_data$data()[1:20, ]
+      },
+      include.rownames = TRUE,
+      striped = TRUE,
+      bordered = TRUE,
+      width = "auto",
+      hover = TRUE
+    )
 
     # Update Variable Selection for the Scatter Plots ----------
     # sample_choice <- stats::setNames(

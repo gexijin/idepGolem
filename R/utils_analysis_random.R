@@ -319,8 +319,11 @@ extract_word <- function(word_list) {
 #' if (check$bool) {
 #'   return(check)
 #' }
-check_object_state <- function(check_exp, true_message,
-                               false_message = "") {
+check_object_state <- function(
+  check_exp,
+  true_message,
+  false_message = ""
+) {
   if (check_exp) {
     message(true_message)
     return(list(
