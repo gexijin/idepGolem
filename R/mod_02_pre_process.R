@@ -222,6 +222,7 @@ mod_02_pre_process_ui <- function(id) {
       # Pre-Process Panel Main -----------
       mainPanel(
         tableOutput(ns("sample_20")),
+        tableOutput(ns("sample_20_proc")),
         h5(
           "Aspect ratios of figures can be adjusted by changing
            the width of browser window."
@@ -316,6 +317,7 @@ mod_02_pre_process_server <- function(id, load_data) {
     })
     outputOptions(output, "data_file_format", suspendWhenHidden = FALSE)
 
+    ############## TEST ########################
     output$sample_20 <- renderTable({
       req(!is.null(load_data$data()))
 
@@ -327,40 +329,57 @@ mod_02_pre_process_server <- function(id, load_data) {
       width = "auto",
       hover = TRUE
     )
+    output$sample_20_proc <- renderTable({
+      req(!is.null(processed_data()$data))
+
+      processed_data()$data[1:20, ]
+      },
+      include.rownames = TRUE,
+      striped = TRUE,
+      bordered = TRUE,
+      width = "auto",
+      hover = TRUE
+    )
+    ##############################################
 
     # Update Variable Selection for the Scatter Plots ----------
-    # sample_choice <- stats::setNames(
-    # as.list(1:(dim(read_data()$data)[2])), colnames(read_data()$data)
-    # )
-    # observe({
-    # updateSelectInput(
-    # session,
-    # inputId = "scatter_x",
-    # choices = sample_choice,
-    # selected = sample_choice[1]
-    # )
-    # })
-    # observe({
-    # updateSelectInput(
-    # session,
-    # inputId = "scatter_y",
-    # choices = sample_choice,
-    # selected = sample_choice[2]
-    # )
-    # })
+    observe({
+      req(!is.null(load_data$data()))
+      sample_choice <- stats::setNames(
+        as.list(1:(dim(load_data$data())[2])), colnames(load_data$data())
+      )
+      updateSelectInput(
+        session,
+        inputId = "scatter_x",
+        choices = sample_choice,
+        selected = sample_choice[1]
+      )
+      updateSelectInput(
+        session,
+        inputId = "scatter_y",
+        choices = sample_choice,
+        selected = sample_choice[2]
+    )
+    })
+
+    processed_data <- reactive(pre_process(
+      data = load_data$data(),
+      missing_value = input$missing_value,
+      data_file_format = load_data$data_file_format(),
+      low_filter_fpkm = input$low_filter_fpkm,
+      n_min_samples_fpkm = input$n_min_samples_fpkm,
+      log_transform_fpkm = input$log_transform_fpkm,
+      log_start_fpkm = input$log_start_fpkm,
+      min_counts = input$min_counts,
+      n_min_samples_count = input$n_min_samples_count,
+      counts_transform = input$counts_transform,
+      counts_log_start = input$counts_log_start,
+      no_fdr = load_data$no_fdr() 
+    ))
 
     # Return Values -----------
     list(
-      missing_value = reactive(input$missing_value),
-      min_counts = reactive(input$min_counts),
-      n_min_samples_count = reactive(input$n_min_samples_count),
-      counts_log_start = reactive(input$counts_log_start),
-      counts_transform = reactive(input$counts_transform),
-      log_transform_fpkm = reactive(input$log_transform_fpkm),
-      log_start_fpkm = reactive(input$log_start_fpkm),
-      low_filter_fpkm = reactive(input$low_filter_fpkm),
-      n_min_samples_fpkm = reactive(input$n_min_samples_fpkm),
-      counts_deg_method = reactive(input$counts_deg_method)
+      NULL
     )
   })
 }

@@ -110,3 +110,200 @@ plot_genes <- function(converted_data, all_gene_info, readSampleInfo, geneSearch
     return(p2)
   }
 }
+
+#' @title Pre-Process the data
+#' 
+#' @description This function takes in user defined values to
+#' process the data for the EDA that occurs on the second page.
+#' All the filtering and transformation that the app does will
+#' occur on this page.
+#' 
+#' @param data Data that has already gone through the load data
+#' 
+#' 
+#' 
+pre_process <- function(
+  data,
+  missing_value,
+  data_file_format,
+  low_filter_fpkm,
+  n_min_samples_fpkm,
+  log_transform_fpkm,
+  log_start_fpkm,
+  min_counts,
+  n_min_samples_count,
+  counts_transform,
+  counts_log_start,
+  no_fdr
+) {
+
+  withProgress(message = "Reading and pre-processing ", {
+    data_type_warning <- 0
+    data_size_original <- dim(data)
+    kurtosis_log <- 50
+
+    # Sort by standard deviation -----------
+    data <- data[order(-apply(
+      data[, 1:dim(data)[2]],
+      1,
+      sd
+    )), ]
+
+    # Missng values in expression data ----------
+    if (sum(is.na(data)) > 0) {
+      if (missing_value == "geneMedian") {
+        row_medians <- apply(data, 1, function(y) median(y, na.rm = T))
+        for (i in 1:dim(data)[2]) {
+          val_miss_row <- which(is.na(data[, i]))
+          data[val_miss_row, i] <- row_medians[val_miss_row]
+        }
+      } else if (missing_value == "treatAsZero") {
+        data[is.na(data)] <- 0
+      } else if (missing_value == "geneMedianInGroup") {
+        sample_groups <- detect_groups(colnames(data))
+        for (group in unique(sample_groups)) {
+          samples <- which(sample_groups == group)
+          row_medians <- apply(
+            data[, samples, drop = F],
+            1,
+            function(y) median(y, na.rm = T)
+          )
+          for (i in samples) {
+            missing <- which(is.na(data[, i]))
+            if (length(missing) > 0) {
+              data[missing, i] <- row_medians[misssing]
+            }
+          }
+        }
+        if (sum(is.na(data)) > 0) {
+          row_medians <- apply(
+            data,
+            1,
+            function(y) median(y, na.rm = T)
+          )
+          for (i in 1:dim(data)[2]) {
+            missing <- which(is.na(data[, i]))
+            data[missing, i] <- row_medians[missing]
+          }
+        }
+      }
+    }
+    # Compute kurtosis ---------
+    mean_kurtosis <- mean(apply(data, 2, e1071::kurtosis), na.rm = T)
+    raw_counts <- NULL
+    pvals <- NULL
+
+    # Pre-processing for each file format ----------
+    if (data_file_format == 2) {
+      incProgress(1 / 3, "Pre-processing data")
+      if (is.integer(data)){
+        data_type_warning <- 1
+      } 
+
+      # Filters ----------
+      # Not enough counts
+      data <- data[which(apply(
+        data,
+        1,
+        function(y) sum(y >= low_filter_fpkm)
+      ) >= n_min_samples_fpkm), ]
+
+      # Same levels in every entry
+      data <- data[which(apply(
+        data,
+        1,
+        function(y) max(y) - min(y)
+      ) > 0), ]
+
+      # Takes log if log is selected OR kurtosis is bigger than 50
+      if (
+        (log_transform_fpkm == TRUE) |
+        (mean_kurtosis > kurtosis_log)
+      ) {
+        data <- log(data + abs(log_start_fpkm), 2)
+      }
+
+      std_dev <- apply(data, 1, sd)
+      data <- data[order(-std_dev), ]
+    } else if (data_file_format == 1) {
+      incProgress(1 / 3, "Pre-processing counts data")
+
+      if (!is.integer(data) & mean_kurtosis < kurtosis_log) {
+        data_type_warning <- -1
+      }
+
+      data <- round(data, 0)
+
+      data <- data[which(apply(
+        edgeR::cpm(edgeR::DGEList(counts = data)),
+        1,
+        function(y) sum(y >= min_counts)
+      ) >= n_min_samples_count), ]
+
+      raw_counts <- data 
+
+      # Construct DESeqExpression Object ----------
+      tem <- rep("A", dim(data)[2])
+      tem[1] <- "B"
+      col_data <- cbind(colnames(data), tem)
+      colnames(col_data) <- c("sample", "groups")
+      dds <- DESeq2::DESeqDataSetFromMatrix(
+        countData = data,
+        colData = col_data,
+        design = ~groups
+      )
+      dds <- DESeq2::estimateSizeFactors(dds)
+
+      incProgress(1 / 2, "transforming raw counts")
+
+      # Counts Transformation ------------
+      if (counts_transform == 3) {
+        data <- DESeq2::rlog(dds, blind = TRUE)
+        data <- SummarizedExperiment::assay(data)
+      } else if (counts_transform == 2) {
+        data <- DESeq2::vst(dds, blind = TRUE)
+        data <- SummarizedExperiment::assay(data)
+      } else {
+        data <- log2(BiocGenerics::counts(
+          dds,
+          normalized = TRUE
+        ) + counts_log_start)
+      }
+    } else if (data_file_format == 3) {
+      n2 <- (dim(data)[2] %/% 2)
+      if (!input$no_fdr) {
+        pvals <- data[, 2 * (1:n2), drop = FALSE]
+        data <- data[, 2 * (1:n2) - 1, drop = FALSE]
+        if (dim(data)[2] == 1) {
+          placeholder <- rep(1, dim(data)[1])
+          pvals <- cbind(pvals, placeholder)
+          zero_placeholder <- rep(0, dim(data)[1])
+          data <- cbind(data, zero_placeholder)
+        }
+      }
+    }
+    data_size <- dim(data)
+
+    validate(
+      need(
+        dim(data)[1] > 5 & dim(data)[2] >= 1,
+        "Data file not recognized. Please double check."
+      )
+    )
+
+    incProgress(1, "Done.")
+  })
+
+  results <- list(
+    data = as.matrix(data),
+    mean_kurtosis = mean_kurtosis,
+    raw_counts = raw_counts,
+    data_type_warning = data_type_warning,
+    data_size = c(data_size_original, data_size),
+    pvals = pvals
+  )
+
+  return(results)
+}
+  
+

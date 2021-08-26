@@ -213,7 +213,7 @@ mod_01_load_data_ui <- function(id) {
 #'
 #' @noRd
 ### testing something, come back to later
-mod_01_load_data_server <- function(id, idep_data, pre_process, read_data) {
+mod_01_load_data_server <- function(id, idep_data) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -234,7 +234,7 @@ mod_01_load_data_server <- function(id, idep_data, pre_process, read_data) {
       htmltools::HTML(paste(i, collapse = "<br/>"))
     })
 
-    load_data <- reactive(load_info(
+    loaded_data <- reactive(load_data(
         expression_file = input$expression_file,
         experiment_file = input$experiment_file,
         go_button = input$go_button,
@@ -244,11 +244,11 @@ mod_01_load_data_server <- function(id, idep_data, pre_process, read_data) {
 
     # Sample information table -----------
     output$sample_info_table <- renderTable({
-      if (is.null(load_data()$sample_info)) {
+      if (is.null(loaded_data()$sample_info)) {
         return(NULL)
       }
       isolate({
-        tem <- t(load_data()$sample_info)
+        tem <- t(loaded_data()$sample_info)
         tem <- cbind(rownames(tem), tem)
         colnames(tem)[1] <- "Study_design"
         return(tem)
@@ -263,9 +263,9 @@ mod_01_load_data_server <- function(id, idep_data, pre_process, read_data) {
 
     # First 20 rows of dataset table -----------
     output$sample_20 <- renderTable({
-      req(!is.null(load_data()$data))
+      req(!is.null(loaded_data()$data))
 
-      load_data()$data[1:20, ]
+      loaded_data()$data[1:20, ]
       },
       include.rownames = TRUE,
       striped = TRUE,
@@ -276,10 +276,10 @@ mod_01_load_data_server <- function(id, idep_data, pre_process, read_data) {
 
     # Get converted IDs ----------
     converted_ids <- reactive({
-      req(!is.null(load_data()$data))
+      req(!is.null(loaded_data()$data))
 
       convert_id(
-        rownames(load_data()$data),
+        rownames(loaded_data()$data),
         idep_data = idep_data,
         select_org = input$select_org
       )
@@ -311,8 +311,10 @@ mod_01_load_data_server <- function(id, idep_data, pre_process, read_data) {
 
     list(
       data_file_format = reactive(input$data_file_format),
-      data = reactive(load_data()$data),
-      sample_info = reactive(load_data()$sample_info)
+      data = reactive(loaded_data()$data),
+      sample_info = reactive(loaedd_data()$sample_info),
+      converted_ids = reactive(converted_ids),
+      no_fdr = reactive(input$no_fdr)
     )
   })
 }

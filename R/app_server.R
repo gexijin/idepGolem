@@ -9,8 +9,7 @@ app_server <- function(input, output, session) {
 
   load_data <- mod_01_load_data_server(
     id = "load_data",
-    idep_data = idep_data,
-    pre_process = pre_process
+    idep_data = idep_data
   )
   pre_process <- mod_02_pre_process_server(
     id = "pre_process",
