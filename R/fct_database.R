@@ -226,7 +226,6 @@ convert_id <- function(query, idep_data,
   # remove ' in gene ids
   # |\\.[0-9] remove anything after A35244.1 -> A35244
   #  some gene ids are like Glyma.01G002100
-
   query_set <- clean_query(query_input = query)
 
   conn_db <- connect_convert_db()

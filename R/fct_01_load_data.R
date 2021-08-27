@@ -92,7 +92,7 @@ gene_info <- function(converted, select_org, idep_data) {
 #' and the sample information. If there is no experiment file it
 #' only returns the expression data.
 #'
-load_data <- function(
+input_data <- function(
   expression_file,
   experiment_file,
   go_button,

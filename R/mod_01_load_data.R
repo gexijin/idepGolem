@@ -234,7 +234,7 @@ mod_01_load_data_server <- function(id, idep_data) {
       htmltools::HTML(paste(i, collapse = "<br/>"))
     })
 
-    loaded_data <- reactive(load_data(
+    loaded_data <- reactive(input_data(
         expression_file = input$expression_file,
         experiment_file = input$experiment_file,
         go_button = input$go_button,
@@ -244,9 +244,8 @@ mod_01_load_data_server <- function(id, idep_data) {
 
     # Sample information table -----------
     output$sample_info_table <- renderTable({
-      if (is.null(loaded_data()$sample_info)) {
-        return(NULL)
-      }
+      req(!is.null(loaded_data()$sample_info))
+
       isolate({
         tem <- t(loaded_data()$sample_info)
         tem <- cbind(rownames(tem), tem)
@@ -277,12 +276,21 @@ mod_01_load_data_server <- function(id, idep_data) {
     # Get converted IDs ----------
     converted_ids <- reactive({
       req(!is.null(loaded_data()$data))
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Loading Data",
+        color = "#000000"
+      )
 
-      convert_id(
+      converted <- convert_id(
         rownames(loaded_data()$data),
         idep_data = idep_data,
         select_org = input$select_org
       )
+
+      shinybusy::remove_modal_spinner()
+
+      return(converted)
     })
 
     # Species match table ----------
@@ -312,7 +320,7 @@ mod_01_load_data_server <- function(id, idep_data) {
     list(
       data_file_format = reactive(input$data_file_format),
       data = reactive(loaded_data()$data),
-      sample_info = reactive(loaedd_data()$sample_info),
+      sample_info = reactive(loaded_data()$sample_info),
       converted_ids = reactive(converted_ids),
       no_fdr = reactive(input$no_fdr)
     )

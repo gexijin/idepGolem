@@ -112,16 +112,28 @@ plot_genes <- function(converted_data, all_gene_info, readSampleInfo, geneSearch
 }
 
 #' @title Pre-Process the data
-#' 
+#'
 #' @description This function takes in user defined values to
 #' process the data for the EDA that occurs on the second page.
 #' All the filtering and transformation that the app does will
 #' occur on this page.
-#' 
-#' @param data Data that has already gone through the load data
-#' 
-#' 
-#' 
+#'
+#' @param data Data that has already gone through the load data fcn
+#' @param missing_value Method to deal with missing data
+#' @param data_file_format Type of data being examined
+#' @param low_filter_fpkm Low count filter for the fpkm data
+#' @param n_min_samples_fpkm Min samples for fpkm data
+#' @param log_transform_fpkm Type of transformation for fpkm data
+#' @param log_start_fpkm Value added to log transformation for fpkm
+#' @param min_counts Low count filter for count data
+#' @param n_min_samples_count Min sample for count data
+#' @param counts_transform Type of transformation for counts data
+#' @param counts_log_start Value added to log for counts data
+#' @param no_fdr Fold changes only data with no p values
+#'
+#' @return A list containing the transformed data, the mean kurtosis,
+#' the raw counts, a data type warning, the size of the original data,
+#' and p-values. 
 pre_process <- function(
   data,
   missing_value,
@@ -240,7 +252,7 @@ pre_process <- function(
         function(y) sum(y >= min_counts)
       ) >= n_min_samples_count), ]
 
-      raw_counts <- data 
+      raw_counts <- data
 
       # Construct DESeqExpression Object ----------
       tem <- rep("A", dim(data)[2])
@@ -271,7 +283,7 @@ pre_process <- function(
       }
     } else if (data_file_format == 3) {
       n2 <- (dim(data)[2] %/% 2)
-      if (!input$no_fdr) {
+      if (!no_fdr) {
         pvals <- data[, 2 * (1:n2), drop = FALSE]
         data <- data[, 2 * (1:n2) - 1, drop = FALSE]
         if (dim(data)[2] == 1) {
@@ -305,5 +317,254 @@ pre_process <- function(
 
   return(results)
 }
-  
 
+#' @title Creates a barplot of the count data
+#'
+#' @description This function takes in the rount count data
+#' and creates a formatted gg barplot that shows the number
+#' of genes mapped to each sample in millions.
+#''
+#' @param counts_data Raw counts from gene expression data
+#' @param sample_info Experiment file information for grouping
+#' samples
+#'
+#' @return formatted ggbarplot
+#'
+total_counts_ggplot <- function(
+  counts_data,
+  sample_info
+) {
+
+  counts <- counts_data
+  memo <- ""
+
+  if (ncol(counts) > 100) {
+    part <- 1:100
+    counts <- counts[, part]
+    memo <- paste("(only showing 100 samples)")
+  }
+  groups <- as.factor(
+    detect_groups(colnames(counts_data), sample_info)
+  )
+
+  if (nlevels(groups) <= 1 | nlevels(groups) > 20) {
+    grouping <- NULL
+  } else {
+    grouping <- groups
+  }
+
+  if(ncol(counts) < 31) {
+    y_axis_labels <- 16
+  } else {
+    y_axis_labels <- 12
+  }
+  plot_data <- data.frame(
+    sample = as.factor(colnames(counts)),
+    counts = colSums(counts) / 1e6,
+    group = groups,
+    grouping = grouping
+  )
+
+  plot <- ggplot2::ggplot(
+    data = plot_data,
+    ggplot2::aes(x = sample, y = counts, fill = grouping)
+  ) +
+    ggplot2::geom_bar(stat = "identity") +
+    ggplot2::theme_minimal() +
+    ggplot2::theme(
+      legend.position = "none",
+      axis.title.x = ggplot2::element_blank(),
+      axis.title.y = ggplot2::element_blank(),
+      axis.text.x = ggplot2::element_text(
+        angle = 90,
+        size = 14
+      ),
+      axis.text.y = ggplot2::element_text(
+        size = y_axis_labels
+      ),
+      plot.title = ggplot2::element_text(
+        color = "black",
+        size = 16,
+        face = "bold",
+        hjust = .5
+      )
+    ) +
+    ggplot2::labs(title = paste("Total read counts (millions)", memo))
+
+  return(plot)
+}
+
+#' EDA SCATTER
+eda_scatter <- function(
+  processed_data,
+  plot_xaxis,
+  plot_yaxis
+) {
+
+  plot_data <- as.data.frame(processed_data)
+  scatter <- ggplot2::ggplot(
+    plot_data,
+    ggplot2::aes(
+      x = get(plot_xaxis),
+      y = get(plot_yaxis)
+    )
+  ) +
+  ggplot2::geom_point(size = 1) +
+  ggplot2::labs(
+    title = paste0("Scatter for ", plot_xaxis, " and ", plot_yaxis,
+                   " transfromed expression"),
+    x = paste0(plot_xaxis),
+    y =  paste0(plot_yaxis)
+  ) +
+  ggplot2::theme_minimal() +
+  ggplot2::theme(legend.position = "none",
+    axis.text = ggplot2::element_text(size = 14),
+    axis.title = ggplot2::element_text(size = 16),
+    plot.title = ggplot2::element_text(
+      color = "black",
+      size = 16,
+      face = "bold",
+      hjust = .5
+    )
+  )
+
+  return(scatter)
+}
+
+#' EDA BOXPLOT
+eda_boxplot <- function(
+  processed_data,
+  sample_info
+) {
+
+  counts <- as.data.frame(processed_data)
+  memo <- ""
+
+  if (ncol(counts) > 40) {
+    part <- 1:40
+    counts <- counts[, part]
+    memo <- paste(" (only showing 40 samples)")
+  }
+  groups <- as.factor(
+    detect_groups(colnames(processed_data), sample_info)
+  )
+
+  if (nlevels(groups) <= 1 | nlevels(groups) > 20) {
+    grouping <- NULL
+  } else {
+    grouping <- groups
+  }
+  if(ncol(counts) < 31) {
+    y_axis_labels <- 16
+  } else {
+    y_axis_labels <- 12
+  }
+
+  longer_data <- tidyr::pivot_longer(
+    data = counts,
+    colnames(counts),
+    names_to = "sample",
+    values_to = "expression"
+  )
+  longer_data$groups <- rep(groups, nrow(counts))
+  longer_data$grouping <- rep(grouping, nrow(counts))
+
+  plot <- ggplot2::ggplot(
+      data = longer_data,
+      ggplot2::aes(x = sample, y = expression, fill = grouping)
+    ) +
+    ggplot2::geom_boxplot() +
+    ggplot2::theme_minimal() +
+    ggplot2::theme(
+      legend.position = "none",
+      axis.title.x = ggplot2::element_blank(),
+      axis.title.y = ggplot2::element_blank(),
+      axis.text.x = ggplot2::element_text(
+        angle = 90,
+        size = 14
+      ),
+      axis.text.y = ggplot2::element_text(
+        size = y_axis_labels
+      ),
+      plot.title = ggplot2::element_text(
+        color = "black",
+        size = 16,
+        face = "bold",
+        hjust = .5
+      )
+    ) +
+    ggplot2::labs(title = paste("Distribution of transformed data", memo))
+
+  return(plot)
+}
+
+#' EDA DENSITY
+eda_density <- function(
+  processed_data,
+  sample_info
+) {
+
+  counts <- as.data.frame(processed_data)
+  memo <- ""
+
+  if (ncol(counts) > 40) {
+    part <- 1:40
+    counts <- counts[, part]
+    memo <- paste(" (only showing 40 samples)")
+  }
+  groups <- as.factor(
+    detect_groups(colnames(processed_data), sample_info)
+  )
+
+  if (nlevels(groups) <= 1 | nlevels(groups) > 20) {
+    group_fill <- NULL
+    legend <- "none"
+  } else {
+    group_fill <- groups
+    legend <- "right"
+  }
+  if(ncol(counts) < 31) {
+    y_axis_labels <- 16
+  } else {
+    y_axis_labels <- 12
+  }
+
+  longer_data <- tidyr::pivot_longer(
+    data = counts,
+    colnames(counts),
+    names_to = "sample",
+    values_to = "expression"
+  )
+  longer_data$groups <- rep(groups, nrow(counts))
+  longer_data$group_fill <- rep(group_fill, nrow(counts))
+
+  plot <- ggplot2::ggplot(
+      data = longer_data,
+      ggplot2::aes(x = expression, color = group_fill, group = sample)
+    ) +
+    ggplot2::geom_density(size = 1) +
+    ggplot2::theme_minimal() +
+    ggplot2::theme(
+      legend.position = legend,
+      axis.title.x = ggplot2::element_blank(),
+      axis.title.y = ggplot2::element_blank(),
+      axis.text.x = ggplot2::element_text(
+        size = 16
+      ),
+      axis.text.y = ggplot2::element_text(
+        size = y_axis_labels
+      ),
+      plot.title = ggplot2::element_text(
+        color = "black",
+        size = 16,
+        face = "bold",
+        hjust = .5
+      )
+    ) +
+    ggplot2::labs(
+      title = paste("Density plot of transformed data", memo),
+      color = "Sample"
+    )
+
+  return(plot)
+}

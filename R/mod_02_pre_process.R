@@ -209,20 +209,10 @@ mod_02_pre_process_ui <- function(id) {
           href = "https://idepsite.wordpress.com/pre-process/",
           target = "_blank"
         ),
-        selectInput("counts_deg_method", "Method:",
-          choices = list(
-            "DESeq2" = 3,
-            "limma-voom" = 2,
-            "limma-trend" = 1
-          ),
-          selected = 3
-        )
       ),
 
       # Pre-Process Panel Main -----------
       mainPanel(
-        tableOutput(ns("sample_20")),
-        tableOutput(ns("sample_20_proc")),
         h5(
           "Aspect ratios of figures can be adjusted by changing
            the width of browser window."
@@ -231,9 +221,14 @@ mod_02_pre_process_ui <- function(id) {
         # Conditional panel for barplot of read count data ----------
         conditionalPanel(
           condition = "output.data_file_format == 1",
-          plotOutput(outputId = ns("total_counts")),
+          plotOutput(
+            outputId = ns("total_counts_gg"),
+            width = "100%",
+            height = "500px"
+          ),
           ns = ns
         ),
+        br(),
 
         # Axis selectors -----------
         fluidRow(
@@ -256,9 +251,29 @@ mod_02_pre_process_ui <- function(id) {
             )
           )
         ),
+        br(),
 
-        # EDA scatter plot -----------
-        plotOutput(outputId = "eda"),
+        # EDA plots -----------
+        plotOutput(
+          outputId = ns("eda_scatter"),
+          width = "100%",
+          height = "500px"
+        ),
+        br(),
+        plotOutput(
+          outputId = ns("eda_boxplot"),
+          width = "100%",
+          height = "500px"
+        ),
+        br(),
+        plotOutput(
+          outputId = ns("eda_density"),
+          width = "100%",
+          height = "500px"
+        ),
+        br(),
+
+        # Modal pop-ups ----------
         shinyBS::bsModal(
           id = "modalExample10",
           title = "Converted data (Most variable genes on top)",
@@ -317,31 +332,6 @@ mod_02_pre_process_server <- function(id, load_data) {
     })
     outputOptions(output, "data_file_format", suspendWhenHidden = FALSE)
 
-    ############## TEST ########################
-    output$sample_20 <- renderTable({
-      req(!is.null(load_data$data()))
-
-      load_data$data()[1:20, ]
-      },
-      include.rownames = TRUE,
-      striped = TRUE,
-      bordered = TRUE,
-      width = "auto",
-      hover = TRUE
-    )
-    output$sample_20_proc <- renderTable({
-      req(!is.null(processed_data()$data))
-
-      processed_data()$data[1:20, ]
-      },
-      include.rownames = TRUE,
-      striped = TRUE,
-      bordered = TRUE,
-      width = "auto",
-      hover = TRUE
-    )
-    ##############################################
-
     # Update Variable Selection for the Scatter Plots ----------
     observe({
       req(!is.null(load_data$data()))
@@ -351,31 +341,77 @@ mod_02_pre_process_server <- function(id, load_data) {
       updateSelectInput(
         session,
         inputId = "scatter_x",
-        choices = sample_choice,
-        selected = sample_choice[1]
+        choices = colnames(load_data$data()),
+        selected = colnames(load_data$data())[1]
       )
       updateSelectInput(
         session,
         inputId = "scatter_y",
-        choices = sample_choice,
-        selected = sample_choice[2]
+        choices = colnames(load_data$data()),
+        selected = colnames(load_data$data())[2]
     )
     })
 
-    processed_data <- reactive(pre_process(
-      data = load_data$data(),
-      missing_value = input$missing_value,
-      data_file_format = load_data$data_file_format(),
-      low_filter_fpkm = input$low_filter_fpkm,
-      n_min_samples_fpkm = input$n_min_samples_fpkm,
-      log_transform_fpkm = input$log_transform_fpkm,
-      log_start_fpkm = input$log_start_fpkm,
-      min_counts = input$min_counts,
-      n_min_samples_count = input$n_min_samples_count,
-      counts_transform = input$counts_transform,
-      counts_log_start = input$counts_log_start,
-      no_fdr = load_data$no_fdr() 
-    ))
+    # Process the data with user defined criteria ----------
+    processed_data <- reactive({
+      req(!is.null(load_data$data()))
+
+      pre_process(
+        data = load_data$data(),
+        missing_value = input$missing_value,
+        data_file_format = load_data$data_file_format(),
+        low_filter_fpkm = input$low_filter_fpkm,
+        n_min_samples_fpkm = input$n_min_samples_fpkm,
+        log_transform_fpkm = input$log_transform_fpkm,
+        log_start_fpkm = input$log_start_fpkm,
+        min_counts = input$min_counts,
+        n_min_samples_count = input$n_min_samples_count,
+        counts_transform = input$counts_transform,
+        counts_log_start = input$counts_log_start,
+        no_fdr = load_data$no_fdr()
+      )
+    })
+
+    # Counts barplot ------------
+    output$total_counts_gg <- renderPlot({
+      req(!is.null(processed_data()$raw_counts))
+
+      total_counts_ggplot(
+        counts_data = processed_data()$raw_counts,
+        sample_info = load_data$sample_info()
+      )
+    })
+
+    # Scatter eda plot ----------
+    output$eda_scatter <- renderPlot({
+      req(!is.null(processed_data()$data))
+
+      eda_scatter(
+        processed_data = processed_data()$data,
+        plot_xaxis = input$scatter_x,
+        plot_yaxis = input$scatter_y
+      )
+    })
+
+    # Box eda plot ----------
+    output$eda_boxplot <- renderPlot({
+      req(!is.null(processed_data()$data))
+
+      eda_boxplot(
+        processed_data = processed_data()$data,
+        sample_info = load_data$sample_info()
+      )
+    })
+
+    # Density eda plot ----------
+    output$eda_density <- renderPlot({
+      req(!is.null(processed_data()$data))
+
+      eda_density(
+        processed_data = processed_data()$data,
+        sample_info = load_data$sample_info()
+      )
+    })
 
     # Return Values -----------
     list(
