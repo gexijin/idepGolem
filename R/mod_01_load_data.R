@@ -107,6 +107,13 @@ mod_01_load_data_ui <- function(id) {
           )
         ),
 
+        # Yes or no to converting IDs -------------
+        checkboxInput(
+          inputId = ns("no_id_conversion"),
+          label = "Do not convert gene IDs to Ensembl.",
+          value = FALSE
+        ),
+
         # Link to public RNA-seq datasets ----------
         a(
           h4("Analyze public RNA-seq datasets for 9 species"),
@@ -262,9 +269,9 @@ mod_01_load_data_server <- function(id, idep_data) {
 
     # First 20 rows of dataset table -----------
     output$sample_20 <- renderTable({
-      req(!is.null(loaded_data()$data))
+      req(!is.null(conversion_info()$converted_data))
 
-      loaded_data()$data[1:20, ]
+      conversion_info()$converted_data[1:20, ]
       },
       include.rownames = TRUE,
       striped = TRUE,
@@ -274,8 +281,9 @@ mod_01_load_data_server <- function(id, idep_data) {
     )
 
     # Get converted IDs ----------
-    converted_ids <- reactive({
+    conversion_info <- reactive({
       req(!is.null(loaded_data()$data))
+
       shinybusy::show_modal_spinner(
         spin = "orbit",
         text = "Loading Data",
@@ -288,9 +296,49 @@ mod_01_load_data_server <- function(id, idep_data) {
         select_org = input$select_org
       )
 
+      gene_data <- gene_info(
+        converted = converted,
+        select_org = input$select_org,
+        idep_data = idep_data
+      )
+
+      converted_data <- {
+        if (is.null(converted)) {
+          loaded_data()$data
+        } else if (input$no_id_conversion) {
+          loaded_data()$data
+        } else {
+          mapping <- converted$conversion_table
+          data <- loaded_data()$data
+
+          rownames(data) <- toupper(rownames(data))
+          merged <- merge(
+            mapping[, 1:2],
+            data,
+            by.y = "row.names",
+            by.x = "User_input",
+            all.y = TRUE
+          )
+          no_match <- which(is.na(merged[, 2]))
+          merged[no_match, 2] <- merged[no_match, 1]
+          # Multiple matches use the one with highest SD ---------
+          tem <- apply(merged[, 3:(dim(merged)[2])], 1, sd)
+          merged <- merged[order(merged[, 2], -tem), ]
+          merged <- merged[!duplicated(merged[, 2]), ]
+          rownames(merged) <- merged[, 2]
+          merged <- as.matrix(merged[, c(-1, -2)])
+
+          merged
+        }
+      }
+
       shinybusy::remove_modal_spinner()
 
-      return(converted)
+      return(list(
+        converted = converted,
+        all_gene_info = gene_data,
+        converted_data = converted_data
+      ))
     })
 
     # Species match table ----------
@@ -299,7 +347,7 @@ mod_01_load_data_server <- function(id, idep_data) {
         return(NULL)
       }
       isolate({
-        tem <- converted_ids()$species_match
+        tem <- conversion_info()$converted$species_match
         if (is.null(tem)) {
           as.data.frame("ID not recognized.")
         } else {
@@ -316,12 +364,14 @@ mod_01_load_data_server <- function(id, idep_data) {
       width = "auto",
       hover = TRUE
     )
-    
+
     list(
       data_file_format = reactive(input$data_file_format),
       data = reactive(loaded_data()$data),
+      converted_data = reactive(conversion_info()$converted_data),
       sample_info = reactive(loaded_data()$sample_info),
-      converted_ids = reactive(converted_ids),
+      converted = reactive(conversion_info()$converted),
+      all_gene_info = reactive(conversion_info()$all_gene_info),
       no_fdr = reactive(input$no_fdr)
     )
   })

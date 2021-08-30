@@ -5,6 +5,7 @@
 #' @import shiny
 #' @noRd
 app_ui <- function(request) {
+  library(shinyBS)
   tagList(
     # Leave this function for adding external resources
     golem_add_external_resources(),
@@ -14,7 +15,8 @@ app_ui <- function(request) {
       id = "navbar",
       mod_01_load_data_ui(id = "load_data"),
       mod_02_pre_process_ui(id = "pre_process"),
-      mod_03_heatmap_ui(id = "heatmap")
+      mod_03_heatmap_ui(id = "heatmap"),
+      mod_04_k_means_ui("test")
     )
   )
 }

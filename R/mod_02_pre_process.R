@@ -162,13 +162,6 @@ mod_02_pre_process_ui <- function(id) {
         br(),
         br(),
 
-        # Yes or no to converting IDs -------------
-        checkboxInput(
-          inputId = ns("no_id_conversion"),
-          label = "Do not convert gene IDs to Ensembl.",
-          value = FALSE
-        ),
-
         # Download button for processed data -----------
         downloadButton(
           outputId = ns("download_processed_data"),
@@ -183,12 +176,6 @@ mod_02_pre_process_ui <- function(id) {
             label = "Converted counts data"
           ),
           ns = ns
-        ),
-
-        # Download EDA plot button -----------
-        downloadButton(
-          outputId = ns("download_eda_plot"),
-          label = "High-resolution figure"
         ),
         br(),
         br(),
@@ -215,63 +202,70 @@ mod_02_pre_process_ui <- function(id) {
       mainPanel(
         h5(
           "Aspect ratios of figures can be adjusted by changing
-           the width of browser window."
+           the width of browser window. (To save a plot, right-click)"
         ),
-
-        # Conditional panel for barplot of read count data ----------
-        conditionalPanel(
-          condition = "output.data_file_format == 1",
-          plotOutput(
-            outputId = ns("total_counts_gg"),
-            width = "100%",
-            height = "500px"
-          ),
-          ns = ns
-        ),
-        br(),
-
-        # Axis selectors -----------
-        fluidRow(
-          column(
-            width = 4,
-            selectInput(
-              inputId = ns("scatter_x"),
-              label = "Select a sample for x-axis",
-              choices = 1:5,
-              selected = 1
+        tabsetPanel(
+          id = ns("eda_plots"),
+          tabPanel(
+            title = "Barplot",
+            br(),
+            plotOutput(
+              outputId = ns("total_counts_gg"),
+              width = "100%",
+              height = "500px"
             )
           ),
-          column(
-            width = 4,
-            selectInput(
-              inputId = ns("scatter_y"),
-              label = "Select a sample for y-axis",
-              choices = 1:5,
-              selected = 2
+          tabPanel(
+            title = "Scatterplot",
+            # Axis selectors -----------
+            br(),
+            fluidRow(
+              column(
+                width = 4,
+                selectInput(
+                  inputId = ns("scatter_x"),
+                  label = "Select a sample for x-axis",
+                  choices = 1:5,
+                  selected = 1
+                )
+              ),
+              column(
+                width = 4,
+                selectInput(
+                  inputId = ns("scatter_y"),
+                  label = "Select a sample for y-axis",
+                  choices = 1:5,
+                  selected = 2
+                )
+              )
+            ),
+            br(),
+            plotOutput(
+              outputId = ns("eda_scatter"),
+              width = "100%",
+              height = "500px"
             )
+          ),
+          tabPanel(
+            title = "Boxplot",
+            br(),
+            plotOutput(
+              outputId = ns("eda_boxplot"),
+              width = "100%",
+              height = "500px"
+            )
+          ),
+          tabPanel(
+            title = "Density Plot",
+            br(),
+            plotOutput(
+              outputId = ns("eda_density"),
+              width = "100%",
+              height = "500px"
+            ),
           )
         ),
-        br(),
-
-        # EDA plots -----------
-        plotOutput(
-          outputId = ns("eda_scatter"),
-          width = "100%",
-          height = "500px"
-        ),
-        br(),
-        plotOutput(
-          outputId = ns("eda_boxplot"),
-          width = "100%",
-          height = "500px"
-        ),
-        br(),
-        plotOutput(
-          outputId = ns("eda_density"),
-          width = "100%",
-          height = "500px"
-        ),
-        br(),
+        DT::dataTableOutput(outputId = ns("examine_dataTEST")),
 
         # Modal pop-ups ----------
         shinyBS::bsModal(
@@ -281,7 +275,6 @@ mod_02_pre_process_ui <- function(id) {
           size = "large",
           DT::dataTableOutput(outputId = ns("examine_data"))
         ),
-        DT::dataTableOutput(outputId = ns("examine_dataTEST")),
 
         shinyBS::bsModal(
           id = "modalExample1021",
@@ -354,6 +347,17 @@ mod_02_pre_process_server <- function(id, load_data) {
     )
     })
 
+    # Dynamic Barplot Tab ----------
+    observe({
+      if (load_data$data_file_format() != 1) {
+        hideTab(inputId = "eda_plots", target = "Barplot")
+        updateTabsetPanel(session, "eda_plots", selected = "Scatterplot")
+      } else if (load_data$data_file_format() == 1) {
+        showTab(inputId = "eda_plots", target = "Barplot")
+        updateTabsetPanel(session, "eda_plots", selected = "Barplot")
+      }
+    })
+
     # Process the data with user defined criteria ----------
     processed_data <- reactive({
       req(!is.null(load_data$data()))
@@ -415,18 +419,18 @@ mod_02_pre_process_server <- function(id, load_data) {
       )
     })
 
-
     ###### TEST #################
     output$examine_data <- DT::renderDataTable({
       req(!is.null(load_data$data()))
 
       load_data$data()[1:20, ]
-      }
+      },
+      width = "100%"
     )
     output$examine_dataTEST <- DT::renderDataTable({
-      req(!is.null(load_data$data()))
+      req(!is.null(load_data$converted_data()))
 
-      load_data$data()[1:20, ]
+      load_data$converted_data()[1:20, ]
       }
     )
 

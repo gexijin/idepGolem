@@ -19,6 +19,8 @@ usethis::use_package( "thinkr" )
 usethis::use_package("DESeq2")
 usethis::use_package("edgeR")
 usethis::use_package("withProgress")
+usethis::use_package("shinyBS")
+usethis::use_package("utils")
 
 ## Add modules ----
 ## Create a module infrastructure in R/

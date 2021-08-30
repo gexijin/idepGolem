@@ -11,7 +11,15 @@ NULL
 
 ##### work in process, want to rewrite other code that is relays on first
 # plot the expression of one or more genes in the preprocess tab
-plot_genes <- function(converted_data, all_gene_info, readSampleInfo, geneSearch, genePlotBox, useSD, selectOrg) {
+plot_genes <- function(
+  converted_data,
+  all_gene_info,
+  sample_info,
+  gene_search,
+  gene_plot_box,
+  use_sd,
+  select_org
+) {
   symbols <- rownames(converted_data)
   if (selectOrg != "NEW" && ncol(all_gene_info) != 1) {
     ix <- match(symbols, all_gene_info[, 1])

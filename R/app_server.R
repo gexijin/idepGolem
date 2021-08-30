@@ -16,4 +16,5 @@ app_server <- function(input, output, session) {
     load_data = load_data
   )
   mod_03_heatmap_server(id = "heatmap")
+  mod_04_k_means_server("test")
 }

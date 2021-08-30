@@ -42,7 +42,7 @@ gene_info <- function(converted, select_org, idep_data) {
 
   # If selected species is not the default "bestMatch",
   # use that species directly
-  if (select_org != idep_date$species_choice[[1]]) {
+  if (select_org != idep_data$species_choice[[1]]) {
     ix <- grep(
       pattern = find_species_by_id(
         species_id = select_org,
@@ -59,7 +59,7 @@ gene_info <- function(converted, select_org, idep_data) {
   if (check$bool) {
     return(check)
   } else {
-    gene_info_csv <- read.csv(as.character(idep_data$geneInfoFiles[ix]))
+    gene_info_csv <- read.csv(as.character(idep_data$gene_info_files[ix]))
     gene_info_csv[, 1] <- toupper(gene_info_csv[, 1])
   }
 
