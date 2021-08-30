@@ -281,10 +281,12 @@ mod_02_pre_process_ui <- function(id) {
           size = "large",
           DT::dataTableOutput(outputId = ns("examine_data"))
         ),
+        DT::dataTableOutput(outputId = ns("examine_dataTEST")),
+
         shinyBS::bsModal(
           id = "modalExample1021",
           title = "Search for genes",
-          trigger = "gene_plot_1",
+          trigger = ns("gene_plot_1"),
           size = "large",
           textInput(
             inputId = ns("gene_search"),
@@ -297,7 +299,7 @@ mod_02_pre_process_ui <- function(id) {
             label = "Show individual samples",
             value = FALSE
           ),
-          plotOutput(outputId = "gene_plot"),
+          plotOutput(outputId = ns("gene_plot")),
           conditionalPanel(
             condition = "input.gene_plot_box == 0",
             checkboxInput(
@@ -412,6 +414,21 @@ mod_02_pre_process_server <- function(id, load_data) {
         sample_info = load_data$sample_info()
       )
     })
+
+
+    ###### TEST #################
+    output$examine_data <- DT::renderDataTable({
+      req(!is.null(load_data$data()))
+
+      load_data$data()[1:20, ]
+      }
+    )
+    output$examine_dataTEST <- DT::renderDataTable({
+      req(!is.null(load_data$data()))
+
+      load_data$data()[1:20, ]
+      }
+    )
 
     # Return Values -----------
     list(

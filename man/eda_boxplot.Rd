@@ -2,10 +2,21 @@
 % Please edit documentation in R/fct_02_pre_process.R
 \name{eda_boxplot}
 \alias{eda_boxplot}
-\title{EDA BOXPLOT}
+\title{Boxplot for processed data}
 \usage{
 eda_boxplot(processed_data, sample_info)
 }
+\arguments{
+\item{processed_data}{Data that has gone through the pre-processing}
+
+\item{sample_info}{Sample_info from the experiment file}
+}
+\value{
+Formatted gg boxplot of the distribution of counts for each
+sample
+}
 \description{
-EDA BOXPLOT
+This function takes the processed data and creates
+a boxplot of number of sequences mapped to each
+tissue sample.
 }

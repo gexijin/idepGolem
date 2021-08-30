@@ -316,7 +316,7 @@ mod_01_load_data_server <- function(id, idep_data) {
       width = "auto",
       hover = TRUE
     )
-
+    
     list(
       data_file_format = reactive(input$data_file_format),
       data = reactive(loaded_data()$data),

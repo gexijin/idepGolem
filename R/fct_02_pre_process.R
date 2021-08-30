@@ -394,7 +394,18 @@ total_counts_ggplot <- function(
   return(plot)
 }
 
-#' EDA SCATTER
+#' Scatterplot for EDA on processed data
+#'
+#' This function takes the data after it has been pre-processed and
+#' creates a scatterplot of the counts for two samples that are
+#' selected by the user.
+#'
+#' @param processed_data Data that has gone through the pre-processing
+#' @param plot_xaxis Sample to plot on the x-axis
+#' @param plot_yaxis Sample to plot on the y axis
+#'
+#' @return Returns a formatted gg scatterplot
+#'
 eda_scatter <- function(
   processed_data,
   plot_xaxis,
@@ -431,7 +442,19 @@ eda_scatter <- function(
   return(scatter)
 }
 
-#' EDA BOXPLOT
+
+#' Boxplot for processed data
+#'
+#' This function takes the processed data and creates
+#' a boxplot of number of sequences mapped to each
+#' tissue sample.
+#'
+#' @param processed_data Data that has gone through the pre-processing
+#' @param sample_info Sample_info from the experiment file
+#'
+#' @return Formatted gg boxplot of the distribution of counts for each
+#' sample
+#'
 eda_boxplot <- function(
   processed_data,
   sample_info
@@ -498,7 +521,16 @@ eda_boxplot <- function(
   return(plot)
 }
 
-#' EDA DENSITY
+#' Density plot for the processed data
+#'
+#' This function takes in the processed data and sample info
+#' and creates a density plot for the distribution of sequences
+#' that are mapped to each sample.
+#'
+#' @param processed_data Data that has gone through the pre-processing
+#' @param sample_info Sample_info from the experiment file
+#'
+#' @return Returns a formatted gg density plot
 eda_density <- function(
   processed_data,
   sample_info
