@@ -162,10 +162,11 @@ mod_01_load_data_ui <- function(id) {
         shinyjs::useShinyjs(),
 
         # Table output for sample tissue type ----------
-        tableOutput(ns("sample_info_table")),
+        DT::dataTableOutput(ns("sample_info_table")),
+        br(),
 
         # Display first 20 rows of the data ----------
-        tableOutput(ns("sample_20")),
+        DT::dataTableOutput(ns("sample_20")),
 
         # Instructions and flowchart ------------
         div(
@@ -250,35 +251,38 @@ mod_01_load_data_server <- function(id, idep_data) {
     ))
 
     # Sample information table -----------
-    output$sample_info_table <- renderTable({
-      req(!is.null(loaded_data()$sample_info))
-
-      isolate({
-        tem <- t(loaded_data()$sample_info)
-        tem <- cbind(rownames(tem), tem)
-        colnames(tem)[1] <- "Study_design"
-        return(tem)
-      })
-      },
-      include.rownames = FALSE,
-      striped = TRUE,
-      bordered = TRUE,
-      width = "auto",
-      hover = TRUE
-    )
-
-    # First 20 rows of dataset table -----------
-    output$sample_20 <- renderTable({
+    output$sample_info_table <- DT::renderDataTable({
       req(!is.null(conversion_info()$converted_data))
 
-      conversion_info()$converted_data[1:20, ]
-      },
-      include.rownames = TRUE,
-      striped = TRUE,
-      bordered = TRUE,
-      width = "auto",
-      hover = TRUE
-    )
+      DT::datatable(
+        isolate({
+          tem <- t(loaded_data()$sample_info)
+          tem <- cbind(rownames(tem), tem)
+          colnames(tem)[1] <- "Study_design"
+          tem
+        }),
+        options = list(
+          pageLength = 20,
+          scrollX = "400px",
+          dom = "t",
+          ordering = F
+        ),
+        rownames = FALSE)
+    })
+
+    # First 20 rows of dataset table -----------
+    output$sample_20 <- DT::renderDataTable({
+      req(!is.null(conversion_info()$converted_data))
+
+      DT::datatable(
+        conversion_info()$converted_data[1:20, ],
+        options = list(
+          pageLength = 20,
+          scrollX = "400px",
+          dom = "t"
+        ),
+        rownames = TRUE)
+    })
 
     # Get converted IDs ----------
     conversion_info <- reactive({
@@ -302,35 +306,11 @@ mod_01_load_data_server <- function(id, idep_data) {
         idep_data = idep_data
       )
 
-      converted_data <- {
-        if (is.null(converted)) {
-          loaded_data()$data
-        } else if (input$no_id_conversion) {
-          loaded_data()$data
-        } else {
-          mapping <- converted$conversion_table
-          data <- loaded_data()$data
-
-          rownames(data) <- toupper(rownames(data))
-          merged <- merge(
-            mapping[, 1:2],
-            data,
-            by.y = "row.names",
-            by.x = "User_input",
-            all.y = TRUE
-          )
-          no_match <- which(is.na(merged[, 2]))
-          merged[no_match, 2] <- merged[no_match, 1]
-          # Multiple matches use the one with highest SD ---------
-          tem <- apply(merged[, 3:(dim(merged)[2])], 1, sd)
-          merged <- merged[order(merged[, 2], -tem), ]
-          merged <- merged[!duplicated(merged[, 2]), ]
-          rownames(merged) <- merged[, 2]
-          merged <- as.matrix(merged[, c(-1, -2)])
-
-          merged
-        }
-      }
+      converted_data <- convert_data(
+        converted = converted,
+        no_id_conversion = input$no_id_conversion,
+        data = loaded_data()$data
+      )
 
       shinybusy::remove_modal_spinner()
 
@@ -367,12 +347,12 @@ mod_01_load_data_server <- function(id, idep_data) {
 
     list(
       data_file_format = reactive(input$data_file_format),
-      data = reactive(loaded_data()$data),
       converted_data = reactive(conversion_info()$converted_data),
       sample_info = reactive(loaded_data()$sample_info),
       converted = reactive(conversion_info()$converted),
       all_gene_info = reactive(conversion_info()$all_gene_info),
-      no_fdr = reactive(input$no_fdr)
+      no_fdr = reactive(input$no_fdr),
+      select_org = reactive(input$select_org)
     )
   })
 }

@@ -15,7 +15,6 @@ mod_02_pre_process_ui <- function(id) {
 
       # Pre-Process Panel Sidebar ----------
       sidebarPanel(
-
         # Conditional panel for read count data -----------
         conditionalPanel(
           condition = "output.data_file_format == 1",
@@ -145,20 +144,6 @@ mod_02_pre_process_ui <- function(id) {
           ),
           selected = "geneMedian"
         ),
-
-        # Button to trigger gene plot modal --------------
-        actionButton(
-          inputId = ns("gene_plot_1"),
-          label = "Plot one or more genes"
-        ),
-        br(),
-        br(),
-
-        # Button to trigger examine data modal ----------
-        actionButton(
-          inputId = ns("examine_datab"),
-          label = "Search processed data"
-        ),
         br(),
         br(),
 
@@ -205,7 +190,7 @@ mod_02_pre_process_ui <- function(id) {
            the width of browser window. (To save a plot, right-click)"
         ),
         tabsetPanel(
-          id = ns("eda_plots"),
+          id = ns("eda_tabs"),
           tabPanel(
             title = "Barplot",
             br(),
@@ -263,48 +248,29 @@ mod_02_pre_process_ui <- function(id) {
               width = "100%",
               height = "500px"
             ),
-          )
-        ),
-        DT::dataTableOutput(outputId = ns("examine_dataTEST")),
-
-        # Modal pop-ups ----------
-        shinyBS::bsModal(
-          id = "modalExample10",
-          title = "Converted data (Most variable genes on top)",
-          trigger = ns("examine_datab"),
-          size = "large",
-          DT::dataTableOutput(outputId = ns("examine_data"))
-        ),
-
-        shinyBS::bsModal(
-          id = "modalExample1021",
-          title = "Search for genes",
-          trigger = ns("gene_plot_1"),
-          size = "large",
-          textInput(
-            inputId = ns("gene_search"),
-            label = "Enter full or partial gene ID, or list of
-                     genes separated by semicolon:",
-            value = "HOXA1;e2f2;tp53"
           ),
-          checkboxInput(
-            inputId = ns("gene_plot_box"),
-            label = "Show individual samples",
-            value = FALSE
+          tabPanel(
+            title = "Converted Data",
+            br(),
+            DT::dataTableOutput(outputId = ns("examine_data"))
           ),
-          plotOutput(outputId = ns("gene_plot")),
-          conditionalPanel(
-            condition = "input.gene_plot_box == 0",
+          tabPanel(
+            title = "Individual Genes",
+            br(),
+            selectizeInput(
+              inputId = ns("select_gene"),
+              label = "Select/Search for Genes",
+              choices = "",
+              selected = NULL,
+              multiple = TRUE
+            ),
             checkboxInput(
-              inputId = ns("use_sd"),
-              label = "Use standard deviation instead of standard error",
+              inputId = ns("gene_plot_box"),
+              label = "Show individual samples",
               value = FALSE
             ),
-            ns = ns
-          ),
-          downloadButton(
-            outputId = "downloadGenePlot",
-            label = "Figure"
+            uiOutput(ns("sd_checkbox")),
+            plotOutput(outputId = ns("gene_plot"))
           )
         )
       )
@@ -315,7 +281,7 @@ mod_02_pre_process_ui <- function(id) {
 #' 01_pre_process Server Functions
 #'
 #' @noRd
-mod_02_pre_process_server <- function(id, load_data) {
+mod_02_pre_process_server <- function(id, load_data, tab) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -329,22 +295,20 @@ mod_02_pre_process_server <- function(id, load_data) {
 
     # Update Variable Selection for the Scatter Plots ----------
     observe({
-      req(!is.null(load_data$data()))
-      sample_choice <- stats::setNames(
-        as.list(1:(dim(load_data$data())[2])), colnames(load_data$data())
-      )
+      req(!is.null(load_data$converted_data()))
+
       updateSelectInput(
         session,
         inputId = "scatter_x",
-        choices = colnames(load_data$data()),
-        selected = colnames(load_data$data())[1]
+        choices = colnames(load_data$converted_data()),
+        selected = colnames(load_data$converted_data())[1]
       )
       updateSelectInput(
         session,
         inputId = "scatter_y",
-        choices = colnames(load_data$data()),
-        selected = colnames(load_data$data())[2]
-    )
+        choices = colnames(load_data$converted_data()),
+        selected = colnames(load_data$converted_data())[2]
+      )
     })
 
     # Dynamic Barplot Tab ----------
@@ -360,10 +324,10 @@ mod_02_pre_process_server <- function(id, load_data) {
 
     # Process the data with user defined criteria ----------
     processed_data <- reactive({
-      req(!is.null(load_data$data()))
+      req(!is.null(load_data$converted_data()))
 
       pre_process(
-        data = load_data$data(),
+        data = load_data$converted_data(),
         missing_value = input$missing_value,
         data_file_format = load_data$data_file_format(),
         low_filter_fpkm = input$low_filter_fpkm,
@@ -419,20 +383,53 @@ mod_02_pre_process_server <- function(id, load_data) {
       )
     })
 
-    ###### TEST #################
+    # Merge Data with Gene names ----------
+    merged_data <- reactive({
+      req(!is.null(processed_data()$data))
+
+      merge_data(
+        select_org = load_data$select_org(),
+        all_gene_info = load_data$all_gene_info(),
+        processed_data = processed_data()$data
+      )
+    })
+
+    # Pre-Process Data Table ----------
     output$examine_data <- DT::renderDataTable({
-      req(!is.null(load_data$data()))
+      req(!is.null(merged_data()))
 
-      load_data$data()[1:20, ]
-      },
-      width = "100%"
-    )
-    output$examine_dataTEST <- DT::renderDataTable({
-      req(!is.null(load_data$converted_data()))
+      DT::datatable(
+        merged_data(),
+        options = list(
+          pageLength = 10,
+          scrollX = "400px"
+        ),
+        rownames = FALSE)
+    })
 
-      load_data$converted_data()[1:20, ]
-      }
-    )
+    # Individual genes selection ----------
+    observe({
+      req(tab() == "Pre-Process")
+
+      updateSelectizeInput(
+        session,
+        inputId = "select_gene",
+        choices = merged_data()$symbol,
+        selected = merged_data()$symbol[1],
+        server = TRUE
+      )
+    })
+
+    # Dynamic checkbox ----------
+    output$sd_checkbox <- renderUI({
+      req(input$gene_plot_box == FALSE)
+
+      checkboxInput(
+        inputId = ns("use_sd"),
+        label = "Use standard deviation instead of standard error",
+        value = FALSE
+      )
+    })
 
     # Return Values -----------
     list(

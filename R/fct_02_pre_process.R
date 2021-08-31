@@ -126,7 +126,7 @@ plot_genes <- function(
 #' All the filtering and transformation that the app does will
 #' occur on this page.
 #'
-#' @param data Data that has already gone through the load data fcn
+#' @param data Data that has already gone through the convert_data fcn
 #' @param missing_value Method to deal with missing data
 #' @param data_file_format Type of data being examined
 #' @param low_filter_fpkm Low count filter for the fpkm data
@@ -607,4 +607,45 @@ eda_density <- function(
     )
 
   return(plot)
+}
+
+#' Merge data from gene info and processed data
+#'
+#' This function takes in the gene info data and merges it
+#' with the data that has gone through the processing fcn.
+#' The returned data contains the gene names as well as the
+#' ensembl id in the first two columns.
+#'
+#' @param select_org Selected species that the expression data is from
+#' @param all_gene_info Data containing the ensembl to gene name mapping
+#' @param processed_data Data that has gone through the pre_processing
+#' 
+#' @return 
+merge_data <- function(
+  select_org,
+  all_gene_info,
+  processed_data
+) {
+  isolate({
+  if (
+    select_org == "NEW" || ncol(all_gene_info) == 1
+  ) {
+    new_data <- round(processed_data, 2)
+    new_data$ensembl_gene_id <- rownames(processed_data)
+    return(new_data)
+  } else {
+    all_data <- merge(
+      all_gene_info[, c("ensembl_gene_id", "symbol")],
+      round(processed_data, 2),
+      by.x = "ensembl_gene_id",
+      by.y = "row.names",
+      all.y = T
+    )
+    tmp <- apply(all_data[, 3:dim(all_data)[2]], 1, sd)
+    all_data <- all_data[order(-tmp), ]
+    all_data <- all_data[!duplicated(all_data$ensembl_gene_id), ]
+
+    return(all_data)
+  }
+  })
 }

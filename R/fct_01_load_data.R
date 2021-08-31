@@ -11,6 +11,7 @@ NULL
 
 # retrieve detailed info on genes
 gene_info <- function(converted, select_org, idep_data) {
+  
   check <- check_object_state(
     check_exp = (is.null(converted)),
     true_message = as.data.frame("ID not recognized!")
@@ -66,7 +67,7 @@ gene_info <- function(converted, select_org, idep_data) {
   set <- match(gene_info_csv$ensembl_gene_id, query_set)
   set[which(is.na(set))] <- "Genome"
   set[which(set != "Genome")] <- "List"
-  return(cbind(gene_info, set))
+  return(cbind(gene_info_csv, set))
 }
 
 
@@ -147,6 +148,13 @@ input_data <- function(
     # Remove "-" or "." from sample names ----------
     colnames(data) <- gsub("-", "", colnames(data))
     colnames(data) <- gsub("\\.", "", colnames(data))
+
+    # Order by SD ----------
+    data <- data[order(-apply(
+      data[, 1:dim(data)[2]],
+      1,
+      sd
+    )), ]
   })
 
   # Read experiment file ----------
@@ -233,4 +241,56 @@ input_data <- function(
       ))
     }
   })
+}
+
+#' Convert expression data rownames to ensembl
+#'
+#' This function works with the converted ids to take in the
+#' expression data and swap the rownames to the converted ids.
+#' It returns the data exactly the same except for the changed
+#' ids.
+#'
+#' @param converted Data from convert_id function containing converted ids
+#' @param no_id_conversion TRUE/FALSE for converting data ids or not
+#' @param data Data from inputed expression file
+#' 
+#' @return Returns original data with rownames converted to ensembl
+convert_data <- function(
+  converted,
+  no_id_conversion,
+  data
+) {
+  
+  if (is.null(converted) || no_id_conversion) {
+    return(data)
+  } else {
+    mapping <- converted$conversion_table
+
+    rownames(data) <- toupper(rownames(data))
+    merged <- merge(
+      mapping[, 1:2],
+      data,
+      by.y = "row.names",
+      by.x = "User_input",
+      all.y = TRUE
+    )
+    no_match <- which(is.na(merged[, 2]))
+    merged[no_match, 2] <- merged[no_match, 1]
+
+    # Multiple matches use one with highest SD ----------
+    tmp <- apply(merged[, 3:(dim(merged)[2])], 1, sd)
+    merged <- merged[order(merged[, 2], -tmp),]
+    merged <- merged[!duplicated(merged[, 2]), ]
+    rownames(merged) <- merged[, 2]
+    merged <- as.matrix(merged[, c(-1, -2)])
+
+    # Order by SD ----------
+    merged <- merged[order(-apply(
+      merged[, 1:dim(merged)[2]],
+      1,
+      sd
+    )), ]
+
+    return(merged)
+  }
 }

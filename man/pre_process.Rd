@@ -20,7 +20,7 @@ pre_process(
 )
 }
 \arguments{
-\item{data}{Data that has already gone through the load data fcn}
+\item{data}{Data that has already gone through the convert_data fcn}
 
 \item{missing_value}{Method to deal with missing data}
 
