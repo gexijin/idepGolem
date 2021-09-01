@@ -378,7 +378,7 @@ total_counts_ggplot <- function(
     ggplot2::aes(x = sample, y = counts, fill = grouping)
   ) +
     ggplot2::geom_bar(stat = "identity") +
-    ggplot2::theme_minimal() +
+    ggplot2::theme_dark() +
     ggplot2::theme(
       legend.position = "none",
       axis.title.x = ggplot2::element_blank(),
@@ -435,7 +435,7 @@ eda_scatter <- function(
     x = paste0(plot_xaxis),
     y =  paste0(plot_yaxis)
   ) +
-  ggplot2::theme_minimal() +
+  ggplot2::theme_classic() +
   ggplot2::theme(legend.position = "none",
     axis.text = ggplot2::element_text(size = 14),
     axis.title = ggplot2::element_text(size = 16),
@@ -505,7 +505,7 @@ eda_boxplot <- function(
       ggplot2::aes(x = sample, y = expression, fill = grouping)
     ) +
     ggplot2::geom_boxplot() +
-    ggplot2::theme_minimal() +
+    ggplot2::theme_light() +
     ggplot2::theme(
       legend.position = "none",
       axis.title.x = ggplot2::element_blank(),
@@ -583,7 +583,7 @@ eda_density <- function(
       ggplot2::aes(x = expression, color = group_fill, group = sample)
     ) +
     ggplot2::geom_density(size = 1) +
-    ggplot2::theme_minimal() +
+    ggplot2::theme_linedraw() +
     ggplot2::theme(
       legend.position = legend,
       axis.title.x = ggplot2::element_blank(),
@@ -626,7 +626,7 @@ merge_data <- function(
   all_gene_info,
   processed_data
 ) {
-  
+
   isolate({
   if (
     select_org == "NEW" || ncol(all_gene_info) == 1
@@ -664,8 +664,26 @@ merge_data <- function(
 }
 
 
-#' INDIVDUAL GENE PLOTS
-individual_plots <- function (
+#' Individual plotting function for genes
+#'
+#' Takes in the merged data and other data to provide
+#' plots on individual gene names. Depening on the selections
+#' this function will either return a barplot from the
+#' grouped data or a lineplot from the individual sample.
+#'
+#' @param merged_data Data that has been merged with the gene info
+#' @param sample_info Experiment file information for grouping samples
+#' @param select_dene Gene(s) to be plotted
+#' @param gene_plot_box T/F for individual sample plot or grouped data plot
+#' @param use_sd T/F for standard error or standard deviation bars on bar plot
+#' @param select_org Species the expression data is from
+#' 
+#' @return A formatted ggplot. For gene_plot_box = TRUE the return will be a
+#' lineplot for the expression of each individual sample for the selected gene.
+#' If gene_plot_box = FALSE the return will be a barplot for the groups provided
+#' in the sample information.
+#'
+individual_plots <- function(
   merged_data,
   sample_info,
   selected_gene,
@@ -680,24 +698,23 @@ individual_plots <- function (
   } else {
     merged_data <- dplyr::select(merged_data, -ensembl_gene_id)
   }
-
-  if (gene_plot_box == TRUE) {
-    plot_data <- merged_data %>%
+  plot_data <- merged_data %>%
       dplyr::filter(symbol %in% selected_gene) %>%
       tidyr::pivot_longer(!symbol, names_to = "sample", values_to = "value")
-
-    if(ncol(plot_data) < 31) {
-      x_axis_labels <- 16
+  if (ncol(plot_data) < 31) {
+      x_axis_labels <- 14
     } else {
-      x_axis_labels <- 12
+      x_axis_labels <- 10
     }
+
+  if (gene_plot_box == TRUE) {
 
     ind_line <- ggplot2::ggplot(
       data = plot_data,
       ggplot2::aes(x = sample, y = value, group = symbol, color = symbol)
     ) +
     ggplot2::geom_line() +
-    ggplot2::geom_point(size = 5, fill = "white") + 
+    ggplot2::geom_point(size = 5, fill = "white") +
     ggplot2::labs(title = "Transformed Expression Level") +
     ggplot2::coord_cartesian(ylim = c(0, max(plot_data$value))) +
     ggplot2::theme_minimal() +
@@ -719,5 +736,58 @@ individual_plots <- function (
     )
 
     return(ind_line)
+  } else if (gene_plot_box == FALSE) {
+
+    plot_data$groups <- detect_groups(plot_data$sample, sample_info)
+
+    summarized <- plot_data %>%
+      dplyr::group_by(groups, symbol) %>%
+      dplyr::summarise(Mean = mean(value), SD = sd(value), N = dplyr::n())
+
+    summarized$SE <- summarized$SD / sqrt(summarized$N)
+
+    gene_bar <- ggplot2::ggplot(
+      summarized,
+      ggplot2::aes(x = symbol, y = Mean, fill = groups)
+    ) +
+    ggplot2::geom_bar(stat = "identity", position = ggplot2::position_dodge()) +
+    ggplot2::labs(title = "Expression Level") +
+    ggplot2::theme_bw() +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(
+        color = "black",
+        size = 16,
+        face = "bold",
+        hjust = .5
+      ),
+      axis.text.x = ggplot2::element_text(
+        angle = 0,
+        size = x_axis_labels
+      ),
+      axis.text.y = ggplot2::element_text(size = 16),
+      axis.title.x = ggplot2::element_blank(),
+      axis.title.y = ggplot2::element_blank(),
+      legend.text = ggplot2::element_text(size = 12)
+    )
+
+    if (use_sd == TRUE) {
+      gene_bar <- gene_bar + ggplot2::geom_errorbar(
+        ggplot2::aes(
+          ymin = Mean - SD,
+          ymax = Mean + SD),
+        width = 0.2,
+        position = ggplot2::position_dodge(.9)
+      )
+    } else {
+      gene_bar <- gene_bar + ggplot2::geom_errorbar(
+        ggplot2::aes(
+          ymin = Mean - SE,
+          ymax = Mean + SE),
+        width = 0.2,
+        position = ggplot2::position_dodge(.9)
+      )
+    }
+
+    return(gene_bar)
   }
 }

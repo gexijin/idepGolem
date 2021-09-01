@@ -257,19 +257,25 @@ mod_02_pre_process_ui <- function(id) {
           tabPanel(
             title = "Individual Genes",
             br(),
-            selectizeInput(
-              inputId = ns("selected_gene"),
-              label = "Select/Search for Genes",
-              choices = "",
-              selected = NULL,
-              multiple = TRUE
+            fluidRow(
+              column(4,
+                selectizeInput(
+                  inputId = ns("selected_gene"),
+                  label = "Select/Search for Genes",
+                  choices = "",
+                  selected = NULL,
+                  multiple = TRUE
+                )
+              ),
+              column(4,
+                checkboxInput(
+                  inputId = ns("gene_plot_box"),
+                  label = "Show individual samples",
+                  value = FALSE
+                ),
+                uiOutput(ns("sd_checkbox"))
+              ) 
             ),
-            checkboxInput(
-              inputId = ns("gene_plot_box"),
-              label = "Show individual samples",
-              value = FALSE
-            ),
-            uiOutput(ns("sd_checkbox")),
             plotOutput(
               outputId = ns("gene_plot"),
               width = "100%",
