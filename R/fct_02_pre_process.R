@@ -361,10 +361,10 @@ total_counts_ggplot <- function(
     grouping <- groups
   }
 
-  if(ncol(counts) < 31) {
-    y_axis_labels <- 16
+  if (ncol(counts) < 31) {
+    x_axis_labels <- 16
   } else {
-    y_axis_labels <- 12
+    x_axis_labels <- 12
   }
   plot_data <- data.frame(
     sample = as.factor(colnames(counts)),
@@ -385,10 +385,10 @@ total_counts_ggplot <- function(
       axis.title.y = ggplot2::element_blank(),
       axis.text.x = ggplot2::element_text(
         angle = 90,
-        size = 14
+        size = x_axis_labels
       ),
       axis.text.y = ggplot2::element_text(
-        size = y_axis_labels
+        size = 16
       ),
       plot.title = ggplot2::element_text(
         color = "black",
@@ -485,10 +485,10 @@ eda_boxplot <- function(
   } else {
     grouping <- groups
   }
-  if(ncol(counts) < 31) {
-    y_axis_labels <- 16
+  if (ncol(counts) < 31) {
+    x_axis_labels <- 16
   } else {
-    y_axis_labels <- 12
+    x_axis_labels <- 12
   }
 
   longer_data <- tidyr::pivot_longer(
@@ -512,10 +512,10 @@ eda_boxplot <- function(
       axis.title.y = ggplot2::element_blank(),
       axis.text.x = ggplot2::element_text(
         angle = 90,
-        size = 14
+        size = x_axis_labels
       ),
       axis.text.y = ggplot2::element_text(
-        size = y_axis_labels
+        size = 16
       ),
       plot.title = ggplot2::element_text(
         color = "black",
@@ -564,9 +564,9 @@ eda_density <- function(
     legend <- "right"
   }
   if(ncol(counts) < 31) {
-    y_axis_labels <- 16
+    x_axis_labels <- 16
   } else {
-    y_axis_labels <- 12
+    x_axis_labels <- 12
   }
 
   longer_data <- tidyr::pivot_longer(
@@ -589,10 +589,10 @@ eda_density <- function(
       axis.title.x = ggplot2::element_blank(),
       axis.title.y = ggplot2::element_blank(),
       axis.text.x = ggplot2::element_text(
-        size = 16
+        size = x_axis_labels
       ),
       axis.text.y = ggplot2::element_text(
-        size = y_axis_labels
+        size = 16
       ),
       plot.title = ggplot2::element_text(
         color = "black",
@@ -626,12 +626,21 @@ merge_data <- function(
   all_gene_info,
   processed_data
 ) {
+  
   isolate({
   if (
     select_org == "NEW" || ncol(all_gene_info) == 1
   ) {
     new_data <- round(processed_data, 2)
-    new_data$ensembl_gene_id <- rownames(processed_data)
+    new_data <- as.data.frame(new_data)
+    new_data$gene_id <- rownames(processed_data)
+    new_data <- dplyr::select(
+      new_data,
+      gene_id,
+      tidyselect::everything()
+    )
+    tmp <- apply(new_data[, 2:dim(new_data)[2]], 1, sd)
+    new_data <- new_data[order(-tmp), ]
     return(new_data)
   } else {
     all_data <- merge(
@@ -644,8 +653,71 @@ merge_data <- function(
     tmp <- apply(all_data[, 3:dim(all_data)[2]], 1, sd)
     all_data <- all_data[order(-tmp), ]
     all_data <- all_data[!duplicated(all_data$ensembl_gene_id), ]
+    all_data$symbol[all_data$symbol == ""] <- NA
+    all_data$symbol[is.na(all_data$symbol)] <- {
+      all_data$ensembl_gene_id[is.na(all_data$symbol)]
+    }
 
     return(all_data)
   }
   })
+}
+
+
+#' INDIVDUAL GENE PLOTS
+individual_plots <- function (
+  merged_data,
+  sample_info,
+  selected_gene,
+  gene_plot_box,
+  use_sd,
+  select_org
+) {
+  library(magrittr)
+  if (select_org == "NEW" || is.null(merged_data$symbol)) {
+    merged_data$symbol <- merged_data$gene_id
+    merged_data <- dplyr::select(merged_data, -gene_id)
+  } else {
+    merged_data <- dplyr::select(merged_data, -ensembl_gene_id)
+  }
+
+  if (gene_plot_box == TRUE) {
+    plot_data <- merged_data %>%
+      dplyr::filter(symbol %in% selected_gene) %>%
+      tidyr::pivot_longer(!symbol, names_to = "sample", values_to = "value")
+
+    if(ncol(plot_data) < 31) {
+      x_axis_labels <- 16
+    } else {
+      x_axis_labels <- 12
+    }
+
+    ind_line <- ggplot2::ggplot(
+      data = plot_data,
+      ggplot2::aes(x = sample, y = value, group = symbol, color = symbol)
+    ) +
+    ggplot2::geom_line() +
+    ggplot2::geom_point(size = 5, fill = "white") + 
+    ggplot2::labs(title = "Transformed Expression Level") +
+    ggplot2::coord_cartesian(ylim = c(0, max(plot_data$value))) +
+    ggplot2::theme_minimal() +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(
+        color = "black",
+        size = 16,
+        face = "bold",
+        hjust = .5
+      ),
+      axis.text.x = ggplot2::element_text(
+        angle = 90,
+        size = x_axis_labels
+      ),
+      axis.text.y = ggplot2::element_text(size = 16),
+      axis.title.x = ggplot2::element_blank(),
+      axis.title.y = ggplot2::element_blank(),
+      legend.text = ggplot2::element_text(size = 12)
+    )
+
+    return(ind_line)
+  }
 }

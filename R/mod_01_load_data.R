@@ -252,7 +252,7 @@ mod_01_load_data_server <- function(id, idep_data) {
 
     # Sample information table -----------
     output$sample_info_table <- DT::renderDataTable({
-      req(!is.null(conversion_info()$converted_data))
+      req(!is.null(loaded_data()$sample_info))
 
       DT::datatable(
         isolate({

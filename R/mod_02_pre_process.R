@@ -258,7 +258,7 @@ mod_02_pre_process_ui <- function(id) {
             title = "Individual Genes",
             br(),
             selectizeInput(
-              inputId = ns("select_gene"),
+              inputId = ns("selected_gene"),
               label = "Select/Search for Genes",
               choices = "",
               selected = NULL,
@@ -270,7 +270,11 @@ mod_02_pre_process_ui <- function(id) {
               value = FALSE
             ),
             uiOutput(ns("sd_checkbox")),
-            plotOutput(outputId = ns("gene_plot"))
+            plotOutput(
+              outputId = ns("gene_plot"),
+              width = "100%",
+              height = "400px"
+            )
           )
         )
       )
@@ -411,16 +415,21 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     observe({
       req(tab() == "Pre-Process")
 
+      if (is.null(merged_data()$symbol)) {
+        choices <- merged_data()$gene_id
+      } else {
+        choices <- merged_data()$symbol
+      }
       updateSelectizeInput(
         session,
-        inputId = "select_gene",
-        choices = merged_data()$symbol,
-        selected = merged_data()$symbol[1],
+        inputId = "selected_gene",
+        choices = choices,
+        selected = NULL,
         server = TRUE
       )
     })
 
-    # Dynamic checkbox ----------
+    # Dynamic individual gene checkbox ----------
     output$sd_checkbox <- renderUI({
       req(input$gene_plot_box == FALSE)
 
@@ -430,6 +439,22 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         value = FALSE
       )
     })
+
+    output$gene_plot <- renderPlot({
+      req(!is.null(merged_data()))
+      req(!is.null(input$selected_gene))
+
+      individual_plots(
+        merged_data = merged_data(),
+        sample_info = load_data$sample_info(),
+        selected_gene = input$selected_gene,
+        gene_plot_box = input$gene_plot_box,
+        use_sd = input$use_sd,
+        select_org = load_data$select_org()
+      )
+    })
+
+
 
     # Return Values -----------
     list(
