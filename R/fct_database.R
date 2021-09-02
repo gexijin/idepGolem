@@ -184,7 +184,7 @@ find_id_type_by_id <- function(id, id_index) {
 #' @examples
 #' # ADD_EXAMPLES_HERE
 find_species_by_id <- function(species_id, org_info) {
-  return(org_info[which(org_info$id == speciesID), ])
+  return(org_info[which(org_info$id == species_id), ])
 }
 
 
@@ -226,7 +226,6 @@ convert_id <- function(query, idep_data,
   # remove ' in gene ids
   # |\\.[0-9] remove anything after A35244.1 -> A35244
   #  some gene ids are like Glyma.01G002100
-
   query_set <- clean_query(query_input = query)
 
   conn_db <- connect_convert_db()
@@ -243,7 +242,7 @@ convert_id <- function(query, idep_data,
       conn = conn_db,
       statement = "select distinct id,ens,species,idType
      from mapping where species = ? and id in (?)",
-      params = list(select_org, query_set)
+      params = list(rep(select_org, length(query_set)), query_set)
     )
   }
   DBI::dbDisconnect(conn = conn_db)

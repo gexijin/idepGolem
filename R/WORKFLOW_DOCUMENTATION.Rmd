@@ -1,0 +1,155 @@
+---
+title: "Workflow Documentation"
+output: html_document
+---
+
+The purpose of this document is to document the workflow of IDEP. The goal is to
+later use the code in this document to create a vignette that users will be able
+to read and then use IDEP in command line instead of the shiny app.
+
+# Load Data
+
+This function will enable us to use the functions that drive the IDEPgolem 
+package.
+```{r}
+devtools::load_all()
+```
+
+#### Data Paths
+
+This begins the process of loading the data. `get_idep_data()` returns a list of
+the data that will be used to process and examine the loaded expression data. To
+analyze a data set, just substitute the path to the expression data into
+`YOUR_DATA_PATH`. If your data comes with information about the samples,
+substitute the path for that file into `YOUR_EXPERIMENT_PATH`. These data paths
+are then stored in a data frame that will be used in the `input_data` function.
+```{r}
+idep_data <- get_idep_data()
+
+YOUR_DATA_PATH <- "D:/data/data103/data_go/BcellGSE71176_p53.csv"
+YOUR_EXPERIMENT_PATH <- "D:/data/data103/data_go/BcellGSE71176_p53_sampleInfo.csv"
+
+expression_file <- data.frame(
+  datapath = YOUR_DATA_PATH
+)
+experiment_file <- data.frame(
+  datapath = YOUR_EXPERIMENT_PATH
+)
+```
+
+#### `input_data` Function
+
+`input_data` takes in the established data paths and reads it into a data set to
+analyze. If an experiment file is provided, the data will be returned in a list
+containing the expression data and sample information. To run idep on an example
+data set, set the value of `go_button` to `TRUE`. The `demo_data_file` and
+`demo_metadata_file` are the built-in paths to the example data set and should
+not be changed. The returned expression will be a numeric matrix with gene IDs
+as rownames. The columns will denote the sample.
+```{r}
+loaded_data <- input_data(
+  expression_file = expression_file,
+  experiment_file = experiment_file,
+  go_button = FALSE,
+  demo_data_file = idep_data$demo_data_file,
+  demo_metadata_file = idep_data$demo_metadata_file
+)
+```
+
+#### Gene ID and Meta Data Functions
+
+Idep works with "ensembl" gene IDs to perform many of its functions. Given a
+data set, idep will convert IDs to ensembl and then gather metadata for each
+gene if the database recognizes the species. This process occurs in the
+following functions.
+
+1. `convert_id`
+
+    This function will take in a 'query' and use the 'idep_data' to match the 
+    provided gene IDs with the corresponding ensembl ID. The IDs from the
+    inputted data are currently the rownames of the data frame `data` stored in
+    the list `loaded_data`. `select_org` is a parameter to provide the species
+    that the expression data is from. `convert_id` returns a list containing
+    information about the query results. The converted IDs are are accessed by
+    `converted$ids`. `print(converted$species_matched[2,])` shows the species
+    that was recognized by the provided gene IDs.
+
+2. `gene_info`
+
+    Gathering the information on the converted ensembl IDs is the next step. 
+    The `converted` results are passed into the `gene_info` function to retrieve
+    gene name information that is stored in `idep_data` as well. If `select_org`
+    is `BestMatch`, the function will use the matched species from converted to
+    retrieve the gene data. If a species code is provided, it will use that
+    species directly. `gene_info` will then read a gene data file from the
+    `idep_data` and return the resulting data frame. This data will be used to
+    map to more informative gene names in the coming functions.
+    
+3. `convert_data`
+
+    This step will return the original data from `input_data` with the converted
+    ensembl IDs as rownames. It uses the IDs that were matched with `convert_id`
+    to swap the current rownames with the corresponding ensembl ID. 
+    `no_id_conversion` can be set to `TRUE` if the desired IDs are the original
+    ones, but the simpler solution is to simply not run the function.
+    
+```{r}
+converted <- convert_id(
+  query = rownames(loaded_data$data),
+  idep_data = idep_data,
+  select_org = "BestMatch"
+)
+
+print(converted$species_matched[2,])
+
+gene_data <- gene_info(
+  converted = converted,
+  select_org = "BestMatch",
+  idep_data = idep_data
+)
+
+converted_data <- convert_data(
+  converted = converted,
+  no_id_conversion = FALSE,
+  data = loaded_data$data
+)
+```
+
+# Process Data
+
+Now that the gene information has been retrieved and the IDs converted, it is
+possible to process the data and perform a transformation for analysis.
+
+#### `pre_process` Function
+
+Processing the data requires many options to ensure the data gets to the desired
+form. This is the data that will be used in the exploratory analysis to come.
+The data to be processed is the `converted_data` from above. `missing_value`
+determines how to handle the missing values in `converted_data`. There are
+three options for idep currently
+
+Input (`missing_value`)   Method
+------------------------- -----------------------------------------------------------
+`geneMedian`              Substitute median expression value for gene across all samples
+`treatAsZero`             Substitute "0" for all missing values
+`geneMedianInGroup`       Substitute median expression value for gene within sample group
+
+
+```{r}
+processed_data <- pre_process(
+  data = converted_data,
+  missing_value = "geneMedian",
+  data_file_format = 1,
+  low_filter_fpkm = -1000,
+  n_min_samples_fpkm = 1,
+  log_transform_fpkm = TRUE,
+  log_start_fpkm = 1,
+  min_counts = .5,
+  n_min_samples_count = 1,
+  counts_transform = 1,
+  counts_log_start = 4,
+  no_fdr = FALSE
+)
+```
+
+

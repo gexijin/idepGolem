@@ -15,7 +15,6 @@ mod_02_pre_process_ui <- function(id) {
 
       # Pre-Process Panel Sidebar ----------
       sidebarPanel(
-
         # Conditional panel for read count data -----------
         conditionalPanel(
           condition = "output.data_file_format == 1",
@@ -145,29 +144,8 @@ mod_02_pre_process_ui <- function(id) {
           ),
           selected = "geneMedian"
         ),
-
-        # Button to trigger gene plot modal --------------
-        actionButton(
-          inputId = ns("gene_plot_1"),
-          label = "Plot one or more genes"
-        ),
         br(),
         br(),
-
-        # Button to trigger examine data modal ----------
-        actionButton(
-          inputId = ns("examine_datab"),
-          label = "Search processed data"
-        ),
-        br(),
-        br(),
-
-        # Yes or no to converting IDs -------------
-        checkboxInput(
-          inputId = ns("no_id_conversion"),
-          label = "Do not convert gene IDs to Ensembl.",
-          value = FALSE
-        ),
 
         # Download button for processed data -----------
         downloadButton(
@@ -183,12 +161,6 @@ mod_02_pre_process_ui <- function(id) {
             label = "Converted counts data"
           ),
           ns = ns
-        ),
-
-        # Download EDA plot button -----------
-        downloadButton(
-          outputId = ns("download_eda_plot"),
-          label = "High-resolution figure"
         ),
         br(),
         br(),
@@ -209,90 +181,106 @@ mod_02_pre_process_ui <- function(id) {
           href = "https://idepsite.wordpress.com/pre-process/",
           target = "_blank"
         ),
-        selectInput("counts_deg_method", "Method:",
-          choices = list(
-            "DESeq2" = 3,
-            "limma-voom" = 2,
-            "limma-trend" = 1
-          ),
-          selected = 3
-        )
       ),
 
       # Pre-Process Panel Main -----------
       mainPanel(
         h5(
           "Aspect ratios of figures can be adjusted by changing
-           the width of browser window."
+           the width of browser window. (To save a plot, right-click)"
         ),
-
-        # Conditional panel for barplot of read count data ----------
-        conditionalPanel(
-          condition = "output.data_file_format == 1",
-          plotOutput(outputId = ns("total_counts")),
-          ns = ns
-        ),
-
-        # Axis selectors -----------
-        fluidRow(
-          column(
-            width = 4,
-            selectInput(
-              inputId = ns("scatter_x"),
-              label = "Select a sample for x-axis",
-              choices = 1:5,
-              selected = 1
+        tabsetPanel(
+          id = ns("eda_tabs"),
+          tabPanel(
+            title = "Barplot",
+            br(),
+            plotOutput(
+              outputId = ns("total_counts_gg"),
+              width = "100%",
+              height = "500px"
             )
           ),
-          column(
-            width = 4,
-            selectInput(
-              inputId = ns("scatter_y"),
-              label = "Select a sample for y-axis",
-              choices = 1:5,
-              selected = 2
-            )
-          )
-        ),
-
-        # EDA scatter plot -----------
-        plotOutput(outputId = "eda"),
-        shinyBS::bsModal(
-          id = "modalExample10",
-          title = "Converted data (Most variable genes on top)",
-          trigger = ns("examine_datab"),
-          size = "large",
-          DT::dataTableOutput(outputId = ns("examine_data"))
-        ),
-        shinyBS::bsModal(
-          id = "modalExample1021",
-          title = "Search for genes",
-          trigger = "gene_plot_1",
-          size = "large",
-          textInput(
-            inputId = ns("gene_search"),
-            label = "Enter full or partial gene ID, or list of
-                     genes separated by semicolon:",
-            value = "HOXA1;e2f2;tp53"
-          ),
-          checkboxInput(
-            inputId = ns("gene_plot_box"),
-            label = "Show individual samples",
-            value = FALSE
-          ),
-          plotOutput(outputId = "gene_plot"),
-          conditionalPanel(
-            condition = "input.gene_plot_box == 0",
-            checkboxInput(
-              inputId = ns("use_sd"),
-              label = "Use standard deviation instead of standard error",
-              value = FALSE
+          tabPanel(
+            title = "Scatterplot",
+            # Axis selectors -----------
+            br(),
+            fluidRow(
+              column(
+                width = 4,
+                selectInput(
+                  inputId = ns("scatter_x"),
+                  label = "Select a sample for x-axis",
+                  choices = 1:5,
+                  selected = 1
+                )
+              ),
+              column(
+                width = 4,
+                selectInput(
+                  inputId = ns("scatter_y"),
+                  label = "Select a sample for y-axis",
+                  choices = 1:5,
+                  selected = 2
+                )
+              )
             ),
-            ns = ns
+            br(),
+            plotOutput(
+              outputId = ns("eda_scatter"),
+              width = "100%",
+              height = "500px"
+            )
           ),
-          downloadButton(
-            outputId = "downloadGenePlot",
-            label = "Figure"
+          tabPanel(
+            title = "Boxplot",
+            br(),
+            plotOutput(
+              outputId = ns("eda_boxplot"),
+              width = "100%",
+              height = "500px"
+            )
+          ),
+          tabPanel(
+            title = "Density Plot",
+            br(),
+            plotOutput(
+              outputId = ns("eda_density"),
+              width = "100%",
+              height = "500px"
+            ),
+          ),
+          tabPanel(
+            title = "Converted Data",
+            br(),
+            DT::dataTableOutput(outputId = ns("examine_data"))
+          ),
+          tabPanel(
+            title = "Individual Genes",
+            br(),
+            fluidRow(
+              column(4,
+                selectizeInput(
+                  inputId = ns("selected_gene"),
+                  label = "Select/Search for Genes",
+                  choices = "",
+                  selected = NULL,
+                  multiple = TRUE
+                )
+              ),
+              column(4,
+                checkboxInput(
+                  inputId = ns("gene_plot_box"),
+                  label = "Show individual samples",
+                  value = FALSE
+                ),
+                uiOutput(ns("sd_checkbox"))
+              ) 
+            ),
+            plotOutput(
+              outputId = ns("gene_plot"),
+              width = "100%",
+              height = "400px"
+            )
           )
         )
       )
@@ -303,7 +291,7 @@ mod_02_pre_process_ui <- function(id) {
 #' 01_pre_process Server Functions
 #'
 #' @noRd
-mod_02_pre_process_server <- function(id, load_data) {
+mod_02_pre_process_server <- function(id, load_data, tab) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -316,38 +304,177 @@ mod_02_pre_process_server <- function(id, load_data) {
     outputOptions(output, "data_file_format", suspendWhenHidden = FALSE)
 
     # Update Variable Selection for the Scatter Plots ----------
-    # sample_choice <- stats::setNames(
-    # as.list(1:(dim(read_data()$data)[2])), colnames(read_data()$data)
-    # )
-    # observe({
-    # updateSelectInput(
-    # session,
-    # inputId = "scatter_x",
-    # choices = sample_choice,
-    # selected = sample_choice[1]
-    # )
-    # })
-    # observe({
-    # updateSelectInput(
-    # session,
-    # inputId = "scatter_y",
-    # choices = sample_choice,
-    # selected = sample_choice[2]
-    # )
-    # })
+    observe({
+      req(!is.null(load_data$converted_data()))
+
+      updateSelectInput(
+        session,
+        inputId = "scatter_x",
+        choices = colnames(load_data$converted_data()),
+        selected = colnames(load_data$converted_data())[1]
+      )
+      updateSelectInput(
+        session,
+        inputId = "scatter_y",
+        choices = colnames(load_data$converted_data()),
+        selected = colnames(load_data$converted_data())[2]
+      )
+    })
+
+    # Dynamic Barplot Tab ----------
+    observe({
+      if (load_data$data_file_format() != 1) {
+        hideTab(inputId = "eda_plots", target = "Barplot")
+        updateTabsetPanel(session, "eda_plots", selected = "Scatterplot")
+      } else if (load_data$data_file_format() == 1) {
+        showTab(inputId = "eda_plots", target = "Barplot")
+        updateTabsetPanel(session, "eda_plots", selected = "Barplot")
+      }
+    })
+
+    # Process the data with user defined criteria ----------
+    processed_data <- reactive({
+      req(!is.null(load_data$converted_data()))
+
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Pre-Processing Data",
+        color = "#000000"
+      )
+
+      processed_data <- pre_process(
+        data = load_data$converted_data(),
+        missing_value = input$missing_value,
+        data_file_format = load_data$data_file_format(),
+        low_filter_fpkm = input$low_filter_fpkm,
+        n_min_samples_fpkm = input$n_min_samples_fpkm,
+        log_transform_fpkm = input$log_transform_fpkm,
+        log_start_fpkm = input$log_start_fpkm,
+        min_counts = input$min_counts,
+        n_min_samples_count = input$n_min_samples_count,
+        counts_transform = input$counts_transform,
+        counts_log_start = input$counts_log_start,
+        no_fdr = load_data$no_fdr()
+      )
+
+      shinybusy::remove_modal_spinner()
+
+      return(processed_data)
+    })
+
+    # Counts barplot ------------
+    output$total_counts_gg <- renderPlot({
+      req(!is.null(processed_data()$raw_counts))
+
+      total_counts_ggplot(
+        counts_data = processed_data()$raw_counts,
+        sample_info = load_data$sample_info()
+      )
+    })
+
+    # Scatter eda plot ----------
+    output$eda_scatter <- renderPlot({
+      req(!is.null(processed_data()$data))
+
+      eda_scatter(
+        processed_data = processed_data()$data,
+        plot_xaxis = input$scatter_x,
+        plot_yaxis = input$scatter_y
+      )
+    })
+
+    # Box eda plot ----------
+    output$eda_boxplot <- renderPlot({
+      req(!is.null(processed_data()$data))
+
+      eda_boxplot(
+        processed_data = processed_data()$data,
+        sample_info = load_data$sample_info()
+      )
+    })
+
+    # Density eda plot ----------
+    output$eda_density <- renderPlot({
+      req(!is.null(processed_data()$data))
+
+      eda_density(
+        processed_data = processed_data()$data,
+        sample_info = load_data$sample_info()
+      )
+    })
+
+    # Merge Data with Gene names ----------
+    merged_data <- reactive({
+      req(!is.null(processed_data()$data))
+
+      merge_data(
+        select_org = load_data$select_org(),
+        all_gene_info = load_data$all_gene_info(),
+        processed_data = processed_data()$data
+      )
+    })
+
+    # Pre-Process Data Table ----------
+    output$examine_data <- DT::renderDataTable({
+      req(!is.null(merged_data()))
+
+      DT::datatable(
+        merged_data(),
+        options = list(
+          pageLength = 10,
+          scrollX = "400px"
+        ),
+        rownames = FALSE)
+    })
+
+    # Individual genes selection ----------
+    observe({
+      req(tab() == "Pre-Process")
+
+      if (is.null(merged_data()$symbol)) {
+        choices <- merged_data()$gene_id
+      } else {
+        choices <- merged_data()$symbol
+      }
+      updateSelectizeInput(
+        session,
+        inputId = "selected_gene",
+        choices = choices,
+        selected = NULL,
+        server = TRUE
+      )
+    })
+
+    # Dynamic individual gene checkbox ----------
+    output$sd_checkbox <- renderUI({
+      req(input$gene_plot_box == FALSE)
+
+      checkboxInput(
+        inputId = ns("use_sd"),
+        label = "Use standard deviation instead of standard error",
+        value = FALSE
+      )
+    })
+
+    output$gene_plot <- renderPlot({
+      req(!is.null(merged_data()))
+      req(!is.null(input$selected_gene))
+
+      individual_plots(
+        merged_data = merged_data(),
+        sample_info = load_data$sample_info(),
+        selected_gene = input$selected_gene,
+        gene_plot_box = input$gene_plot_box,
+        use_sd = input$use_sd,
+        select_org = load_data$select_org()
+      )
+    })
+
+
 
     # Return Values -----------
     list(
-      missing_value = reactive(input$missing_value),
-      min_counts = reactive(input$min_counts),
-      n_min_samples_count = reactive(input$n_min_samples_count),
-      counts_log_start = reactive(input$counts_log_start),
-      counts_transform = reactive(input$counts_transform),
-      log_transform_fpkm = reactive(input$log_transform_fpkm),
-      log_start_fpkm = reactive(input$log_start_fpkm),
-      low_filter_fpkm = reactive(input$low_filter_fpkm),
-      n_min_samples_fpkm = reactive(input$n_min_samples_fpkm),
-      counts_deg_method = reactive(input$counts_deg_method)
+      NULL
     )
   })
 }
