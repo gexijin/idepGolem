@@ -336,7 +336,13 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     processed_data <- reactive({
       req(!is.null(load_data$converted_data()))
 
-      pre_process(
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Pre-Processing Data",
+        color = "#000000"
+      )
+
+      processed_data <- pre_process(
         data = load_data$converted_data(),
         missing_value = input$missing_value,
         data_file_format = load_data$data_file_format(),
@@ -350,6 +356,10 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         counts_log_start = input$counts_log_start,
         no_fdr = load_data$no_fdr()
       )
+
+      shinybusy::remove_modal_spinner()
+
+      return(processed_data)
     })
 
     # Counts barplot ------------

@@ -10,8 +10,12 @@
 NULL
 
 # retrieve detailed info on genes
-gene_info <- function(converted, select_org, idep_data) {
-  
+gene_info <- function(
+  converted,
+  select_org,
+  idep_data
+) {
+
   check <- check_object_state(
     check_exp = (is.null(converted)),
     true_message = as.data.frame("ID not recognized!")
@@ -100,7 +104,7 @@ input_data <- function(
   demo_data_file,
   demo_metadata_file
 ) {
-
+  browser()
   in_file_data <- expression_file
   in_file_data <- in_file_data$datapath
 
