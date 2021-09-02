@@ -104,7 +104,7 @@ input_data <- function(
   demo_data_file,
   demo_metadata_file
 ) {
-  browser()
+  
   in_file_data <- expression_file
   in_file_data <- in_file_data$datapath
 
