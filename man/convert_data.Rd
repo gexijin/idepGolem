@@ -4,14 +4,14 @@
 \alias{convert_data}
 \title{Convert expression data rownames to ensembl}
 \usage{
-convert_data(converted, no_id_conversion, data)
+convert_data(converted, data, no_id_conversion)
 }
 \arguments{
 \item{converted}{Data from convert_id function containing converted ids}
 
-\item{no_id_conversion}{TRUE/FALSE for converting data ids or not}
-
 \item{data}{Data from inputed expression file}
+
+\item{no_id_conversion}{TRUE/FALSE for converting data ids or not}
 }
 \value{
 Returns original data with rownames converted to ensembl

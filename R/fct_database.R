@@ -301,8 +301,7 @@ convert_id <- function(query, idep_data,
       )
       species_matched[1, 1] <- paste(
         species_matched[1, 1],
-        "***Used in mapping***  To change,
-         select from above and resubmit query."
+        "***Used in mapping***"
       )
       species_matched <- as.data.frame(species_matched[, 1])
     }

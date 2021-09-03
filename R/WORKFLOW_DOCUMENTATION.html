@@ -174,6 +174,7 @@ pre code {
 <p>This function will enable us to use the functions that drive the IDEPgolem package.</p>
 <pre class="r"><code>devtools::load_all()</code></pre>
 <pre><code>## i Loading idepGolem</code></pre>
+<p><br></p>
 <div id="data-paths" class="section level4">
 <h4>Data Paths</h4>
 <p>This begins the process of loading the data. <code>get_idep_data()</code> returns a list of the data that will be used to process and examine the loaded expression data. To analyze a data set, just substitute the path to the expression data into <code>YOUR_DATA_PATH</code>. If your data comes with information about the samples, substitute the path for that file into <code>YOUR_EXPERIMENT_PATH</code>. These data paths are then stored in a data frame that will be used in the <code>input_data</code> function.</p>
@@ -188,6 +189,7 @@ expression_file &lt;- data.frame(
 experiment_file &lt;- data.frame(
   datapath = YOUR_EXPERIMENT_PATH
 )</code></pre>
+<p><br></p>
 </div>
 <div id="input_data-function" class="section level4">
 <h4><code>input_data</code> Function</h4>
@@ -199,6 +201,7 @@ experiment_file &lt;- data.frame(
   demo_data_file = idep_data$demo_data_file,
   demo_metadata_file = idep_data$demo_metadata_file
 )</code></pre>
+<p><br></p>
 </div>
 <div id="gene-id-and-meta-data-functions" class="section level4">
 <h4>Gene ID and Meta Data Functions</h4>
@@ -209,7 +212,9 @@ experiment_file &lt;- data.frame(
 <li><p><code>gene_info</code></p>
 <p>Gathering the information on the converted ensembl IDs is the next step. The <code>converted</code> results are passed into the <code>gene_info</code> function to retrieve gene name information that is stored in <code>idep_data</code> as well. If <code>select_org</code> is <code>BestMatch</code>, the function will use the matched species from converted to retrieve the gene data. If a species code is provided, it will use that species directly. <code>gene_info</code> will then read a gene data file from the <code>idep_data</code> and return the resulting data frame. This data will be used to map to more informative gene names in the coming functions.</p></li>
 <li><p><code>convert_data</code></p>
-<p>This step will return the original data from <code>input_data</code> with the converted ensembl IDs as rownames. It uses the IDs that were matched with <code>convert_id</code> to swap the current rownames with the corresponding ensembl ID. <code>no_id_conversion</code> can be set to <code>TRUE</code> if the desired IDs are the original ones, but the simpler solution is to simply not run the function.</p></li>
+<p>This step will return the original data from <code>input_data</code> with the converted ensembl IDs as rownames, and a data frame of the mapped IDs. It uses the IDs that were matched with <code>convert_id</code> to swap the current rownames with the corresponding ensembl ID. <code>no_id_conversion</code> can be set to <code>TRUE</code> if the desired IDs are the original ones, but the simpler solution is to simply not run the function. The returned list contains the data with converted IDs in <code>data</code> and IDs in <code>mapped_ids</code>.</p></li>
+<li><p><code>get_all_gene_names</code></p>
+<p>This function enables us to combine all the gene name information that has been gathered in the preceding functions. <code>mapped_ids</code> are the matched IDs from <code>converted</code>, and <code>all_gene_info</code> is the data read from idep based off the identified species. This function returns a data frame with <code>User_ID</code> as the original IDs, <code>ensembl_ID</code> containing the converted IDs, and <code>symbol</code> containing the informative gene names. This data frame will later be used to create a data frame after processing for reproducibility.</p></li>
 </ol>
 <pre class="r"><code>converted &lt;- convert_id(
   query = rownames(loaded_data$data),
@@ -217,9 +222,9 @@ experiment_file &lt;- data.frame(
   select_org = &quot;BestMatch&quot;
 )
 
-print(converted$species_matched[2,])</code></pre>
-<pre><code>## [1] &quot;Mouse (6851)&quot;</code></pre>
-<pre class="r"><code>gene_data &lt;- gene_info(
+print(converted$species_matched[1,])</code></pre>
+<pre><code>## [1] &quot;Mouse (6851) ***Used in mapping***&quot;</code></pre>
+<pre class="r"><code>all_gene_info &lt;- gene_info(
   converted = converted,
   select_org = &quot;BestMatch&quot;,
   idep_data = idep_data
@@ -229,20 +234,27 @@ converted_data &lt;- convert_data(
   converted = converted,
   no_id_conversion = FALSE,
   data = loaded_data$data
+)
+
+gene_names &lt;- get_all_gene_names(
+  mapped_ids = converted_data$mapped_ids,
+  all_gene_info = all_gene_info
 )</code></pre>
+<p><br></p>
 </div>
 </div>
 <div id="process-data" class="section level1">
 <h1>Process Data</h1>
 <p>Now that the gene information has been retrieved and the IDs converted, it is possible to process the data and perform a transformation for analysis.</p>
+<p><br></p>
 <div id="pre_process-function" class="section level4">
 <h4><code>pre_process</code> Function</h4>
-<p>Processing the data requires many options to ensure the data gets to the desired form. This is the data that will be used in the exploratory analysis to come. The data to be processed is the <code>converted_data</code> from above. <code>missing_value</code> determines how to handle the missing values in <code>converted_data</code>. There are three options for idep currently</p>
+<p>Processing the data requires many options to ensure the data gets to the desired form. This is the data that will be used in the exploratory analysis to come. The data to be processed is the <code>converted_data</code> from above. The parameters <code>missing_value</code> and <code>data_file_format</code> have a list of input values to select from for processing. These values and descriptions can be found in the tables below. <code>missing_value</code> determines how missing data entries will be filled in, and <code>data_file_format</code> tells the function what type of data is being processed.</p>
 <table>
 <thead>
 <tr class="header">
 <th align="left">Input (<code>missing_value</code>)</th>
-<th align="left">Method</th>
+<th align="left">Description</th>
 </tr>
 </thead>
 <tbody>
@@ -260,23 +272,87 @@ converted_data &lt;- convert_data(
 </tr>
 </tbody>
 </table>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Input (<code>data_file_format</code>)</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><code>1</code></td>
+<td align="left">Read counts data (recommended)</td>
+</tr>
+<tr class="even">
+<td align="left"><code>2</code></td>
+<td align="left">Normalized expression values (RNA-seq FPKM, micro-array, etc.)</td>
+</tr>
+<tr class="odd">
+<td align="left"><code>3</code></td>
+<td align="left">Fold-changes and corrected P values from CuffDiff or any other program</td>
+</tr>
+</tbody>
+</table>
+<p><br></p>
+<div id="read-counts-data" class="section level5">
+<h5><strong>Read counts data</strong></h5>
+<p>For read counts data, the parameters <code>min_counts</code>, <code>n_min_samples_counts</code>, <code>counts_transform</code> and <code>counts_log_start</code> need input values. <code>min_counts</code> and <code>n_min_samples</code> work to filter the genes out of the data that do not have sufficient counts. The function counts the columns that have more counts than <code>min_counts</code> for each gene and filters out the genes with less columns than <code>n_min_samples</code>. For example, if you only wanted genes with more than 0 counts for each sample, you would set <code>min_counts = .5</code> and <code>n_min_samples = ncol(converted_data)</code>. <code>counts_transform</code> specifies the transformation to perform on the counts data. This parameter has 3 input options which are outlined below. If <code>counts_transform = 1</code>, <code>counts_log_start</code> determines the constant to add to CPM to ensure that there are no <code>log(0)</code> errors. All other parameters can be set to <code>NULL</code></p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Input (<code>counts_transform</code>)</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><code>1</code></td>
+<td align="left">EdgeR: log2(CPM+c) (Counts per Million + constant)</td>
+</tr>
+<tr class="even">
+<td align="left"><code>2</code></td>
+<td align="left">VST: variance stabilizing transform</td>
+</tr>
+<tr class="odd">
+<td align="left"><code>3</code></td>
+<td align="left">rlog: regularized log (slow)</td>
+</tr>
+</tbody>
+</table>
+<p><br></p>
+</div>
+<div id="normalized-expression-values-parameters" class="section level5">
+<h5><strong>Normalized expression values Parameters</strong></h5>
+<p>If the data being processed is for normalized expression values, the parameters <code>low_filter_fpkm</code>, <code>n_min_samples_fpkm</code>, <code>log_transform_fpkm</code> and <code>log_start_fpkm</code> need input values. <code>low_filter_fpkm</code> and <code>n_min_samples_fpkm</code> work together to filter out the genes that do not have enough counts. The function will count the columns that are greater than <code>low_filter_fpkm</code> and discard the gene if it is not more than <code>n_min_samples_fpkm</code> columns. The parameter <code>log_transform_fpkm</code> is <code>TRUE/FALSE</code> for whether to perform a log transform on the data or not. If <code>log_transform = TRUE</code>, then <code>log_start_fpkm</code> is the value that will be added to ensure there are no <code>log(0)</code> errors. All other values can be set to <code>NULL</code>.</p>
+<p><br></p>
+</div>
+<div id="fold-changes-and-corrected-p-values" class="section level5">
+<h5><strong>Fold-changes and corrected P values</strong></h5>
+<p>FOr this data type, there is only one additional parameter to provide an input for, <code>no_fdr</code>. This is a logical <code>TRUE/FALSE</code> to specify whether the data contains corrected p-values or not. <code>TRUE</code> denotes fold-change only data. All other parameters can be set to <code>NULL</code>.</p>
 <pre class="r"><code>processed_data &lt;- pre_process(
-  data = converted_data,
+  data = converted_data$data,
   missing_value = &quot;geneMedian&quot;,
   data_file_format = 1,
-  low_filter_fpkm = -1000,
-  n_min_samples_fpkm = 1,
-  log_transform_fpkm = TRUE,
-  log_start_fpkm = 1,
+  low_filter_fpkm = NULL,
+  n_min_samples_fpkm = NULL,
+  log_transform_fpkm = NULL,
+  log_start_fpkm = NULL,
   min_counts = .5,
   n_min_samples_count = 1,
   counts_transform = 1,
   counts_log_start = 4,
-  no_fdr = FALSE
+  no_fdr = NULL
 )</code></pre>
 <pre><code>## converting counts to integer mode</code></pre>
 <pre><code>## Warning in DESeqDataSet(se, design = design, ignoreRank): some variables in
 ## design formula are characters, converting to factors</code></pre>
+<p>WORK IN PROGRESS</p>
+<pre class="r"><code>merged_data &lt;- merge_data(
+  gene_names,
+  processed_data$raw_counts
+)</code></pre>
+</div>
 </div>
 </div>
 

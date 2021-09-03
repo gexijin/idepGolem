@@ -10,7 +10,7 @@ individual_plots(
   selected_gene,
   gene_plot_box,
   use_sd,
-  select_org
+  lab_rotate
 )
 }
 \arguments{
@@ -22,9 +22,9 @@ individual_plots(
 
 \item{use_sd}{T/F for standard error or standard deviation bars on bar plot}
 
-\item{select_org}{Species the expression data is from}
-
 \item{select_dene}{Gene(s) to be plotted}
+
+\item{select_org}{Species the expression data is from}
 }
 \value{
 A formatted ggplot. For gene_plot_box = TRUE the return will be a

@@ -4,17 +4,15 @@
 \alias{merge_data}
 \title{Merge data from gene info and processed data}
 \usage{
-merge_data(select_org, all_gene_info, processed_data)
+merge_data(all_gene_names, data)
 }
 \arguments{
-\item{select_org}{Selected species that the expression data is from}
+\item{all_gene_names}{All matched gene names from idep data}
 
-\item{all_gene_info}{Data containing the ensembl to gene name mapping}
-
-\item{processed_data}{Data that has gone through the pre_processing}
+\item{data}{Data matrix with rownames to merge with gene names}
 }
 \value{
-
+Inputted data with all gene name information.
 }
 \description{
 This function takes in the gene info data and merges it

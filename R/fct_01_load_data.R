@@ -261,12 +261,15 @@ input_data <- function(
 #' @return Returns original data with rownames converted to ensembl
 convert_data <- function(
   converted,
-  no_id_conversion,
-  data
+  data,
+  no_id_conversion
 ) {
-  
+
   if (is.null(converted) || no_id_conversion) {
-    return(data)
+    return(list(
+      data = data,
+      mapped_ids = rownames(data)
+    ))
   } else {
     mapping <- converted$conversion_table
 
@@ -280,6 +283,8 @@ convert_data <- function(
     )
     no_match <- which(is.na(merged[, 2]))
     merged[no_match, 2] <- merged[no_match, 1]
+
+    mapped_ids <- merged[, 1:2]
 
     # Multiple matches use one with highest SD ----------
     tmp <- apply(merged[, 3:(dim(merged)[2])], 1, sd)
@@ -295,6 +300,68 @@ convert_data <- function(
       sd
     )), ]
 
-    return(merged)
+    return(list(
+      data = merged,
+      mapped_ids = mapped_ids
+    ))
+  }
+}
+
+#' Get all matched gene names
+#'
+#' This function will create a data frame with all the matched
+#' gene names from the database.
+#'
+#' @param mapped_ids Matched IDs from the convert_data functions
+#' @param all_gene_info Gene information matched species in idep database
+#'
+#' @return Data frame containing all the matched ID names from idep
+#' database. Three columns denotes a recognized species for which
+#' idep had gene names for. Two columns means the IDs were converted
+#' to ensembl format, but no species was found for the gene names.
+#' One means no conversion occurred. 
+get_all_gene_names <- function(
+  mapped_ids,
+  all_gene_info
+) {
+  if (is.null(dim(mapped_ids))) {
+    return(data.frame("User_ID" = mapped_ids))
+  } else if (!is.null(all_gene_info$bool)) {
+    return(data.frame(
+      "User_ID" = mapped_ids[, 1],
+      "ensembl_ID" = mapped_ids[, 2]
+    ))
+  } else {
+    mapped_ids <- data.frame(
+      "User_ID" = mapped_ids[, 1],
+      "ensembl_ID" = mapped_ids[, 2]
+    )
+    all_names <- merge(
+      mapped_ids,
+      all_gene_info[, c("ensembl_gene_id", "symbol")],
+      by.x = "ensembl_ID",
+      by.y = "ensembl_gene_id",
+      all.x = T
+    )
+    all_names <- all_names[!duplicated(all_names$ensembl_ID), ]
+    all_names$symbol[all_names$symbol == ""] <- NA
+    all_names$symbol[is.na(all_names$symbol)] <- {
+      all_names$ensembl_ID[is.na(all_names$symbol)]
+    }
+    duplicates <- all_names$symbol %in% 
+                  all_names$symbol[duplicated(all_names$symbol)]
+    all_names$symbol[duplicates] <- paste(
+      all_names$symbol[duplicates],
+      all_names$ensembl_ID[duplicates]
+    )
+    all_names <- dplyr::select(
+      all_names,
+      User_ID,
+      ensembl_ID,
+      symbol,
+      tidyselect::everything()
+    )
+
+    return(all_names)
   }
 }

@@ -14,6 +14,7 @@ package.
 ```{r}
 devtools::load_all()
 ```
+<br>
 
 #### Data Paths
 
@@ -36,6 +37,7 @@ experiment_file <- data.frame(
   datapath = YOUR_EXPERIMENT_PATH
 )
 ```
+<br>
 
 #### `input_data` Function
 
@@ -55,6 +57,7 @@ loaded_data <- input_data(
   demo_metadata_file = idep_data$demo_metadata_file
 )
 ```
+<br>
 
 #### Gene ID and Meta Data Functions
 
@@ -88,10 +91,22 @@ following functions.
 3. `convert_data`
 
     This step will return the original data from `input_data` with the converted
-    ensembl IDs as rownames. It uses the IDs that were matched with `convert_id`
-    to swap the current rownames with the corresponding ensembl ID. 
-    `no_id_conversion` can be set to `TRUE` if the desired IDs are the original
-    ones, but the simpler solution is to simply not run the function.
+    ensembl IDs as rownames, and a data frame of the mapped IDs. It uses the IDs
+    that were matched with `convert_id` to swap the current rownames with the 
+    corresponding ensembl ID. `no_id_conversion` can be set to `TRUE` if the 
+    desired IDs are the original ones, but the simpler solution is to simply not
+    run the function. The returned list contains the data with converted IDs in 
+    `data` and IDs in `mapped_ids`.
+
+4. `get_all_gene_names`
+
+    This function enables us to combine all the gene name information that has
+    been gathered in the preceding functions. `mapped_ids` are the matched IDs
+    from `converted`, and `all_gene_info` is the data read from idep based off
+    the identified species. This function returns a data frame with `User_ID`
+    as the original IDs, `ensembl_ID` containing the converted IDs, and `symbol`
+    containing the informative gene names. This data frame will later be used to
+    create a data frame after processing for reproducibility.
     
 ```{r}
 converted <- convert_id(
@@ -100,9 +115,9 @@ converted <- convert_id(
   select_org = "BestMatch"
 )
 
-print(converted$species_matched[2,])
+print(converted$species_matched[1,])
 
-gene_data <- gene_info(
+all_gene_info <- gene_info(
   converted = converted,
   select_org = "BestMatch",
   idep_data = idep_data
@@ -113,43 +128,113 @@ converted_data <- convert_data(
   no_id_conversion = FALSE,
   data = loaded_data$data
 )
+
+gene_names <- get_all_gene_names(
+  mapped_ids = converted_data$mapped_ids,
+  all_gene_info = all_gene_info
+)
 ```
+<br>
 
 # Process Data
 
 Now that the gene information has been retrieved and the IDs converted, it is
 possible to process the data and perform a transformation for analysis.
 
+<br>
+
 #### `pre_process` Function
 
 Processing the data requires many options to ensure the data gets to the desired
 form. This is the data that will be used in the exploratory analysis to come.
-The data to be processed is the `converted_data` from above. `missing_value`
-determines how to handle the missing values in `converted_data`. There are
-three options for idep currently
+The data to be processed is the `converted_data` from above. The parameters
+`missing_value` and `data_file_format` have a list of input values to select 
+from for processing. These values and descriptions can be found in the tables 
+below. `missing_value` determines how missing data entries will be filled in, 
+and `data_file_format` tells the function what type of data is being processed.
 
-Input (`missing_value`)   Method
+Input (`missing_value`)   Description
 ------------------------- -----------------------------------------------------------
 `geneMedian`              Substitute median expression value for gene across all samples
 `treatAsZero`             Substitute "0" for all missing values
 `geneMedianInGroup`       Substitute median expression value for gene within sample group
 
+Input (`data_file_format`)   Description
+---------------------------  -----------------------------------------------------------
+`1`                          Read counts data (recommended)
+`2`                          Normalized expression values (RNA-seq FPKM, micro-array, etc.)
+`3`                          Fold-changes and corrected P values from CuffDiff or any other program
+
+<br>
+
+##### **Read counts data**
+
+For read counts data, the parameters `min_counts`, `n_min_samples_counts`,
+`counts_transform` and `counts_log_start` need input values. `min_counts` and
+`n_min_samples` work to filter the genes out of the data that do not have
+sufficient counts. The function counts the columns that have more counts than
+`min_counts` for each gene and filters out the genes with less columns than
+`n_min_samples`. For example, if you only wanted genes with more than 0 counts
+for each sample, you would set `min_counts = .5` and 
+`n_min_samples = ncol(converted_data)`. `counts_transform` specifies the
+transformation to perform on the counts data. This parameter has 3 input options
+which are outlined below. If `counts_transform = 1`, `counts_log_start`
+determines the constant to add to CPM to ensure that there are no `log(0)`
+errors. All other parameters can be set to `NULL`
+
+Input (`counts_transform`)   Description
+---------------------------  -----------------------------------------------------------
+`1`                          EdgeR: log2(CPM+c) (Counts per Million + constant)
+`2`                          VST: variance stabilizing transform
+`3`                          rlog: regularized log (slow)
+
+<br>
+
+##### **Normalized expression values Parameters**
+
+If the data being processed is for normalized expression values, the parameters
+`low_filter_fpkm`, `n_min_samples_fpkm`, `log_transform_fpkm` and 
+`log_start_fpkm` need input values. `low_filter_fpkm` and `n_min_samples_fpkm`
+work together to filter out the genes that do not have enough counts. The
+function will count the columns that are greater than `low_filter_fpkm` and 
+discard the gene if it is not more than `n_min_samples_fpkm` columns. The
+parameter `log_transform_fpkm` is `TRUE/FALSE` for whether to perform a log
+transform on the data or not. If `log_transform = TRUE`, then `log_start_fpkm`
+is the value that will be added to ensure there are no `log(0)` errors. All
+other values can be set to `NULL`.
+
+<br>
+
+##### **Fold-changes and corrected P values**
+
+FOr this data type, there is only one additional parameter to provide an input
+for, `no_fdr`. This is a logical `TRUE/FALSE` to specify whether the data
+contains corrected p-values or not. `TRUE` denotes fold-change only data. All
+other parameters can be set to `NULL`.
 
 ```{r}
 processed_data <- pre_process(
-  data = converted_data,
+  data = converted_data$data,
   missing_value = "geneMedian",
   data_file_format = 1,
-  low_filter_fpkm = -1000,
-  n_min_samples_fpkm = 1,
-  log_transform_fpkm = TRUE,
-  log_start_fpkm = 1,
+  low_filter_fpkm = NULL,
+  n_min_samples_fpkm = NULL,
+  log_transform_fpkm = NULL,
+  log_start_fpkm = NULL,
   min_counts = .5,
   n_min_samples_count = 1,
   counts_transform = 1,
   counts_log_start = 4,
-  no_fdr = FALSE
+  no_fdr = NULL
 )
 ```
 
+WORK IN PROGRESS
+
+```{r}
+merged_data <- merge_data(
+  gene_names,
+  processed_data$raw_counts
+)
+```
 
