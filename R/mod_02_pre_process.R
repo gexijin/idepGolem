@@ -102,11 +102,11 @@ mod_02_pre_process_ui <- function(id) {
           ),
           tags$style(
             type = "text/css",
-            "#pre_process-low_filter { width:100%;   margin-top:-12px}"
+            "#pre_process-low_filter_fpkm { width:100%;margin-top:-12px}"
           ),
           tags$style(
             type = "text/css",
-            "#pre_process-n_min_samples_fpkm { width:100%;   margin-top:-12px}"
+            "#pre_process-n_min_samples_fpkm { width:100%;margin-top:-12px}"
           ),
           radioButtons(
             inputId = ns("log_transform_fpkm"),
@@ -145,8 +145,9 @@ mod_02_pre_process_ui <- function(id) {
           selected = "geneMedian"
         ),
         br(),
-        br(),
 
+        strong("Download Processed Data"),
+        br(),
         # Download button for processed data -----------
         downloadButton(
           outputId = ns("download_processed_data"),
@@ -170,7 +171,7 @@ mod_02_pre_process_ui <- function(id) {
             font-size: 16px;
             font-style: italic;}"
         )),
-        textOutput(outputId = ns("readCountsBias")),
+        textOutput(outputId = ns("read_counts_bias")),
         tags$head(tags$style(
           "#pre_process-read_counts_bias{color: red;
             font-size: 16px;
@@ -274,12 +275,20 @@ mod_02_pre_process_ui <- function(id) {
                   value = FALSE
                 ),
                 uiOutput(ns("sd_checkbox"))
-              ) 
+              ),
+              column(4,
+                radioButtons(
+                  inputId = ns("angle_ind_axis_lab"),
+                  label = "Angle Axis Labels",
+                  choices = c(0, 45, 90),
+                  selected = 0
+                )
+              )
             ),
             plotOutput(
               outputId = ns("gene_plot"),
               width = "100%",
-              height = "400px"
+              height = "500px"
             )
           )
         )
@@ -403,23 +412,30 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       )
     })
 
-    # Merge Data with Gene names ----------
-    merged_data <- reactive({
+    # Merge Data Sets with Gene names ----------
+    merged_processed_data <- reactive({
       req(!is.null(processed_data()$data))
 
-      merge_data(
-        select_org = load_data$select_org(),
-        all_gene_info = load_data$all_gene_info(),
-        processed_data = processed_data()$data
+      merged_data <- merge_data(
+        load_data$all_gene_names(),
+        processed_data()$data
+      )
+    })
+    merged_raw_counts_data <- reactive({
+      req(!is.null(processed_data()$data))
+
+      merged_data <- merge_data(
+        load_data$all_gene_names(),
+        processed_data()$raw_counts
       )
     })
 
     # Pre-Process Data Table ----------
     output$examine_data <- DT::renderDataTable({
-      req(!is.null(merged_data()))
+      req(!is.null(merged_processed_data()))
 
       DT::datatable(
-        merged_data(),
+        merged_processed_data(),
         options = list(
           pageLength = 10,
           scrollX = "400px"
@@ -431,10 +447,10 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     observe({
       req(tab() == "Pre-Process")
 
-      if (is.null(merged_data()$symbol)) {
-        choices <- merged_data()$gene_id
+      if (is.null(merged_processed_data()$symbol)) {
+        choices <- merged_processed_data()$User_id
       } else {
-        choices <- merged_data()$symbol
+        choices <- merged_processed_data()$symbol
       }
       updateSelectizeInput(
         session,
@@ -457,20 +473,61 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     })
 
     output$gene_plot <- renderPlot({
-      req(!is.null(merged_data()))
+      req(!is.null(merged_processed_data()))
       req(!is.null(input$selected_gene))
 
       individual_plots(
-        merged_data = merged_data(),
+        merged_data = merged_processed_data(),
         sample_info = load_data$sample_info(),
         selected_gene = input$selected_gene,
         gene_plot_box = input$gene_plot_box,
         use_sd = input$use_sd,
-        select_org = load_data$select_org()
+        lab_rotate = input$angle_ind_axis_lab
       )
     })
 
+    # Download buttons ----------
+    output$download_processed_data <- downloadHandler(
+      filename = function() {
+        "processed_data.csv"
+      },
+      content = function(file) {
+        write.csv(merged_processed_data(), file)
+      }
+    )
+    output$download_converted_counts <- downloadHandler(
+      filename = function() {
+        "converted_counts_data.csv"
+      },
+      content = function(file) {
+        write.csv(merged_raw_counts_data(), file)
+      }
+    )
 
+    # Text Output Information -----------
+    output$n_genes_filter <- renderText({
+      req(processed_data()$data_size)
+
+      if (dim(load_data$all_gene_names())[2] == 1) {
+        return(paste(
+          processed_data()$data_size[1], "genes in",
+          processed_data()$data_size[4], "samples.",
+          processed_data()$data_size[3], " genes passed filter
+          (see above). Original gene IDs used."
+        ))
+      } else {
+        return(paste(
+          processed_data()$data_size[1], "genes in",
+          processed_data()$data_size[4], "samples.",
+          processed_data()$data_size[3], " genes passed filter
+          (see above), ", load_data$n_matched(),
+          " were converted to Ensembl gene IDs in our database.
+          The remaining ", processed_data()$data_size[3] -
+          load_data$n_matched(), " genes were kept in the
+          data using original IDs."
+        ))
+      }
+    })
 
     # Return Values -----------
     list(

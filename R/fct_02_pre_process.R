@@ -261,11 +261,14 @@ total_counts_ggplot <- function(
     ggplot2::aes(x = sample, y = counts, fill = grouping)
   ) +
     ggplot2::geom_bar(stat = "identity") +
-    ggplot2::theme_dark() +
+    ggplot2::theme_light() +
     ggplot2::theme(
       legend.position = "none",
       axis.title.x = ggplot2::element_blank(),
-      axis.title.y = ggplot2::element_blank(),
+      axis.title.y = ggplot2::element_text(
+        color = "black",
+        size = 14
+      ),
       axis.text.x = ggplot2::element_text(
         angle = 90,
         size = x_axis_labels
@@ -280,7 +283,10 @@ total_counts_ggplot <- function(
         hjust = .5
       )
     ) +
-    ggplot2::labs(title = paste("Total read counts (millions)", memo))
+    ggplot2::labs(
+      title = paste("Total read counts (millions)", memo),
+      y = "Counts (Millions)"
+    )
 
   return(plot)
 }
@@ -318,7 +324,7 @@ eda_scatter <- function(
     x = paste0(plot_xaxis),
     y =  paste0(plot_yaxis)
   ) +
-  ggplot2::theme_classic() +
+  ggplot2::theme_light() +
   ggplot2::theme(legend.position = "none",
     axis.text = ggplot2::element_text(size = 14),
     axis.title = ggplot2::element_text(size = 16),
@@ -392,7 +398,10 @@ eda_boxplot <- function(
     ggplot2::theme(
       legend.position = "none",
       axis.title.x = ggplot2::element_blank(),
-      axis.title.y = ggplot2::element_blank(),
+      axis.title.y = ggplot2::element_text(
+        color = "black",
+        size = 14
+      ),
       axis.text.x = ggplot2::element_text(
         angle = 90,
         size = x_axis_labels
@@ -407,7 +416,10 @@ eda_boxplot <- function(
         hjust = .5
       )
     ) +
-    ggplot2::labs(title = paste("Distribution of transformed data", memo))
+    ggplot2::labs(
+      title = paste("Distribution of Transformed Data", memo),
+      y = "Transformed Expression"
+    )
 
   return(plot)
 }
@@ -466,11 +478,17 @@ eda_density <- function(
       ggplot2::aes(x = expression, color = group_fill, group = sample)
     ) +
     ggplot2::geom_density(size = 1) +
-    ggplot2::theme_linedraw() +
+    ggplot2::theme_light() +
     ggplot2::theme(
       legend.position = legend,
-      axis.title.x = ggplot2::element_blank(),
-      axis.title.y = ggplot2::element_blank(),
+      axis.title.x = ggplot2::element_text(
+        color = "black",
+        size = 14
+      ),
+      axis.title.y = ggplot2::element_text(
+        color = "black",
+        size = 14
+      ),
       axis.text.x = ggplot2::element_text(
         size = x_axis_labels
       ),
@@ -485,7 +503,9 @@ eda_density <- function(
       )
     ) +
     ggplot2::labs(
-      title = paste("Density plot of transformed data", memo),
+      title = paste("Density Plot of Transformed Data", memo),
+      x = "Transformed Expression",
+      y = "Density",
       color = "Sample"
     )
 
@@ -499,50 +519,69 @@ eda_density <- function(
 #' The returned data contains the gene names as well as the
 #' ensembl id in the first two columns.
 #'
-#' @param select_org Selected species that the expression data is from
-#' @param all_gene_info Data containing the ensembl to gene name mapping
-#' @param processed_data Data that has gone through the pre_processing
+#' @param all_gene_names All matched gene names from idep data
+#' @param data Data matrix with rownames to merge with gene names
 #' 
-#' @return 
+#' @return Inputted data with all gene name information.
 merge_data <- function(
-  select_org,
-  all_gene_info,
-  processed_data
+  all_gene_names,
+  data
 ) {
 
   isolate({
-  if (
-    select_org == "NEW" || ncol(all_gene_info) == 1 ||
-    is.null(all_gene_info)
-  ) {
-    new_data <- round(processed_data, 2)
+  if (dim(all_gene_names)[2] == 1) {
+    new_data <- round(data, 2)
     new_data <- as.data.frame(new_data)
-    new_data$gene_id <- rownames(processed_data)
+    new_data$User_id <- rownames(new_data)
     new_data <- dplyr::select(
       new_data,
-      gene_id,
+      User_id,
       tidyselect::everything()
     )
+    rownames(new_data) <- seq(1, nrow(new_data), 1)
     tmp <- apply(new_data[, 2:dim(new_data)[2]], 1, sd)
     new_data <- new_data[order(-tmp), ]
+
     return(new_data)
-  } else {
-    all_data <- merge(
-      all_gene_info[, c("ensembl_gene_id", "symbol")],
-      round(processed_data, 2),
-      by.x = "ensembl_gene_id",
+  } else if (dim(all_gene_names)[2] == 2) {
+    new_data <- merge(
+      all_gene_names,
+      round(data, 2),
+      by.x = "ensembl_ID",
       by.y = "row.names",
       all.y = T
     )
-    tmp <- apply(all_data[, 3:dim(all_data)[2]], 1, sd)
-    all_data <- all_data[order(-tmp), ]
-    all_data <- all_data[!duplicated(all_data$ensembl_gene_id), ]
-    all_data$symbol[all_data$symbol == ""] <- NA
-    all_data$symbol[is.na(all_data$symbol)] <- {
-      all_data$ensembl_gene_id[is.na(all_data$symbol)]
-    }
+    new_data <- dplyr::select(
+      new_data,
+      User_ID,
+      ensembl_ID,
+      tidyselect::everything()
+    )
+    rownames(new_data) <- seq(1, nrow(new_data), 1)
+    tmp <- apply(new_data[, 3:dim(new_data)[2]], 1, sd)
+    new_data <- new_data[order(-tmp), ]
 
-    return(all_data)
+    return(new_data)
+  } else {
+    new_data <- merge(
+      all_gene_names,
+      round(data, 2),
+      by.x = "ensembl_ID",
+      by.y = "row.names",
+      all.y = T
+    )
+    new_data <- dplyr::select(
+      new_data,
+      User_ID,
+      ensembl_ID,
+      symbol,
+      tidyselect::everything()
+    )
+    rownames(new_data) <- seq(1, nrow(new_data), 1)
+    tmp <- apply(new_data[, 4:dim(new_data)[2]], 1, sd)
+    new_data <- new_data[order(-tmp), ]
+
+    return(new_data)
   }
   })
 }
@@ -573,14 +612,17 @@ individual_plots <- function(
   selected_gene,
   gene_plot_box,
   use_sd,
-  select_org
+  lab_rotate
 ) {
   library(magrittr)
-  if (select_org == "NEW" || is.null(merged_data$symbol)) {
-    merged_data$symbol <- merged_data$gene_id
-    merged_data <- dplyr::select(merged_data, -gene_id)
+  if (is.null(merged_data$ensembl_ID)) {
+    merged_data$symbol <- merged_data$User_id
+    merged_data <- dplyr::select(merged_data, -User_ID)
+  } else if (is.null(merged_data$symbol)) {
+    merged_data$symbol <- merged_data$ensembl_id
+    merged_data <- dplyr::select(merged_data, -User_ID, - ensembl_ID)
   } else {
-    merged_data <- dplyr::select(merged_data, -ensembl_gene_id)
+    merged_data <- dplyr::select(merged_data, -User_ID, -ensembl_ID)
   }
   plot_data <- merged_data %>%
       dplyr::filter(symbol %in% selected_gene) %>%
@@ -599,9 +641,12 @@ individual_plots <- function(
     ) +
     ggplot2::geom_line() +
     ggplot2::geom_point(size = 5, fill = "white") +
-    ggplot2::labs(title = "Transformed Expression Level") +
+    ggplot2::labs(
+      title = "Transformed Expression Level",
+      y = "Transformed Expression"
+    ) +
     ggplot2::coord_cartesian(ylim = c(0, max(plot_data$value))) +
-    ggplot2::theme_minimal() +
+    ggplot2::theme_light() +
     ggplot2::theme(
       plot.title = ggplot2::element_text(
         color = "black",
@@ -610,12 +655,16 @@ individual_plots <- function(
         hjust = .5
       ),
       axis.text.x = ggplot2::element_text(
-        angle = 90,
-        size = x_axis_labels
+        angle = as.numeric(lab_rotate),
+        size = x_axis_labels,
+        vjust = .5
       ),
       axis.text.y = ggplot2::element_text(size = 16),
       axis.title.x = ggplot2::element_blank(),
-      axis.title.y = ggplot2::element_blank(),
+      axis.title.y = ggplot2::element_text(
+        color = "black",
+        size = 14
+      ),
       legend.text = ggplot2::element_text(size = 12)
     )
 
@@ -635,8 +684,11 @@ individual_plots <- function(
       ggplot2::aes(x = symbol, y = Mean, fill = groups)
     ) +
     ggplot2::geom_bar(stat = "identity", position = ggplot2::position_dodge()) +
-    ggplot2::labs(title = "Expression Level") +
-    ggplot2::theme_bw() +
+    ggplot2::labs(
+      title = "Expression Level",
+      y = "Grouped Transformed Expression"
+    ) +
+    ggplot2::theme_light() +
     ggplot2::theme(
       plot.title = ggplot2::element_text(
         color = "black",
@@ -645,12 +697,16 @@ individual_plots <- function(
         hjust = .5
       ),
       axis.text.x = ggplot2::element_text(
-        angle = 0,
-        size = x_axis_labels
+        angle = as.numeric(lab_rotate),
+        size = x_axis_labels,
+        vjust = .5
       ),
       axis.text.y = ggplot2::element_text(size = 16),
       axis.title.x = ggplot2::element_blank(),
-      axis.title.y = ggplot2::element_blank(),
+      axis.title.y = ggplot2::element_text(
+        color = "black",
+        size = 14
+      ),
       legend.text = ggplot2::element_text(size = 12)
     )
 

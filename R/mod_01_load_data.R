@@ -300,7 +300,7 @@ mod_01_load_data_server <- function(id, idep_data) {
         select_org = input$select_org
       )
 
-      gene_data <- gene_info(
+      all_gene_info <- gene_info(
         converted = converted,
         select_org = input$select_org,
         idep_data = idep_data
@@ -312,12 +312,18 @@ mod_01_load_data_server <- function(id, idep_data) {
         data = loaded_data()$data
       )
 
+      all_gene_names <- get_all_gene_names(
+        mapped_ids = converted_data$mapped_ids,
+        all_gene_info = all_gene_info
+      )
+
       shinybusy::remove_modal_spinner()
 
       return(list(
         converted = converted,
-        all_gene_info = gene_data,
-        converted_data = converted_data
+        all_gene_info = all_gene_info,
+        converted_data = converted_data$data,
+        all_gene_names = all_gene_names
       ))
     })
 
@@ -347,12 +353,12 @@ mod_01_load_data_server <- function(id, idep_data) {
 
     list(
       data_file_format = reactive(input$data_file_format),
-      converted_data = reactive(conversion_info()$converted_data),
-      sample_info = reactive(loaded_data()$sample_info),
-      converted = reactive(conversion_info()$converted),
-      all_gene_info = reactive(conversion_info()$all_gene_info),
       no_fdr = reactive(input$no_fdr),
-      select_org = reactive(input$select_org)
+      sample_info = reactive(loaded_data()$sample_info),
+      all_gene_info = reactive(conversion_info()$all_gene_info),
+      converted_data = reactive(conversion_info()$converted_data),
+      all_gene_names = reactive(conversion_info()$all_gene_names),
+      n_matched = reactive(length(conversion_info()$converted$ids))
     )
   })
 }
