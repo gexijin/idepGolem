@@ -6,10 +6,12 @@
 #' @noRd
 app_ui <- function(request) {
   library(shinyBS)
+
   tagList(
     # Leave this function for adding external resources
     golem_add_external_resources(),
     # Your application UI logic
+
     navbarPage(
       "idepGolem",
       id = "navbar",

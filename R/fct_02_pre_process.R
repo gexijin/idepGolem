@@ -731,3 +731,89 @@ individual_plots <- function(
     return(gene_bar)
   }
 }
+
+#' Data processing message
+#' 
+#' Creates a message about the size of the counts
+#' data and the amount of IDs that were converted.
+#' 
+#' @param data_size Data size matrix from processing function
+#' @param all_gene_names Data frame with all gene names
+#' @param n_matched Count of matched IDs after processing
+#' 
+#' @return Message about processed data
+conversion_counts_message <- function(
+  data_size,
+  all_gene_names,
+  n_matched
+) {
+  if (dim(all_gene_names)[2] == 1) {
+    return(paste(
+      data_size[1], "genes in", data_size[4], "samples.",
+      data_size[3], " genes passed filter. Original gene IDs used."
+    ))
+  } else {
+    return(paste(
+      data_size[1], "genes in", data_size[4], "samples.",
+      data_size[3], " genes passed filter, ", n_matched,
+      " were converted to Ensembl gene IDs in our database.
+      The remaining ", data_size[3] - n_matched, " genes were 
+      kept in the data using original IDs."
+    ))
+  }
+}
+
+#' Create message for sequencing depth bias
+#'
+#' This function creates a warning message for the
+#' UI to present to the user regarding the sequencing
+#' depth bias.
+#' 
+#' @param raw_counts Raw counts data from the processing function
+#' @param sample_info Experiment file information about each sample
+#' 
+#' @return Message for the UI
+counts_bias_message <- function(
+  raw_counts,
+  sample_info
+) {
+  total_counts <- colSums(raw_counts)
+  groups <- as.factor(
+    detect_groups(
+      colnames(raw_counts),
+      sample_info
+    )
+  )
+  message <- NULL
+  # ANOVA of total read counts vs sample groups parsed by sample name
+  pval <- summary(aov(total_counts ~ groups))[[1]][["Pr(>F)"]][1]
+  means <- aggregate(total_counts, by = list(groups), mean)
+  max_min_ratio <- max(means[, 2]) / min(means[, 2])
+
+  if (is.null(pval)) {
+    message <- NULL
+  } else if (pval < 0.05) {
+    message <- paste(
+      "Warning! Sequencing depth bias detected. Total read counts are
+       significantly different among sample groups
+       (p=", sprintf("%-3.2e", pval), ") based on ANOVA.
+       Total read counts max/min =", round(max_min_ratio, 2)
+    )
+  }
+  # ANOVA of total read counts vs factors in experiment design
+  if (!is.null(sample_info)) {
+    y <- sample_info
+    for (j in 1:ncol(y)) {
+      pval <- summary(aov(
+        total_counts ~ as.factor(y[, j])))[[1]][["Pr(>F)"]][1]
+
+      if (pval < 0.01) {
+        message <- paste(
+          message, " Total read counts seem to be correlated with factor",
+          colnames(y)[j], "(p=",  sprintf("%-3.2e",pval),").  "
+        )
+      }
+    }
+  }
+  return(message)
+}

@@ -358,7 +358,7 @@ mod_01_load_data_server <- function(id, idep_data) {
       all_gene_info = reactive(conversion_info()$all_gene_info),
       converted_data = reactive(conversion_info()$converted_data),
       all_gene_names = reactive(conversion_info()$all_gene_names),
-      n_matched = reactive(length(conversion_info()$converted$ids))
+      matched_ids = reactive(conversion_info()$converted$ids)
     )
   })
 }

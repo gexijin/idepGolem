@@ -165,12 +165,10 @@ mod_02_pre_process_ui <- function(id) {
         ),
         br(),
         br(),
-        textOutput(outputId = ns("n_genes_filter")),
-        tags$head(tags$style(
-          "#pre_process-n_genes_filter{color: blue;
-            font-size: 16px;
-            font-style: italic;}"
-        )),
+        actionButton(
+          inputId = ns("show_messages"),
+          label = "Show Conversion Messages"
+        ),
         textOutput(outputId = ns("read_counts_bias")),
         tags$head(tags$style(
           "#pre_process-read_counts_bias{color: red;
@@ -504,29 +502,58 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       }
     )
 
+    # Number of converted IDs ---------
+    n_matched <- reactive({
+      req(!is.null(processed_data))
+
+      match_process_ids <-
+        load_data$matched_ids() %in% rownames(processed_data()$data)
+
+      return(sum(match_process_ids))
+    })
+
+    read_counts_bias <- reactive({
+      req(!is.null(processed_data()$raw_counts))
+
+      counts_bias_message(
+        raw_counts = processed_data()$raw_counts,
+        sample_info = load_data$sample_info()
+      )
+    })
+
     # Text Output Information -----------
-    output$n_genes_filter <- renderText({
+    converted_message <- reactive({
       req(processed_data()$data_size)
 
-      if (dim(load_data$all_gene_names())[2] == 1) {
-        return(paste(
-          processed_data()$data_size[1], "genes in",
-          processed_data()$data_size[4], "samples.",
-          processed_data()$data_size[3], " genes passed filter
-          (see above). Original gene IDs used."
-        ))
-      } else {
-        return(paste(
-          processed_data()$data_size[1], "genes in",
-          processed_data()$data_size[4], "samples.",
-          processed_data()$data_size[3], " genes passed filter
-          (see above), ", load_data$n_matched(),
-          " were converted to Ensembl gene IDs in our database.
-          The remaining ", processed_data()$data_size[3] -
-          load_data$n_matched(), " genes were kept in the
-          data using original IDs."
-        ))
-      }
+      conversion_counts_message(
+        data_size = processed_data()$data_size,
+        all_gene_names = load_data$all_gene_names(),
+        n_matched = n_matched()
+      )
+    })
+
+    observe({
+      req(input$show_messages || tab() == "Pre-Process")
+
+      showNotification(
+        ui = converted_message(),
+        id = "conversion_counts",
+        duration = NULL,
+        type = "default"
+      )
+      showNotification(
+        ui = read_counts_bias(),
+        id = "read_counts_message",
+        duration = NULL,
+        type = "error"
+      )
+    })
+
+    observe({
+      req(tab() != "Pre-Process")
+
+      removeNotification("conversion_counts")
+      removeNotification("read_counts_message")
     })
 
     # Return Values -----------
