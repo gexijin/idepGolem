@@ -2,10 +2,20 @@
 % Please edit documentation in R/fct_02_pre_process.R
 \name{counts_bias_message}
 \alias{counts_bias_message}
-\title{READ COUNTS BIAS MESSAGE}
+\title{Create message for sequencing depth bias}
 \usage{
 counts_bias_message(raw_counts, sample_info)
 }
+\arguments{
+\item{raw_counts}{Raw counts data from the processing function}
+
+\item{sample_info}{Experiment file information about each sample}
+}
+\value{
+Message for the UI
+}
 \description{
-READ COUNTS BIAS MESSAGE
+This function creates a warning message for the
+UI to present to the user regarding the sequencing
+depth bias.
 }

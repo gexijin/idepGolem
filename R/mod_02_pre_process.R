@@ -190,6 +190,8 @@ mod_02_pre_process_ui <- function(id) {
         ),
         tabsetPanel(
           id = ns("eda_tabs"),
+
+          # Barplot for read counts data ----------
           tabPanel(
             title = "Barplot",
             br(),
@@ -199,6 +201,8 @@ mod_02_pre_process_ui <- function(id) {
               height = "500px"
             )
           ),
+
+          # Scatterplot with interactive axises ----------
           tabPanel(
             title = "Scatterplot",
             # Axis selectors -----------
@@ -230,6 +234,8 @@ mod_02_pre_process_ui <- function(id) {
               height = "500px"
             )
           ),
+
+          # Boxplot of transformed data ----------
           tabPanel(
             title = "Boxplot",
             br(),
@@ -239,6 +245,8 @@ mod_02_pre_process_ui <- function(id) {
               height = "500px"
             )
           ),
+
+          # Density plot of transformed data ---------
           tabPanel(
             title = "Density Plot",
             br(),
@@ -248,11 +256,15 @@ mod_02_pre_process_ui <- function(id) {
               height = "500px"
             ),
           ),
+
+          # Searchable table of transformed converted data ---------
           tabPanel(
             title = "Converted Data",
             br(),
             DT::dataTableOutput(outputId = ns("examine_data"))
           ),
+
+          # Plot panel for individual genes ---------
           tabPanel(
             title = "Individual Genes",
             br(),

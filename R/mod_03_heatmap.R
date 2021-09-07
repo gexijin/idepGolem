@@ -23,25 +23,6 @@ mod_03_heatmap_ui <- function(id) {
           value = 1000,
           step = 100
         ),
-
-        # Pop-up buttons -----------
-        actionButton(
-          inputId = ns("show_gene_sd_heatmap"),
-          label = "Gene SD distribution"
-        ),
-        actionButton(
-          inputId = ns("show_interactive_heatmap"),
-          label = "Interactive heatmap"
-        ),
-        br(),
-        actionButton(
-          inputId = ns("show_correlation"),
-          label = "Correlation matrix"
-        ),
-        actionButton(
-          inputId = ns("show_sample_tree"),
-          label = "Sample Tree"
-        ),
         HTML(
           '<hr style="height:1px;border:none;
            color:#333;background-color:#333;" />'
@@ -128,14 +109,6 @@ mod_03_heatmap_ui <- function(id) {
 
         # Sample coloring bar -----------
         htmlOutput(ns("list_factors_heatmap")),
-        downloadButton(
-          outputId = "download_data",
-          label = "Heatmap data"
-        ),
-        downloadButton(
-          outputId = ns("download_heatmap"),
-          label = "High-resolution figure"
-        ),
         br(),
         a(
           h5("Questions?", align = "right"),
@@ -144,28 +117,44 @@ mod_03_heatmap_ui <- function(id) {
         )
       ),
       mainPanel(
-        plotOutput(outputId = ns("heatmap_main")),
-        shinyBS::bsModal(
-          id = "modalExample8",
-          title = "Correlation matrix using top 75% genes",
-          trigger = ns("show_correlation"),
-          size = "large",
-          downloadButton(
-            outputId = ns("download_correlation_matrix"),
-            label = "Data"
-          ),
-          downloadButton(
-            outputId = ns("download_correlation_matrix_plot"),
-            label = "Figure"
-          ),
-          checkboxInput(
-            inputId = ns("label_PCC"),
-            label = "Label w/ Pearson's correlation coefficients",
-            value = TRUE
-          ),
-          plotOutput(outputId = ns("correlation_matrix"))
-        ),
+        tabsetPanel(
+          id = ns("heatmap_panels"),
 
+          # Main heatmap ---------
+          tabPanel(
+            title = "Heatmap",
+            br(),
+            plotOutput(outputId = ns("heatmap_main"))
+          ),
+
+          # Interactive heatmap panel ----------
+          tabPanel(
+            title = "Interactive Heatmap",
+            br(),
+            # INSERT PLOTLY OUTPUT
+          ),
+
+          # Gene Standard Deviation Distribution ----------
+          tabPanel(
+            title = "Gene SD Distribution",
+            br(),
+            # INSERT SD DISTRIBUTION PLOT
+          ),
+
+          # Correlation matrix panel ----------
+          tabPanel(
+            title = "Correlation Matrix",
+            br(),
+            # Insert Correlation Matrix
+          ),
+
+          # Sample Tree Plot ---------
+          tabPanel(
+            title = "Sample Tree",
+            br(),
+            # INSERT SAMPLE TREE PLOT
+          )
+        )
       )
     )
   )
@@ -218,20 +207,15 @@ mod_03_heatmap_server <- function(id) {
 
     # Sample color bar render ----------
     output$list_factors_heatmap <- renderUI({
-      tem <- input$selectOrg
-      tem <- input$limmaPval
-      tem <- input$limmaFC
+      req(!is.null(pre_process$sample_info()))
 
-      if (is.null(read_sample_info())) {
-        return(NULL)
-      } else {
-        selectInput(
-          inputId = ns("select_factors_heatmap"),
-          label = "Sample color bar:",
-          choices = c(colnames(read_sample_info()), "Sample_Name")
-        )
-      }
+      selectInput(
+        inputId = ns("select_factors_heatmap"),
+        label = "Sample color bar:",
+        choices = c(colnames(read_sample_info()), "Sample_Name")
+      )
     })
+
   })
 }
 

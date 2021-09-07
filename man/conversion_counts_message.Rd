@@ -2,10 +2,21 @@
 % Please edit documentation in R/fct_02_pre_process.R
 \name{conversion_counts_message}
 \alias{conversion_counts_message}
-\title{CONVERTED COUNTS BIAS}
+\title{Data processing message}
 \usage{
 conversion_counts_message(data_size, all_gene_names, n_matched)
 }
+\arguments{
+\item{data_size}{Data size matrix from processing function}
+
+\item{all_gene_names}{Data frame with all gene names}
+
+\item{n_matched}{Count of matched IDs after processing}
+}
+\value{
+Message about processed data
+}
 \description{
-CONVERTED COUNTS BIAS
+Creates a message about the size of the counts
+data and the amount of IDs that were converted.
 }
