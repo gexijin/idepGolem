@@ -32,7 +32,7 @@ NULL
 #'
 #' @return A list containing the transformed data, the mean kurtosis,
 #' the raw counts, a data type warning, the size of the original data,
-#' and p-values. 
+#' and p-values.
 pre_process <- function(
   data,
   missing_value,
@@ -607,7 +607,7 @@ merge_data <- function(
 #' in the sample information.
 #'
 individual_plots <- function(
-  merged_data,
+  individual_data,
   sample_info,
   selected_gene,
   gene_plot_box,
@@ -615,16 +615,10 @@ individual_plots <- function(
   lab_rotate
 ) {
   library(magrittr)
-  if (is.null(merged_data$ensembl_ID)) {
-    merged_data$symbol <- merged_data$User_id
-    merged_data <- dplyr::select(merged_data, -User_ID)
-  } else if (is.null(merged_data$symbol)) {
-    merged_data$symbol <- merged_data$ensembl_id
-    merged_data <- dplyr::select(merged_data, -User_ID, - ensembl_ID)
-  } else {
-    merged_data <- dplyr::select(merged_data, -User_ID, -ensembl_ID)
-  }
-  plot_data <- merged_data %>%
+  individual_data <- as.data.frame(individual_data)
+  individual_data$symbol <- rownames(individual_data)
+
+  plot_data <- individual_data %>%
       dplyr::filter(symbol %in% selected_gene) %>%
       tidyr::pivot_longer(!symbol, names_to = "sample", values_to = "value")
   if (ncol(plot_data) < 31) {

@@ -15,18 +15,25 @@ mod_03_heatmap_ui <- function(id) {
 
       # Heatmap Panel Sidebar ----------
       sidebarPanel(
-        textOutput(ns("test")),
         sliderInput(
           inputId = ns("n_genes"),
           label = h4("Most variable genes to include:"),
           min = 0,
           max = 12000,
-          value = 100,
+          value = c(0, 100),
           step = 50
         ),
         HTML(
           '<hr style="height:1px;border:none;
            color:#333;background-color:#333;" />'
+        ),
+
+        # Gene ID Selection -----------
+        selectInput(
+          inputId = ns("select_gene_id"),
+          label = "Select Gene ID Label (<= 50 genes)",
+          choices = NULL,
+          selected = NULL
         ),
 
         # Heatmap customizing features ----------
@@ -110,6 +117,11 @@ mod_03_heatmap_ui <- function(id) {
           label = "Do not re-order or cluster samples",
           value = FALSE
         ),
+        checkboxInput(
+          inputId = ns("show_row_dend"),
+          label = "Show Row Dendogram",
+          value = TRUE
+        ),
 
         # Sample coloring bar -----------
         htmlOutput(ns("list_factors_heatmap")),
@@ -131,7 +143,7 @@ mod_03_heatmap_ui <- function(id) {
             plotOutput(
               outputId = ns("heatmap_main"),
               width = "100%",
-              height = "800px"
+              height = "700px"
             )
           ),
 
@@ -186,11 +198,11 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
       if(nrow(pre_process$data()) > 12000) {
         max_genes <- 12000
       } else {
-        max_genes <- round(nrow(pre_process$data()), -2)
+        max_genes <- round(nrow(pre_process$data()) + 50, -2)
       }
       updateSliderInput(
         inputId = "n_genes",
-        value = 100,
+        value = c(0, 100),
         max = max_genes
       )
     })
@@ -246,6 +258,17 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
       )
     })
 
+    # Gene ID Name Choices ----------
+    observe({
+      req(!is.null(pre_process$all_gene_names()))
+
+      updateSelectInput(
+        session = session,
+        inputId = "select_gene_id",
+        choices = colnames(pre_process$all_gene_names())
+      )
+    })
+
     # Sample color bar render ----------
     output$list_factors_heatmap <- renderUI({
       selectInput(
@@ -261,7 +284,8 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
 
       sd_density(
         data = pre_process$data(),
-        top = input$n_genes
+        n_genes_max = input$n_genes[2],
+        n_genes_min = input$n_genes[1]
       )
     })
 
@@ -271,23 +295,25 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
 
       process_heatmap_data(
         data = pre_process$data(),
-        n_genes = input$n_genes,
+        n_genes_max = input$n_genes[2],
+        n_genes_min = input$n_genes[1],
         gene_centering = input$gene_centering,
         gene_normalize = input$gene_normalize,
         sample_centering = input$sample_centering,
-        sample_normalize = input$sample_normalize
+        sample_normalize = input$sample_normalize,
+        all_gene_names = pre_process$all_gene_names(),
+        select_gene_id = input$select_gene_id
       )
     })
-
-    output$test <- renderText(heatmap_colors[[input$heatmap_color_select]])
 
     # Main heatmap ----------
     output$heatmap_main <- renderPlot({
       req(!is.null(heatmap_data()))
+      req(!is.null(input$select_factors_heatmap))
 
       heatmap_main(
         data = heatmap_data(),
-        n_genes = input$n_genes,
+        n_genes = input$n_genes[2] - input$n_genes[1],
         heatmap_cutoff = input$heatmap_cutoff,
         sample_info = pre_process$sample_info(),
         select_factors_heatmap = input$select_factors_heatmap,
@@ -295,7 +321,8 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
         dist_function = input$dist_function,
         hclust_function = input$hclust_function,
         no_sample_clustering = input$no_sample_clustering,
-        heatmap_color_select = heatmap_colors[[input$heatmap_color_select]]
+        heatmap_color_select = heatmap_colors[[input$heatmap_color_select]],
+        row_dend = input$show_row_dend
       )
     })
   })

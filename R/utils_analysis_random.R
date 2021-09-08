@@ -338,7 +338,81 @@ check_object_state <- function(
   }
 }
 
+#' ggplot colors function
+#'
+#' This function will return the colors that
+#' the ggplot2 package uses for plots.
+#'
+#' @param n Number of colors to return
+#'
+#' @return Vector of hex color codes for a plot.
 gg_color_hue <- function(n) {
   hues <- seq(15, 375, length = n + 1)
   grDevices::hcl(h = hues, l = 65, c = 100)[1:n]
+}
+
+#' Swap rowname IDs for data matrix
+#'
+#' This function uses the all_gene_names dataframe
+#' to swap the current rownames of a data matrix with
+#' the desired gene ID. For instance, if the rownames
+#' were currently ensembl, this function is able to
+#' switch them back to the original form.
+#'
+#' @param data_matrix Data matrix with ensembl or user gene ID rownames
+#' @param all_gene_names Data frame of gene names
+#' @param select_gene_id Desired ID type for rownames
+#'   (User_ID, ensembl_ID, symbol)
+#'
+#' @return Data matrix with changed rownames
+rowname_id_swap <- function(
+  data_matrix,
+  all_gene_names,
+  select_gene_id
+) {
+  if (select_gene_id == "User_ID" && ncol(all_gene_names) == 1) {
+    return(data_matrix)
+  } else if (select_gene_id == "User_ID") {
+    new_data <- merge(
+      all_gene_names,
+      data_matrix,
+      by.x = "ensembl_ID",
+      by.y = "row.names",
+      all.y = T
+    )
+    rownames(new_data) <- new_data$User_ID
+    nums <- unlist(lapply(new_data, is.numeric))
+    new_data <- new_data[, nums]
+    new_data <- as.matrix(new_data)
+
+    new_data <- new_data[order(-apply(
+      new_data[, 1:dim(new_data)[2]],
+      1,
+      sd
+    )), ]
+
+    return(new_data)
+  } else if (select_gene_id == "ensembl_ID") {
+    return(data_matrix)
+  } else if (select_gene_id == "symbol") {
+    new_data <- merge(
+      all_gene_names,
+      data_matrix,
+      by.x = "ensembl_ID",
+      by.y = "row.names",
+      all.y = T
+    )
+    rownames(new_data) <- new_data$symbol
+    nums <- unlist(lapply(new_data, is.numeric))
+    new_data <- new_data[, nums]
+    new_data <- as.matrix(new_data)
+
+    new_data <- new_data[order(-apply(
+      new_data[, 1:dim(new_data)[2]],
+      1,
+      sd
+    )), ]
+
+    return(new_data)
+  }
 }

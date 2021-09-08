@@ -2,7 +2,7 @@
 % Please edit documentation in R/fct_03_heatmap.R
 \name{heatmap_main}
 \alias{heatmap_main}
-\title{HEATMAP FUNCTION}
+\title{Draw a heatmap of processed data}
 \usage{
 heatmap_main(
   data,
@@ -14,9 +14,39 @@ heatmap_main(
   dist_function,
   hclust_function,
   no_sample_clustering,
-  heatmap_color_select
+  heatmap_color_select,
+  row_dend
 )
 }
+\arguments{
+\item{data}{Data returned from process_heatmap_data}
+
+\item{n_genes}{Amount of genes included in the heatmap}
+
+\item{heatmap_cutoff}{Z score max to filter data}
+
+\item{sample_info}{Experiment design information from load data}
+
+\item{select_factors_heatmap}{Factor group for annotation legend}
+
+\item{dist_funs}{List of distance functions to use in heatmap}
+
+\item{dist_function}{The selected distance function to use}
+
+\item{hclust_function}{Type of clustering to perform}
+
+\item{no_sample_clustering}{TRUE/FALSE Specify whehter to cluster columns}
+
+\item{heatmap_color_select}{Vector of colors for heatmap scale}
+
+\item{row_dend}{TRUE/FALSE Hide row dendogram}
+}
+\value{
+Heatmap of the processed data.
+}
 \description{
-HEATMAP FUNCTION
+Uses the package ComplexHeatmaps to draw a heatmap of the
+processed data that has been prepared for the heatmap. The
+returned heatmap visualizes the processed expression of the
+gene range provided in process_heatmap_data.
 }

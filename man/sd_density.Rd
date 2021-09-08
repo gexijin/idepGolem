@@ -4,7 +4,7 @@
 \alias{sd_density}
 \title{SD DISTRIBUTION PLOT}
 \usage{
-sd_density(data, top)
+sd_density(data, n_genes_max, n_genes_min)
 }
 \description{
 SD DISTRIBUTION PLOT

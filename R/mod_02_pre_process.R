@@ -269,7 +269,13 @@ mod_02_pre_process_ui <- function(id) {
             title = "Individual Genes",
             br(),
             fluidRow(
-              column(4,
+              column(4,# Gene ID Selection -----------
+                selectInput(
+                  inputId = ns("select_gene_id"),
+                  label = "Select Gene ID Label",
+                  choices = NULL,
+                  selected = NULL
+                ),
                 selectizeInput(
                   inputId = ns("selected_gene"),
                   label = "Select/Search for Genes",
@@ -343,17 +349,23 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     # Dynamic Barplot Tab ----------
     observe({
       if (load_data$data_file_format() != 1) {
-        hideTab(inputId = "eda_plots", target = "Barplot")
-        updateTabsetPanel(session, "eda_plots", selected = "Scatterplot")
+        hideTab(inputId = "eda_tabs", target = "Barplot")
+        updateTabsetPanel(session, "eda_tabs", selected = "Scatterplot")
       } else if (load_data$data_file_format() == 1) {
-        showTab(inputId = "eda_plots", target = "Barplot")
-        updateTabsetPanel(session, "eda_plots", selected = "Barplot")
+        showTab(inputId = "eda_tabs", target = "Barplot")
+        updateTabsetPanel(session, "eda_tabs", selected = "Barplot")
       }
     })
 
     # Process the data with user defined criteria ----------
     processed_data <- reactive({
       req(!is.null(load_data$converted_data()))
+      req(input$n_min_samples_count)
+      req(input$min_counts)
+      req(input$low_filter_fpkm)
+      req(input$n_min_samples_fpkm)
+      req(input$counts_log_start)
+      req(input$log_start_fpkm)
 
       shinybusy::show_modal_spinner(
         spin = "orbit",
@@ -453,19 +465,36 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         rownames = FALSE)
     })
 
+    # Gene ID Name Choices ----------
+    observe({
+      req(!is.null(load_data$all_gene_names()))
+
+      updateSelectInput(
+        session = session,
+        inputId = "select_gene_id",
+        choices = colnames(load_data$all_gene_names())
+      )
+    })
+
+    # Individual plot data ------------
+    individual_data <- reactive({
+      req(!is.null(processed_data()$data))
+
+      rowname_id_swap(
+        data_matrix = processed_data()$data,
+        all_gene_names = load_data$all_gene_names(),
+        select_gene_id = input$select_gene_id
+      )
+    })
+
     # Individual genes selection ----------
     observe({
       req(tab() == "Pre-Process")
 
-      if (is.null(merged_processed_data()$symbol)) {
-        choices <- merged_processed_data()$User_id
-      } else {
-        choices <- merged_processed_data()$symbol
-      }
       updateSelectizeInput(
         session,
         inputId = "selected_gene",
-        choices = choices,
+        choices = rownames(individual_data()),
         selected = NULL,
         server = TRUE
       )
@@ -483,11 +512,11 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     })
 
     output$gene_plot <- renderPlot({
-      req(!is.null(merged_processed_data()))
+      req(!is.null(individual_data()))
       req(!is.null(input$selected_gene))
 
       individual_plots(
-        merged_data = merged_processed_data(),
+        individual_data = individual_data(),
         sample_info = load_data$sample_info(),
         selected_gene = input$selected_gene,
         gene_plot_box = input$gene_plot_box,
@@ -571,7 +600,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     # Return Values -----------
     list(
       data = reactive(processed_data()$data),
-      sample_info = reactive(load_data$sample_info())
+      sample_info = reactive(load_data$sample_info()),
+      all_gene_names = reactive(load_data$all_gene_names())
     )
   })
 }
