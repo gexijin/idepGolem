@@ -107,7 +107,7 @@ pre_process <- function(
   if (data_file_format == 2) {
     if (is.integer(data)){
       data_type_warning <- 1
-    } 
+    }
 
     # Filters ----------
     # Not enough counts

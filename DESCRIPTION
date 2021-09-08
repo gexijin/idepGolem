@@ -14,6 +14,7 @@ Imports:
     DESeq2,
     edgeR,
     golem (>= 0.3.1),
+    htmltools (>= 0.5.2),
     RSQLite,
     shiny (>= 1.6.0),
     shinyBS,

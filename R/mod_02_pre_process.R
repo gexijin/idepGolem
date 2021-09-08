@@ -570,7 +570,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
 
     # Return Values -----------
     list(
-      NULL
+      data = reactive(processed_data()$data),
+      sample_info = reactive(load_data$sample_info())
     )
   })
 }

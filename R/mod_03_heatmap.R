@@ -15,13 +15,14 @@ mod_03_heatmap_ui <- function(id) {
 
       # Heatmap Panel Sidebar ----------
       sidebarPanel(
+        textOutput(ns("test")),
         sliderInput(
           inputId = ns("n_genes"),
           label = h4("Most variable genes to include:"),
           min = 0,
           max = 12000,
-          value = 1000,
-          step = 100
+          value = 100,
+          step = 50
         ),
         HTML(
           '<hr style="height:1px;border:none;
@@ -47,9 +48,9 @@ mod_03_heatmap_ui <- function(id) {
           column(
             width = 8,
             selectInput(
-              inputId = ns("dist_functions"),
+              inputId = ns("dist_function"),
               label = NULL,
-              choices = "Correlation",
+              choices = NULL,
               width = "100%"
             )
           )
@@ -59,9 +60,12 @@ mod_03_heatmap_ui <- function(id) {
           column(
             width = 8,
             selectInput(
-              inputId = ns("hclust_functions"),
+              inputId = ns("hclust_function"),
               label = NULL,
-              choices = "average",
+              choices = c(
+                "average", "complete", "single",
+                "median", "centroid", "mcquitty"
+              ),
               width = "100%"
             )
           )
@@ -124,7 +128,11 @@ mod_03_heatmap_ui <- function(id) {
           tabPanel(
             title = "Heatmap",
             br(),
-            plotOutput(outputId = ns("heatmap_main"))
+            plotOutput(
+              outputId = ns("heatmap_main"),
+              width = "100%",
+              height = "800px"
+            )
           ),
 
           # Interactive heatmap panel ----------
@@ -138,7 +146,11 @@ mod_03_heatmap_ui <- function(id) {
           tabPanel(
             title = "Gene SD Distribution",
             br(),
-            # INSERT SD DISTRIBUTION PLOT
+            plotOutput(
+              outputId = ns("sd_density_plot"),
+              width = "100%",
+              height = "500px"
+            )
           ),
 
           # Correlation matrix panel ----------
@@ -163,17 +175,46 @@ mod_03_heatmap_ui <- function(id) {
 #' 03_heatmap Server Functions
 #'
 #' @noRd
-mod_03_heatmap_server <- function(id) {
+mod_03_heatmap_server <- function(id, pre_process, tab) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+    # Update Slider Input ---------
+    observe({
+      req(tab() == "Heatmap")
+      req(!is.null(pre_process$data()))
+      if(nrow(pre_process$data()) > 12000) {
+        max_genes <- 12000
+      } else {
+        max_genes <- round(nrow(pre_process$data()), -2)
+      }
+      updateSliderInput(
+        inputId = "n_genes",
+        value = 100,
+        max = max_genes
+      )
+    })
+
     # Heatmap Colors ----------
-    heatmap_colors <- get_heatmap_colors()
+    heatmap_colors <- list(
+      "Green-Black-Red" = c("green", "black", "red"),
+      "Blue-White-Red" = c("blue", "white", "red"),
+      "Green-Black-Magenta" = c("green", "black", "magenta"),
+      "Blue-Yellow-Red" = c("blue", "yellow", "red"),
+      "Blue-White-Brown" = c("blue", "white", "brown")
+    )
+    heatmap_choices <- c(
+      "Green-Black-Red",
+      "Blue-White-Red",
+      "Green-Black-Magenta",
+      "Blue-Yellow-Red",
+      "Blue-White-Brown"
+    )
     observe({
       updateSelectInput(
         session = session,
         inputId = "heatmap_color_select",
-        choices = heatmap_colors$color_choices
+        choices = heatmap_choices
       )
     })
 
@@ -186,7 +227,7 @@ mod_03_heatmap_server <- function(id) {
     observe({
       updateSelectInput(
         session = session,
-        inputId = "dist_functions",
+        inputId = "dist_function",
         choices = dist_choices
       )
     })
@@ -207,15 +248,56 @@ mod_03_heatmap_server <- function(id) {
 
     # Sample color bar render ----------
     output$list_factors_heatmap <- renderUI({
-      req(!is.null(pre_process$sample_info()))
-
       selectInput(
         inputId = ns("select_factors_heatmap"),
         label = "Sample color bar:",
-        choices = c(colnames(read_sample_info()), "Sample_Name")
+        choices = c("Sample_Name", colnames(pre_process$sample_info()))
       )
     })
 
+    # Standard Deviation Density Plot ----------
+    output$sd_density_plot <- renderPlot({
+      req(!is.null(pre_process$data()))
+
+      sd_density(
+        data = pre_process$data(),
+        top = input$n_genes
+      )
+    })
+
+    # Heatmap Data -----------
+    heatmap_data <- reactive({
+      req(!is.null(pre_process$data()))
+
+      process_heatmap_data(
+        data = pre_process$data(),
+        n_genes = input$n_genes,
+        gene_centering = input$gene_centering,
+        gene_normalize = input$gene_normalize,
+        sample_centering = input$sample_centering,
+        sample_normalize = input$sample_normalize
+      )
+    })
+
+    output$test <- renderText(heatmap_colors[[input$heatmap_color_select]])
+
+    # Main heatmap ----------
+    output$heatmap_main <- renderPlot({
+      req(!is.null(heatmap_data()))
+
+      heatmap_main(
+        data = heatmap_data(),
+        n_genes = input$n_genes,
+        heatmap_cutoff = input$heatmap_cutoff,
+        sample_info = pre_process$sample_info(),
+        select_factors_heatmap = input$select_factors_heatmap,
+        dist_funs = dist_funs,
+        dist_function = input$dist_function,
+        hclust_function = input$hclust_function,
+        no_sample_clustering = input$no_sample_clustering,
+        heatmap_color_select = heatmap_colors[[input$heatmap_color_select]]
+      )
+    })
   })
 }
 

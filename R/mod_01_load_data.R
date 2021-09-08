@@ -31,7 +31,7 @@ mod_01_load_data_ui <- function(id) {
         h5(" and just click the tabs for some magic!", style = "color:red"),
 
         # Reset Button -----------
-        p(HTML(
+        p(htmltools::HTML(
           "<div align=\"right\"><A HREF=\"javascript:history.go(0)\"
            >Reset</A></div>"
         )),

@@ -21,6 +21,7 @@ usethis::use_package("edgeR")
 usethis::use_package("withProgress")
 usethis::use_package("shinyBS")
 usethis::use_package("utils")
+usethis::use_package("htmltools")
 
 ## Add modules ----
 ## Create a module infrastructure in R/
