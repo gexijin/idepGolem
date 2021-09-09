@@ -165,12 +165,10 @@ mod_02_pre_process_ui <- function(id) {
         ),
         br(),
         br(),
-        textOutput(outputId = ns("n_genes_filter")),
-        tags$head(tags$style(
-          "#pre_process-n_genes_filter{color: blue;
-            font-size: 16px;
-            font-style: italic;}"
-        )),
+        actionButton(
+          inputId = ns("show_messages"),
+          label = "Show Conversion Messages"
+        ),
         textOutput(outputId = ns("read_counts_bias")),
         tags$head(tags$style(
           "#pre_process-read_counts_bias{color: red;
@@ -192,6 +190,8 @@ mod_02_pre_process_ui <- function(id) {
         ),
         tabsetPanel(
           id = ns("eda_tabs"),
+
+          # Barplot for read counts data ----------
           tabPanel(
             title = "Barplot",
             br(),
@@ -201,6 +201,8 @@ mod_02_pre_process_ui <- function(id) {
               height = "500px"
             )
           ),
+
+          # Scatterplot with interactive axises ----------
           tabPanel(
             title = "Scatterplot",
             # Axis selectors -----------
@@ -232,6 +234,8 @@ mod_02_pre_process_ui <- function(id) {
               height = "500px"
             )
           ),
+
+          # Boxplot of transformed data ----------
           tabPanel(
             title = "Boxplot",
             br(),
@@ -241,6 +245,8 @@ mod_02_pre_process_ui <- function(id) {
               height = "500px"
             )
           ),
+
+          # Density plot of transformed data ---------
           tabPanel(
             title = "Density Plot",
             br(),
@@ -250,16 +256,26 @@ mod_02_pre_process_ui <- function(id) {
               height = "500px"
             ),
           ),
+
+          # Searchable table of transformed converted data ---------
           tabPanel(
             title = "Converted Data",
             br(),
             DT::dataTableOutput(outputId = ns("examine_data"))
           ),
+
+          # Plot panel for individual genes ---------
           tabPanel(
             title = "Individual Genes",
             br(),
             fluidRow(
-              column(4,
+              column(4,# Gene ID Selection -----------
+                selectInput(
+                  inputId = ns("select_gene_id"),
+                  label = "Select Gene ID Label",
+                  choices = NULL,
+                  selected = NULL
+                ),
                 selectizeInput(
                   inputId = ns("selected_gene"),
                   label = "Select/Search for Genes",
@@ -333,17 +349,23 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     # Dynamic Barplot Tab ----------
     observe({
       if (load_data$data_file_format() != 1) {
-        hideTab(inputId = "eda_plots", target = "Barplot")
-        updateTabsetPanel(session, "eda_plots", selected = "Scatterplot")
+        hideTab(inputId = "eda_tabs", target = "Barplot")
+        updateTabsetPanel(session, "eda_tabs", selected = "Scatterplot")
       } else if (load_data$data_file_format() == 1) {
-        showTab(inputId = "eda_plots", target = "Barplot")
-        updateTabsetPanel(session, "eda_plots", selected = "Barplot")
+        showTab(inputId = "eda_tabs", target = "Barplot")
+        updateTabsetPanel(session, "eda_tabs", selected = "Barplot")
       }
     })
 
     # Process the data with user defined criteria ----------
     processed_data <- reactive({
       req(!is.null(load_data$converted_data()))
+      req(input$n_min_samples_count)
+      req(input$min_counts)
+      req(input$low_filter_fpkm)
+      req(input$n_min_samples_fpkm)
+      req(input$counts_log_start)
+      req(input$log_start_fpkm)
 
       shinybusy::show_modal_spinner(
         spin = "orbit",
@@ -443,19 +465,36 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         rownames = FALSE)
     })
 
+    # Gene ID Name Choices ----------
+    observe({
+      req(!is.null(load_data$all_gene_names()))
+
+      updateSelectInput(
+        session = session,
+        inputId = "select_gene_id",
+        choices = colnames(load_data$all_gene_names())
+      )
+    })
+
+    # Individual plot data ------------
+    individual_data <- reactive({
+      req(!is.null(processed_data()$data))
+
+      rowname_id_swap(
+        data_matrix = processed_data()$data,
+        all_gene_names = load_data$all_gene_names(),
+        select_gene_id = input$select_gene_id
+      )
+    })
+
     # Individual genes selection ----------
     observe({
       req(tab() == "Pre-Process")
 
-      if (is.null(merged_processed_data()$symbol)) {
-        choices <- merged_processed_data()$User_id
-      } else {
-        choices <- merged_processed_data()$symbol
-      }
       updateSelectizeInput(
         session,
         inputId = "selected_gene",
-        choices = choices,
+        choices = rownames(individual_data()),
         selected = NULL,
         server = TRUE
       )
@@ -473,11 +512,11 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     })
 
     output$gene_plot <- renderPlot({
-      req(!is.null(merged_processed_data()))
+      req(!is.null(individual_data()))
       req(!is.null(input$selected_gene))
 
       individual_plots(
-        merged_data = merged_processed_data(),
+        individual_data = individual_data(),
         sample_info = load_data$sample_info(),
         selected_gene = input$selected_gene,
         gene_plot_box = input$gene_plot_box,
@@ -504,34 +543,65 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       }
     )
 
+    # Number of converted IDs ---------
+    n_matched <- reactive({
+      req(!is.null(processed_data))
+
+      match_process_ids <-
+        load_data$matched_ids() %in% rownames(processed_data()$data)
+
+      return(sum(match_process_ids))
+    })
+
+    read_counts_bias <- reactive({
+      req(!is.null(processed_data()$raw_counts))
+
+      counts_bias_message(
+        raw_counts = processed_data()$raw_counts,
+        sample_info = load_data$sample_info()
+      )
+    })
+
     # Text Output Information -----------
-    output$n_genes_filter <- renderText({
+    converted_message <- reactive({
       req(processed_data()$data_size)
 
-      if (dim(load_data$all_gene_names())[2] == 1) {
-        return(paste(
-          processed_data()$data_size[1], "genes in",
-          processed_data()$data_size[4], "samples.",
-          processed_data()$data_size[3], " genes passed filter
-          (see above). Original gene IDs used."
-        ))
-      } else {
-        return(paste(
-          processed_data()$data_size[1], "genes in",
-          processed_data()$data_size[4], "samples.",
-          processed_data()$data_size[3], " genes passed filter
-          (see above), ", load_data$n_matched(),
-          " were converted to Ensembl gene IDs in our database.
-          The remaining ", processed_data()$data_size[3] -
-          load_data$n_matched(), " genes were kept in the
-          data using original IDs."
-        ))
-      }
+      conversion_counts_message(
+        data_size = processed_data()$data_size,
+        all_gene_names = load_data$all_gene_names(),
+        n_matched = n_matched()
+      )
+    })
+
+    observe({
+      req(input$show_messages || tab() == "Pre-Process")
+
+      showNotification(
+        ui = converted_message(),
+        id = "conversion_counts",
+        duration = NULL,
+        type = "default"
+      )
+      showNotification(
+        ui = read_counts_bias(),
+        id = "read_counts_message",
+        duration = NULL,
+        type = "error"
+      )
+    })
+
+    observe({
+      req(tab() != "Pre-Process")
+
+      removeNotification("conversion_counts")
+      removeNotification("read_counts_message")
     })
 
     # Return Values -----------
     list(
-      NULL
+      data = reactive(processed_data()$data),
+      sample_info = reactive(load_data$sample_info()),
+      all_gene_names = reactive(load_data$all_gene_names())
     )
   })
 }

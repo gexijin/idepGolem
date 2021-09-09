@@ -15,8 +15,12 @@ app_server <- function(input, output, session) {
   pre_process <- mod_02_pre_process_server(
     id = "pre_process",
     load_data = load_data,
-    tab
+    tab = tab
   )
-  mod_03_heatmap_server(id = "heatmap")
+  mod_03_heatmap_server(
+    id = "heatmap",
+    pre_process = pre_process,
+    tab = tab
+  )
   mod_04_k_means_server("test")
 }

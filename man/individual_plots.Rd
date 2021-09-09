@@ -5,7 +5,7 @@
 \title{Individual plotting function for genes}
 \usage{
 individual_plots(
-  merged_data,
+  individual_data,
   sample_info,
   selected_gene,
   gene_plot_box,
@@ -14,13 +14,13 @@ individual_plots(
 )
 }
 \arguments{
-\item{merged_data}{Data that has been merged with the gene info}
-
 \item{sample_info}{Experiment file information for grouping samples}
 
 \item{gene_plot_box}{T/F for individual sample plot or grouped data plot}
 
 \item{use_sd}{T/F for standard error or standard deviation bars on bar plot}
+
+\item{merged_data}{Data that has been merged with the gene info}
 
 \item{select_dene}{Gene(s) to be plotted}
 

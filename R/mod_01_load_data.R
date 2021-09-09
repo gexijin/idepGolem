@@ -31,7 +31,7 @@ mod_01_load_data_ui <- function(id) {
         h5(" and just click the tabs for some magic!", style = "color:red"),
 
         # Reset Button -----------
-        p(HTML(
+        p(htmltools::HTML(
           "<div align=\"right\"><A HREF=\"javascript:history.go(0)\"
            >Reset</A></div>"
         )),
@@ -358,7 +358,7 @@ mod_01_load_data_server <- function(id, idep_data) {
       all_gene_info = reactive(conversion_info()$all_gene_info),
       converted_data = reactive(conversion_info()$converted_data),
       all_gene_names = reactive(conversion_info()$all_gene_names),
-      n_matched = reactive(length(conversion_info()$converted$ids))
+      matched_ids = reactive(conversion_info()$converted$ids)
     )
   })
 }

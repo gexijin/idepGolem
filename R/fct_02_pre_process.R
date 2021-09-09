@@ -32,7 +32,7 @@ NULL
 #'
 #' @return A list containing the transformed data, the mean kurtosis,
 #' the raw counts, a data type warning, the size of the original data,
-#' and p-values. 
+#' and p-values.
 pre_process <- function(
   data,
   missing_value,
@@ -107,7 +107,7 @@ pre_process <- function(
   if (data_file_format == 2) {
     if (is.integer(data)){
       data_type_warning <- 1
-    } 
+    }
 
     # Filters ----------
     # Not enough counts
@@ -607,7 +607,7 @@ merge_data <- function(
 #' in the sample information.
 #'
 individual_plots <- function(
-  merged_data,
+  individual_data,
   sample_info,
   selected_gene,
   gene_plot_box,
@@ -615,16 +615,10 @@ individual_plots <- function(
   lab_rotate
 ) {
   library(magrittr)
-  if (is.null(merged_data$ensembl_ID)) {
-    merged_data$symbol <- merged_data$User_id
-    merged_data <- dplyr::select(merged_data, -User_ID)
-  } else if (is.null(merged_data$symbol)) {
-    merged_data$symbol <- merged_data$ensembl_id
-    merged_data <- dplyr::select(merged_data, -User_ID, - ensembl_ID)
-  } else {
-    merged_data <- dplyr::select(merged_data, -User_ID, -ensembl_ID)
-  }
-  plot_data <- merged_data %>%
+  individual_data <- as.data.frame(individual_data)
+  individual_data$symbol <- rownames(individual_data)
+
+  plot_data <- individual_data %>%
       dplyr::filter(symbol %in% selected_gene) %>%
       tidyr::pivot_longer(!symbol, names_to = "sample", values_to = "value")
   if (ncol(plot_data) < 31) {
@@ -730,4 +724,90 @@ individual_plots <- function(
 
     return(gene_bar)
   }
+}
+
+#' Data processing message
+#' 
+#' Creates a message about the size of the counts
+#' data and the amount of IDs that were converted.
+#' 
+#' @param data_size Data size matrix from processing function
+#' @param all_gene_names Data frame with all gene names
+#' @param n_matched Count of matched IDs after processing
+#' 
+#' @return Message about processed data
+conversion_counts_message <- function(
+  data_size,
+  all_gene_names,
+  n_matched
+) {
+  if (dim(all_gene_names)[2] == 1) {
+    return(paste(
+      data_size[1], "genes in", data_size[4], "samples.",
+      data_size[3], " genes passed filter. Original gene IDs used."
+    ))
+  } else {
+    return(paste(
+      data_size[1], "genes in", data_size[4], "samples.",
+      data_size[3], " genes passed filter, ", n_matched,
+      " were converted to Ensembl gene IDs in our database.
+      The remaining ", data_size[3] - n_matched, " genes were 
+      kept in the data using original IDs."
+    ))
+  }
+}
+
+#' Create message for sequencing depth bias
+#'
+#' This function creates a warning message for the
+#' UI to present to the user regarding the sequencing
+#' depth bias.
+#' 
+#' @param raw_counts Raw counts data from the processing function
+#' @param sample_info Experiment file information about each sample
+#' 
+#' @return Message for the UI
+counts_bias_message <- function(
+  raw_counts,
+  sample_info
+) {
+  total_counts <- colSums(raw_counts)
+  groups <- as.factor(
+    detect_groups(
+      colnames(raw_counts),
+      sample_info
+    )
+  )
+  message <- NULL
+  # ANOVA of total read counts vs sample groups parsed by sample name
+  pval <- summary(aov(total_counts ~ groups))[[1]][["Pr(>F)"]][1]
+  means <- aggregate(total_counts, by = list(groups), mean)
+  max_min_ratio <- max(means[, 2]) / min(means[, 2])
+
+  if (is.null(pval)) {
+    message <- NULL
+  } else if (pval < 0.05) {
+    message <- paste(
+      "Warning! Sequencing depth bias detected. Total read counts are
+       significantly different among sample groups
+       (p=", sprintf("%-3.2e", pval), ") based on ANOVA.
+       Total read counts max/min =", round(max_min_ratio, 2)
+    )
+  }
+  # ANOVA of total read counts vs factors in experiment design
+  if (!is.null(sample_info)) {
+    y <- sample_info
+    for (j in 1:ncol(y)) {
+      pval <- summary(aov(
+        total_counts ~ as.factor(y[, j])))[[1]][["Pr(>F)"]][1]
+
+      if (pval < 0.01) {
+        message <- paste(
+          message, " Total read counts seem to be correlated with factor",
+          colnames(y)[j], "(p=",  sprintf("%-3.2e",pval),").  "
+        )
+      }
+    }
+  }
+  return(message)
 }
