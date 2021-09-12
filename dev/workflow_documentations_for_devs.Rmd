@@ -3,6 +3,13 @@ title: "Workflow Documentation"
 output: html_document
 ---
 
+``{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
 The purpose of this document is to document the workflow of IDEP. The goal is to
 later use the code in this document to create a vignette that users will be able
 to read and then use IDEP in command line instead of the shiny app.
@@ -13,6 +20,7 @@ This function will enable us to use the functions that drive the IDEPgolem
 package.
 ```{r}
 devtools::load_all()
+ROOT <- "/mnt/storage/"
 ```
 <br>
 
@@ -27,8 +35,8 @@ are then stored in a data frame that will be used in the `input_data` function.
 ```{r}
 idep_data <- get_idep_data()
 
-YOUR_DATA_PATH <- "D:/data/data103/data_go/BcellGSE71176_p53.csv"
-YOUR_EXPERIMENT_PATH <- "D:/data/data103/data_go/BcellGSE71176_p53_sampleInfo.csv"
+YOUR_DATA_PATH <- paste0(ROOT, "data/data103/data_go/BcellGSE71176_p53.csv")
+YOUR_EXPERIMENT_PATH <- paste0(ROOT, "data/data103/data_go/BcellGSE71176_p53_sampleInfo.csv")
 
 expression_file <- data.frame(
   datapath = YOUR_DATA_PATH

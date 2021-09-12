@@ -10,12 +10,9 @@
 NULL
 
 # retrieve detailed info on genes
-gene_info <- function(
-  converted,
-  select_org,
-  idep_data
-) {
-
+gene_info <- function(converted,
+                      select_org,
+                      idep_data) {
   check <- check_object_state(
     check_exp = (is.null(converted)),
     true_message = as.data.frame("ID not recognized!")
@@ -78,12 +75,12 @@ gene_info <- function(
 
 
 #' Load basic data information
-#' 
+#'
 #' This function does the immediate loading of the data and
 #' sample info to present in the data preview table and the
 #' sample info table. The data undergoes very basic filtering
 #' and transformation before entering the table.
-#' 
+#'
 #' @param expression_file The data path for the input into the
 #' expression file file input bar
 #' @param experiment_file The data path for the input into the
@@ -92,19 +89,16 @@ gene_info <- function(
 #' load the demo data files
 #' @param demo_data_file Expression demo data path
 #' @param demo_metadata_file Experiment demo data path
-#' 
+#'
 #' @return This returns a list that contains the expression data
 #' and the sample information. If there is no experiment file it
 #' only returns the expression data.
 #'
-input_data <- function(
-  expression_file,
-  experiment_file,
-  go_button,
-  demo_data_file,
-  demo_metadata_file
-) {
-  
+input_data <- function(expression_file,
+                       experiment_file,
+                       go_button,
+                       demo_data_file,
+                       demo_metadata_file) {
   in_file_data <- expression_file
   in_file_data <- in_file_data$datapath
 
@@ -118,7 +112,7 @@ input_data <- function(
     # Read expression file -----------
     data <- read.csv(in_file_data, quote = "", comment.char = "")
     # Tab-delimented if not CSV
-    if (dim(data)[2] <= 2) {
+    if (ncol(data) <= 2) {
       data <- read.table(
         in_file_data,
         sep = "\t",
@@ -130,7 +124,7 @@ input_data <- function(
 
     # Filter out non-numeric columns ---------
     num_col <- c(TRUE)
-    for (i in 2:dim(data)[2]) {
+    for (i in 2:ncol(data)) {
       num_col <- c(num_col, is.numeric(data[, i]))
     }
     if (sum(num_col) <= 2) {
@@ -155,7 +149,7 @@ input_data <- function(
 
     # Order by SD ----------
     data <- data[order(-apply(
-      data[, 1:dim(data)[2]],
+      data[, 1:ncol(data)],
       1,
       sd
     )), ]
@@ -170,15 +164,15 @@ input_data <- function(
     ))
   } else if (go_button > 0) {
     sample_info_demo <- t(read.csv(
-    demo_metadata_file,
-    row.names = 1,
-    header = T,
-    colClasses = "character"
-  ))
-  return(list(
-    sample_info = sample_info_demo,
-    data = data
-  ))
+      demo_metadata_file,
+      row.names = 1,
+      header = T,
+      colClasses = "character"
+    ))
+    return(list(
+      sample_info = sample_info_demo,
+      data = data
+    ))
   }
 
   isolate({
@@ -189,7 +183,7 @@ input_data <- function(
       header = TRUE,
       colClasses = "character"
     )
-    if (dim(expr)[2] <= 2) {
+    if (ncol(expr) <= 2) {
       expr <- read.table(
         in_file_expr,
         row.names = 1,
@@ -208,37 +202,37 @@ input_data <- function(
     )
     matches <- matches[which(!is.na(matches))] # remove NA
     validate(need(
-      length(unique(matches)) == dim(data)[2] &
-        dim(expr)[1] >= 1 & dim(expr)[1] < 500,
+      length(unique(matches)) == ncol(data) &&
+        nrow(expr) >= 1 && nrow(expr) < 500,
       "Error!!! Sample information file not recognized. Sample names
        must be exactly the same. Each row is a factor. Each column
        represent a sample.  Please see documentation on format."
     ))
 
     # Check factor levels, change if needed ----------
-    for (i in 1:dim(expr)[1]) {
+    for (i in 1:nrow(expr)) {
       expr[i, ] <- gsub("-", "", expr[i, ])
       expr[i, ] <- gsub("\\.", "", expr[i, ])
     }
 
     # Factor levels match ---------
-    if (length(unique(matches)) == dim(data)[2]) {
+    if (length(unique(matches)) == ncol(data)) {
       expr <- expr[, matches]
       if (
         sum(apply(expr, 1, function(y) length(unique(y)))) >
-        length(unique(unlist(expr)))) {
-          factor_names <- apply(
-            expr,
-            2,
-            function(y) paste0(names(y), y)
-          )
-          rownames(factor_names) <- rownames(expr)
-          expr <- factor_names
-        }
-        return(list(
-          data = data,
-          sample_info = t(expr)
-        ))
+          length(unique(unlist(expr)))) {
+        factor_names <- apply(
+          expr,
+          2,
+          function(y) paste0(names(y), y)
+        )
+        rownames(factor_names) <- rownames(expr)
+        expr <- factor_names
+      }
+      return(list(
+        data = data,
+        sample_info = t(expr)
+      ))
     } else {
       return(list(
         data = data
@@ -257,14 +251,11 @@ input_data <- function(
 #' @param converted Data from convert_id function containing converted ids
 #' @param no_id_conversion TRUE/FALSE for converting data ids or not
 #' @param data Data from inputed expression file
-#' 
+#'
 #' @return Returns original data with rownames converted to ensembl
-convert_data <- function(
-  converted,
-  data,
-  no_id_conversion
-) {
-
+convert_data <- function(converted,
+                         data,
+                         no_id_conversion) {
   if (is.null(converted) || no_id_conversion) {
     return(list(
       data = data,
@@ -287,15 +278,15 @@ convert_data <- function(
     mapped_ids <- merged[, 1:2]
 
     # Multiple matches use one with highest SD ----------
-    tmp <- apply(merged[, 3:(dim(merged)[2])], 1, sd)
-    merged <- merged[order(merged[, 2], -tmp),]
+    tmp <- apply(merged[, 3:(ncol(merged))], 1, sd)
+    merged <- merged[order(merged[, 2], -tmp), ]
     merged <- merged[!duplicated(merged[, 2]), ]
     rownames(merged) <- merged[, 2]
     merged <- as.matrix(merged[, c(-1, -2)])
 
     # Order by SD ----------
     merged <- merged[order(-apply(
-      merged[, 1:dim(merged)[2]],
+      merged[, 1:ncol(merged)],
       1,
       sd
     )), ]
@@ -319,11 +310,9 @@ convert_data <- function(
 #' database. Three columns denotes a recognized species for which
 #' idep had gene names for. Two columns means the IDs were converted
 #' to ensembl format, but no species was found for the gene names.
-#' One means no conversion occurred. 
-get_all_gene_names <- function(
-  mapped_ids,
-  all_gene_info
-) {
+#' One means no conversion occurred.
+get_all_gene_names <- function(mapped_ids,
+                               all_gene_info) {
   if (is.null(dim(mapped_ids))) {
     return(data.frame("User_ID" = mapped_ids))
   } else if (!is.null(all_gene_info$bool)) {
@@ -348,8 +337,8 @@ get_all_gene_names <- function(
     all_names$symbol[is.na(all_names$symbol)] <- {
       all_names$ensembl_ID[is.na(all_names$symbol)]
     }
-    duplicates <- all_names$symbol %in% 
-                  all_names$symbol[duplicated(all_names$symbol)]
+    duplicates <- all_names$symbol %in%
+      all_names$symbol[duplicated(all_names$symbol)]
     all_names$symbol[duplicates] <- paste(
       all_names$symbol[duplicates],
       all_names$ensembl_ID[duplicates]

@@ -36,9 +36,9 @@ mod_04_k_means_server <- function(id) {
     ns <- session$ns
     output$cars_modal <- renderPlot(
       pairs(
-        ~mpg+disp+drat+wt,
-        data=mtcars,
-        main="Simple Scatterplot Matrix"
+        ~ mpg + disp + drat + wt,
+        data = mtcars,
+        main = "Simple Scatterplot Matrix"
       )
     )
   })

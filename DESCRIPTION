@@ -9,16 +9,33 @@ Authors@R:
 Description: What the package does (one paragraph).
 License: What license is it under?
 Imports: 
+    ComplexHeatmap,
     config (>= 0.3.1),
     DBI,
     DESeq2,
+    dplyr,
+    DT,
+    e1071,
     edgeR,
+    ggplot2,
     golem (>= 0.3.1),
+    gplots,
+    grDevices,
+    grid,
     htmltools (>= 0.5.2),
     RSQLite,
     shiny (>= 1.6.0),
     shinyBS,
+    shinybusy,
+    shinyjs,
+    SummarizedExperiment,
+    tidyr,
+    tidyselect,
     utils
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
+Suggests: 
+    rmarkdown,
+    knitr
+VignetteBuilder: knitr

@@ -10,6 +10,5 @@ associated with third tab of the iDEP website.
 }
 \section{fct_03_heatmap.R functions}{
 
-\code{add_legend}
 }
 

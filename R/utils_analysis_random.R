@@ -319,11 +319,9 @@ extract_word <- function(word_list) {
 #' if (check$bool) {
 #'   return(check)
 #' }
-check_object_state <- function(
-  check_exp,
-  true_message,
-  false_message = ""
-) {
+check_object_state <- function(check_exp,
+                               true_message,
+                               false_message = "") {
   if (check_exp) {
     message(true_message)
     return(list(
@@ -365,11 +363,9 @@ gg_color_hue <- function(n) {
 #'   (User_ID, ensembl_ID, symbol)
 #'
 #' @return Data matrix with changed rownames
-rowname_id_swap <- function(
-  data_matrix,
-  all_gene_names,
-  select_gene_id
-) {
+rowname_id_swap <- function(data_matrix,
+                            all_gene_names,
+                            select_gene_id) {
   if (select_gene_id == "User_ID" && ncol(all_gene_names) == 1) {
     return(data_matrix)
   } else if (select_gene_id == "User_ID") {
