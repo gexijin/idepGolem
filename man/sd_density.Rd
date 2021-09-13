@@ -2,10 +2,22 @@
 % Please edit documentation in R/fct_03_heatmap.R
 \name{sd_density}
 \alias{sd_density}
-\title{SD DISTRIBUTION PLOT}
+\title{Density plot of data standard deviation}
 \usage{
 sd_density(data, n_genes_max, n_genes_min)
 }
+\arguments{
+\item{data}{Data that has been through pre-processing}
+
+\item{n_genes_max}{Upper limit of gene range}
+
+\item{n_genes_min}{Lower limit of gene range}
+}
+\value{
+Formatted density plot of the standard deviation
+distribution.
+}
 \description{
-SD DISTRIBUTION PLOT
+Draw a denisty plot of the standard deviation in the
+data. Add vertical red lines for a range of genes.
 }

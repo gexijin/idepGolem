@@ -1,15 +1,40 @@
 ---
-title: "Workflow Documentation"
-output: html_document
+title: "idep Workflow"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{idep Workflow}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
-The purpose of this document is to document the workflow of IDEP. The goal is to
-later use the code in this document to create a vignette that users will be able
-to read and then use IDEP in command line instead of the shiny app.
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+#library(idepGolem)
+```
+
+
+#### Introduction
+
+The purpose of this project is to provide the tools to examine expression data
+with simple and effective features. idep enables the user to upload their data
+and go to work processing and analyzing the data to draw informative
+conclusions. This workflow is visualized in the chart below. 
+
+<center>
+
+![](flowchart.png)
+
+</center>
 
 ## Load Data
 
-This function will enable us to use the functions that drive the IDEPgolem 
+This function will enable us to use the functions that drive the idepGolem 
 package.
 ```{r}
 devtools::load_all()
@@ -24,7 +49,9 @@ analyze a data set, just substitute the path to the expression data into
 `YOUR_DATA_PATH`. If your data comes with information about the samples,
 substitute the path for that file into `YOUR_EXPERIMENT_PATH`. These data paths
 are then stored in a data frame that will be used in the `input_data` function.
-```{r}
+The structure of your data should be a **numeric** matrix with gene IDs as rows
+and sample names as columns.
+```{r Create Data Paths}
 idep_data <- get_idep_data()
 
 YOUR_DATA_PATH <- "D:/data/data103/data_go/BcellGSE71176_p53.csv"
@@ -48,7 +75,7 @@ data set, set the value of `go_button` to `TRUE`. The `demo_data_file` and
 `demo_metadata_file` are the built-in paths to the example data set and should
 not be changed. The returned expression will be a numeric matrix with gene IDs
 as rownames. The columns will denote the sample.
-```{r}
+```{r Load Data}
 loaded_data <- input_data(
   expression_file = expression_file,
   experiment_file = experiment_file,
@@ -64,7 +91,10 @@ loaded_data <- input_data(
 Idep works with "ensembl" gene IDs to perform many of its functions. Given a
 data set, idep will convert IDs to ensembl and then gather metadata for each
 gene if the database recognizes the species. This process occurs in the
-following functions.
+following functions. To search for a species that fits the expression data,
+utilize the line 
+`idep_data$species_choice[grep("Mouse", names(idep_data$species_choice))]` and
+input the numeric code as a character string (i.e 107 -> "107") in `select_org`.
 
 1. **`convert_id`**
 
@@ -74,7 +104,7 @@ following functions.
     the list `loaded_data`. `select_org` is a parameter to provide the species
     that the expression data is from. `convert_id` returns a list containing
     information about the query results. The converted IDs are are accessed by
-    `converted$ids`. `print(converted$species_matched[2,])` shows the species
+    `converted$ids`. `print(converted$species_matched[1,])` shows the species
     that was recognized by the provided gene IDs.
 
 2. **`gene_info`**
@@ -108,7 +138,10 @@ following functions.
     containing the informative gene names. This data frame will later be used to
     create a data frame after processing for reproducibility.
     
-```{r}
+```{r Data Manipulation}
+# Species search for input data
+idep_data$species_choice[grep("Mouse", names(idep_data$species_choice))]
+
 converted <- convert_id(
   query = rownames(loaded_data$data),
   idep_data = idep_data,
@@ -207,12 +240,12 @@ other values can be set to `NULL`.
 
 ##### **Fold-changes and corrected P values**
 
-FOr this data type, there is only one additional parameter to provide an input
+For this data type, there is only one additional parameter to provide an input
 for, `no_fdr`. This is a logical `TRUE/FALSE` to specify whether the data
 contains corrected p-values or not. `TRUE` denotes fold-change only data. All
 other parameters can be set to `NULL`.
 
-```{r}
+```{r Pre-Process Data}
 processed_data <- pre_process(
   data = converted_data$data,
   missing_value = "geneMedian",
@@ -247,7 +280,7 @@ data. `counts_data` is the raw counts that is returned from the `pre_process`
 function. `sample_info` is the experiment design data from the `input_data`
 function. 
 
-```{r fig.height=7, fig.width=11}
+```{r fig.height=7, fig.width=11, fig.align = 'center'}
 total_counts_ggplot(
   counts_data = processed_data$raw_counts,
   sample_info = loaded_data$sample_info
@@ -265,7 +298,7 @@ string names of the columns to be plotted. The options for these inputs can be
 seen using `colnames(processed_data$data)`. `processed_data` is the returned
 data from the `pre_process` function. 
 
-```{r fig.height=7, fig.width=11}
+```{r fig.height=7, fig.width=11, fig.align = 'center'}
 colnames(processed_data$data)
 
 eda_scatter(
@@ -284,7 +317,7 @@ pre-processing transformation. This function returns a ggplot boxplot of each
 column in the data. `processed_data` is the transformed counts and `sample_info`
 is the experiment design information from the `input_data` function. 
 
-```{r fig.height=7, fig.width=11}
+```{r fig.height=7, fig.width=11, fig.align = 'center'}
 eda_boxplot(
   processed_data = processed_data$data,
   sample_info = loaded_data$sample_info
@@ -300,7 +333,7 @@ each sample in the data. The information is displayed in a density ridge plot in
 the ggplot format. Again, the data provided is returned from the `pre_process`
 function. The `sample_info` provides information on each sample in the dataset.
 
-```{r fig.height=7, fig.width=11}
+```{r fig.height=7, fig.width=11, fig.align = 'center'}
 eda_density(
   processed_data = processed_data$data,
   sample_info = loaded_data$sample_info
@@ -335,10 +368,8 @@ merged_data <- merge_data(
 
 #### SEARCHING
 ```{r}
-# Species search for input data
-idep_data$species_choice[grep("Human", names(idep_data$species_choice))]
+
 
 # Gene search for individual plotting
 merged_data[grep("H4c1", merged_data$symbol),]
 ```
-

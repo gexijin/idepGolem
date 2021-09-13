@@ -440,7 +440,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
 
       merged_data <- merge_data(
         load_data$all_gene_names(),
-        processed_data()$data
+        processed_data()$data,
+        merge_ID = "ensembl_ID"
       )
     })
     merged_raw_counts_data <- reactive({
@@ -448,7 +449,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
 
       merged_data <- merge_data(
         load_data$all_gene_names(),
-        processed_data()$raw_counts
+        processed_data()$raw_counts,
+        merge_ID = "ensembl_ID"
       )
     })
 

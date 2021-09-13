@@ -22,5 +22,5 @@ app_server <- function(input, output, session) {
     pre_process = pre_process,
     tab = tab
   )
-  mod_04_k_means_server("test")
+  mod_04_k_means_server(id = "k_means")
 }
