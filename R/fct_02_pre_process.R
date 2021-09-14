@@ -33,21 +33,18 @@ NULL
 #' @return A list containing the transformed data, the mean kurtosis,
 #' the raw counts, a data type warning, the size of the original data,
 #' and p-values.
-pre_process <- function(
-  data,
-  missing_value,
-  data_file_format,
-  low_filter_fpkm,
-  n_min_samples_fpkm,
-  log_transform_fpkm,
-  log_start_fpkm,
-  min_counts,
-  n_min_samples_count,
-  counts_transform,
-  counts_log_start,
-  no_fdr
-) {
-
+pre_process <- function(data,
+                        missing_value,
+                        data_file_format,
+                        low_filter_fpkm,
+                        n_min_samples_fpkm,
+                        log_transform_fpkm,
+                        log_start_fpkm,
+                        min_counts,
+                        n_min_samples_count,
+                        counts_transform,
+                        counts_log_start,
+                        no_fdr) {
   data_type_warning <- 0
   data_size_original <- dim(data)
   kurtosis_log <- 50
@@ -63,7 +60,7 @@ pre_process <- function(
   if (sum(is.na(data)) > 0) {
     if (missing_value == "geneMedian") {
       row_medians <- apply(data, 1, function(y) median(y, na.rm = T))
-      for (i in 1:dim(data)[2]) {
+      for (i in 1:ncol(data)) {
         val_miss_row <- which(is.na(data[, i]))
         data[val_miss_row, i] <- row_medians[val_miss_row]
       }
@@ -91,7 +88,7 @@ pre_process <- function(
           1,
           function(y) median(y, na.rm = T)
         )
-        for (i in 1:dim(data)[2]) {
+        for (i in 1:ncol(data)) {
           missing <- which(is.na(data[, i]))
           data[missing, i] <- row_medians[missing]
         }
@@ -99,13 +96,13 @@ pre_process <- function(
     }
   }
   # Compute kurtosis ---------
-  mean_kurtosis <- mean(apply(data, 2, e1071::kurtosis), na.rm = T)
+  mean_kurtosis <- mean(apply(data, 2, e1071::kurtosis), na.rm = TRUE)
   raw_counts <- NULL
   pvals <- NULL
 
   # Pre-processing for each file format ----------
   if (data_file_format == 2) {
-    if (is.integer(data)){
+    if (is.integer(data)) {
       data_type_warning <- 1
     }
 
@@ -126,8 +123,8 @@ pre_process <- function(
 
     # Takes log if log is selected OR kurtosis is bigger than 50
     if (
-      (log_transform_fpkm == TRUE) |
-      (mean_kurtosis > kurtosis_log)
+      (log_transform_fpkm == TRUE) ||
+        (mean_kurtosis > kurtosis_log)
     ) {
       data <- log(data + abs(log_start_fpkm), 2)
     }
@@ -135,8 +132,7 @@ pre_process <- function(
     std_dev <- apply(data, 1, sd)
     data <- data[order(-std_dev), ]
   } else if (data_file_format == 1) {
-
-    if (!is.integer(data) & mean_kurtosis < kurtosis_log) {
+    if (!is.integer(data) && mean_kurtosis < kurtosis_log) {
       data_type_warning <- -1
     }
 
@@ -176,11 +172,11 @@ pre_process <- function(
       ) + counts_log_start)
     }
   } else if (data_file_format == 3) {
-    n2 <- (dim(data)[2] %/% 2)
+    n2 <- (ncol(data) %/% 2)
     if (!no_fdr) {
       pvals <- data[, 2 * (1:n2), drop = FALSE]
       data <- data[, 2 * (1:n2) - 1, drop = FALSE]
-      if (dim(data)[2] == 1) {
+      if (ncol(data) == 1) {
         placeholder <- rep(1, dim(data)[1])
         pvals <- cbind(pvals, placeholder)
         zero_placeholder <- rep(0, dim(data)[1])
@@ -192,7 +188,7 @@ pre_process <- function(
 
   validate(
     need(
-      dim(data)[1] > 5 & dim(data)[2] >= 1,
+      nrow(data) > 5 && ncol(data) >= 1,
       "Data file not recognized. Please double check."
     )
   )
@@ -221,11 +217,8 @@ pre_process <- function(
 #'
 #' @return formatted ggbarplot
 #'
-total_counts_ggplot <- function(
-  counts_data,
-  sample_info
-) {
-
+total_counts_ggplot <- function(counts_data,
+                                sample_info) {
   counts <- counts_data
   memo <- ""
 
@@ -238,7 +231,7 @@ total_counts_ggplot <- function(
     detect_groups(colnames(counts_data), sample_info)
   )
 
-  if (nlevels(groups) <= 1 | nlevels(groups) > 20) {
+  if (nlevels(groups) <= 1 || nlevels(groups) > 20) {
     grouping <- NULL
   } else {
     grouping <- groups
@@ -303,12 +296,9 @@ total_counts_ggplot <- function(
 #'
 #' @return Returns a formatted gg scatterplot
 #'
-eda_scatter <- function(
-  processed_data,
-  plot_xaxis,
-  plot_yaxis
-) {
-
+eda_scatter <- function(processed_data,
+                        plot_xaxis,
+                        plot_yaxis) {
   plot_data <- as.data.frame(processed_data)
   scatter <- ggplot2::ggplot(
     plot_data,
@@ -317,24 +307,27 @@ eda_scatter <- function(
       y = get(plot_yaxis)
     )
   ) +
-  ggplot2::geom_point(size = 1) +
-  ggplot2::labs(
-    title = paste0("Scatter for ", plot_xaxis, " and ", plot_yaxis,
-                   " transfromed expression"),
-    x = paste0(plot_xaxis),
-    y =  paste0(plot_yaxis)
-  ) +
-  ggplot2::theme_light() +
-  ggplot2::theme(legend.position = "none",
-    axis.text = ggplot2::element_text(size = 14),
-    axis.title = ggplot2::element_text(size = 16),
-    plot.title = ggplot2::element_text(
-      color = "black",
-      size = 16,
-      face = "bold",
-      hjust = .5
+    ggplot2::geom_point(size = 1) +
+    ggplot2::labs(
+      title = paste0(
+        "Scatter for ", plot_xaxis, " and ", plot_yaxis,
+        " transfromed expression"
+      ),
+      x = paste0(plot_xaxis),
+      y = paste0(plot_yaxis)
+    ) +
+    ggplot2::theme_light() +
+    ggplot2::theme(
+      legend.position = "none",
+      axis.text = ggplot2::element_text(size = 14),
+      axis.title = ggplot2::element_text(size = 16),
+      plot.title = ggplot2::element_text(
+        color = "black",
+        size = 16,
+        face = "bold",
+        hjust = .5
+      )
     )
-  )
 
   return(scatter)
 }
@@ -352,11 +345,8 @@ eda_scatter <- function(
 #' @return Formatted gg boxplot of the distribution of counts for each
 #' sample
 #'
-eda_boxplot <- function(
-  processed_data,
-  sample_info
-) {
-
+eda_boxplot <- function(processed_data,
+                        sample_info) {
   counts <- as.data.frame(processed_data)
   memo <- ""
 
@@ -390,9 +380,9 @@ eda_boxplot <- function(
   longer_data$grouping <- rep(grouping, nrow(counts))
 
   plot <- ggplot2::ggplot(
-      data = longer_data,
-      ggplot2::aes(x = sample, y = expression, fill = grouping)
-    ) +
+    data = longer_data,
+    ggplot2::aes(x = sample, y = expression, fill = grouping)
+  ) +
     ggplot2::geom_boxplot() +
     ggplot2::theme_light() +
     ggplot2::theme(
@@ -434,11 +424,8 @@ eda_boxplot <- function(
 #' @param sample_info Sample_info from the experiment file
 #'
 #' @return Returns a formatted gg density plot
-eda_density <- function(
-  processed_data,
-  sample_info
-) {
-
+eda_density <- function(processed_data,
+                        sample_info) {
   counts <- as.data.frame(processed_data)
   memo <- ""
 
@@ -458,7 +445,7 @@ eda_density <- function(
     group_fill <- groups
     legend <- "right"
   }
-  if(ncol(counts) < 31) {
+  if (ncol(counts) < 31) {
     x_axis_labels <- 16
   } else {
     x_axis_labels <- 12
@@ -474,9 +461,9 @@ eda_density <- function(
   longer_data$group_fill <- rep(group_fill, nrow(counts))
 
   plot <- ggplot2::ggplot(
-      data = longer_data,
-      ggplot2::aes(x = expression, color = group_fill, group = sample)
-    ) +
+    data = longer_data,
+    ggplot2::aes(x = expression, color = group_fill, group = sample)
+  ) +
     ggplot2::geom_density(size = 1) +
     ggplot2::theme_light() +
     ggplot2::theme(
@@ -521,70 +508,65 @@ eda_density <- function(
 #'
 #' @param all_gene_names All matched gene names from idep data
 #' @param data Data matrix with rownames to merge with gene names
-#' @param merge_ID ID from all_gene_names that matches the rownames of data
-#' 
+#'
 #' @return Inputted data with all gene name information.
-merge_data <- function(
-  all_gene_names,
-  data,
-  merge_ID
-) {
-
+merge_data <- function(all_gene_names,
+                       data) {
   isolate({
-  if (dim(all_gene_names)[2] == 1) {
-    new_data <- round(data, 2)
-    new_data <- as.data.frame(new_data)
-    new_data$User_id <- rownames(new_data)
-    new_data <- dplyr::select(
-      new_data,
-      User_id,
-      tidyselect::everything()
-    )
-    rownames(new_data) <- seq(1, nrow(new_data), 1)
-    tmp <- apply(new_data[, 2:dim(new_data)[2]], 1, sd)
-    new_data <- new_data[order(-tmp), ]
+    if (dim(all_gene_names)[2] == 1) {
+      new_data <- round(data, 2)
+      new_data <- as.data.frame(new_data)
+      new_data$User_id <- rownames(new_data)
+      new_data <- dplyr::select(
+        new_data,
+        User_id,
+        tidyselect::everything()
+      )
+      rownames(new_data) <- seq(1, nrow(new_data), 1)
+      tmp <- apply(new_data[, 2:dim(new_data)[2]], 1, sd)
+      new_data <- new_data[order(-tmp), ]
 
-    return(new_data)
-  } else if (dim(all_gene_names)[2] == 2) {
-    new_data <- merge(
-      all_gene_names,
-      round(data, 2),
-      by.x = merge_ID,
-      by.y = "row.names",
-      all.y = T
-    )
-    new_data <- dplyr::select(
-      new_data,
-      User_ID,
-      ensembl_ID,
-      tidyselect::everything()
-    )
-    rownames(new_data) <- seq(1, nrow(new_data), 1)
-    tmp <- apply(new_data[, 3:dim(new_data)[2]], 1, sd)
-    new_data <- new_data[order(-tmp), ]
+      return(new_data)
+    } else if (dim(all_gene_names)[2] == 2) {
+      new_data <- merge(
+        all_gene_names,
+        round(data, 2),
+        by.x = "ensembl_ID",
+        by.y = "row.names",
+        all.y = T
+      )
+      new_data <- dplyr::select(
+        new_data,
+        User_ID,
+        ensembl_ID,
+        tidyselect::everything()
+      )
+      rownames(new_data) <- seq(1, nrow(new_data), 1)
+      tmp <- apply(new_data[, 3:dim(new_data)[2]], 1, sd)
+      new_data <- new_data[order(-tmp), ]
 
-    return(new_data)
-  } else {
-    new_data <- merge(
-      all_gene_names,
-      round(data, 2),
-      by.x = merge_ID,
-      by.y = "row.names",
-      all.y = T
-    )
-    new_data <- dplyr::select(
-      new_data,
-      User_ID,
-      ensembl_ID,
-      symbol,
-      tidyselect::everything()
-    )
-    rownames(new_data) <- seq(1, nrow(new_data), 1)
-    tmp <- apply(new_data[, 4:dim(new_data)[2]], 1, sd)
-    new_data <- new_data[order(-tmp), ]
+      return(new_data)
+    } else {
+      new_data <- merge(
+        all_gene_names,
+        round(data, 2),
+        by.x = "ensembl_ID",
+        by.y = "row.names",
+        all.y = T
+      )
+      new_data <- dplyr::select(
+        new_data,
+        User_ID,
+        ensembl_ID,
+        symbol,
+        tidyselect::everything()
+      )
+      rownames(new_data) <- seq(1, nrow(new_data), 1)
+      tmp <- apply(new_data[, 4:dim(new_data)[2]], 1, sd)
+      new_data <- new_data[order(-tmp), ]
 
-    return(new_data)
-  }
+      return(new_data)
+    }
   })
 }
 
@@ -602,75 +584,70 @@ merge_data <- function(
 #' @param gene_plot_box T/F for individual sample plot or grouped data plot
 #' @param use_sd T/F for standard error or standard deviation bars on bar plot
 #' @param select_org Species the expression data is from
-#' 
+#'
 #' @return A formatted ggplot. For gene_plot_box = TRUE the return will be a
 #' lineplot for the expression of each individual sample for the selected gene.
 #' If gene_plot_box = FALSE the return will be a barplot for the groups provided
 #' in the sample information.
 #'
-individual_plots <- function(
-  individual_data,
-  sample_info,
-  selected_gene,
-  gene_plot_box,
-  use_sd,
-  lab_rotate
-) {
-  library(magrittr)
+individual_plots <- function(individual_data,
+                             sample_info,
+                             selected_gene,
+                             gene_plot_box,
+                             use_sd,
+                             lab_rotate) {
   individual_data <- as.data.frame(individual_data)
   individual_data$symbol <- rownames(individual_data)
 
-  plot_data <- individual_data %>%
-      dplyr::filter(symbol %in% selected_gene) %>%
-      tidyr::pivot_longer(!symbol, names_to = "sample", values_to = "value")
+  plot_data <- individual_data |>
+    dplyr::filter(symbol %in% selected_gene) |>
+    tidyr::pivot_longer(!symbol, names_to = "sample", values_to = "value")
   if (ncol(plot_data) < 31) {
-      x_axis_labels <- 14
-    } else {
-      x_axis_labels <- 10
-    }
+    x_axis_labels <- 14
+  } else {
+    x_axis_labels <- 10
+  }
 
   if (gene_plot_box == TRUE) {
-
     ind_line <- ggplot2::ggplot(
       data = plot_data,
       ggplot2::aes(x = sample, y = value, group = symbol, color = symbol)
     ) +
-    ggplot2::geom_line() +
-    ggplot2::geom_point(size = 5, fill = "white") +
-    ggplot2::labs(
-      title = "Transformed Expression Level",
-      y = "Transformed Expression"
-    ) +
-    ggplot2::coord_cartesian(ylim = c(0, max(plot_data$value))) +
-    ggplot2::theme_light() +
-    ggplot2::theme(
-      plot.title = ggplot2::element_text(
-        color = "black",
-        size = 16,
-        face = "bold",
-        hjust = .5
-      ),
-      axis.text.x = ggplot2::element_text(
-        angle = as.numeric(lab_rotate),
-        size = x_axis_labels,
-        vjust = .5
-      ),
-      axis.text.y = ggplot2::element_text(size = 16),
-      axis.title.x = ggplot2::element_blank(),
-      axis.title.y = ggplot2::element_text(
-        color = "black",
-        size = 14
-      ),
-      legend.text = ggplot2::element_text(size = 12)
-    )
+      ggplot2::geom_line() +
+      ggplot2::geom_point(size = 5, fill = "white") +
+      ggplot2::labs(
+        title = "Transformed Expression Level",
+        y = "Transformed Expression"
+      ) +
+      ggplot2::coord_cartesian(ylim = c(0, max(plot_data$value))) +
+      ggplot2::theme_light() +
+      ggplot2::theme(
+        plot.title = ggplot2::element_text(
+          color = "black",
+          size = 16,
+          face = "bold",
+          hjust = .5
+        ),
+        axis.text.x = ggplot2::element_text(
+          angle = as.numeric(lab_rotate),
+          size = x_axis_labels,
+          vjust = .5
+        ),
+        axis.text.y = ggplot2::element_text(size = 16),
+        axis.title.x = ggplot2::element_blank(),
+        axis.title.y = ggplot2::element_text(
+          color = "black",
+          size = 14
+        ),
+        legend.text = ggplot2::element_text(size = 12)
+      )
 
     return(ind_line)
   } else if (gene_plot_box == FALSE) {
-
     plot_data$groups <- detect_groups(plot_data$sample, sample_info)
 
-    summarized <- plot_data %>%
-      dplyr::group_by(groups, symbol) %>%
+    summarized <- plot_data |>
+      dplyr::group_by(groups, symbol) |>
       dplyr::summarise(Mean = mean(value), SD = sd(value), N = dplyr::n())
 
     summarized$SE <- summarized$SD / sqrt(summarized$N)
@@ -679,38 +656,39 @@ individual_plots <- function(
       summarized,
       ggplot2::aes(x = symbol, y = Mean, fill = groups)
     ) +
-    ggplot2::geom_bar(stat = "identity", position = ggplot2::position_dodge()) +
-    ggplot2::labs(
-      title = "Expression Level",
-      y = "Grouped Transformed Expression"
-    ) +
-    ggplot2::theme_light() +
-    ggplot2::theme(
-      plot.title = ggplot2::element_text(
-        color = "black",
-        size = 16,
-        face = "bold",
-        hjust = .5
-      ),
-      axis.text.x = ggplot2::element_text(
-        angle = as.numeric(lab_rotate),
-        size = x_axis_labels,
-        vjust = .5
-      ),
-      axis.text.y = ggplot2::element_text(size = 16),
-      axis.title.x = ggplot2::element_blank(),
-      axis.title.y = ggplot2::element_text(
-        color = "black",
-        size = 14
-      ),
-      legend.text = ggplot2::element_text(size = 12)
-    )
+      ggplot2::geom_bar(stat = "identity", position = ggplot2::position_dodge()) +
+      ggplot2::labs(
+        title = "Expression Level",
+        y = "Grouped Transformed Expression"
+      ) +
+      ggplot2::theme_light() +
+      ggplot2::theme(
+        plot.title = ggplot2::element_text(
+          color = "black",
+          size = 16,
+          face = "bold",
+          hjust = .5
+        ),
+        axis.text.x = ggplot2::element_text(
+          angle = as.numeric(lab_rotate),
+          size = x_axis_labels,
+          vjust = .5
+        ),
+        axis.text.y = ggplot2::element_text(size = 16),
+        axis.title.x = ggplot2::element_blank(),
+        axis.title.y = ggplot2::element_text(
+          color = "black",
+          size = 14
+        ),
+        legend.text = ggplot2::element_text(size = 12)
+      )
 
     if (use_sd == TRUE) {
       gene_bar <- gene_bar + ggplot2::geom_errorbar(
         ggplot2::aes(
           ymin = Mean - SD,
-          ymax = Mean + SD),
+          ymax = Mean + SD
+        ),
         width = 0.2,
         position = ggplot2::position_dodge(.9)
       )
@@ -718,7 +696,8 @@ individual_plots <- function(
       gene_bar <- gene_bar + ggplot2::geom_errorbar(
         ggplot2::aes(
           ymin = Mean - SE,
-          ymax = Mean + SE),
+          ymax = Mean + SE
+        ),
         width = 0.2,
         position = ggplot2::position_dodge(.9)
       )
@@ -729,21 +708,19 @@ individual_plots <- function(
 }
 
 #' Data processing message
-#' 
+#'
 #' Creates a message about the size of the counts
 #' data and the amount of IDs that were converted.
-#' 
+#'
 #' @param data_size Data size matrix from processing function
 #' @param all_gene_names Data frame with all gene names
 #' @param n_matched Count of matched IDs after processing
-#' 
+#'
 #' @return Message about processed data
-conversion_counts_message <- function(
-  data_size,
-  all_gene_names,
-  n_matched
-) {
-  if (dim(all_gene_names)[2] == 1) {
+conversion_counts_message <- function(data_size,
+                                      all_gene_names,
+                                      n_matched) {
+  if (ncol(all_gene_names) == 1) {
     return(paste(
       data_size[1], "genes in", data_size[4], "samples.",
       data_size[3], " genes passed filter. Original gene IDs used."
@@ -753,7 +730,7 @@ conversion_counts_message <- function(
       data_size[1], "genes in", data_size[4], "samples.",
       data_size[3], " genes passed filter, ", n_matched,
       " were converted to Ensembl gene IDs in our database.
-      The remaining ", data_size[3] - n_matched, " genes were 
+      The remaining ", data_size[3] - n_matched, " genes were
       kept in the data using original IDs."
     ))
   }
@@ -764,15 +741,13 @@ conversion_counts_message <- function(
 #' This function creates a warning message for the
 #' UI to present to the user regarding the sequencing
 #' depth bias.
-#' 
+#'
 #' @param raw_counts Raw counts data from the processing function
 #' @param sample_info Experiment file information about each sample
-#' 
+#'
 #' @return Message for the UI
-counts_bias_message <- function(
-  raw_counts,
-  sample_info
-) {
+counts_bias_message <- function(raw_counts,
+                                sample_info) {
   total_counts <- colSums(raw_counts)
   groups <- as.factor(
     detect_groups(
@@ -801,12 +776,13 @@ counts_bias_message <- function(
     y <- sample_info
     for (j in 1:ncol(y)) {
       pval <- summary(aov(
-        total_counts ~ as.factor(y[, j])))[[1]][["Pr(>F)"]][1]
+        total_counts ~ as.factor(y[, j])
+      ))[[1]][["Pr(>F)"]][1]
 
       if (pval < 0.01) {
         message <- paste(
           message, " Total read counts seem to be correlated with factor",
-          colnames(y)[j], "(p=",  sprintf("%-3.2e",pval),").  "
+          colnames(y)[j], "(p=", sprintf("%-3.2e", pval), ").  "
         )
       }
     }

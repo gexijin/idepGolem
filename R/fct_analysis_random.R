@@ -14,6 +14,7 @@ NULL
 
 
 ##### work in process, want to rewrite other code that this function relays on first
+### Can we removed this?????
 #' FUNCTION_TITLE
 #'
 #' FUNCTION_DESCRIPTION

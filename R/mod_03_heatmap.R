@@ -215,7 +215,7 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
     observe({
       req(tab() == "Heatmap")
       req(!is.null(pre_process$data()))
-      if(nrow(pre_process$data()) > 12000) {
+      if (nrow(pre_process$data()) > 12000) {
         max_genes <- 12000
       } else {
         max_genes <- round(nrow(pre_process$data()) + 50, -2)

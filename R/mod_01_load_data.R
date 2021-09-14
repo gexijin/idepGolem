@@ -243,11 +243,11 @@ mod_01_load_data_server <- function(id, idep_data) {
     })
 
     loaded_data <- reactive(input_data(
-        expression_file = input$expression_file,
-        experiment_file = input$experiment_file,
-        go_button = input$go_button,
-        demo_data_file = idep_data$demo_data_file,
-        demo_metadata_file = idep_data$demo_metadata_file
+      expression_file = input$expression_file,
+      experiment_file = input$experiment_file,
+      go_button = input$go_button,
+      demo_data_file = idep_data$demo_data_file,
+      demo_metadata_file = idep_data$demo_metadata_file
     ))
 
     # Sample information table -----------
@@ -267,7 +267,8 @@ mod_01_load_data_server <- function(id, idep_data) {
           dom = "t",
           ordering = F
         ),
-        rownames = FALSE)
+        rownames = FALSE
+      )
     })
 
     # First 20 rows of dataset table -----------
@@ -281,7 +282,8 @@ mod_01_load_data_server <- function(id, idep_data) {
           scrollX = "400px",
           dom = "t"
         ),
-        rownames = TRUE)
+        rownames = TRUE
+      )
     })
 
     # Get converted IDs ----------
@@ -328,20 +330,22 @@ mod_01_load_data_server <- function(id, idep_data) {
     })
 
     # Species match table ----------
-    output$species_match <- renderTable({
-      if (is.null(input$expression_file) && input$go_button == 0){
-        return(NULL)
-      }
-      isolate({
-        tem <- conversion_info()$converted$species_match
-        if (is.null(tem)) {
-          as.data.frame("ID not recognized.")
-        } else {
-          data.frame(
-            "Matched Species (genes)" = tem[1,],
-            check.names = FALSE)
+    output$species_match <- renderTable(
+      {
+        if (is.null(input$expression_file) && input$go_button == 0) {
+          return(NULL)
         }
-      })
+        isolate({
+          tem <- conversion_info()$converted$species_match
+          if (is.null(tem)) {
+            as.data.frame("ID not recognized.")
+          } else {
+            data.frame(
+              "Matched Species (genes)" = tem[1, ],
+              check.names = FALSE
+            )
+          }
+        })
       },
       digits = -1,
       spacing = "s",

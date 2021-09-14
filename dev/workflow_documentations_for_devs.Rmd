@@ -1,0 +1,352 @@
+---
+title: "Workflow Documentation"
+output: html_document
+---
+
+``{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+The purpose of this document is to document the workflow of IDEP. The goal is to
+later use the code in this document to create a vignette that users will be able
+to read and then use IDEP in command line instead of the shiny app.
+
+## Load Data
+
+This function will enable us to use the functions that drive the IDEPgolem 
+package.
+```{r}
+devtools::load_all()
+ROOT <- "/mnt/storage/"
+```
+<br>
+
+#### Data Paths
+
+This begins the process of loading the data. `get_idep_data()` returns a list of
+the data that will be used to process and examine the loaded expression data. To
+analyze a data set, just substitute the path to the expression data into
+`YOUR_DATA_PATH`. If your data comes with information about the samples,
+substitute the path for that file into `YOUR_EXPERIMENT_PATH`. These data paths
+are then stored in a data frame that will be used in the `input_data` function.
+```{r}
+idep_data <- get_idep_data()
+
+YOUR_DATA_PATH <- paste0(ROOT, "data/data103/data_go/BcellGSE71176_p53.csv")
+YOUR_EXPERIMENT_PATH <- paste0(ROOT, "data/data103/data_go/BcellGSE71176_p53_sampleInfo.csv")
+
+expression_file <- data.frame(
+  datapath = YOUR_DATA_PATH
+)
+experiment_file <- data.frame(
+  datapath = YOUR_EXPERIMENT_PATH
+)
+```
+<br>
+
+#### **`input_data`** Function
+
+`input_data` takes in the established data paths and reads it into a data set to
+analyze. If an experiment file is provided, the data will be returned in a list
+containing the expression data and sample information. To run idep on an example
+data set, set the value of `go_button` to `TRUE`. The `demo_data_file` and
+`demo_metadata_file` are the built-in paths to the example data set and should
+not be changed. The returned expression will be a numeric matrix with gene IDs
+as rownames. The columns will denote the sample.
+```{r}
+loaded_data <- input_data(
+  expression_file = expression_file,
+  experiment_file = experiment_file,
+  go_button = FALSE,
+  demo_data_file = idep_data$demo_data_file,
+  demo_metadata_file = idep_data$demo_metadata_file
+)
+```
+<br>
+
+#### Gene ID and Meta Data Functions
+
+Idep works with "ensembl" gene IDs to perform many of its functions. Given a
+data set, idep will convert IDs to ensembl and then gather metadata for each
+gene if the database recognizes the species. This process occurs in the
+following functions.
+
+1. **`convert_id`**
+
+    This function will take in a 'query' and use the 'idep_data' to match the 
+    provided gene IDs with the corresponding ensembl ID. The IDs from the
+    inputted data are currently the rownames of the data frame `data` stored in
+    the list `loaded_data`. `select_org` is a parameter to provide the species
+    that the expression data is from. `convert_id` returns a list containing
+    information about the query results. The converted IDs are are accessed by
+    `converted$ids`. `print(converted$species_matched[2,])` shows the species
+    that was recognized by the provided gene IDs.
+
+2. **`gene_info`**
+
+    Gathering the information on the converted ensembl IDs is the next step. 
+    The `converted` results are passed into the `gene_info` function to retrieve
+    gene name information that is stored in `idep_data` as well. If `select_org`
+    is `BestMatch`, the function will use the matched species from converted to
+    retrieve the gene data. If a species code is provided, it will use that
+    species directly. `gene_info` will then read a gene data file from the
+    `idep_data` and return the resulting data frame. This data will be used to
+    map to more informative gene names in the coming functions.
+    
+3. **`convert_data`**
+
+    This step will return the original data from `input_data` with the converted
+    ensembl IDs as rownames, and a data frame of the mapped IDs. It uses the IDs
+    that were matched with `convert_id` to swap the current rownames with the 
+    corresponding ensembl ID. `no_id_conversion` can be set to `TRUE` if the 
+    desired IDs are the original ones, but the simpler solution is to simply not
+    run the function. The returned list contains the data with converted IDs in 
+    `data` and IDs in `mapped_ids`.
+
+4. **`get_all_gene_names`**
+
+    This function enables us to combine all the gene name information that has
+    been gathered in the preceding functions. `mapped_ids` are the matched IDs
+    from `converted`, and `all_gene_info` is the data read from idep based off
+    the identified species. This function returns a data frame with `User_ID`
+    as the original IDs, `ensembl_ID` containing the converted IDs, and `symbol`
+    containing the informative gene names. This data frame will later be used to
+    create a data frame after processing for reproducibility.
+    
+```{r}
+converted <- convert_id(
+  query = rownames(loaded_data$data),
+  idep_data = idep_data,
+  select_org = "BestMatch"
+)
+
+print(converted$species_matched[1,])
+
+all_gene_info <- gene_info(
+  converted = converted,
+  select_org = "BestMatch",
+  idep_data = idep_data
+)
+
+converted_data <- convert_data(
+  converted = converted,
+  no_id_conversion = FALSE,
+  data = loaded_data$data
+)
+
+gene_names <- get_all_gene_names(
+  mapped_ids = converted_data$mapped_ids,
+  all_gene_info = all_gene_info
+)
+```
+<br>
+
+## Process Data
+
+Now that the gene information has been retrieved and the IDs converted, it is
+possible to process the data and perform a transformation for analysis.
+
+<br>
+
+#### **`pre_process`** Function
+
+Processing the data requires many options to ensure the data gets to the desired
+form. This is the data that will be used in the exploratory analysis to come.
+The data to be processed is the `converted_data` from above. The parameters
+`missing_value` and `data_file_format` have a list of input values to select 
+from for processing. These values and descriptions can be found in the tables 
+below. `missing_value` determines how missing data entries will be filled in, 
+and `data_file_format` tells the function what type of data is being processed.
+
+Input (`missing_value`)   Description
+------------------------- -----------------------------------------------------------
+`geneMedian`              Substitute median expression value for gene across all samples
+`treatAsZero`             Substitute "0" for all missing values
+`geneMedianInGroup`       Substitute median expression value for gene within sample group
+
+Input (`data_file_format`)   Description
+---------------------------  -----------------------------------------------------------
+`1`                          Read counts data (recommended)
+`2`                          Normalized expression values (RNA-seq FPKM, micro-array, etc.)
+`3`                          Fold-changes and corrected P values from CuffDiff or any other program
+
+<br>
+
+##### **Read counts data**
+
+For read counts data, the parameters `min_counts`, `n_min_samples_counts`,
+`counts_transform` and `counts_log_start` need input values. `min_counts` and
+`n_min_samples` work to filter the genes out of the data that do not have
+sufficient counts. The function counts the columns that have more counts than
+`min_counts` for each gene and filters out the genes with less columns than
+`n_min_samples`. For example, if you only wanted genes with more than 0 counts
+for each sample, you would set `min_counts = .5` and 
+`n_min_samples = ncol(converted_data)`. `counts_transform` specifies the
+transformation to perform on the counts data. This parameter has 3 input options
+which are outlined below. If `counts_transform = 1`, `counts_log_start`
+determines the constant to add to CPM to ensure that there are no `log(0)`
+errors. All other parameters can be set to `NULL`
+
+Input (`counts_transform`)   Description
+---------------------------  -----------------------------------------------------------
+`1`                          EdgeR: log2(CPM+c) (Counts per Million + constant)
+`2`                          VST: variance stabilizing transform
+`3`                          rlog: regularized log (slow)
+
+<br>
+
+##### **Normalized expression values Parameters**
+
+If the data being processed is for normalized expression values, the parameters
+`low_filter_fpkm`, `n_min_samples_fpkm`, `log_transform_fpkm` and 
+`log_start_fpkm` need input values. `low_filter_fpkm` and `n_min_samples_fpkm`
+work together to filter out the genes that do not have enough counts. The
+function will count the columns that are greater than `low_filter_fpkm` and 
+discard the gene if it is not more than `n_min_samples_fpkm` columns. The
+parameter `log_transform_fpkm` is `TRUE/FALSE` for whether to perform a log
+transform on the data or not. If `log_transform = TRUE`, then `log_start_fpkm`
+is the value that will be added to ensure there are no `log(0)` errors. All
+other values can be set to `NULL`.
+
+<br>
+
+##### **Fold-changes and corrected P values**
+
+FOr this data type, there is only one additional parameter to provide an input
+for, `no_fdr`. This is a logical `TRUE/FALSE` to specify whether the data
+contains corrected p-values or not. `TRUE` denotes fold-change only data. All
+other parameters can be set to `NULL`.
+
+```{r}
+processed_data <- pre_process(
+  data = converted_data$data,
+  missing_value = "geneMedian",
+  data_file_format = 1,
+  low_filter_fpkm = NULL,
+  n_min_samples_fpkm = NULL,
+  log_transform_fpkm = NULL,
+  log_start_fpkm = NULL,
+  min_counts = .5,
+  n_min_samples_count = 1,
+  counts_transform = 1,
+  counts_log_start = 4,
+  no_fdr = NULL
+)
+```
+<br>
+
+## Exploratory Data Analysis
+
+Now that the data has been processed, it is possible to begin data analysis. It
+is possible to create unique and informative plots with the processed data, and
+idep has built in functions to assist with that.
+
+<br>
+
+#### **`total_counts_ggplot`** Function
+
+This function will only work for read counts data, so if that is not the format
+of the processed data, please skip this function. For read counts data, this
+function creates a barplot to show the counts in millions for each sample in the
+data. `counts_data` is the raw counts that is returned from the `pre_process`
+function. `sample_info` is the experiment design data from the `input_data`
+function. 
+
+```{r fig.height=7, fig.width=11}
+total_counts_ggplot(
+  counts_data = processed_data$raw_counts,
+  sample_info = loaded_data$sample_info
+)
+```
+
+<br>
+
+#### **`eda_scatter`** Function
+
+Another useful plot is a scatter plot of the transformed expression for two
+samples in the data. `eda_scatter` provides a scatter plot of two specified
+sample (columns) of the processed data. `plot_xaxis` and `plot_yaxis` are
+string names of the columns to be plotted. The options for these inputs can be
+seen using `colnames(processed_data$data)`. `processed_data` is the returned
+data from the `pre_process` function. 
+
+```{r fig.height=7, fig.width=11}
+colnames(processed_data$data)
+
+eda_scatter(
+  processed_data = processed_data$data,
+  plot_xaxis = "p53_IR_1",
+  plot_yaxis = "p53_mock_1"
+)
+```
+
+<br>
+
+#### **`eda_boxplot`** Function
+
+`eda_boxplot` will show the distribution of the counts data after the 
+pre-processing transformation. This function returns a ggplot boxplot of each
+column in the data. `processed_data` is the transformed counts and `sample_info`
+is the experiment design information from the `input_data` function. 
+
+```{r fig.height=7, fig.width=11}
+eda_boxplot(
+  processed_data = processed_data$data,
+  sample_info = loaded_data$sample_info
+)
+```
+
+<br>
+
+#### **`eda_density`** Function
+
+This plotting function provides a plot of the distribution of counts values for
+each sample in the data. The information is displayed in a density ridge plot in
+the ggplot format. Again, the data provided is returned from the `pre_process`
+function. The `sample_info` provides information on each sample in the dataset.
+
+```{r fig.height=7, fig.width=11}
+eda_density(
+  processed_data = processed_data$data,
+  sample_info = loaded_data$sample_info
+)
+```
+
+<br>
+
+#### `merge_data` Function
+
+The current data is using the converted ensembl IDs as rownames in a large data
+matrix, but the following function will create a data frame containing the gene
+names from the `get_all_gene_names` function. `merge_data` takes the
+`gene_names` data frame and a data matrix with ID rownames and creates a data
+frame with columns for each ID that idep has matched from the original IDs.
+This is useful to view different IDs for the same gene. It also enables writing
+CSV files that can be saved and be used to reproduce results from idep. The
+following code will merge the gene names with the raw counts data and the
+transformed data from `pre_process`.
+
+```{r}
+merged_raw_counts <- merge_data(
+  all_gene_names = gene_names,
+  data = processed_data$raw_counts
+)
+
+merged_data <- merge_data(
+  all_gene_names = gene_names,
+  data = processed_data$data
+)
+```
+
+#### SEARCHING
+```{r}
+# Species search for input data
+idep_data$species_choice[grep("Human", names(idep_data$species_choice))]
+
+# Gene search for individual plotting
+merged_data[grep("H4c1", merged_data$symbol),]
+```
+

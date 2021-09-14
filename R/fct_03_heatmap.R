@@ -3,35 +3,12 @@
 #'
 #'
 #' @section fct_03_heatmap.R functions:
-#' \code{add_legend}
+#'
 #'
 #'
 #' @name fct_03_heatmap.R
 NULL
 
-
-# adding sample legends to heatmap; this is for the main heatmap
-# https://stackoverflow.com/questions/3932038/plot-a-legend-outside-of-the-plotting-area-in-base-graphics
-#' FUNCTION_TITLE
-#'
-#' FUNCTION_DESCRIPTION
-#'
-#' @param ... DESCRIPTION.
-#'
-#' @return RETURN_DESCRIPTION
-#' @examples
-#' # ADD_EXAMPLES_HERE
-add_legend <- function(...) {
-  opar <- par(
-    fig = c(0, 1, 0, 1),
-    oma = c(0, 0, 0, 0),
-    mar = c(0, 0, 0, 6),
-    new = TRUE
-  )
-  on.exit(par(opar))
-  plot(x = 0, y = 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
-  legend(...)
-}
 
 #' Get color choice list for the heatmap
 #'
@@ -44,7 +21,7 @@ add_legend <- function(...) {
 #' @return Returns a list containing color choices and a data frame
 #' of hex color values.
 get_heatmap_colors <- function() {
-  hmcols <- colorRampPalette(rev(c(
+  hmcols <- grDevices::colorRampPalette(rev(c(
     "#D73027", "#FC8D59", "#FEE090", "#FFFFBF",
     "#E0F3F8", "#91BFDB", "#4575B4"
   )))(75)
@@ -83,7 +60,6 @@ sd_density <- function(
   n_genes_max,
   n_genes_min
 ) {
-
   sds <- apply(data[, 1:dim(data)[2]], 1, sd)
   max_sd <- mean(sds) + 4 * sd(sds)
   sds[sds > max_sd] <- max_sd
@@ -153,7 +129,6 @@ sd_density <- function(
       )
 
     return(plot)
-
   } else {
     cutoff_max <- sort(sds$sds, decreasing = TRUE)[n_genes_max]
     cutoff_min <- sort(sds$sds, decreasing = TRUE)[n_genes_min]
@@ -197,7 +172,7 @@ sd_density <- function(
 #' to be displayed in a heatmap. It takes in limits for
 #' what genes to subset, what centering and standardizing
 #' to perform, and what gene ID label to use.
-#' 
+#'
 #' @param data Processed data matrix
 #' @param n_genes_max Row number upper limit to display in heatmap
 #' @param n_genes_min Row number lower limit to display in heatmap
@@ -208,20 +183,18 @@ sd_density <- function(
 #' @param all_gene_names Data frame of gene names
 #' @param select_gene_id Desired ID type for heatmap labels
 #'   (User_ID, ensembl_ID, symbol)
-#' 
+#'
 #' @return Subsetted data matrix ([n_genes_min:n_genes_max, ]) with
 #'   gene IDs as the select_gene_id
-process_heatmap_data <- function(
-  data,
-  n_genes_max,
-  n_genes_min,
-  gene_centering,
-  gene_normalize,
-  sample_centering,
-  sample_normalize,
-  all_gene_names,
-  select_gene_id
-) {
+process_heatmap_data <- function(data,
+                                 n_genes_max,
+                                 n_genes_min,
+                                 gene_centering,
+                                 gene_normalize,
+                                 sample_centering,
+                                 sample_normalize,
+                                 all_gene_names,
+                                 select_gene_id) {
   data <- rowname_id_swap(
     data_matrix = data,
     all_gene_names = all_gene_names,
@@ -288,22 +261,19 @@ process_heatmap_data <- function(
 #' @param no_sample_clustering TRUE/FALSE Specify whehter to cluster columns
 #' @param heatmap_color_select Vector of colors for heatmap scale
 #' @param row_dend TRUE/FALSE Hide row dendogram
-#' 
+#'
 #' @return Heatmap of the processed data.
-heatmap_main <- function(
-  data,
-  n_genes,
-  heatmap_cutoff,
-  sample_info,
-  select_factors_heatmap,
-  dist_funs,
-  dist_function,
-  hclust_function,
-  no_sample_clustering,
-  heatmap_color_select,
-  row_dend
-) {
-
+heatmap_main <- function(data,
+                         n_genes,
+                         heatmap_cutoff,
+                         sample_info,
+                         select_factors_heatmap,
+                         dist_funs,
+                         dist_function,
+                         hclust_function,
+                         no_sample_clustering,
+                         heatmap_color_select,
+                         row_dend) {
   if (ncol(data) < 20) {
     cex_factor <- 12
   } else if (ncol(x) < 31) {

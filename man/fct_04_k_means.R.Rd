@@ -10,6 +10,5 @@ associated with fourth tab of the iDEP website.
 }
 \section{fct_04_k_means.R functions}{
 
-\code{add_legend}
 }
 

@@ -145,7 +145,6 @@ mod_02_pre_process_ui <- function(id) {
           selected = "geneMedian"
         ),
         br(),
-
         strong("Download Processed Data"),
         br(),
         # Download button for processed data -----------
@@ -269,7 +268,8 @@ mod_02_pre_process_ui <- function(id) {
             title = "Individual Genes",
             br(),
             fluidRow(
-              column(4,# Gene ID Selection -----------
+              column(
+                4, # Gene ID Selection -----------
                 selectInput(
                   inputId = ns("select_gene_id"),
                   label = "Select Gene ID Label",
@@ -284,7 +284,8 @@ mod_02_pre_process_ui <- function(id) {
                   multiple = TRUE
                 )
               ),
-              column(4,
+              column(
+                4,
                 checkboxInput(
                   inputId = ns("gene_plot_box"),
                   label = "Show individual samples",
@@ -292,7 +293,8 @@ mod_02_pre_process_ui <- function(id) {
                 ),
                 uiOutput(ns("sd_checkbox"))
               ),
-              column(4,
+              column(
+                4,
                 radioButtons(
                   inputId = ns("angle_ind_axis_lab"),
                   label = "Angle Axis Labels",
@@ -464,7 +466,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
           pageLength = 10,
           scrollX = "400px"
         ),
-        rownames = FALSE)
+        rownames = FALSE
+      )
     })
 
     # Gene ID Name Choices ----------
