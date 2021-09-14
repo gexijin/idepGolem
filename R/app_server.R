@@ -6,6 +6,8 @@
 #' @noRd
 app_server <- function(input, output, session) {
   idep_data <- get_idep_data()
+
+  # Tab Variable to control reactivity
   tab <- reactive(input$navbar)
 
   load_data <- mod_01_load_data_server(
@@ -22,5 +24,7 @@ app_server <- function(input, output, session) {
     pre_process = pre_process,
     tab = tab
   )
-  mod_04_k_means_server(id = "k_means")
+  mod_04_k_means_server(
+    id = "k_means"
+  )
 }

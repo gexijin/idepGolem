@@ -22,6 +22,8 @@ usethis::use_package("withProgress")
 usethis::use_package("shinyBS")
 usethis::use_package("utils")
 usethis::use_package("htmltools")
+usethis::use_package("InteractiveComplexHeatmap")
+usethis::use_package("reshape2")
 
 ## Add modules ----
 ## Create a module infrastructure in R/

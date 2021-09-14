@@ -177,7 +177,14 @@ mod_03_heatmap_ui <- function(id) {
           tabPanel(
             title = "Correlation Matrix",
             br(),
-            # Insert Correlation Matrix
+            checkboxInput(
+              ns("labelPCC"),
+              label = "Label w/ Pearson's correlation coefficients",
+              value = TRUE
+            ),
+            plotOutput(
+              outputId = ns("correlationMatrix")
+            )
           ),
 
           # Sample Tree Plot ---------
@@ -322,6 +329,12 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
       req(!is.null(heatmap_data()))
       req(!is.null(input$select_factors_heatmap))
 
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Creating Heatmap",
+        color = "#000000"
+      )
+
       # Assign heatmap to be used in multiple components
       shiny_env$ht <- heatmap_main(
         data = heatmap_data(),
@@ -338,7 +351,11 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
       )
 
       # Use heatmap position in multiple components
-      shiny_env$ht_pos <- ComplexHeatmap::ht_pos_on_device(shiny_env$ht)
+      shiny_env$ht_pos <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht)
+
+      shinybusy::remove_modal_spinner()
+
+      return(shiny_env$ht)
     })
 
     # Heatmap Click Value ---------
@@ -348,10 +365,10 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
         "Click for Info."
       } else {
 
-        pos1 <- ComplexHeatmap:::get_pos_from_click(input$ht_click)
+        pos1 <- InteractiveComplexHeatmap::getPositionFromClick(input$ht_click)
 
         ht <- shiny_env$ht
-        pos <- ComplexHeatmap::selectPosition(
+        pos <- InteractiveComplexHeatmap::selectPosition(
           ht,
           mark = FALSE,
           pos = pos1,
@@ -384,12 +401,12 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
         grid::grid.newpage()
         grid::grid.text("No region is selected.", 0.5, 0.5)
       } else {
-        lt <- ComplexHeatmap:::get_pos_from_brush(input$ht_brush)
+        lt <- InteractiveComplexHeatmap::getPositionFromBrush(input$ht_brush)
         pos1 <- lt[[1]]
         pos2 <- lt[[2]]
 
         ht <- shiny_env$ht
-        pos <- ComplexHeatmap::selectArea(
+        pos <- InteractiveComplexHeatmap::selectArea(
           ht,
           mark = FALSE,
           pos1 = pos1,
@@ -432,6 +449,48 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
         ),
         rownames = TRUE)
     })
+
+    # Correlation Matrix  TEMPORARY ----------
+    output$correlationMatrix <- renderPlot({
+		
+		x <- pre_process$data()
+		maxGene <- apply(x,1,max)
+		x <- x[which(maxGene > quantile(maxGene)[1] ) ,] # remove bottom 25% lowly expressed genes, which inflate the PPC
+		
+	   melted_cormat <- reshape2::melt(round(cor(x),2), na.rm = TRUE)
+		# melted_cormat <- melted_cormat[which(melted_cormat[,1] != melted_cormat[,2] ) , ]
+		# Create a ggheatmap
+		ggheatmap <- ggplot2::ggplot(melted_cormat, ggplot2::aes(Var2, Var1, fill = value))+
+			ggplot2::geom_tile(color = "white")+
+			ggplot2::scale_fill_gradient2(low = "green", high = "red",  mid = "white", 
+			space = "Lab",  limit = c(min(melted_cormat[,3]) ,max(melted_cormat[,3])), midpoint = median(melted_cormat[,3]),
+			name="Pearson's \nCorrelation") +
+			ggplot2::theme_minimal()+ # minimal theme
+			ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, vjust = 1, size=14,hjust = 1))+
+			ggplot2::theme(axis.text.y = ggplot2::element_text( size = 14 ))+
+			ggplot2::coord_fixed()
+		# print(ggheatmap)
+		 if(input$labelPCC && ncol(x)<20)
+				ggheatmap <- ggheatmap +  ggplot2::geom_text(ggplot2::aes(Var2, Var1, label = value), color = "black", size = 4)
+				
+		ggheatmap + 
+		  ggplot2::theme(axis.title.x = ggplot2::element_blank(),
+				axis.title.y = ggplot2::element_blank(),
+				panel.grid.major = ggplot2::element_blank(),
+				panel.border = ggplot2::element_blank(),
+				panel.background = ggplot2::element_blank(),
+				axis.ticks = ggplot2::element_blank(),
+				legend.justification = c(1, 0),
+				legend.position = c(0.6, 0.7),
+				legend.direction = "horizontal")+
+				ggplot2::guides(fill = FALSE) # + ggtitle("Pearson's Correlation Coefficient (all genes)")
+
+			# why legend does not show up??????	
+		 
+
+ 
+  }, height = 600, width = 700  )#)
+
 
     # Sample Tree ----------
     output$sample_tree <- renderPlot({

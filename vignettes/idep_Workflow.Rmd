@@ -7,7 +7,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
+```{r eval=FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
@@ -30,7 +30,7 @@ conclusions. This workflow is visualized in the chart below.
 
 ![](flowchart.png)
 
-</center>
+<\center>
 
 ## Load Data
 
@@ -186,17 +186,21 @@ from for processing. These values and descriptions can be found in the tables
 below. `missing_value` determines how missing data entries will be filled in, 
 and `data_file_format` tells the function what type of data is being processed.
 
-Input (`missing_value`)   Description
-------------------------- -----------------------------------------------------------
-`geneMedian`              Substitute median expression value for gene across all samples
-`treatAsZero`             Substitute "0" for all missing values
-`geneMedianInGroup`       Substitute median expression value for gene within sample group
+<div style="text-align: left">
+
+Input (`missing_value`)    Description
+-------------------------  -----------------------------------------------------------
+`geneMedian`               Substitute median expression value for gene across all samples
+`treatAsZero`              Substitute "0" for all missing values
+`geneMedianInGroup`        Substitute median expression value for gene within sample group
 
 Input (`data_file_format`)   Description
----------------------------  -----------------------------------------------------------
+---------------------------  -----------------------------------------------------------------------
 `1`                          Read counts data (recommended)
 `2`                          Normalized expression values (RNA-seq FPKM, micro-array, etc.)
 `3`                          Fold-changes and corrected P values from CuffDiff or any other program
+
+</div>
 
 <br>
 
@@ -216,7 +220,7 @@ determines the constant to add to CPM to ensure that there are no `log(0)`
 errors. All other parameters can be set to `NULL`
 
 Input (`counts_transform`)   Description
----------------------------  -----------------------------------------------------------
+---------------------------  --------------------------------------------------
 `1`                          EdgeR: log2(CPM+c) (Counts per Million + constant)
 `2`                          VST: variance stabilizing transform
 `3`                          rlog: regularized log (slow)
@@ -280,7 +284,7 @@ data. `counts_data` is the raw counts that is returned from the `pre_process`
 function. `sample_info` is the experiment design data from the `input_data`
 function. 
 
-```{r fig.height=7, fig.width=11, fig.align = 'center'}
+```{r fig.height=5.5, fig.width=7.5}
 total_counts_ggplot(
   counts_data = processed_data$raw_counts,
   sample_info = loaded_data$sample_info
@@ -298,7 +302,7 @@ string names of the columns to be plotted. The options for these inputs can be
 seen using `colnames(processed_data$data)`. `processed_data` is the returned
 data from the `pre_process` function. 
 
-```{r fig.height=7, fig.width=11, fig.align = 'center'}
+```{r fig.height=5.5, fig.width=7.5}
 colnames(processed_data$data)
 
 eda_scatter(
@@ -317,7 +321,7 @@ pre-processing transformation. This function returns a ggplot boxplot of each
 column in the data. `processed_data` is the transformed counts and `sample_info`
 is the experiment design information from the `input_data` function. 
 
-```{r fig.height=7, fig.width=11, fig.align = 'center'}
+```{r fig.height=5.5, fig.width=7.5}
 eda_boxplot(
   processed_data = processed_data$data,
   sample_info = loaded_data$sample_info
@@ -333,7 +337,7 @@ each sample in the data. The information is displayed in a density ridge plot in
 the ggplot format. Again, the data provided is returned from the `pre_process`
 function. The `sample_info` provides information on each sample in the dataset.
 
-```{r fig.height=7, fig.width=11, fig.align = 'center'}
+```{r fig.height=5.5, fig.width=7.5}
 eda_density(
   processed_data = processed_data$data,
   sample_info = loaded_data$sample_info
