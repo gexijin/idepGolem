@@ -126,6 +126,10 @@ mod_03_heatmap_ui <- function(id) {
         # Sample coloring bar -----------
         htmlOutput(ns("list_factors_heatmap")),
         br(),
+        downloadButton(
+          outputId = ns("download_heatmap_data"),
+          label = "Heatmap data"
+        ),
         a(
           h5("Questions?", align = "right"),
           href = "https://idepsite.wordpress.com/heatmap/",
@@ -136,22 +140,26 @@ mod_03_heatmap_ui <- function(id) {
         tabsetPanel(
           id = ns("heatmap_panels"),
 
-          # Main heatmap ---------
+          # Heatmap panel ----------
           tabPanel(
             title = "Heatmap",
+            h5("Brush for sub-heatmap, click for value. (Shown Below)"),
             br(),
             plotOutput(
               outputId = ns("heatmap_main"),
+              height = "700px",
               width = "100%",
-              height = "700px"
-            )
-          ),
-
-          # Interactive heatmap panel ----------
-          tabPanel(
-            title = "Interactive Heatmap",
-            br(),
-            # INSERT PLOTLY OUTPUT
+              brush = ns("ht_brush"),
+              click = ns("ht_click")
+            ),
+            verbatimTextOutput(ns("ht_click_content")),
+            plotOutput(
+              outputId = ns("sub_heatmap"),
+              height = "700px",
+              width = "100%"
+            ),
+            h4("Sub-heatmap Data Table", align = "center"),
+            DT::dataTableOutput(outputId = ns("subheat_data"))
           ),
 
           # Gene Standard Deviation Distribution ----------
@@ -175,8 +183,16 @@ mod_03_heatmap_ui <- function(id) {
           # Sample Tree Plot ---------
           tabPanel(
             title = "Sample Tree",
+            h5(
+              "Using genes with maximum expression level at the top 75%.
+               Data is transformed and clustered as specified in the sidebar."
+            ),
             br(),
-            # INSERT SAMPLE TREE PLOT
+            plotOutput(
+              outputId = ns("sample_tree"),
+              width = "100%",
+              height = "400px"
+            )
           )
         )
       )
@@ -184,12 +200,16 @@ mod_03_heatmap_ui <- function(id) {
   )
 }
 
+
 #' 03_heatmap Server Functions
 #'
 #' @noRd
 mod_03_heatmap_server <- function(id, pre_process, tab) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    # Interactive heatmap environment
+    shiny_env <- new.env()
 
     # Update Slider Input ---------
     observe({
@@ -246,17 +266,6 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
 
     # Hclust Functions ----------
     hclust_funs <- hcluster_functions()
-    hclust_choices <- setNames(
-      1:length(hclust_funs),
-      names(hclust_funs)
-    )
-    observe({
-      updateSelectInput(
-        session = session,
-        inputId = "hclust_functions",
-        choices = hclust_choices
-      )
-    })
 
     # Gene ID Name Choices ----------
     observe({
@@ -306,12 +315,15 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
       )
     })
 
-    # Main heatmap ----------
+    # HEATMAP -----------
+    # Information on interactivity
+    # https://jokergoo.github.io/2020/05/15/interactive-complexheatmap/
     output$heatmap_main <- renderPlot({
       req(!is.null(heatmap_data()))
       req(!is.null(input$select_factors_heatmap))
 
-      heatmap_main(
+      # Assign heatmap to be used in multiple components
+      shiny_env$ht <- heatmap_main(
         data = heatmap_data(),
         n_genes = input$n_genes[2] - input$n_genes[1],
         heatmap_cutoff = input$heatmap_cutoff,
@@ -324,7 +336,152 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
         heatmap_color_select = heatmap_colors[[input$heatmap_color_select]],
         row_dend = input$show_row_dend
       )
+
+      # Use heatmap position in multiple components
+      shiny_env$ht_pos <- ComplexHeatmap::ht_pos_on_device(shiny_env$ht)
     })
+
+    # Heatmap Click Value ---------
+    output$ht_click_content <- renderText({
+
+      if (is.null(input$ht_click)) {
+        "Click for Info."
+      } else {
+
+        pos1 <- ComplexHeatmap:::get_pos_from_click(input$ht_click)
+
+        ht <- shiny_env$ht
+        pos <- ComplexHeatmap::selectPosition(
+          ht,
+          mark = FALSE,
+          pos = pos1,
+          verbose = FALSE,
+          ht_pos = shiny_env$ht_pos
+        )
+
+        row_index <- pos[1, "row_index"]
+        column_index <- pos[1, "column_index"]
+
+        m <- ht@ht_list[[1]]@matrix
+        value <- m[row_index, column_index]
+        sample <- colnames(m)[column_index]
+        gene <- rownames(m)[row_index]
+
+
+        glue::glue(
+          "Sample Name: {sample}",
+          "Gene: {gene}",
+          "Value: {value}",
+          .sep = "\n"
+        )
+      }
+    })
+
+    # Subheatmap creation ---------
+    output$sub_heatmap <- renderPlot({
+
+      if (is.null(input$ht_brush)) {
+        grid::grid.newpage()
+        grid::grid.text("No region is selected.", 0.5, 0.5)
+      } else {
+        lt <- ComplexHeatmap:::get_pos_from_brush(input$ht_brush)
+        pos1 <- lt[[1]]
+        pos2 <- lt[[2]]
+
+        ht <- shiny_env$ht
+        pos <- ComplexHeatmap::selectArea(
+          ht,
+          mark = FALSE,
+          pos1 = pos1,
+          pos2 = pos2,
+          verbose = FALSE,
+          ht_pos = shiny_env$ht_pos
+        )
+
+        row_index <- unlist(pos[1, "row_index"])
+        column_index <- unlist(pos[1, "column_index"])
+        m <- ht@ht_list[[1]]@matrix
+        if (length(row_index) > 50) {
+          show_rows <- FALSE
+        } else {
+          show_rows <- TRUE
+        }
+        shiny_env$submap <- m[row_index, column_index, drop = FALSE]
+
+        ht_select <- ComplexHeatmap::Heatmap(
+          shiny_env$submap,
+          col = ht@ht_list[[1]]@matrix_color_mapping@col_fun,
+          show_heatmap_legend = FALSE,
+          cluster_rows = FALSE,
+          cluster_columns = FALSE,
+          show_row_names = show_rows
+        )
+        ComplexHeatmap::draw(ht_select)
+      }
+    })
+
+    # Subheatmap Data Table ----------
+    output$subheat_data <- DT::renderDataTable({
+      req(!is.null(input$ht_brush))
+
+      DT::datatable(
+        shiny_env$submap,
+        options = list(
+          pageLength = 10,
+          scrollX = "400px"
+        ),
+        rownames = TRUE)
+    })
+
+    # Sample Tree ----------
+    output$sample_tree <- renderPlot({
+      req(!is.null(pre_process$data()))
+
+      draw_sample_tree(
+        tree_data = pre_process$data(),
+        gene_centering = input$gene_centering,
+        gene_normalize = input$gene_normalize,
+        sample_centering = input$sample_centering,
+        sample_normalize = input$sample_normalize,
+        hclust_funs = hclust_funs,
+        hclust_function = input$hclust_function,
+        dist_funs = dist_funs,
+        dist_function = input$dist_function
+      )
+    })
+
+     # Heatmap Download Data -----------
+    heatmap_data_download <- reactive({
+      req(!is.null(pre_process$data()))
+
+      down_data <- process_heatmap_data(
+        data = pre_process$data(),
+        n_genes_max = input$n_genes[2],
+        n_genes_min = input$n_genes[1],
+        gene_centering = input$gene_centering,
+        gene_normalize = input$gene_normalize,
+        sample_centering = input$sample_centering,
+        sample_normalize = input$sample_normalize,
+        all_gene_names = pre_process$all_gene_names(),
+        select_gene_id = "User_ID"
+      )
+
+      merged_data <- merge_data(
+        pre_process$all_gene_names(),
+        down_data,
+        merge_ID = "User_ID"
+      )
+    })
+
+    output$download_heatmap_data <- downloadHandler(
+      filename = function() {
+        "heatmap_data.csv"
+      },
+      content = function(file) {
+        write.csv(heatmap_data_download(), file)
+      }
+    )
+
   })
 }
 

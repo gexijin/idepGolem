@@ -10,19 +10,13 @@
 mod_04_k_means_ui <- function(id) {
   ns <- NS(id)
   tabPanel(
-    "Test",
+    "k-Means",
     sidebarLayout(
       sidebarPanel(
-        actionButton(ns("test"), "Show Plot")
+        NULL
       ),
       mainPanel(
-        shinyBS::bsModal(
-          id = "modal_example",
-          title = "Example",
-          trigger = ns("test"),
-          size = "large",
-          plotOutput(ns("cars_modal"))
-        )
+        NULL
       )
     )
   )
@@ -34,13 +28,7 @@ mod_04_k_means_ui <- function(id) {
 mod_04_k_means_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    output$cars_modal <- renderPlot(
-      pairs(
-        ~mpg+disp+drat+wt,
-        data=mtcars,
-        main="Simple Scatterplot Matrix"
-      )
-    )
+    
   })
 }
 

@@ -521,11 +521,13 @@ eda_density <- function(
 #'
 #' @param all_gene_names All matched gene names from idep data
 #' @param data Data matrix with rownames to merge with gene names
+#' @param merge_ID ID from all_gene_names that matches the rownames of data
 #' 
 #' @return Inputted data with all gene name information.
 merge_data <- function(
   all_gene_names,
-  data
+  data,
+  merge_ID
 ) {
 
   isolate({
@@ -547,7 +549,7 @@ merge_data <- function(
     new_data <- merge(
       all_gene_names,
       round(data, 2),
-      by.x = "ensembl_ID",
+      by.x = merge_ID,
       by.y = "row.names",
       all.y = T
     )
@@ -566,7 +568,7 @@ merge_data <- function(
     new_data <- merge(
       all_gene_names,
       round(data, 2),
-      by.x = "ensembl_ID",
+      by.x = merge_ID,
       by.y = "row.names",
       all.y = T
     )

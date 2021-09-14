@@ -45,7 +45,7 @@ hcluster_functions <- function() {
 
   return(list(
     complete = hclust,
-    averge = hclust_average,
+    average = hclust_average,
     ward_D = hclust_ward_D,
     ward_D2 = hclust_ward_D2,
     single = hclust_single,
