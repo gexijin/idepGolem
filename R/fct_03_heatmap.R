@@ -44,10 +44,22 @@ get_heatmap_colors <- function() {
   )
 }
 
-#' SD DISTRIBUTION PLOT
-sd_density <- function(data,
-                       n_genes_max,
-                       n_genes_min) {
+#' Density plot of data standard deviation
+#'
+#' Draw a denisty plot of the standard deviation in the
+#' data. Add vertical red lines for a range of genes.
+#'
+#' @param data Data that has been through pre-processing
+#' @param n_genes_max Upper limit of gene range
+#' @param n_genes_min Lower limit of gene range
+#'
+#' @return Formatted density plot of the standard deviation
+#' distribution.
+sd_density <- function(
+  data,
+  n_genes_max,
+  n_genes_min
+) {
   sds <- apply(data[, 1:dim(data)[2]], 1, sd)
   max_sd <- mean(sds) + 4 * sd(sds)
   sds[sds > max_sd] <- max_sd
@@ -361,4 +373,63 @@ heatmap_main <- function(data,
     heatmap_legend_side = "bottom",
     annotation_legend_side = "top"
   )
+}
+
+#' Draw a dendogram of data samples
+#' 
+#' Create a clustered tree of the samples in the dataset.
+#' 
+#' @param tree_data Data that has been through pre-processing
+#' @param gene_centering TRUE/FALSE subtract mean from gene rows
+#' @param gene_normalize TRUE/FALSE divide by SD in gene rows
+#' @param sample_centering TRUE/FALSE subtract mean from sample columns
+#' @param sample_normalize TRUE/FALSE divide by SD in sample columns
+#' @param hclust_funs Clustering functions defined in idep
+#' @param hclust_function String of chosen clustering method
+#' @param dist_funs Distance functions defined in idep
+#' @param dist_function Selected distance function
+#' 
+#' @return Dendogram plot of dataset samples
+draw_sample_tree <- function(
+  tree_data,
+  gene_centering,
+  gene_normalize,
+  sample_centering,
+  sample_normalize,
+  hclust_funs,
+  hclust_function,
+  dist_funs,
+  dist_function
+) {
+  max_gene <- apply(tree_data, 1, max)
+  # Remove bottom 25% lowly expressed genes, which inflate the PPC
+  tree_data <- tree_data[which(max_gene > quantile(max_gene)[1]), ]
+  # Center by gene
+  if (gene_centering) {
+    tree_data <- tree_data - apply(tree_data, 1, mean)
+  }
+  # Normalize by gene
+  if (gene_normalize) {
+    tree_data <- tree_data / apply(tree_data, 1, sd)
+  }
+  # Center and normalize by sample
+  tree_data <- scale(
+    tree_data,
+    center = sample_centering,
+    scale = sample_normalize
+  )
+  
+  plot(
+    stats::as.dendrogram(
+      hclust_funs[[hclust_function]]
+      (dist_funs[[as.numeric(dist_function)]](t(tree_data)))
+    ),
+    xlab = "",
+    ylab = paste(
+      names(dist_funs)[as.numeric(dist_function)], "(",
+      hclust_function, "linkage", ")"
+    ),
+    type = "rectangle"
+  )
+
 }
