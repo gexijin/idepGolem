@@ -10,9 +10,11 @@
 NULL
 
 # retrieve detailed info on genes
-gene_info <- function(converted,
-                      select_org,
-                      idep_data) {
+gene_info <- function(
+  converted,
+  select_org,
+  idep_data
+) {
   check <- check_object_state(
     check_exp = (is.null(converted)),
     true_message = as.data.frame("ID not recognized!")
@@ -94,11 +96,13 @@ gene_info <- function(converted,
 #' and the sample information. If there is no experiment file it
 #' only returns the expression data.
 #'
-input_data <- function(expression_file,
-                       experiment_file,
-                       go_button,
-                       demo_data_file,
-                       demo_metadata_file) {
+input_data <- function(
+  expression_file,
+  experiment_file,
+  go_button,
+  demo_data_file,
+  demo_metadata_file
+) {
   in_file_data <- expression_file
   in_file_data <- in_file_data$datapath
 
@@ -253,9 +257,11 @@ input_data <- function(expression_file,
 #' @param data Data from inputed expression file
 #'
 #' @return Returns original data with rownames converted to ensembl
-convert_data <- function(converted,
-                         data,
-                         no_id_conversion) {
+convert_data <- function(
+  converted,
+  data,
+  no_id_conversion
+) {
   if (is.null(converted) || no_id_conversion) {
     return(list(
       data = data,
@@ -311,8 +317,10 @@ convert_data <- function(converted,
 #' idep had gene names for. Two columns means the IDs were converted
 #' to ensembl format, but no species was found for the gene names.
 #' One means no conversion occurred.
-get_all_gene_names <- function(mapped_ids,
-                               all_gene_info) {
+get_all_gene_names <- function(
+  mapped_ids,
+  all_gene_info
+) {
   if (is.null(dim(mapped_ids))) {
     return(data.frame("User_ID" = mapped_ids))
   } else if (!is.null(all_gene_info$bool)) {

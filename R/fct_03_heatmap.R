@@ -186,15 +186,17 @@ sd_density <- function(
 #'
 #' @return Subsetted data matrix ([n_genes_min:n_genes_max, ]) with
 #'   gene IDs as the select_gene_id
-process_heatmap_data <- function(data,
-                                 n_genes_max,
-                                 n_genes_min,
-                                 gene_centering,
-                                 gene_normalize,
-                                 sample_centering,
-                                 sample_normalize,
-                                 all_gene_names,
-                                 select_gene_id) {
+process_heatmap_data <- function(
+  data, 
+  n_genes_max,
+  n_genes_min,
+  gene_centering,
+  gene_normalize,
+  sample_centering,
+  sample_normalize,
+  all_gene_names,
+  select_gene_id
+) {
   data <- rowname_id_swap(
     data_matrix = data,
     all_gene_names = all_gene_names,
@@ -263,17 +265,19 @@ process_heatmap_data <- function(data,
 #' @param row_dend TRUE/FALSE Hide row dendogram
 #'
 #' @return Heatmap of the processed data.
-heatmap_main <- function(data,
-                         n_genes,
-                         heatmap_cutoff,
-                         sample_info,
-                         select_factors_heatmap,
-                         dist_funs,
-                         dist_function,
-                         hclust_function,
-                         no_sample_clustering,
-                         heatmap_color_select,
-                         row_dend) {
+heatmap_main <- function(
+  data,
+  n_genes,
+  heatmap_cutoff,
+  sample_info,
+  select_factors_heatmap,
+  dist_funs,
+  dist_function,
+  hclust_function,
+  no_sample_clustering,
+  heatmap_color_select,
+  row_dend
+) {
   if (ncol(data) < 20) {
     cex_factor <- 12
   } else if (ncol(x) < 31) {

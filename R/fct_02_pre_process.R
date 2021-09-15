@@ -33,18 +33,20 @@ NULL
 #' @return A list containing the transformed data, the mean kurtosis,
 #' the raw counts, a data type warning, the size of the original data,
 #' and p-values.
-pre_process <- function(data,
-                        missing_value,
-                        data_file_format,
-                        low_filter_fpkm,
-                        n_min_samples_fpkm,
-                        log_transform_fpkm,
-                        log_start_fpkm,
-                        min_counts,
-                        n_min_samples_count,
-                        counts_transform,
-                        counts_log_start,
-                        no_fdr) {
+pre_process <- function(
+  data,
+  missing_value,
+  data_file_format,
+  low_filter_fpkm,
+  n_min_samples_fpkm,
+  log_transform_fpkm,
+  log_start_fpkm,
+  min_counts,
+  n_min_samples_count,
+  counts_transform,
+  counts_log_start,
+  no_fdr
+) {
   data_type_warning <- 0
   data_size_original <- dim(data)
   kurtosis_log <- 50
@@ -217,8 +219,10 @@ pre_process <- function(data,
 #'
 #' @return formatted ggbarplot
 #'
-total_counts_ggplot <- function(counts_data,
-                                sample_info) {
+total_counts_ggplot <- function(
+  counts_data,
+  sample_info
+) {
   counts <- counts_data
   memo <- ""
 
@@ -296,9 +300,11 @@ total_counts_ggplot <- function(counts_data,
 #'
 #' @return Returns a formatted gg scatterplot
 #'
-eda_scatter <- function(processed_data,
-                        plot_xaxis,
-                        plot_yaxis) {
+eda_scatter <- function(
+  processed_data,
+  plot_xaxis,
+  plot_yaxis
+) {
   plot_data <- as.data.frame(processed_data)
   scatter <- ggplot2::ggplot(
     plot_data,
@@ -345,8 +351,10 @@ eda_scatter <- function(processed_data,
 #' @return Formatted gg boxplot of the distribution of counts for each
 #' sample
 #'
-eda_boxplot <- function(processed_data,
-                        sample_info) {
+eda_boxplot <- function(
+  processed_data,
+  sample_info
+) {
   counts <- as.data.frame(processed_data)
   memo <- ""
 
@@ -424,8 +432,10 @@ eda_boxplot <- function(processed_data,
 #' @param sample_info Sample_info from the experiment file
 #'
 #' @return Returns a formatted gg density plot
-eda_density <- function(processed_data,
-                        sample_info) {
+eda_density <- function(
+  processed_data,
+  sample_info
+) {
   counts <- as.data.frame(processed_data)
   memo <- ""
 
@@ -510,8 +520,11 @@ eda_density <- function(processed_data,
 #' @param data Data matrix with rownames to merge with gene names
 #'
 #' @return Inputted data with all gene name information.
-merge_data <- function(all_gene_names,
-                       data) {
+merge_data <- function(
+  all_gene_names,
+  data,
+  merge_ID
+) {
   isolate({
     if (dim(all_gene_names)[2] == 1) {
       new_data <- round(data, 2)
@@ -531,7 +544,7 @@ merge_data <- function(all_gene_names,
       new_data <- merge(
         all_gene_names,
         round(data, 2),
-        by.x = "ensembl_ID",
+        by.x = merge_ID,
         by.y = "row.names",
         all.y = T
       )
@@ -550,7 +563,7 @@ merge_data <- function(all_gene_names,
       new_data <- merge(
         all_gene_names,
         round(data, 2),
-        by.x = "ensembl_ID",
+        by.x = merge_ID,
         by.y = "row.names",
         all.y = T
       )
@@ -590,12 +603,14 @@ merge_data <- function(all_gene_names,
 #' If gene_plot_box = FALSE the return will be a barplot for the groups provided
 #' in the sample information.
 #'
-individual_plots <- function(individual_data,
-                             sample_info,
-                             selected_gene,
-                             gene_plot_box,
-                             use_sd,
-                             lab_rotate) {
+individual_plots <- function(
+  individual_data,
+  sample_info,
+  selected_gene,
+  gene_plot_box,
+  use_sd,
+  lab_rotate
+) {
   individual_data <- as.data.frame(individual_data)
   individual_data$symbol <- rownames(individual_data)
 
