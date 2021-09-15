@@ -152,7 +152,11 @@ mod_03_heatmap_ui <- function(id) {
               brush = ns("ht_brush"),
               click = ns("ht_click")
             ),
-            verbatimTextOutput(ns("ht_click_content")),
+            h4("Selected Cell:"),
+            verbatimTextOutput(
+              ns("ht_click_content"),
+              placeholder = TRUE
+            ),
             plotOutput(
               outputId = ns("sub_heatmap"),
               height = "700px",
@@ -447,7 +451,8 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
           pageLength = 10,
           scrollX = "400px"
         ),
-        rownames = TRUE)
+        rownames = TRUE
+      )
     })
 
     # Correlation Matrix  TEMPORARY ----------

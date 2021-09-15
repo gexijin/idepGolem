@@ -4,7 +4,7 @@
 \alias{merge_data}
 \title{Merge data from gene info and processed data}
 \usage{
-merge_data(all_gene_names, data)
+merge_data(all_gene_names, data, merge_ID)
 }
 \arguments{
 \item{all_gene_names}{All matched gene names from idep data}

@@ -256,6 +256,17 @@ mod_02_pre_process_ui <- function(id) {
             ),
           ),
 
+          # Density plot of transformed data ---------
+          tabPanel(
+            title = "SD vs. Mean Plot",
+            br(),
+            plotOutput(
+              outputId = ns("dev_transfrom"),
+              width = "100%",
+              height = "500px"
+            ),
+          ),
+
           # Searchable table of transformed converted data ---------
           tabPanel(
             title = "Converted Data",
@@ -436,6 +447,17 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       )
     })
 
+    # Standard deviation vs mean plot ----------
+    output$dev_transfrom <- renderPlot({
+      req(!is.null(processed_data()$data))
+
+      vsn::meanSdPlot(
+        x = processed_data()$data,
+        ylab = "Standard Deviation",
+        xlab = "Transformed Expression Mean Rank"
+      )
+    })
+
     # Merge Data Sets with Gene names ----------
     merged_processed_data <- reactive({
       req(!is.null(processed_data()$data))
@@ -587,6 +609,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         duration = NULL,
         type = "default"
       )
+
+      req(!is.null(read_counts_bias()))
       showNotification(
         ui = read_counts_bias(),
         id = "read_counts_message",
