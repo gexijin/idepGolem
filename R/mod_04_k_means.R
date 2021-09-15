@@ -33,18 +33,6 @@ mod_04_k_means_ui <- function(id) {
           inputId = ns("k_means_re_run"),
           label = "Re-Run"
         ),
-        actionButton(
-          inputId = ns("n_clusters"),
-          label = "How many clusters?"
-        ),
-        actionButton(
-          inputId = ns("show_gene_sd"),
-          label = "Gene SD distribution"
-        ),
-        actionButton(
-          inputId = ns("gene_tsne"),
-          label = "t-SNE map"
-        ),
         selectInput(
           inputId = ns("k_means_normalization"),
           label = h5("Normalize by gene:"),
@@ -59,11 +47,6 @@ mod_04_k_means_ui <- function(id) {
           type = "text/css",
           "#k_means-k_means_normalization {width:100%; margin-top:-9px}"
         ),
-        actionButton(
-          inputId = ns("show_motif_k_means"),
-          label = "Enriched TF binding motifs"
-        ),
-        br(),
         downloadButton(
           outputId = ns("download_data_k_means"),
           label = "K-means data"
@@ -85,10 +68,6 @@ mod_04_k_means_ui <- function(id) {
           label = "Remove redudant genesets",
           value = TRUE
         ),
-        actionButton(
-          inputId = ns("modal_enrichment_plot_k_means"),
-          label = "Visualize enrichment"
-        ),
         downloadButton(
           outputId = ns("download_k_means_go"),
           label = "Enrichment details"
@@ -100,7 +79,85 @@ mod_04_k_means_ui <- function(id) {
         )
       ),
       mainPanel(
-        NULL
+        tabsetPanel(
+          id = ns("k_means"),
+
+          tabPanel(
+            title = "Cluster Map",
+            plotOutput(ns("k_means_heatmap")),
+            br(),
+            h4("Enriched pathways for each cluster"),
+            tableOutput(outputId = ns("k_means_go"))
+          ),
+          tabPanel(
+            title = "N-Clusters",
+            h4("Determining the number of clusters (k)"),
+            h5(
+              "Following the elbow method, one should choose k so that adding another 
+               cluster does not substantially reduce the within groups sum of squares.",
+              a(
+                "Wikipedia",
+                href = "https://en.wikipedia.org/wiki/Determining_the_number_of_clusters_in_a_data_set",
+                target = "_blank"
+              )
+            ),
+            plotOutput(outputId = ns("n_clusters"))
+          ),
+          tabPanel(
+            title = "t-SNE",
+            h5(
+              "We use the dimension reduction algorith ",
+              a(
+                "t-SNE",
+                href="https://lvdmaaten.github.io/tsne/",
+                target="_blank"
+              ), 
+              "to map the top genes. Examine the distribution
+               can help choose the nubmer of clusters in k-Means."
+            ),
+            fluidRow(
+              column(
+                width = 4,
+                checkboxInput(
+                  inputId = ns("color_genes"),
+                  label = "Color genes by the results of k-Means",
+                  value = TRUE
+                ),
+              ),
+              column(
+                width = 4,
+                actionButton(
+                  inputId = ns("seed_tsne"),
+                  label = "Re-calculate using different random numbers"
+                )
+              )
+            ),
+            plotOutput(outputId = ns("t_sne_gene_plot"))
+          ),
+          tabPanel(
+            title = "Enrichment",
+            h5(
+              "Gene sets closer on the tree share more genes. Sizes
+              of dot correspond to adjusted p-values"
+            ),
+            plotOutput(outputId = ns("enrichment_plot_k_means"))
+          ),
+          tabPanel(
+            title = "Enriched Motifs",
+            h5("Enriched TF binding motifs in promoters of k-means clusters"),
+            br(),
+            radioButtons(
+              inputId = ns("radio_promoter_k_means"), 
+              label    = NULL, 
+              choices  = list(
+                "Upstream 300bp as promoter" = 300, 
+                "Upstream 600bp as promoter" = 600
+              ),
+              selected = 300
+            ),
+            tableOutput(outputId = ns("k_means_promoter"))
+          )
+        )
       )
     )
   )
