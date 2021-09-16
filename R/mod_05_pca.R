@@ -9,7 +9,88 @@
 #' @importFrom shiny NS tagList
 mod_05_pca_ui <- function(id) {
   ns <- NS(id)
-  tagList()
+  tabPanel(
+    "PCA",
+    sidebarLayout(
+      sidebarPanel(
+        radioButtons(
+          inputId = ns("pca_meth"),
+          label = "Methods", 
+          choices = c(
+            "Principal Component Analysis" = 1,            
+            "Multidimensional Scaling" = 3, 
+            "t-SNE" = 4,
+            "Pathway Analysis of PCA rotation" = 2             
+          )
+        ),
+        conditionalPanel(
+          condition = "input.pca_meth == 2",
+          htmlOutput(outputId = ns("select_go_pca"))
+        ),
+        conditionalPanel(
+          condition = "input.pca_meth != 2",
+          htmlOutput(outputId = ns("list_factors_color")),
+          htmlOutput(outputId = ns("list_factors_shape"))
+        ),
+
+        br(),
+        downloadButton(
+          outputId = ns("down_pca_data"),
+          label = "Coordinates"
+        ),
+        a(h5(
+          "Questions?",
+          align = "right"
+          ),
+          href="https://idepsite.wordpress.com/pca/",
+          target="_blank"
+        )        
+      ),
+      mainPanel(
+        conditionalPanel(
+          condition = "input.pca_meth == 1",
+          fluidRow( 
+            column(
+              width = 6,
+              selectInput(
+                inputId = ns("pca_x"),
+                label = "Principal component for x-axis",
+                choices = 1:5,
+                selected = 1
+              )
+            ),
+            column(
+              width = 6,
+              selectInput(
+                inputId = ns("pca_y"),
+                label = "Principal component for y-axis",
+                choices = 1:5,
+                selected = 2
+              )
+            )
+          ) 
+        ),
+        plotOutput(
+          outputId = ns("pca_plot"), inline=TRUE
+        ),
+        br(),
+        conditionalPanel(
+          condition = "input.pca_meth == 4", 
+          actionButton(
+            inputId = ns("tsne_seed"),
+            label = "Re-calculate t-SNE"),
+            br(),
+            br()
+        ),
+        conditionalPanel(
+          conditon = "input.pca_meth == 1 | input.pca_meth == 2 ",
+          htmlOutput(ns("pca_2_factore")),
+          br(),
+          br()
+        )
+      )
+    )
+  )
 }
 
 #' 05_pca Server Functions

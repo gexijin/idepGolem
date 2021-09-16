@@ -28,6 +28,17 @@ mod_03_heatmap_ui <- function(id) {
            color:#333;background-color:#333;" />'
         ),
 
+        # Select Clustering Method ----------
+        selectInput(
+          inputId = ns("cluster_meth"),
+          label = "Select Clustering Method",
+          choices = c(
+            "Hierarchical" = 1,
+            "k-Means" = 2
+          ),
+          selected = "Hierarchical"
+        ),
+
         # Gene ID Selection -----------
         selectInput(
           inputId = ns("select_gene_id"),
@@ -145,22 +156,31 @@ mod_03_heatmap_ui <- function(id) {
             title = "Heatmap",
             h5("Brush for sub-heatmap, click for value. (Shown Below)"),
             br(),
-            plotOutput(
-              outputId = ns("heatmap_main"),
-              height = "700px",
-              width = "100%",
-              brush = ns("ht_brush"),
-              click = ns("ht_click")
-            ),
-            h4("Selected Cell:"),
-            verbatimTextOutput(
-              ns("ht_click_content"),
-              placeholder = TRUE
-            ),
-            plotOutput(
-              outputId = ns("sub_heatmap"),
-              height = "700px",
-              width = "100%"
+            fluidRow(
+              column(
+                width = 3,
+                plotOutput(
+                  outputId = ns("heatmap_main"),
+                  height = "400px",
+                  width = "100%",
+                  brush = ns("ht_brush")
+                ),
+                br(),
+                h4("Selected Cell (Submap):"),
+                verbatimTextOutput(
+                  outputId = ns("ht_click_content"),
+                  placeholder = TRUE
+                )
+              ),
+              column(
+                width = 9,
+                plotOutput(
+                  outputId = ns("sub_heatmap"),
+                  height = "650px",
+                  width = "100%",
+                  click = ns("ht_click")
+                )
+              )
             ),
             h4("Sub-heatmap Data Table", align = "center"),
             DT::dataTableOutput(outputId = ns("subheat_data"))
@@ -355,7 +375,7 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
       )
 
       # Use heatmap position in multiple components
-      shiny_env$ht_pos <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht)
+      shiny_env$ht_pos_main <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht)
 
       shinybusy::remove_modal_spinner()
 
@@ -371,19 +391,19 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
 
         pos1 <- InteractiveComplexHeatmap::getPositionFromClick(input$ht_click)
 
-        ht <- shiny_env$ht
+        ht_sub <- shiny_env$ht_sub
         pos <- InteractiveComplexHeatmap::selectPosition(
-          ht,
+          ht_sub,
           mark = FALSE,
           pos = pos1,
           verbose = FALSE,
-          ht_pos = shiny_env$ht_pos
+          ht_pos = shiny_env$ht_pos_sub
         )
 
         row_index <- pos[1, "row_index"]
         column_index <- pos[1, "column_index"]
 
-        m <- ht@ht_list[[1]]@matrix
+        m <- ht_sub@ht_list[[1]]@matrix
         value <- m[row_index, column_index]
         sample <- colnames(m)[column_index]
         gene <- rownames(m)[row_index]
@@ -416,7 +436,7 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
           pos1 = pos1,
           pos2 = pos2,
           verbose = FALSE,
-          ht_pos = shiny_env$ht_pos
+          ht_pos = shiny_env$ht_pos_main
         )
 
         row_index <- unlist(pos[1, "row_index"])
@@ -437,7 +457,12 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
           cluster_columns = FALSE,
           show_row_names = show_rows
         )
-        ComplexHeatmap::draw(ht_select)
+
+        shiny_env$ht_sub <- ComplexHeatmap::draw(ht_select)
+
+        shiny_env$ht_pos_sub <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht_sub)
+
+        shiny_env$ht_sub
       }
     })
 

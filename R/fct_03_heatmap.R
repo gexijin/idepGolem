@@ -359,6 +359,7 @@ heatmap_main <- function(
     row_dend_width = grid::unit(2, "cm"),
     top_annotation = heat_ann,
     show_row_names = show_gene_names,
+    show_column_names = FALSE,
     heatmap_legend_param = list(
       direction = "horizontal",
       legend_width = grid::unit(6, "cm"),

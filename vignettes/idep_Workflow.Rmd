@@ -361,18 +361,20 @@ transformed data from `pre_process`.
 ```{r}
 merged_raw_counts <- merge_data(
   all_gene_names = gene_names,
-  data = processed_data$raw_counts
+  data = processed_data$raw_counts,
+  merge_ID = "ensembl_ID"
 )
 
 merged_data <- merge_data(
   all_gene_names = gene_names,
-  data = processed_data$data
+  data = processed_data$data,
+  merge_ID = "ensembl_ID"
 )
 ```
 
 #### SEARCHING
 ```{r}
-
+vsn::meanSdPlot(processed_data$data)
 
 # Gene search for individual plotting
 merged_data[grep("H4c1", merged_data$symbol),]
