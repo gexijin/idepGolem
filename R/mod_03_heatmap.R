@@ -32,11 +32,11 @@ mod_03_heatmap_ui <- function(id) {
         selectInput(
           inputId = ns("cluster_meth"),
           label = "Select Clustering Method",
-          choices = c(
+          choices = list(
             "Hierarchical" = 1,
             "k-Means" = 2
           ),
-          selected = "Hierarchical"
+          selected = 1
         ),
 
         # Gene ID Selection -----------
@@ -48,8 +48,9 @@ mod_03_heatmap_ui <- function(id) {
         ),
 
         # Heatmap customizing features ----------
-        strong("Customize hierarchical clustering (Default values work well):"),
+        strong("Customize heatmap (Default values work well):"),
         fluidRow(
+          br(),
           column(width = 3, h5("Color")),
           column(
             width = 9,
@@ -61,45 +62,69 @@ mod_03_heatmap_ui <- function(id) {
             )
           )
         ),
-        fluidRow(
-          column(width = 4, h5("Distance")),
-          column(
-            width = 8,
-            selectInput(
-              inputId = ns("dist_function"),
-              label = NULL,
-              choices = NULL,
-              width = "100%"
+
+        # Clustering methods for hierarchical ----------
+        conditionalPanel(
+          condition = "input.cluster_meth == 1",
+          fluidRow(
+            column(width = 4, h5("Distance")),
+            column(
+              width = 8,
+              selectInput(
+                inputId = ns("dist_function"),
+                label = NULL,
+                choices = NULL,
+                width = "100%"
+              )
             )
-          )
+          ),
+          fluidRow(
+            column(width = 4, h5("Linkage")),
+            column(
+              width = 8,
+              selectInput(
+                inputId = ns("hclust_function"),
+                label = NULL,
+                choices = c(
+                  "average", "complete", "single",
+                  "median", "centroid", "mcquitty"
+                ),
+                width = "100%"
+              )
+            )
+          ),
+          fluidRow(
+            column(width = 8, h5("Cut-off Z score")),
+            column(
+              width = 4,
+              numericInput(
+                inputId = ns("heatmap_cutoff"),
+                label = NULL,
+                value = 4,
+                min = 2,
+                step = 1
+              )
+            )
+          ),
+          ns = ns
         ),
-        fluidRow(
-          column(width = 4, h5("Linkage")),
-          column(
-            width = 8,
-            selectInput(
-              inputId = ns("hclust_function"),
-              label = NULL,
-              choices = c(
-                "average", "complete", "single",
-                "median", "centroid", "mcquitty"
-              ),
-              width = "100%"
-            )
-          )
-        ),
-        fluidRow(
-          column(width = 8, h5("Cut-off Z score")),
-          column(
-            width = 4,
-            numericInput(
-              inputId = ns("heatmap_cutoff"),
-              label = NULL,
-              value = 4,
-              min = 2,
-              step = 1
-            )
-          )
+
+        # k- means slidebar -----------
+        conditionalPanel(
+          condition = "input.cluster_meth == 2",
+          sliderInput(
+            inputId = ns("k_clusters"),
+            label = "Number of Clusters",
+            min   = 2,
+            max   = 20,
+            value = 4,
+            step  = 1
+          ),
+          actionButton(
+            inputId = ns("k_means_re_run"),
+            label = "Re-Run"
+          ),
+          ns = ns
         ),
 
         # Checkbox features ------------
@@ -161,7 +186,7 @@ mod_03_heatmap_ui <- function(id) {
                 width = 3,
                 plotOutput(
                   outputId = ns("heatmap_main"),
-                  height = "400px",
+                  height = "450px",
                   width = "100%",
                   brush = ns("ht_brush")
                 ),
@@ -223,6 +248,26 @@ mod_03_heatmap_ui <- function(id) {
               outputId = ns("sample_tree"),
               width = "100%",
               height = "400px"
+            )
+          ),
+
+          # K-means elbow plot ----------
+          tabPanel(
+            title = "k-Cluster Plot",
+            h4("Determining the number of clusters (k)"),
+            h5(
+              "Following the elbow method, one should choose k so that adding another 
+               cluster does not substantially reduce the within groups sum of squares.",
+              a(
+                "Wikipedia",
+                href = "https://en.wikipedia.org/wiki/Determining_the_number_of_clusters_in_a_data_set",
+                target = "_blank"
+              )
+            ),
+            plotOutput(
+              outputId = ns("k_clusters"),
+              width = "100%",
+              height = "500px"
             )
           )
         )
@@ -362,7 +407,7 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
       # Assign heatmap to be used in multiple components
       shiny_env$ht <- heatmap_main(
         data = heatmap_data(),
-        n_genes = input$n_genes[2] - input$n_genes[1],
+        cluster_meth = input$cluster_meth,
         heatmap_cutoff = input$heatmap_cutoff,
         sample_info = pre_process$sample_info(),
         select_factors_heatmap = input$select_factors_heatmap,
@@ -371,7 +416,9 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
         hclust_function = input$hclust_function,
         no_sample_clustering = input$no_sample_clustering,
         heatmap_color_select = heatmap_colors[[input$heatmap_color_select]],
-        row_dend = input$show_row_dend
+        row_dend = input$show_row_dend,
+        k_clusters = input$k_clusters,
+        re_run = input$k_means_re_run
       )
 
       # Use heatmap position in multiple components
@@ -539,26 +586,24 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
       )
     })
 
+    # k-Cluster elbow plot ----------
+    output$k_clusters <- renderPlot({
+      req(!is.null(heatmap_data()))
+
+      k_means_elbow(
+        heatmap_data = heatmap_data()
+      )
+    })
+
      # Heatmap Download Data -----------
     heatmap_data_download <- reactive({
-      req(!is.null(pre_process$data()))
-
-      down_data <- process_heatmap_data(
-        data = pre_process$data(),
-        n_genes_max = input$n_genes[2],
-        n_genes_min = input$n_genes[1],
-        gene_centering = input$gene_centering,
-        gene_normalize = input$gene_normalize,
-        sample_centering = input$sample_centering,
-        sample_normalize = input$sample_normalize,
-        all_gene_names = pre_process$all_gene_names(),
-        select_gene_id = "User_ID"
-      )
+      req(!is.null(pre_process$all_gene_names()))
+      req(!is.null(heatmap_data()))
 
       merged_data <- merge_data(
         pre_process$all_gene_names(),
-        down_data,
-        merge_ID = "User_ID"
+        heatmap_data(),
+        merge_ID = input$select_gene_id
       )
     })
 

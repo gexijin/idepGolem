@@ -16,7 +16,7 @@ mod_05_pca_ui <- function(id) {
         radioButtons(
           inputId = ns("pca_meth"),
           label = "Methods", 
-          choices = c(
+          choices = list(
             "Principal Component Analysis" = 1,            
             "Multidimensional Scaling" = 3, 
             "t-SNE" = 4,
@@ -25,12 +25,14 @@ mod_05_pca_ui <- function(id) {
         ),
         conditionalPanel(
           condition = "input.pca_meth == 2",
-          htmlOutput(outputId = ns("select_go_pca"))
+          htmlOutput(outputId = ns("select_go_pca")),
+          ns = ns
         ),
         conditionalPanel(
           condition = "input.pca_meth != 2",
           htmlOutput(outputId = ns("list_factors_color")),
-          htmlOutput(outputId = ns("list_factors_shape"))
+          htmlOutput(outputId = ns("list_factors_shape")),
+          ns = ns
         ),
 
         br(),
@@ -68,7 +70,8 @@ mod_05_pca_ui <- function(id) {
                 selected = 2
               )
             )
-          ) 
+          ),
+          ns = ns
         ),
         plotOutput(
           outputId = ns("pca_plot"), inline=TRUE
@@ -80,13 +83,15 @@ mod_05_pca_ui <- function(id) {
             inputId = ns("tsne_seed"),
             label = "Re-calculate t-SNE"),
             br(),
-            br()
+            br(),
+          ns = ns
         ),
         conditionalPanel(
           conditon = "input.pca_meth == 1 | input.pca_meth == 2 ",
           htmlOutput(ns("pca_2_factore")),
           br(),
-          br()
+          br(),
+          ns = ns
         )
       )
     )

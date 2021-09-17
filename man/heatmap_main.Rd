@@ -6,7 +6,7 @@
 \usage{
 heatmap_main(
   data,
-  n_genes,
+  cluster_meth,
   heatmap_cutoff,
   sample_info,
   select_factors_heatmap,
@@ -15,13 +15,15 @@ heatmap_main(
   hclust_function,
   no_sample_clustering,
   heatmap_color_select,
-  row_dend
+  row_dend,
+  k_clusters,
+  re_run
 )
 }
 \arguments{
 \item{data}{Data returned from process_heatmap_data}
 
-\item{n_genes}{Amount of genes included in the heatmap}
+\item{cluster_meth}{Type of clustering to use (Hierarchical/k-Means)}
 
 \item{heatmap_cutoff}{Z score max to filter data}
 
@@ -39,7 +41,13 @@ heatmap_main(
 
 \item{heatmap_color_select}{Vector of colors for heatmap scale}
 
-\item{row_dend}{TRUE/FALSE Hide row dendogram}
+\item{row_dend}{TRUE/FALSE Hide row dendogram,}
+
+\item{k_clusters}{Number of clusters to use for k-means}
+
+\item{re_run}{Re-run k-means with a different seed}
+
+\item{n_genes}{Amount of genes included in the heatmap}
 }
 \value{
 Heatmap of the processed data.
