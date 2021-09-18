@@ -28,6 +28,17 @@ mod_03_heatmap_ui <- function(id) {
            color:#333;background-color:#333;" />'
         ),
 
+        # Select Clustering Method ----------
+        selectInput(
+          inputId = ns("cluster_meth"),
+          label = "Select Clustering Method",
+          choices = list(
+            "Hierarchical" = 1,
+            "k-Means" = 2
+          ),
+          selected = 1
+        ),
+
         # Gene ID Selection -----------
         selectInput(
           inputId = ns("select_gene_id"),
@@ -37,8 +48,9 @@ mod_03_heatmap_ui <- function(id) {
         ),
 
         # Heatmap customizing features ----------
-        strong("Customize hierarchical clustering (Default values work well):"),
+        strong("Customize heatmap (Default values work well):"),
         fluidRow(
+          br(),
           column(width = 3, h5("Color")),
           column(
             width = 9,
@@ -50,45 +62,69 @@ mod_03_heatmap_ui <- function(id) {
             )
           )
         ),
-        fluidRow(
-          column(width = 4, h5("Distance")),
-          column(
-            width = 8,
-            selectInput(
-              inputId = ns("dist_function"),
-              label = NULL,
-              choices = NULL,
-              width = "100%"
+
+        # Clustering methods for hierarchical ----------
+        conditionalPanel(
+          condition = "input.cluster_meth == 1",
+          fluidRow(
+            column(width = 4, h5("Distance")),
+            column(
+              width = 8,
+              selectInput(
+                inputId = ns("dist_function"),
+                label = NULL,
+                choices = NULL,
+                width = "100%"
+              )
             )
-          )
+          ),
+          fluidRow(
+            column(width = 4, h5("Linkage")),
+            column(
+              width = 8,
+              selectInput(
+                inputId = ns("hclust_function"),
+                label = NULL,
+                choices = c(
+                  "average", "complete", "single",
+                  "median", "centroid", "mcquitty"
+                ),
+                width = "100%"
+              )
+            )
+          ),
+          fluidRow(
+            column(width = 8, h5("Cut-off Z score")),
+            column(
+              width = 4,
+              numericInput(
+                inputId = ns("heatmap_cutoff"),
+                label = NULL,
+                value = 4,
+                min = 2,
+                step = 1
+              )
+            )
+          ),
+          ns = ns
         ),
-        fluidRow(
-          column(width = 4, h5("Linkage")),
-          column(
-            width = 8,
-            selectInput(
-              inputId = ns("hclust_function"),
-              label = NULL,
-              choices = c(
-                "average", "complete", "single",
-                "median", "centroid", "mcquitty"
-              ),
-              width = "100%"
-            )
-          )
-        ),
-        fluidRow(
-          column(width = 8, h5("Cut-off Z score")),
-          column(
-            width = 4,
-            numericInput(
-              inputId = ns("heatmap_cutoff"),
-              label = NULL,
-              value = 4,
-              min = 2,
-              step = 1
-            )
-          )
+
+        # k- means slidebar -----------
+        conditionalPanel(
+          condition = "input.cluster_meth == 2",
+          sliderInput(
+            inputId = ns("k_clusters"),
+            label = "Number of Clusters",
+            min   = 2,
+            max   = 20,
+            value = 4,
+            step  = 1
+          ),
+          actionButton(
+            inputId = ns("k_means_re_run"),
+            label = "Re-Run"
+          ),
+          ns = ns
         ),
 
         # Checkbox features ------------
@@ -145,18 +181,31 @@ mod_03_heatmap_ui <- function(id) {
             title = "Heatmap",
             h5("Brush for sub-heatmap, click for value. (Shown Below)"),
             br(),
-            plotOutput(
-              outputId = ns("heatmap_main"),
-              height = "700px",
-              width = "100%",
-              brush = ns("ht_brush"),
-              click = ns("ht_click")
-            ),
-            verbatimTextOutput(ns("ht_click_content")),
-            plotOutput(
-              outputId = ns("sub_heatmap"),
-              height = "700px",
-              width = "100%"
+            fluidRow(
+              column(
+                width = 3,
+                plotOutput(
+                  outputId = ns("heatmap_main"),
+                  height = "450px",
+                  width = "100%",
+                  brush = ns("ht_brush")
+                ),
+                br(),
+                h4("Selected Cell (Submap):"),
+                verbatimTextOutput(
+                  outputId = ns("ht_click_content"),
+                  placeholder = TRUE
+                )
+              ),
+              column(
+                width = 9,
+                plotOutput(
+                  outputId = ns("sub_heatmap"),
+                  height = "650px",
+                  width = "100%",
+                  click = ns("ht_click")
+                )
+              )
             ),
             h4("Sub-heatmap Data Table", align = "center"),
             DT::dataTableOutput(outputId = ns("subheat_data"))
@@ -177,7 +226,14 @@ mod_03_heatmap_ui <- function(id) {
           tabPanel(
             title = "Correlation Matrix",
             br(),
-            # Insert Correlation Matrix
+            checkboxInput(
+              ns("labelPCC"),
+              label = "Label w/ Pearson's correlation coefficients",
+              value = TRUE
+            ),
+            plotOutput(
+              outputId = ns("correlationMatrix")
+            )
           ),
 
           # Sample Tree Plot ---------
@@ -192,6 +248,26 @@ mod_03_heatmap_ui <- function(id) {
               outputId = ns("sample_tree"),
               width = "100%",
               height = "400px"
+            )
+          ),
+
+          # K-means elbow plot ----------
+          tabPanel(
+            title = "k-Cluster Plot",
+            h4("Determining the number of clusters (k)"),
+            h5(
+              "Following the elbow method, one should choose k so that adding another 
+               cluster does not substantially reduce the within groups sum of squares.",
+              a(
+                "Wikipedia",
+                href = "https://en.wikipedia.org/wiki/Determining_the_number_of_clusters_in_a_data_set",
+                target = "_blank"
+              )
+            ),
+            plotOutput(
+              outputId = ns("k_clusters"),
+              width = "100%",
+              height = "500px"
             )
           )
         )
@@ -322,10 +398,16 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
       req(!is.null(heatmap_data()))
       req(!is.null(input$select_factors_heatmap))
 
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Creating Heatmap",
+        color = "#000000"
+      )
+
       # Assign heatmap to be used in multiple components
       shiny_env$ht <- heatmap_main(
         data = heatmap_data(),
-        n_genes = input$n_genes[2] - input$n_genes[1],
+        cluster_meth = input$cluster_meth,
         heatmap_cutoff = input$heatmap_cutoff,
         sample_info = pre_process$sample_info(),
         select_factors_heatmap = input$select_factors_heatmap,
@@ -334,11 +416,17 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
         hclust_function = input$hclust_function,
         no_sample_clustering = input$no_sample_clustering,
         heatmap_color_select = heatmap_colors[[input$heatmap_color_select]],
-        row_dend = input$show_row_dend
+        row_dend = input$show_row_dend,
+        k_clusters = input$k_clusters,
+        re_run = input$k_means_re_run
       )
 
       # Use heatmap position in multiple components
-      shiny_env$ht_pos <- ComplexHeatmap::ht_pos_on_device(shiny_env$ht)
+      shiny_env$ht_pos_main <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht)
+
+      shinybusy::remove_modal_spinner()
+
+      return(shiny_env$ht)
     })
 
     # Heatmap Click Value ---------
@@ -348,21 +436,21 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
         "Click for Info."
       } else {
 
-        pos1 <- ComplexHeatmap:::get_pos_from_click(input$ht_click)
+        pos1 <- InteractiveComplexHeatmap::getPositionFromClick(input$ht_click)
 
-        ht <- shiny_env$ht
-        pos <- ComplexHeatmap::selectPosition(
-          ht,
+        ht_sub <- shiny_env$ht_sub
+        pos <- InteractiveComplexHeatmap::selectPosition(
+          ht_sub,
           mark = FALSE,
           pos = pos1,
           verbose = FALSE,
-          ht_pos = shiny_env$ht_pos
+          ht_pos = shiny_env$ht_pos_sub
         )
 
         row_index <- pos[1, "row_index"]
         column_index <- pos[1, "column_index"]
 
-        m <- ht@ht_list[[1]]@matrix
+        m <- ht_sub@ht_list[[1]]@matrix
         value <- m[row_index, column_index]
         sample <- colnames(m)[column_index]
         gene <- rownames(m)[row_index]
@@ -384,18 +472,18 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
         grid::grid.newpage()
         grid::grid.text("No region is selected.", 0.5, 0.5)
       } else {
-        lt <- ComplexHeatmap:::get_pos_from_brush(input$ht_brush)
+        lt <- InteractiveComplexHeatmap::getPositionFromBrush(input$ht_brush)
         pos1 <- lt[[1]]
         pos2 <- lt[[2]]
 
         ht <- shiny_env$ht
-        pos <- ComplexHeatmap::selectArea(
+        pos <- InteractiveComplexHeatmap::selectArea(
           ht,
           mark = FALSE,
           pos1 = pos1,
           pos2 = pos2,
           verbose = FALSE,
-          ht_pos = shiny_env$ht_pos
+          ht_pos = shiny_env$ht_pos_main
         )
 
         row_index <- unlist(pos[1, "row_index"])
@@ -416,7 +504,12 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
           cluster_columns = FALSE,
           show_row_names = show_rows
         )
-        ComplexHeatmap::draw(ht_select)
+
+        shiny_env$ht_sub <- ComplexHeatmap::draw(ht_select)
+
+        shiny_env$ht_pos_sub <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht_sub)
+
+        shiny_env$ht_sub
       }
     })
 
@@ -430,8 +523,51 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
           pageLength = 10,
           scrollX = "400px"
         ),
-        rownames = TRUE)
+        rownames = TRUE
+      )
     })
+
+    # Correlation Matrix  TEMPORARY ----------
+    output$correlationMatrix <- renderPlot({
+		
+		x <- pre_process$data()
+		maxGene <- apply(x,1,max)
+		x <- x[which(maxGene > quantile(maxGene)[1] ) ,] # remove bottom 25% lowly expressed genes, which inflate the PPC
+		
+	   melted_cormat <- reshape2::melt(round(cor(x),2), na.rm = TRUE)
+		# melted_cormat <- melted_cormat[which(melted_cormat[,1] != melted_cormat[,2] ) , ]
+		# Create a ggheatmap
+		ggheatmap <- ggplot2::ggplot(melted_cormat, ggplot2::aes(Var2, Var1, fill = value))+
+			ggplot2::geom_tile(color = "white")+
+			ggplot2::scale_fill_gradient2(low = "green", high = "red",  mid = "white", 
+			space = "Lab",  limit = c(min(melted_cormat[,3]) ,max(melted_cormat[,3])), midpoint = median(melted_cormat[,3]),
+			name="Pearson's \nCorrelation") +
+			ggplot2::theme_minimal()+ # minimal theme
+			ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, vjust = 1, size=14,hjust = 1))+
+			ggplot2::theme(axis.text.y = ggplot2::element_text( size = 14 ))+
+			ggplot2::coord_fixed()
+		# print(ggheatmap)
+		 if(input$labelPCC && ncol(x)<20)
+				ggheatmap <- ggheatmap +  ggplot2::geom_text(ggplot2::aes(Var2, Var1, label = value), color = "black", size = 4)
+				
+		ggheatmap + 
+		  ggplot2::theme(axis.title.x = ggplot2::element_blank(),
+				axis.title.y = ggplot2::element_blank(),
+				panel.grid.major = ggplot2::element_blank(),
+				panel.border = ggplot2::element_blank(),
+				panel.background = ggplot2::element_blank(),
+				axis.ticks = ggplot2::element_blank(),
+				legend.justification = c(1, 0),
+				legend.position = c(0.6, 0.7),
+				legend.direction = "horizontal")+
+				ggplot2::guides(fill = FALSE) # + ggtitle("Pearson's Correlation Coefficient (all genes)")
+
+			# why legend does not show up??????	
+		 
+
+ 
+  }, height = 600, width = 700  )#)
+
 
     # Sample Tree ----------
     output$sample_tree <- renderPlot({
@@ -450,26 +586,24 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
       )
     })
 
+    # k-Cluster elbow plot ----------
+    output$k_clusters <- renderPlot({
+      req(!is.null(heatmap_data()))
+
+      k_means_elbow(
+        heatmap_data = heatmap_data()
+      )
+    })
+
      # Heatmap Download Data -----------
     heatmap_data_download <- reactive({
-      req(!is.null(pre_process$data()))
-
-      down_data <- process_heatmap_data(
-        data = pre_process$data(),
-        n_genes_max = input$n_genes[2],
-        n_genes_min = input$n_genes[1],
-        gene_centering = input$gene_centering,
-        gene_normalize = input$gene_normalize,
-        sample_centering = input$sample_centering,
-        sample_normalize = input$sample_normalize,
-        all_gene_names = pre_process$all_gene_names(),
-        select_gene_id = "User_ID"
-      )
+      req(!is.null(pre_process$all_gene_names()))
+      req(!is.null(heatmap_data()))
 
       merged_data <- merge_data(
         pre_process$all_gene_names(),
-        down_data,
-        merge_ID = "User_ID"
+        heatmap_data(),
+        merge_ID = input$select_gene_id
       )
     })
 

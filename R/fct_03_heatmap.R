@@ -186,15 +186,17 @@ sd_density <- function(
 #'
 #' @return Subsetted data matrix ([n_genes_min:n_genes_max, ]) with
 #'   gene IDs as the select_gene_id
-process_heatmap_data <- function(data,
-                                 n_genes_max,
-                                 n_genes_min,
-                                 gene_centering,
-                                 gene_normalize,
-                                 sample_centering,
-                                 sample_normalize,
-                                 all_gene_names,
-                                 select_gene_id) {
+process_heatmap_data <- function(
+  data, 
+  n_genes_max,
+  n_genes_min,
+  gene_centering,
+  gene_normalize,
+  sample_centering,
+  sample_normalize,
+  all_gene_names,
+  select_gene_id
+) {
   data <- rowname_id_swap(
     data_matrix = data,
     all_gene_names = all_gene_names,
@@ -251,6 +253,7 @@ process_heatmap_data <- function(data,
 #' gene range provided in process_heatmap_data.
 #'
 #' @param data Data returned from process_heatmap_data
+#' @param cluster_meth Type of clustering to use (Hierarchical/k-Means)
 #' @param n_genes Amount of genes included in the heatmap
 #' @param heatmap_cutoff Z score max to filter data
 #' @param sample_info Experiment design information from load data
@@ -260,28 +263,26 @@ process_heatmap_data <- function(data,
 #' @param hclust_function Type of clustering to perform
 #' @param no_sample_clustering TRUE/FALSE Specify whehter to cluster columns
 #' @param heatmap_color_select Vector of colors for heatmap scale
-#' @param row_dend TRUE/FALSE Hide row dendogram
+#' @param row_dend TRUE/FALSE Hide row dendogram,
+#' @param k_clusters Number of clusters to use for k-means
+#' @param re_run Re-run k-means with a different seed
 #'
 #' @return Heatmap of the processed data.
-heatmap_main <- function(data,
-                         n_genes,
-                         heatmap_cutoff,
-                         sample_info,
-                         select_factors_heatmap,
-                         dist_funs,
-                         dist_function,
-                         hclust_function,
-                         no_sample_clustering,
-                         heatmap_color_select,
-                         row_dend) {
-  if (ncol(data) < 20) {
-    cex_factor <- 12
-  } else if (ncol(x) < 31) {
-    cex_factor <- 10
-  } else {
-    cex_factor <- 8
-  }
-
+heatmap_main <- function(
+  data,
+  cluster_meth,
+  heatmap_cutoff,
+  sample_info,
+  select_factors_heatmap,
+  dist_funs,
+  dist_function,
+  hclust_function,
+  no_sample_clustering,
+  heatmap_color_select,
+  row_dend,
+  k_clusters,
+  re_run
+) {
   cutoff <- median(unlist(data)) + heatmap_cutoff * sd(unlist(data))
   data[data > cutoff] <- cutoff
   cutoff <- median(unlist(data)) - heatmap_cutoff * sd(unlist(data))
@@ -300,11 +301,6 @@ heatmap_main <- function(data,
 
   groups_colors <- gg_color_hue(length(unique(groups)))
 
-  if (n_genes > 60) {
-    show_gene_names <- FALSE
-  } else {
-    show_gene_names <- TRUE
-  }
 
   if (min(data) < 0) {
     col_fun <- circlize::colorRamp2(
@@ -335,38 +331,66 @@ heatmap_main <- function(data,
     show_legend = show_group_leg
   )
 
-  heat <- ComplexHeatmap::Heatmap(
-    data,
-    name = "Expression",
-    col = col_fun,
-    clustering_method_rows = hclust_function,
-    clustering_method_columns = hclust_function,
-    clustering_distance_rows = function(x) {
-      dist_funs[[as.numeric(dist_function)]](x)
-    },
-    clustering_distance_columns = function(x) {
-      dist_funs[[as.numeric(dist_function)]](x)
-    },
-    cluster_rows = TRUE,
-    cluster_columns = !(no_sample_clustering),
-    show_column_dend = TRUE,
-    show_row_dend = row_dend,
-    row_dend_side = "left",
-    row_dend_width = grid::unit(2, "cm"),
-    top_annotation = heat_ann,
-    show_row_names = show_gene_names,
-    heatmap_legend_param = list(
-      direction = "horizontal",
-      legend_width = grid::unit(6, "cm"),
-      title = "Color Key",
-      title_position = "topcenter"
-    ),
-    row_names_gp = grid::gpar(fontsize = 8),
-    column_names_gp = grid::gpar(
-      fontsize = cex_factor
-    ),
-    column_names_rot = 90
-  )
+  if (cluster_meth == 1) {
+    heat <- ComplexHeatmap::Heatmap(
+      data,
+      name = "Expression",
+      col = col_fun,
+      clustering_method_rows = hclust_function,
+      clustering_method_columns = hclust_function,
+      clustering_distance_rows = function(x) {
+        dist_funs[[as.numeric(dist_function)]](x)
+      },
+      clustering_distance_columns = function(x) {
+        dist_funs[[as.numeric(dist_function)]](x)
+      },
+      cluster_rows = TRUE,
+      cluster_columns = !(no_sample_clustering),
+      show_column_dend = TRUE,
+      show_row_dend = row_dend,
+      row_dend_side = "left",
+      row_dend_width = grid::unit(1, "cm"),
+      top_annotation = heat_ann,
+      show_row_names = FALSE,
+      show_column_names = FALSE,
+      heatmap_legend_param = list(
+        direction = "horizontal",
+        legend_width = grid::unit(6, "cm"),
+        title = "Color Key",
+        title_position = "topcenter"
+      )
+    )
+  } else if (cluster_meth == 2) {
+    set.seed(re_run)
+    if(k_clusters > 10){
+      row_title = 8
+    } else {
+      row_title = 10
+    }
+
+    heat <- ComplexHeatmap::Heatmap(
+      data,
+      name = "Expression",
+      col = col_fun,
+      row_km = k_clusters,
+      cluster_rows = TRUE,
+      cluster_columns = !(no_sample_clustering),
+      show_column_dend = TRUE,
+      show_row_dend = row_dend,
+      row_dend_side = "left",
+      row_dend_width = grid::unit(1, "cm"),
+      top_annotation = heat_ann,
+      show_row_names = FALSE,
+      show_column_names = FALSE,
+      heatmap_legend_param = list(
+        direction = "horizontal",
+        legend_width = grid::unit(6, "cm"),
+        title = "Color Key",
+        title_position = "topcenter"
+      ),
+      row_title_gp = grid::gpar(fontsize = row_title)
+    )
+  }
 
   ComplexHeatmap::draw(
     heat,
@@ -432,4 +456,54 @@ draw_sample_tree <- function(
     type = "rectangle"
   )
 
+}
+
+#' Draw an elbow plot for k-cluster selection
+#' 
+#' This function takes in the processed heatmap data and
+#' creates an elbow plot to guide the selection of the
+#' number of clusters to create
+#' 
+#' @param heatmap_data Processed heatmap data
+#' 
+#' @return Formatted elbow plot for the data
+k_means_elbow <- function(
+  heatmap_data
+) {
+
+  factoextra::fviz_nbclust(
+    heatmap_data,
+    kmeans,
+    method = "wss",
+    k.max = 20
+  ) +
+  ggplot2::theme_light() +
+  ggplot2::theme(
+    legend.position = "none",
+    axis.title.x = ggplot2::element_text(
+      color = "black",
+      size = 14
+    ),
+    axis.title.y = ggplot2::element_text(
+      color = "black",
+      size = 14
+    ),
+    axis.text.x = ggplot2::element_text(
+      size = 12
+    ),
+    axis.text.y = ggplot2::element_text(
+      size = 12
+    ),
+    plot.title = ggplot2::element_text(
+      color = "black",
+      size = 16,
+      face = "bold",
+      hjust = .5
+    )
+  ) +
+  ggplot2::labs(
+    title = "k-Means Elbow Plot",
+    y = "Within Sum of Square",
+    x = "Clusters"
+  )
 }

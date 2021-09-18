@@ -16,7 +16,7 @@ app_ui <- function(request) {
       mod_01_load_data_ui(id = "load_data"),
       mod_02_pre_process_ui(id = "pre_process"),
       mod_03_heatmap_ui(id = "heatmap"),
-      mod_04_k_means_ui(id = "k_means")
+      mod_05_pca_ui(id = "k_means")
     )
   )
 }

@@ -10,8 +10,6 @@ merge_data(all_gene_names, data, merge_ID)
 \item{all_gene_names}{All matched gene names from idep data}
 
 \item{data}{Data matrix with rownames to merge with gene names}
-
-\item{merge_ID}{ID from all_gene_names that matches the rownames of data}
 }
 \value{
 Inputted data with all gene name information.

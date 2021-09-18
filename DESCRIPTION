@@ -23,6 +23,8 @@ Imports:
     grDevices,
     grid,
     htmltools (>= 0.5.2),
+    InteractiveComplexHeatmap,
+    reshape2,
     RSQLite,
     shiny (>= 1.6.0),
     shinyBS,
