@@ -283,11 +283,26 @@ heatmap_main <- function(
   k_clusters,
   re_run
 ) {
+  # Filter with max z-score
   cutoff <- median(unlist(data)) + heatmap_cutoff * sd(unlist(data))
   data[data > cutoff] <- cutoff
   cutoff <- median(unlist(data)) - heatmap_cutoff * sd(unlist(data))
   data[data < cutoff] <- cutoff
 
+  # Color scale
+  if (min(data) < 0) {
+    col_fun <- circlize::colorRamp2(
+      c(min(data), 0, max(data)),
+      heatmap_color_select
+    )
+  } else {
+    col_fun <- circlize::colorRamp2(
+      c(min(data), median(data), max(data)),
+      heatmap_color_select
+    )
+  }
+
+  # Annotation for groups
   groups <- detect_groups(colnames(data))
 
   if (!is.null(sample_info) && !is.null(select_factors_heatmap)) {
@@ -301,26 +316,12 @@ heatmap_main <- function(
 
   groups_colors <- gg_color_hue(length(unique(groups)))
 
-
-  if (min(data) < 0) {
-    col_fun <- circlize::colorRamp2(
-      c(min(data), 0, max(data)),
-      heatmap_color_select
-    )
-  } else {
-    col_fun <- circlize::colorRamp2(
-      c(min(data), median(data), max(data)),
-      heatmap_color_select
-    )
-  }
-
   if (length(groups) < 30) {
     show_group_leg <- TRUE
   } else {
     show_group_leg <- FALSE
   }
-
-
+  
   heat_ann <- ComplexHeatmap::HeatmapAnnotation(
     Group = groups,
     col = list(Group = setNames(groups_colors, unique(groups))),
@@ -328,9 +329,10 @@ heatmap_main <- function(
       Group = list(nrow = 1, title = NULL)
     ),
     show_annotation_name = list(Group = FALSE),
-    show_legend = show_group_leg
+    show_legend = FALSE
   )
 
+  # Different heatmaps for hierarchical and k-means
   if (cluster_meth == 1) {
     heat <- ComplexHeatmap::Heatmap(
       data,
@@ -392,10 +394,12 @@ heatmap_main <- function(
     )
   }
 
-  ComplexHeatmap::draw(
-    heat,
-    heatmap_legend_side = "bottom",
-    annotation_legend_side = "top"
+  # Return heatmap and annotation
+  return(
+    heat = ComplexHeatmap::draw(
+      heat,
+      heatmap_legend_side = "bottom"
+    )
   )
 }
 
@@ -507,3 +511,208 @@ k_means_elbow <- function(
     x = "Clusters"
   )
 }
+
+
+#' SUB HEATMAP ANNOTATION
+sub_heat_ann <- function(
+  data,
+  sample_info,
+  select_factors_heatmap
+) {
+  groups <- detect_groups(colnames(data))
+
+  if (!is.null(sample_info) && !is.null(select_factors_heatmap)) {
+    if (select_factors_heatmap == "Sample_Name") {
+      groups <- detect_groups(colnames(data))
+    } else {
+      ix <- match(select_factors_heatmap, colnames(sample_info))
+      groups <- sample_info[, ix]
+    }
+  }
+
+  groups_colors <- gg_color_hue(length(unique(groups)))
+
+  if (length(groups) < 30) {
+    show_group_leg <- TRUE
+  } else {
+    show_group_leg <- FALSE
+  }
+
+  
+  heat_sub_ann <- ComplexHeatmap::HeatmapAnnotation(
+    Group = groups,
+    col = list(Group = setNames(groups_colors, unique(groups))),
+    annotation_legend_param = list(
+      Group = list(nrow = 1, title = NULL)
+    ),
+    show_annotation_name = list(Group = FALSE),
+    show_legend = TRUE
+  )
+  
+  return(heat_sub_ann)
+}
+
+#' SUB HEATMAP CLICK INFORMATION
+heat_click_info <- function(
+  click,
+  ht_sub,
+  ht_pos_sub
+) {
+  pos1 <- InteractiveComplexHeatmap::getPositionFromClick(click)
+    
+  pos <- InteractiveComplexHeatmap::selectPosition(
+    ht_sub,
+    mark = FALSE,
+    pos = pos1,
+    verbose = FALSE,
+    ht_pos = ht_pos_sub
+  )
+
+  row_index <- pos[1, "row_index"]
+  column_index <- pos[1, "column_index"]
+
+  m <- ht_sub@ht_list[[1]]@matrix
+  value <- m[row_index, column_index]
+  sample <- colnames(m)[column_index]
+  gene <- rownames(m)[row_index]
+
+
+  glue::glue(
+    "Sample Name: {sample}",
+    "Gene: {gene}",
+    "Value: {value}",
+    .sep = "\n"
+  )  
+}
+
+#' DRAW SUBHEATMAP
+heat_sub <- function(
+  ht_brush,
+  ht,
+  ht_pos_main,
+  heatmap_data,
+  sample_info,
+  select_factors_heatmap
+) {
+  lt <- InteractiveComplexHeatmap::getPositionFromBrush(ht_brush)
+  pos1 <- lt[[1]]
+  pos2 <- lt[[2]]
+
+  pos <- InteractiveComplexHeatmap::selectArea(
+    ht,
+    mark = FALSE,
+    pos1 = pos1,
+    pos2 = pos2,
+    verbose = FALSE,
+    ht_pos = ht_pos_main
+  )
+
+  row_index <- unlist(pos[1, "row_index"])
+  column_index <- unlist(pos[1, "column_index"])
+  m <- ht@ht_list[[1]]@matrix
+  if (length(row_index) > 50) {
+    show_rows <- FALSE
+  } else {
+    show_rows <- TRUE
+  }
+  submap_data <- m[row_index, column_index, drop = FALSE]
+
+  sub_ann <- sub_heat_ann(
+    data = heatmap_data,
+    sample_info = sample_info,
+    select_factors_heatmap = select_factors_heatmap
+  )
+  sub_ann <- sub_ann[column_index]
+
+  ht_select <- ComplexHeatmap::Heatmap(
+    m[row_index, column_index, drop = FALSE],
+    col = ht@ht_list[[1]]@matrix_color_mapping@col_fun,
+    show_heatmap_legend = FALSE,
+    cluster_rows = FALSE,
+    cluster_columns = FALSE,
+    show_row_names = show_rows,
+    top_annotation = sub_ann
+  )
+
+  ht_sub <- ComplexHeatmap::draw(
+    ht_select,
+    annotation_legend_side = "top"
+  )
+  return(list(
+    ht_sub = ht_sub,
+    submap_data = submap_data
+  ))
+}
+
+#' CORRELATION PLOT
+cor_plot <- function(
+  data,
+  label_pcc
+) {
+  # remove bottom 25% lowly expressed genes, which inflate the PPC 
+	max_gene <- apply(data, 1, max)
+	data <- data[which(max_gene > quantile(max_gene)[1] ), ]
+		
+	melted_cormat <- reshape2::melt(round(cor(data), 2), na.rm = TRUE)
+
+	ggheatmap <- ggplot2::ggplot(
+    melted_cormat,
+    ggplot2::aes(Var2, Var1, fill = value)
+  ) +
+	ggplot2::geom_tile(color = "white") +
+	ggplot2::scale_fill_gradient2(
+    low = "green",
+    high = "red", 
+    mid = "black", 
+		space = "Lab",
+    limit = c(
+      min(melted_cormat[, 3]),
+      max(melted_cormat[, 3])
+    ),
+    midpoint = median(melted_cormat[, 3]),
+		name = "Pearson's \nCorrelation"
+  ) +
+	ggplot2::theme_minimal()+ # minimal theme
+	ggplot2::theme(
+    axis.text.x = ggplot2::element_text(
+      angle = 45,
+      vjust = 1,
+      size = 14,
+      hjust = 1
+    ),
+    axis.text.y = ggplot2::element_text(size = 14 )
+  ) +
+	ggplot2::coord_fixed()
+
+	if(label_pcc && ncol(data)<20) {
+    ggheatmap <- ggheatmap +
+    ggplot2::geom_text(
+      ggplot2::aes(Var2, Var1, label = value),
+      color = "white",
+      size = 4
+    )
+  }	
+		
+  ggheatmap + ggplot2::theme(
+    axis.title.x = ggplot2::element_blank(),
+		axis.title.y = ggplot2::element_blank(),
+		panel.grid.major = ggplot2::element_blank(),
+		panel.border = ggplot2::element_blank(),
+		panel.background = ggplot2::element_blank(),
+		axis.ticks = ggplot2::element_blank(),
+    legend.title = ggplot2::element_text(
+      color = "black",
+      size = 14
+    ),
+    legend.text = ggplot2::element_text(
+      color = "black",
+      size = 9,
+      angle = 0,
+      hjust = .5,
+      vjust = .5
+    ),
+    legend.title.align = 0.5,
+    legend.position = "right"
+  )
+}
+  

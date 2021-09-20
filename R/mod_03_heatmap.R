@@ -47,6 +47,9 @@ mod_03_heatmap_ui <- function(id) {
           selected = NULL
         ),
 
+        # Sample coloring bar -----------
+        htmlOutput(ns("list_factors_heatmap")),
+
         # Heatmap customizing features ----------
         strong("Customize heatmap (Default values work well):"),
         fluidRow(
@@ -158,9 +161,6 @@ mod_03_heatmap_ui <- function(id) {
           label = "Show Row Dendogram",
           value = TRUE
         ),
-
-        # Sample coloring bar -----------
-        htmlOutput(ns("list_factors_heatmap")),
         br(),
         downloadButton(
           outputId = ns("download_heatmap_data"),
@@ -227,7 +227,7 @@ mod_03_heatmap_ui <- function(id) {
             title = "Correlation Matrix",
             br(),
             checkboxInput(
-              ns("labelPCC"),
+              ns("label_pcc"),
               label = "Label w/ Pearson's correlation coefficients",
               value = TRUE
             ),
@@ -358,7 +358,7 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
     output$list_factors_heatmap <- renderUI({
       selectInput(
         inputId = ns("select_factors_heatmap"),
-        label = "Sample color bar:",
+        label = "Sample Color Bar:",
         choices = c("Sample_Name", colnames(pre_process$sample_info()))
       )
     })
@@ -431,37 +431,14 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
 
     # Heatmap Click Value ---------
     output$ht_click_content <- renderText({
-
-      if (is.null(input$ht_click)) {
+      if (is.null(input$ht_click)) { 
         "Click for Info."
       } else {
-
-        pos1 <- InteractiveComplexHeatmap::getPositionFromClick(input$ht_click)
-
-        ht_sub <- shiny_env$ht_sub
-        pos <- InteractiveComplexHeatmap::selectPosition(
-          ht_sub,
-          mark = FALSE,
-          pos = pos1,
-          verbose = FALSE,
-          ht_pos = shiny_env$ht_pos_sub
-        )
-
-        row_index <- pos[1, "row_index"]
-        column_index <- pos[1, "column_index"]
-
-        m <- ht_sub@ht_list[[1]]@matrix
-        value <- m[row_index, column_index]
-        sample <- colnames(m)[column_index]
-        gene <- rownames(m)[row_index]
-
-
-        glue::glue(
-          "Sample Name: {sample}",
-          "Gene: {gene}",
-          "Value: {value}",
-          .sep = "\n"
-        )
+      heat_click_info(
+        click = input$ht_click,
+        ht_sub = shiny_env$ht_sub,
+        ht_pos_sub = shiny_env$ht_pos_sub
+      )
       }
     })
 
@@ -472,44 +449,20 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
         grid::grid.newpage()
         grid::grid.text("No region is selected.", 0.5, 0.5)
       } else {
-        lt <- InteractiveComplexHeatmap::getPositionFromBrush(input$ht_brush)
-        pos1 <- lt[[1]]
-        pos2 <- lt[[2]]
-
-        ht <- shiny_env$ht
-        pos <- InteractiveComplexHeatmap::selectArea(
-          ht,
-          mark = FALSE,
-          pos1 = pos1,
-          pos2 = pos2,
-          verbose = FALSE,
-          ht_pos = shiny_env$ht_pos_main
+        submap_return <- heat_sub(
+          ht_brush = input$ht_brush,
+          ht = shiny_env$ht,
+          ht_pos_main = shiny_env$ht_pos_main,
+          heatmap_data = heatmap_data(),
+          sample_info = pre_process$sample_info(),
+          select_factors_heatmap = input$select_factors_heatmap
         )
-
-        row_index <- unlist(pos[1, "row_index"])
-        column_index <- unlist(pos[1, "column_index"])
-        m <- ht@ht_list[[1]]@matrix
-        if (length(row_index) > 50) {
-          show_rows <- FALSE
-        } else {
-          show_rows <- TRUE
-        }
-        shiny_env$submap <- m[row_index, column_index, drop = FALSE]
-
-        ht_select <- ComplexHeatmap::Heatmap(
-          shiny_env$submap,
-          col = ht@ht_list[[1]]@matrix_color_mapping@col_fun,
-          show_heatmap_legend = FALSE,
-          cluster_rows = FALSE,
-          cluster_columns = FALSE,
-          show_row_names = show_rows
-        )
-
-        shiny_env$ht_sub <- ComplexHeatmap::draw(ht_select)
+        shiny_env$ht_sub <- submap_return$ht_sub
+        shiny_env$submap_data <- submap_return$submap_data
 
         shiny_env$ht_pos_sub <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht_sub)
 
-        shiny_env$ht_sub
+        return(shiny_env$ht_sub)
       }
     })
 
@@ -518,7 +471,7 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
       req(!is.null(input$ht_brush))
 
       DT::datatable(
-        shiny_env$submap,
+        shiny_env$submap_data,
         options = list(
           pageLength = 10,
           scrollX = "400px"
@@ -527,47 +480,13 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
       )
     })
 
-    # Correlation Matrix  TEMPORARY ----------
+    # Correlation Matrix ----------
     output$correlationMatrix <- renderPlot({
-		
-		x <- pre_process$data()
-		maxGene <- apply(x,1,max)
-		x <- x[which(maxGene > quantile(maxGene)[1] ) ,] # remove bottom 25% lowly expressed genes, which inflate the PPC
-		
-	   melted_cormat <- reshape2::melt(round(cor(x),2), na.rm = TRUE)
-		# melted_cormat <- melted_cormat[which(melted_cormat[,1] != melted_cormat[,2] ) , ]
-		# Create a ggheatmap
-		ggheatmap <- ggplot2::ggplot(melted_cormat, ggplot2::aes(Var2, Var1, fill = value))+
-			ggplot2::geom_tile(color = "white")+
-			ggplot2::scale_fill_gradient2(low = "green", high = "red",  mid = "white", 
-			space = "Lab",  limit = c(min(melted_cormat[,3]) ,max(melted_cormat[,3])), midpoint = median(melted_cormat[,3]),
-			name="Pearson's \nCorrelation") +
-			ggplot2::theme_minimal()+ # minimal theme
-			ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, vjust = 1, size=14,hjust = 1))+
-			ggplot2::theme(axis.text.y = ggplot2::element_text( size = 14 ))+
-			ggplot2::coord_fixed()
-		# print(ggheatmap)
-		 if(input$labelPCC && ncol(x)<20)
-				ggheatmap <- ggheatmap +  ggplot2::geom_text(ggplot2::aes(Var2, Var1, label = value), color = "black", size = 4)
-				
-		ggheatmap + 
-		  ggplot2::theme(axis.title.x = ggplot2::element_blank(),
-				axis.title.y = ggplot2::element_blank(),
-				panel.grid.major = ggplot2::element_blank(),
-				panel.border = ggplot2::element_blank(),
-				panel.background = ggplot2::element_blank(),
-				axis.ticks = ggplot2::element_blank(),
-				legend.justification = c(1, 0),
-				legend.position = c(0.6, 0.7),
-				legend.direction = "horizontal")+
-				ggplot2::guides(fill = FALSE) # + ggtitle("Pearson's Correlation Coefficient (all genes)")
-
-			# why legend does not show up??????	
-		 
-
- 
-  }, height = 600, width = 700  )#)
-
+		  cor_plot(
+        data = pre_process$data(),
+        label_pcc = input$label_pcc
+      )
+    }, height = 600, width = 700)
 
     # Sample Tree ----------
     output$sample_tree <- renderPlot({
