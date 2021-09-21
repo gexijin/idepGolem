@@ -2,10 +2,26 @@
 % Please edit documentation in R/fct_03_heatmap.R
 \name{heat_click_info}
 \alias{heat_click_info}
-\title{SUB HEATMAP CLICK INFORMATION}
+\title{Interactive click text for subheatmap}
 \usage{
-heat_click_info(click, ht_sub, ht_pos_sub)
+heat_click_info(click, ht_sub, ht_sub_obj, ht_pos_sub, sub_groups)
+}
+\arguments{
+\item{click}{Click input from subheatmap}
+
+\item{ht_sub}{Drawn subheatmap}
+
+\item{ht_sub_obj}{Heatmap object with mapping info}
+
+\item{ht_pos_sub}{Position information from submap}
+
+\item{sub_groups}{Vector of group labels from submap}
+}
+\value{
+HTML code to produce a table with information
+about the selected cell.
 }
 \description{
-SUB HEATMAP CLICK INFORMATION
+Create a text output to tell the user the cell
+information for their click.
 }

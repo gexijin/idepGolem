@@ -31,7 +31,7 @@ mod_03_heatmap_ui <- function(id) {
         # Select Clustering Method ----------
         selectInput(
           inputId = ns("cluster_meth"),
-          label = "Select Clustering Method",
+          label = "Select Clustering Method:",
           choices = list(
             "Hierarchical" = 1,
             "k-Means" = 2
@@ -42,7 +42,7 @@ mod_03_heatmap_ui <- function(id) {
         # Gene ID Selection -----------
         selectInput(
           inputId = ns("select_gene_id"),
-          label = "Select Gene ID Label (<= 50 genes)",
+          label = "Select Gene ID Label (<= 50 genes):",
           choices = NULL,
           selected = NULL
         ),
@@ -191,8 +191,8 @@ mod_03_heatmap_ui <- function(id) {
                   brush = ns("ht_brush")
                 ),
                 br(),
-                h4("Selected Cell (Submap):"),
-                verbatimTextOutput(
+                h5("Selected Cell (Submap):"),
+                uiOutput(
                   outputId = ns("ht_click_content"),
                   placeholder = TRUE
                 )
@@ -430,15 +430,17 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
     })
 
     # Heatmap Click Value ---------
-    output$ht_click_content <- renderText({
+    output$ht_click_content <- renderUI({
       if (is.null(input$ht_click)) { 
         "Click for Info."
       } else {
-      heat_click_info(
-        click = input$ht_click,
-        ht_sub = shiny_env$ht_sub,
-        ht_pos_sub = shiny_env$ht_pos_sub
-      )
+        heat_click_info(
+          click = input$ht_click,
+          ht_sub = shiny_env$ht_sub,
+          ht_sub_obj = shiny_env$ht_sub_obj,
+          ht_pos_sub = shiny_env$ht_pos_sub,
+          sub_groups = shiny_env$sub_groups
+        )
       }
     })
 
@@ -457,9 +459,16 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
           sample_info = pre_process$sample_info(),
           select_factors_heatmap = input$select_factors_heatmap
         )
-        shiny_env$ht_sub <- submap_return$ht_sub
-        shiny_env$submap_data <- submap_return$submap_data
 
+        # Objects used in other components ----------
+        shiny_env$ht_sub_obj <- submap_return$ht_select
+        shiny_env$submap_data <- submap_return$submap_data
+        shiny_env$sub_groups <- submap_return$sub_groups
+        
+        shiny_env$ht_sub <- ComplexHeatmap::draw(
+          shiny_env$ht_sub_obj,
+          annotation_legend_side = "top"
+        )
         shiny_env$ht_pos_sub <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht_sub)
 
         return(shiny_env$ht_sub)

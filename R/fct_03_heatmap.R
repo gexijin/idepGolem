@@ -237,12 +237,12 @@ process_heatmap_data <- function(
   )
 
   if (gene_centering) {
-    return(data)
+    return(round(data, 3))
   } else {
     data <- data[(n_genes_min + 1):n_genes_max, ]
   }
 
-  return(data)
+  return(round(data, 3))
 }
 
 #' Draw a heatmap of processed data
@@ -394,13 +394,12 @@ heatmap_main <- function(
     )
   }
 
-  # Return heatmap and annotation
   return(
-    heat = ComplexHeatmap::draw(
+    ComplexHeatmap::draw(
       heat,
       heatmap_legend_side = "bottom"
     )
-  )
+  )  
 }
 
 #' Draw a dendogram of data samples
@@ -513,7 +512,17 @@ k_means_elbow <- function(
 }
 
 
-#' SUB HEATMAP ANNOTATION
+#' Create annotation for shiny subheatmap
+#' 
+#' Use the heatmap data to make an annotation for the
+#' submap that will also show the legend
+#' 
+#' @param data Heatmap data
+#' @param sample_info Experiment design file from load data
+#' @param select_factors_heatmap Factor to group by in the samples
+#' 
+#' @return ComplexHeatmap annotation object
+#' 
 sub_heat_ann <- function(
   data,
   sample_info,
@@ -532,7 +541,7 @@ sub_heat_ann <- function(
 
   groups_colors <- gg_color_hue(length(unique(groups)))
 
-  if (length(groups) < 30) {
+  if (length(groups) < 10) {
     show_group_leg <- TRUE
   } else {
     show_group_leg <- FALSE
@@ -549,14 +558,31 @@ sub_heat_ann <- function(
     show_legend = TRUE
   )
   
-  return(heat_sub_ann)
+  return(list(
+    heat_sub_ann = heat_sub_ann,
+    groups = groups
+  ))
 }
 
-#' SUB HEATMAP CLICK INFORMATION
+#' Interactive click text for subheatmap
+#' 
+#' Create a text output to tell the user the cell
+#' information for their click.
+#' 
+#' @param click Click input from subheatmap
+#' @param ht_sub Drawn subheatmap
+#' @param ht_sub_obj Heatmap object with mapping info
+#' @param ht_pos_sub Position information from submap
+#' @param sub_groups Vector of group labels from submap
+#' 
+#' @return HTML code to produce a table with information
+#' about the selected cell.
 heat_click_info <- function(
   click,
   ht_sub,
-  ht_pos_sub
+  ht_sub_obj,
+  ht_pos_sub,
+  sub_groups
 ) {
   pos1 <- InteractiveComplexHeatmap::getPositionFromClick(click)
     
@@ -567,7 +593,7 @@ heat_click_info <- function(
     verbose = FALSE,
     ht_pos = ht_pos_sub
   )
-
+  
   row_index <- pos[1, "row_index"]
   column_index <- pos[1, "column_index"]
 
@@ -575,17 +601,39 @@ heat_click_info <- function(
   value <- m[row_index, column_index]
   sample <- colnames(m)[column_index]
   gene <- rownames(m)[row_index]
+  col <- ComplexHeatmap::map_to_colors(ht_sub_obj@matrix_color_mapping, value)
+  group_name <- sub_groups[column_index]
+  group_col <- ht_sub_obj@top_annotation@anno_list$Group@color_mapping@colors[[group_name]]
 
-
-  glue::glue(
-    "Sample Name: {sample}",
-    "Gene: {gene}",
-    "Value: {value}",
-    .sep = "\n"
-  )  
+  # HTML for info table
+  # Pulled from https://github.com/jokergoo/InteractiveComplexHeatmap/blob/master/R/shiny-server.R
+  # Lines 1669:1678
+  html <- GetoptLong::qq("
+<div>
+<pre>
+Value: @{round(value, 2)} <span style='background-color:@{col};width=50px;'>    </span>
+Sample: @{sample}
+Gene: @{gene} 
+Group: @{group_name} <span style='background-color:@{group_col};width=50px;'>    </span>
+</pre></div>"
+)
+  HTML(html)
 }
 
-#' DRAW SUBHEATMAP
+#' Draw sub heatmap from brush input
+#' 
+#' Use the brush input from the main heatmap to
+#' create a larger subheatmap. 
+#' 
+#' @param ht_brush Brush input from the main heatmap
+#' @param ht Main heatmap object
+#' @param ht_pos_main Position of brush on main heatmap
+#' @param heatmap_data Data for the heatmap
+#' @param sample_info Experiment design file
+#' @param select_factors_heatmap Group design to label by
+#' 
+#' @return Heatmap from the brush selection of the main heatmap.
+#' 
 heat_sub <- function(
   ht_brush,
   ht,
@@ -617,12 +665,13 @@ heat_sub <- function(
   }
   submap_data <- m[row_index, column_index, drop = FALSE]
 
-  sub_ann <- sub_heat_ann(
+  sub_heat <- sub_heat_ann(
     data = heatmap_data,
     sample_info = sample_info,
     select_factors_heatmap = select_factors_heatmap
   )
-  sub_ann <- sub_ann[column_index]
+  sub_ann <- sub_heat$heat_sub_ann[column_index]
+  sub_groups <- sub_heat$groups[column_index]
 
   ht_select <- ComplexHeatmap::Heatmap(
     m[row_index, column_index, drop = FALSE],
@@ -634,17 +683,23 @@ heat_sub <- function(
     top_annotation = sub_ann
   )
 
-  ht_sub <- ComplexHeatmap::draw(
-    ht_select,
-    annotation_legend_side = "top"
-  )
   return(list(
-    ht_sub = ht_sub,
-    submap_data = submap_data
+    ht_select = ht_select,
+    submap_data = submap_data,
+    sub_groups = sub_groups
   ))
 }
 
-#' CORRELATION PLOT
+#' Create a correlation plot from heatmap data
+#' 
+#' Creates a correlation matrix heatmap from the
+#' heatmap data to demonstrate the correlation
+#' between samples.
+#' 
+#' @param data Heatmap data
+#' @param label_pcc Label with correlation coefficient when TRUE
+#' 
+#' @return ggplot heatmap of correlation matrix
 cor_plot <- function(
   data,
   label_pcc

@@ -2,10 +2,21 @@
 % Please edit documentation in R/fct_03_heatmap.R
 \name{sub_heat_ann}
 \alias{sub_heat_ann}
-\title{SUB HEATMAP ANNOTATION}
+\title{Create annotation for shiny subheatmap}
 \usage{
 sub_heat_ann(data, sample_info, select_factors_heatmap)
 }
+\arguments{
+\item{data}{Heatmap data}
+
+\item{sample_info}{Experiment design file from load data}
+
+\item{select_factors_heatmap}{Factor to group by in the samples}
+}
+\value{
+ComplexHeatmap annotation object
+}
 \description{
-SUB HEATMAP ANNOTATION
+Use the heatmap data to make an annotation for the
+submap that will also show the legend
 }

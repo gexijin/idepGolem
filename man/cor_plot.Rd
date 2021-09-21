@@ -2,10 +2,20 @@
 % Please edit documentation in R/fct_03_heatmap.R
 \name{cor_plot}
 \alias{cor_plot}
-\title{CORRELATION PLOT}
+\title{Create a correlation plot from heatmap data}
 \usage{
 cor_plot(data, label_pcc)
 }
+\arguments{
+\item{data}{Heatmap data}
+
+\item{label_pcc}{Label with correlation coefficient when TRUE}
+}
+\value{
+ggplot heatmap of correlation matrix
+}
 \description{
-CORRELATION PLOT
+Creates a correlation matrix heatmap from the
+heatmap data to demonstrate the correlation
+between samples.
 }

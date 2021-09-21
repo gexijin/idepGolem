@@ -378,4 +378,18 @@ vsn::meanSdPlot(processed_data$data)
 
 # Gene search for individual plotting
 merged_data[grep("H4c1", merged_data$symbol),]
+
+heatmap_data <- process_heatmap_data(
+  data = processed_data$data,
+  n_genes_max = 100,
+  n_genes_min = 0,
+  gene_centering = TRUE,
+  gene_normalize = FALSE,
+  sample_centering = FALSE,
+  sample_normalize = FALSE,
+  all_gene_names = gene_names,
+  select_gene_id = "ensembl_ID"
+)
+dist_funs <- dist_functions()
+hclust_funs <- hcluster_functions()
 ```

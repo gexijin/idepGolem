@@ -2,7 +2,7 @@
 % Please edit documentation in R/fct_03_heatmap.R
 \name{heat_sub}
 \alias{heat_sub}
-\title{DRAW SUBHEATMAP}
+\title{Draw sub heatmap from brush input}
 \usage{
 heat_sub(
   ht_brush,
@@ -13,6 +13,23 @@ heat_sub(
   select_factors_heatmap
 )
 }
+\arguments{
+\item{ht_brush}{Brush input from the main heatmap}
+
+\item{ht}{Main heatmap object}
+
+\item{ht_pos_main}{Position of brush on main heatmap}
+
+\item{heatmap_data}{Data for the heatmap}
+
+\item{sample_info}{Experiment design file}
+
+\item{select_factors_heatmap}{Group design to label by}
+}
+\value{
+Heatmap from the brush selection of the main heatmap.
+}
 \description{
-DRAW SUBHEATMAP
+Use the brush input from the main heatmap to
+create a larger subheatmap.
 }
