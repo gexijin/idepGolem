@@ -540,27 +540,30 @@ sub_heat_ann <- function(
   }
 
   groups_colors <- gg_color_hue(length(unique(groups)))
+  group_colors <- setNames(groups_colors, unique(groups))
 
-  if (length(groups) < 10) {
-    show_group_leg <- TRUE
+  if (length(unique(groups)) < 10) {
+    lgd <- ComplexHeatmap::Legend(
+      at = unique(groups),
+      legend_gp = grid::gpar(fill = groups_colors),
+      nrow = 1
+    )
   } else {
-    show_group_leg <- FALSE
+    lgd <- NULL
   }
-
   
   heat_sub_ann <- ComplexHeatmap::HeatmapAnnotation(
     Group = groups,
     col = list(Group = setNames(groups_colors, unique(groups))),
-    annotation_legend_param = list(
-      Group = list(nrow = 1, title = NULL)
-    ),
     show_annotation_name = list(Group = FALSE),
-    show_legend = TRUE
+    show_legend = FALSE
   )
-  
+
   return(list(
     heat_sub_ann = heat_sub_ann,
-    groups = groups
+    lgd = lgd,
+    groups = groups,
+    group_colors = group_colors
   ))
 }
 
@@ -582,8 +585,12 @@ heat_click_info <- function(
   ht_sub,
   ht_sub_obj,
   ht_pos_sub,
-  sub_groups
+  sub_groups,
+  group_colors,
+  cluster_meth,
+  click_data
 ) {
+
   pos1 <- InteractiveComplexHeatmap::getPositionFromClick(click)
     
   pos <- InteractiveComplexHeatmap::selectPosition(
@@ -597,13 +604,29 @@ heat_click_info <- function(
   row_index <- pos[1, "row_index"]
   column_index <- pos[1, "column_index"]
 
-  m <- ht_sub@ht_list[[1]]@matrix
-  value <- m[row_index, column_index]
-  sample <- colnames(m)[column_index]
-  gene <- rownames(m)[row_index]
-  col <- ComplexHeatmap::map_to_colors(ht_sub_obj@matrix_color_mapping, value)
+  if (cluster_meth == 1) {
+
+    value <- click_data[row_index, column_index]
+    col <- ComplexHeatmap::map_to_colors(ht_sub_obj@matrix_color_mapping, value)
+    sample <- colnames(click_data)[column_index]
+    gene <- rownames(click_data)[row_index]
+
+  } else if (cluster_meth == 2) {
+
+    clust <- pos[1, "heatmap"]
+    sub_click_data <- click_data[[clust]]
+    value <- sub_click_data[row_index, column_index]
+    col <- ComplexHeatmap::map_to_colors(
+      ht_sub_obj@ht_list$heat_1@matrix_color_mapping,
+      value
+    )
+    sample <- colnames(sub_click_data)[column_index]
+    gene <- rownames(sub_click_data)[row_index]
+
+  }
+  
   group_name <- sub_groups[column_index]
-  group_col <- ht_sub_obj@top_annotation@anno_list$Group@color_mapping@colors[[group_name]]
+  group_col <- group_colors[[group_name]]
 
   # HTML for info table
   # Pulled from https://github.com/jokergoo/InteractiveComplexHeatmap/blob/master/R/shiny-server.R
@@ -640,7 +663,8 @@ heat_sub <- function(
   ht_pos_main,
   heatmap_data,
   sample_info,
-  select_factors_heatmap
+  select_factors_heatmap,
+  cluster_meth
 ) {
   lt <- InteractiveComplexHeatmap::getPositionFromBrush(ht_brush)
   pos1 <- lt[[1]]
@@ -655,16 +679,9 @@ heat_sub <- function(
     ht_pos = ht_pos_main
   )
 
-  row_index <- unlist(pos[1, "row_index"])
   column_index <- unlist(pos[1, "column_index"])
-  m <- ht@ht_list[[1]]@matrix
-  if (length(row_index) > 50) {
-    show_rows <- FALSE
-  } else {
-    show_rows <- TRUE
-  }
-  submap_data <- m[row_index, column_index, drop = FALSE]
 
+  # Annotation, groups, and legend
   sub_heat <- sub_heat_ann(
     data = heatmap_data,
     sample_info = sample_info,
@@ -672,21 +689,85 @@ heat_sub <- function(
   )
   sub_ann <- sub_heat$heat_sub_ann[column_index]
   sub_groups <- sub_heat$groups[column_index]
+  lgd <- sub_heat$lgd
+  group_colors <- sub_heat$group_colors
+  
+  if (cluster_meth == 1) {
+    row_index <- unlist(pos[1, "row_index"])
+    m <- ht@ht_list[[1]]@matrix
+    if (length(row_index) > 50) {
+      show_rows <- FALSE
+    } else {
+      show_rows <- TRUE
+    }
+    submap_data <- m[row_index, column_index, drop = FALSE]
+    click_data <- submap_data
 
-  ht_select <- ComplexHeatmap::Heatmap(
-    m[row_index, column_index, drop = FALSE],
-    col = ht@ht_list[[1]]@matrix_color_mapping@col_fun,
-    show_heatmap_legend = FALSE,
-    cluster_rows = FALSE,
-    cluster_columns = FALSE,
-    show_row_names = show_rows,
-    top_annotation = sub_ann
-  )
+    ht_select <- ComplexHeatmap::Heatmap(
+      m[row_index, column_index, drop = FALSE],
+      col = ht@ht_list[[1]]@matrix_color_mapping@col_fun,
+      show_heatmap_legend = FALSE,
+      cluster_rows = FALSE,
+      cluster_columns = FALSE,
+      show_row_names = show_rows,
+      top_annotation = sub_ann,
+      name = "heat_1"
+    )
+  } else if (cluster_meth == 2) {
+    sub_heats = c()
+    all_rows = c()
+    click_data = c()
+
+    for (i in 1:nrow(pos)) {
+      all_rows <- c(all_rows, unlist(pos[i, "row_index"]))
+    }
+
+    if (length(all_rows) > 50) {
+        show_rows <- FALSE
+      } else {
+        show_rows <- TRUE
+    }
+    m <- ht@ht_list[[1]]@matrix
+    submap_data <- m[all_rows, column_index, drop = FALSE]
+    
+    for (i in 1:nrow(pos)) {
+      row_index <- unlist(pos[i, "row_index"])
+      
+      click_data[[paste0("heat_", i)]] <- m[row_index, column_index, drop = FALSE]
+
+      sub_heats[[i]] <- ComplexHeatmap::Heatmap(
+        m[row_index, column_index, drop = FALSE],
+        col = ht@ht_list[[1]]@matrix_color_mapping@col_fun,
+        show_heatmap_legend = FALSE,
+        cluster_rows = FALSE,
+        cluster_columns = FALSE,
+        show_row_names = show_rows,
+        name = paste0("heat_", i)
+      )
+      if (i == 1) {
+        sub_heats[[i]] <- ComplexHeatmap::add_heatmap(
+          sub_ann,
+          sub_heats[[i]],
+          direction = "vertical"
+        )
+      } else if (i >= 2) {
+        sub_heats[[i]] <- ComplexHeatmap::add_heatmap(
+          sub_heats[[i-1]],
+          sub_heats[[i]],
+          direction = "vertical"
+        )
+      }
+      ht_select <- sub_heats[[i]]
+    }
+  }
 
   return(list(
     ht_select = ht_select,
     submap_data = submap_data,
-    sub_groups = sub_groups
+    sub_groups = sub_groups,
+    lgd = lgd,
+    group_colors = group_colors,
+    click_data = click_data
   ))
 }
 

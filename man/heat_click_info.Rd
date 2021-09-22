@@ -4,7 +4,16 @@
 \alias{heat_click_info}
 \title{Interactive click text for subheatmap}
 \usage{
-heat_click_info(click, ht_sub, ht_sub_obj, ht_pos_sub, sub_groups)
+heat_click_info(
+  click,
+  ht_sub,
+  ht_sub_obj,
+  ht_pos_sub,
+  sub_groups,
+  group_colors,
+  cluster_meth,
+  click_data
+)
 }
 \arguments{
 \item{click}{Click input from subheatmap}

@@ -439,7 +439,10 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
           ht_sub = shiny_env$ht_sub,
           ht_sub_obj = shiny_env$ht_sub_obj,
           ht_pos_sub = shiny_env$ht_pos_sub,
-          sub_groups = shiny_env$sub_groups
+          sub_groups = shiny_env$sub_groups,
+          group_colors = shiny_env$group_colors,
+          cluster_meth = input$cluster_meth,
+          click_data = shiny_env$click_data
         )
       }
     })
@@ -457,18 +460,23 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
           ht_pos_main = shiny_env$ht_pos_main,
           heatmap_data = heatmap_data(),
           sample_info = pre_process$sample_info(),
-          select_factors_heatmap = input$select_factors_heatmap
+          select_factors_heatmap = input$select_factors_heatmap,
+          cluster_meth = input$cluster_meth
         )
 
         # Objects used in other components ----------
         shiny_env$ht_sub_obj <- submap_return$ht_select
         shiny_env$submap_data <- submap_return$submap_data
         shiny_env$sub_groups <- submap_return$sub_groups
+        shiny_env$group_colors <- submap_return$group_colors
+        shiny_env$click_data <- submap_return$click_data
         
         shiny_env$ht_sub <- ComplexHeatmap::draw(
           shiny_env$ht_sub_obj,
+          annotation_legend_list = submap_return$lgd,
           annotation_legend_side = "top"
         )
+
         shiny_env$ht_pos_sub <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht_sub)
 
         return(shiny_env$ht_sub)

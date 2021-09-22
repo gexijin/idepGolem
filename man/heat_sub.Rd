@@ -10,7 +10,8 @@ heat_sub(
   ht_pos_main,
   heatmap_data,
   sample_info,
-  select_factors_heatmap
+  select_factors_heatmap,
+  cluster_meth
 )
 }
 \arguments{
