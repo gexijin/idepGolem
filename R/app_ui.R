@@ -15,7 +15,7 @@ app_ui <- function(request) {
       id = "navbar",
       mod_01_load_data_ui(id = "load_data"),
       mod_02_pre_process_ui(id = "pre_process"),
-      mod_03_heatmap_ui(id = "heatmap"),
+      mod_03_clustering_ui(id = "clustering"),
       mod_05_pca_ui(id = "k_means")
     )
   )
@@ -35,7 +35,12 @@ golem_add_external_resources <- function() {
   )
 
   tags$head(
-    favicon(),
+    favicon(
+      ico = "favicon",
+      rel = "shortcut icon",
+      resources_path = "www",
+      ext = "ico"
+    ),
     bundle_resources(
       path = app_sys("app/www"),
       app_title = "idepGolem"

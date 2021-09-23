@@ -783,11 +783,16 @@ heat_sub <- function(
 #' @return ggplot heatmap of correlation matrix
 cor_plot <- function(
   data,
-  label_pcc
+  label_pcc,
+  heat_cols,
+  text_col
 ) {
   # remove bottom 25% lowly expressed genes, which inflate the PPC 
 	max_gene <- apply(data, 1, max)
 	data <- data[which(max_gene > quantile(max_gene)[1] ), ]
+  low_col <- heat_cols[[1]]
+  mid_col <- heat_cols[[2]]
+  high_col <- heat_cols[[3]]
 		
 	melted_cormat <- reshape2::melt(round(cor(data), 2), na.rm = TRUE)
 
@@ -795,11 +800,11 @@ cor_plot <- function(
     melted_cormat,
     ggplot2::aes(Var2, Var1, fill = value)
   ) +
-	ggplot2::geom_tile(color = "white") +
+	ggplot2::geom_tile(color = text_col) +
 	ggplot2::scale_fill_gradient2(
-    low = "green",
-    high = "red", 
-    mid = "black", 
+    low = low_col,
+    high = high_col, 
+    mid = mid_col, 
 		space = "Lab",
     limit = c(
       min(melted_cormat[, 3]),
@@ -824,7 +829,7 @@ cor_plot <- function(
     ggheatmap <- ggheatmap +
     ggplot2::geom_text(
       ggplot2::aes(Var2, Var1, label = value),
-      color = "white",
+      color = text_col,
       size = 4
     )
   }	

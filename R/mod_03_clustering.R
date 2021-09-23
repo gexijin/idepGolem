@@ -7,10 +7,10 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
-mod_03_heatmap_ui <- function(id) {
+mod_03_clustering_ui <- function(id) {
   ns <- NS(id)
   tabPanel(
-    "Heatmap",
+    "Clustering",
     sidebarLayout(
 
       # Heatmap Panel Sidebar ----------
@@ -23,52 +23,84 @@ mod_03_heatmap_ui <- function(id) {
           value = c(0, 100),
           step = 50
         ),
+
+        # k- means slidebar -----------
+        conditionalPanel(
+          condition = "input.cluster_meth == 2",
+          sliderInput(
+            inputId = ns("k_clusters"),
+            label = "Number of Clusters:",
+            min   = 2,
+            max   = 20,
+            value = 4,
+            step  = 1
+          ),
+          actionButton(
+            inputId = ns("k_means_re_run"),
+            label = "Re-Run"
+          ),
+          ns = ns
+        ),
+
         HTML(
           '<hr style="height:1px;border:none;
            color:#333;background-color:#333;" />'
         ),
 
         # Select Clustering Method ----------
-        selectInput(
-          inputId = ns("cluster_meth"),
-          label = "Select Clustering Method:",
-          choices = list(
-            "Hierarchical" = 1,
-            "k-Means" = 2
+        conditionalPanel(
+          condition = "input.cluster_panels == 'Heatmap'",
+          
+          selectInput(
+            inputId = ns("cluster_meth"),
+            label = "Select Clustering Method:",
+            choices = list(
+              "Hierarchical" = 1,
+              "k-Means" = 2
+            ),
+            selected = 1
           ),
-          selected = 1
-        ),
 
-        # Gene ID Selection -----------
-        selectInput(
-          inputId = ns("select_gene_id"),
-          label = "Select Gene ID Label (<= 50 genes):",
-          choices = NULL,
-          selected = NULL
-        ),
+          # Gene ID Selection -----------
+          selectInput(
+            inputId = ns("select_gene_id"),
+            label = "Select Gene ID Label (<= 50 genes):",
+            choices = NULL,
+            selected = NULL
+          ),
 
-        # Sample coloring bar -----------
-        htmlOutput(ns("list_factors_heatmap")),
+          # Sample coloring bar -----------
+          htmlOutput(ns("list_factors_heatmap")),
+
+          ns = ns
+        ),
 
         # Heatmap customizing features ----------
-        strong("Customize heatmap (Default values work well):"),
-        fluidRow(
-          br(),
-          column(width = 3, h5("Color")),
-          column(
-            width = 9,
-            selectInput(
-              inputId = ns("heatmap_color_select"),
-              label = NULL,
-              choices = "green-black-red",
-              width = "100%"
+        conditionalPanel(
+          condition = "input.cluster_panels == 'Heatmap' ||
+                       input.cluster_panels == 'Correlation Matrix'",
+
+          strong("Customize heatmap (Default values work well):"),
+          fluidRow(
+            br(),
+            column(width = 3, h5("Color")),
+            column(
+              width = 9,
+              selectInput(
+                inputId = ns("heatmap_color_select"),
+                label = NULL,
+                choices = "green-black-red",
+                width = "100%"
+              )
             )
-          )
+          ),
+
+          ns = ns
         ),
 
         # Clustering methods for hierarchical ----------
         conditionalPanel(
-          condition = "input.cluster_meth == 1",
+          condition = "input.cluster_meth == 1 && input.cluster_panels == 'Heatmap'",
           fluidRow(
             column(width = 4, h5("Distance")),
             column(
@@ -112,24 +144,6 @@ mod_03_heatmap_ui <- function(id) {
           ns = ns
         ),
 
-        # k- means slidebar -----------
-        conditionalPanel(
-          condition = "input.cluster_meth == 2",
-          sliderInput(
-            inputId = ns("k_clusters"),
-            label = "Number of Clusters",
-            min   = 2,
-            max   = 20,
-            value = 4,
-            step  = 1
-          ),
-          actionButton(
-            inputId = ns("k_means_re_run"),
-            label = "Re-Run"
-          ),
-          ns = ns
-        ),
-
         # Checkbox features ------------
         checkboxInput(
           inputId = ns("gene_centering"),
@@ -151,20 +165,25 @@ mod_03_heatmap_ui <- function(id) {
           label = "Normalize samples(divide by SD)",
           value = FALSE
         ),
-        checkboxInput(
-          inputId = ns("no_sample_clustering"),
-          label = "Do not re-order or cluster samples",
-          value = FALSE
-        ),
-        checkboxInput(
-          inputId = ns("show_row_dend"),
-          label = "Show Row Dendogram",
-          value = TRUE
-        ),
-        br(),
-        downloadButton(
-          outputId = ns("download_heatmap_data"),
-          label = "Heatmap data"
+
+        conditionalPanel(
+          condition = "input.cluster_panels == 'Heatmap'",
+          checkboxInput(
+            inputId = ns("no_sample_clustering"),
+            label = "Do not re-order or cluster samples",
+            value = FALSE
+          ),
+          checkboxInput(
+            inputId = ns("show_row_dend"),
+            label = "Show Row Dendogram",
+            value = TRUE
+          ),
+          br(),
+          downloadButton(
+            outputId = ns("download_heatmap_data"),
+            label = "Heatmap data"
+          ),
+          ns = ns
         ),
         a(
           h5("Questions?", align = "right"),
@@ -174,7 +193,7 @@ mod_03_heatmap_ui <- function(id) {
       ),
       mainPanel(
         tabsetPanel(
-          id = ns("heatmap_panels"),
+          id = ns("cluster_panels"),
 
           # Heatmap panel ----------
           tabPanel(
@@ -211,6 +230,12 @@ mod_03_heatmap_ui <- function(id) {
             DT::dataTableOutput(outputId = ns("subheat_data"))
           ),
 
+          # Enrichment panel ----------
+          tabPanel(
+            title = "Enrichment",
+            br()
+          ),
+
           # Gene Standard Deviation Distribution ----------
           tabPanel(
             title = "Gene SD Distribution",
@@ -226,10 +251,24 @@ mod_03_heatmap_ui <- function(id) {
           tabPanel(
             title = "Correlation Matrix",
             br(),
-            checkboxInput(
-              ns("label_pcc"),
-              label = "Label w/ Pearson's correlation coefficients",
-              value = TRUE
+            fluidRow(
+              column(
+                width = 4,
+                selectInput(
+                  inputId = ns("cor_text_col"),
+                  label = "Select Text Color:",
+                  choices = c("White", "Black"),
+                  selected = "White"
+                )
+              ),
+              column(
+                width = 8,
+                checkboxInput(
+                  ns("label_pcc"),
+                  label = "Label w/ Pearson's correlation coefficients",
+                  value = TRUE
+                )
+              )
             ),
             plotOutput(
               outputId = ns("correlationMatrix")
@@ -280,7 +319,7 @@ mod_03_heatmap_ui <- function(id) {
 #' 03_heatmap Server Functions
 #'
 #' @noRd
-mod_03_heatmap_server <- function(id, pre_process, tab) {
+mod_03_clustering_server <- function(id, pre_process, tab) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -501,7 +540,9 @@ mod_03_heatmap_server <- function(id, pre_process, tab) {
     output$correlationMatrix <- renderPlot({
 		  cor_plot(
         data = pre_process$data(),
-        label_pcc = input$label_pcc
+        label_pcc = input$label_pcc,
+        heat_cols = heatmap_colors[[input$heatmap_color_select]],
+        text_col = stringr::str_to_lower(input$cor_text_col)
       )
     }, height = 600, width = 700)
 

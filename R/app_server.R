@@ -19,8 +19,8 @@ app_server <- function(input, output, session) {
     load_data = load_data,
     tab = tab
   )
-  mod_03_heatmap_server(
-    id = "heatmap",
+  mod_03_clustering_server(
+    id = "clustering",
     pre_process = pre_process,
     tab = tab
   )
