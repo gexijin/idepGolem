@@ -11,7 +11,11 @@ app_ui <- function(request) {
     # Your application UI logic
 
     navbarPage(
-      "idepGolem",
+      img(
+        src = "www/idep_logo.png",
+        width = "25",
+        height = "25"
+      ),
       id = "navbar",
       mod_01_load_data_ui(id = "load_data"),
       mod_02_pre_process_ui(id = "pre_process"),
@@ -39,7 +43,7 @@ golem_add_external_resources <- function() {
       ico = "favicon",
       rel = "shortcut icon",
       resources_path = "www",
-      ext = "ico"
+      ext = "png"
     ),
     bundle_resources(
       path = app_sys("app/www"),

@@ -169,6 +169,22 @@ mod_01_load_data_ui <- function(id) {
         DT::dataTableOutput(ns("sample_20")),
 
         # Instructions and flowchart ------------
+        fluidRow(
+          column(
+            width = 5,
+            h1("Welcome to iDEP!")
+          ),
+          column(
+            width = 6,
+            img(
+              src = "www/idep_logo.png",
+              width = "100",
+              height = "100"
+            )
+          )
+          
+          
+        ),
         div(
           id = ns("load_message"),
           h4("Loading R packages, please wait ... ... ...")
