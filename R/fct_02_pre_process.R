@@ -804,3 +804,78 @@ counts_bias_message <- function(raw_counts,
   }
   return(message)
 }
+
+#' MEAN SD PLOT 
+mean_sd_plot <- function(
+  processed_data,
+  rank,
+  heat_cols
+) {
+  table_data <- data.frame(
+    "x_axis" = apply(
+      processed_data,
+      1,
+      mean
+      
+    ),
+    "y_axis" = apply(
+      processed_data,
+      1,
+      sd
+    )
+  )
+
+  if (rank) {
+    table_data$x_axis <- rank(table_data$x_axis) 
+  }
+  low_col <- "black"
+  high_col <- heat_cols[[1]]
+
+  hex_plot <- ggplot2::ggplot(
+      table_data,
+      ggplot2::aes(x = x_axis, y = y_axis)
+  ) +
+  ggplot2::geom_hex() +
+  ggplot2::geom_smooth(
+    method = "gam",
+    formula = y ~ s(x, bs = "cs")
+  ) +
+  ggplot2::scale_fill_gradient2(
+    mid = low_col,
+    high = high_col
+  ) +
+  ggplot2::theme_light() +
+  ggplot2::theme(
+    plot.title = ggplot2::element_text(
+      color = "black",
+      size = 16,
+      face = "bold",
+      hjust = .5
+    ),
+    axis.text.x = ggplot2::element_text(size = 14),
+    axis.text.y = ggplot2::element_text(size = 14),
+    axis.title.x = ggplot2::element_text(
+      color = "black",
+      size = 14
+    ),
+    axis.title.y = ggplot2::element_text(
+      color = "black",
+      size = 14
+    ),
+    legend.text = ggplot2::element_text(size = 12)
+  ) +
+  ggplot2::labs(
+    title = "Mean vs. Standard Deviation",
+    y = "Standard Deviation"
+  )
+
+  if (rank) {
+    hex_plot <- hex_plot +
+      ggplot2::labs(x = "Rank of Mean")
+  } else {
+    hex_plot <- hex_plot +
+      ggplot2::labs(x = "Mean")
+  }
+
+  return(hex_plot)
+}

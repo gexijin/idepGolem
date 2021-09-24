@@ -260,11 +260,28 @@ mod_02_pre_process_ui <- function(id) {
           tabPanel(
             title = "SD vs. Mean Plot",
             br(),
+            fluidRow(
+              column(
+                width = 4,
+                selectInput(
+                  inputId = ns("heat_color_select"),
+                  label = "Select Heat Colors",
+                  choices = NULL
+                )
+              ),
+              column(
+                width = 4,
+                checkboxInput(
+                  inputId = ns("rank"),
+                  label = "Use rank of mean values"
+                )
+              ),
+            ),
             plotOutput(
               outputId = ns("dev_transfrom"),
               width = "100%",
               height = "500px"
-            ),
+            )
           ),
 
           # Searchable table of transformed converted data ---------
@@ -448,13 +465,36 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     })
 
     # Standard deviation vs mean plot ----------
+    # Heatmap Colors ----------
+    heat_colors <- list(
+      "Green" = c("green"),
+      "Red" = c("red"),
+      "Magenta" = c("magenta"),
+      "Blue" = c("blue"),
+      "Brown" = c("brown")
+    )
+    heat_choices <- c(
+      "Green",
+      "Red",
+      "Magenta",
+      "Blue",
+      "Brown"
+    )
+    observe({
+      updateSelectInput(
+        session = session,
+        inputId = "heat_color_select",
+        choices = heat_choices
+      )
+    })
+    
     output$dev_transfrom <- renderPlot({
       req(!is.null(processed_data()$data))
 
-      vsn::meanSdPlot(
-        x = processed_data()$data,
-        ylab = "Standard Deviation",
-        xlab = "Transformed Expression Mean Rank"
+      mean_sd_plot(
+        processed_data = processed_data()$data,
+        heat_cols = heat_colors[[input$heat_color_select]],
+        rank = input$rank
       )
     })
 
