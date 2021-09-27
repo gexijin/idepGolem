@@ -14,7 +14,8 @@ sub_heat_ann(data, sample_info, select_factors_heatmap)
 \item{select_factors_heatmap}{Factor to group by in the samples}
 }
 \value{
-ComplexHeatmap annotation object
+A list containing a ComplexHeatmap annotation object,
+a ComplexHeatmap legend, list of groups, and list of group colors.
 }
 \description{
 Use the heatmap data to make an annotation for the

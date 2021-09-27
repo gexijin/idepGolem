@@ -25,6 +25,12 @@ heat_click_info(
 \item{ht_pos_sub}{Position information from submap}
 
 \item{sub_groups}{Vector of group labels from submap}
+
+\item{group_colors}{Colors for the group annotation}
+
+\item{cluster_meth}{Type of clustering being performed}
+
+\item{click_data}{Data matrix to get the data value from}
 }
 \value{
 HTML code to produce a table with information

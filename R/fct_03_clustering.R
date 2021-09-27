@@ -521,7 +521,8 @@ k_means_elbow <- function(
 #' @param sample_info Experiment design file from load data
 #' @param select_factors_heatmap Factor to group by in the samples
 #' 
-#' @return ComplexHeatmap annotation object
+#' @return A list containing a ComplexHeatmap annotation object,
+#' a ComplexHeatmap legend, list of groups, and list of group colors.
 #' 
 sub_heat_ann <- function(
   data,
@@ -577,6 +578,9 @@ sub_heat_ann <- function(
 #' @param ht_sub_obj Heatmap object with mapping info
 #' @param ht_pos_sub Position information from submap
 #' @param sub_groups Vector of group labels from submap
+#' @param group_colors Colors for the group annotation
+#' @param cluster_meth Type of clustering being performed
+#' @param click_data Data matrix to get the data value from
 #' 
 #' @return HTML code to produce a table with information
 #' about the selected cell.
@@ -654,8 +658,11 @@ Group: @{group_name} <span style='background-color:@{group_col};width=50px;'>   
 #' @param heatmap_data Data for the heatmap
 #' @param sample_info Experiment design file
 #' @param select_factors_heatmap Group design to label by
+#' @param cluster_meth Type of clustering being performed
 #' 
-#' @return Heatmap from the brush selection of the main heatmap.
+#' @return A list containing a Heatmap from the brush selection
+#' of the main heatmap, the submap data matrix, the groups for
+#' the submap, the submap legend, and data for the click info.
 #' 
 heat_sub <- function(
   ht_brush,
@@ -779,6 +786,8 @@ heat_sub <- function(
 #' 
 #' @param data Heatmap data
 #' @param label_pcc Label with correlation coefficient when TRUE
+#' @param heat_cols Heat colors to use in the correlation matrix
+#' @param text_col Color to make the text labels in the plot
 #' 
 #' @return ggplot heatmap of correlation matrix
 cor_plot <- function(
@@ -857,3 +866,28 @@ cor_plot <- function(
   )
 }
 
+k_means_go_data <- function(
+  select_go,
+  cluster_meth,
+  click_data,
+  gmt_file
+) {
+  if (select_go == "ID not recognized!") {
+    return(as.matrix("Gene ID not recognized."))
+  }
+
+  pp = 0
+  min_fdr = 0.01
+
+  if (cluster_meth == 2) {
+    for(i in 1:length(brush_data)) {
+      query = rownames(click_data[[i]])
+
+      if(!is.null(gmt_file)) {
+        result <- find_overlap_gmt(query)
+      }
+    }
+  }
+
+
+}

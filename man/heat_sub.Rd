@@ -26,9 +26,13 @@ heat_sub(
 \item{sample_info}{Experiment design file}
 
 \item{select_factors_heatmap}{Group design to label by}
+
+\item{cluster_meth}{Type of clustering being performed}
 }
 \value{
-Heatmap from the brush selection of the main heatmap.
+A list containing a Heatmap from the brush selection
+of the main heatmap, the submap data matrix, the groups for
+the submap, the submap legend, and data for the click info.
 }
 \description{
 Use the brush input from the main heatmap to

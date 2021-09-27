@@ -732,9 +732,11 @@ individual_plots <- function(
 #' @param n_matched Count of matched IDs after processing
 #'
 #' @return Message about processed data
-conversion_counts_message <- function(data_size,
-                                      all_gene_names,
-                                      n_matched) {
+conversion_counts_message <- function(
+  data_size,
+  all_gene_names,
+  n_matched
+) {
   if (ncol(all_gene_names) == 1) {
     return(paste(
       data_size[1], "genes in", data_size[4], "samples.",
@@ -761,8 +763,10 @@ conversion_counts_message <- function(data_size,
 #' @param sample_info Experiment file information about each sample
 #'
 #' @return Message for the UI
-counts_bias_message <- function(raw_counts,
-                                sample_info) {
+counts_bias_message <- function(
+  raw_counts,
+  sample_info
+) {
   total_counts <- colSums(raw_counts)
   groups <- as.factor(
     detect_groups(
@@ -805,7 +809,20 @@ counts_bias_message <- function(raw_counts,
   return(message)
 }
 
-#' MEAN SD PLOT 
+#' Mean vs. Standard Deviation plot
+#' 
+#' Create a plot that shows the standard deviation as the
+#' Y-axis across the mean of the counts data on the X-axis.
+#' Option to make the X-axis the rank of the mean which
+#' does a better job showing the spread of the data.
+#' 
+#' @param processed_data Data that has gone through the pre-processing
+#' @param rank TRUE/FALSE whether to use the rank of the mean or not
+#' @param heat_cols Heat color to use with black in the plot
+#' 
+#' @return A formatted ggplot hexplot of the mean and standard
+#' deviation of the processed data
+#' 
 mean_sd_plot <- function(
   processed_data,
   rank,

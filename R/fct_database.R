@@ -133,6 +133,15 @@ get_idep_data <- function(datapath = DATAPATH) {
     !(names(species_choice) %in% top_choices)
   ]
   species_choice <- species_choice[c(top_choices, other_choices)]
+  
+  genome_assembl <- paste0(datapath, "data_go/orgInfo_animal_plant_metazoa.csv")
+  genome_assembl <- read.csv(genome_assembl)
+  genome_assembl <- genome_assembl |>
+    dplyr::select(name2, academicName, assembly) |>
+    dplyr::rename(
+      "Species Name" = name2, "Academic Name" = academicName,
+      "Genome Assembly" = assembly
+    )
 
   DBI::dbDisconnect(conn = conn_db)
 
@@ -149,7 +158,8 @@ get_idep_data <- function(datapath = DATAPATH) {
     go_levels = go_levels,
     go_level_2_terms = go_level_2_terms,
     id_index = id_index,
-    species_choice = species_choice
+    species_choice = species_choice,
+    genome_assembl = genome_assembl
   ))
 }
 

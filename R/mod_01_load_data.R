@@ -139,16 +139,14 @@ mod_01_load_data_ui <- function(id) {
 
         # Action button for Gene ID examples -----------
         h5(
-          "Check this out if you want example of our gene ids, or download gene
-          mapping."
+          "Check this out for a list of species and their genome assemblies."
         ),
 
-        # ADD GENE ID EXAMPLE CODE FOR BUTTON ----------
+        # Species list and genome assemblies ----------
         actionButton(
-          inputId = ns("gene_id_button"),
-          label = "Optional: COMING SOON!"
+          inputId = ns("genome_assembl_button"),
+          label = "Species List and Genome Assembly"
         ),
-        ##################################################
 
         a(
           h5("Questions?", align = "right"),
@@ -228,6 +226,17 @@ mod_01_load_data_ui <- function(id) {
           width = "562",
           height = "383"
         ),
+        shinyBS::bsModal(
+          id = ns("species_list"),
+          title = "Species List and Genome Assemblies",
+          trigger = ns("gene_id_button"),
+          size = "large",
+          DT::dataTableOutput(
+            outputId = ns("genome_species_table"),
+            width = "100%",
+            height = "auto"
+          )
+        )
       )
     )
   )
@@ -252,12 +261,14 @@ mod_01_load_data_server <- function(id, idep_data) {
       )
     })
 
+    # Message for the status of the app ---------
     output$file_format <- renderUI({
       shinyjs::hideElement(id = "load_message")
       i <- "<h3>Ready to load data files.</h3>"
       htmltools::HTML(paste(i, collapse = "<br/>"))
     })
 
+    # Reactive element to load the data from the user or demo data ---------
     loaded_data <- reactive(input_data(
       expression_file = input$expression_file,
       experiment_file = input$experiment_file,
@@ -335,6 +346,14 @@ mod_01_load_data_server <- function(id, idep_data) {
         all_gene_info = all_gene_info
       )
 
+      gmt_choices <- gmt_category(
+        converted = converted,
+        converted_data = converted_data,
+        select_org = input$select_org,
+        gmt_file = input$gmt_file,
+        idep_data = idep_data
+      )
+
       shinybusy::remove_modal_spinner()
 
       return(list(
@@ -371,14 +390,31 @@ mod_01_load_data_server <- function(id, idep_data) {
       hover = TRUE
     )
 
+    # Species list and genome assemblies ---------
+    output$genome_species_table <- DT::renderDataTable({
+      DT::datatable(
+        idep_data$genome_assembl,
+        options = list(
+          pageLength = 20,
+          scrollY = "400px"
+        ),
+        rownames = FALSE
+      )
+    })
+
+    # Return data used in the following panels --------
     list(
       data_file_format = reactive(input$data_file_format),
       no_fdr = reactive(input$no_fdr),
+      select_org = reactive(input$select_org),
+      gmt_file = reactive(input$gmt_file),
       sample_info = reactive(loaded_data()$sample_info),
       all_gene_info = reactive(conversion_info()$all_gene_info),
       converted_data = reactive(conversion_info()$converted_data),
       all_gene_names = reactive(conversion_info()$all_gene_names),
-      matched_ids = reactive(conversion_info()$converted$ids)
+      matched_ids = reactive(conversion_info()$converted$ids),
+      gmt_choices = reactive(conversion_info()$gmt_choices),
+      converted = reactive(conversion_info()$converted)
     )
   })
 }

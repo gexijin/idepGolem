@@ -10,6 +10,10 @@ cor_plot(data, label_pcc, heat_cols, text_col)
 \item{data}{Heatmap data}
 
 \item{label_pcc}{Label with correlation coefficient when TRUE}
+
+\item{heat_cols}{Heat colors to use in the correlation matrix}
+
+\item{text_col}{Color to make the text labels in the plot}
 }
 \value{
 ggplot heatmap of correlation matrix

@@ -35,6 +35,8 @@ mod_03_clustering_ui <- function(id) {
             value = 4,
             step  = 1
           ),
+
+          # Re-run k-means with a different seed
           actionButton(
             inputId = ns("k_means_re_run"),
             label = "Re-Run"
@@ -42,6 +44,7 @@ mod_03_clustering_ui <- function(id) {
           ns = ns
         ),
 
+        # Line break ---------
         HTML(
           '<hr style="height:1px;border:none;
            color:#333;background-color:#333;" />'
@@ -233,7 +236,33 @@ mod_03_clustering_ui <- function(id) {
           # Enrichment panel ----------
           tabPanel(
             title = "Enrichment",
-            br()
+            br(),
+            htmlOutput(outputId = ns("select_go_selector")),
+            h4("Geneset size: "),
+            fluidRow( 
+              column(
+                width = 6,
+                numericInput(
+                  inputId = ns("min_set_size"), 
+                  label = h5("Min:"), 
+                  min   = 5, 
+                  max   = 30, 
+                  value = 15,
+                  step  = 1
+                )
+              ),
+              column(
+                width = 6,
+                numericInput(
+                  inputId = ns("max_set_size"), 
+                  label = h5("Max:"), 
+                  min   = 1000, 
+                  max   = 2000, 
+                  value = 2000,
+                  step  = 100
+                ) 
+              )
+            )
           ),
 
           # Gene Standard Deviation Distribution ----------
@@ -319,7 +348,7 @@ mod_03_clustering_ui <- function(id) {
 #' 03_heatmap Server Functions
 #'
 #' @noRd
-mod_03_clustering_server <- function(id, pre_process, tab) {
+mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -328,7 +357,7 @@ mod_03_clustering_server <- function(id, pre_process, tab) {
 
     # Update Slider Input ---------
     observe({
-      req(tab() == "Heatmap")
+      req(tab() == "Clustering")
       req(!is.null(pre_process$data()))
       if (nrow(pre_process$data()) > 12000) {
         max_genes <- 12000
@@ -393,12 +422,24 @@ mod_03_clustering_server <- function(id, pre_process, tab) {
       )
     })
 
-    # Sample color bar render ----------
+    # Sample color bar selector ----------
     output$list_factors_heatmap <- renderUI({
       selectInput(
         inputId = ns("select_factors_heatmap"),
         label = "Sample Color Bar:",
         choices = c("Sample_Name", colnames(pre_process$sample_info()))
+      )
+    })
+
+    # GMT choices for enrichment ----------
+    output$select_go_selector <- renderUI({
+	    req(!is.null(pre_process$data()))
+
+	    selectInput(
+        inputId = ns("select_go"),
+        label = NULL,
+        choices = pre_process$gmt_choices(),
+        selected = "GOBP"
       )
     })
 
@@ -534,6 +575,23 @@ mod_03_clustering_server <- function(id, pre_process, tab) {
         ),
         rownames = TRUE
       )
+    })
+
+    # Enrichment Analysis ----------
+    # Gene sets reactive
+    gene_sets <- reactive({
+
+      read_gene_sets <- function(
+        all_gene_names = pre_process$all_gene_names(),
+        converted = pre_process$converted(),
+        go = input$select_go,
+        select_org = pre_process$select_org(),
+        gmt_range = c(input$min_set_size, input$max_set_size),
+        gmt_file = pre_process$gmt_file(),
+        idep_data = idep_data
+      )
+      
+      return(read_gene_sets)
     })
 
     # Correlation Matrix ----------

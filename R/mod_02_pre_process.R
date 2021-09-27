@@ -15,6 +15,7 @@ mod_02_pre_process_ui <- function(id) {
 
       # Pre-Process Panel Sidebar ----------
       sidebarPanel(
+
         # Conditional panel for read count data -----------
         conditionalPanel(
           condition = "output.data_file_format == 1",
@@ -23,6 +24,8 @@ mod_02_pre_process_ui <- function(id) {
           fluidRow(
             column(
               width = 6,
+
+              # Min counts per million (works with min samples)
               numericInput(
                 inputId = ns("min_counts"),
                 label = h5("Min. CPM"),
@@ -31,6 +34,8 @@ mod_02_pre_process_ui <- function(id) {
             ),
             column(
               width = 6,
+
+              # Min samples per row to have min CPM
               numericInput(
                 inputId = ns("n_min_samples_count"),
                 label = h5("n libraries"),
@@ -46,6 +51,8 @@ mod_02_pre_process_ui <- function(id) {
             type = "text/css",
             "#pre_process-n_min_samples_count { width:100%;   margin-top:-12px}"
           ),
+
+          # Type of transformation to perform on the counts data
           radioButtons(
             inputId = ns("counts_transform"),
             label = "Transform counts data for clustering & PCA.",
@@ -56,6 +63,7 @@ mod_02_pre_process_ui <- function(id) {
             ),
             selected = 1
           ),
+
           # Conditional panel for EdgeR transformation -----------
           conditionalPanel(
             condition = "input.counts_transform == 1",
@@ -66,6 +74,8 @@ mod_02_pre_process_ui <- function(id) {
               ),
               column(
                 width = 7,
+
+                # Constant to add for a log transform
                 numericInput(
                   inputId = ns("counts_log_start"),
                   label = NULL,
@@ -85,6 +95,8 @@ mod_02_pre_process_ui <- function(id) {
           fluidRow(
             column(
               width = 6,
+
+              # Fold counts min (works with min samples)
               numericInput(
                 inputId = ns("low_filter_fpkm"),
                 label = h5("Min. level"),
@@ -93,6 +105,8 @@ mod_02_pre_process_ui <- function(id) {
             ),
             column(
               width = 6,
+
+              # Min samples per row to have the low filter
               numericInput(
                 inputId = ns("n_min_samples_fpkm"),
                 label = h5("n samples"),
@@ -108,11 +122,15 @@ mod_02_pre_process_ui <- function(id) {
             type = "text/css",
             "#pre_process-n_min_samples_fpkm { width:100%;margin-top:-12px}"
           ),
+
+          # Perform a log transform or not
           radioButtons(
             inputId = ns("log_transform_fpkm"),
             label = "Log Transformation",
             choices = c("No" = FALSE, "Yes" = TRUE)
           ),
+
+          # Constant to add if yes to a log transform
           numericInput(
             inputId = ns("log_start_fpkm"),
             label = h5("Constant c for started log: log(x+c)"),
@@ -121,14 +139,6 @@ mod_02_pre_process_ui <- function(id) {
           tags$style(
             type = "text/css",
             "#pre_process-log_start { width:100%;   margin-top:-12px}"
-          ),
-          textOutput(ns("text_transform")),
-          tags$head(
-            tags$style(
-              "#pre_process-text_transform{color: blue;
-               font-size: 16px;
-               font-style: italic;}"
-            )
           ),
           ns = ns
         ),
@@ -145,6 +155,7 @@ mod_02_pre_process_ui <- function(id) {
           selected = "geneMedian"
         ),
         br(),
+
         strong("Download Processed Data"),
         br(),
         # Download button for processed data -----------
@@ -156,6 +167,8 @@ mod_02_pre_process_ui <- function(id) {
         # Conditional panel for read count data ------------
         conditionalPanel(
           condition = "output.data_file_format == 1",
+
+          # Download the counts data with converted IDs
           downloadButton(
             outputId = ns("download_converted_counts"),
             label = "Converted counts data"
@@ -164,16 +177,13 @@ mod_02_pre_process_ui <- function(id) {
         ),
         br(),
         br(),
+
+        # Show transform messages
         actionButton(
           inputId = ns("show_messages"),
           label = "Show Conversion Messages"
         ),
-        textOutput(outputId = ns("read_counts_bias")),
-        tags$head(tags$style(
-          "#pre_process-read_counts_bias{color: red;
-            font-size: 16px;
-            font-style: italic;}"
-        )),
+
         a(
           h5("Questions?", align = "right"),
           href = "https://idepsite.wordpress.com/pre-process/",
@@ -297,7 +307,8 @@ mod_02_pre_process_ui <- function(id) {
             br(),
             fluidRow(
               column(
-                4, # Gene ID Selection -----------
+                4, 
+                # Gene ID Selection -----------
                 selectInput(
                   inputId = ns("select_gene_id"),
                   label = "Select Gene ID Label",
@@ -488,6 +499,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       )
     })
     
+    # Mean vs SD plot --------
     output$dev_transfrom <- renderPlot({
       req(!is.null(processed_data()$data))
 
@@ -578,6 +590,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       )
     })
 
+    # Individual gene plot ---------
     output$gene_plot <- renderPlot({
       req(!is.null(individual_data()))
       req(!is.null(input$selected_gene))
@@ -620,6 +633,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       return(sum(match_process_ids))
     })
 
+    # Bias detected message -------
     read_counts_bias <- reactive({
       req(!is.null(processed_data()$raw_counts))
 
@@ -640,6 +654,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       )
     })
 
+    # Show messages when on the Pre-Process tab or button is clicked
     observe({
       req(input$show_messages || tab() == "Pre-Process")
 
@@ -659,6 +674,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       )
     })
 
+    # Remove tabs if the tab changes --------
     observe({
       req(tab() != "Pre-Process")
 
@@ -670,7 +686,11 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     list(
       data = reactive(processed_data()$data),
       sample_info = reactive(load_data$sample_info()),
-      all_gene_names = reactive(load_data$all_gene_names())
+      all_gene_names = reactive(load_data$all_gene_names()),
+      gmt_choices = reactive(load_data$gmt_choices()),
+      converted = reactive(load_data$converted()),
+      select_org = reactive(load_Data$select_org()),
+      gmt_file = reactive(load_data$gmt_file())
     )
   })
 }
