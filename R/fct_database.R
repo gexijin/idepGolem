@@ -423,3 +423,185 @@ convert_ensembl <- function(query, species, idep_date,
   names(tem) <- result$id
   return(tem)
 }
+
+#' READ GENE SETS
+read_gene_sets <- function (
+  all_gene_names,
+  converted,
+  go,
+  select_org,
+  gmt_range,
+  gmt_file,
+  idep_data,
+  gene_info
+) {
+	id_not_recognized = as.data.frame("ID not recognized!")
+
+  if(select_org == "NEW" && !is.null(gmt_file)) {
+    in_file <- gmt_file
+    in_file <- in_file$datapath
+
+    return(read_gmt(in_file))
+  }
+
+	if(ncol(all_gene_names) == 1) {
+    return(id_not_recognized)
+  } 
+
+	query_set <- all_gene_names[, 2]
+
+  if(!is.null(gene_info)) {
+    if(dim(gene_info)[1] > 1) {  
+	    gene_info <- gene_info[which(
+        gene_info$gene_biotype == "protein_coding"
+      ), ]  
+	    query_set <- intersect(query_set, gene_info[, 1])
+	  }
+  }
+
+  if(length(query_set) == 0) {
+    return(id_not_recognized)
+  } 
+
+	ix = grep(converted$species[1,1], idep_data$gmt_files)
+  total_genes <- converted$species[1,7]
+
+	if (length(ix) == 0 ) {
+    return(id_not_recognized)
+  }
+	
+	# If selected species is not the default "bestMatch", use that species directly
+	if(select_org != "BestMatch") {  
+		ix = grep(find_species_by_id(select_org)[1, 1], idep_data$gmt_files)
+		if (length(ix) == 0) {
+      return(id_not_recognized )
+    }
+		total_genes <- org_info[which(
+      org_info$id == as.numeric(select_org)
+    ), 7]
+	}
+
+	pathway <- DBI::dbConnect(
+    drv = RSQLite::dbDriver("SQLite"),
+    dbname = idep_data$gmt_files[ix],
+    flags= RSQLite::SQLITE_RO
+  )
+	
+	if(is.null(go)) {
+    go <- "GOBP"
+  }
+
+
+	sql_query = paste(
+    "select distinct gene, pathwayID from pathway where gene IN ('",
+    paste(query_set, collapse = "', '"), "')",
+    sep = ""
+  )
+	# cat(paste0("\n\nhere:",GO,"There"))
+
+	if(go != "All") {
+    sql_query = paste0(sql_query, " AND category ='", go,"'")
+  } 
+	result <- DBI::dbGetQuery(pathway, sql_query)
+
+	if(dim(result)[1] == 0) {
+    return(list(x = as.data.frame("No matching species or gene ID file!")))
+  }
+	# list pathways and frequency of genes
+	pathway_ids <- stats::aggregate(
+    result$pathwayID,
+    by = list(unique.values = result$pathwayID),
+    FUN = length
+  )
+	pathway_ids <- pathway_ids[which(pathway_ids[, 2] >= gmt_range[1]), ]
+	pathway_ids <- pathway_ids[which(pathway_ids[, 2] <= gmt_range[2]), ]
+
+	if(dim(pathway_ids)[1] == 0) {
+    gene_sets = NULL
+  } else {
+    # Convert pathways into lists
+	  gene_sets <- lapply(
+      pathway_ids[, 1],
+      function(x)  result[which(result$pathwayID == x), 1]
+    )
+	  pathway_info <- DBI::dbGetQuery(
+      pathway,
+      paste(
+        "select distinct id, Description from pathwayInfo where id IN ('", 
+				paste(pathway_ids[, 1], collapse = "', '"), "') ", sep = ""
+      ) 
+    )
+	  ix = match(pathway_ids[, 1], pathway_info[, 1])
+	  names(gene_sets) <- pathway_info[ix, 2]  
+  }
+	
+	DBI::dbDisconnect(pathway)
+	return(gene_sets)
+} 
+
+#' Database choices for the converted IDs
+gmt_category <- function(
+  converted,
+  converted_data,
+  select_org,
+  gmt_file,
+  idep_data
+) {
+	if (select_org == "NEW" && !is.null(gmt_file)) {
+    return(list(custom_gene_set ="Custom"))
+  }
+		
+	id_not_recognized = as.data.frame("ID not recognized!")
+
+	if(is.null(converted)) {
+    return(id_not_recognized)
+  }
+
+	query_set <- rownames(converted_data)
+
+	if(length(query_set) == 0){
+    return(id_not_recognized )
+  }
+
+	ix = grep(converted$species[1,1], idep_data$gmt_files)
+
+	if (length(ix) == 0) {
+    return(id_not_recognized)
+  }
+	
+	# If selected species is not the default "bestMatch", use that species directly
+	if(select_org != idep_data$species_choice[[1]]) {  
+		ix = grep(find_species_by_id(select_org)[1,1], idep_data$gmt_files)
+		if (length(ix) == 0) {
+      return(id_not_recognized)
+    }
+	}
+
+	pathway <- DBI::dbConnect(
+    drv = RSQLite::dbDriver("SQLite"),
+    dbname = idep_data$gmt_files[ix],
+    flags= RSQLite::SQLITE_RO
+  )
+
+	# Generate a list of geneset categories such as "GOBP", "KEGG" from file
+	gene_set_category <-  DBI::dbGetQuery(pathway, "select distinct * from categories") 
+	gene_set_category  <- sort(gene_set_category[, 1])
+	category_choices <- setNames(as.list(gene_set_category ), gene_set_category )
+	
+	# Set order of popular elements
+  top_choices <- c("GOBP", "GOCC", "GOMF", "KEGG")
+  other_choices <- names(category_choices)[
+    !(names(category_choices) %in% top_choices)
+  ]
+  category_choices <- category_choices[c(top_choices, other_choices)]
+
+	# Change names to the full description for display
+	names(category_choices)[match("GOBP", category_choices)] <- "GO Biological Process"
+	names(category_choices)[match("GOCC", category_choices)] <- "GO Cellular Component"
+	names(category_choices)[match("GOMF", category_choices)] <- "GO Molecular Function"
+	category_choices <- append(setNames("All", "All available gene sets"), category_choices)
+	
+	DBI::dbDisconnect(pathway)
+
+	return(category_choices )
+} 

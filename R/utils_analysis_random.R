@@ -319,9 +319,11 @@ extract_word <- function(word_list) {
 #' if (check$bool) {
 #'   return(check)
 #' }
-check_object_state <- function(check_exp,
-                               true_message,
-                               false_message = "") {
+check_object_state <- function(
+  check_exp,
+  true_message,
+  false_message = ""
+) {
   if (check_exp) {
     message(true_message)
     return(list(
@@ -363,9 +365,11 @@ gg_color_hue <- function(n) {
 #'   (User_ID, ensembl_ID, symbol)
 #'
 #' @return Data matrix with changed rownames
-rowname_id_swap <- function(data_matrix,
-                            all_gene_names,
-                            select_gene_id) {
+rowname_id_swap <- function(
+  data_matrix,
+  all_gene_names,
+  select_gene_id
+) {
   if (select_gene_id == "User_ID" && ncol(all_gene_names) == 1) {
     return(data_matrix)
   } else if (select_gene_id == "User_ID") {
@@ -413,98 +417,3 @@ rowname_id_swap <- function(data_matrix,
   }
 }
 
-#' READ GENE SETS
-read_gene_sets <- function (
-  all_gene_names,
-  converted,
-  go,
-  select_org,
-  gmt_range,
-  gmt_file,
-  idep_data
-) {
-	id_not_recognized = as.data.frame("ID not recognized!")
-
-  if(select_org == "NEW" && !is.null(gmt_file)) {
-    in_file <- gmt_file
-    in_file <- in_file$datapath
-
-    return(read_gmt(in_file))
-  }
-
-	if(ncol(all_gene_names) == 1) {
-    return(id_not_recognized)
-  } 
-
-	query_set <- all_gene_names[, 2]
-
-	ix = grep(converted$species[1,1], idep_data$gmt_files)
-	if (length(ix) == 0 ) {
-    return(id_not_recognized)
-  }
-	
-	# If selected species is not the default "bestMatch", use that species directly
-	if(select_org != "BestMatch") {  
-		ix = grep(find_species_by_id(select_org)[1, 1], idep_data$gmt_files)
-		if (length(ix) == 0) {
-      return(id_not_recognized )
-    }
-	}
-
-	pathway <- DBI::dbConnect(
-    drv = RSQLite::dbDriver("SQLite"),
-    dbname = idep_data$gmt_files[ix],
-    flags= RSQLite::SQLITE_RO
-  )
-	
-	if(is.null(go)) {
-    go <- "GOBP"
-  }
-
-
-	sql_query = paste(
-    "select distinct gene, pathwayID from pathway where gene IN ('",
-    paste(query_set, collapse = "', '"), "')",
-    sep = ""
-  )
-	# cat(paste0("\n\nhere:",GO,"There"))
-
-	if(go != "All") {
-    sql_query = paste0(sql_query, " AND category ='", go,"'")
-  } 
-	result <- DBI::dbGetQuery(pathway, sql_query)
-
-	if(dim(result)[1] == 0) {
-    return(list(x = as.data.frame("No matching species or gene ID file!")))
-  }
-	# list pathways and frequency of genes
-	pathway_ids <- stats::aggregate(
-    result$pathwayID,
-    by = list(unique.values = result$pathwayID),
-    FUN = length
-  )
-	pathway_ids <- pathway_ids[which(pathway_ids[, 2] >= gmt_range[1]), ]
-	pathway_ids <- pathway_ids[which(pathway_ids[, 2] <= gmt_range[2]), ]
-
-	if(dim(pathway_ids)[1] == 0) {
-    gene_sets = NULL
-  } else {
-    # Convert pathways into lists
-	  gene_sets <- lapply(
-      pathway_ids[, 1],
-      function(x)  result[which(result$pathwayID == x), 1]
-    )
-	  pathway_info <- DBI::dbGetQuery(
-      pathway,
-      paste(
-        "select distinct id,Description from pathwayInfo where id IN ('", 
-				paste(pathway_ids[, 1], collapse = "', '"), "') ", sep = ""
-      ) 
-    )
-	  ix = match(pathway_ids[, 1], pathway_info[, 1])
-	  names(gene_sets) <- pathway_info[ix, 2]  
-  }
-	
-	DBI::dbDisconnect(pathway)
-	return(gene_sets)
-} 
