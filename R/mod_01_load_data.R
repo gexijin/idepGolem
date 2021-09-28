@@ -348,7 +348,7 @@ mod_01_load_data_server <- function(id, idep_data) {
 
       gmt_choices <- gmt_category(
         converted = converted,
-        converted_data = converted_data,
+        converted_data = converted_data$data,
         select_org = input$select_org,
         gmt_file = input$gmt_file,
         idep_data = idep_data
@@ -360,7 +360,8 @@ mod_01_load_data_server <- function(id, idep_data) {
         converted = converted,
         all_gene_info = all_gene_info,
         converted_data = converted_data$data,
-        all_gene_names = all_gene_names
+        all_gene_names = all_gene_names,
+        gmt_choices = gmt_choices
       ))
     })
 

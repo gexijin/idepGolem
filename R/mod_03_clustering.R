@@ -237,30 +237,46 @@ mod_03_clustering_ui <- function(id) {
           tabPanel(
             title = "Enrichment",
             br(),
-            htmlOutput(outputId = ns("select_go_selector")),
-            h4("Geneset size: "),
-            fluidRow( 
+            fluidRow(
               column(
-                width = 6,
-                numericInput(
-                  inputId = ns("min_set_size"), 
-                  label = h5("Min:"), 
-                  min   = 5, 
-                  max   = 30, 
-                  value = 15,
-                  step  = 1
-                )
+                width = 4,
+                htmlOutput(outputId = ns("select_go_selector")),
               ),
               column(
-                width = 6,
-                numericInput(
-                  inputId = ns("max_set_size"), 
-                  label = h5("Max:"), 
-                  min   = 1000, 
-                  max   = 2000, 
-                  value = 2000,
-                  step  = 100
-                ) 
+                width = 8,
+                strong("Geneset size:"),
+                fluidRow(
+                  column(
+                    width = 3,
+                    numericInput(
+                      inputId = ns("min_set_size"), 
+                      label = h5("Min:"), 
+                      min   = 5, 
+                      max   = 30, 
+                      value = 15,
+                      step  = 1
+                    )
+                  ),
+                  column(
+                    width = 3,
+                    numericInput(
+                      inputId = ns("max_set_size"), 
+                      label = h5("Max:"), 
+                      min   = 1000, 
+                      max   = 2000, 
+                      value = 2000,
+                      step  = 100
+                    ) 
+                  )
+                )
+              ),
+              tags$style(
+                type='text/css',
+                "#clustering-min_set_size {width:100%; margin-top:-12px}"
+              ),
+              tags$style(
+                type='text/css',
+                "#clustering-max_set_size {width:100%; margin-top:-12px}"
               )
             )
           ),
@@ -433,11 +449,11 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
 
     # GMT choices for enrichment ----------
     output$select_go_selector <- renderUI({
-	    req(!is.null(pre_process$data()))
+	    req(!is.null(pre_process$gmt_choices()))
 
 	    selectInput(
         inputId = ns("select_go"),
-        label = NULL,
+        label = "Select Geneset:",
         choices = pre_process$gmt_choices(),
         selected = "GOBP"
       )
@@ -580,6 +596,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     # Enrichment Analysis ----------
     # Gene sets reactive
     gene_sets <- reactive({
+      req(!is.null(pre_process$all_gene_names()))
 
       read_gene_sets <- function(
         all_gene_names = pre_process$all_gene_names(),
@@ -590,6 +607,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         gmt_file = pre_process$gmt_file(),
         idep_data = idep_data
       )
+      browser()
       
       return(read_gene_sets)
     })
