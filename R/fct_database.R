@@ -425,7 +425,7 @@ convert_ensembl <- function(query, species, idep_date,
 }
 
 #' READ GENE SETS
-read_gene_sets <- function (
+read_pathway_sets <- function (
   all_gene_names,
   converted,
   go,
@@ -435,6 +435,7 @@ read_gene_sets <- function (
   idep_data,
   gene_info
 ) {
+  browser()
 	id_not_recognized = as.data.frame("ID not recognized!")
 
   if(select_org == "NEW" && !is.null(gmt_file)) {
@@ -446,9 +447,9 @@ read_gene_sets <- function (
 
 	if(ncol(all_gene_names) == 1) {
     return(id_not_recognized)
-  } 
+  }
 
-	query_set <- all_gene_names[, 2]
+  query_set <- all_gene_names[, 2]
 
   if(!is.null(gene_info)) {
     if(dim(gene_info)[1] > 1) {  
@@ -466,20 +467,17 @@ read_gene_sets <- function (
 	ix = grep(converted$species[1,1], idep_data$gmt_files)
   total_genes <- converted$species[1,7]
 
-	if (length(ix) == 0 ) {
-    return(id_not_recognized)
-  }
-	
 	# If selected species is not the default "bestMatch", use that species directly
 	if(select_org != "BestMatch") {  
 		ix = grep(find_species_by_id(select_org)[1, 1], idep_data$gmt_files)
-		if (length(ix) == 0) {
-      return(id_not_recognized )
-    }
 		total_genes <- org_info[which(
       org_info$id == as.numeric(select_org)
     ), 7]
 	}
+
+  if (length(ix) == 0) {
+    return(id_not_recognized )
+  }
 
 	pathway <- DBI::dbConnect(
     drv = RSQLite::dbDriver("SQLite"),
@@ -490,7 +488,6 @@ read_gene_sets <- function (
 	if(is.null(go)) {
     go <- "GOBP"
   }
-
 
 	sql_query = paste(
     "select distinct gene, pathwayID from pathway where gene IN ('",
@@ -507,6 +504,7 @@ read_gene_sets <- function (
 	if(dim(result)[1] == 0) {
     return(list(x = as.data.frame("No matching species or gene ID file!")))
   }
+
 	# list pathways and frequency of genes
 	pathway_ids <- stats::aggregate(
     result$pathwayID,
@@ -515,6 +513,7 @@ read_gene_sets <- function (
   )
 	pathway_ids <- pathway_ids[which(pathway_ids[, 2] >= gmt_range[1]), ]
 	pathway_ids <- pathway_ids[which(pathway_ids[, 2] <= gmt_range[2]), ]
+  colnames(pathway_ids) <- c("pathway_id", "overlap")
 
 	if(dim(pathway_ids)[1] == 0) {
     gene_sets = NULL
@@ -527,16 +526,33 @@ read_gene_sets <- function (
 	  pathway_info <- DBI::dbGetQuery(
       pathway,
       paste(
-        "select distinct id, Description from pathwayInfo where id IN ('", 
+        "select distinct id, n, Description from pathwayInfo where id IN ('", 
 				paste(pathway_ids[, 1], collapse = "', '"), "') ", sep = ""
       ) 
     )
-	  ix = match(pathway_ids[, 1], pathway_info[, 1])
+	  ix <- match(pathway_ids[, 1], pathway_info[, 1])
+    pathway_merge <- merge(
+      x = pathway_ids,
+      y = pathway_info,
+      by.x = "pathway_id",
+      by.y = "id"
+    )
 	  names(gene_sets) <- pathway_info[ix, 2]  
+
+    test <- total_genes - length(query_set)
+	  if (test < 0) {
+	    test <- 0
+ 	  }
   }
 	
 	DBI::dbDisconnect(pathway)
-	return(gene_sets)
+
+  # Gene sets and info for the enrichment analysis
+	return(list(
+    gene_sets = gene_sets,
+    pathway_info = pathway_merge,
+    total_gene_test = test
+  ))
 } 
 
 #' Database choices for the converted IDs

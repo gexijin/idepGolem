@@ -167,21 +167,7 @@ find_overlap <- function(
   minFDR,
   reduced = FALSE
 ) {
-	max_terms <- 15 # max number of enriched terms
-	id_not_recognized <- as.data.frame("ID not recognized!")
-
-  if(is.null(all_gene_names[, 2])){
-    return(id_not_recognized)
-  }
 	
-  query_set <- all_gene_names[, 2]
-
-  if(!is.null(g_info)) {
-    if(dim(g_info)[1] > 1) {  # some species does not have gene Info
-	    g_info <- g_info[which(g_info$gene_biotype == "protein_coding"), ]  
-	    query_set <- intersect(query_set, g_info[, 1])
-	  }
-  }
         
 	if(length(query_set) == 0) {
     return(id_not_recognized)
@@ -212,14 +198,7 @@ find_overlap <- function(
 	if( dim(result)[1] ==0) {return(as.data.frame("No matching species or gene ID file!" )) }
 
 	# given a pathway id, it finds the overlapped genes, symbol preferred
-	sharedGenesPrefered <- function(pathwayID) {
-		tem <- result[which(result[,2]== pathwayID ),1]
-		ix = match(tem, converted$conversionTable$ensembl_gene_id) # convert back to original
-		tem2 <- unique( converted$conversionTable$User_input[ix] )
-		if(length(unique(gInfo$symbol) )/dim(gInfo)[1] >.7  ) # if 70% genes has symbol in geneInfo
-		{ ix = match(tem, gInfo$ensembl_gene_id); 
-		tem2 <- unique( gInfo$symbol[ix] )      }
-	return( paste( tem2 ,collapse=" ",sep="") )}
+	
 	
 	x0 = table(result$pathwayID)					
 	x0 = as.data.frame( x0[which(x0>=Min_overlap)] )# remove low overlaps
@@ -270,3 +249,15 @@ find_overlap <- function(
 	dbDisconnect(pathway)
 	return(x )
 } 
+
+#' SHARED GENES FUNCTION
+shared_genes_prefered <- function(
+  pathway_id,
+  result) {
+		filter_ids <- result[which(result[, 2] == pathway_id), 1]
+		ix = match(filter_ids, converted$conversionTable$ensembl_gene_id) # convert back to original
+		tem2 <- unique(converted$conversionTable$User_input[ix] )
+		if(length(unique(gInfo$symbol) )/dim(gInfo)[1] >.7  ) # if 70% genes has symbol in geneInfo
+		{ ix = match(tem, gInfo$ensembl_gene_id); 
+		tem2 <- unique( gInfo$symbol[ix] )      }
+	return( paste( tem2 ,collapse=" ",sep="") )}

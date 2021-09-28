@@ -392,4 +392,15 @@ heatmap_data <- process_heatmap_data(
 )
 dist_funs <- dist_functions()
 hclust_funs <- hcluster_functions()
+
+gene_sets <- read_pathway_sets(
+  all_gene_names = gene_names[1:100, ],
+  converted = converted,
+  go = NULL,
+  select_org = "BestMatch",
+  gmt_range = c(15, 2000),
+  gmt_file = NULL,
+  idep_data = idep_data,
+  gene_info = all_gene_info
+)
 ```
