@@ -426,7 +426,7 @@ convert_ensembl <- function(query, species, idep_date,
 
 #' READ GENE SETS
 read_pathway_sets <- function (
-  all_gene_names,
+  all_gene_names_query,
   converted,
   go,
   select_org,
@@ -445,11 +445,11 @@ read_pathway_sets <- function (
     return(read_gmt(in_file))
   }
 
-	if(ncol(all_gene_names) == 1) {
+	if(ncol(all_gene_names_query) == 1) {
     return(id_not_recognized)
   }
 
-  query_set <- all_gene_names[, 2]
+  query_set <- all_gene_names_query[, 2]
 
   if(!is.null(gene_info)) {
     if(dim(gene_info)[1] > 1) {  

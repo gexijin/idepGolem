@@ -594,7 +594,6 @@ heat_click_info <- function(
   cluster_meth,
   click_data
 ) {
-
   pos1 <- InteractiveComplexHeatmap::getPositionFromClick(click)
     
   pos <- InteractiveComplexHeatmap::selectPosition(
@@ -607,6 +606,10 @@ heat_click_info <- function(
   
   row_index <- pos[1, "row_index"]
   column_index <- pos[1, "column_index"]
+
+  if (is.null(row_index)) {
+    return("Select a cell in the heatmap.")
+  }
 
   if (cluster_meth == 1) {
 
