@@ -251,9 +251,9 @@ mod_03_clustering_ui <- function(id) {
                     numericInput(
                       inputId = ns("min_set_size"), 
                       label = h5("Min:"), 
-                      min   = 5, 
+                      min   = 1, 
                       max   = 30, 
-                      value = 15,
+                      value = 2,
                       step  = 1
                     )
                   ),
@@ -278,7 +278,8 @@ mod_03_clustering_ui <- function(id) {
                 type='text/css',
                 "#clustering-max_set_size {width:100%; margin-top:-12px}"
               )
-            )
+            ),
+            DT::dataTableOutput(outputId = ns("pathway_data"))
           ),
 
           # Gene Standard Deviation Distribution ----------
@@ -593,23 +594,66 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       )
     })
 
+    pathway_gene_name_data <- reactive({
+      req(!is.null(input$select_gene_id))
+      req(!is.null(input$ht_brush))
+      
+      gene_names <- merge_data(
+        all_gene_names = pre_process$all_gene_names(),
+        data = shiny_env$submap_data,
+        merge_ID = input$select_gene_id
+      )
+      
+      # Only keep the gene names and scrap the data
+      gene_names <- dplyr::select_if(gene_names, is.character)
+    })
+
     # Enrichment Analysis ----------
     # Gene sets reactive
-    gene_sets <- reactive({
+    pathway_table <- reactive({
       req(!is.null(pre_process$all_gene_names()))
+      req(!is.null(pathway_gene_name_data()))
+      req(!is.null(input$select_go))
 
-      read_gene_sets <- function(
-        all_gene_names = pre_process$all_gene_names(),
+      gene_sets <- read_pathway_sets(
+        all_gene_names_query = pathway_gene_name_data(),
         converted = pre_process$converted(),
         go = input$select_go,
         select_org = pre_process$select_org(),
         gmt_range = c(input$min_set_size, input$max_set_size),
         gmt_file = pre_process$gmt_file(),
-        idep_data = idep_data
+        idep_data = idep_data,
+        gene_info = pre_process$all_gene_info()
       )
-      browser()
-      
-      return(read_gene_sets)
+
+      pathway_info <- find_overlap(
+        pathway_table = gene_sets$pathway_table,
+        query_set = gene_sets$query_set,
+        total_genes = gene_sets$total_genes,
+        processed_data = pre_process$data(),
+        gene_info = pre_process$all_gene_info(),
+        go = input$select_go,
+        idep_data = idep_data,
+        sub_pathway_files = gene_sets$pathway_files,
+        use_filtered_background = TRUE,
+        reduced = .75
+      )
+
+      return(pathway_info)
+    })
+
+    # Subheatmap Data Table ----------
+    output$pathway_data <- DT::renderDataTable({
+      req(!is.null(pathway_table()))
+
+      DT::datatable(
+        pathway_table(),
+        options = list(
+          pageLength = 10,
+          scrollX = "400px"
+        ),
+        rownames = TRUE
+      )
     })
 
     # Correlation Matrix ----------

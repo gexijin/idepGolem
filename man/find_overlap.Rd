@@ -2,20 +2,21 @@
 % Please edit documentation in R/fct_analysis_random.R
 \name{find_overlap}
 \alias{find_overlap}
-\title{FIND OVERLAP FUNCTION
-Main function. Find a query set of genes enriched with functional category}
+\title{OVERLAP FUNCTION ------------}
 \usage{
 find_overlap(
-  converted,
-  all_gene_names,
-  g_info,
-  GO,
-  selectOrg,
-  minFDR,
+  pathway_table,
+  query_set,
+  total_genes,
+  processed_data,
+  gene_info,
+  go,
+  idep_data,
+  sub_pathway_files,
+  use_filtered_background,
   reduced = FALSE
 )
 }
 \description{
-FIND OVERLAP FUNCTION
-Main function. Find a query set of genes enriched with functional category
+OVERLAP FUNCTION ------------
 }

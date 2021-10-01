@@ -393,14 +393,29 @@ heatmap_data <- process_heatmap_data(
 dist_funs <- dist_functions()
 hclust_funs <- hcluster_functions()
 
+devtools::load_all()
+
 gene_sets <- read_pathway_sets(
-  all_gene_names = gene_names[1:100, ],
+  all_gene_names_query = gene_names[1:300, ],
   converted = converted,
   go = NULL,
   select_org = "BestMatch",
-  gmt_range = c(15, 2000),
+  gmt_range = c(2, 2000),
   gmt_file = NULL,
   idep_data = idep_data,
   gene_info = all_gene_info
+)
+
+pathway_info <- find_overlap(
+  pathway_table = gene_sets$pathway_table,
+  query_set = gene_sets$query_set,
+  total_genes = gene_sets$total_genes,
+  processed_data = processed_data$data,
+  gene_info = all_gene_info,
+  go = "GOBP",
+  idep_data = idep_data,
+  sub_pathway_files = gene_sets$pathway_files,
+  use_filtered_background = TRUE,
+  reduced = .75
 )
 ```

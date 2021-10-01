@@ -156,108 +156,108 @@ find_overlap_gmt <- function(
   return(result)
 }
 
-#' FIND OVERLAP FUNCTION
-#' Main function. Find a query set of genes enriched with functional category
+#' OVERLAP FUNCTION ------------
 find_overlap <- function(
-  converted,
-  all_gene_names,
-  g_info,
-  GO,
-  selectOrg,
-  minFDR,
+  pathway_table,
+  query_set,
+  total_genes,
+  processed_data,
+  gene_info,
+  go,
+  idep_data,
+  sub_pathway_files,
+  use_filtered_background,
   reduced = FALSE
 ) {
-	
-        
-	if(length(query_set) == 0) {
-    return(id_not_recognized)
-  }
-	
-	ix = grep(converted$species[1,1], gmt_files)
-	total_genes <- converted$species[1, 7]
-	
-	if (length(ix) == 0) {
-    return(id_not_recognized)
-  }
-	
-	# If selected species is not the default "bestMatch", use that species directly
-	if(selectOrg != speciesChoice[[1]]) {  
-		ix = grep(findSpeciesById(selectOrg)[1,1], gmtFiles )
-		if (length(ix) == 0 ) {return(idNotRecognized )}
-		totalGenes <- orgInfo[which(orgInfo$id == as.numeric(selectOrg)),7]
-	}
-	pathway <- dbConnect(sqlite,gmtFiles[ix],flags=SQLITE_RO)
-	
-		
-	sqlQuery = paste( " select distinct gene,pathwayID from pathway where gene IN ('", paste(querySet,collapse="', '"),"')" ,sep="")
-	
-	#cat(paste0("HH",GO,"HH") )
-	
-	if( GO != "All") sqlQuery = paste0(sqlQuery, " AND category ='",GO,"'")
-	result <- dbGetQuery( pathway, sqlQuery  )
-	if( dim(result)[1] ==0) {return(as.data.frame("No matching species or gene ID file!" )) }
+  max_pval_filter <- 0.3
+  max_genes_background <- 30000
+  min_genes_background <- 2000
+  max_terms <- 15
+  min_fdr <- .05
+  reduced <- .9
 
-	# given a pathway id, it finds the overlapped genes, symbol preferred
-	
-	
-	x0 = table(result$pathwayID)					
-	x0 = as.data.frame( x0[which(x0>=Min_overlap)] )# remove low overlaps
-	if(dim(x0)[1] <= 5 ) return(idNotRecognized) # no data
-	colnames(x0)=c("pathwayID","overlap")
-	pathwayInfo <- dbGetQuery( pathway, paste( " select distinct id,n,Description from pathwayInfo where id IN ('", 
-							paste(x0$pathwayID,collapse="', '"),   "') ",sep="") )
-	
-	x = merge(x0,pathwayInfo, by.x='pathwayID', by.y='id')
-	#browser() 
-	test <- totalGenes - length(querySet)
-	if (test < 0) {
-	  test <- 0
-	}
-	x$Pval=phyper(x$overlap-1,length(querySet),test,as.numeric(x$n), lower.tail=FALSE )
-	x$FDR = p.adjust(x$Pval,method="fdr")
-	x <- x[ order( x$FDR)  ,]  # sort according to FDR
-	
-	if(dim(x)[1] > maxTerms ) x = x[1:maxTerms,]	
-	
-	if(min(x$FDR) > minFDR) x=as.data.frame("No significant enrichment found!") else {
-		x <- x[which(x$FDR < minFDR),] 
+  if(dim(pathway_table)[1] == 0 || is.null(pathway_table)) {
+    return(as.data.frame("No significant enrichment found!"))
+  }
 
-		x= cbind(x,sapply( x$pathwayID, sharedGenesPrefered ) )
-		colnames(x)[7]= "Genes"
-		x <- subset(x,select = c(FDR,overlap,n,description,Genes) )
-		colnames(x) = c("Corrected P value (FDR)", "Genes in list", "Total genes in category","Functional Category","Genes"  )
-		
-		# remove redudant gene sets
-		if(reduced != FALSE ){  # reduced=FALSE no filtering,  reduced = 0.9 filter sets overlap with 90%
-			n=  nrow(x)
-			tem=rep(TRUE,n )
-			geneLists = lapply(x$Genes, function(y) unlist( strsplit(as.character(y)," " )   ) )
-			for( i in 2:n)
-				for( j in 1:(i-1) ) { 
-				  if(tem[j]) { # skip if this one is already removed
-					  commonGenes = length(intersect(geneLists[i] ,geneLists[j] ) )
-					  if( commonGenes/ length(geneLists[j] ) > reduced )
-						tem[i] = FALSE	
+  pathway_table <- pathway_table[which(
+    pathway_table$overlap / length(query_set) /
+    (as.numeric(pathway_table$n) / total_genes) > 1
+  ), ]
+
+  pathway_table$pval <- stats::phyper(
+    pathway_table$overlap - 1,
+		length(query_set),
+		total_genes - length(query_set),   
+		as.numeric(pathway_table$n), 
+		lower.tail=FALSE
+  )
+  pathway_table <- subset(pathway_table, pathway_table$pval < max_pval_filter)
+
+  # Background genes -----------
+  if(!is.null(use_filtered_background)) {
+    if(
+      use_filtered_background && 
+      length(row.names(processed_data)) > min_genes_background &&
+      length(row.names(processed_data)) < max_genes_background + 1
+    ) {
+      pathway_table_bg <- background_pathway_sets(
+        processed_data = processed_data,
+        gene_info = gene_info,
+        sub_query = query_set,
+        go = go,
+        pathway_table = pathway_table,
+        idep_data = idep_data,
+        sub_pathway_files = sub_pathway_files
+      )
+
+      pathway_table$pval <- phyper(
+        pathway_table_bg$overlap - 1,
+        length(query_set),
+        length(rownames(processed_data)) - length(query_set),   
+        as.numeric(pathway_table_bg$overlap_bg),
+        lower.tail=FALSE
+      ) 
+    }
+  }
+
+  pathway_table$fdr <- stats::p.adjust(pathway_table$pval, method = "fdr")
+  pathway_table <- pathway_table[order(pathway_table$fdr), ]
+
+  if(dim(pathway_table)[1] > max_terms) {
+    pathway_table <- pathway_table[1:max_terms, ]
+  }
+  
+  if(min(pathway_table$fdr) > min_fdr) {
+    pathway_table <- as.data.frame("No significant enrichment found!")
+  } else {
+    pathway_table <- pathway_table[which(pathway_table$fdr < min_fdr), ]
+
+    pathway_table <- subset(pathway_table, select = c(fdr, overlap, n, description, gene_sets) )
+    colnames(pathway_table) <- c(
+      "Corrected P value (FDR)", "Genes in list", "Total genes in category",
+      "Functional Category", "Genes"
+    )
+
+    # Remove redudant gene sets
+		if(reduced != FALSE ){
+			n <- nrow(pathway_table)
+			tem <- rep(TRUE, n)
+			gene_lists = pathway_table$Genes
+			for(i in 2:n) {
+        for(j in 1:(i-1)) { 
+				  if(tem[j]) {
+					  common_genes = length(intersect(gene_lists[[i]], gene_lists[[j]]))
+					  if(common_genes/ length(gene_lists[[j]]) > reduced) {
+              tem[j] = FALSE
+            }	
 				  }			
-				}								
-			x <- x[which(tem),]		
+				}				
+      }
+								
+			pathway_table <- pathway_table[which(tem), ]		
 		}
-		
+  }
 
-	}
-			
-	dbDisconnect(pathway)
-	return(x )
-} 
-
-#' SHARED GENES FUNCTION
-shared_genes_prefered <- function(
-  pathway_id,
-  result) {
-		filter_ids <- result[which(result[, 2] == pathway_id), 1]
-		ix = match(filter_ids, converted$conversionTable$ensembl_gene_id) # convert back to original
-		tem2 <- unique(converted$conversionTable$User_input[ix] )
-		if(length(unique(gInfo$symbol) )/dim(gInfo)[1] >.7  ) # if 70% genes has symbol in geneInfo
-		{ ix = match(tem, gInfo$ensembl_gene_id); 
-		tem2 <- unique( gInfo$symbol[ix] )      }
-	return( paste( tem2 ,collapse=" ",sep="") )}
+  return(pathway_table)
+}

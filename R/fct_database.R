@@ -435,7 +435,6 @@ read_pathway_sets <- function (
   idep_data,
   gene_info
 ) {
-  browser()
 	id_not_recognized = as.data.frame("ID not recognized!")
 
   if(select_org == "NEW" && !is.null(gmt_file)) {
@@ -478,10 +477,11 @@ read_pathway_sets <- function (
   if (length(ix) == 0) {
     return(id_not_recognized )
   }
-
+  
+  pathway_files <- idep_data$gmt_files[ix]
 	pathway <- DBI::dbConnect(
     drv = RSQLite::dbDriver("SQLite"),
-    dbname = idep_data$gmt_files[ix],
+    dbname = pathway_files,
     flags= RSQLite::SQLITE_RO
   )
 	
@@ -489,7 +489,7 @@ read_pathway_sets <- function (
     go <- "GOBP"
   }
 
-	sql_query = paste(
+	sql_query <- paste(
     "select distinct gene, pathwayID from pathway where gene IN ('",
     paste(query_set, collapse = "', '"), "')",
     sep = ""
@@ -502,13 +502,13 @@ read_pathway_sets <- function (
 	result <- DBI::dbGetQuery(pathway, sql_query)
 
 	if(dim(result)[1] == 0) {
-    return(list(x = as.data.frame("No matching species or gene ID file!")))
+    return(pathway_table <- NULL)
   }
 
 	# list pathways and frequency of genes
 	pathway_ids <- stats::aggregate(
     result$pathwayID,
-    by = list(unique.values = result$pathwayID),
+    by = list(unique_values = result$pathwayID),
     FUN = length
   )
 	pathway_ids <- pathway_ids[which(pathway_ids[, 2] >= gmt_range[1]), ]
@@ -537,23 +537,97 @@ read_pathway_sets <- function (
       by.x = "pathway_id",
       by.y = "id"
     )
-	  names(gene_sets) <- pathway_info[ix, 2]  
+	  names(gene_sets) <- pathway_info[ix, 1]
 
-    test <- total_genes - length(query_set)
-	  if (test < 0) {
-	    test <- 0
- 	  }
+    pathway_merge$gene_sets <- gene_sets
   }
 	
 	DBI::dbDisconnect(pathway)
 
   # Gene sets and info for the enrichment analysis
 	return(list(
-    gene_sets = gene_sets,
-    pathway_info = pathway_merge,
-    total_gene_test = test
+    pathway_table = pathway_merge,
+    query_set = query_set,
+    total_genes = total_genes,
+    pathway_files = pathway_files
   ))
-} 
+}
+
+#' BACKGROUND GENES PATHWAY INFORMATION
+background_pathway_sets <- function(
+  processed_data,
+  gene_info,
+  sub_query,
+  go,
+  pathway_table,
+  idep_data,
+  sub_pathway_files
+){
+  browser()
+  query_set <- rownames(processed_data)
+  
+  if(!is.null(gene_info)) {
+    if(dim(gene_info)[1] > 1) {
+	    query_set <- intersect(
+        query_set, 
+        gene_info[which(gene_info$gene_biotype == "protein_coding"), 1]
+      )
+	  }  
+  }
+
+  pathway <- DBI::dbConnect(
+    drv = RSQLite::dbDriver("SQLite"),
+    dbname = sub_pathway_files,
+    flags= RSQLite::SQLITE_RO
+  )
+
+  if(length(intersect(query_set, sub_query) ) == 0) {
+    # If none of the selected genes are in background genes
+    return(list(
+      bg_result = as.data.frame(
+        "None of the selected genes are in the background genes!"
+      )
+    ))
+  }
+
+  # Make sure the background set includes the query set
+  query_set <- unique(c(query_set, sub_query))
+
+  sql_query <- paste(
+    "select distinct gene,pathwayID from pathway where gene IN ('", 
+    paste(query_set, collapse = "', '"), "')", sep = ""
+  )    
+  # Restrict to pathways with genes matching sub_query (Improves speed)
+  sql_query <- paste0(sql_query, " AND pathwayID IN ('",
+    paste(pathway_table$pathway_id, collapse = "', '"),"')" 
+  )
+
+  if(go != "All") {
+    sql_query <- paste0(sql_query, " AND category ='", go, "'")
+  }
+
+  results <- DBI::dbGetQuery(pathway, sql_query)
+
+  if(dim(results)[1] == 0) {
+    return(list(
+      bg_result = as.data.frame("No matching species or gene ID file!")
+    ))
+  }
+  bg_result <- table(results$pathwayID)
+  bg_result <- as.data.frame(bg_result)
+  colnames(bg_result) <- c("pathway_id", "overlap_bg")
+
+  pathway_table_bg <- merge(
+    pathway_table,
+    bg_result,
+    by = "pathway_id",
+    all.x = TRUE
+  )
+
+  DBI::dbDisconnect(pathway)
+  
+  return(pathway_table_bg)
+}
 
 #' Database choices for the converted IDs
 gmt_category <- function(
