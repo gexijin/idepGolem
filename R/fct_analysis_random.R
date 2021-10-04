@@ -12,80 +12,6 @@
 #' @name fct_analysis_random.R
 NULL
 
-
-##### work in process, want to rewrite other code that this function relays on first
-### Can we removed this?????
-#' FUNCTION_TITLE
-#'
-#' FUNCTION_DESCRIPTION
-#'
-#' @param x DESCRIPTION.
-#' @param bar DESCRIPTION.
-#' @param n DESCRIPTION.
-#' @param mycolor DESCRIPTION.
-#' @param clusterNames DESCRIPTION.
-#' @param sideColors DESCRIPTION.
-#'
-#' @return RETURN_DESCRIPTION
-#' @examples
-#' # ADD_EXAMPLES_HERE
-gene_group_heatmap <- function(x, bar = NULL, n = -1, mycolor = 1, clusterNames = NULL, sideColors = NULL) {
-  # number of genes to show
-  ngenes <- as.character(table(bar))
-  if (length(bar) > n && n != -1) {
-    ix <- sort(sample(1:length(bar), n))
-    bar <- bar[ix]
-    x <- x[ix, ]
-  }
-  if (!is.null(bar)) {
-    if (is.null(sideColors)) {
-      sideColors <- mycolors
-    }
-  }
-
-  # this will cutoff very large values, which could skew the color
-  x <- as.matrix(x) - apply(x, 1, mean)
-  cutoff <- median(unlist(x)) + 3 * sd(unlist(x))
-  x[x > cutoff] <- cutoff
-  cutoff <- median(unlist(x)) - 3 * sd(unlist(x))
-  x[x < cutoff] <- cutoff
-  # colnames(x)= detectGroups(colnames(x))
-  if (is.null(bar)) { # no side colors
-    heatmap.2(x,
-      Rowv = F, Colv = F, dendrogram = "none",
-      col = heatColors[as.integer(mycolor), ], density.info = "none", trace = "none", scale = "none", keysize = .3,
-      key = F, labRow = F
-      # ,RowSideColors = mycolors[bar]
-      , margins = c(8, 24),
-      srtCol = 45
-    )
-  } else {
-    heatmap.2(x,
-      Rowv = F, Colv = F, dendrogram = "none",
-      col = heatColors[as.integer(mycolor), ], density.info = "none", trace = "none", scale = "none", keysize = .3,
-      key = F, labRow = F,
-      RowSideColors = sideColors[bar],
-      margins = c(8, 24),
-      srtCol = 45
-    )
-  }
-
-  if (!is.null(bar)) {
-    legend.text <- paste("Cluster ", toupper(letters)[unique(bar)], " (N=", ngenes, ")", sep = "")
-    if (!is.null(clusterNames) && length(clusterNames) >= length(unique(bar))) {
-      legend.text <- paste(clusterNames[1:length(unique(bar))], " (N=", ngenes, ")", sep = "")
-    }
-
-    par(lend = 1) # square line ends for the color legend
-    legend("topright", # location of the legend on the heatmap plot
-      legend = legend.text, # category labels
-      col = sideColors, # color key
-      lty = 1, # line style
-      lwd = 10
-    ) # line width
-  }
-}
-
 ### work in process
 #' FUNCTION_TITLE
 #'
@@ -156,7 +82,43 @@ find_overlap_gmt <- function(
   return(result)
 }
 
-#' OVERLAP FUNCTION ------------
+#' Find overlap for pathway analysis
+#' 
+#' Use the pathway table from the read_pathway_sets function
+#' to calculate adjusted p-values. Adjusted p-values determine
+#' the enriched pathways from the selected qeury.
+#' 
+#' @param pathway_table Results from the read_pathway_sets
+#'   query. If NULL or 0 rows there is no significant
+#'   enrichment
+#' @param query_set The vector of IDs that the enrichment
+#'   analysis is being performed on
+#' @param total_genes Length of the query set subtracted from
+#'   the total number of genes in the database. Could change
+#'   within the function if the background set changes to the
+#'   filtered genes.
+#' @param processed_data Data that has been filtered and
+#'   transformed in the pre_process function
+#' @param gene_info The gene info from the converted IDs and
+#'   the function gene_info()
+#' @param go Section of the database to query for pathway
+#'   analysis
+#' @param idep_data Data built in to idep
+#' @param sub_pathway_files GMT files in the database that
+#'   contain information for the matched species
+#' @param use_filtered_background T/F Use the genes that
+#'   passed the pre_process filter as the backgrounf
+#' @param select_org Input for what organism the IDs are 
+#'   pertaining to
+#' @param reduced T/F Remove gene sets that are redudant
+#'   from the final result
+#' 
+#' @return If there is significant enrichment, the data frame
+#'   that is returned has a pathway for each row with the
+#'   total genes in the database mapping to it as well as the
+#'   number of genes in the query that map to it. It also
+#'   contains a column for the p-value and a list of the
+#'   specific IDs included in the pathway from the query.
 find_overlap <- function(
   pathway_table,
   query_set,
@@ -167,6 +129,7 @@ find_overlap <- function(
   idep_data,
   sub_pathway_files,
   use_filtered_background,
+  select_org,
   reduced = FALSE
 ) {
   max_pval_filter <- 0.3
@@ -174,10 +137,25 @@ find_overlap <- function(
   min_genes_background <- 2000
   max_terms <- 15
   min_fdr <- .05
-  reduced <- .9
+  if(reduced) {
+    reduced <- .9
+  }
+  error_msg <- data.frame("Enrichment" = "No significant enrichment found!")
+
+  if(select_org == "NEW" && is.null(pathway_table)) {
+    return(data.frame("Enrichment" = "No GMT file provided!"))
+  } else if (select_org == "NEW") {
+    find_overlap_gmt(
+      query = query_set,
+      gene_set = pathway_table,
+      min_fdr = .2,
+      min_size = 2,
+      max_size = 10000
+    )
+  }
 
   if(dim(pathway_table)[1] == 0 || is.null(pathway_table)) {
-    return(as.data.frame("No significant enrichment found!"))
+    return(error_msg)
   }
 
   pathway_table <- pathway_table[which(
@@ -229,13 +207,15 @@ find_overlap <- function(
   }
   
   if(min(pathway_table$fdr) > min_fdr) {
-    pathway_table <- as.data.frame("No significant enrichment found!")
+    pathway_table <- error_msg
   } else {
     pathway_table <- pathway_table[which(pathway_table$fdr < min_fdr), ]
 
     pathway_table <- subset(pathway_table, select = c(fdr, overlap, n, description, gene_sets) )
+    pathway_table$n <- as.numeric(pathway_table$n)
+    pathway_table$fdr <-  formatC(pathway_table$fdr, format = "e", digits = 2)
     colnames(pathway_table) <- c(
-      "Corrected P value (FDR)", "Genes in list", "Total genes in category",
+      "Corrected P value (FDR)", "Genes in query", "Total genes in category",
       "Functional Category", "Genes"
     )
 

@@ -6,6 +6,24 @@
 \usage{
 gmt_category(converted, converted_data, select_org, gmt_file, idep_data)
 }
+\arguments{
+\item{converted}{Conversion information from the original IDs returned
+from the convert_id() function}
+
+\item{converted_data}{Data matrix with the converted ensembl_IDs}
+
+\item{select_org}{Input for what organism the IDs are pertaining to}
+
+\item{gmt_file}{Inputed gene set pathway file for NEW species}
+
+\item{idep_data}{Data built in to idep}
+}
+\value{
+A character vector of names of the section of data to perform
+  pathway analysis on
+}
 \description{
-Database choices for the converted IDs
+This function provides a list of the portions of the
+database to query that contain genes from the converted
+IDs.
 }

@@ -241,6 +241,16 @@ mod_03_clustering_ui <- function(id) {
               column(
                 width = 4,
                 htmlOutput(outputId = ns("select_go_selector")),
+                checkboxInput(
+                  inputId = ns("filtered_background"), 
+                  label = "Use filtered data as background in enrichment (slow)", 
+                  value = TRUE
+                ),
+                checkboxInput(
+                  inputId = ns("remove_redudant"),
+                  label = "Remove Redudant Gene Sets",
+                  value = FALSE
+                )
               ),
               column(
                 width = 8,
@@ -279,7 +289,7 @@ mod_03_clustering_ui <- function(id) {
                 "#clustering-max_set_size {width:100%; margin-top:-12px}"
               )
             ),
-            DT::dataTableOutput(outputId = ns("pathway_data"))
+            uiOutput(outputId = ns("pathway_data"))
           ),
 
           # Gene Standard Deviation Distribution ----------
@@ -594,65 +604,153 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       )
     })
 
-    pathway_gene_name_data <- reactive({
-      req(!is.null(input$select_gene_id))
-      req(!is.null(input$ht_brush))
-      
-      gene_names <- merge_data(
-        all_gene_names = pre_process$all_gene_names(),
-        data = shiny_env$submap_data,
-        merge_ID = input$select_gene_id
-      )
-      
-      # Only keep the gene names and scrap the data
-      gene_names <- dplyr::select_if(gene_names, is.character)
-    })
-
     # Enrichment Analysis ----------
     # Gene sets reactive
     pathway_table <- reactive({
-      req(!is.null(pre_process$all_gene_names()))
-      req(!is.null(pathway_gene_name_data()))
-      req(!is.null(input$select_go))
+      req(!is.null(input$select_gene_id))
+      req(!is.null(input$ht_brush))
 
-      gene_sets <- read_pathway_sets(
-        all_gene_names_query = pathway_gene_name_data(),
-        converted = pre_process$converted(),
-        go = input$select_go,
-        select_org = pre_process$select_org(),
-        gmt_range = c(input$min_set_size, input$max_set_size),
-        gmt_file = pre_process$gmt_file(),
-        idep_data = idep_data,
-        gene_info = pre_process$all_gene_info()
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Running Analysis",
+        color = "#000000"
       )
+      
+      pathway_info <- list()
+      
+      if (input$cluster_meth == 1) {
+        gene_names <- merge_data(
+          all_gene_names = pre_process$all_gene_names(),
+          data = shiny_env$submap_data,
+          merge_ID = input$select_gene_id
+        )
+      
+        # Only keep the gene names and scrap the data
+        gene_names_query <- dplyr::select_if(gene_names, is.character)
 
-      pathway_info <- find_overlap(
-        pathway_table = gene_sets$pathway_table,
-        query_set = gene_sets$query_set,
-        total_genes = gene_sets$total_genes,
-        processed_data = pre_process$data(),
-        gene_info = pre_process$all_gene_info(),
-        go = input$select_go,
-        idep_data = idep_data,
-        sub_pathway_files = gene_sets$pathway_files,
-        use_filtered_background = TRUE,
-        reduced = .75
-      )
+        req(!is.null(pre_process$all_gene_names()))
+        req(!is.null(input$select_go))
+
+        gene_sets <- read_pathway_sets(
+          all_gene_names_query = gene_names_query,
+          converted = pre_process$converted(),
+          go = input$select_go,
+          select_org = pre_process$select_org(),
+          gmt_range = c(input$min_set_size, input$max_set_size),
+          gmt_file = pre_process$gmt_file(),
+          idep_data = idep_data,
+          gene_info = pre_process$all_gene_info()
+        )
+
+        pathway_info[["Hierarchical_Selection"]] <- find_overlap(
+          pathway_table = gene_sets$pathway_table,
+          query_set = gene_sets$query_set,
+          total_genes = gene_sets$total_genes,
+          processed_data = pre_process$data(),
+          gene_info = pre_process$all_gene_info(),
+          go = input$select_go,
+          idep_data = idep_data,
+          select_org = pre_process$select_org(),
+          sub_pathway_files = gene_sets$pathway_files,
+          use_filtered_background = input$filtered_background,
+          reduced = input$remove_redudant
+        )
+      } else if (input$cluster_meth == 2) {
+        # Get the cluster number and Gene IDs
+        row_ord <- ComplexHeatmap::row_order(shiny_env$ht)
+        for (i in 1:length(row_ord)) {
+          if (i == 1) {
+          clusts <- data.frame(
+            "cluster" = rep(names(row_ord[i]), length(row_ord[[i]])),
+            "row_order" = row_ord[[i]]
+          )
+          } else {
+          tem <- data.frame(
+            "cluster" = rep(names(row_ord[i]), length(row_ord[[i]])),
+            "row_order" = row_ord[[i]]
+          )
+          clusts <- rbind(clusts, tem)
+          }
+        }
+        clusts$id <- rownames(heatmap_data()[clusts$row_order, ]) 
+
+        for (i in 1:length(shiny_env$click_data)) {
+          cluster_data <- shiny_env$click_data[[i]]
+
+          gene_names <- merge_data(
+            all_gene_names = pre_process$all_gene_names(),
+            data = cluster_data,
+            merge_ID = input$select_gene_id
+          )
+      
+          # Only keep the gene names and scrap the data
+          gene_names_query <- dplyr::select_if(gene_names, is.character)
+
+          req(!is.null(pre_process$all_gene_names()))
+          req(!is.null(input$select_go))
+
+          gene_sets <- read_pathway_sets(
+            all_gene_names_query = gene_names_query,
+            converted = pre_process$converted(),
+            go = input$select_go,
+            select_org = pre_process$select_org(),
+            gmt_range = c(input$min_set_size, input$max_set_size),
+            gmt_file = pre_process$gmt_file(),
+            idep_data = idep_data,
+            gene_info = pre_process$all_gene_info()
+          )
+
+          pathway_sub_info <- find_overlap(
+            pathway_table = gene_sets$pathway_table,
+            query_set = gene_sets$query_set,
+            total_genes = gene_sets$total_genes,
+            processed_data = pre_process$data(),
+            gene_info = pre_process$all_gene_info(),
+            go = input$select_go,
+            idep_data = idep_data,
+            select_org = pre_process$select_org(),
+            sub_pathway_files = gene_sets$pathway_files,
+            use_filtered_background = TRUE,
+            reduced = FALSE
+          )
+
+          # Get cluster by matching gene ID from query to cluster number
+          clust_num <- clusts$cluster[clusts$id == gene_names_query[1, 2]]
+
+          pathway_info[[paste0("Cluster_", clust_num)]] <- pathway_sub_info
+        }
+      }
+
+      shinybusy::remove_modal_spinner()
 
       return(pathway_info)
     })
 
-    # Subheatmap Data Table ----------
-    output$pathway_data <- DT::renderDataTable({
+    # Pathway Data Table ----------
+    output$pathway_data <- renderUI({
       req(!is.null(pathway_table()))
 
-      DT::datatable(
-        pathway_table(),
-        options = list(
-          pageLength = 10,
-          scrollX = "400px"
-        ),
-        rownames = TRUE
+      lapply(names(pathway_table()), function(x) {
+        output[[x]] = DT::renderDataTable({
+          DT::datatable(
+            pathway_table()[[x]],
+            options = list(
+              pageLength = 20,
+              scrollX = "400px",
+              dom = 'ft'
+            ),
+            rownames = FALSE
+          )
+        })
+      })
+  
+      return(lapply(names(pathway_table()), function(x) {
+        tagList(
+          br(),
+          strong(h3(gsub("_", " ", x))),
+          DT::dataTableOutput(ns(x))
+        )
+      })
       )
     })
 

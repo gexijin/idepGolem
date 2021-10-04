@@ -381,7 +381,7 @@ merged_data[grep("H4c1", merged_data$symbol),]
 
 heatmap_data <- process_heatmap_data(
   data = processed_data$data,
-  n_genes_max = 100,
+  n_genes_max = 50,
   n_genes_min = 0,
   gene_centering = TRUE,
   gene_normalize = FALSE,

@@ -14,6 +14,7 @@ find_overlap(
   idep_data,
   sub_pathway_files,
   use_filtered_background,
+  select_org,
   reduced = FALSE
 )
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/fct_database.R
 \name{background_pathway_sets}
 \alias{background_pathway_sets}
-\title{BACKGROUND GENES PATHWAY INFORMATION}
+\title{Background gene pathway sets}
 \usage{
 background_pathway_sets(
   processed_data,
@@ -14,6 +14,33 @@ background_pathway_sets(
   sub_pathway_files
 )
 }
+\arguments{
+\item{processed_data}{The data matrix that has been through
+the pre-processing function}
+
+\item{gene_info}{The gene info from the converted IDs and
+the function gene_info()}
+
+\item{sub_query}{Query that the pathway analysis is being
+performed for}
+
+\item{go}{Section of the database to query for pathway
+analysis}
+
+\item{pathway_table}{Table from the initial querying for the
+sub-query}
+
+\item{idep_data}{Data built in to idep}
+
+\item{sub_pathway_files}{The subset of GMT files that contain
+information for the matched species}
+}
+\value{
+Pathway gene set table for the background genes. Used
+  in find_overlap to calculate pvals for the filtered background
+}
 \description{
-BACKGROUND GENES PATHWAY INFORMATION
+This function reads the pathway sets for the filtered
+gene IDs and performs pathway analysis for the query
+with the filtered background.
 }

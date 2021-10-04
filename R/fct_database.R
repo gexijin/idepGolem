@@ -229,8 +229,11 @@ find_species_by_id_name <- function(species_id, org_info) {
 #' @return RETURN_DESCRIPTION
 #' @examples
 #' # ADD_EXAMPLES_HERE
-convert_id <- function(query, idep_data,
-                       select_org = "BestMatch") {
+convert_id <- function(
+  query,
+  idep_data,
+  select_org = "BestMatch"
+) {
   query <- gsub(pattern = "\"|\'", "", x = query)
   # remove " in gene ids, mess up SQL query
   # remove ' in gene ids
@@ -357,7 +360,7 @@ convert_id <- function(query, idep_data,
 }
 
 
-
+#CAN WE GET RID OF THIS?
 #' FUNCTION_TITLE
 #'
 #' FUNCTION_DESCRIPTION
@@ -370,8 +373,12 @@ convert_id <- function(query, idep_data,
 #' @return RETURN_DESCRIPTION
 #' @examples
 #' # ADD_EXAMPLES_HERE
-convert_ensembl <- function(query, species, idep_date,
-                            convert_type = "entrez") {
+convert_ensembl <- function(
+  query,
+  species,
+  idep_data,
+  convert_type = "entrez"
+) {
   query_set <- clean_query(query_input = query)
   # note uses species Identifying
   species_id <-
@@ -424,7 +431,36 @@ convert_ensembl <- function(query, species, idep_date,
   return(tem)
 }
 
-#' READ GENE SETS
+#' Read pathway sets for gene query
+#' 
+#' This function provides the gene set information
+#' to perform enrichment analysis on the provided
+#' query.
+#' 
+#' @param all_gene_names_query Subsetted rows of the 
+#'   all_gene_names data frame to query the database with
+#' @param converted Conversion information from the original
+#'   IDs returned from the convert_id() function
+#' @param go Section of the database to query for pathway
+#'   analysis
+#' @param select_org Input for what organism the IDs are 
+#'   pertaining to
+#' @param gmt_range c(min, max) for the min and max size
+#'   of the gene sets to limit
+#' @param gmt_file For NEW species the gmt file to use
+#'   for the pathway analysis
+#' @param idep_data Data built in to idep
+#' @param gene_info The gene info from the converted IDs and
+#'   the function gene_info()
+#' 
+#' @return This function returns a list with values that are
+#'   used in the find_overlap function. The list contains
+#'   pathway_table which is the overlap and total genes for
+#'   each pathway that is enriched in the query. The list
+#'   also contains the query_set of genes, the total_genes
+#'   number which is used in the calculation of the p-values
+#'   and the pathway files that contain gmt information on
+#'   the mathced species.
 read_pathway_sets <- function (
   all_gene_names_query,
   converted,
@@ -437,7 +473,9 @@ read_pathway_sets <- function (
 ) {
 	id_not_recognized = as.data.frame("ID not recognized!")
 
-  if(select_org == "NEW" && !is.null(gmt_file)) {
+  if(select_org == "NEW" && is.null(gmt_file)) {
+    return(NULL)
+  } else if (select_org == "NEW" && !is.null(gmt_file)) {
     in_file <- gmt_file
     in_file <- in_file$datapath
 
@@ -494,7 +532,6 @@ read_pathway_sets <- function (
     paste(query_set, collapse = "', '"), "')",
     sep = ""
   )
-	# cat(paste0("\n\nhere:",GO,"There"))
 
 	if(go != "All") {
     sql_query = paste0(sql_query, " AND category ='", go,"'")
@@ -505,18 +542,16 @@ read_pathway_sets <- function (
     return(pathway_table <- NULL)
   }
 
-	# list pathways and frequency of genes
+	# List pathways and frequency of genes
 	pathway_ids <- stats::aggregate(
     result$pathwayID,
     by = list(unique_values = result$pathwayID),
     FUN = length
   )
-	pathway_ids <- pathway_ids[which(pathway_ids[, 2] >= gmt_range[1]), ]
-	pathway_ids <- pathway_ids[which(pathway_ids[, 2] <= gmt_range[2]), ]
   colnames(pathway_ids) <- c("pathway_id", "overlap")
 
 	if(dim(pathway_ids)[1] == 0) {
-    gene_sets = NULL
+    return(pathway_table <- NULL)
   } else {
     # Convert pathways into lists
 	  gene_sets <- lapply(
@@ -537,6 +572,8 @@ read_pathway_sets <- function (
       by.x = "pathway_id",
       by.y = "id"
     )
+    pathway_ids <- pathway_ids[which(pathway_ids$n >= gmt_range[1]), ]
+	  pathway_ids <- pathway_ids[which(pathway_ids$n <= gmt_range[2]), ]
 	  names(gene_sets) <- pathway_info[ix, 1]
 
     pathway_merge$gene_sets <- gene_sets
@@ -553,7 +590,28 @@ read_pathway_sets <- function (
   ))
 }
 
-#' BACKGROUND GENES PATHWAY INFORMATION
+#' Background gene pathway sets
+#' 
+#' This function reads the pathway sets for the filtered
+#' gene IDs and performs pathway analysis for the query
+#' with the filtered background.
+#' 
+#' @param processed_data The data matrix that has been through
+#'   the pre-processing function
+#' @param gene_info The gene info from the converted IDs and
+#'   the function gene_info()
+#' @param sub_query Query that the pathway analysis is being
+#'   performed for
+#' @param go Section of the database to query for pathway
+#'   analysis
+#' @param pathway_table Table from the initial querying for the
+#'  sub-query
+#' @param idep_data Data built in to idep
+#' @param sub_pathway_files The subset of GMT files that contain
+#'   information for the matched species
+#' 
+#' @return Pathway gene set table for the background genes. Used
+#'   in find_overlap to calculate pvals for the filtered background
 background_pathway_sets <- function(
   processed_data,
   gene_info,
@@ -563,7 +621,6 @@ background_pathway_sets <- function(
   idep_data,
   sub_pathway_files
 ){
-  browser()
   query_set <- rownames(processed_data)
   
   if(!is.null(gene_info)) {
@@ -630,6 +687,20 @@ background_pathway_sets <- function(
 }
 
 #' Database choices for the converted IDs
+#' 
+#' This function provides a list of the portions of the
+#' database to query that contain genes from the converted
+#' IDs. 
+#' 
+#' @param converted Conversion information from the original IDs returned
+#'   from the convert_id() function
+#' @param converted_data Data matrix with the converted ensembl_IDs
+#' @param select_org Input for what organism the IDs are pertaining to
+#' @param gmt_file Inputed gene set pathway file for NEW species
+#' @param idep_data Data built in to idep
+#' 
+#' @return A character vector of names of the section of data to perform
+#'   pathway analysis on
 gmt_category <- function(
   converted,
   converted_data,
@@ -693,5 +764,5 @@ gmt_category <- function(
 	
 	DBI::dbDisconnect(pathway)
 
-	return(category_choices )
+	return(category_choices)
 } 
