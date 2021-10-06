@@ -215,8 +215,7 @@ mod_03_clustering_ui <- function(id) {
                 br(),
                 h5("Selected Cell (Submap):"),
                 uiOutput(
-                  outputId = ns("ht_click_content"),
-                  placeholder = TRUE
+                  outputId = ns("ht_click_content")
                 )
               ),
               column(
@@ -240,7 +239,10 @@ mod_03_clustering_ui <- function(id) {
             fluidRow(
               column(
                 width = 4,
-                htmlOutput(outputId = ns("select_go_selector")),
+                htmlOutput(outputId = ns("select_go_selector"))
+              ),
+              column(
+                width = 8,
                 checkboxInput(
                   inputId = ns("filtered_background"), 
                   label = "Use filtered data as background in enrichment (slow)", 
@@ -250,34 +252,6 @@ mod_03_clustering_ui <- function(id) {
                   inputId = ns("remove_redudant"),
                   label = "Remove Redudant Gene Sets",
                   value = FALSE
-                )
-              ),
-              column(
-                width = 8,
-                strong("Geneset size:"),
-                fluidRow(
-                  column(
-                    width = 3,
-                    numericInput(
-                      inputId = ns("min_set_size"), 
-                      label = h5("Min:"), 
-                      min   = 1, 
-                      max   = 30, 
-                      value = 2,
-                      step  = 1
-                    )
-                  ),
-                  column(
-                    width = 3,
-                    numericInput(
-                      inputId = ns("max_set_size"), 
-                      label = h5("Max:"), 
-                      min   = 1000, 
-                      max   = 2000, 
-                      value = 2000,
-                      step  = 100
-                    ) 
-                  )
                 )
               ),
               tags$style(
@@ -636,7 +610,6 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
           converted = pre_process$converted(),
           go = input$select_go,
           select_org = pre_process$select_org(),
-          gmt_range = c(input$min_set_size, input$max_set_size),
           gmt_file = pre_process$gmt_file(),
           idep_data = idep_data,
           gene_info = pre_process$all_gene_info()
@@ -694,7 +667,6 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
             converted = pre_process$converted(),
             go = input$select_go,
             select_org = pre_process$select_org(),
-            gmt_range = c(input$min_set_size, input$max_set_size),
             gmt_file = pre_process$gmt_file(),
             idep_data = idep_data,
             gene_info = pre_process$all_gene_info()

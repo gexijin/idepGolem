@@ -445,8 +445,6 @@ convert_ensembl <- function(
 #'   analysis
 #' @param select_org Input for what organism the IDs are 
 #'   pertaining to
-#' @param gmt_range c(min, max) for the min and max size
-#'   of the gene sets to limit
 #' @param gmt_file For NEW species the gmt file to use
 #'   for the pathway analysis
 #' @param idep_data Data built in to idep
@@ -466,7 +464,6 @@ read_pathway_sets <- function (
   converted,
   go,
   select_org,
-  gmt_range,
   gmt_file,
   idep_data,
   gene_info
@@ -474,7 +471,7 @@ read_pathway_sets <- function (
 	id_not_recognized = as.data.frame("ID not recognized!")
 
   if(select_org == "NEW" && is.null(gmt_file)) {
-    return(NULL)
+    return(as.data.frame("No GMT file provided!"))
   } else if (select_org == "NEW" && !is.null(gmt_file)) {
     in_file <- gmt_file
     in_file <- in_file$datapath
@@ -506,7 +503,10 @@ read_pathway_sets <- function (
 
 	# If selected species is not the default "bestMatch", use that species directly
 	if(select_org != "BestMatch") {  
-		ix = grep(find_species_by_id(select_org)[1, 1], idep_data$gmt_files)
+		ix = grep(
+      find_species_by_id(select_org, idep_data$org_info)[1, 1],
+      idep_data$gmt_files
+    )
 		total_genes <- org_info[which(
       org_info$id == as.numeric(select_org)
     ), 7]
@@ -535,7 +535,7 @@ read_pathway_sets <- function (
 
 	if(go != "All") {
     sql_query = paste0(sql_query, " AND category ='", go,"'")
-  } 
+  }
 	result <- DBI::dbGetQuery(pathway, sql_query)
 
 	if(dim(result)[1] == 0) {
@@ -572,8 +572,6 @@ read_pathway_sets <- function (
       by.x = "pathway_id",
       by.y = "id"
     )
-    pathway_ids <- pathway_ids[which(pathway_ids$n >= gmt_range[1]), ]
-	  pathway_ids <- pathway_ids[which(pathway_ids$n <= gmt_range[2]), ]
 	  names(gene_sets) <- pathway_info[ix, 1]
 
     pathway_merge$gene_sets <- gene_sets
@@ -732,7 +730,10 @@ gmt_category <- function(
 	
 	# If selected species is not the default "bestMatch", use that species directly
 	if(select_org != idep_data$species_choice[[1]]) {  
-		ix = grep(find_species_by_id(select_org)[1,1], idep_data$gmt_files)
+		ix = grep(
+      find_species_by_id(select_org, idep_data$org_info)[1,1],
+      idep_data$gmt_files
+    )
 		if (length(ix) == 0) {
       return(id_not_recognized)
     }

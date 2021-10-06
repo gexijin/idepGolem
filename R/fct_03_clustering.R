@@ -869,28 +869,3 @@ cor_plot <- function(
   )
 }
 
-k_means_go_data <- function(
-  select_go,
-  cluster_meth,
-  click_data,
-  gmt_file
-) {
-  if (select_go == "ID not recognized!") {
-    return(as.matrix("Gene ID not recognized."))
-  }
-
-  pp = 0
-  min_fdr = 0.01
-
-  if (cluster_meth == 2) {
-    for(i in 1:length(brush_data)) {
-      query = rownames(click_data[[i]])
-
-      if(!is.null(gmt_file)) {
-        result <- find_overlap_gmt(query)
-      }
-    }
-  }
-
-
-}

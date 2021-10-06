@@ -399,8 +399,7 @@ gene_sets <- read_pathway_sets(
   all_gene_names_query = gene_names[1:300, ],
   converted = converted,
   go = NULL,
-  select_org = "BestMatch",
-  gmt_range = c(2, 2000),
+  select_org = "BestMatch"
   gmt_file = NULL,
   idep_data = idep_data,
   gene_info = all_gene_info
