@@ -869,3 +869,19 @@ cor_plot <- function(
   )
 }
 
+#' GET RID OF LISTS IN A DATA FRAME
+data_frame_with_list <- function(data_object) {
+  set_lists_to_chars <- function(x) { 
+    if(class(x) == 'list') {
+      y <- paste(unlist(x[1]), sep='', collapse=', ')
+    } else {
+      y <- x
+    } 
+    return(y)
+  }
+  new_frame <- data.frame(
+    lapply(data_object, set_lists_to_chars),
+    stringsAsFactors = F
+  )
+  return(new_frame)
+}

@@ -396,7 +396,7 @@ hclust_funs <- hcluster_functions()
 devtools::load_all()
 
 gene_sets <- read_pathway_sets(
-  all_gene_names_query = gene_names[1:300, ],
+  all_gene_names_query = gene_names[1:500, ],
   converted = converted,
   go = NULL,
   select_org = "BestMatch",
@@ -418,4 +418,5 @@ pathway_info <- find_overlap(
   select_org = "BestMatch",
   reduced = .75
 )
+pathway_info
 ```

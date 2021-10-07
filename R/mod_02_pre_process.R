@@ -691,7 +691,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       converted = reactive(load_data$converted()),
       select_org = reactive(load_data$select_org()),
       gmt_file = reactive(load_data$gmt_file()),
-      all_gene_info = reactive(load_data$all_gene_info())
+      all_gene_info = reactive(load_data$all_gene_info()),
+      data_file_format = reactive(load_data$data_file_format())
     )
   })
 }

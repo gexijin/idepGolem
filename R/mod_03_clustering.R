@@ -263,6 +263,7 @@ mod_03_clustering_ui <- function(id) {
                 "#clustering-max_set_size {width:100%; margin-top:-12px}"
               )
             ),
+            verbatimTextOutput(ns("test")),
             uiOutput(outputId = ns("pathway_data"))
           ),
 
@@ -701,6 +702,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     # Pathway Data Table ----------
     output$pathway_data <- renderUI({
       req(!is.null(pathway_table()))
+      browser()
 
       lapply(names(pathway_table()), function(x) {
         output[[x]] = DT::renderDataTable({
@@ -711,19 +713,42 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
               scrollX = "400px",
               dom = 'ft'
             ),
-            rownames = FALSE
+            rownames = FALSE,
+            selection = 'single'
           )
         })
+
+        down_data <- data_frame_with_list(pathway_table()[[x]])
+
+        output[[paste0("table_", x)]] = downloadHandler(
+          filename = function() {
+            paste0(x, ".csv")
+          },
+          content = function(file) {
+            write.csv(down_data, file)
+          }
+        )
       })
   
       return(lapply(names(pathway_table()), function(x) {
         tagList(
           br(),
           strong(h3(gsub("_", " ", x))),
-          DT::dataTableOutput(ns(x))
+          DT::dataTableOutput(ns(x)),
+          br(),
+          downloadButton(
+            outputId = ns(paste0("table_", x)),
+            label = paste0("Enrichment: ", gsub("_", " ", x))
+          )
         )
       })
       )
+    })
+
+    hyperlink <- reactive({
+      if(length(input$Hierarchical_Selection_rows_selected)) {
+        utils::browseURL("https://stat.ethz.ch/R-manual/R-patched/library/utils/html/browseURL.html")
+      }
     })
 
     # Correlation Matrix ----------

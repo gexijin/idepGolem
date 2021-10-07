@@ -28,4 +28,8 @@ app_server <- function(input, output, session) {
   mod_05_pca_server(
     id = "pca"
   )
+  mod_06_deg1_server(
+    id = "deg",
+    pre_process = pre_process
+  )
 }
