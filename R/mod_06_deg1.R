@@ -145,7 +145,7 @@ mod_06_deg1_ui <- function(id) {
                 style = "float:center"
               ),
               tags$head(tags$style(
-                "#deg-submit_model_button{color: blue;font-size: 20px;}"
+                "#deg-submit_model_button{font-size: 20px;}"
               )),
               a(
                 h5("More info on DESeq2 experiment design", align = "right"),
@@ -257,6 +257,63 @@ mod_06_deg1_server <- function(id, pre_process) {
       name = "data_file_format",
       suspendWhenHidden = FALSE
     )
+
+    # Experiment Design UI Elements ------------
+    output$list_factors_de <- renderUI({
+      list_factors_ui(
+        sample_info = pre_process$sample_info(),
+        data_file_format = pre_process$data_file_format(),
+        counts_deg_method = input$counts_deg_method,
+        id = id
+      )
+	  })
+
+    output$list_block_factors_de <- renderUI({ 
+      list_block_factors_ui(
+        sample_info = pre_process$sample_info(),
+        select_factors_model = input$select_factors_model,
+        data_file_format = pre_process$data_file_format(),
+        deg_method = input$counts_deg_method,
+        id = id
+      )
+	  })
+
+    output$list_model_comparisons <- renderUI({
+      req(pre_process$data())
+
+		  list_model_comparisons_ui(
+        sample_info = pre_process$sample_info(),
+        select_factors_model = input$select_factors_model,
+        processed_data = pre_process$data(),
+        id = id
+      )
+	  })
+
+    output$list_interaction_terms <- renderUI({
+      list_interaction_terms_ui(
+        sample_info = pre_process$sample_info(),
+        select_factors_model = input$select_factors_model,
+        id = input$id
+      )
+	  }) 
+
+	
+	# set limits for selections of factors. 
+#observe({
+#		if(length(input$selectFactorsModel) > maxFactors) # less than 4 factors
+#			updateCheckboxGroupInput(session, "selectFactorsModel", selected= tail(input$selectFactorsModel,maxFactors))
+#
+#		if( input$CountsDEGMethod !=3 ) { # if using the limma package
+#			if(length(input$selectFactorsModel) > 2) # less than 2 factors
+#
+#			if(length(input$selectBlockFactorsModel) > 1) # less than 1 factors
+#				updateCheckboxGroupInput(session, "selectBlockFactorsModel", selected= tail(input$selectBlockFactorsModel,2))
+				
+#		}
+#		if(length(input$selectComparisonsVenn) >5 )
+#					updateCheckboxGroupInput(session, "selectComparisonsVenn", selected= tail(input$selectComparisonsVenn,5))
+		
+#	})
 
   })
 }
