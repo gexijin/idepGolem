@@ -104,34 +104,7 @@ mod_06_deg1_ui <- function(id) {
                 ) 
               ),
               fluidRow(
-                column(
-                  width = 6,
-                  htmlOutput(outputId = ns("select_reference_levels"))
-                ),
-                column(
-                  width = 6,
-                  htmlOutput(outputId = ns("select_reference_levels_2"))
-                ) 
-              ),
-              fluidRow(
-                column(
-                  width = 6,
-                  htmlOutput(outputId = ns("select_reference_levels_3"))
-                ),
-                column(
-                  width = 6,
-                  htmlOutput(outputId = ns("select_reference_levels_4"))
-                ) 
-              ),
-              fluidRow(
-                column(
-                  width = 6,
-                  htmlOutput(outputId = ns("select_reference_levels_5"))
-                ),
-                column(
-                  width = 6,
-                  htmlOutput(outputId = ns("select_reference_levels_6"))
-                )  
+                htmlOutput(outputId = ns("select_reference_levels"))
               ),
               htmlOutput(outputId = ns("list_interaction_terms")),
               textOutput(outputId = ns("experiment_design")),
@@ -298,23 +271,73 @@ mod_06_deg1_server <- function(id, pre_process) {
 	  }) 
 
 	
-	# set limits for selections of factors. 
-#observe({
-#		if(length(input$selectFactorsModel) > maxFactors) # less than 4 factors
-#			updateCheckboxGroupInput(session, "selectFactorsModel", selected= tail(input$selectFactorsModel,maxFactors))
-#
-#		if( input$CountsDEGMethod !=3 ) { # if using the limma package
-#			if(length(input$selectFactorsModel) > 2) # less than 2 factors
-#
-#			if(length(input$selectBlockFactorsModel) > 1) # less than 1 factors
-#				updateCheckboxGroupInput(session, "selectBlockFactorsModel", selected= tail(input$selectBlockFactorsModel,2))
-				
-#		}
-#		if(length(input$selectComparisonsVenn) >5 )
-#					updateCheckboxGroupInput(session, "selectComparisonsVenn", selected= tail(input$selectComparisonsVenn,5))
-		
-#	})
+	  # Set limits for selections of factors
+    observe({
+    	if(length(input$select_factors_model) > 6) {
+        updateCheckboxGroupInput(
+          session,
+          ns("select_factors_model"),
+          selected = tail(input$select_factors_model, 6)
+        )
+      }
+      if(input$counts_deg_method !=3 ) {
+        if(length(input$select_factors_model) > 2) {
+          updateCheckboxGroupInput(
+            session,
+            ns("select_factors_model"),
+            selected = tail(input$select_factors_model, 2)
+          )
+        }
+        if(length(input$select_block_factors_model) > 1) {
+          updateCheckboxGroupInput(
+            session,
+            ns("select_block_factors_model"),
+            selected = tail(input$select_block_factors_model, 1)
+          )
+        }
+      }
+      
+      if(length(input$select_comparisons_venn) > 5) {
+        updateCheckboxGroupInput(
+          session,
+          ns("select_comparisons_venn"),
+          selected = tail(input$select_comparisons_venn, 5)
+        )
+      }
+		})
 
+    output$experiment_design <- renderText({
+      experiment_design_txt(
+        sample_info = pre_process$sample_info(),
+        select_factors_model = input$select_factors_model,
+        select_block_factors_model = input$select_block_factors_model,
+        select_interactions = input$select_interactions
+      )
+    })
+
+    output$select_reference_levels <- renderUI({
+      select_reference_levels_ui(
+        sample_info = pre_process$sample_info(),
+        select_factors_model = input$select_factors_model,
+        data_file_format = pre_process$data_file_format(),
+        counts_deg_method = input$counts_deg_method,
+        id = id
+      )
+    })
+
+    factor_reference_levels <- reactive(
+      input$submit_model_button, {
+      return(
+        c(
+          input$reference_level_factor_1,
+				  input$reference_level_factor_2,
+				  input$reference_level_factor_3,
+				  input$reference_level_factor_4,
+				  input$reference_level_factor_5,
+				  input$reference_level_factor_6
+        )
+      )
+    })
   })
 }
 
