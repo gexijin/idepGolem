@@ -332,56 +332,74 @@ select_reference_levels_ui <- function(
 #' LIMMA REACTIVE VALUE
 limma_value <- function(
   data_file_format,
-  counts_deg_method
+  counts_deg_method,
+  raw_counts,
+  limma_p_val,
+  limma_fc,
+  select_model_comprions,
+  sample_info,
+  select_factors_model,
+  select_interactions,
+  select_block_factors_model,
+  factor_reference_levels,
+  processed_data,
+  counts_log_start,
+  p_vals
 ) {
   if(data_file_format == 1) {
     if(counts_deg_method == 3) {
       return(
-        DEG.DESeq2( convertedCounts(),input$limmaPval, input$limmaFC,
-									input$selectModelComprions, readSampleInfo(),
-									c(input$selectFactorsModel,input$selectInteractions), 
-									input$selectBlockFactorsModel, factorReferenceLevels() )  )
-			}
+        deg_deseq2(
+          raw_counts = raw_counts,
+          max_p_limma = limma_p_val,
+          min_fc_limma = limma_fc,
+				  selected_comparisons = select_model_comprions,
+          sample_info = sample_info,
+					model_factors = c(select_factors_model, select_interactions), 
+				  block_factor = select_block_factors_model,
+          reference_levels = factor_reference_levels
+        )
+      )
+		} else if(counts_deg_method < 3) {
+      return(
+        deg_limma(
+          processed_data = processed_data,
+          max_p_limma = limma_p_val,
+          min_fc_limma = limma_fc,
+					raw_counts = raw_counts,
+          counts_deg_method = counts_deg_method,
+					prior_counts = counts_log_start,
+          data_file_format = data_file_format,
+					selected_comparisons = select_model_comprions,
+          sample_info = sample_info,
+					model_factors = c(select_factors_model, select_interactions),
+					block_factor = select_block_factors_model
+        )
+      )
     }
-  }
-}
-  if(input$dataFileFormat == 1 ) {  # if count data
-		 if(input$CountsDEGMethod == 3 ) {    # if DESeq2 method
-				# rawCounts = read.csv("exampleData/airway_GSE52778.csv", row.names=1)
-				# res =DEG.DESeq2(rawCounts, .05, 2) 
-				# res1 =DEG.limma(rawCounts, .1, 1.5,rawCounts, 2,3) 
-					
-			return(   DEG.DESeq2( convertedCounts(),input$limmaPval, input$limmaFC,
-									input$selectModelComprions, readSampleInfo(),
-									c(input$selectFactorsModel,input$selectInteractions), 
-									input$selectBlockFactorsModel, factorReferenceLevels() )  )
-			}
-			if(input$CountsDEGMethod < 3 )    # voom or limma-trend
-				return( DEG.limma(convertedData(), input$limmaPval, input$limmaFC,
-									convertedCounts(), input$CountsDEGMethod,
-									priorCounts=input$countsLogStart,input$dataFileFormat,
-									input$selectModelComprions, readSampleInfo(),
-									c(input$selectFactorsModel,input$selectInteractions),
-									input$selectBlockFactorsModel) )
-	} else if (input$dataFileFormat == 2 ){ # normalized data
-	 return( DEG.limma(convertedData(), input$limmaPval, input$limmaFC,
-						convertedCounts(), input$CountsDEGMethod,
-						priorCounts=input$countsLogStart,input$dataFileFormat,
-						input$selectModelComprions, readSampleInfo(),
-						c(input$selectFactorsModel,input$selectInteractions),
-						input$selectBlockFactorsModel) )
-	} else {   # dataFileFormat == 3 user just uploaded fold change matrix
-	
-		x = convertedData()
-		
-		pvals = convertedPvals()
-		if(!is.null(pvals) ) {
-		  ix = match(rownames(x), rownames(pvals))
-		  pvals = pvals[ix,]
+  } else if(data_file_format == 2) {
+	  return(
+      deg_limma(
+        processed_data = processed_data,
+        max_p_limma = limma_p_val,
+        min_fc_limma = limma_fc,
+				raw_counts = raw_counts,
+        counts_deg_method = counts_deg_method,
+				prior_counts = counts_log_start,
+        data_file_format = data_file_format,
+				selected_comparisons = select_model_comprions,
+        sample_info = sample_info,
+				model_factors = c(select_factors_model, select_interactions),
+				block_factor = select_block_factors_model
+      )
+    )
+	} else {
+		if(!is.null(p_vals)) {
+		  ix <- match(rownames(processed_data), rownames(p_vals))
+		  p_vals <- p_vals[ix, ]
 		}
 
-
-		# looks like ratio data, take log2
+		# Looks like ratio data, take log2
 		if( sum(round(apply(x,2, median) + .2) == 1 ) == dim(x)[2] & min(x) > 0) 
 			x = log2(x)
 		
@@ -408,7 +426,7 @@ limma_value <- function(
 		topGenes <- setNames(topGenes, colnames(x ) )
 		
 		return( list(results= all.Calls, comparisons = colnames(x ), Exp.type=Exp.type, topGenes=topGenes) )
-	}
+}
 
 # Differential expression using DESeq2
 deg_deseq2 <- function(
@@ -842,4 +860,507 @@ split_interaction_terms <- function(
       level_lookup[terms_split[2]]
     )
   )
+}
+
+deg_limma <- function(
+  processed_data,
+  max_p_limma = .1,
+  min_fc_limma = 2,
+  raw_counts,
+  counts_deg_method,
+  prior_counts,
+  data_file_format,
+  selected_comparisons = NULL,
+  sample_info = NULL,
+  model_factors = NULL,
+  block_factor = NULL
+){
+  # Many different situations:
+  # 1. Just use sample names
+  # 2. Just one factor
+  # 3. Two factors no interaction
+	# 4. Two factors with interaction
+  # 5. Block factor 
+
+	top_genes <- list()
+  limma_trend <- FALSE
+	if(data_file_format == 2) {
+    eset <- methods::new("ExpressionSet", exprs = as.matrix(processed_data))
+  } else {
+    # Limma-trend method selected for counts data
+		if(counts_deg_method == 1) {
+      # Use transformed data for limma  
+			eset <- methods::new("ExpressionSet", exprs = as.matrix(processed_data))
+			limma_trend = TRUE
+		}
+	}
+
+	groups <- colnames(processed_data)
+	groups <-  detect_groups(groups, sample_info) 
+	unique_groups <- unique(groups)  
+	
+	# Check for replicates, removes samples without replicates
+  # Number of replicates per biological sample
+	reps <- as.matrix(table(groups))
+  # Less than 2 samples with replicates
+	if(sum(reps[, 1] >= 2) < 2) {
+    return(
+      list(
+        results = NULL,
+        comparisons = NULL,
+        exp_type = 
+          "Failed to parse sample names to define groups. Cannot perform
+          DEGs and pathway analysis. Please double check column names! Use
+          WT_Rep1, WT_Rep2 etc. ",
+        topGenes=NULL
+      )
+    )
+  }
+	 
+	# Remove samples without replicates
+	unique_groups <- rownames(reps)[which(reps[, 1] > 1)]
+	ix <- which(groups %in% unique_groups)  
+	groups <- groups[ix]   
+	processed_data <- processed_data[, ix]
+  raw_counts <- raw_counts[, ix] 
+	
+  # Just two groups
+	if(length(unique_groups) == 2) {  
+		unique_groups <- unique(groups)
+    # "Mutant-WT"
+		comparisons <-  paste(unique_groups[2], "-", unique_groups[1], sep = "")
+		
+		# No sample file, but user selected comparisons using column names
+		if(is.null(model_factors) & length(selected_comparisons) > 0) {
+      comparisons <- selected_comparisons
+    }
+
+    # Set reference level based on the order in which the levels appear
+    # The first appearing level is set as reference; otherwise, we get
+    # up and down-regulation reversed.
+    groups <- factor(groups, levels = unique_groups) 
+
+		design <- model.matrix(~0 + groups)
+		colnames(design) <- unique_groups
+		
+    # Voom
+		if(!is.null(raw_counts) && counts_deg_method == 2) {
+			dge <- edgeR::DGEList(counts=rawCounts)
+      # Normalization
+			dge <- edgeR::calcNormFactors(dge, method = "TMM")
+			voom_results <- limma::voom(dge, design)
+      fit <- limma::lmFit(v, design)
+    } else {
+      # Regular limma
+			fit <- limma::lmFit(eset, design)
+    }
+
+    cont_matrix <- limma::makeContrasts(contrasts = comparisons, levels = design)
+		contrasts_fit <- limma::contrasts.fit(fit, cont_matrix)
+		fit <- limma::eBayes(contrasts_fit, trend = limma_trend)
+
+		# Calls differential gene expression 1 for up, -1 for down
+		results <- limma::decideTests(
+      fit,
+      p.value = max_p_limma,
+      lfc = log2(min_fc_limma)
+    )
+
+		top_genes_table <- limma::topTable(fit, number = 1e12, sort.by = "M")
+		if(dim(top_genes_table)[1] != 0) {
+      top_genes_table <- top_genes_table[, c('logFC', 'adj.P.Val')]
+      top_genes[[1]] <- top_genes_table
+    }
+
+		# Log fold change is actually substract of means. So if the data is natral log
+    # transformed, it should be natral log.
+		exp_type = "2 sample groups."
+  }
+	
+  # More than two sample groups
+	if(length(unique_groups) > 2) {
+	  # Set reference level based on the order in which the levels appear
+    # The first appearing level is set as reference; otherwise, we get up and 
+    # down-regulation reversed.
+    groups <- factor(groups, levels = unique_groups)
+
+		design <- model.matrix(~ 0 + groups)
+		colnames(design) <- gsub("^groups", "", colnames(design))
+
+		if(!is.null(raw_counts) && counts_deg_method == 2) {
+			limma_voom <- limma::voom(raw_counts, design) 
+			fit <- limma::lmFit(limma_voom, design) 
+		} else {
+      fit <- limma::lmFit(eset, design)
+    }
+		
+		fit <- limma::eBayes(fit, trend = limma_trend)
+		
+		comparisons <- ""
+		for(i in 1:(length(unique_groups) - 1)) {
+      for (j in (i + 1):length(unique_groups)) {
+        comparisons <- c(comparisons, paste(g[j], "-", g[i], sep = ""))
+      }
+    }
+		comparisons <- comparisons[-1]
+
+		# No sample file, but user selected comparisons using column names
+		if(is.null(model_factors) & length(selected_comparisons) > 0) {
+      comparisons <- selected_comparisons
+    }
+		
+		make_contrast <- limma::makeContrasts(contrasts = comparisons[1], levels = design)
+		if(length(comparisons) > 1) {
+      for( kk in 2:length(comparisons) ) {
+        make_contrast <- cbind(
+          make_contrast,
+          limma::makeContrasts(contrasts = comparisons[kk], levels = design)
+        )
+      }
+    }
+		exp_type = paste(length(unique_groups), " sample groups detected.")	 
+		
+		# Factorial design 2x2, 2x3, 3x5 etc.
+		# All samples must be something like WT_control_rep1
+		if(sum(sapply(strsplit(g, "_"), length) == 2) == length(unique_groups)) {
+			Comparisons <- ""
+			for(i in 1:(length(unique_groups) - 1)) {
+        for (j in (i + 1):length(unique_groups)) {
+          # Only compare WT_control vs. WT_treatment
+          if(strsplit(g[i], "_")[[1]][1] == strsplit(g[j], "_")[[1]][1] |
+             strsplit(g[i], "_")[[1]][2] == strsplit(g[j], "_")[[1]][2]) {
+            comparisons <- c(comparisons, paste(g[j], "-", g[i], sep = ""))
+          }
+        }
+      }
+			comparisons <- comparisons[-1]
+
+			# Factors genotype treatment levels
+			extract_treatment <- function(x) {
+        paste(gsub(".*_", "", unlist(strsplit(x, "-"))), collapse = "-")
+      }
+			extract_genotype <- function (x) {
+        gsub("_.*", "", unlist(strsplit(x, "-")))[1]
+      }
+			extract_treatment_counting <- unique(gsub(".*_", "", unlist(strsplit(g, "-"))))
+			treatments <- sapply(comparisons, extract_treatment)
+			genotypes <- sapply(comparisons, extract_genotype)
+			exp_type <- paste(
+        exp_type,
+        "\nFactorial design:",
+        length(unique(genotypes)),
+        "X",
+        length(extract_treatment_counting),
+        sep = ""
+      )
+
+			# Pairwise contrasts
+			make_contrast <- limma::makeContrasts(
+        contrasts = comparisons[1],
+        levels = design
+      )
+			for(kk in 2:length(comparisons)) {
+        make_contrast <- cbind(
+          make_contrast,
+          limma::makeContrasts(contrasts = comparisons[kk], levels = design)
+        )
+      }
+			contrast_names = colnames(make_contrast)
+
+			# Interaction contrasts
+			for (kk in 1:(length(comparisons) - 1)) {
+        for(kp in (kk + 1):length(comparisons)) {
+          if(treatments[kp] == treatments[kk]) {  
+					  make_contrast <- cbind(
+              make_contrast,
+              make_contrast[, kp] - make_contrast[, kk]
+            )
+					  contrast_names <- c(
+              contrast_names,
+              paste(
+                "I:", 
+                genotypes[kp],
+                "-",
+                genotypes[kk],
+                "(",
+                gsub("-", ".vs.", treatments[kp]),
+                ")",
+                sep = ""
+              )
+            )
+				  }
+        }   
+			}
+
+			colnames(make_contrast) <- contrast_names
+			comparisons <- contrast_names
+		}
+		
+
+		# Sample information is uploaded and user selected factors and comparisons
+		if(!is.null(model_factors) & length(selected_comparisons) > 0) {
+			exp_type <- paste("Model: ~", paste(model_factors, collapse = " + "))
+      # Default value to be re-write if needed
+			interaction_term <- FALSE
+			
+			# Model factors that does not contain interaction terms
+			# model_factors "genotype", "condition", "genotype:condition"
+			key_model_factors <- model_factors[!grepl(":", model_factors)]
+			
+			# "genotype: control vs. mutant"
+      # Corresponding factors for each comparison
+			factors_vector <- gsub(":.*", "", selected_comparisons) 
+			# Remove factors not used in comparison, these are batch effects/pairs/blocks, 	
+			
+			# A factor is selected both in block and main factors, then use it as block factor
+			key_model_factors <- key_model_factors[
+        is.na(match(key_model_factors, block_factor))
+      ]	
+		
+      # Design matrix ----------
+      # Remove factors not used.
+			sample_info_filter <- sample_info[, key_model_factors, drop = F]
+			groups <- apply(sample_info_filter, 1, function(x) paste(x, collapse = "_"))
+			unique_groups <- unique(groups)  
+
+      groups <- factor(groups, levels = unique_groups)
+
+		  design <- stats::model.matrix(~ 0 + groups)  
+		  colnames(design) <- gsub("^groups", "", colnames(design))
+            	
+			if(!is.null(raw_counts) && counts_deg_method == 2) {
+				voom_results <- limma::voom(raw_counts, design) 
+				fit <- limma::lmFit(voom_results, design) 
+			} else {
+        fit <- limma::lmFit(eset, design)
+      }
+		
+			fit <- limma::eBayes(fit, trend = limma_trend)	
+			
+			# Making comaprisons-----------
+      # Only one factor, or more than two then use all pairwise comparisons
+			if(length(key_model_factors) != 2 | length(block_factor) > 1)  {
+				comparisons <- gsub(".*: ", "", selected_comparisons)
+				comparisons <- gsub(" vs\\. ", "-", comparisons)
+      # Two key factors
+			} else if(length(key_model_factors) == 2){ 
+				if(sum(grepl(":", model_factors) > 0)) { 
+					interaction_term <- TRUE
+					# All pairwise comparisons
+					comparisons <- ""
+					for(i in 1:(length(unique_groups) - 1)) {
+            for(j in (i + 1):length(unique_groups)) {
+              # Only compare WT_control vs. WT_treatment
+              if(strsplit(g[i], "_")[[1]][1] == strsplit(g[j], "_")[[1]][1] |
+                 strsplit(g[i], "_")[[1]][2] == strsplit(g[j], "_")[[1]][2]) {
+                comparisons <- c(comparisons, paste(g[j], "-", g[i], sep = ""))
+              }
+            }
+          }
+					comparisons <- comparisons[-1]
+					
+					# Pairwise contrasts
+				  make_contrast <- limma::makeContrasts(
+            contrasts = comparisons[1],
+            levels = design
+          )
+					if(length(comparisons) > 1) {
+            for(kk in 2:length(comparisons)) {
+              make_contrast <- cbind(
+                make_contrast,
+                limma::makeContrasts(contrasts = comparisons[kk], levels = design)
+              )
+            }
+          }
+					
+						
+					contrast_names <- colnames(make_contrast)		
+				
+					# All possible interactions
+					# Interaction contrasts
+					
+					contrast_compare <- NULL
+					contrast_names <- ""
+					for (kk in 1:(dim(make_contrast)[2] - 1)) {
+					  for(kp in (kk+1):dim(make_contrast)[2]) {
+              if(is.null(contrast_compare)) {
+                contrast_compare <- make_contrast[, kp] - make_contrast[,kk]
+              } else {
+                contrast_compare <- cbind(
+                  contrast_compare,
+                  make_contrast[, kp] - make_contrast[, kk]
+                )
+              }
+							contrast_names <- c(
+                contrast_names,
+                paste0(
+                  "I:",
+                  colnames(make_contrast)[kp],
+                  ".vs.",
+                  colnames(make_contrast)[kk]
+                )
+              )
+						}   
+					}
+					colnames(contrast_compare) <- contrast_names[-1]
+					
+					# Remove nonsense contrasts from interactions
+					contrast_compare <- contrast_compare[, which(
+            apply(abs(contrast_compare), 2, max) == 1), drop = F
+          ]
+					contrast_compare <- contrast_comapre[, which(
+            apply(abs(contrast_compare), 2, sum) == 4), drop = F
+          ]
+          # Remove duplicate columns
+					contrast_compare <- t(unique(t(contrast_compare)))		
+					
+					# Remove unwanted contrasts involving more than three levels in 
+          # either factor
+					keep <- c()
+					for(i in 1:dim(contrast_compare)[2]) {
+						tem <- rownames(contrast_compare)[contrast_compare[, i] != 0]
+						tem1 <- unique(unlist(gsub("_.*", "", tem)))
+						tem2 <- unique(unlist(gsub(".*_", "", tem)))
+						if(length(tem1) == 2 & length(tem2) == 2) {
+              keep <- c(keep, colnames(contrast_compare)[i])
+            }
+					}
+					contrast_comapre <- contrast_compare[, keep, drop = F]
+					comparison_names = colnames(contrast_compare) 				 
+				}
+
+				# "stage: MN vs. EN"  -->  c("MN_AB-EN_AB", "EN_Nodule-EN_AB") 
+				#  comparisons in all levels of the other factor 
+				transform_comparisons <- function(
+          comparison,
+          key_model_factors,
+        ) {
+					tem <- gsub(".*: ", "", comparison)
+          # control  mutant
+					tem <- unlist(strsplit(tem, " vs\\. ")) 							
+					factor <- gsub(":.*", "", comparison)
+          
+          # 1: first factor, 2: 2nd factor
+					ix <- match(factor, key_model_factors)
+          # 3-1 = 2; 3-1=1
+					other_factor <- key_model_factors[3 - ix]
+					other_factor_levels <- unique(sample_info_filter[, other_factor])				
+					comparisons <- c()
+					
+					for(factor_levels in other_factor_levels) {
+						if(ix == 1) {
+							comparisons <- c(
+                comparisons,
+                paste(paste0(tem, "_", factor_levels), collapse = "-")
+              )
+						} else {
+							comparisons <- c(
+                comparisons,
+                paste(paste0(factor_levels, "_", tem), collapse = "-")
+              )
+						}
+					}
+					return(comparisons)		
+				}	
+				
+				comparisons <- unlist(sapply(selected_comparisons, transform_comparisons))
+				comparisons <- as.vector(comparisons)
+			}
+			
+			# make contrasts
+			make_contrast <- limma::makeContrasts(contrasts = comparisons[1], levels = design)
+			if(length(comparisons) > 1) {
+        for(kk in 2:length(comparisons)) {
+          make_contrast <- cbind(
+            make_contrast,
+            limma::makeContrasts(contrasts = comparisons[kk], levels = design)
+          )
+        }
+      }
+				
+			if(interaction_term) {
+				make_contrast <- cbind(make_contrast, contrast_compare)
+				contrast_names <- c(colnames(make_contrast), colnames(contrast_compare))
+				comparisons <- c(comparisons, comparison_names)
+			}
+			
+      # Factor is selected as block
+			if(length(block_factor) >= 1) { 
+				if(length(block_factor) >= 1) {
+          # If multiple use the first one
+          block_factor <- block_factor[1] 
+        }
+
+				block <- sample_info[, block_factor]
+			
+				if(!is.null(raw_counts) && counts_deg_method == 2) {
+					voom_results <- limma::voom(raw_counts, design)
+					corfit <- limma::duplicateCorrelation(voom_results, design, block = block)			
+					fit <- limma::lmFit(
+            voom_results,
+            design,
+            block = block,
+            correlation = corfit$consensus
+          ) 
+				} else {
+					corfit <- limma::duplicateCorrelation(eset, design, block = block)
+					fit <- limma::lmFit(
+            eset,
+            design,
+            block = block,
+            correlation = corfit$consensus
+          )
+				}
+				fit <- limma::eBayes(fit, trend = limma_trend)	
+			}
+		}
+		
+		fit_contrast <- limma::contrasts.fit(fit, make_contrast)
+		fit_contrast <- limma::eBayes(fit_contrast, trend = limma_trend)
+		results <- limma::decideTests(
+      fit_contrast,
+      p.value = max_p_limma,
+      lfc = log2(min_fc_limma )
+    )
+		# Extract fold change for each comparison
+		# There is issues with direction of foldchange. Sometimes opposite
+		top <- function(
+      comp,
+      fit_contrast
+    ) {
+			tem <- limma::topTable(
+        fit_contrast,
+        number = 1e12,
+        coef = comp,
+        sort.by = "M"
+      ) 
+			if(dim(tem)[1] == 0) {
+        return(1) 
+			} else { 			
+				# Compute fold change for the first gene (ranked by absolute value)
+				tem2 <- as.numeric(
+          processed_data[which(rownames(processed_data) == rownames(tem)[1]), ]
+        )
+				names(tem2) <- colnames(processed_data) 
+					
+				return(tem[, c(1,5)]) 
+			}											
+		}
+		
+		
+		top_genes <- lapply(comparisons, top)
+		top_genes <- setNames(top_genes, comparisons)
+
+		ix <- which(unlist(lapply(top_genes, class) ) == "numeric")
+		if(length(ix) > 0) {
+      top_genes <- top_genes[-ix]
+    } 
+	}
+    
+	return(list(
+    results = results,
+    comparisons = comparisons,
+    exp_type = exp_type,
+    top_genes = top_genes
+  )) 
 }
