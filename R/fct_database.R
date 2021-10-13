@@ -274,6 +274,7 @@ convert_id <- function(
     # 1:3 are Ensembl species
     # and #2 come earlier (ensembl) than #1
     tmp <- sum(idep_data$annotated_species_counts[1:3])
+    if(class(sortedCounts) == "table") # if more than 1 matched.
     if (!is.integer(sorted_counts) &&
       sorted_counts[1] <= sorted_counts[2] * 1.1 &&
       as.numeric(gsub(
