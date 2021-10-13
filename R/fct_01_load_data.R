@@ -217,6 +217,8 @@ input_data <- function(
     for (i in 1:nrow(expr)) {
       expr[i, ] <- gsub("-", "", expr[i, ])
       expr[i, ] <- gsub("\\.", "", expr[i, ])
+      expr[i, ] <- gsub(" ", "", expr[i, ]) # remove whitespace
+      expr[i, ] <- toupper(expr[i, ])   # convert to upper case to avoid mixing? 
     }
 
     # Factor levels match ---------
