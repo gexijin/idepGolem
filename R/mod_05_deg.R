@@ -7,7 +7,7 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
-mod_06_deg1_ui <- function(id) {
+mod_05_deg_ui <- function(id) {
   ns <- NS(id)
   navbarMenu(
     "DEG",
@@ -40,7 +40,7 @@ mod_06_deg1_ui <- function(id) {
             column(
               width = 5,
               numericInput(
-                inputId = "limma_pval",
+                inputId = ns("limma_p_val"),
                 label = h5("FDR cutoff"), 
                 value = 0.1,
                 min = 1e-5,
@@ -51,7 +51,7 @@ mod_06_deg1_ui <- function(id) {
             column(
               width = 7,
               numericInput(
-                inputId = "limma_fc",
+                inputId = ns("limma_fc"),
                 label = h5("Min fold change"),
                 value = 2,
                 min = 1,
@@ -61,13 +61,21 @@ mod_06_deg1_ui <- function(id) {
             ),
             tags$style(
               type = "text/css",
-              "#deg-limma_pval { width:100%;   margin-top:-12px}"
+              "#deg-limma_p_val { width:100%;   margin-top:-12px}"
             ),
             tags$style(
               type = "text/css",
               "#deg-limma_fc { width:100%;   margin-top:-12px}"
             )
           ),
+          actionButton(
+            inputId = ns("submit_model_button"),
+            label = "Submit & re-calculate",
+            style = "float:center"
+          ),
+          tags$head(tags$style(
+            "#deg-submit_model_button{font-size: 20px;}"
+          )),
           a(
             h5("Questions?", align = "right"),
             href = "https://idepsite.wordpress.com/degs/",
@@ -76,21 +84,6 @@ mod_06_deg1_ui <- function(id) {
         ),
         mainPanel(
           tabsetPanel(
-            tabPanel(
-              title = "Overview",
-              plotOutput(
-                outputId = ns("sig_gene_stats")
-              ),
-              br(),
-              br(),
-              h4(
-                "Numbers of differentially expressed genes for all comparisons.
-                \"B-A\" means B vs. A. Interaction terms start with \"I:\" "
-              ),
-              tableOutput(
-                outputId = ns("sig_gene_stats_table")
-              )
-            ),
             tabPanel(
               title = "Experiment Design",
               fluidRow(
@@ -112,18 +105,26 @@ mod_06_deg1_ui <- function(id) {
                 "#deg-experiment_design{color: red;font-size: 16px;}"
               )),
               htmlOutput(outputId = ns("list_model_comparisons")),
-              actionButton(
-                inputId = ns("submit_model_button"),
-                label = "Submit & re-calculate",
-                style = "float:center"
-              ),
-              tags$head(tags$style(
-                "#deg-submit_model_button{font-size: 20px;}"
-              )),
+              h3("Use the submit button in the sidebar once the desired design is selected!"),
               a(
                 h5("More info on DESeq2 experiment design", align = "right"),
                 href = "http://rpubs.com/ge600/deseq2",
                 target = "_blank"
+              )
+            ),
+            tabPanel(
+              title = "Results",
+              plotOutput(
+                outputId = ns("sig_gene_stats")
+              ),
+              br(),
+              br(),
+              h4(
+                "Numbers of differentially expressed genes for all comparisons.
+                \"B-A\" means B vs. A. Interaction terms start with \"I:\" "
+              ),
+              tableOutput(
+                outputId = ns("sig_gene_stats_table")
               )
             ),
             tabPanel(
@@ -133,8 +134,8 @@ mod_06_deg1_ui <- function(id) {
                 label = "Split gene lists by up- or down-regulation",
                 value = FALSE
               ),
-              htmlOutput(outputId = ns("listComparisonsVenn")),
-              plotOutput(outputId = ns("vennPlot"))
+              htmlOutput(outputId = ns("list_comparisons_venn")),
+              plotOutput(outputId = ns("venn_plot"))
             )
           )
         )
@@ -155,7 +156,12 @@ mod_06_deg1_ui <- function(id) {
           htmlOutput(outputId = ns("select_go")),
           tags$style(
             type = "text/css",
-            "#deg-select_go { width:100%;   margin-top:-9px}"
+            "#deg-select_go { width:100%; margin-top:-9px}"
+          ),
+          checkboxInput(
+            ns("filtered_background"), 
+            label = "Filtered genes as background for enrichment", 
+            value = TRUE
           )
         ),
         mainPanel(
@@ -218,10 +224,11 @@ mod_06_deg1_ui <- function(id) {
 #' 06_deg1 Server Functions
 #'
 #' @noRd
-mod_06_deg1_server <- function(id, pre_process) {
+mod_05_deg_server <- function(id, pre_process) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+    # DEG STEP 1 ----------
     output$data_file_format <- reactive({
       pre_process$data_file_format()
     })
@@ -326,7 +333,6 @@ mod_06_deg1_server <- function(id, pre_process) {
     })
 
     factor_reference_levels <- reactive(
-      input$submit_model_button, {
       return(
         c(
           input$reference_level_factor_1,
@@ -337,12 +343,120 @@ mod_06_deg1_server <- function(id, pre_process) {
 				  input$reference_level_factor_6
         )
       )
+    )
+
+    deg <- reactiveValues(limma = NULL)
+    observeEvent(
+      input$submit_model_button, {
+        req(!is.null(pre_process$raw_counts()))
+      
+        shinybusy::show_modal_spinner(
+          spin = "orbit",
+          text = "Running Analysis",
+          color = "#000000"
+        )
+
+        deg$limma <- limma_value(
+          data_file_format = pre_process$data_file_format(),
+          counts_deg_method = input$counts_deg_method,
+          raw_counts = pre_process$raw_counts(),
+          limma_p_val = input$limma_p_val,
+          limma_fc = input$limma_fc,
+          select_model_comprions = input$select_model_comprions,
+          sample_info = pre_process$sample_info(),
+          select_factors_model = input$select_factors_model,
+          select_interactions = input$select_interactions,
+          select_block_factors_model = input$select_block_factors_model,
+          factor_reference_levels = factor_reference_levels(),
+          processed_data = pre_process$data(),
+          counts_log_start = pre_process$counts_log_start(),
+          p_vals = pre_process$p_vals()
+        )
+
+        shinybusy::remove_modal_spinner()
+      }  
+    )
+
+    output$sig_gene_stats <- renderPlot({
+      req(!is.null(deg$limma$results))
+      sig_genes_plot(
+        results = deg$limma$results
+      )
     })
+
+    output$sig_gene_stats_table <- renderTable({
+      req(!is.null(deg$limma))
+      
+		  genes_stat_table(limma = deg$limma)
+    },
+      digits = 0,
+      spacing = "s",
+      include.rownames = FALSE,
+      striped = TRUE,
+      bordered = TRUE,
+      width = "auto",
+      hover = T
+    )
+
+    output$list_comparisons_venn <- renderUI({
+      req(!is.null(deg$limma))
+
+      list_comp_venn(
+        limma = deg$limma,
+        up_down_regulated = input$up_down_regulated,
+        id = id
+      )
+	  })
+
+    output$venn_plot <- renderPlot({
+      req(!is.null(deg$limma))
+      req(!is.null(input$select_comparisons_venn))
+      
+		  plot_venn(
+        limma = deg$limma,
+        up_down_regulated = input$up_down_regulated,
+        select_comparisons_venn = input$select_comparisons_venn
+      )
+    },
+      height = 600,
+      width = 600
+    )
+
+    # DEG STEP 2 --------
+    output$list_comparisons <- renderUI({
+      
+      if (is.null(deg$limma$comparisons)) {
+        selectInput(
+          inputId = ns("select_contrast"),
+          label = NULL,
+          choices = list("All" = "All"),
+          selected = "All"
+        )  
+			}	else {
+        selectInput(
+          inputId = ns("select_contrast"),
+          label = 
+            "Select a comparison to examine. \"A-B\" means A vs. B (See heatmap).
+            Interaction terms start with \"I:\"",
+          choices = deg$limma$comparisons
+	     )
+      } 
+	  })
+
+    output$selectedHeatmap <- renderPlot({
+	   
+     bar = selectedHeatmap.data()$bar +2;
+		 bar[bar==3] =2
+
+	  	 myheatmap2( selectedHeatmap.data()$genes,bar,200,mycolor=input$heatColors1,c("Down","Up") )
+	
+    }, height = 400, width = 500)
+
   })
 }
 
 ## To be copied in the UI
-# mod_06_deg1_ui("06_deg1_ui_1")
+# mod_06_deg_ui("06_deg_ui_1")
 
 ## To be copied in the server
-# mod_06_deg1_server("06_deg1_ui_1")
+# mod_06_deg_server("06_deg_ui_1")

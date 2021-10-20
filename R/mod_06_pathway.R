@@ -7,7 +7,7 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
-mod_08_pathway_ui <- function(id) {
+mod_06_pathway_ui <- function(id) {
   ns <- NS(id)
   tagList()
 }
@@ -15,7 +15,7 @@ mod_08_pathway_ui <- function(id) {
 #' 08_pathway Server Functions
 #'
 #' @noRd
-mod_08_pathway_server <- function(id) {
+mod_06_pathway_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
   })

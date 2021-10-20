@@ -7,7 +7,7 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
-mod_05_pca_ui <- function(id) {
+mod_04_pca_ui <- function(id) {
   ns <- NS(id)
   tabPanel(
     "PCA",
@@ -101,7 +101,7 @@ mod_05_pca_ui <- function(id) {
 #' 05_pca Server Functions
 #'
 #' @noRd
-mod_05_pca_server <- function(id) {
+mod_04_pca_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
   })

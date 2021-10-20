@@ -241,3 +241,160 @@ find_overlap <- function(
 
   return(pathway_table)
 }
+
+# SAMPLE INDEX FOR SELECTED COMPARISON
+find_contrast_samples <- function(
+  select_contrast,
+  all_sample_names,
+  sample_info = NULL,
+  select_factors_model = NULL,
+  select_model_comprions = NULL,
+  reference_levels = NULL,
+  counts_deg_method = NULL,
+  data_file_format = NULL
+){
+	iz <- match(detect_groups(all_sample_names), unlist(strsplit(select_contrast, "-")))
+	iz <- which(!is.na(iz))
+	
+	# Has design file, but didn't select factors
+	if(!is.null(sample_info) & is.null(select_factors_model) &
+     length(select_model_comprions) == 0) {
+	  
+    find_samples <- function(
+      factor_level,
+      sample_info
+    ) { 
+	    # Given a factor level such as "wt", return a vector indicating the samples 
+      # with TRUE FALSE
+	    #  p53_mock_1  p53_mock_2  p53_mock_3  p53_mock_4 ... p53_IR_4 null_mock_1 null_mock_2 
+	    #  TRUE        TRUE        TRUE        TRUE       ... TRUE     FALSE       FALSE 
+  	  tem <- apply(sample_info, 2, function(y) y == factorLevel )
+  	  colSums(tem) > 0
+  	  tem <- tem[, colSums(tem) > 0]
+  	  return(tem)
+	  }
+	  
+	  
+	  sample_1 <- gsub("-.*", "", select_contrast)
+	  level_1 <- gsub("_.*", "", sample_1)
+	  level_2 <- gsub(".*_", "", sample_1)
+	  iz <- which(find_samples(level_1, sample_info) & find_samples(level_2, sample_info))
+	  
+	  sample_2 <- gsub(".*-", "", select_contrast)
+	  level_1 <- gsub("_.*", "", sample_2)
+	  level_2 <- gsub(".*_", "", sample_2)
+	  iz <- c(iz, which(find_samples(level_1, sample_info) & find_samples(level_2, sample_info)))	  
+	}
+	
+	#Has design file and chose factors
+	if(!is.null(sample_info) & !is.null(select_factors_model) &
+     length(select_model_comprions) > 0) {
+    
+    # Strings like: "groups: mutant vs. control"
+		comparisons <- gsub(".*: ", "", select_model_comprions)
+    comparisons <- gsub(" vs\\. ", "-", comparisons)		
+    # Corresponding factors
+		factors_vector <- gsub(":.*", "", select_model_comprions)
+
+	  # If read counts data and DESeq2
+		if(data_file_format == 1 & counts_deg_method == 3) {
+      # Could be "wt-mu" or "wt-mu_for_conditionB"
+			contrast <- gsub("_for_.*", "", select_contrast)
+      # Selected contrast lookes like: "mutant-control" 
+			ik <- match(contrast, comparisons)
+
+			other_factor_level <- gsub(".*_for_", "", select_contrast)
+			# Find the corresponding factor for the other factor
+			other_factor <- " "
+			if(nchar(other_factor_level) > 0) {
+				for(each_factor in colnames(sample_info)) {
+          if (other_factor_level %in% sample_info[, each_factor]) {
+            other_factor <- each_factor
+          }
+        }		
+			}
+			
+			if(is.na(ik)) {
+        iz <- 1:(length(all_sample_names))
+      # Interaction term, use all samples
+      } else {
+        # Corresponding factors
+				selected_factor <- factors_vector[ik] 
+
+				iz <- which(sample_info[, selected_factor] %in% unlist(strsplit(contrast, "-")))
+
+				# Filter by other factors: reference level
+        # c("genotype:wt", "treatment:control")
+				if(!is.null(reference_levels)) {   
+					for(refs in reference_levels) {
+            if(!is.null(refs) & gsub(":.*", "", refs) != selected_factor) {
+							current_factor <- gsub(":.*", "", refs)
+              # If not reference level
+							if(nchar(other_factor_level) > 0 & current_factor == other_factor) {
+								iz <- intersect(iz, which(sample_info[, current_factor] == other_factor_level))
+							} else {
+                iz <- intersect(iz, which(sample_info[, current_factor] == gsub(".*:", "", refs)))
+              }	
+						}
+          }
+				}			
+				iz <- iz[which(!is.na(iz))]
+			# Switching from limma to DESeq2 causes problem, as reference level is not defined.
+			}
+    # Not DESeq2
+		} else {
+		  # Given level find corresponding sample ids
+			find_ids_from_level <- function(
+        a_level,
+        sample_info
+      ){
+				# Find factor
+				current_factor = ""
+				for(each_factor in colnames(sample_info)) {
+          if (a_level %in% sample_info[, each_factor]) {
+            current_factor <- each_factor
+          }
+        }			
+				
+        if(nchar(current_factor) > 0) {
+          return(which(sample_info[, current_factor] %in% a_level)) 
+        } else {
+          return(NULL)
+        }	
+      }		
+					
+			if(!grepl(".*_.*-.*_.*", select_contrast)) {
+        iz <- c()
+      }
+      # Double split!
+			levels_4 <- unlist(strsplit(unlist(strsplit(select_contrast, "-")), "_")) 
+			if(length(levels_4) != 4) { 
+				iz <- c() 
+			} else {
+        # First sample
+				iz <- intersect(
+          find_ids_from_level(levels_4[1], sample_info),
+          find_ids_from_level(levels_4[2], sample_info)
+        )
+        # 2nd sample
+				iz <- c(
+          iz,
+          intersect(
+            find_ids_from_level(levels_4[3], sample_info),
+            find_ids_from_level(levels_4[4], sample_info)
+          )
+        ) 
+			}
+		}
+	}	
+	 
+	if(grepl("I:", select_contrast)) {
+    # If it is factor design use all samples
+    iz <- 1:length(all_sample_names)
+  }
+	if(is.na(iz)[1] | length(iz) <= 1 ) {
+    iz <- 1:length(all_sample_names)
+  }
+
+	return(iz)
+}

@@ -25,10 +25,10 @@ app_server <- function(input, output, session) {
     idep_data = idep_data,
     tab = tab
   )
-  mod_05_pca_server(
+  mod_04_pca_server(
     id = "pca"
   )
-  mod_06_deg1_server(
+  mod_05_deg_server(
     id = "deg",
     pre_process = pre_process
   )

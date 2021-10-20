@@ -531,7 +531,6 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
 
     # Subheatmap creation ---------
     output$sub_heatmap <- renderPlot({
-
       if (is.null(input$ht_brush)) {
         grid::grid.newpage()
         grid::grid.text("No region is selected.", 0.5, 0.5)
@@ -702,7 +701,6 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     # Pathway Data Table ----------
     output$pathway_data <- renderUI({
       req(!is.null(pathway_table()))
-      browser()
 
       lapply(names(pathway_table()), function(x) {
         output[[x]] = DT::renderDataTable({

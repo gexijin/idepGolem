@@ -201,7 +201,7 @@ pre_process <- function(
     raw_counts = raw_counts,
     data_type_warning = data_type_warning,
     data_size = c(data_size_original, data_size),
-    pvals = pvals
+    p_vals = pvals
   )
 
   return(results)
