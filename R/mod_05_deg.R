@@ -70,7 +70,7 @@ mod_05_deg_ui <- function(id) {
           ),
           actionButton(
             inputId = ns("submit_model_button"),
-            label = "Submit & re-calculate",
+            label = "Submit & Calculate",
             style = "float:center"
           ),
           tags$head(tags$style(
@@ -167,36 +167,60 @@ mod_05_deg_ui <- function(id) {
         mainPanel(
           tabsetPanel(
             tabPanel(
-              "Heatmap",
-              plotOutput(
-                outputId = ns("selected_heatmap"),
-              ),
+              title = "Heatmap",
+              h5("Brush for sub-heatmap, click for value. (Shown Below)"),
               br(),
-              h4("Enriched pathways in DEGs for the selected comparison:"),
-              tableOutput(
-                outputId = ns("gene_list_go")
-              ),
-              h4("Top Genes for selected comparison:"),
-              tableOutput(
-                outputId = ns("gene_list")
+              fluidRow(
+                column(
+                  width = 3,
+                  plotOutput(
+                    outputId = ns("deg_main_heatmap"),
+                    height = "450px",
+                    width = "100%",
+                    brush = ns("ht_brush")
+                  ),
+                  br(),
+                  h5("Selected Cell (Submap):"),
+                  uiOutput(
+                    outputId = ns("ht_click_content")
+                  )
+                ),
+                column(
+                  width = 9,
+                  plotOutput(
+                    outputId = ns("deg_sub_heatmap"),
+                    height = "650px",
+                    width = "100%",
+                    click = ns("ht_click")
+                  )
+                )
               )
             ),
             tabPanel(
               "Volcano Plot",
+              br(),
               plotOutput(
-                outputId = ns("volcano_plot")
+                outputId = ns("volcano_plot"),
+                height = "500px",
+                width = "100%"
               )  
             ),
             tabPanel(
               "MA Plot",
+              br(),
               plotOutput(
-                outputId = ns("ma_plot")
+                outputId = ns("ma_plot"),
+                height = "500px",
+                width = "100%"
               )
             ),
             tabPanel(
               "Scatter Plot",
+              br(),
               plotOutput(
-                outputId = ns("scatter_plot")
+                outputId = ns("scatter_plot"),
+                height = "500px",
+                width = "100%"
               )
             ),
             tabPanel(
@@ -227,6 +251,10 @@ mod_05_deg_ui <- function(id) {
 mod_05_deg_server <- function(id, pre_process) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    # Interactive heatmap environment
+    deg_env <- new.env()
+
 
     # DEG STEP 1 ----------
     output$data_file_format <- reactive({
@@ -273,7 +301,7 @@ mod_05_deg_server <- function(id, pre_process) {
       list_interaction_terms_ui(
         sample_info = pre_process$sample_info(),
         select_factors_model = input$select_factors_model,
-        id = input$id
+        id = id
       )
 	  }) 
 
@@ -443,15 +471,145 @@ mod_05_deg_server <- function(id, pre_process) {
       } 
 	  })
 
-    output$selectedHeatmap <- renderPlot({
-	   
-     bar = selectedHeatmap.data()$bar +2;
-		 bar[bar==3] =2
+    contrast_samples <- reactive({
+      req(!is.null(input$select_contrast))
 
-	  	 myheatmap2( selectedHeatmap.data()$genes,bar,200,mycolor=input$heatColors1,c("Down","Up") )
-	
-    }, height = 400, width = 500)
+      find_contrast_samples(
+        select_contrast = input$select_contrast, 
+		    all_sample_names = colnames(pre_process$data()),
+		    sample_info = pre_process$sample_info(),
+		    select_factors_model = input$select_factors_model,
+		    select_model_comprions = input$select_model_comprions, 
+		    reference_levels = factor_reference_levels(),
+		    counts_deg_method = input$counts_deg_method,
+		    data_file_format = pre_process$data_file_format()
+	    )
+    })
 
+    heat_data <- reactive({
+      req(!is.null(deg$limma))
+      req(!is.null(input$select_contrast))
+
+      deg_heat_data(
+        limma = deg$limma,
+        select_contrast = input$select_contrast,
+        processed_data = pre_process$data(),
+        contrast_samples = contrast_samples()
+      )
+    })
+
+    output$deg_main_heatmap <- renderPlot({
+      req(!is.null(heat_data()$genes))
+
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Creating Heatmap",
+        color = "#000000"
+      )
+
+      # Assign heatmap to be used in multiple components
+      deg_env$ht <- deg_heatmap(
+        data = heat_data()$genes,
+        bar = heat_data()$bar,
+        heatmap_color_select = c("green", "black", "red")
+      )
+
+      # Use heatmap position in multiple components
+      deg_env$ht_pos_main <- InteractiveComplexHeatmap::htPositionsOnDevice(deg_env$ht)
+
+      shinybusy::remove_modal_spinner()
+
+      return(deg_env$ht)
+    })
+
+    output$deg_sub_heatmap <- renderPlot({
+      if (is.null(input$ht_brush)) {
+        grid::grid.newpage()
+        grid::grid.text("No region is selected.", 0.5, 0.5)
+      } else {
+        deg_heat_return <- deg_heat_sub(
+          ht_brush = input$ht_brush,
+          ht = deg_env$ht,
+          ht_pos_main = deg_env$ht_pos_main,
+          heatmap_data = heat_data()
+        )
+
+        deg_env$ht_select <- deg_heat_return$ht_select
+        deg_env$submap_data <- deg_heat_return$submap_data
+        deg_env$group_colors <- deg_heat_return$group_colors
+        deg_env$column_groups <- deg_heat_return$column_groups
+        deg_env$bar <- deg_heat_return$bar
+        
+        deg_env$ht_sub <- ComplexHeatmap::draw(
+          deg_env$ht_select,
+          annotation_legend_side = "top",
+          heatmap_legend_side = "top"
+        )
+
+        deg_env$ht_pos_sub <- InteractiveComplexHeatmap::htPositionsOnDevice(deg_env$ht_sub)
+
+        return(deg_env$ht_sub)
+      }
+    })
+
+    # Sub Heatmap Click Value ---------
+    output$ht_click_content <- renderUI({
+      if (is.null(input$ht_click)) { 
+        "Click for Info."
+      } else {
+        deg_click_info(
+          click = input$ht_click,
+          ht_sub = deg_env$ht_sub,
+          ht_sub_obj = deg_env$ht_select,
+          ht_pos_sub = deg_env$ht_pos_sub,
+          sub_groups = deg_env$column_groups,
+          group_colors = deg_env$group_colors,
+          bar = deg_env$bar,
+          data = deg_env$submap_data
+        )
+      }
+    })
+
+    output$volcano_plot <- renderPlot({
+      req(!is.null(deg$limma$top_genes))
+
+      plot_volcano(
+        select_contrast = input$select_contrast,
+        comparisons = deg$limma$comparisons,
+        top_genes = deg$limma$top_genes,
+        limma_p_val = input$limma_p_val,
+        limma_fc = input$limma_fc
+      )
+    })
+
+    output$ma_plot <- renderPlot({
+	    req(!is.null(deg$limma$top_genes))
+      
+      plot_ma(
+        select_contrast = input$select_contrast,
+        comparisons = deg$limma$comparisons,
+        top_genes = deg$limma$top_genes,
+        limma_p_val = input$limma_p_val,
+        limma_fc = input$limma_fc,
+        contrast_samples = contrast_samples(),
+        processed_data = pre_process$data()
+      )
+    })
+
+    output$scatter_plot <- renderPlot({
+      req(!is.null(deg$limma$top_genes))
+
+      plot_deg_scatter(
+        select_contrast = input$select_contrast,
+        comparisons = deg$limma$comparisons,
+        top_genes = deg$limma$top_genes,
+        limma_p_val = input$limma_p_val,
+        limma_fc = input$limma_fc,
+        contrast_samples = contrast_samples(),
+        processed_data = pre_process$data(),
+        sample_info = pre_process$sample_info()
+      )
+    })
   })
 }
 

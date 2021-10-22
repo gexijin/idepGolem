@@ -468,7 +468,7 @@ deg_deseq2 <- function(
   max_samples <- 100
   max_comparisons <- 20
 
-	groups <- as.character(detect_groups(colnames(raw_counts),sample_info))
+	groups <- as.character(detect_groups(colnames(raw_counts), sample_info))
 	unique_groups <- unique(groups)	
 	
 	# Check for replicates, removes samples without replicates
@@ -599,7 +599,7 @@ deg_deseq2 <- function(
       colData = col_data, design = ~ ", 
 			paste(factors_coded[factors], collapse = "+")
     )	
-		exp_type = paste(
+		exp_type <- paste(
       "Model: ~",
       paste(model_factors, collapse = " + ")
     )
@@ -624,7 +624,7 @@ deg_deseq2 <- function(
     # End the model
 		deseq2_object <- paste(deseq2_object, ")") 
 
-		eval(parse(text = deseq2_object) )
+		eval(parse(text = deseq2_object))
 	
 		dds = DESeq2::DESeq(dds)  # main function		
 
@@ -674,7 +674,7 @@ deg_deseq2 <- function(
           substr(tem[2], 2, nchar(tem[2])) 
 			  )				
 			}
-			comparison_names = c(comparison_names,interaction_comparison_names)
+			comparison_names = c(comparison_names,interaction_comparisons)
 		}
 	}
 	
@@ -754,7 +754,7 @@ deg_deseq2 <- function(
 		level_lookup <- c()
 		
 		for(i in 1:dim(sample_info)[2]) {
-      unique_sample_info <- unique(sampleInfo)
+      unique_sample_info <- unique(sample_info)
 			tem <- rep(toupper(letters)[i], dim(unique_sample_info)[1])
 			names(tem) <- paste0(toupper(letters)[i], unique_sample_info[, i])
 			factor_lookup <- c(factor_lookup, tem)  
@@ -805,7 +805,7 @@ deg_deseq2 <- function(
 					if(c_factor == splits[1]) {
             other_level <- splits[4]
           } else {
-            other_level = splited[2]
+            other_level <- splits[2]
           }
 							
 					comparison_name = paste0(
@@ -1569,13 +1569,8 @@ plot_venn <- function(
 deg_heat_data <- function(
   limma,
   select_contrast,
-  converted_data,
-  sample_info,
-  select_factors_model,
-  select_model_comprions,
-  factor_reference_levels,
-  counts_deg_method,
-  data_file_format
+  processed_data,
+  contrast_samples
 ) {
 	genes <- limma$results
 	
@@ -1585,7 +1580,7 @@ deg_heat_data <- function(
 	
   # If not interaction term
   if(!grepl("I:", select_contrast)) {
-		ix <- match(input$selectContrast, colnames(genes)) 
+		ix <- match(select_contrast, colnames(genes)) 
 	} else {
 		# Mismatch in comparison names for interaction terms for DESeq2
 		# I:water_Wet.genetic_Hy in the selected Contrast
@@ -1615,35 +1610,534 @@ deg_heat_data <- function(
 	if(length(query) == 0) {
     return(NULL)
   }
-  iy <- match(query, rownames(converted_data))
+  iy <- match(query, rownames(processed_data))
 		  
 
-	iz <- find_contrast_samples(
-    select_contrast, 
-		colnames(converted_data),
-		sample_info,
-		select_factors_model,
-		select_model_comprions, 
-		factor_reference_levels,
-		counts_deg_method,
-		data_file_format
-	)
+	iz <- contrast_samples
 	
-		# color bar
-		 bar = as.vector( genes[,ix]  ); # new R versions stopped autoconvert single column data frames to vectors.
-		 names(bar) = row.names( genes[,ix] )
-		 bar = bar[bar!=0]
+	# Color bar
+	bar <- as.vector(genes[, ix])
+	names(bar) <- row.names(genes)
+	bar <- bar[bar != 0]
 
-		 # retreive related data		 
-		 genes = convertedData()[iy,iz,drop=FALSE]
-		 
-		 genes = genes[order(bar),,drop=FALSE] # needs to be sorted because myheatmap2 does not reorder genes
-		 bar = sort(bar)
-
-
-		 return(list(genes=genes, bar=bar ))
-
+	# Retreive related data		 
+	genes <- processed_data[iy, iz, drop = FALSE]
 	
-	 })
-	})
+  # Needs to be sorted because myheatmap2 does not reorder genes
+	genes <- genes[order(bar), , drop = FALSE]
+	bar <- sort(bar)
+
+
+	return(list(
+    genes = genes,
+    bar = bar
+  ))
+}
+
+#' SELECTED HEATMAP
+deg_heatmap <- function(
+  data,
+  bar,
+  heatmap_color_select
+) {
+  # Number of genes to show
+	n_genes <- as.character(table(bar))
+
+  data <- as.matrix(data) - apply(data, 1, mean)
+  cutoff <- median(unlist(data)) + 3 * sd(unlist(data)) 
+	data[data > cutoff] <- cutoff
+	cutoff <- median(unlist(data)) - 3 * sd(unlist(data)) 
+	data[data < cutoff] <- cutoff
+
+  # Color scale
+  if (min(data) < 0) {
+    col_fun <- circlize::colorRamp2(
+      c(min(data), 0, max(data)),
+      heatmap_color_select
+    )
+  } else {
+    col_fun <- circlize::colorRamp2(
+      c(min(data), median(data), max(data)),
+      heatmap_color_select
+    )
+  }
+  
+	groups <- detect_groups(colnames(data))
+	group_count <- length(unique(groups))
+  groups_colors <- gg_color_hue(2 + group_count)
+  
+  top_ann <- ComplexHeatmap::HeatmapAnnotation(
+    Group = groups,
+    col = list(
+      Group = setNames(groups_colors[1:group_count], unique(groups))
+    ),
+    annotation_legend_param = list(
+      Group = list(nrow = 1, title = NULL)
+    ),
+    show_annotation_name = list(Group = FALSE),
+    show_legend = FALSE
+  )
+  
+  bar[bar == -1] <- "Negative"
+  bar[bar == 1]  <- "Positive"
+  groups <- bar
+
+  row_ann <- ComplexHeatmap::rowAnnotation(
+    Change = groups,
+    col = list(
+      Change = setNames(
+        groups_colors[(group_count + 1):length(groups_colors)], unique(groups)
+      )
+    ),
+    annotation_legend_param = list(
+      Change = list(nrow = 1, title = NULL)
+    ),
+    show_annotation_name = list(Change = FALSE),
+    show_legend = FALSE
+  )
+
+  heat <- ComplexHeatmap::Heatmap(
+    data,
+    name = "Expression",
+    col = col_fun,
+    cluster_rows = FALSE,
+    cluster_columns = TRUE,
+    show_row_dend = FALSE,
+    show_column_dend = FALSE,
+    left_annotation = row_ann,
+    top_annotation = top_ann,
+    show_row_names = FALSE,
+    show_column_names = FALSE,
+    heatmap_legend_param = list(
+      direction = "horizontal",
+      legend_width = grid::unit(6, "cm"),
+      title = "Color Key",
+      title_position = "topcenter"
+    )
+  )
+  
+  return(
+    heatmap = ComplexHeatmap::draw(
+      heat,
+      heatmap_legend_side = "bottom"
+    )
+  )
+}
+
+#' SUBHEATMAP
+deg_heat_sub <- function(
+  ht_brush,
+  ht,
+  ht_pos_main,
+  heatmap_data
+) {
+  lt <- InteractiveComplexHeatmap::getPositionFromBrush(ht_brush)
+  pos1 <- lt[[1]]
+  pos2 <- lt[[2]]
+
+  pos <- InteractiveComplexHeatmap::selectArea(
+    ht,
+    mark = FALSE,
+    pos1 = pos1,
+    pos2 = pos2,
+    verbose = FALSE,
+    ht_pos = ht_pos_main
+  )
+
+  # Annotations ----------
+    column_groups <- detect_groups(colnames(heatmap_data$genes))
+	  group_count <- length(unique(column_groups))
+    groups_colors <- gg_color_hue(2 + group_count)
+  
+    top_ann <- ComplexHeatmap::HeatmapAnnotation(
+      Group = column_groups,
+      col = list(
+        Group = setNames(
+          groups_colors[1:group_count],
+          unique(column_groups)
+        )
+      ),
+      annotation_legend_param = list(
+        Group = list(nrow = 1, title = NULL)
+      ),
+      show_annotation_name = list(Group = FALSE),
+      show_legend = TRUE
+    )
+    
+    bar <- heatmap_data$bar
+    bar[bar == -1] <- "Down"
+    bar[bar == 1]  <- "Up"
+    row_groups <- bar
+
+    row_ann <- ComplexHeatmap::rowAnnotation(
+      Change = row_groups,
+      col = list(
+        Change = setNames(
+          groups_colors[(group_count + 1):length(groups_colors)],
+          unique(row_groups)
+        )
+      ),
+      annotation_legend_param = list(
+        Change = list(nrow = 1, title = NULL)
+      ),
+      show_annotation_name = list(Change = FALSE),
+      show_legend = TRUE
+    )
+    
+    group_col_return <- setNames(
+      groups_colors,
+      c(unique(column_groups), unique(row_groups))
+    )
+  # End annotation ---------
+
+  column_index <- unlist(pos[1, "column_index"])
+  row_index <- unlist(pos[1, "row_index"])
+  top_ann <- top_ann[column_index]
+  row_ann <- row_ann[row_index]
+  column_groups <- column_groups[column_index]
+  m <- ht@ht_list[[1]]@matrix
+
+  bar_return <- bar[row_index]
+
+  if (length(row_index) > 50) {
+    show_rows <- FALSE
+  } else {
+    show_rows <- TRUE
+  }
+  submap_data <- m[row_index, column_index, drop = FALSE]
+
+  ht_select <- ComplexHeatmap::Heatmap(
+    m[row_index, column_index, drop = FALSE],
+    col = ht@ht_list[[1]]@matrix_color_mapping@col_fun,
+    show_heatmap_legend = FALSE,
+    cluster_rows = FALSE,
+    cluster_columns = FALSE,
+    show_row_names = show_rows,
+    top_annotation = top_ann,
+    left_annotation = row_ann,
+    name = "heat_1"
+  )
+
+  return(list(
+    ht_select = ht_select,
+    submap_data = submap_data,
+    group_colors = group_col_return,
+    column_groups = column_groups,
+    bar = bar_return
+  ))
+}
+
+#' DEG SUB CLICK INFO
+deg_click_info <- function(
+  click,
+  ht_sub,
+  ht_sub_obj,
+  ht_pos_sub,
+  sub_groups,
+  group_colors,
+  bar,
+  data
+) {
+  pos1 <- InteractiveComplexHeatmap::getPositionFromClick(click)
+    
+  pos <- InteractiveComplexHeatmap::selectPosition(
+    ht_sub,
+    mark = FALSE,
+    pos = pos1,
+    verbose = FALSE,
+    ht_pos = ht_pos_sub
+  )
+  
+  row_index <- pos[1, "row_index"]
+  column_index <- pos[1, "column_index"]
+
+  if (is.null(row_index)) {
+    return("Select a cell in the heatmap.")
+  }
+
+  value <- data[row_index, column_index]
+  col <- ComplexHeatmap::map_to_colors(ht_sub_obj@matrix_color_mapping, value)
+  sample <- colnames(data)[column_index]
+  gene <- rownames(data)[row_index]
+  up_down <- bar[row_index]
+  up_down_col <- group_colors[[up_down]]
+  group_name <- sub_groups[column_index]
+  group_col <- group_colors[[group_name]]
+
+  # HTML for info table
+  # Pulled from https://github.com/jokergoo/InteractiveComplexHeatmap/blob/master/R/shiny-server.R
+  # Lines 1669:1678
+  html <- GetoptLong::qq("
+<div>
+<pre>
+Value: @{round(value, 2)} <span style='background-color:@{col};width=50px;'>    </span>
+Sample: @{sample}
+Gene: @{gene} 
+Group: @{group_name} <span style='background-color:@{group_col};width=50px;'>    </span>
+Regulation: @{up_down} <span style='background-color:@{up_down_col};width=50px;'>    </span>   
+</pre></div>"
+)
+
+ return(HTML(html))
+}
+
+#' VOLCANO PLOT
+plot_volcano <- function(
+  select_contrast,
+  comparisons,
+  top_genes,
+  limma_p_val,
+  limma_fc
+) {
+  if(is.null(select_contrast) || is.null(comparisons) ||
+     length(top_genes) == 0) {
+    return(NULL)
+  }
+	if(length(comparisons)  == 1) { 
+    top_1 = top_genes[[1]]  
+	} else {
+	  top <- top_genes
+	  ix <- match(select_contrast, names(top))
+	  if(is.na(ix)) {
+      return (NULL)
+    }
+	  top_1 <- top[[ix]]
+	}
+  if(dim(top_1)[1] == 0 ) {
+    return(NULL)
+  } 
+  colnames(top_1) <- c("Fold","FDR")
+  # Convert to data frame
+	top_1 <- as.data.frame(top_1)
+  # Remove NA's
+  top_1 <- top_1[which(!(is.na(top_1$Fold) | is.na(top_1$FDR))), ] 
+	top_1$upOrDown <- "None"
+	top_1$upOrDown[which(
+    top_1$FDR <= limma_p_val & top_1$Fold  >= log2(limma_fc)
+  )] <- "Up"
+	top_1$upOrDown[which(
+    top_1$FDR <= limma_p_val & top_1$Fold  <= -log2(limma_fc)
+  )] <- "Down"
+
+  colors <- gg_color_hue(2)
+  
+  return(
+    ggplot2::ggplot(top_1, ggplot2::aes(x = Fold, y = -log10(FDR))) +
+      ggplot2::geom_point(ggplot2::aes(color = upOrDown))	+
+      ggplot2::scale_color_manual(values = c(colors[1], "grey45", colors[2])) +
+      ggplot2::theme_light() +
+      ggplot2::theme(
+        legend.position = "right",
+        axis.title.x = ggplot2::element_text(
+          color = "black",
+          size = 14
+        ),
+        axis.title.y = ggplot2::element_text(
+          color = "black",
+          size = 14
+        ),
+        axis.text.x = ggplot2::element_text(
+          size = 16
+        ),
+        axis.text.y = ggplot2::element_text(
+          size = 16
+        ),
+        plot.title = ggplot2::element_text(
+          color = "black",
+          size = 16,
+          face = "bold",
+          hjust = .5
+        )
+      ) +
+      ggplot2::labs(
+        title = "Fold Change vs. Adjusted p-Value",
+        y = "-log10(Adjusted p-Val)",
+        x = "Fold Change",
+        color = "Regulated"
+      )
+  ) 
+}
+
+plot_ma <- function(
+  select_contrast,
+  comparisons,
+  top_genes,
+  limma_p_val,
+  limma_fc,
+  contrast_samples,
+  processed_data
+) {
+  if(grepl("I:", select_contrast)) {
+    return(NULL)
+  }
+  if(length(comparisons) == 1) {
+    top_1 <- top_genes[[1]]  
+	} else {
+	  top <- top_genes
+	  ix <- match(select_contrast, names(top))
+	  if(is.na(ix)) {
+      return(NULL)
+    }
+	  top_1 <- top[[ix]] 
+	}
+  if(dim(top_1)[1] == 0) {
+    return(NULL)
+  }
+  colnames(top_1) <- c("Fold", "FDR")
+  # Convert to data frame
+  top_1 <- as.data.frame(top_1)
+  # Remove NA's
+  top_1 <- top_1[which(!(is.na(top_1$Fold) | is.na(top_1$FDR))), ]
+  top_1$upOrDown <- "None"
+	top_1$upOrDown[which(
+    top_1$FDR <= limma_p_val & top_1$Fold  >= log2(limma_fc)
+  )] <- "Up"
+	top_1$upOrDown[which(
+    top_1$FDR <= limma_p_val & top_1$Fold  <= -log2(limma_fc)
+  )] <- "Down"
+
+  iz <- contrast_samples
+
+  average_data <- as.data.frame(apply(processed_data[, iz], 1, mean))
+  colnames(average_data) <- "Average"
+	rownames(average_data) <- rownames(processed_data)
+		
+	genes <-  merge(average_data, top_1, by = "row.names")
+
+  colors <- gg_color_hue(2)
+
+  return(
+    ggplot2::ggplot(genes, ggplot2::aes(x = Average, y = Fold)) +
+      ggplot2::geom_point(ggplot2::aes(color = upOrDown))	+
+      ggplot2::scale_color_manual(values = c(colors[1], "grey45", colors[2])) +
+      ggplot2::theme_light() +
+      ggplot2::theme(
+        legend.position = "right",
+        axis.title.x = ggplot2::element_text(
+          color = "black",
+          size = 14
+        ),
+        axis.title.y = ggplot2::element_text(
+          color = "black",
+          size = 14
+        ),
+        axis.text.x = ggplot2::element_text(
+          size = 16
+        ),
+        axis.text.y = ggplot2::element_text(
+          size = 16
+        ),
+        plot.title = ggplot2::element_text(
+          color = "black",
+          size = 16,
+          face = "bold",
+          hjust = .5
+        )
+      ) +
+      ggplot2::labs(
+        title = "Average Expression vs. Log2 Fold Change",
+        y = "Log2 Fold Change",
+        x = "Average Expression",
+        color = "Regulated"
+      )
+  ) 
+}
+
+plot_deg_scatter <- function(
+  select_contrast,
+  comparisons,
+  top_genes,
+  limma_p_val,
+  limma_fc,
+  contrast_samples,
+  processed_data,
+  sample_info
+) {
+	if(grepl("I:", select_contrast)) {
+    return(NULL)
+  }
+
+	if(length(comparisons)  == 1) {
+    top_1 <- top_genes[[1]]  
+	} else {
+	  top <- top_genes
+	  ix <- match(select_contrast, names(top))
+	  if(is.na(ix)) {
+      return(NULL)
+    }
+	  top_1 <- top[[ix]] 
+	}
+	  
+  if(dim(top_1)[1] == 0) {
+    return(NULL)
+  }
+	colnames(top_1) <- c("Fold", "FDR")
+  # Convert to data frame
+	top_1 <- as.data.frame(top_1)
+  # Remove NA's
+  top_1 <- top_1[which(!(is.na(top_1$Fold) | is.na(top_1$FDR))), ] 
+	top_1$upOrDown <- "None"
+	top_1$upOrDown[which(
+    top_1$FDR <= limma_p_val & top_1$Fold  >= log2(limma_fc)
+  )] <- "Up"
+	top_1$upOrDown[which(
+    top_1$FDR <= limma_p_val & top_1$Fold  <= -log2(limma_fc)
+  )] <- "Down"
+
+	iz <- contrast_samples
+	
+  genes <- processed_data[,iz]
+	 
+	g <- detect_groups(colnames(genes), sample_info)
+	 
+	if(length(unique(g)) > 2) {
+    plot.new()
+    text(0.5,0.5, "Not available.")
+  } else{
+		average_1 <- apply(genes[, which(g == unique(g)[1])], 1, mean)
+
+		average_2 <- apply(genes[, which(g == unique(g)[2])], 1, mean)
+
+		genes_1 <- cbind(average_1, average_2)
+		rownames(genes_1) <- rownames(genes)
+		genes_1 <-  merge(genes_1, top_1, by = "row.names")
+
+    colors <- gg_color_hue(2)
+
+    return(
+      ggplot2::ggplot(genes_1, ggplot2::aes(x = average_1, y = average_2)) +
+        ggplot2::geom_point(ggplot2::aes(color = upOrDown))	+
+        ggplot2::scale_color_manual(values = c(colors[1], "grey45", colors[2])) +
+        ggplot2::theme_light() +
+        ggplot2::theme(
+          legend.position = "right",
+          axis.title.x = ggplot2::element_text(
+            color = "black",
+            size = 14
+          ),
+          axis.title.y = ggplot2::element_text(
+            color = "black",
+            size = 14
+          ),
+          axis.text.x = ggplot2::element_text(
+            size = 16
+          ),
+          axis.text.y = ggplot2::element_text(
+            size = 16
+          ),
+          plot.title = ggplot2::element_text(
+            color = "black",
+            size = 16,
+            face = "bold",
+            hjust = .5
+          )
+        ) +
+        ggplot2::labs(
+          title = "Average Expression in Group",
+          y = paste0("Average Expression: ", unique(g)[2]),
+          x = paste0("Average Expression: ", unique(g)[1]),
+          color = "Regulated"
+        )
+    )
+	} 
 }
