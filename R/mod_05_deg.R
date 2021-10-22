@@ -147,7 +147,23 @@ mod_05_deg_ui <- function(id) {
         sidebarPanel(
           h5("Examine the results of DEGs for each comparison"),
           htmlOutput(outputId = ns("list_comparisons")),
-          br(),
+          # Heatmap customizing features ----------
+          conditionalPanel(
+            condition = "input.step_2 == 'Heatmap'",
+            fluidRow(
+              column(width = 3, h5("Color:")),
+              column(
+                width = 9,
+                selectInput(
+                  inputId = ns("heatmap_color_select"),
+                  label = NULL,
+                  choices = "green-black-red",
+                  width = "100%"
+                )
+              )
+            ),
+            ns = ns
+          ),
           HTML(
             "<hr style='height:1px;border:none;color:
             #333;background-color:#333;' />"
@@ -166,6 +182,7 @@ mod_05_deg_ui <- function(id) {
         ),
         mainPanel(
           tabsetPanel(
+            id = ns("step_2"),
             tabPanel(
               title = "Heatmap",
               h5("Brush for sub-heatmap, click for value. (Shown Below)"),
@@ -498,6 +515,29 @@ mod_05_deg_server <- function(id, pre_process) {
       )
     })
 
+    # Heatmap Colors ----------
+    heatmap_colors <- list(
+      "Green-Black-Red" = c("green", "black", "red"),
+      "Blue-White-Red" = c("blue", "white", "red"),
+      "Green-Black-Magenta" = c("green", "black", "magenta"),
+      "Blue-Yellow-Red" = c("blue", "yellow", "red"),
+      "Blue-White-Brown" = c("blue", "white", "brown")
+    )
+    heatmap_choices <- c(
+      "Green-Black-Red",
+      "Blue-White-Red",
+      "Green-Black-Magenta",
+      "Blue-Yellow-Red",
+      "Blue-White-Brown"
+    )
+    observe({
+      updateSelectInput(
+        session = session,
+        inputId = "heatmap_color_select",
+        choices = heatmap_choices
+      )
+    })
+
     output$deg_main_heatmap <- renderPlot({
       req(!is.null(heat_data()$genes))
 
@@ -511,7 +551,7 @@ mod_05_deg_server <- function(id, pre_process) {
       deg_env$ht <- deg_heatmap(
         data = heat_data()$genes,
         bar = heat_data()$bar,
-        heatmap_color_select = c("green", "black", "red")
+        heatmap_color_select = heatmap_colors[[input$heatmap_color_select]]
       )
 
       # Use heatmap position in multiple components
