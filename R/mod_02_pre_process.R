@@ -674,7 +674,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       )
     })
 
-    # Remove tabs if the tab changes --------
+    # Remove messages if the tab changes --------
     observe({
       req(tab() != "Pre-Process")
 

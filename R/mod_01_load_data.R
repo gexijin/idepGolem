@@ -246,7 +246,7 @@ mod_01_load_data_ui <- function(id) {
 #'
 #' @noRd
 ### testing something, come back to later
-mod_01_load_data_server <- function(id, idep_data) {
+mod_01_load_data_server <- function(id, idep_data, tab) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -390,6 +390,28 @@ mod_01_load_data_server <- function(id, idep_data) {
       width = "auto",
       hover = TRUE
     )
+
+    # Species match message ----------
+    observe({
+      req(tab() == "Load Data" && !is.null(conversion_info()$converted))
+
+      tem <- conversion_info()$converted$species_match
+      showNotification(
+        ui = paste("Matched species is '", tem[1, ],".' If that is not your
+                    species, please reset and use the dropdown to select
+                    the correct species."),
+        id = "species_match",
+        duration = NULL,
+        type = "warning"
+      )
+    })
+
+    # Remove message if the tab changes --------
+    observe({
+      req(tab() != "Load Data")
+
+      removeNotification("species_match")
+    })
 
     # Species list and genome assemblies ---------
     output$genome_species_table <- DT::renderDataTable({

@@ -302,7 +302,7 @@ mod_03_clustering_ui <- function(id) {
               )
             ),
             plotOutput(
-              outputId = ns("correlationMatrix")
+              outputId = ns("correlation_matrix")
             )
           ),
 
@@ -743,14 +743,8 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       )
     })
 
-    hyperlink <- reactive({
-      if(length(input$Hierarchical_Selection_rows_selected)) {
-        utils::browseURL("https://stat.ethz.ch/R-manual/R-patched/library/utils/html/browseURL.html")
-      }
-    })
-
     # Correlation Matrix ----------
-    output$correlationMatrix <- renderPlot({
+    output$correlation_matrix <- renderPlot({
 		  cor_plot(
         data = pre_process$data(),
         label_pcc = input$label_pcc,

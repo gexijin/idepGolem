@@ -153,6 +153,8 @@ find_overlap <- function(
       max_size = 10000
     )
   }
+  
+  # pathway_table <- pathway_table[pathway_table$overlap > 1, ]
 
   if(dim(pathway_table)[1] == 0 || is.null(pathway_table)) {
     return(error_msg)
@@ -211,7 +213,7 @@ find_overlap <- function(
   } else {
     pathway_table <- pathway_table[which(pathway_table$fdr < min_fdr), ]
 
-    pathway_table <- subset(pathway_table, select = c(fdr, overlap, n, description, gene_sets) )
+    pathway_table <- subset(pathway_table, select = c(fdr, overlap, n, description, gene_sets))
     pathway_table$n <- as.numeric(pathway_table$n)
     pathway_table$fdr <-  formatC(pathway_table$fdr, format = "e", digits = 2)
     colnames(pathway_table) <- c(

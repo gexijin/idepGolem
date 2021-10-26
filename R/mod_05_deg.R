@@ -169,15 +169,20 @@ mod_05_deg_ui <- function(id) {
             #333;background-color:#333;' />"
           ),
           h5("Enrichment analysis for DEGs:"),
-          htmlOutput(outputId = ns("select_go")),
+          htmlOutput(outputId = ns("select_go_selector")),
           tags$style(
             type = "text/css",
             "#deg-select_go { width:100%; margin-top:-9px}"
           ),
           checkboxInput(
-            ns("filtered_background"), 
-            label = "Filtered genes as background for enrichment", 
+            inputId = ns("filtered_background"), 
+            label = "Use filtered data as background in enrichment (slow)", 
             value = TRUE
+          ),
+          checkboxInput(
+            inputId = ns("remove_redudant"),
+            label = "Remove Redudant Gene Sets",
+            value = FALSE
           )
         ),
         mainPanel(
@@ -214,7 +219,7 @@ mod_05_deg_ui <- function(id) {
               )
             ),
             tabPanel(
-              "Volcano Plot",
+              title = "Volcano Plot",
               br(),
               plotOutput(
                 outputId = ns("volcano_plot"),
@@ -223,7 +228,7 @@ mod_05_deg_ui <- function(id) {
               )  
             ),
             tabPanel(
-              "MA Plot",
+              title = "MA Plot",
               br(),
               plotOutput(
                 outputId = ns("ma_plot"),
@@ -232,7 +237,7 @@ mod_05_deg_ui <- function(id) {
               )
             ),
             tabPanel(
-              "Scatter Plot",
+              title = "Scatter Plot",
               br(),
               plotOutput(
                 outputId = ns("scatter_plot"),
@@ -240,19 +245,109 @@ mod_05_deg_ui <- function(id) {
                 width = "100%"
               )
             ),
-            tabPanel(
-              "Enriched TF Motifs",
-              NULL
-            ),
             navbarMenu(
-              "Enrichment",
+              title = "Enrichment",
               tabPanel(
-                "Tree",
-                NULL
+                title = "Table",
+                br(),
+                strong(h3("Up Regulated Genes")),
+                br(),
+                DT::dataTableOutput(
+                  outputId = ns("pathway_data_up")
+                ),
+                br(),
+                strong(h3("Down Regulated Genes")),
+                br(),
+                DT::dataTableOutput(
+                  outputId = ns("pathway_data_down")
+                )
               ),
               tabPanel(
-                "Network",
-                NULL
+                title = "Tree",
+                plotOutput(
+                  outputId = ns("enrichment_tree"),
+                  width = "100%"
+                )
+              ),
+              tabPanel(
+                title = "Network",
+                h5("Connected gene sets share more genes. Color of node correspond to adjuested Pvalues."),
+                fluidRow(
+                  column(
+                    width = 2,
+                    actionButton(
+                      inputId = ns("layout_vis_deg"),
+                      label = "Change layout"
+                    )
+                  ),
+                  column(
+                    width = 1,
+                    h5("Cutoff:"),
+                    align="right"
+                  ),
+                  column(
+                    width = 2,
+                    numericInput(
+                      inputId = ns("edge_cutoff_deg"),
+                      label = NULL,
+                      value = 0.30,
+                      min = 0,
+                      max = 1,
+                      step = .1
+                    ),
+                    align="left"
+                  ),
+                  column(
+                    width = 2,
+                    checkboxInput(
+                      inputId = ns("wrap_text_network_deg"),
+                      label = "Wrap text",
+                      value = TRUE
+                    )
+                  ),
+                  column(
+                    width = 1,
+                    downloadButton(
+                      outputId = ns("vis_network_deg_download"),
+                      label = "Network"
+                    )
+                  ),
+                  column(
+                    width = 1,
+                    downloadButton(
+                      outputId = ns("download_edges_deg"),
+                      label = "Edges"
+                    )
+                  ) ,
+                  column(
+                    width = 1,
+                    downloadButton(
+                      outputId = "download_nodes_deg",
+                      label = "Nodes"
+                    )
+                  )
+                ),
+                selectInput(
+                  inputId = ns("up_down_reg_deg"),
+                  NULL,
+                  choices = c(
+                    "Both Up & Down" = "Both",
+                    "Up regulated" = "Up",
+                    "Down regulated" = "Down"
+                  )
+                ),
+                h6(
+                  "Two pathways (nodes) are connected if they share 30% (default, adjustable) or more genes.
+                  Green and red represents down- and up-regulated pathways. You can move the nodes by 
+                  dragging them, zoom in and out by scrolling, and shift the entire network by click on an 
+                  empty point and drag. Darker nodes are more significantly enriched gene sets. Bigger nodes
+                  represent larger gene sets. Thicker edges represent more overlapped genes."
+                ),
+                visNetwork::visNetworkOutput(
+                  outputId = ns("vis_network_deg"),
+                  height = "800px",
+                  width = "100%"
+                )
               )
             )
           )
@@ -649,6 +744,184 @@ mod_05_deg_server <- function(id, pre_process) {
         processed_data = pre_process$data(),
         sample_info = pre_process$sample_info()
       )
+    })
+
+    # Split up and down genes into two data bases ---------
+    up_reg_data <- reactive({
+      req(!is.null(heat_data()))
+
+      return(
+        heat_data()$genes[heat_data()$bar == 1, ]
+      )
+    })
+    down_reg_data <- reactive({
+      req(!is.null(heat_data()))
+
+      return(
+        heat_data()$genes[heat_data()$bar == -1, ]
+      )
+    })
+
+    # GMT choices for enrichment ----------
+    output$select_go_selector <- renderUI({
+	    req(!is.null(pre_process$gmt_choices()))
+
+	    selectInput(
+        inputId = ns("select_go"),
+        label = "Select Geneset:",
+        choices = pre_process$gmt_choices(),
+        selected = "GOBP"
+      )
+    })
+
+    # Enrichment Analysis Up Data -----------
+    pathway_table_up <- reactive({
+      req(!is.null(up_reg_data()))
+
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Running Analysis",
+        color = "#000000"
+      )
+
+      gene_names <- merge_data(
+        all_gene_names = pre_process$all_gene_names(),
+        data = up_reg_data(),
+        merge_ID = "ensembl_ID"
+      )
+      # Only keep the gene names and scrap the data
+      gene_names_query <- dplyr::select_if(gene_names, is.character)
+
+      req(!is.null(input$select_go))
+
+      gene_sets <- read_pathway_sets(
+        all_gene_names_query = gene_names_query,
+        converted = pre_process$converted(),
+        go = input$select_go,
+        select_org = pre_process$select_org(),
+        gmt_file = pre_process$gmt_file(),
+        idep_data = idep_data,
+        gene_info = pre_process$all_gene_info()
+      )
+
+      pathway_info <- find_overlap(
+        pathway_table = gene_sets$pathway_table,
+        query_set = gene_sets$query_set,
+        total_genes = gene_sets$total_genes,
+        processed_data = pre_process$data(),
+        gene_info = pre_process$all_gene_info(),
+        go = input$select_go,
+        idep_data = idep_data,
+        select_org = pre_process$select_org(),
+        sub_pathway_files = gene_sets$pathway_files,
+        use_filtered_background = input$filtered_background,
+        reduced = input$remove_redudant
+      )
+
+      shinybusy::remove_modal_spinner()
+
+      return(pathway_info)
+    })
+
+    # Subheatmap Data Table ----------
+    output$pathway_data_up <- DT::renderDataTable({
+      req(!is.null(pathway_table_up()))
+
+      DT::datatable(
+        pathway_table_up(),
+        options = list(
+          pageLength = 20,
+          scrollX = "400px"
+        ),
+        rownames = TRUE
+      )
+    })
+
+    # Enrichment Analysis Down Data -----------
+    pathway_table_down <- reactive({
+      req(!is.null(down_reg_data()))
+
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Running Analysis",
+        color = "#000000"
+      )
+
+      gene_names <- merge_data(
+        all_gene_names = pre_process$all_gene_names(),
+        data = down_reg_data(),
+        merge_ID = "ensembl_ID"
+      )
+      # Only keep the gene names and scrap the data
+      gene_names_query <- dplyr::select_if(gene_names, is.character)
+
+      req(!is.null(input$select_go))
+
+      gene_sets <- read_pathway_sets(
+        all_gene_names_query = gene_names_query,
+        converted = pre_process$converted(),
+        go = input$select_go,
+        select_org = pre_process$select_org(),
+        gmt_file = pre_process$gmt_file(),
+        idep_data = idep_data,
+        gene_info = pre_process$all_gene_info()
+      )
+
+      pathway_info <- find_overlap(
+        pathway_table = gene_sets$pathway_table,
+        query_set = gene_sets$query_set,
+        total_genes = gene_sets$total_genes,
+        processed_data = pre_process$data(),
+        gene_info = pre_process$all_gene_info(),
+        go = input$select_go,
+        idep_data = idep_data,
+        select_org = pre_process$select_org(),
+        sub_pathway_files = gene_sets$pathway_files,
+        use_filtered_background = input$filtered_background,
+        reduced = input$remove_redudant
+      )
+
+      shinybusy::remove_modal_spinner()
+
+      return(pathway_info)
+    })
+
+    # Subheatmap Data Table ----------
+    output$pathway_data_down <- DT::renderDataTable({
+      req(!is.null(pathway_table_down()))
+
+      DT::datatable(
+        pathway_table_down(),
+        options = list(
+          pageLength = 20,
+          scrollX = "400px"
+        ),
+        rownames = TRUE
+      )
+    })
+
+    go_table <- reactive({
+      req(!is.null(pathway_table_up()) || !is.null(pathway_data_down()))
+
+      go_table_data(
+        up_enrich_data = pathway_table_up(),
+        down_enrich_data = pathway_table_down(),
+      )
+    })
+
+    # Enrichment Tree -----------
+    output$enrichment_tree <- renderPlot({
+      req(!is.null(go_table()))
+	    
+      enrichment_plot_deg(
+        go_table = go_table()
+        45
+      )
+    })
+
+    # Define a Network
+    network_data_deg <- reactive({
+      
     })
   })
 }
