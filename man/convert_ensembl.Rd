@@ -4,16 +4,16 @@
 \alias{convert_ensembl}
 \title{FUNCTION_TITLE}
 \usage{
-convert_ensembl(query, species, idep_date, convert_type = "entrez")
+convert_ensembl(query, species, idep_data, convert_type = "entrez")
 }
 \arguments{
 \item{query}{DESCRIPTION.}
 
 \item{species}{DESCRIPTION.}
 
-\item{idep_date}{DESCRIPTION.}
-
 \item{convert_type}{DESCRIPTION.}
+
+\item{idep_date}{DESCRIPTION.}
 }
 \value{
 RETURN_DESCRIPTION

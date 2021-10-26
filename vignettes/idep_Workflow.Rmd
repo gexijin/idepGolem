@@ -378,4 +378,93 @@ vsn::meanSdPlot(processed_data$data)
 
 # Gene search for individual plotting
 merged_data[grep("H4c1", merged_data$symbol),]
+
+heatmap_data <- process_heatmap_data(
+  data = processed_data$data,
+  n_genes_max = 50,
+  n_genes_min = 0,
+  gene_centering = TRUE,
+  gene_normalize = FALSE,
+  sample_centering = FALSE,
+  sample_normalize = FALSE,
+  all_gene_names = gene_names,
+  select_gene_id = "ensembl_ID"
+)
+dist_funs <- dist_functions()
+hclust_funs <- hcluster_functions()
+
+devtools::load_all()
+
+gene_sets <- read_pathway_sets(
+  all_gene_names_query = gene_names[1:500, ],
+  converted = converted,
+  go = NULL,
+  select_org = "BestMatch",
+  gmt_file = NULL,
+  idep_data = idep_data,
+  gene_info = all_gene_info
+)
+
+pathway_info <- find_overlap(
+  pathway_table = gene_sets$pathway_table,
+  query_set = gene_sets$query_set,
+  total_genes = gene_sets$total_genes,
+  processed_data = processed_data$data,
+  gene_info = all_gene_info,
+  go = "GOBP",
+  idep_data = idep_data,
+  sub_pathway_files = gene_sets$pathway_files,
+  use_filtered_background = TRUE,
+  select_org = "BestMatch",
+  reduced = .75
+)
+pathway_info
 ```
+
+
+```{r}
+limma <- limma_value(
+  data_file_format = "1",
+  counts_deg_method = "3",
+  raw_counts = processed_data$raw_counts,
+  limma_p_val = .1,
+  limma_fc = 2,
+  select_model_comprions = "p53: null vs. wt",
+  sample_info = loaded_data$sample_info,
+  select_factors_model = c("p53", "Treatment"),
+  select_interactions = "p53:Treatment",
+  select_block_factors_model = NULL,
+  factor_reference_levels = c("p53:wt", "Treatment:mock"),
+  processed_data = processed_data$data,
+  counts_log_start = 4,
+  p_vals = processed_data$p_vals
+)
+
+deg_heat <- deg_heat_data(
+  limma = limma,
+  select_contrast = "null-wt",
+  processed_data = processed_data$data,
+  sample_info = loaded_data$sample_info,
+  select_factors_model = c("p53", "Treatment"),
+  select_model_comprions = "p53: null vs. wt",
+  factor_reference_levels = c("p53:wt", "Treatment:mock"),
+  counts_deg_method = "3",
+  data_file_format = "1"
+)
+
+main_heat_deg <- deg_heatmap(
+  data = deg_heat$genes,
+  bar = deg_heat$bar,
+  heatmap_color_select = c("green", "black", "red")
+)
+ComplexHeatmap::draw(main_heat_deg)
+
+plot_volcano(
+  select_contrast = "null-wt",
+  comparisons = limma$comparisons,
+  top_genes = limma$top_genes,
+  limma_p_val = .1,
+  limma_fc = 2
+)
+```
+

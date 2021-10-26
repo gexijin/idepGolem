@@ -237,12 +237,12 @@ process_heatmap_data <- function(
   )
 
   if (gene_centering) {
-    return(data)
+    return(round(data, 3))
   } else {
     data <- data[(n_genes_min + 1):n_genes_max, ]
   }
 
-  return(data)
+  return(round(data, 3))
 }
 
 #' Draw a heatmap of processed data
@@ -283,11 +283,26 @@ heatmap_main <- function(
   k_clusters,
   re_run
 ) {
+  # Filter with max z-score
   cutoff <- median(unlist(data)) + heatmap_cutoff * sd(unlist(data))
   data[data > cutoff] <- cutoff
   cutoff <- median(unlist(data)) - heatmap_cutoff * sd(unlist(data))
   data[data < cutoff] <- cutoff
 
+  # Color scale
+  if (min(data) < 0) {
+    col_fun <- circlize::colorRamp2(
+      c(min(data), 0, max(data)),
+      heatmap_color_select
+    )
+  } else {
+    col_fun <- circlize::colorRamp2(
+      c(min(data), median(data), max(data)),
+      heatmap_color_select
+    )
+  }
+
+  # Annotation for groups
   groups <- detect_groups(colnames(data))
 
   if (!is.null(sample_info) && !is.null(select_factors_heatmap)) {
@@ -301,26 +316,12 @@ heatmap_main <- function(
 
   groups_colors <- gg_color_hue(length(unique(groups)))
 
-
-  if (min(data) < 0) {
-    col_fun <- circlize::colorRamp2(
-      c(min(data), 0, max(data)),
-      heatmap_color_select
-    )
-  } else {
-    col_fun <- circlize::colorRamp2(
-      c(min(data), median(data), max(data)),
-      heatmap_color_select
-    )
-  }
-
   if (length(groups) < 30) {
     show_group_leg <- TRUE
   } else {
     show_group_leg <- FALSE
   }
-
-
+  
   heat_ann <- ComplexHeatmap::HeatmapAnnotation(
     Group = groups,
     col = list(Group = setNames(groups_colors, unique(groups))),
@@ -328,9 +329,10 @@ heatmap_main <- function(
       Group = list(nrow = 1, title = NULL)
     ),
     show_annotation_name = list(Group = FALSE),
-    show_legend = show_group_leg
+    show_legend = FALSE
   )
 
+  # Different heatmaps for hierarchical and k-means
   if (cluster_meth == 1) {
     heat <- ComplexHeatmap::Heatmap(
       data,
@@ -392,11 +394,12 @@ heatmap_main <- function(
     )
   }
 
-  ComplexHeatmap::draw(
-    heat,
-    heatmap_legend_side = "bottom",
-    annotation_legend_side = "top"
-  )
+  return(
+    ComplexHeatmap::draw(
+      heat,
+      heatmap_legend_side = "bottom"
+    )
+  )  
 }
 
 #' Draw a dendogram of data samples
@@ -506,4 +509,379 @@ k_means_elbow <- function(
     y = "Within Sum of Square",
     x = "Clusters"
   )
+}
+
+
+#' Create annotation for shiny subheatmap
+#' 
+#' Use the heatmap data to make an annotation for the
+#' submap that will also show the legend
+#' 
+#' @param data Heatmap data
+#' @param sample_info Experiment design file from load data
+#' @param select_factors_heatmap Factor to group by in the samples
+#' 
+#' @return A list containing a ComplexHeatmap annotation object,
+#' a ComplexHeatmap legend, list of groups, and list of group colors.
+#' 
+sub_heat_ann <- function(
+  data,
+  sample_info,
+  select_factors_heatmap
+) {
+  groups <- detect_groups(colnames(data))
+
+  if (!is.null(sample_info) && !is.null(select_factors_heatmap)) {
+    if (select_factors_heatmap == "Sample_Name") {
+      groups <- detect_groups(colnames(data))
+    } else {
+      ix <- match(select_factors_heatmap, colnames(sample_info))
+      groups <- sample_info[, ix]
+    }
+  }
+
+  groups_colors <- gg_color_hue(length(unique(groups)))
+  group_colors <- setNames(groups_colors, unique(groups))
+
+  if (length(unique(groups)) < 10) {
+    lgd <- ComplexHeatmap::Legend(
+      at = unique(groups),
+      legend_gp = grid::gpar(fill = groups_colors),
+      nrow = 1
+    )
+  } else {
+    lgd <- NULL
+  }
+  
+  heat_sub_ann <- ComplexHeatmap::HeatmapAnnotation(
+    Group = groups,
+    col = list(Group = setNames(groups_colors, unique(groups))),
+    show_annotation_name = list(Group = FALSE),
+    show_legend = FALSE
+  )
+
+  return(list(
+    heat_sub_ann = heat_sub_ann,
+    lgd = lgd,
+    groups = groups,
+    group_colors = group_colors
+  ))
+}
+
+#' Interactive click text for subheatmap
+#' 
+#' Create a text output to tell the user the cell
+#' information for their click.
+#' 
+#' @param click Click input from subheatmap
+#' @param ht_sub Drawn subheatmap
+#' @param ht_sub_obj Heatmap object with mapping info
+#' @param ht_pos_sub Position information from submap
+#' @param sub_groups Vector of group labels from submap
+#' @param group_colors Colors for the group annotation
+#' @param cluster_meth Type of clustering being performed
+#' @param click_data Data matrix to get the data value from
+#' 
+#' @return HTML code to produce a table with information
+#' about the selected cell.
+heat_click_info <- function(
+  click,
+  ht_sub,
+  ht_sub_obj,
+  ht_pos_sub,
+  sub_groups,
+  group_colors,
+  cluster_meth,
+  click_data
+) {
+  pos1 <- InteractiveComplexHeatmap::getPositionFromClick(click)
+    
+  pos <- InteractiveComplexHeatmap::selectPosition(
+    ht_sub,
+    mark = FALSE,
+    pos = pos1,
+    verbose = FALSE,
+    ht_pos = ht_pos_sub
+  )
+  
+  row_index <- pos[1, "row_index"]
+  column_index <- pos[1, "column_index"]
+
+  if (is.null(row_index)) {
+    return("Select a cell in the heatmap.")
+  }
+
+  if (cluster_meth == 1) {
+
+    value <- click_data[row_index, column_index]
+    col <- ComplexHeatmap::map_to_colors(ht_sub_obj@matrix_color_mapping, value)
+    sample <- colnames(click_data)[column_index]
+    gene <- rownames(click_data)[row_index]
+
+  } else if (cluster_meth == 2) {
+
+    clust <- pos[1, "heatmap"]
+    sub_click_data <- click_data[[clust]]
+    value <- sub_click_data[row_index, column_index]
+    col <- ComplexHeatmap::map_to_colors(
+      ht_sub_obj@ht_list$heat_1@matrix_color_mapping,
+      value
+    )
+    sample <- colnames(sub_click_data)[column_index]
+    gene <- rownames(sub_click_data)[row_index]
+
+  }
+  
+  group_name <- sub_groups[column_index]
+  group_col <- group_colors[[group_name]]
+
+  # HTML for info table
+  # Pulled from https://github.com/jokergoo/InteractiveComplexHeatmap/blob/master/R/shiny-server.R
+  # Lines 1669:1678
+  html <- GetoptLong::qq("
+<div>
+<pre>
+Value: @{round(value, 2)} <span style='background-color:@{col};width=50px;'>    </span>
+Sample: @{sample}
+Gene: @{gene} 
+Group: @{group_name} <span style='background-color:@{group_col};width=50px;'>    </span>
+</pre></div>"
+)
+  HTML(html)
+}
+
+#' Draw sub heatmap from brush input
+#' 
+#' Use the brush input from the main heatmap to
+#' create a larger subheatmap. 
+#' 
+#' @param ht_brush Brush input from the main heatmap
+#' @param ht Main heatmap object
+#' @param ht_pos_main Position of brush on main heatmap
+#' @param heatmap_data Data for the heatmap
+#' @param sample_info Experiment design file
+#' @param select_factors_heatmap Group design to label by
+#' @param cluster_meth Type of clustering being performed
+#' 
+#' @return A list containing a Heatmap from the brush selection
+#' of the main heatmap, the submap data matrix, the groups for
+#' the submap, the submap legend, and data for the click info.
+#' 
+heat_sub <- function(
+  ht_brush,
+  ht,
+  ht_pos_main,
+  heatmap_data,
+  sample_info,
+  select_factors_heatmap,
+  cluster_meth
+) {
+  lt <- InteractiveComplexHeatmap::getPositionFromBrush(ht_brush)
+  pos1 <- lt[[1]]
+  pos2 <- lt[[2]]
+
+  pos <- InteractiveComplexHeatmap::selectArea(
+    ht,
+    mark = FALSE,
+    pos1 = pos1,
+    pos2 = pos2,
+    verbose = FALSE,
+    ht_pos = ht_pos_main
+  )
+
+  column_index <- unlist(pos[1, "column_index"])
+
+  # Annotation, groups, and legend
+  sub_heat <- sub_heat_ann(
+    data = heatmap_data,
+    sample_info = sample_info,
+    select_factors_heatmap = select_factors_heatmap
+  )
+  sub_ann <- sub_heat$heat_sub_ann[column_index]
+  sub_groups <- sub_heat$groups[column_index]
+  lgd <- sub_heat$lgd
+  group_colors <- sub_heat$group_colors
+  
+  if (cluster_meth == 1) {
+    row_index <- unlist(pos[1, "row_index"])
+    m <- ht@ht_list[[1]]@matrix
+    if (length(row_index) > 50) {
+      show_rows <- FALSE
+    } else {
+      show_rows <- TRUE
+    }
+    submap_data <- m[row_index, column_index, drop = FALSE]
+    click_data <- submap_data
+
+    ht_select <- ComplexHeatmap::Heatmap(
+      m[row_index, column_index, drop = FALSE],
+      col = ht@ht_list[[1]]@matrix_color_mapping@col_fun,
+      show_heatmap_legend = FALSE,
+      cluster_rows = FALSE,
+      cluster_columns = FALSE,
+      show_row_names = show_rows,
+      top_annotation = sub_ann,
+      name = "heat_1"
+    )
+  } else if (cluster_meth == 2) {
+    sub_heats = c()
+    all_rows = c()
+    click_data = c()
+
+    for (i in 1:nrow(pos)) {
+      all_rows <- c(all_rows, unlist(pos[i, "row_index"]))
+    }
+
+    if (length(all_rows) > 50) {
+        show_rows <- FALSE
+      } else {
+        show_rows <- TRUE
+    }
+    m <- ht@ht_list[[1]]@matrix
+    submap_data <- m[all_rows, column_index, drop = FALSE]
+    
+    for (i in 1:nrow(pos)) {
+      row_index <- unlist(pos[i, "row_index"])
+      
+      click_data[[paste0("heat_", i)]] <- m[row_index, column_index, drop = FALSE]
+
+      sub_heats[[i]] <- ComplexHeatmap::Heatmap(
+        m[row_index, column_index, drop = FALSE],
+        col = ht@ht_list[[1]]@matrix_color_mapping@col_fun,
+        show_heatmap_legend = FALSE,
+        cluster_rows = FALSE,
+        cluster_columns = FALSE,
+        show_row_names = show_rows,
+        name = paste0("heat_", i)
+      )
+      if (i == 1) {
+        sub_heats[[i]] <- ComplexHeatmap::add_heatmap(
+          sub_ann,
+          sub_heats[[i]],
+          direction = "vertical"
+        )
+      } else if (i >= 2) {
+        sub_heats[[i]] <- ComplexHeatmap::add_heatmap(
+          sub_heats[[i-1]],
+          sub_heats[[i]],
+          direction = "vertical"
+        )
+      }
+      ht_select <- sub_heats[[i]]
+    }
+  }
+
+  return(list(
+    ht_select = ht_select,
+    submap_data = submap_data,
+    sub_groups = sub_groups,
+    lgd = lgd,
+    group_colors = group_colors,
+    click_data = click_data
+  ))
+}
+
+#' Create a correlation plot from heatmap data
+#' 
+#' Creates a correlation matrix heatmap from the
+#' heatmap data to demonstrate the correlation
+#' between samples.
+#' 
+#' @param data Heatmap data
+#' @param label_pcc Label with correlation coefficient when TRUE
+#' @param heat_cols Heat colors to use in the correlation matrix
+#' @param text_col Color to make the text labels in the plot
+#' 
+#' @return ggplot heatmap of correlation matrix
+cor_plot <- function(
+  data,
+  label_pcc,
+  heat_cols,
+  text_col
+) {
+  # remove bottom 25% lowly expressed genes, which inflate the PPC 
+	max_gene <- apply(data, 1, max)
+	data <- data[which(max_gene > quantile(max_gene)[1] ), ]
+  low_col <- heat_cols[[1]]
+  mid_col <- heat_cols[[2]]
+  high_col <- heat_cols[[3]]
+		
+	melted_cormat <- reshape2::melt(round(cor(data), 2), na.rm = TRUE)
+
+	ggheatmap <- ggplot2::ggplot(
+    melted_cormat,
+    ggplot2::aes(Var2, Var1, fill = value)
+  ) +
+	ggplot2::geom_tile(color = text_col) +
+	ggplot2::scale_fill_gradient2(
+    low = low_col,
+    high = high_col, 
+    mid = mid_col, 
+		space = "Lab",
+    limit = c(
+      min(melted_cormat[, 3]),
+      max(melted_cormat[, 3])
+    ),
+    midpoint = median(melted_cormat[, 3]),
+		name = "Pearson's \nCorrelation"
+  ) +
+	ggplot2::theme_minimal()+ # minimal theme
+	ggplot2::theme(
+    axis.text.x = ggplot2::element_text(
+      angle = 45,
+      vjust = 1,
+      size = 14,
+      hjust = 1
+    ),
+    axis.text.y = ggplot2::element_text(size = 14 )
+  ) +
+	ggplot2::coord_fixed()
+
+	if(label_pcc && ncol(data)<20) {
+    ggheatmap <- ggheatmap +
+    ggplot2::geom_text(
+      ggplot2::aes(Var2, Var1, label = value),
+      color = text_col,
+      size = 4
+    )
+  }	
+		
+  ggheatmap + ggplot2::theme(
+    axis.title.x = ggplot2::element_blank(),
+		axis.title.y = ggplot2::element_blank(),
+		panel.grid.major = ggplot2::element_blank(),
+		panel.border = ggplot2::element_blank(),
+		panel.background = ggplot2::element_blank(),
+		axis.ticks = ggplot2::element_blank(),
+    legend.title = ggplot2::element_text(
+      color = "black",
+      size = 14
+    ),
+    legend.text = ggplot2::element_text(
+      color = "black",
+      size = 9,
+      angle = 0,
+      hjust = .5,
+      vjust = .5
+    ),
+    legend.title.align = 0.5,
+    legend.position = "right"
+  )
+}
+
+#' GET RID OF LISTS IN A DATA FRAME
+data_frame_with_list <- function(data_object) {
+  set_lists_to_chars <- function(x) { 
+    if(class(x) == 'list') {
+      y <- paste(unlist(x[1]), sep='', collapse=', ')
+    } else {
+      y <- x
+    } 
+    return(y)
+  }
+  new_frame <- data.frame(
+    lapply(data_object, set_lists_to_chars),
+    stringsAsFactors = F
+  )
+  return(new_frame)
 }

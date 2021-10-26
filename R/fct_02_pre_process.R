@@ -201,7 +201,7 @@ pre_process <- function(
     raw_counts = raw_counts,
     data_type_warning = data_type_warning,
     data_size = c(data_size_original, data_size),
-    pvals = pvals
+    p_vals = pvals
   )
 
   return(results)
@@ -509,79 +509,6 @@ eda_density <- function(
   return(plot)
 }
 
-#' Merge data from gene info and processed data
-#'
-#' This function takes in the gene info data and merges it
-#' with the data that has gone through the processing fcn.
-#' The returned data contains the gene names as well as the
-#' ensembl id in the first two columns.
-#'
-#' @param all_gene_names All matched gene names from idep data
-#' @param data Data matrix with rownames to merge with gene names
-#'
-#' @return Inputted data with all gene name information.
-merge_data <- function(
-  all_gene_names,
-  data,
-  merge_ID
-) {
-  isolate({
-    if (dim(all_gene_names)[2] == 1) {
-      new_data <- round(data, 2)
-      new_data <- as.data.frame(new_data)
-      new_data$User_id <- rownames(new_data)
-      new_data <- dplyr::select(
-        new_data,
-        User_id,
-        tidyselect::everything()
-      )
-      rownames(new_data) <- seq(1, nrow(new_data), 1)
-      tmp <- apply(new_data[, 2:dim(new_data)[2]], 1, sd)
-      new_data <- new_data[order(-tmp), ]
-
-      return(new_data)
-    } else if (dim(all_gene_names)[2] == 2) {
-      new_data <- merge(
-        all_gene_names,
-        round(data, 2),
-        by.x = merge_ID,
-        by.y = "row.names",
-        all.y = T
-      )
-      new_data <- dplyr::select(
-        new_data,
-        User_ID,
-        ensembl_ID,
-        tidyselect::everything()
-      )
-      rownames(new_data) <- seq(1, nrow(new_data), 1)
-      tmp <- apply(new_data[, 3:dim(new_data)[2]], 1, sd)
-      new_data <- new_data[order(-tmp), ]
-
-      return(new_data)
-    } else {
-      new_data <- merge(
-        all_gene_names,
-        round(data, 2),
-        by.x = merge_ID,
-        by.y = "row.names",
-        all.y = T
-      )
-      new_data <- dplyr::select(
-        new_data,
-        User_ID,
-        ensembl_ID,
-        symbol,
-        tidyselect::everything()
-      )
-      rownames(new_data) <- seq(1, nrow(new_data), 1)
-      tmp <- apply(new_data[, 4:dim(new_data)[2]], 1, sd)
-      new_data <- new_data[order(-tmp), ]
-
-      return(new_data)
-    }
-  })
-}
 
 
 #' Individual plotting function for genes
@@ -732,9 +659,11 @@ individual_plots <- function(
 #' @param n_matched Count of matched IDs after processing
 #'
 #' @return Message about processed data
-conversion_counts_message <- function(data_size,
-                                      all_gene_names,
-                                      n_matched) {
+conversion_counts_message <- function(
+  data_size,
+  all_gene_names,
+  n_matched
+) {
   if (ncol(all_gene_names) == 1) {
     return(paste(
       data_size[1], "genes in", data_size[4], "samples.",
@@ -761,8 +690,10 @@ conversion_counts_message <- function(data_size,
 #' @param sample_info Experiment file information about each sample
 #'
 #' @return Message for the UI
-counts_bias_message <- function(raw_counts,
-                                sample_info) {
+counts_bias_message <- function(
+  raw_counts,
+  sample_info
+) {
   total_counts <- colSums(raw_counts)
   groups <- as.factor(
     detect_groups(
@@ -803,4 +734,92 @@ counts_bias_message <- function(raw_counts,
     }
   }
   return(message)
+}
+
+#' Mean vs. Standard Deviation plot
+#' 
+#' Create a plot that shows the standard deviation as the
+#' Y-axis across the mean of the counts data on the X-axis.
+#' Option to make the X-axis the rank of the mean which
+#' does a better job showing the spread of the data.
+#' 
+#' @param processed_data Data that has gone through the pre-processing
+#' @param rank TRUE/FALSE whether to use the rank of the mean or not
+#' @param heat_cols Heat color to use with black in the plot
+#' 
+#' @return A formatted ggplot hexplot of the mean and standard
+#' deviation of the processed data
+#' 
+mean_sd_plot <- function(
+  processed_data,
+  rank,
+  heat_cols
+) {
+  table_data <- data.frame(
+    "x_axis" = apply(
+      processed_data,
+      1,
+      mean
+      
+    ),
+    "y_axis" = apply(
+      processed_data,
+      1,
+      sd
+    )
+  )
+
+  if (rank) {
+    table_data$x_axis <- rank(table_data$x_axis) 
+  }
+  low_col <- "black"
+  high_col <- heat_cols[[1]]
+
+  hex_plot <- ggplot2::ggplot(
+      table_data,
+      ggplot2::aes(x = x_axis, y = y_axis)
+  ) +
+  ggplot2::geom_hex() +
+  ggplot2::geom_smooth(
+    method = "gam",
+    formula = y ~ s(x, bs = "cs")
+  ) +
+  ggplot2::scale_fill_gradient2(
+    mid = low_col,
+    high = high_col
+  ) +
+  ggplot2::theme_light() +
+  ggplot2::theme(
+    plot.title = ggplot2::element_text(
+      color = "black",
+      size = 16,
+      face = "bold",
+      hjust = .5
+    ),
+    axis.text.x = ggplot2::element_text(size = 14),
+    axis.text.y = ggplot2::element_text(size = 14),
+    axis.title.x = ggplot2::element_text(
+      color = "black",
+      size = 14
+    ),
+    axis.title.y = ggplot2::element_text(
+      color = "black",
+      size = 14
+    ),
+    legend.text = ggplot2::element_text(size = 12)
+  ) +
+  ggplot2::labs(
+    title = "Mean vs. Standard Deviation",
+    y = "Standard Deviation"
+  )
+
+  if (rank) {
+    hex_plot <- hex_plot +
+      ggplot2::labs(x = "Rank of Mean")
+  } else {
+    hex_plot <- hex_plot +
+      ggplot2::labs(x = "Mean")
+  }
+
+  return(hex_plot)
 }
