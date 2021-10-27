@@ -1,4 +1,4 @@
-#' 06_deg1 UI Function
+#' 05_deg1 UI Function
 #'
 #' @description A shiny Module.
 #'
@@ -304,27 +304,6 @@ mod_05_deg_ui <- function(id) {
                       label = "Wrap text",
                       value = TRUE
                     )
-                  ),
-                  column(
-                    width = 1,
-                    downloadButton(
-                      outputId = ns("vis_network_deg_download"),
-                      label = "Network"
-                    )
-                  ),
-                  column(
-                    width = 1,
-                    downloadButton(
-                      outputId = ns("download_edges_deg"),
-                      label = "Edges"
-                    )
-                  ) ,
-                  column(
-                    width = 1,
-                    downloadButton(
-                      outputId = "download_nodes_deg",
-                      label = "Nodes"
-                    )
                   )
                 ),
                 selectInput(
@@ -357,7 +336,7 @@ mod_05_deg_ui <- function(id) {
   )
 }
 
-#' 06_deg1 Server Functions
+#' 05_deg1 Server Functions
 #'
 #' @noRd
 mod_05_deg_server <- function(id, pre_process) {
@@ -905,7 +884,7 @@ mod_05_deg_server <- function(id, pre_process) {
 
       go_table_data(
         up_enrich_data = pathway_table_up(),
-        down_enrich_data = pathway_table_down(),
+        down_enrich_data = pathway_table_down()
       )
     })
 
@@ -914,14 +893,31 @@ mod_05_deg_server <- function(id, pre_process) {
       req(!is.null(go_table()))
 	    
       enrichment_plot_deg(
-        go_table = go_table()
+        go_table = go_table(),
         45
       )
     })
 
     # Define a Network
     network_data_deg <- reactive({
+      req(!is.null(go_table()))
+
+      network_deg_data(
+        network = go_table(),
+        up_down_reg_deg = input$up_down_reg_deg,
+        wrap_text_network_deg= input$wrap_text_network_deg,
+        layout_vis_deg = input$layout_vis_deg,
+        edge_cutoff_deg = input$edge_cutoff_deg
+      )
+    })
+
+    # Interactive vis network plot
+    output$vis_network_deg <- visNetwork::renderVisNetwork({
+      req(!is.null(network_data_deg()))
       
+      vis_network_plot(
+        network_data = network_data_deg()
+      )
     })
   })
 }

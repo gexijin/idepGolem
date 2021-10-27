@@ -530,22 +530,21 @@ enrichment_network <- function(
 	go_table$Direction <- gsub(" .*", "", go_table$Direction)
 
 	g <- enrich_net(
-    enrichedTerms,
-    geneLists,
-    node.id = "Pathways",
-    numChar = 100, 
-	  pvalue = "adj.Pval",
-    pvalue.cutoff = 1,
-    degree.cutoff = 0,
+    data = go_table,
+    gene_set = gene_lists,
+    node_id = "Pathways",
+    num_char = 100, 
+	  p_value = "adj.Pval",
+    p_value_cutoff = 1,
+    degree_cutoff = 0,
 	  n = 200,
-    group = enrichedTerms$Direction,
+    group = go_table$Direction,
     vertex.label.cex = 1, 
     vertex.label.color = "black",
-    show.legend = FALSE, 
-    layoutButton = layoutButton,
-    edge.cutoff = edge.cutoff
-  ) 
-
+    show_legend = FALSE, 
+    layout_button = layout_button,
+    edge_cutoff = edge_cutoff
+  )
 }
 
 #' numChar=100 maximum number of characters
@@ -553,112 +552,163 @@ enrichment_network <- function(
 #' degree.cutoff = 0    Remove node if less connected
 #' from PPInfer
 enrich_net <-  function(
-  x,
-  gene.set,
-  node.id,
-  node.name = node.id,
-  pvalue, 
+  data,
+  gene_set,
+  node_id,
+  node_name = node_id,
+  p_value, 
   n = 50,
-  numChar = NULL,
-  pvalue.cutoff = 0.05,
-  edge.cutoff = 0.05, 
-  degree.cutoff = 0,
-  edge.width = function(x) {5 * x^2},
-  node.size = function(x) {2.5 * log10(x)},
+  num_char = NULL,
+  p_value_cutoff = 0.05,
+  edge_cutoff = 0.05, 
+  degree_cutoff = 0,
+  edge_width = function(x) {5 * x^2},
+  node_size = function(x) {2.5 * log10(x)},
   group = FALSE,
-  group.color = c("green", "red"),
-  group.shape = c("circle", "square"),
-  legend.parameter = list("topright"),
-  show.legend = TRUE,
-  plotting=TRUE, 
-  layoutButton = 0,
+  group_color = c("green", "red"),
+  group_shape = c("circle", "square"),
+  legend_parameter = list("topright"),
+  show_legend = TRUE,
+  plotting = TRUE, 
+  layout_button = 0,
   ...
 ) {
-	library(igraph)
-	set.seed(layoutButton)
-    x <- data.frame(x, group)
-    colnames(x)[length(colnames(x))] <- "Group"
-    x <- x[as.numeric( x[, pvalue]) < pvalue.cutoff, ]
-    x <- x[order(x[, pvalue]), ]
-    n <- min(nrow(x), n)
-    if (n == 0) {
-        stop("no enriched term found...")
+	set.seed(layout_button)
+  data <- data.frame(data, group)
+  colnames(data)[length(colnames(data))] <- "Group"
+  data <- data[as.numeric(data[, "adj_p_val"]) < p_value_cutoff, ]
+  data <- data[order(data[, "adj_p_val"]), ]
+  n <- min(nrow(data), n)
+  if (n == 0) {
+    stop("no enriched term found...")
+  }
+  data <- data[1:n, ]
+  index <- match(data[, node_id], names(gene_set))
+  gene_sets_list <- list()
+  for (i in 1:n) {
+    gene_sets_list[[i]] <- gene_set[[index[i]]]
+  }
+  names(gene_sets_list) <- data[, node_name]
+    
+  if(is.null(num_char)) {
+    num_char <- max(nchar(as.character(data[, node_name])))
+  } else {
+    if(length(unique(substr(data[, node_name], 1, num_char))) < nrow(data)) {
+      num_char <- max(nchar(as.character(data[, node_name])))
+      message("Note : numChar is too small.", "\n")
     }
-    x <- x[1:n, ]
-    index <- match(x[, node.id], names(gene.set))
-    geneSets <- list()
-    for (i in 1:n) {
-        geneSets[[i]] <- gene.set[[index[i]]]
-    }
-    names(geneSets) <- x[, node.name]
-    if (is.null(numChar)) {
-        numChar <- max(nchar(as.character(x[, node.name])))
-    }
-    else {
-        if (length(unique(substr(x[, node.name], 1, numChar))) < 
-            nrow(x)) {
-            numChar <- max(nchar(as.character(x[, node.name])))
-            message("Note : numChar is too small.", "\n")
-        }
-    }
-    x[, node.name] <- paste(substr(x[, node.name], 1, numChar), 
-        ifelse(nchar(as.character(x[, node.name])) > numChar, 
-            "...", ""), sep = "")
-    w <- matrix(NA, nrow = n, ncol = n)
+  }
+  data[, node_name] <- paste(
+    substr(data[, node_name], 1, num_char), 
+    ifelse(nchar(as.character(data[, node_name])) > num_char, "...", ""),
+    sep = ""
+  )
+  w <- matrix(NA, nrow = n, ncol = n)
 
-    for (i in 1:n) {
-        for (j in i:n) {
-            u <- unlist(geneSets[i])
-            v <- unlist(geneSets[j])
-            w[i, j] = length(intersect(u, v))/length(unique(c(u, 
-                v)))
-        }
+  for (i in 1:n) {
+    for (j in i:n) {
+      u <- unlist(gene_sets_list[i])
+      v <- unlist(gene_sets_list[j])
+      w[i, j] <- length(intersect(u, v)) / length(unique(c(u, v)))
     }
-    list.edges <- stack(data.frame(w))
-    list.edges <- cbind(list.edges[, 1], rep(x[, node.name], 
-        n), rep(x[, node.name], each = n))
-    list.edges <- list.edges[list.edges[, 2] != list.edges[,3], ]
-    list.edges <- list.edges[!is.na(list.edges[, 1]), ]
-    g <- graph.data.frame(list.edges[, -1], directed = FALSE)
-    E(g)$width = edge.width(as.numeric(list.edges[, 1]))
-    V(g)$size <- node.size(lengths(geneSets))
-    g <- delete.edges(g, E(g)[as.numeric(list.edges[, 1]) < edge.cutoff])
-    index.deg <- igraph::degree(g) >= degree.cutoff
-    g <- delete.vertices(g, V(g)[!index.deg])
-    x <- x[index.deg, ]
-    index <- index[index.deg]
-    if (length(V(g)) == 0) {
-        stop("no categories greater than degree.cutoff...")
+  }
+  list_edges <- stack(data.frame(w))
+  list_edges <- cbind(
+    list_edges[, 1],
+    rep(data[, node_name], n),
+    rep(data[, node_name], each = n)
+  )
+  list_edges <- list_edges[list_edges[, 2] != list_edges[,3], ]
+  list_edges <- list_edges[!is.na(list_edges[, 1]), ]
+  g <- igraph::graph.data.frame(list_edges[, -1], directed = FALSE)
+  igraph::E(g)$width <- edge_width(as.numeric(list_edges[, 1]))
+  igraph::V(g)$size <- node_size(lengths(gene_sets_list))
+  g <- igraph::delete.edges(g, igraph::E(g)[as.numeric(list_edges[, 1]) < edge_cutoff])
+  index_deg <- igraph::degree(g) >= degree_cutoff
+  g <- igraph::delete.vertices(g, igraph::V(g)[!index_deg])
+  data <- data[index_deg, ]
+  index <- index[index_deg]
+  if(length(igraph::V(g)) == 0) {
+    stop("no categories greater than degree_cutoff...")
+  }
+  n <- min(nrow(data), n)
+  data <- data[1:n, ]
+  group_level <- sort(unique(group))
+  p_values <- log10(as.numeric(data[, "adj_p_val"]))
+    
+  for(i in 1:length(group_level)) {
+    index <- data[, "Group"] == group_level[i]
+    igraph::V(g)$shape[index] <- group_shape[i]
+    group_p_values <- p_values[index]
+    
+    if(length(group_p_values) > 0) {
+      if(max(group_p_values) == min(group_p_values)) {
+        igraph::V(g)$color[index] <- grDevices::adjustcolor(
+          group_color[i], 
+          alpha.f = 0.5
+        )
+      } else {
+        igraph::V(g)$color[index] <- sapply(
+          1 - .9 * (group_p_values - min(group_p_values)) / 
+          (max(group_p_values) - min(group_p_values)), 
+          function(x) {
+            grDevices::adjustcolor(group_color[i], alpha.f =  .1 + x)
+          }
+        )
+      }
     }
-    n <- min(nrow(x), n)
-    x <- x[1:n, ]
-    group.level <- sort(unique(group))
-    pvalues <- log10( x[, pvalue] )
-    for (i in 1:length(group.level)) {
-        index <- x[, "Group"] == group.level[i]
-        V(g)$shape[index] <- group.shape[i]
-        group.pvalues <- pvalues[index]
-        if (length(group.pvalues) > 0) {
-            if (max(group.pvalues) == min(group.pvalues)) {
-                V(g)$color[index] <- adjustcolor(group.color[i], 
-                  alpha.f = 0.5)
-            }
-            else {
-                V(g)$color[index] <- sapply(1 - .9* (group.pvalues - 
-                  min(group.pvalues))/(max(group.pvalues) - min(group.pvalues)), 
-                  function(x) {
-                    adjustcolor(group.color[i], alpha.f =  .1 + x ) # change range?
-                  })
-            }
-        }
-    }
-	if(plotting) { 
-		plot(g, , vertex.label.dist = 1.2, ...)
-		if (show.legend) {
+  }
+	if(plotting) {
+    plot(g, , vertex.label.dist = 1.2, ...)
+    if(show_legend) {
 			legend.parameter$legend <- group.level
 			legend.parameter$text.col <- group.color
 			legend.parameter$bty <- "n"	
 			do.call(legend, legend.parameter)
-		}}
-    return(g)
+		}
+  }
+  
+  return(g)
 }
+
+#' VIS NETWORK FUNCTION
+vis_network_plot <- function(
+  network_data
+) {
+  visNetwork::visNetwork(
+    nodes = network_data$nodes,
+    edges = network_data$edges,
+    height = "700px",
+    width = "700px"
+  ) |> 
+    visNetwork::visIgraphLayout(layout = "layout_with_fr") |>
+    visNetwork::visNodes(
+      color = list(
+        border = "#000000",
+        highlight = "#FF8000"
+      ),
+      font = list(
+        color = "#000000",
+        size = 20
+      ),
+      borderWidth = 1,
+      shadow = list(
+        enabled = TRUE,
+        size = 10)
+    ) |>
+    visNetwork::visEdges(
+      shadow = FALSE,
+      color = list(
+        color = "#A9A9A9",
+        highlight = "#FFD700"
+      )
+    ) |> 
+    visNetwork::visExport(
+      type = "jpeg", 
+      name = "export-network", 
+      float = "left", 
+      label = "Export as an image (only what's visible on the screen!)", 
+      background = "white", 
+      style = ""
+    ) 
+}	
