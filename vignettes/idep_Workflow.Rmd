@@ -440,17 +440,32 @@ limma <- limma_value(
   p_vals = processed_data$p_vals
 )
 
+contrast_samples <- find_contrast_samples(
+  select_contrast = "null-wt", 
+	all_sample_names = colnames(processed_data$data),
+	sample_info = loaded_data$sample_info,
+	select_factors_model = c("p53", "Treatment"),
+	select_model_comprions = "p53: null vs. wt", 
+  reference_levels = c("p53:wt", "Treatment:mock"),
+	counts_deg_method = "3",
+	data_file_format = "1"
+)
+
 deg_heat <- deg_heat_data(
   limma = limma,
   select_contrast = "null-wt",
   processed_data = processed_data$data,
-  sample_info = loaded_data$sample_info,
-  select_factors_model = c("p53", "Treatment"),
-  select_model_comprions = "p53: null vs. wt",
-  factor_reference_levels = c("p53:wt", "Treatment:mock"),
-  counts_deg_method = "3",
-  data_file_format = "1"
+  contrast_samples = contrast_samples
 )
+
+up_reg_data <- pathway_info
+up_reg_data <- as.data.frame(up_reg_data)
+up_reg_data$direction <- rep("Up", nrow(up_reg_data))
+up_reg_data
+down_reg_data <- deg_heat$genes[deg_heat$bar == -1, ]
+down_reg_data <- as.data.frame(down_reg_data)
+down_reg_data$direction <- rep("Down", nrow(down_reg_data))
+down_reg_data
 
 main_heat_deg <- deg_heatmap(
   data = deg_heat$genes,

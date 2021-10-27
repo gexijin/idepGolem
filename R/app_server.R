@@ -6,7 +6,6 @@
 #' @noRd
 app_server <- function(input, output, session) {
   idep_data <- get_idep_data()
-
   # Tab Variable to control reactivity
   tab <- reactive(input$navbar)
 
@@ -32,5 +31,8 @@ app_server <- function(input, output, session) {
   mod_05_deg_server(
     id = "deg",
     pre_process = pre_process
+  )
+  mod_06_pathway_server(
+    id = "pathway"
   )
 }
