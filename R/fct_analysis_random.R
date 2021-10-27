@@ -400,3 +400,35 @@ find_contrast_samples <- function(
 
 	return(iz)
 }
+
+#' Read gene sets GMT file
+#' This functions cleans and converts to upper case
+read_gmt_robust <- function (in_file) {
+	# Read in the first file 
+	x <- scan(in_file, what = "", sep = "\n")
+  # GMT files saved by Excel has a lot of empty cells "\t\t\t\t" "\t." means one or more tab
+	# Remove white space
+  x <- gsub(" ", "", x)  
+	# Convert to upper case
+  x <- toupper(x)
+
+	#----Process the first file
+	# Separate elements by one or more whitespace
+	y <- strsplit(x, "\t")
+	# Extract the first vector element and set it as the list element name
+	names(y) <- sapply(y, "[[", 1)
+	# Remove the first vector element from each list element
+	y <- lapply(y, "[", -c(1, 2))
+	# Remove duplicated elements
+	for(i in 1:length(y)) {
+    y[[i]] <- clean_gene_set(y[[i]])
+  }
+	# Check the distribution of the size of gene lists sapply(y, length) hold a vector of sizes
+	if(max(sapply(y, length)) < 5) {
+    cat("Warning! Gene sets have very small number of genes!\n Please double check format.")
+  }
+  # Gene sets smaller than 1 is ignored!!!
+	y <- y[which(sapply(y, length) > 1)]
+
+	return(y)
+}

@@ -1570,9 +1570,12 @@ deg_heat_data <- function(
   limma,
   select_contrast,
   processed_data,
-  contrast_samples
+  contrast_samples,
+  all_gene_names
 ) {
 	genes <- limma$results
+
+
 	
   if(is.null(genes)) {
     return(NULL)
@@ -1622,11 +1625,16 @@ deg_heat_data <- function(
 
 	# Retreive related data		 
 	genes <- processed_data[iy, iz, drop = FALSE]
-	
-  # Needs to be sorted because myheatmap2 does not reorder genes
 	genes <- genes[order(bar), , drop = FALSE]
 	bar <- sort(bar)
 
+  if(ncol(all_gene_names) == 3) {
+    genes <- rowname_id_swap(
+      data_matrix = genes,
+      all_gene_names = all_gene_names,
+      select_gene_id = "symbol"
+    )
+  }
 
 	return(list(
     genes = genes,

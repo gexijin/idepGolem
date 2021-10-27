@@ -585,7 +585,8 @@ mod_05_deg_server <- function(id, pre_process) {
         limma = deg$limma,
         select_contrast = input$select_contrast,
         processed_data = pre_process$data(),
-        contrast_samples = contrast_samples()
+        contrast_samples = contrast_samples(),
+        all_gene_names = pre_process$all_gene_names()
       )
     })
 
