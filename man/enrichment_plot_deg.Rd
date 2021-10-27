@@ -4,7 +4,7 @@
 \alias{enrichment_plot_deg}
 \title{ENRICHMENT TREE}
 \usage{
-enrichment_plot_deg(up_enrich_data, down_enrich_data, right_margin = 33)
+enrichment_plot_deg(go_table, right_margin = 33)
 }
 \description{
 ENRICHMENT TREE

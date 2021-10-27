@@ -2144,7 +2144,7 @@ plot_deg_scatter <- function(
 
 #' ENRICHMENT TREE
 enrichment_plot_deg <- function(
-  go_table
+  go_table,
   right_margin = 33
 ) {
   # a program for ploting enrichment results by highlighting the similarities among terms
@@ -2261,7 +2261,6 @@ go_table_data <- function(
 network_deg_data <- function(
   network,
   up_down_reg_deg,
-  direction,
   wrap_text_network_deg,
   layout_vis_deg,
   edge_cutoff_deg
@@ -2278,16 +2277,18 @@ network_deg_data <- function(
     network$Pathways <- wrap_strings(network$Pathways)
   }
 
-  g <- enrichmentNetwork(network,layoutButton = input$layoutVisDEG, edge.cutoff = input$edgeCutoffDEG )
+  g <- enrichment_network(
+    network,
+    layout_button = layout_vis_deg,
+    edge_cutoff = edge_cutoff_deg
+  )
 
-    data1 <- toVisNetworkData(g)
+  vis_net <- visNetwork::toVisNetworkData(g)
     
-    # Color codes: https://www.rapidtables.com/web/color/RGB_Color.html
-    data1$nodes$shape <- "dot"
-    # remove the color change of nodes
-    #data1$nodes <- subset(data1$nodes, select = -color)
+  # Color codes: https://www.rapidtables.com/web/color/RGB_Color.html
+  vis_net$nodes$shape <- "dot"
     
-    data1$nodes$size <- 5 + data1$nodes$size^2 
+  vis_net$nodes$size <- 5 + vis_net$nodes$size^2 
     
-    return(data1)
+  return(vis_net)
 }
