@@ -95,11 +95,11 @@ gage_data <- function(
   } else if(pathway_method == 5) {
     p.m <- "ReactomePA"
   }
-  colnames(top1)[2] <- paste(p.m," analysis:", gsub("-"," vs ",input$selectContrast1 ) )
-  top1[ which( top1[,3] >0),1 ] <- "Up" #gsub("-"," > ",input$selectContrast1 )
-  top1[ which( top1[,3] <0),1 ] <- "Down" # gsub("-"," < ",input$selectContrast1 )
-  top1 <- top1[order( top1[,1], -abs(as.numeric( top1[,3]) ) ) ,]
-  top1[ duplicated (top1[,1] ),1 ] <- ""
+  colnames(top_1)[2] <- paste(p.m, "analysis:", gsub("-", " vs ", select_contrast))
+  top_1[which(top_1[, 3] > 0), 1] <- "Up"
+  top_1[which(top_1[, 3] < 0), 1] <- "Down"
+  top_1 <- top_1[order(top_1[, 1], -abs(as.numeric(top_1[, 3]))), ]
+  top_1[duplicated(top_1[, 1]), 1] <- ""
 
-  return( top1)
+  return(top_1)
 }

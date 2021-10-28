@@ -1575,8 +1575,6 @@ deg_heat_data <- function(
 ) {
 	genes <- limma$results
 
-
-	
   if(is.null(genes)) {
     return(NULL)
   }
@@ -1625,16 +1623,17 @@ deg_heat_data <- function(
 
 	# Retreive related data		 
 	genes <- processed_data[iy, iz, drop = FALSE]
-	genes <- genes[order(bar), , drop = FALSE]
-	bar <- sort(bar)
 
   if(ncol(all_gene_names) == 3) {
-    genes <- rowname_id_swap(
+   genes <- rowname_id_swap(
       data_matrix = genes,
       all_gene_names = all_gene_names,
       select_gene_id = "symbol"
     )
   }
+
+	genes <- genes[order(bar), , drop = FALSE]
+	bar <- sort(bar)
 
 	return(list(
     genes = genes,
