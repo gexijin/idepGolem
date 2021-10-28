@@ -818,7 +818,7 @@ read_gene_sets <- function(
   )
 	
 	if(go != "All") {
-    sqlQuery <- paste0(sql_query, " AND category ='", go,"'")
+    sql_query <- paste0(sql_query, " AND category ='", go,"'")
   }
 	result <- DBI::dbGetQuery(pathway, sql_query)
 	if(dim(result)[1] == 0) {

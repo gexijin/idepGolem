@@ -455,6 +455,7 @@ deg_heat <- deg_heat_data(
   limma = limma,
   select_contrast = "null-wt",
   processed_data = processed_data$data,
+  all_gene_names = gene_names,
   contrast_samples = contrast_samples
 )
 
@@ -483,3 +484,47 @@ plot_volcano(
 )
 ```
 
+# Pathway Tab Stuff
+```{r}
+gene_sets <- read_gene_sets(
+  converted = converted,
+  all_gene_names = gene_names,
+  go = "GOBP",
+  select_org = "BestMatch",
+  idep_data = idep_data,
+  my_range = c(15, 2000)
+)
+
+gage <- gage_data(
+  select_go = "GOBP",
+  select_contrast = "I:p53_null.Treatment_IR",
+  min_set_size = 15,
+  max_set_size = 2000,
+  limma = limma,
+  gene_p_val_cutoff = .1,
+  gene_sets = gene_sets,
+  absolute_fold = FALSE,
+  pathway_p_val_cutoff = .1,
+  n_pathway_show = 30
+)
+
+contrast_samples_pgsea <- find_contrast_samples(
+  select_contrast = "I:p53_null.Treatment_IR", 
+	all_sample_names = colnames(processed_data$data),
+	sample_info = loaded_data$sample_info,
+	select_factors_model = c("p53", "Treatment"),
+	select_model_comprions = "p53: null vs. wt", 
+  reference_levels = c("p53:wt", "Treatment:mock"),
+	counts_deg_method = "3",
+	data_file_format = "1"
+)
+
+plot_pgsea(
+  my_range = c(15, 2000),
+  processed_data = processed_data$data,
+  contrast_samples = contrast_samples_pgsea,
+  gene_sets = gene_sets,
+  pathway_p_val_cutoff = .1,
+  n_pathway_show = 30
+)
+```

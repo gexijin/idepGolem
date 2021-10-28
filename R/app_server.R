@@ -28,11 +28,14 @@ app_server <- function(input, output, session) {
   mod_04_pca_server(
     id = "pca"
   )
-  mod_05_deg_server(
+  deg <- mod_05_deg_server(
     id = "deg",
     pre_process = pre_process
   )
   mod_06_pathway_server(
-    id = "pathway"
+    id = "pathway",
+    pre_process = pre_process,
+    deg = deg,
+    idep_data = idep_data
   )
 }

@@ -698,3 +698,14 @@ vis_network_plot <- function(
       style = ""
     ) 
 }	
+
+#' EXTRAT UNDERSCORE
+extract_under <- function(x) {
+  words <- unlist(strsplit(x, "_"))
+  if(length(words) <= 4) {
+    return(gsub("_", " ", x))
+  } else {
+    words <- words[-c(1:4)]
+    return(loose.rock::proper(paste(words, collapse = " ")))
+  }
+}
