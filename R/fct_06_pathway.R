@@ -1,11 +1,11 @@
-#' fct_08_pathway.R This file holds all of the main data analysis functions
+#' fct_06_pathway.R This file holds all of the main data analysis functions
 #' associated with eighth tab of the iDEP website.
 #'
 #'
-#' @section fct_08_pathway.R functions:
+#' @section fct_06_pathway.R functions:
 #'
 #'
-#' @name fct_08_pathway.R
+#' @name fct_06_pathway.R
 NULL
 
 #' GAGE PATHWAY DATA
@@ -75,7 +75,7 @@ gage_data <- function(
   }
   top_1 <- top_1[which(top_1[, 3] <= pathway_p_val_cutoff), , drop = FALSE]
   if(dim(top_1)[1] > n_pathway_show) {
-    top1 <- top1[1:input$nPathwayShow, ,drop=FALSE]
+    top_1 <- top_1[1:n_pathway_show, ,drop=FALSE]
   }		 
   top_1 <- as.data.frame(top_1)
   top_1 <- cbind(rep(select_contrast, dim(top_1)[1]), row.names(top_1), top_1) 
@@ -84,22 +84,147 @@ gage_data <- function(
   top_1[, 2] <- as.character(top_1[, 2])
   top_1[, 1] <- as.character(top_1[, 1])
   colnames(top_1)[1] <- "Direction"
-  if(pathway_method == 1) {
-    p.m <- "GAGE"
-  } else if(pathway_method == 2) {
-    p.m <- "PGSEA"
-  } else if(pathway_method == 3) {
-    p.m <- "GSEA"
-  } else if(pathway_method == 4) {
-    p.m <- "PGSEA_All"
-  } else if(pathway_method == 5) {
-    p.m <- "ReactomePA"
-  }
-  colnames(top1)[2] <- paste(p.m," analysis:", gsub("-"," vs ",input$selectContrast1 ) )
-  top1[ which( top1[,3] >0),1 ] <- "Up" #gsub("-"," > ",input$selectContrast1 )
-  top1[ which( top1[,3] <0),1 ] <- "Down" # gsub("-"," < ",input$selectContrast1 )
-  top1 <- top1[order( top1[,1], -abs(as.numeric( top1[,3]) ) ) ,]
-  top1[ duplicated (top1[,1] ),1 ] <- ""
+  colnames(top_1)[2] <- paste("GAGE analysis:", gsub("-", " vs ", select_contrast))
+  top_1[which(top_1[, 3] > 0), 1] <- "Up"
+  top_1[which(top_1[, 3] < 0), 1] <- "Down"
+  top_1 <- top_1[order(top_1[, 1], -abs(as.numeric(top_1[, 3]))), ]
+  top_1[duplicated(top_1[, 1]), 1] <- ""
+  rownames(top_1) <- seq(1, nrow(top_1), 1)
 
-  return( top1)
+  return(top_1)
+}
+
+#' PGSEA FUNCTION
+pgsea_data <- function(
+  processed_data,
+  gene_sets,
+  my_range,
+  pathway_p_val_cutoff,
+  n_pathway_show
+){
+  subtype = detect_groups(colnames(processed_data))
+	
+  # Cut off to report in PGSEA. Otherwise NA
+	p_value <- 0.01  
+	if(length(gene_sets) == 0) {
+    return(list(pg3 = NULL, best = 1))
+  }
+	
+	pg <- PGSEA::PGSEA(
+    processed_data - rowMeans(processed_data),
+    cl = gene_sets,
+    range = my_range,
+    p.value = TRUE,
+    weighted = FALSE
+  )
+	
+	pg_results <- pg$results
+  # Remove se/wrts with all missing(non-signficant)
+	pg_results <- pg_results[rowSums(is.na(pg_results)) < ncol(pg_results), ]
+	if(dim(pg_results)[1] < 2) {
+    return()
+  }
+	best <- max(abs(pg_results))
+	
+	if(length(subtype) < 4 || length(unique(subtype)) <2 ||
+     length(unique(subtype)) == dim(processed_data)[2]) { 
+	  pg_results <- pg_results[order(-apply(pg_results, 1, sd)), ]
+	  return(list(pg_data = pg_results[1:top, ], best <- best ))
+	} 
+    
+	cat("\nComputing P values using ANOVA\n");
+	path_p_value <- function (
+    k,
+    pg_results,
+    subtype
+  ){
+	  return(summary(aov(pg_results[k, ] ~ subtype))[[1]][["Pr(>F)"]][1])
+	}
+	p_values <- sapply(1:dim(pg_results)[1], function(x) {
+    path_p_value(
+      k = x,
+      pg_results = pg_results,
+      subtype = subtype)
+  })
+	p_values <- stats::p.adjust(p_values, "fdr")
+	
+
+  if(sort(p_values)[2] > pathway_p_val_cutoff) {
+    return(list(pg_data = NULL, best = best)) 
+  } else {  
+    n_sig_t <- rowSums(pg$p.results < p_value)
+	
+	  result <- cbind(as.matrix(p_values), n_sig_t, pg_results) 
+	  result <- result[order(result[, 1]), ]
+    result <- result[which(result[, 1] < pathway_p_val_cutoff), , drop = F]
+	
+	  pg_results = result[, -2]
+
+	  # When there is only 1 left in the matrix pg_results becomes a vector
+	  if(sum(p_values < pathway_p_val_cutoff) == 1) {
+      pg_data <- t(as.matrix(pg_results))
+      pg_data <- rbind(pg_data, pg_data)
+    } else {
+      if(dim(results)[1] > n_pathway_show) {
+        pg_data <- pg_results[1:n_pathway_show, ]
+      } else {
+        pg_data <- pg_results
+      }
+    }
+
+	  rownames(pg_data) <- sapply(rownames(pg_data) , extract_under)
+	  a <- sprintf("%-3.2e", pg_data[, 1])
+	  rownames(pg_data) <- paste(a, rownames(pg_data), sep = " ")
+	  pg_data <- pg_data[, -1]
+	
+    # Sort by SD
+	  pg_data <- pg_data[order(-apply(pg_data, 1, sd)), ]
+  
+    return(list(
+      pg_data = pg_data,
+      best = best
+    ))
+  }
+ }
+
+#' PLOT PGSEA
+plot_pgsea <- function(
+  my_range,
+  processed_data,
+  contrast_samples,
+  gene_sets,
+  pathway_p_val_cutoff,
+  n_pathway_show
+) {
+	genes <- processed_data[, contrast_samples]	
+	if(length( GeneSets() )  == 0)  {
+    return(
+      NULL
+    )
+  } else {
+	  subtype = detect_groups(colnames(genes))
+	  result <- pgsea_data(
+      processed_data = genes,
+      gene_sets = gene_sets,
+      my_range = my_range,
+      pathway_p_val_cutoff = pathway_p_val_cutoff,
+      n_pathway_show = n_pathway_show
+    )
+					 
+	  if(is.null(result$pg_data)) {
+      return(
+        NULL
+      )
+    } else {
+      PGSEA::smcPlot(
+        result$pg_data,
+        factor(subtype),
+        scale = c(-max(result$pg_data), max(result$pg_data)),
+        show.grid = T,
+        margins = c(3,1, 13, 38),
+        col = .rwb,
+        cex.lab = 0.5
+      )
+    }
+  }
 }

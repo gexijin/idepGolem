@@ -1,4 +1,4 @@
-#' 08_pathway UI Function
+#' 06_pathway UI Function
 #'
 #' @description A shiny Module.
 #'
@@ -18,8 +18,9 @@ mod_06_pathway_ui <- function(id) {
         ),
         tags$style(
           type = "text/css",
-          "#pathway-list_comparisons_pathway{width:100%;   margin-top:-12px}"
+          "#pathway-list_comparisons_pathway { width:100%;   margin-top:-12px}"
         ),
+
         selectInput(
           inputId = ns("pathway_method"), 
           label = "Select method:", 
@@ -34,14 +35,14 @@ mod_06_pathway_ui <- function(id) {
         ),
         tags$style(
           type = "text/css",
-          "#pathway-pathway_method{width:100%;   margin-top:-12px}"
+          "#pathway-pathway_method { width:100%;   margin-top:-12px}"
         ),
         htmlOutput(
-          outputId = ns("select_go")
+          outputId = ns("select_go_selector")
         ),
         tags$style(
           type = "text/css",
-          "#pathway-select_go{width:100%;   margin-top:-12px}"
+          "#pathway-select_go { width:100%;   margin-top:-12px}"
         ),
         fluidRow( 
           column(
@@ -69,11 +70,11 @@ mod_06_pathway_ui <- function(id) {
         ),
         tags$style(
           type = "text/css",
-          "#pathway-min_set_size{width:100%;   margin-top:-12px}"
+          "#pathway-min_set_size { width:100%;   margin-top:-12px}"
         ),
         tags$style(
           type = "text/css",
-          "#pathway-max_set_size{width:100%;   margin-top:-12px}"
+          "#pathway-max_set_size { width:100%;   margin-top:-12px}"
         ),
         numericInput(
           inputId = ns("pathway_p_val_cutoff"), 
@@ -85,7 +86,7 @@ mod_06_pathway_ui <- function(id) {
         ),
         tags$style(
           type = "text/css",
-          "#pathway-pathway_p_val_cutoff{width:100%;   margin-top:-12px}"
+          "#pathway-pathway_p_val_cutoff { width:100%;   margin-top:-12px}"
         ),
         numericInput(
           inputId = ns("n_pathway_show"), 
@@ -97,7 +98,7 @@ mod_06_pathway_ui <- function(id) {
         ),
         tags$style(
           type = "text/css",
-          "#pathway-n_pathway_show{width:100%;   margin-top:-12px}"
+          "#pathway-n_pathway_show { width:100%;   margin-top:-12px}"
         ),
         checkboxInput(
           inputId = ns("absolute_fold"),
@@ -114,29 +115,7 @@ mod_06_pathway_ui <- function(id) {
         ),
         tags$style(
           type = "text/css",
-          "#pathway-gene_p_val_cutoff{width:100%;   margin-top:-12px}"
-        ),
-
-        # if pathway analysis using methods other than ReactomePA
-        # GET RID AND PUT DIFFERENT CHECKS IN
-        conditionalPanel(
-          condition = "input.pathway_method == 1 | input.pathway_method == 2 |
-                       input.pathway_method == 3 | input.pathway_method == 4",
-          actionButton("ModalEnrichmentPlotPathway", "Pathway tree"),
-          actionButton("ModalVisNetworkPA", "Network(New!)"),
-          tags$head(tags$style("#ModalVisNetworkPA{color: red}")),
-          downloadButton('downloadPathwayListData', "Pathway list w/ genes"),
-          ns = ns          
-        ),
-        conditionalPanel(
-          condition = "input.pathway_method == 4", 
-          downloadButton("PGSEAplotAllSamples.Download","High-resolution figure"),
-          ns = ns
-        ),
-        conditionalPanel(
-          condition = "input.pathway_method == 2", 
-          downloadButton("PGSEAplot.Download", "High-resolution figure"),
-          ns = ns
+          "#pathway-gene_p_val_cutoff { width:100%;   margin-top:-12px}"
         ),
         h5("* Warning! The many combinations can lead to false positives in pathway analyses."),
         a(
@@ -147,16 +126,13 @@ mod_06_pathway_ui <- function(id) {
       ),
       mainPanel(
         conditionalPanel(
-          condition = "input.pathway_method == 1",
-          tableOutput(outputId = ns("gage_pathway")),
-          ns = ns
-        ),  
-        conditionalPanel(
           condition = "input.pathway_method == 2",
           h5("Red and blue indicates activated and suppressed pathways, respectively."),
           plotOutput(
             outputId = ns("pgsea_plot"),
-            inline = TRUE
+            inline = TRUE,
+            height = "800px",
+            width = "100%"
           ),
           ns = ns
         ),
@@ -204,70 +180,52 @@ mod_06_pathway_ui <- function(id) {
                         input.select_go != 'KEGG'",
           plotOutput(outputId = ns("selected_pathway_heatmap")),
           ns = ns
-        ),
-        #bsModal(
-         # "ModalEnrichmentPlotPathway1",
-          #"Significant pathways",
-          #"ModalEnrichmentPlotPathway",
-          #size="large",
-          #h5("Gene sets closer on the tree share more genes. Sizes of dot correspond to adjuested Pvalues"),
-          #downloadButton('enrichmentPlotPathway4Download',"Figure"),
-          #plotOutput('enrichmentPlotPathway')
-        #),
-        #bsModal(
-          #"ModalEnrichmentPlotPahtway2",
-          #"Significant pathways",
-          #"ModalEnrichmentNetworkPathway",
-          #size="large",
-          #h5("Connected gene sets share more genes. Color of node correspond to adjuested Pvalues."),
-          #actionButton("layoutButton3", "Change layout"),
-          #plotOutput('enrichmentNetworkPlotPathway')
-        #),
-        # visNetwork ------------------------------
-        #bsModal(
-          #"ModalVisNetworkPA1",
-          #"Related pathways",
-          #"ModalVisNetworkPA",
-          #size="large",
-          #h5("Connected gene sets share more genes. Color of node correspond to adjuested Pvalues."),
-          #fluidRow(
-            #column(2, actionButton("layoutVisPA", "Change layout") ),
-            #column(1, h5("Cutoff:"), align="right" ) ,
-            #column(2, numericInput("edgeCutoffPA", label = NULL, value = 0.30, min = 0, max = 1, step = .1), align="left"  ), 
-            #column(2, checkboxInput("wrapTextNetworkPA", "Wrap text", value = TRUE)), 
-            #column(1, downloadButton("visNetworkPADownload","Network") ),
-            #column(1, downloadButton("downloadEdgesPA", "Edges")) ,
-            #column(1, downloadButton("downloadNodesPA", "Nodes"))
-          #),
-          #selectInput(
-            #"upORdownRegPA",
-            #NULL,
-						#c("Both Up & Down" = "Both",
-						  #"Up regulated" = "Up",
-						  #"Down regulated" = "Down")
-          #),
-          #h6(
-            #"This interactive plot also shows the relationship between enriched pathways. 
-			      #Two pathways (nodes) are connected if they share 30% (default, adjustable) or
-            #more genes. Green and red represents down- and up-regulated pathways. You can
-            #move the nodes by dragging them, zoom in and out by scrolling, and shift the 
-            #entire network by click on an empty point and drag. Darker nodes are more 
-            #significantly enriched gene sets. Bigger nodes represent larger gene sets.  
-			      #Thicker edges represent more overlapped genes."
-          #),
-          #visNetwork::visNetworkOutput("visNetworkPA",height = "800px", width = "800px")
-        #)
+        )
       )
-    )    
-  ) 
+    )
+  )
 }
 
-#' 08_pathway Server Functions
+#' mod_06_pathway Server Functions
 #'
 #' @noRd
-mod_06_pathway_server <- function(id) {
+mod_06_pathway_server <- function(id, pre_process, deg, idep_data) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+    output$test <- renderText({
+      input$pathway_method
+    })
+
+    # GMT choices for enrichment ----------
+    output$select_go_selector <- renderUI({
+	    req(!is.null(pre_process$gmt_choices()))
+
+	    selectInput(
+        inputId = ns("select_go"),
+        label = "Select Geneset:",
+        choices = pre_process$gmt_choices(),
+        selected = "GOBP"
+      )
+    })
+
+    output$list_comparisons_pathway <- renderUI({
+      if(is.null(deg$limma()$comparisons)) {
+        selectInput(
+          inputId = ns("select_contrast"),
+          label = NULL,
+          choices = list("All" = "All"),
+          selected = "All"
+        )  
+			}	else {
+        selectInput(
+          inputId = ns("select_contrast"),
+          label = 
+            "Select a comparison to examine. \"A-B\" means A vs. B (See heatmap).
+            Interaction terms start with \"I:\"",
+          choices = deg$limma()$comparisons
+	     )
+      } 
+	  })
 
     gene_sets <- reactive({
       if(pre_process$select_org() == "NEW" && !is.null(pre_process$gmt_file())) {
@@ -287,7 +245,66 @@ mod_06_pathway_server <- function(id) {
     })
 
     gage_pathway_data <- reactive({
+      req(input$pathway_method == 1)
+      req(!is.null(deg$limma()))
 
+      gage_data(
+        select_go = input$select_go,
+        select_contrast = input$select_contrast,
+        min_set_size = input$min_set_size,
+        max_set_size = input$max_set_size,
+        limma = deg$limma(),
+        gene_p_val_cutoff = input$gene_p_val_cutoff,
+        gene_sets = gene_sets(),
+        absolute_fold = input$absolute_fold,
+        pathway_p_val_cutoff = input$pathway_p_val_cutoff,
+        n_pathway_show = input$n_pathway_show
+      )
+    })
+
+    output$gage_pathway_table <- renderTable({
+      req(!is.null(gage_pathway_data()))
+
+      gage_pathway_data()
+    },
+      digits = 0,
+      align = "l",
+      include.rownames = FALSE,
+      striped = TRUE,
+      bordered = TRUE,
+      width = "auto",
+      hover = TRUE
+    )
+
+    contrast_samples <- reactive({
+      req(!is.null(input$select_contrast))
+      req(!is.null(pre_process$data()))
+      browser()
+
+      find_contrast_samples(
+        select_contrast = input$select_contrast, 
+		    all_sample_names = colnames(pre_process$data()),
+		    sample_info = pre_process$sample_info(),
+		    select_factors_model = deg$select_factors_model(),
+		    select_model_comprions = deg$select_model_comprions(), 
+		    reference_levels = deg$factor_reference_levels(),
+		    counts_deg_method = deg$counts_deg_method(),
+		    data_file_format = pre_process$data_file_format()
+	    )
+    })
+
+    output$pgsea_plot <- renderPlot({
+      req(input$pathway_method == 2)
+      browser()
+
+      plot_pgsea(
+        my_range = c(input$min_set_size, input$max_set_size),
+        processed_data = pre_process$data(),
+        contrast_samples = contrast_samples(),
+        gene_sets = gene_sets(),
+        pathway_p_val_cutoff = input$pathway_p_val_cutoff,
+        n_pathway_show = input$n_pathway_show
+      )
     })
   })
 }

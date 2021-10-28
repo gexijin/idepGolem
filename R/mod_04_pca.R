@@ -30,8 +30,7 @@ mod_04_pca_ui <- function(id) {
         ),
         conditionalPanel(
           condition = "input.pca_meth != 2",
-          htmlOutput(outputId = ns("list_factors_color")),
-          htmlOutput(outputId = ns("list_factors_shape")),
+          h5("hey you suck"),
           ns = ns
         ),
 

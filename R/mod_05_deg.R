@@ -544,7 +544,7 @@ mod_05_deg_server <- function(id, pre_process) {
     # DEG STEP 2 --------
     output$list_comparisons <- renderUI({
       
-      if (is.null(deg$limma$comparisons)) {
+      if(is.null(deg$limma$comparisons)) {
         selectInput(
           inputId = ns("select_contrast"),
           label = NULL,
@@ -920,6 +920,14 @@ mod_05_deg_server <- function(id, pre_process) {
         network_data = network_data_deg()
       )
     })
+
+    list(
+      limma = reactive(deg$limma),
+      select_factors_model = reactive(input$select_factors_model),
+      select_model_comprions = reactive(input$select_model_comprions),
+      reference_levels = reactive(factor_reference_levels()),
+      counts_deg_method = reactive(counts_deg_method)
+    )
   })
 }
 
