@@ -197,7 +197,7 @@ plot_pgsea <- function(
   n_pathway_show
 ) {
 	genes <- processed_data[, contrast_samples]	
-	if(length( GeneSets() )  == 0)  {
+	if(length(gene_sets)  == 0)  {
     return(
       NULL
     )
@@ -227,4 +227,213 @@ plot_pgsea <- function(
       )
     }
   }
+}
+
+#' FGSEA DATA
+fgsea_data <- function(
+  select_contrast,
+  my_range,
+  limma,
+  gene_p_val_cutoff,
+  gene_sets,
+  absolute_fold,
+  pathway_p_val_cutoff,
+  n_pathway_show
+) {
+	no_sig <- as.data.frame("No significant pathway found.")
+	if(length(limma$top_genes) == 0) {
+    return(no_sig)
+  }
+	if(length(limma$comparisons) == 1) {
+    top_1 <- limma$top_genes[[1]]  
+	} else {
+	  top <- limma$top_genes
+	  ix <- match(select_contrast, names(top))
+	  if(is.na(ix)) {
+      return(no_sig)
+    }
+	  top_1 <- top[[ix]] 
+	}
+	if(dim(top_1)[1] == 0) {
+    return(no_sig)
+  }
+	colnames(top_1) <- c("Fold","FDR")
+	  
+	# Remove some genes
+	top_1 <- top_1[which(top_1$FDR < gene_p_val_cutoff), ]
+	  
+  if(length(gene_sets) == 0) {
+    return(as.data.frame("No gene set found!"))
+  }
+
+
+	fold <- top_1[, 1]
+  names(fold) <- rownames(top_1)
+	
+  # Use absolute value of fold change, disregard direction
+  if(absolute_fold) {
+    fold <- abs(fold)
+  }
+	 
+  paths <- fgsea::fgsea(
+    pathways = gene_sets, 
+    stats = fold,
+    minSize = my_range[1],
+    maxSize = my_range[2],
+    nPerm = 100000                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ,
+		nproc = 6
+  )
+	
+  if(dim(paths)[1] < 1) {
+    return(no_sig)
+  }
+	paths <- as.data.frame(paths)
+  # Sort by NES
+  paths <- paths[order(-abs(paths[, 5])), ]
+	top_1 <- paths[, c(1, 5, 7, 3)]
+	colnames(top_1) <- c("Pathway", "NES", "Genes", "adj.Pval")
+	  
+	if(length(which(top_1[, 4] <= pathway_p_val_cutoff)) == 0) {
+    return(no_sig)
+  }
+	top_1 <- top_1[which(top_1[, 4] <= pathway_p_val_cutoff), , drop = FALSE]
+	
+  if(dim(top_1)[1] > n_pathway_show) {
+    top_1 <- top_1[1:n_pathway_show, , drop = FALSE]
+  }
+	
+	top_1 <- as.data.frame(top_1)
+	top_1 <- cbind(rep(select_contrast, dim(top_1)[1]), top_1) 
+	top_1[, 4] <- as.character(round(as.numeric(top_1[, 4]), 4)) 
+	top_1$adj.Pval <- sprintf("%-2.1e", as.numeric(top_1$adj.Pval))
+	top_1[, 1] <- as.character(top_1[, 1])
+	colnames(top_1)[1] <- "Direction"
+	colnames(top_1)[2] <- paste("GSEA analysis:", gsub("-"," vs ", select_contrast))
+	top_1[which(as.numeric(top_1[, 3]) > 0), 1] <- "Up"
+  top_1[which(as.numeric(top_1[, 3]) < 0), 1] <- "Down"
+	top_1 <- top_1[order(top_1[, 1], -abs(as.numeric(top_1[, 3]))), ]
+	top_1[duplicated(top_1[, 1]), 1] <- ""	 
+	top_1[, 3] <- as.character(round(as.numeric(top_1[, 3]), 4))
+
+	return(top_1)
+}
+
+#' REACTOME DATA
+reactome_data <- function(
+  select_contrast,
+  my_range,
+  limma,
+  gene_p_val_cutoff,
+  converted,
+  idep_data,
+  pathway_p_val_cutoff,
+  n_pathway_show,
+  absolute_fold
+) {
+  browser()
+  ensembl_species <- c(
+    "hsapiens_gene_ensembl","rnorvegicus_gene_ensembl", "mmusculus_gene_ensembl",
+	  "celegans_gene_ensembl","scerevisiae_gene_ensembl", "drerio_gene_ensembl",
+    "dmelanogaster_gene_ensembl"
+  )
+  reactome_pa_species <- c("human", "rat", "mouse", "celegans", "yeast", "zebrafish", "fly" )
+	no_sig <- as.data.frame("No significant pathway found.")
+	if(length(limma$top_genes) == 0) {
+    return(no_sig)
+  }
+	if(length(limma$comparisons) == 1) {
+    top_1 <- limma$top_genes[[1]]  
+	} else {
+	  top <- limma$top_genes
+	  ix <- match(select_contrast, names(top))
+	  if(is.na(ix)) {
+      return(no_sig)
+    }
+	  top_1 <- top[[ix]] 
+	}
+	if(dim(top_1)[1] == 0) {
+    return(no_sig)
+  }
+	colnames(top_1) <- c("Fold", "FDR")
+
+	# Remove some genes
+	top_1 <- top_1[which(top_1$FDR < gene_p_val_cutoff), ]
+	 
+	fold <- top_1[, 1]
+  names(fold) <- rownames(top_1)
+	if(absolute_fold) {
+    # Use absolute value of fold change, disregard direction
+    fold <- abs(fold) 
+  }
+  
+  species <- converted$species[1, 1]
+  ix <- match(species, ensembl_species)	
+  
+  if(is.na(ix)) {
+    return(as.data.frame("Species not coverted by ReactomePA package!"))
+  }
+	  
+	fold <- convert_ensembl_to_entrez(
+    query = fold,
+    species = species,
+    org_info = idep_data$org_info
+  )  
+	
+  fold <- sort(fold, decreasing = T)
+	paths <- ReactomePA::gsePathway(
+    fold,
+    nPerm = 5000,
+    organism = reactome_pa_species[ix],
+    minGSSize = my_range[1], 
+		maxGSSize = my_range[2],
+		pvalueCutoff = 0.5,
+    pAdjustMethod = "BH",
+    verbose = FALSE
+  )
+  
+  paths <- as.data.frame(paths)
+	  
+	if(is.null(paths)) {
+    return(no_sig)
+  }
+	if(dim(paths)[1] == 0) {
+    return(no_sig)
+  }
+
+  if(dim(paths)[1] < 1) {
+    return(no_sig)
+  }
+  paths <- as.data.frame(paths)
+  paths <- paths[order(-abs(paths[, 5])), ]
+
+	top_1 <- paths[, c(2, 5, 3, 7)]
+
+	colnames(top_1) <- c("Pathway", "NES", "Genes", "adj.Pval")
+	  
+	if(length(which(top_1[, 4] <= pathway_p_val_cutoff)) == 0) {
+    return(no_sig)
+  }  
+  top_1 <- top_1[which(top_1[, 4] <= pathway_p_val_cutoff), , drop = FALSE]
+	
+  if(dim(top_1)[1] > n_pathway_show) {
+    top_1 <- top_1[1:n_pathway_show, , drop = FALSE]
+  }
+ 	
+	top_1 <- as.data.frame(top_1)
+	top_1 <- cbind(rep(select_contrast, dim(top_1)[1]), top_1) 
+	top_1[, 4] <- as.character(round(as.numeric(top_1[, 4]), 4)) 
+	top_1$adj.Pval <- sprintf("%-2.1e", as.numeric(top_1$adj.Pval))
+	top_1[, 1] <- as.character(top_1[, 1])
+	colnames(top_1)[1] <- "Direction"
+	colnames(top_1)[2] <- paste(
+    "ReactomePA analysis:",
+    gsub("-"," vs ", select_contrast)
+  )
+	top_1[which(as.numeric(top_1[, 3]) > 0), 1] <- "Up"
+	top_1[which(as.numeric(top_1[, 3]) < 0), 1] <- "Down"
+	top_1 <- top_1[order(top_1[, 1], -abs(as.numeric(top_1[, 3]))), ]
+	top_1[duplicated(top_1[, 1]), 1] <- ""	 
+  top_1[, 3] <- as.character(round(as.numeric(top_1[, 3]), 4))
+	
+  return(top_1)
 }

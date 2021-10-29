@@ -7,331 +7,329 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
-mod_05_deg_ui <- function(id) {
+mod_05_deg_1_ui <- function(id) {
   ns <- NS(id)
-  navbarMenu(
-    "DEG",
-    tabPanel(
-      title = "Design (Step 1)",
-      sidebarLayout(
-        sidebarPanel(
-          conditionalPanel(
-            condition = "output.data_file_format == 1",
-            selectInput(
-              inputId = ns("counts_deg_method"),
-              label = "Method:", 
-              choices = list(
-                "DESeq2" = 3,
-                "limma-voom" = 2,
-                "limma-trend" = 1
-              ),
-              selected = 3
+  tabPanel(
+    title = "DEG Design (Step 1)",
+    sidebarLayout(
+      sidebarPanel(
+        conditionalPanel(
+          condition = "output.data_file_format == 1",
+          selectInput(
+            inputId = ns("counts_deg_method"),
+            label = "Method:", 
+            choices = list(
+              "DESeq2" = 3,
+              "limma-voom" = 2,
+              "limma-trend" = 1
             ),
-            tags$style(
-              type = 'text/css',
-              "#deg-counts_deg_method {width:100%;   margin-top:-12px}"
-            )
+            selected = 3
           ),
-          conditionalPanel(
-            condition = "output.data_file_format == 2",
-            h5("Using the limma package")
-          ),
-          fluidRow(
-            column(
-              width = 5,
-              numericInput(
-                inputId = ns("limma_p_val"),
-                label = h5("FDR cutoff"), 
-                value = 0.1,
-                min = 1e-5,
-                max = 1,
-                step = .05
-              )
-            ),
-            column(
-              width = 7,
-              numericInput(
-                inputId = ns("limma_fc"),
-                label = h5("Min fold change"),
-                value = 2,
-                min = 1,
-                max = 100,
-                step = 0.5
-              )
-            ),
-            tags$style(
-              type = "text/css",
-              "#deg-limma_p_val { width:100%;   margin-top:-12px}"
-            ),
-            tags$style(
-              type = "text/css",
-              "#deg-limma_fc { width:100%;   margin-top:-12px}"
-            )
-          ),
-          actionButton(
-            inputId = ns("submit_model_button"),
-            label = "Submit & Calculate",
-            style = "float:center"
-          ),
-          tags$head(tags$style(
-            "#deg-submit_model_button{font-size: 20px;}"
-          )),
-          a(
-            h5("Questions?", align = "right"),
-            href = "https://idepsite.wordpress.com/degs/",
-            target = "_blank"
+          tags$style(
+            type = 'text/css',
+            "#deg-counts_deg_method {width:100%;   margin-top:-12px}"
           )
         ),
-        mainPanel(
-          tabsetPanel(
-            tabPanel(
-              title = "Experiment Design",
-              fluidRow(
-                column(
-                  width = 6,
-                  htmlOutput(outputId = ns("list_factors_de"))
-                ),
-                column(
-                  width = 6,
-                  htmlOutput(outputId = ns("list_block_factors_de"))
-                ) 
-              ),
-              fluidRow(
-                htmlOutput(outputId = ns("select_reference_levels"))
-              ),
-              htmlOutput(outputId = ns("list_interaction_terms")),
-              textOutput(outputId = ns("experiment_design")),
-              tags$head(tags$style(
-                "#deg-experiment_design{color: red;font-size: 16px;}"
-              )),
-              htmlOutput(outputId = ns("list_model_comparisons")),
-              h3("Use the submit button in the sidebar once the desired design is selected!"),
-              a(
-                h5("More info on DESeq2 experiment design", align = "right"),
-                href = "http://rpubs.com/ge600/deseq2",
-                target = "_blank"
-              )
-            ),
-            tabPanel(
-              title = "Results",
-              plotOutput(
-                outputId = ns("sig_gene_stats")
-              ),
-              br(),
-              br(),
-              h4(
-                "Numbers of differentially expressed genes for all comparisons.
-                \"B-A\" means B vs. A. Interaction terms start with \"I:\" "
-              ),
-              tableOutput(
-                outputId = ns("sig_gene_stats_table")
-              )
-            ),
-            tabPanel(
-              title = "Venn Diagram",
-              checkboxInput(
-                inputId = ns("up_down_regulated"),
-                label = "Split gene lists by up- or down-regulation",
-                value = FALSE
-              ),
-              htmlOutput(outputId = ns("list_comparisons_venn")),
-              plotOutput(outputId = ns("venn_plot"))
+        conditionalPanel(
+          condition = "output.data_file_format == 2",
+          h5("Using the limma package")
+        ),
+        fluidRow(
+          column(
+            width = 5,
+            numericInput(
+              inputId = ns("limma_p_val"),
+              label = h5("FDR cutoff"), 
+              value = 0.1,
+              min = 1e-5,
+              max = 1,
+              step = .05
             )
-          )
-        )
-      )
-    ),
-    tabPanel(
-      title = "Analysis (Step 2)",
-      sidebarLayout(
-        sidebarPanel(
-          h5("Examine the results of DEGs for each comparison"),
-          htmlOutput(outputId = ns("list_comparisons")),
-          # Heatmap customizing features ----------
-          conditionalPanel(
-            condition = "input.step_2 == 'Heatmap'",
-            fluidRow(
-              column(width = 3, h5("Color:")),
-              column(
-                width = 9,
-                selectInput(
-                  inputId = ns("heatmap_color_select"),
-                  label = NULL,
-                  choices = "green-black-red",
-                  width = "100%"
-                )
-              )
-            ),
-            ns = ns
           ),
-          HTML(
-            "<hr style='height:1px;border:none;color:
-            #333;background-color:#333;' />"
+          column(
+            width = 7,
+            numericInput(
+              inputId = ns("limma_fc"),
+              label = h5("Min fold change"),
+              value = 2,
+              min = 1,
+              max = 100,
+              step = 0.5
+            )
           ),
-          h5("Enrichment analysis for DEGs:"),
-          htmlOutput(outputId = ns("select_go_selector")),
           tags$style(
             type = "text/css",
-            "#deg-select_go { width:100%; margin-top:-9px}"
+            "#deg-limma_p_val { width:100%;   margin-top:-12px}"
           ),
-          checkboxInput(
-            inputId = ns("filtered_background"), 
-            label = "Use filtered data as background in enrichment (slow)", 
-            value = TRUE
-          ),
-          checkboxInput(
-            inputId = ns("remove_redudant"),
-            label = "Remove Redudant Gene Sets",
-            value = FALSE
+          tags$style(
+            type = "text/css",
+            "#deg-limma_fc { width:100%;   margin-top:-12px}"
           )
         ),
-        mainPanel(
-          tabsetPanel(
-            id = ns("step_2"),
-            tabPanel(
-              title = "Heatmap",
-              h5("Brush for sub-heatmap, click for value. (Shown Below)"),
-              br(),
-              fluidRow(
-                column(
-                  width = 3,
-                  plotOutput(
-                    outputId = ns("deg_main_heatmap"),
-                    height = "450px",
-                    width = "100%",
-                    brush = ns("ht_brush")
-                  ),
-                  br(),
-                  h5("Selected Cell (Submap):"),
-                  uiOutput(
-                    outputId = ns("ht_click_content")
-                  )
-                ),
-                column(
-                  width = 9,
-                  plotOutput(
-                    outputId = ns("deg_sub_heatmap"),
-                    height = "650px",
-                    width = "100%",
-                    click = ns("ht_click")
-                  )
-                )
-              )
-            ),
-            tabPanel(
-              title = "Volcano Plot",
-              br(),
-              plotOutput(
-                outputId = ns("volcano_plot"),
-                height = "500px",
-                width = "100%"
-              )  
-            ),
-            tabPanel(
-              title = "MA Plot",
-              br(),
-              plotOutput(
-                outputId = ns("ma_plot"),
-                height = "500px",
-                width = "100%"
-              )
-            ),
-            tabPanel(
-              title = "Scatter Plot",
-              br(),
-              plotOutput(
-                outputId = ns("scatter_plot"),
-                height = "500px",
-                width = "100%"
-              )
-            ),
-            navbarMenu(
-              title = "Enrichment",
-              tabPanel(
-                title = "Table",
-                br(),
-                strong(h3("Up Regulated Genes")),
-                br(),
-                DT::dataTableOutput(
-                  outputId = ns("pathway_data_up")
-                ),
-                br(),
-                strong(h3("Down Regulated Genes")),
-                br(),
-                DT::dataTableOutput(
-                  outputId = ns("pathway_data_down")
-                )
+        actionButton(
+          inputId = ns("submit_model_button"),
+          label = "Submit & Calculate",
+          style = "float:center"
+        ),
+        tags$head(tags$style(
+          "#deg-submit_model_button{font-size: 20px;}"
+        )),
+        a(
+          h5("Questions?", align = "right"),
+          href = "https://idepsite.wordpress.com/degs/",
+          target = "_blank"
+        )
+      ),
+      mainPanel(
+        tabsetPanel(
+          tabPanel(
+            title = "Experiment Design",
+            fluidRow(
+              column(
+                width = 6,
+                htmlOutput(outputId = ns("list_factors_de"))
               ),
-              tabPanel(
-                title = "Tree",
-                plotOutput(
-                  outputId = ns("enrichment_tree"),
-                  width = "100%"
-                )
-              ),
-              tabPanel(
-                title = "Network",
-                h5("Connected gene sets share more genes. Color of node correspond to adjuested Pvalues."),
-                fluidRow(
-                  column(
-                    width = 2,
-                    actionButton(
-                      inputId = ns("layout_vis_deg"),
-                      label = "Change layout"
-                    )
-                  ),
-                  column(
-                    width = 1,
-                    h5("Cutoff:"),
-                    align="right"
-                  ),
-                  column(
-                    width = 2,
-                    numericInput(
-                      inputId = ns("edge_cutoff_deg"),
-                      label = NULL,
-                      value = 0.30,
-                      min = 0,
-                      max = 1,
-                      step = .1
-                    ),
-                    align="left"
-                  ),
-                  column(
-                    width = 2,
-                    checkboxInput(
-                      inputId = ns("wrap_text_network_deg"),
-                      label = "Wrap text",
-                      value = TRUE
-                    )
-                  )
-                ),
-                selectInput(
-                  inputId = ns("up_down_reg_deg"),
-                  NULL,
-                  choices = c(
-                    "Both Up & Down" = "Both",
-                    "Up regulated" = "Up",
-                    "Down regulated" = "Down"
-                  )
-                ),
-                h6(
-                  "Two pathways (nodes) are connected if they share 30% (default, adjustable) or more genes.
-                  Green and red represents down- and up-regulated pathways. You can move the nodes by 
-                  dragging them, zoom in and out by scrolling, and shift the entire network by click on an 
-                  empty point and drag. Darker nodes are more significantly enriched gene sets. Bigger nodes
-                  represent larger gene sets. Thicker edges represent more overlapped genes."
-                ),
-                visNetwork::visNetworkOutput(
-                  outputId = ns("vis_network_deg"),
-                  height = "800px",
-                  width = "100%"
-                )
-              )
+              column(
+                width = 6,
+                htmlOutput(outputId = ns("list_block_factors_de"))
+              ) 
+            ),
+            fluidRow(
+              htmlOutput(outputId = ns("select_reference_levels"))
+            ),
+            htmlOutput(outputId = ns("list_interaction_terms")),
+            textOutput(outputId = ns("experiment_design")),
+            tags$head(tags$style(
+              "#deg-experiment_design{color: red;font-size: 16px;}"
+            )),
+            htmlOutput(outputId = ns("list_model_comparisons")),
+            h3("Use the submit button in the sidebar once the desired design is selected!"),
+            a(
+              h5("More info on DESeq2 experiment design", align = "right"),
+              href = "http://rpubs.com/ge600/deseq2",
+              target = "_blank"
             )
+          ),
+          tabPanel(
+            title = "Results",
+            plotOutput(
+              outputId = ns("sig_gene_stats")
+            ),
+            br(),
+            br(),
+            h4(
+              "Numbers of differentially expressed genes for all comparisons.
+              \"B-A\" means B vs. A. Interaction terms start with \"I:\" "
+            ),
+            tableOutput(
+              outputId = ns("sig_gene_stats_table")
+            )
+          ),
+          tabPanel(
+            title = "Venn Diagram",
+            checkboxInput(
+              inputId = ns("up_down_regulated"),
+              label = "Split gene lists by up- or down-regulation",
+              value = FALSE
+            ),
+            htmlOutput(outputId = ns("list_comparisons_venn")),
+            plotOutput(outputId = ns("venn_plot"))
           )
         )
       )
+    )
+  )
+}
+
+mod_05_deg_2_ui <- function(id) {
+  ns <- NS(id)
+  tabPanel(
+    title = "DEG Analysis (Step 2)",
+    sidebarLayout(
+      sidebarPanel(
+        h5("Examine the results of DEGs for each comparison"),
+        htmlOutput(outputId = ns("list_comparisons")),
+        # Heatmap customizing features ----------
+        conditionalPanel(
+          condition = "input.step_2 == 'Heatmap'",
+          fluidRow(
+            column(width = 3, h5("Color:")),
+            column(
+              width = 9,
+              selectInput(
+                inputId = ns("heatmap_color_select"),
+                label = NULL,
+                choices = "green-black-red",
+                width = "100%"
+              )
+            )
+          ),
+          ns = ns
+        ),
+        HTML(
+          "<hr style='height:1px;border:none;color:
+          #333;background-color:#333;' />"
+        ),
+        h5("Enrichment analysis for DEGs:"),
+        htmlOutput(outputId = ns("select_go_selector")),
+        tags$style(
+          type = "text/css",
+          "#deg-select_go { width:100%; margin-top:-9px}"
+        ),
+        checkboxInput(
+          inputId = ns("filtered_background"), 
+          label = "Use filtered data as background in enrichment (slow)", 
+          value = TRUE
+        ),
+        checkboxInput(
+          inputId = ns("remove_redudant"),
+          label = "Remove Redudant Gene Sets",
+          value = FALSE
+        )
+      ),
+      mainPanel(
+        tabsetPanel(
+          id = ns("step_2"),
+          tabPanel(
+            title = "Heatmap",
+            h5("Brush for sub-heatmap, click for value. (Shown Below)"),
+            br(),
+            fluidRow(
+              column(
+                width = 3,
+                plotOutput(
+                  outputId = ns("deg_main_heatmap"),
+                  height = "450px",
+                  width = "100%",
+                  brush = ns("ht_brush")
+                ),
+                br(),
+                h5("Selected Cell (Submap):"),
+                uiOutput(
+                  outputId = ns("ht_click_content")
+                )
+              ),
+              column(
+                width = 9,
+                plotOutput(
+                  outputId = ns("deg_sub_heatmap"),
+                  height = "650px",
+                  width = "100%",
+                  click = ns("ht_click")
+                )
+              )
+            )
+          ),
+          tabPanel(
+            title = "Volcano Plot",
+            br(),
+            plotOutput(
+              outputId = ns("volcano_plot"),
+              height = "500px",
+              width = "100%"
+            )  
+          ),
+          tabPanel(
+            title = "MA Plot",
+            br(),
+            plotOutput(
+              outputId = ns("ma_plot"),
+              height = "500px",
+              width = "100%"
+            )
+          ),
+          tabPanel(
+            title = "Scatter Plot",
+            br(),
+            plotOutput(
+              outputId = ns("scatter_plot"),
+              height = "500px",
+              width = "100%"
+            )
+          ),
+          tabPanel(
+            title = "Enrich Table",
+            br(),
+            strong(h3("Up Regulated Genes")),
+            br(),
+            DT::dataTableOutput(
+              outputId = ns("pathway_data_up")
+            ),
+            br(),
+            strong(h3("Down Regulated Genes")),
+            br(),
+            DT::dataTableOutput(
+              outputId = ns("pathway_data_down")
+            )
+          ),
+          tabPanel(
+            title = "Enrich Tree",
+            plotOutput(
+              outputId = ns("enrichment_tree"),
+              width = "100%"
+            )
+          ),
+          tabPanel(
+            title = "Pathway Network",
+            h5("Connected gene sets share more genes. Color of node correspond to adjuested Pvalues."),
+            fluidRow(
+              column(
+                width = 2,
+                actionButton(
+                  inputId = ns("layout_vis_deg"),
+                  label = "Change layout"
+                )
+              ),
+              column(
+                width = 1,
+                h5("Cutoff:"),
+                align="right"
+              ),
+              column(
+                width = 2,
+                numericInput(
+                  inputId = ns("edge_cutoff_deg"),
+                  label = NULL,
+                  value = 0.30,
+                  min = 0,
+                  max = 1,
+                  step = .1
+                ),
+                align="left"
+              ),
+              column(
+                width = 2,
+                checkboxInput(
+                  inputId = ns("wrap_text_network_deg"),
+                  label = "Wrap text",
+                  value = TRUE
+                )
+              )
+            ),
+            selectInput(
+              inputId = ns("up_down_reg_deg"),
+              NULL,
+              choices = c(
+                "Both Up & Down" = "Both",
+                "Up regulated" = "Up",
+                "Down regulated" = "Down"
+              )
+            ),
+            h6(
+              "Two pathways (nodes) are connected if they share 30% (default, adjustable) or more genes.
+              Green and red represents down- and up-regulated pathways. You can move the nodes by 
+              dragging them, zoom in and out by scrolling, and shift the entire network by click on an 
+              empty point and drag. Darker nodes are more significantly enriched gene sets. Bigger nodes
+              represent larger gene sets. Thicker edges represent more overlapped genes."
+            ),
+            visNetwork::visNetworkOutput(
+              outputId = ns("vis_network_deg"),
+              height = "800px",
+              width = "100%"
+            )
+          )
+        )
+      )        
     )
   )
 }

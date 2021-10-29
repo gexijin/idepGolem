@@ -36,6 +36,7 @@ app_server <- function(input, output, session) {
     id = "pathway",
     pre_process = pre_process,
     deg = deg,
-    idep_data = idep_data
+    idep_data = idep_data,
+    tab = tab
   )
 }

@@ -126,6 +126,11 @@ mod_06_pathway_ui <- function(id) {
       ),
       mainPanel(
         conditionalPanel(
+          condition = "input.pathway_method == 1",
+          tableOutput(outputId = ns("gage_pathway_table")),
+          ns = ns
+        ),
+        conditionalPanel(
           condition = "input.pathway_method == 2",
           h5("Red and blue indicates activated and suppressed pathways, respectively."),
           plotOutput(
@@ -142,7 +147,7 @@ mod_06_pathway_ui <- function(id) {
           ns = ns
         ),
         conditionalPanel(
-          condition = "input.pathwayMethod == 4",
+          condition = "input.pathway_method == 4",
           h5("Red and blue indicates activated and suppressed pathways, respectively."),
           plotOutput(
             outputId = ns("pgsea_plot_all_samples"),
@@ -159,7 +164,6 @@ mod_06_pathway_ui <- function(id) {
           condition = "input.pathway_method == 1 | input.pathway_method == 2 |
                        input.pathway_method == 3 | input.pathway_method == 4",
           htmlOutput(outputId = ns("list_sig_pathways")),
-          downloadButton("downloadSelectedPathwayData", "Expression data for genes in selected pathway"),
           ns = ns
         ),
         conditionalPanel(
@@ -189,7 +193,7 @@ mod_06_pathway_ui <- function(id) {
 #' mod_06_pathway Server Functions
 #'
 #' @noRd
-mod_06_pathway_server <- function(id, pre_process, deg, idep_data) {
+mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     output$test <- renderText({
@@ -227,13 +231,67 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data) {
       } 
 	  })
 
+    output$list_sig_pathways <- renderUI({
+	    if(tab != "Pathway") {
+        selectInput(
+          inputId = ns("sig_pathways"),
+          label = NULL, 
+          choices = list("All" = "All"),
+          selected = "All"
+        )
+      }	else {
+        req(!is.null(input$pathway_method))
+        # Default, sometimes these methods returns "No significant pathway found"
+		    choices <- "All"  
+		    if(input$pathway_method == 1) { 
+			    if(!is.null(gage_pathway_data()) && dim(gage_pathway_data())[2] > 1) {
+            choices <- gage_pathway_data()[, 2]
+          } 
+		    } else if(input$pathway_method == 2) {
+          if(!is.null(pgsea_plot_data()) && dim(pgsea_plot_data())[2] > 1) {
+					 	pathways <- as.data.frame(pgsea_plot_data())
+						choices <- substr(rownames(pathways), 10, nchar(rownames(pathways)))
+					}
+				} else if(input$pathway_method == 3) {
+          if(!is.null(fgsea_pathway_data()) && dim(fgsea_pathway_data())[2] > 1) {
+            choices <- fgsea_pathway_data()[, 2]
+          }
+        } else if(input$pathwayMethod == 4) {
+          if(!is.null(pgsea_plot_all_samples_data()) && dim(pgsea_plot_all_samples_data())[2] > 1) {
+					  pathways <- as.data.frame(pgsea_plot_all_samples_data())
+					  choices <- substr(rownames(pathways), 10, nchar(rownames(pathways)))
+				  }
+        } else if(input$pathway_method == 5) {
+			    if(!is.null(reactome_pa_pathway_data()) && dim(reactome_pa_pathway_data())[2] > 1) {
+            choices <- reactome_pa_pathway_data()[, 2]
+          }  
+		    }
+        
+        selectInput(
+          inputId = ns("sig_pathways"),
+          label = 
+            "Select a pathway to show expression pattern of related genes on a heatmap or a
+             KEGG pathway diagram:",
+          choices = choices
+        )
+	    } 
+	  })
+
     gene_sets <- reactive({
+      req(tab == "Pathway")
+
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Finding Gene Sets",
+        color = "#000000"
+      )
+
       if(pre_process$select_org() == "NEW" && !is.null(pre_process$gmt_file())) {
         in_file <- pre_process$gmt_file()
         in_file <- in_file$datapath
-				return(read_gmt_robust(inFile))
+				gene_sets <- read_gmt_robust(in_file)
       } else {
-        read_gene_sets(
+        gene_sets <- read_gene_sets(
           converted = pre_process$converted(),
           all_gene_names = pre_process$all_gene_names(),
           go = input$select_go,
@@ -242,11 +300,16 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data) {
           my_range = c(input$min_set_size, input$max_set_size)
         )
       }
+
+      shinybusy::remove_modal_spinner()
+
+      return(gene_sets)
     })
 
     gage_pathway_data <- reactive({
       req(input$pathway_method == 1)
       req(!is.null(deg$limma()))
+      req(!is.null(gene_sets()))
 
       gage_data(
         select_go = input$select_go,
@@ -279,7 +342,6 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data) {
     contrast_samples <- reactive({
       req(!is.null(input$select_contrast))
       req(!is.null(pre_process$data()))
-      browser()
 
       find_contrast_samples(
         select_contrast = input$select_contrast, 
@@ -295,7 +357,6 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data) {
 
     output$pgsea_plot <- renderPlot({
       req(input$pathway_method == 2)
-      browser()
 
       plot_pgsea(
         my_range = c(input$min_set_size, input$max_set_size),
@@ -306,6 +367,66 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data) {
         n_pathway_show = input$n_pathway_show
       )
     })
+
+    fgsea_pathway_data <- reactive({
+      req(input$pathway_method == 3)
+      req(!is.null(deg$limma()))
+      req(!is.null(gene_sets()))
+
+      fgsea_data(
+        select_contrast = input$select_contrast,
+        my_range = c(input$min_set_size, input$max_set_size),
+        limma = deg$limma(),
+        gene_p_val_cutoff = input$gene_p_val_cutoff,
+        gene_sets = gene_sets(),
+        absolute_fold = input$absolute_fold,
+        pathway_p_val_cutoff = inut$pathway_p_val_cutoff,
+        n_pathway_show = input$n_pathway_show
+      )
+    })
+
+    output$fgsea_pathway <- renderTable({
+      req(!is.null(fgsea_pathway_data()))
+	    fgsea_pathway_data()
+	  },
+      digits = 0,
+      align = "l",
+      include.rownames = FALSE,
+      striped = TRUE,
+      bordered = TRUE,
+      width = "auto",
+      hover = T
+    )
+
+    reactome_pa_pathway_data <- reactive({
+      req(!is.null(deg$limma()))
+
+      reactome_data(
+        select_contrast = input$select_contrast,
+        my_range = c(input$min_set_size, input$max_set_size),
+        limma = deg$limma(),
+        gene_p_val_cutoff = input$gene_p_val_cutoff,
+        converted = pre_process$converted(),
+        idep_data = idep_data,
+        pathway_p_val_cutoff = input$pathway_p_val_cutoff,
+        n_pathway_show = input$n_pathway_show,
+        absolute_fold = input$absolute_fold
+      )
+    })
+
+    output$reactome_pa_pathway <- renderTable({
+      req(!is.null(reactome_pa_pathway_data()))
+	    
+      reactome_pa_pathway_data()
+	  },
+      digits = 0,
+      align = "l",
+      include.rownames = FALSE,
+      striped = TRUE,
+      bordered = TRUE,
+      width = "auto",
+      hover = T
+    )
   })
 }
 

@@ -501,7 +501,7 @@ gage <- gage_data(
   min_set_size = 15,
   max_set_size = 2000,
   limma = limma,
-  gene_p_val_cutoff = .1,
+  gene_p_val_cutoff = 1,
   gene_sets = gene_sets,
   absolute_fold = FALSE,
   pathway_p_val_cutoff = .1,
@@ -519,12 +519,37 @@ contrast_samples_pgsea <- find_contrast_samples(
 	data_file_format = "1"
 )
 
-plot_pgsea(
+#plot_pgsea(
+  #my_range = c(15, 2000),
+  #processed_data = processed_data$data,
+  #contrast_samples = contrast_samples_pgsea,
+  #gene_sets = gene_sets,
+  #pathway_p_val_cutoff = .1,
+  #n_pathway_show = 30
+#)
+
+fgsea <- fgsea_data(
+  select_contrast = "I:p53_null.Treatment_IR",
   my_range = c(15, 2000),
-  processed_data = processed_data$data,
-  contrast_samples = contrast_samples_pgsea,
+  limma = limma,
+  gene_p_val_cutoff = 1,
   gene_sets = gene_sets,
+  absolute_fold = FALSE,
   pathway_p_val_cutoff = .1,
   n_pathway_show = 30
 )
+
+reactome_data(
+  select_contrast = "I:p53_null.Treatment_IR",
+  my_range = c(15, 2000),
+  limma = limma,
+  gene_p_val_cutoff = 1,
+  converted = converted,
+  idep_data = idep_data,
+  pathway_p_val_cutoff = .1,
+  n_pathway_show = 30,
+  absolute_fold = FALSE
+)
 ```
+
+
