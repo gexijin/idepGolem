@@ -9,8 +9,38 @@
 #' @importFrom shiny NS tagList 
 mod_07_genome_ui <- function(id){
   ns <- NS(id)
-  tagList(
- 
+  tabPanel(
+    "Genome",
+    sidebarLayout(
+      sidebarPanel(
+        # Buttons for data file format ----------
+        radioButtons(
+          inputId = ns("data_file_format"),
+          label = "2. Choose data type",
+          choices = list(
+            "Read counts data (recommended)" = 1,
+            "Normalized expression values (RNA-seq FPKM, microarray, etc.)" = 2,
+            "Fold-changes and corrected P values from CuffDiff or any other
+             program" = 3
+          ),
+          selected = 1
+        ),
+
+        # Conditional panel for fold changes data file ----------
+        conditionalPanel(
+          condition = "input.data_file_format == 3",
+          checkboxInput(
+            inputId = ns("no_fdr"),
+            label = "Fold-changes only, no corrected P values",
+            value = FALSE
+          ),
+          ns = ns
+        )
+      ),
+      mainPanel(
+        NULL
+      )
+    )
   )
 }
     

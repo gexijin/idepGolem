@@ -851,4 +851,51 @@ read_gene_sets <- function(
 	names(gene_sets) <- pathway_info[ix, 2]
 	DBI::dbDisconnect(pathway)
 	return(gene_sets)
-} 
+}
+
+#' ENSEMBL TO ENTREZ
+convert_ensembl_to_entrez <- function(
+  query,
+  species,
+  org_info
+) { 
+	query_set <- clean_gene_set(unlist(strsplit(toupper(names(query)), '\t| |\n|\\, ')))
+  # Note uses species Identifying
+	species_id <- org_info$id[which(org_info$ensembl_dataset == species)]  
+	# idType 6 for entrez gene ID
+  convert <- connect_convert_db()
+
+  id_type_entrez <- DBI::dbGetQuery(
+    convert,
+    paste(
+      "select distinct * from idIndex where idType = 'entrezgene_id'" 
+    )
+  )
+  if(dim(id_type_entrez)[1] != 1) {
+    cat("Warning! entrezgene ID not found!")
+  }
+  id_type_entrez <- as.numeric(id_type_entrez[1, 1])
+
+	result <- DBI::dbGetQuery(
+    convert,
+		paste(
+      "select  id,ens,species from mapping where ens IN ('",
+      paste(query_set, collapse = "', '"),
+			"') AND  idType ='",
+      id_type_entrez,
+      "'",
+      sep = ""
+    )
+  )
+	DBI::dbDisconnect(convert)
+	if(dim(result)[1] == 0) {
+    return(NULL)
+  }
+  result <- subset(result, species == species_id, select = -species)
+
+	ix = match(result$ens, names(query))
+  
+	tem <- query[ix]
+  names(tem) <- result$id
+  return(tem)
+}

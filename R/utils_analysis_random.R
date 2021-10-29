@@ -373,6 +373,8 @@ rowname_id_swap <- function(
   if (select_gene_id == "User_ID" && ncol(all_gene_names) == 1) {
     return(data_matrix)
   } else if (select_gene_id == "User_ID") {
+    data_matrix <- as.data.frame(data_matrix)
+    data_matrix$order <- seq(1, nrow(data_matrix), 1)
     new_data <- merge(
       data_matrix,
       all_gene_names,
@@ -383,11 +385,15 @@ rowname_id_swap <- function(
     rownames(new_data) <- new_data$User_ID
     nums <- unlist(lapply(new_data, is.numeric))
     new_data <- new_data[, nums]
+    new_data <- new_data[order(new_data$order), ]
+    new_data <- dplyr::select(new_data, -order)
     new_data <- as.matrix(new_data)
     return(new_data)
   } else if(select_gene_id == "ensembl_ID") {
     return(data_matrix)
   } else if (select_gene_id == "symbol") {
+    data_matrix <- as.data.frame(data_matrix)
+    data_matrix$order <- seq(1, nrow(data_matrix), 1)
     new_data <- merge(
       data_matrix,
       all_gene_names,
@@ -398,6 +404,8 @@ rowname_id_swap <- function(
     rownames(new_data) <- new_data$symbol
     nums <- unlist(lapply(new_data, is.numeric))
     new_data <- new_data[, nums]
+    new_data <- new_data[order(new_data$order), ]
+    new_data <- dplyr::select(new_data, -order)
     new_data <- as.matrix(new_data)
     return(new_data)
   }
