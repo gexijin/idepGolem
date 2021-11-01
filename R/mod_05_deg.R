@@ -583,8 +583,7 @@ mod_05_deg_server <- function(id, pre_process) {
         limma = deg$limma,
         select_contrast = input$select_contrast,
         processed_data = pre_process$data(),
-        contrast_samples = contrast_samples(),
-        all_gene_names = pre_process$all_gene_names()
+        contrast_samples = contrast_samples()
       )
     })
 
@@ -644,7 +643,8 @@ mod_05_deg_server <- function(id, pre_process) {
           ht_brush = input$ht_brush,
           ht = deg_env$ht,
           ht_pos_main = deg_env$ht_pos_main,
-          heatmap_data = heat_data()
+          heatmap_data = heat_data(),
+          all_gene_names = pre_process$all_gene_names()
         )
 
         deg_env$ht_select <- deg_heat_return$ht_select
@@ -924,7 +924,7 @@ mod_05_deg_server <- function(id, pre_process) {
       select_factors_model = reactive(input$select_factors_model),
       select_model_comprions = reactive(input$select_model_comprions),
       reference_levels = reactive(factor_reference_levels()),
-      counts_deg_method = reactive(counts_deg_method)
+      counts_deg_method = reactive(input$counts_deg_method)
     )
   })
 }

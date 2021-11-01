@@ -1570,8 +1570,7 @@ deg_heat_data <- function(
   limma,
   select_contrast,
   processed_data,
-  contrast_samples,
-  all_gene_names
+  contrast_samples
 ) {
 	genes <- limma$results
 
@@ -1623,14 +1622,6 @@ deg_heat_data <- function(
 
 	# Retreive related data		 
 	genes <- processed_data[iy, iz, drop = FALSE]
-
-  if(ncol(all_gene_names) == 3) {
-   genes <- rowname_id_swap(
-      data_matrix = genes,
-      all_gene_names = all_gene_names,
-      select_gene_id = "symbol"
-    )
-  }
 
 	genes <- genes[order(bar), , drop = FALSE]
 	bar <- sort(bar)
@@ -1736,7 +1727,8 @@ deg_heat_sub <- function(
   ht_brush,
   ht,
   ht_pos_main,
-  heatmap_data
+  heatmap_data,
+  all_gene_names
 ) {
   lt <- InteractiveComplexHeatmap::getPositionFromBrush(ht_brush)
   pos1 <- lt[[1]]
@@ -1811,10 +1803,19 @@ deg_heat_sub <- function(
   } else {
     show_rows <- TRUE
   }
-  submap_data <- m[row_index, column_index, drop = FALSE]
+  if(ncol(all_gene_names) == 3) {
+    genes <- rowname_id_swap(
+      data_matrix = m[row_index, column_index, drop = FALSE],
+      all_gene_names = all_gene_names,
+      select_gene_id = "symbol"
+    )
+  } else {
+    genes <- m[row_index, column_index, drop = FALSE]
+  }
+  submap_data <- genes
 
   ht_select <- ComplexHeatmap::Heatmap(
-    m[row_index, column_index, drop = FALSE],
+    genes,
     col = ht@ht_list[[1]]@matrix_color_mapping@col_fun,
     show_heatmap_legend = FALSE,
     cluster_rows = FALSE,

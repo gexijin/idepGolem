@@ -390,7 +390,22 @@ rowname_id_swap <- function(
     new_data <- as.matrix(new_data)
     return(new_data)
   } else if(select_gene_id == "ensembl_ID") {
-    return(data_matrix)
+    data_matrix <- as.data.frame(data_matrix)
+    data_matrix$order <- seq(1, nrow(data_matrix), 1)
+    new_data <- merge(
+      data_matrix,
+      all_gene_names,
+      by.x = "row.names",
+      by.y = "ensembl_ID",
+      all.x = T
+    )
+    rownames(new_data) <- new_data$ensembl_ID
+    nums <- unlist(lapply(new_data, is.numeric))
+    new_data <- new_data[, nums]
+    new_data <- new_data[order(new_data$order), ]
+    new_data <- dplyr::select(new_data, -order)
+    new_data <- as.matrix(new_data)
+    return(new_data)
   } else if (select_gene_id == "symbol") {
     data_matrix <- as.data.frame(data_matrix)
     data_matrix$order <- seq(1, nrow(data_matrix), 1)

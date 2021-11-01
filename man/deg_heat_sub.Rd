@@ -4,7 +4,7 @@
 \alias{deg_heat_sub}
 \title{SUBHEATMAP}
 \usage{
-deg_heat_sub(ht_brush, ht, ht_pos_main, heatmap_data)
+deg_heat_sub(ht_brush, ht, ht_pos_main, heatmap_data, all_gene_names)
 }
 \description{
 SUBHEATMAP
