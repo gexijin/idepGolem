@@ -158,14 +158,14 @@ pgsea_data <- function(
 	  result <- result[order(result[, 1]), ]
     result <- result[which(result[, 1] < pathway_p_val_cutoff), , drop = F]
 	
-	  pg_results = result[, -2]
+	  pg_results <- result[, -2]
 
 	  # When there is only 1 left in the matrix pg_results becomes a vector
 	  if(sum(p_values < pathway_p_val_cutoff) == 1) {
       pg_data <- t(as.matrix(pg_results))
       pg_data <- rbind(pg_data, pg_data)
     } else {
-      if(dim(results)[1] > n_pathway_show) {
+      if(dim(pg_results)[1] > n_pathway_show) {
         pg_data <- pg_results[1:n_pathway_show, ]
       } else {
         pg_data <- pg_results
@@ -196,13 +196,13 @@ plot_pgsea <- function(
   pathway_p_val_cutoff,
   n_pathway_show
 ) {
-	genes <- processed_data[, contrast_samples]	
+  genes <- processed_data[, contrast_samples]	
 	if(length(gene_sets)  == 0)  {
     return(
       NULL
     )
   } else {
-	  subtype = detect_groups(colnames(genes))
+	  subtype <- detect_groups(colnames(genes))
 	  result <- pgsea_data(
       processed_data = genes,
       gene_sets = gene_sets,
@@ -221,8 +221,8 @@ plot_pgsea <- function(
         factor(subtype),
         scale = c(-max(result$pg_data), max(result$pg_data)),
         show.grid = T,
-        margins = c(3,1, 13, 38),
-        col = .rwb,
+        margins = c(3, 1, 13, 38),
+        col = PGSEA::.rwb,
         cex.lab = 0.5
       )
     }
@@ -330,7 +330,6 @@ reactome_data <- function(
   n_pathway_show,
   absolute_fold
 ) {
-  browser()
   ensembl_species <- c(
     "hsapiens_gene_ensembl","rnorvegicus_gene_ensembl", "mmusculus_gene_ensembl",
 	  "celegans_gene_ensembl","scerevisiae_gene_ensembl", "drerio_gene_ensembl",
@@ -436,4 +435,139 @@ reactome_data <- function(
   top_1[, 3] <- as.character(round(as.numeric(top_1[, 3]), 4))
 	
   return(top_1)
+}
+
+pgsea_plot_all <- function(
+  go,
+  my_range,
+  data,
+  select_contrast,
+  gene_sets,
+  pathway_p_val_cutoff,
+  n_pathway_show
+) {
+  if(length(gene_sets)  == 0) {
+    plot.new()
+    text(0, 1, "No gene sets!")
+  } else {
+    subtype <- detect_groups(colnames(data)) 
+	  result <- pgsea_data(
+      processed_data = data,
+      gene_sets = gene_sets,
+      my_range = my_range,
+      pathway_p_val_cutoff = pathway_p_val_cutoff,
+      n_pathway_show = n_pathway_show
+    )
+    if(is.null(result$pg_data)) {
+      plot.new()
+      text(0.5, 1, "No significant pathway found!")
+    } else {
+      PGSEA::smcPlot(
+        result$pg_data,
+        factor(subtype),
+        scale = c(-max(result$pg_data), max(result$pg_data)),
+        show.grid = T,
+        margins = c(3, 1, 13, 38),
+        col = PGSEA::.rwb,
+        cex.lab = 0.5
+      )
+    }
+  }
+}
+
+get_pgsea_plot_data <- function(
+  my_range,
+  data,
+  select_contrast,
+  gene_sets,
+  sample_info,
+  select_factors_model,
+  select_model_comprions,
+  pathway_p_val_cutoff,
+  n_pathway_show
+) {	
+	# Find sample related to the comparison
+	iz <- match(detect_groups(colnames(data)), unlist(strsplit(select_contrast, "-")))
+	iz <- which(!is.na(iz))
+	
+  if(!is.null(sample_info) & !is.null(select_factors_model) & length(select_model_comprions) > 0 ) {
+		# Strings like: "groups: mutant vs. control"
+    comparisons <- gsub(".*: ", "", select_model_comprions)
+		comparisons <- gsub(" vs\\. ", "-", comparisons)
+    # Corresponding factors
+		factors_vector <- gsub(":.*", "", select_model_comprions)
+    # Selected contrast lookes like: "mutant-control"
+		ik <- match(select_contrast, comparisons)
+		if(is.na(ik)) {
+      iz <- 1:(dim(data)[2]) 
+    } else {
+      # Interaction term, use all samples	
+      # Corresponding factors
+			selected_factor <- factors_vector[ik]
+			iz <- match(sample_info[, selected_factor], unlist(strsplit(select_contrast, "-")))
+			iz <- which(!is.na(iz))
+		}
+	}
+
+	if(grepl("I:", select_contrast)) {
+    # If it is factor design use all samples
+    iz <- 1:(dim(data)[2])
+  } 
+	if(is.na(iz)[1] | length(iz) <= 1) {
+    iz <- 1:(dim(data)[2]) 
+  }
+	
+	genes <- data
+	genes <- genes[, iz]
+
+	subtype <- detect_groups(colnames(genes)) 
+  
+  if(length(gene_sets)  == 0) {
+    return(as.data.frame("No significant pathway!"))
+  } else {
+    result <- pgsea_data(
+      processed_data = genes,
+      gene_sets = gene_sets,
+      my_range = my_range,
+      pathway_p_val_cutoff = pathway_p_val_cutoff,
+      n_pathway_show = n_pathway_show
+    )
+					 
+	  if(is.null(result$pg_data)) {
+      return(as.data.frame("No significant pathway!"))
+    } else {
+      return( as.data.frame(result$pg_data) )
+    } 
+  }
+}
+
+get_pgsea_plot_all_samples_data <- function(
+  data,
+  select_contrast,
+  gene_sets,
+  my_range,
+  pathway_p_val_cutoff,
+  n_pathway_show
+) {
+  genes <- data
+	subtype <- detect_groups(colnames(genes)) 
+  
+  if(length(gene_sets)  == 0) {
+    plot.new()
+    text(0,1, "No gene sets!")
+  } else {
+	  result <- pgsea_data(
+      processed_data = genes,
+      gene_sets = gene_sets,
+      my_range = my_range,
+      pathway_p_val_cutoff = pathway_p_val_cutoff,
+      n_pathway_show = n_pathway_show
+    )
+					 
+	  if(is.null(result$pg_data)) {
+      return(as.data.frame("No significant pathway!"))
+    } else {
+      return(as.data.frame(result$pg_data))
+    }
+  }	
 }

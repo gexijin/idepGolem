@@ -4,13 +4,7 @@
 \alias{deg_heat_data}
 \title{HEATMAP DATA FOR DEG}
 \usage{
-deg_heat_data(
-  limma,
-  select_contrast,
-  processed_data,
-  contrast_samples,
-  all_gene_names
-)
+deg_heat_data(limma, select_contrast, processed_data, contrast_samples)
 }
 \description{
 HEATMAP DATA FOR DEG

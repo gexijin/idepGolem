@@ -374,8 +374,6 @@ merged_data <- merge_data(
 
 #### SEARCHING
 ```{r}
-vsn::meanSdPlot(processed_data$data)
-
 # Gene search for individual plotting
 merged_data[grep("H4c1", merged_data$symbol),]
 
@@ -455,7 +453,6 @@ deg_heat <- deg_heat_data(
   limma = limma,
   select_contrast = "null-wt",
   processed_data = processed_data$data,
-  all_gene_names = gene_names,
   contrast_samples = contrast_samples
 )
 
@@ -519,14 +516,14 @@ contrast_samples_pgsea <- find_contrast_samples(
 	data_file_format = "1"
 )
 
-#plot_pgsea(
-  #my_range = c(15, 2000),
-  #processed_data = processed_data$data,
-  #contrast_samples = contrast_samples_pgsea,
-  #gene_sets = gene_sets,
-  #pathway_p_val_cutoff = .1,
-  #n_pathway_show = 30
-#)
+plot_pgsea(
+  my_range = c(15, 2000),
+  processed_data = processed_data$data,
+  contrast_samples = contrast_samples_pgsea,
+  gene_sets = gene_sets,
+  pathway_p_val_cutoff = .1,
+  n_pathway_show = 30
+)
 
 fgsea <- fgsea_data(
   select_contrast = "I:p53_null.Treatment_IR",
@@ -549,6 +546,16 @@ reactome_data(
   pathway_p_val_cutoff = .1,
   n_pathway_show = 30,
   absolute_fold = FALSE
+)
+
+pgsea_plot_all(
+  go = "GOBP",
+  my_range = c(15, 2000),
+  data = processed_data$data,
+  select_contrast = "I:p53_null.Treatment_IR",
+  gene_sets = gene_sets,
+  pathway_p_val_cutoff = .1,
+  n_pathway_show = 30
 )
 ```
 
