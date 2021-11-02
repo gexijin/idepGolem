@@ -571,3 +571,349 @@ get_pgsea_plot_all_samples_data <- function(
     }
   }	
 }
+
+pathway_select_data <- function(
+  sig_pathways,
+  gene_sets,
+  contrast_samples,
+  data,
+  select_org,
+  all_gene_names
+) {
+  if(sig_pathways == "All") {
+    return (NULL) 
+  }
+  # Find the gene set
+	ix <- which(names(gene_sets) == sig_pathways)
+	if(length(ix) == 0) {
+    return(NULL)
+  }
+  # Retrieve genes
+  genes <- gene_sets[[ix]]
+
+	# Find related samples	
+	iz <-contrast_samples
+	x <- data[which(rownames(data) %in% genes), iz]
+	if(ncol(all_gene_names) == 3) {
+    x <- rowname_id_swap(
+      data_matrix = x,
+      all_gene_names = all_gene_names,
+      select_gene_id = "symbol"
+    )
+  }
+	
+	return(x)
+}
+
+# SELECTED HEATMAP
+pathway_heatmap <- function(
+  data,
+  heatmap_color_select
+) {
+  # Number of genes to show
+	n_genes <- nrow(data)
+
+  data <- as.matrix(data) - apply(data, 1, mean)
+  cutoff <- median(unlist(data)) + 3 * sd(unlist(data)) 
+	data[data > cutoff] <- cutoff
+	cutoff <- median(unlist(data)) - 3 * sd(unlist(data)) 
+	data[data < cutoff] <- cutoff
+	
+	data <- data[which(apply(data, 1, sd) > 0), ]
+
+  # Color scale
+  if(min(data) < 0) {
+    col_fun <- circlize::colorRamp2(
+      c(min(data), 0, max(data)),
+      heatmap_color_select
+    )
+  } else {
+    col_fun <- circlize::colorRamp2(
+      c(min(data), median(data), max(data)),
+      heatmap_color_select
+    )
+  }
+  
+	groups <- detect_groups(colnames(data))
+	group_count <- length(unique(groups))
+  groups_colors <- gg_color_hue(group_count)
+  
+  top_ann <- ComplexHeatmap::HeatmapAnnotation(
+    Group = groups,
+    col = list(
+      Group = setNames(groups_colors, unique(groups))
+    ),
+    annotation_legend_param = list(
+      Group = list(nrow = 1, title = NULL)
+    ),
+    show_annotation_name = list(Group = FALSE),
+    show_legend = FALSE
+  )
+
+  heat <- ComplexHeatmap::Heatmap(
+    data,
+    name = "Expression",
+    col = col_fun,
+    cluster_rows = TRUE,
+    clustering_method_rows = "average",
+    clustering_distance_rows = function(x) as.dist(
+      1 - cor(t(x), method = "pearson")
+    ),
+    cluster_columns = TRUE,
+    show_row_dend = TRUE,
+    show_column_dend = FALSE,
+    top_annotation = top_ann,
+    show_row_names = FALSE,
+    show_column_names = FALSE,
+    heatmap_legend_param = list(
+      direction = "horizontal",
+      legend_width = grid::unit(6, "cm"),
+      title = "Color Key",
+      title_position = "topcenter"
+    )
+  )
+  
+  return(
+    heatmap = ComplexHeatmap::draw(
+      heat,
+      heatmap_legend_side = "bottom"
+    )
+  )
+}
+
+
+#' SUBHEATMAP
+path_heat_sub <- function(
+  ht_brush,
+  ht,
+  ht_pos_main,
+  heatmap_data
+) {
+  lt <- InteractiveComplexHeatmap::getPositionFromBrush(ht_brush)
+  pos1 <- lt[[1]]
+  pos2 <- lt[[2]]
+
+  pos <- InteractiveComplexHeatmap::selectArea(
+    ht,
+    mark = FALSE,
+    pos1 = pos1,
+    pos2 = pos2,
+    verbose = FALSE,
+    ht_pos = ht_pos_main
+  )
+
+  # Annotations ----------
+    column_groups <- detect_groups(colnames(heatmap_data))
+    groups_colors <- gg_color_hue(length(unique(column_groups)))
+  
+    top_ann <- ComplexHeatmap::HeatmapAnnotation(
+      Group = column_groups,
+      col = list(
+        Group = setNames(
+          groups_colors,
+          unique(column_groups)
+        )
+      ),
+      annotation_legend_param = list(
+        Group = list(nrow = 1, title = NULL)
+      ),
+      show_annotation_name = list(Group = FALSE),
+      show_legend = TRUE
+    )
+    
+    group_col_return <- setNames(
+      groups_colors,
+      c(unique(column_groups))
+    )
+  # End annotation ---------
+
+  column_index <- unlist(pos[1, "column_index"])
+  row_index <- unlist(pos[1, "row_index"])
+  top_ann <- top_ann[column_index]
+  column_groups <- column_groups[column_index]
+  m <- ht@ht_list[[1]]@matrix
+
+  if (length(row_index) > 50) {
+    show_rows <- FALSE
+  } else {
+    show_rows <- TRUE
+  }
+
+  submap_data <- m[row_index, column_index, drop = FALSE]
+
+  ht_select <- ComplexHeatmap::Heatmap(
+    submap_data,
+    col = ht@ht_list[[1]]@matrix_color_mapping@col_fun,
+    show_heatmap_legend = FALSE,
+    cluster_rows = FALSE,
+    cluster_columns = FALSE,
+    show_row_names = show_rows,
+    top_annotation = top_ann,
+    name = "heat_1"
+  )
+
+  return(list(
+    ht_select = ht_select,
+    submap_data = submap_data,
+    group_colors = group_col_return,
+    column_groups = column_groups
+  ))
+}
+
+#' PATH SUB CLICK INFO
+path_click_info <- function(
+  click,
+  ht_sub,
+  ht_sub_obj,
+  ht_pos_sub,
+  sub_groups,
+  group_colors,
+  data
+) {
+  pos1 <- InteractiveComplexHeatmap::getPositionFromClick(click)
+    
+  pos <- InteractiveComplexHeatmap::selectPosition(
+    ht_sub,
+    mark = FALSE,
+    pos = pos1,
+    verbose = FALSE,
+    ht_pos = ht_pos_sub
+  )
+  
+  row_index <- pos[1, "row_index"]
+  column_index <- pos[1, "column_index"]
+
+  if (is.null(row_index)) {
+    return("Select a cell in the heatmap.")
+  }
+
+  value <- data[row_index, column_index]
+  col <- ComplexHeatmap::map_to_colors(ht_sub_obj@matrix_color_mapping, value)
+  sample <- colnames(data)[column_index]
+  gene <- rownames(data)[row_index]
+  group_name <- sub_groups[column_index]
+  group_col <- group_colors[[group_name]]
+
+  # HTML for info table
+  # Pulled from https://github.com/jokergoo/InteractiveComplexHeatmap/blob/master/R/shiny-server.R
+  # Lines 1669:1678
+  html <- GetoptLong::qq("
+<div>
+<pre>
+Value: @{round(value, 2)} <span style='background-color:@{col};width=50px;'>    </span>
+Sample: @{sample}
+Gene: @{gene} 
+Group: @{group_name} <span style='background-color:@{group_col};width=50px;'>    </span>   
+</pre></div>"
+)
+
+ return(HTML(html))
+}
+
+get_pathway_list_data <- function(
+  pathway_method,
+  gage_pathway_data,
+  fgsea_pathway_data,
+  pgsea_plot_data,
+  pgsea_plot_all_samples_data,
+  go,
+  select_org,
+  gene_info
+) {
+	pathways <- NULL
+	if(pathway_method == 1) {
+    if(!is.null(gage_pathway_data)) {
+      if(dim(gage_pathway_data)[2] > 1) { 
+				pathways <- gage_pathway_data
+				colnames(pathways)[2] <- "Pathways" 	
+				colnames(pathways)[4] <- "nGenes"
+			}
+    }
+  }
+	if(pathway_method == 3) {
+    if(!is.null(fgsea_pathway_data)) {
+      if(dim(fgsea_pathway_data)[2] > 1) {
+				pathways <- fgsea_pathway_data
+				colnames(pathways)[2] <- "Pathways" 	
+				colnames(pathways)[4] <- "nGenes" 
+			}
+    }
+  }
+	if(pathway_method == 2) {
+    if(!is.null(pgsea_plot_data)) {
+      if(dim(pgsea_plot_data)[2] > 1) {
+				pathways <- as.data.frame(pgsea_plot_data)
+				pathways$Pathways <- substr(rownames(pathways), 10, nchar(rownames(pathways)))
+				pathways$adj.Pval <- gsub(" .*", "", rownames(pathways))
+				pathways$Direction <- "Diff"
+			}
+    }
+  }
+	if(pathway_method == 4) {
+    if(!is.null(pgsea_plot_all_samples_data)) {
+      if(dim(pgsea_plot_all_samples_data)[2] >1 ) {
+				pathways <- as.data.frame(pgsea_plot_all_samples_data)
+				pathways$Pathways <- substr(rownames(pathways), 10, nchar(rownames(pathways)))
+				pathways$adj.Pval <- gsub(" .*", "", rownames(pathways))
+				pathways$Direction <- "Diff"	
+			}
+    }
+  }	
+	if(is.null(pathways)) {
+    return(NULL)
+  }	
+	# if no gene set data, return pathway list
+	if(is.null(gene_sets)) {
+    return(pathways)
+  } 
+	
+	pathways$adj.Pval <- as.numeric(pathways$adj.Pval)
+
+  # Sometimes only one pathway is in the table
+	if(nrow(pathways) > 1) {
+    for(i in 2:nrow(pathways)) {
+      if(nchar(pathways$Direction[i]) <= 1) {
+			  pathways$Direction[i] = pathways$Direction[i-1]
+      }
+    }
+	}	
+
+	# Gene symbol matching symbols 
+	probe_to_gene <- NULL
+	if(go != "ID not recognized!" & select_org != "NEW") {
+    # If more than 50% genes has symbol
+    if(sum(is.na(gene_info$symbol)) / dim(gene_info)[1] < .5) { 
+		  probe_to_gene <- gene_info[, c("ensembl_gene_id", "symbol")]
+		  probe_to_gene$symbol <- gsub(" ", "", probe_to_gene$symbol)
+
+		  ix <- which(
+        is.na(probe_to_gene$symbol) |
+				nchar(probe_to_gene$symbol) < 2 | 
+				toupper(probe_to_gene$symbol) == "NA" |  
+				toupper(probe_to_gene$symbol) == "0"
+      )
+      # Use gene ID
+		  probe_to_gene[ix, 2] <- probe_to_gene[ix, 1]  
+	  }
+  }
+			
+
+	
+	pathways$Genes <- ""
+	# looking up genes for each pathway
+	for(i in 1:nrow(pathways)) {
+    # Find the gene set
+		ix <- which(names(gene_sets) == pathways$Pathways[i])
+		if(length(ix) != 0) {
+      # Retrieve genes
+			genes <- gene_sets[[ix]]
+			
+			if(!is.null(probe_to_gene)) { 
+				iy <- match(genes, probe_to_gene[, 1])
+				genes <- probe_to_gene[iy, 2]
+			}
+			pathways$Genes[i] <- paste(genes, collapse = " ")
+		}
+	}
+	return(pathways)
+}

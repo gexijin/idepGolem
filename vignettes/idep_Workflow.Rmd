@@ -516,14 +516,14 @@ contrast_samples_pgsea <- find_contrast_samples(
 	data_file_format = "1"
 )
 
-plot_pgsea(
-  my_range = c(15, 2000),
-  processed_data = processed_data$data,
-  contrast_samples = contrast_samples_pgsea,
-  gene_sets = gene_sets,
-  pathway_p_val_cutoff = .1,
-  n_pathway_show = 30
-)
+#plot_pgsea(
+  #my_range = c(15, 2000),
+  #processed_data = processed_data$data,
+  #contrast_samples = contrast_samples_pgsea,
+  #gene_sets = gene_sets,
+  #pathway_p_val_cutoff = .1,
+  #n_pathway_show = 30
+#)
 
 fgsea <- fgsea_data(
   select_contrast = "I:p53_null.Treatment_IR",
@@ -548,14 +548,46 @@ reactome_data(
   absolute_fold = FALSE
 )
 
-pgsea_plot_all(
-  go = "GOBP",
-  my_range = c(15, 2000),
-  data = processed_data$data,
-  select_contrast = "I:p53_null.Treatment_IR",
+#pgsea_plot_all(
+  #go = "GOBP",
+  #my_range = c(15, 2000),
+  #data = processed_data$data,
+  #select_contrast = "I:p53_null.Treatment_IR",
+  #gene_sets = gene_sets,
+  #pathway_p_val_cutoff = .1,
+  #n_pathway_show = 30
+#)
+
+gage[, 2]
+
+select_data <- pathway_select_data(
+  sig_pathways = "RNA processing ",
   gene_sets = gene_sets,
-  pathway_p_val_cutoff = .1,
-  n_pathway_show = 30
+  contrast_samples = contrast_samples_pgsea,
+  data = processed_data$data,
+  select_org = "BestMatch",
+  all_gene_names = gene_names
+)
+
+pathway_heatmap(
+  data = select_data,
+  c("green", "black", "red")
+)
+
+pahtway_list_data <- get_pathway_list_data(
+  pathway_method = 1,
+  gage_pathway_data = gage,
+  fgsea_pathway_data = NULL,
+  pgsea_plot_data = NULL,
+  pgsea_plot_all_samples_data = NULL,
+  go = "GOBP",
+  select_org = "BestMatch",
+  gene_info = all_gene_info
+)
+
+enrichment_plot_deg(
+  go_table = pathway_list_data,
+  45
 )
 ```
 

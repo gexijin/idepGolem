@@ -168,14 +168,55 @@ mod_06_pathway_ui <- function(id) {
             conditionalPanel(
               condition = "input.pathway_method == 1 | input.pathway_method == 2 |
                            input.pathway_method == 3 | input.pathway_method == 4",
-              htmlOutput(outputId = ns("list_sig_pathways")),
+              fluidRow(
+                br(),
+                column(
+                  width = 5,
+                  htmlOutput(outputId = ns("list_sig_pathways")),
+                ),
+                column(
+                  width = 4, 
+                  selectInput(
+                    inputId = ns("heatmap_color_select"),
+                    label = "Select Heatmap Color: ",
+                    choices = "green-black-red",
+                    width = "100%"
+                  )
+                )
+              ),
               ns = ns
             ),
             conditionalPanel(
               condition = "(input.pathway_method == 1 | input.pathway_method == 2 |
                             input.pathway_method == 3 | input.pathway_method == 4) &
                             input.select_go != 'KEGG'",
-              plotOutput(outputId = ns("selected_pathway_heatmap")),
+              h5("Brush for sub-heatmap, click for value. (Shown Below)"),
+              br(),
+              fluidRow(
+                column(
+                  width = 3,
+                  plotOutput(
+                    outputId = ns("path_main_heatmap"),
+                    height = "450px",
+                    width = "100%",
+                    brush = ns("ht_brush")
+                  ),
+                  br(),
+                  h5("Selected Cell (Submap):"),
+                  uiOutput(
+                    outputId = ns("ht_click_content")
+                  )
+                ),
+                column(
+                  width = 9,
+                  plotOutput(
+                    outputId = ns("path_sub_heatmap"),
+                    height = "650px",
+                    width = "100%",
+                    click = ns("ht_click")
+                  )
+                )
+              ),
               ns = ns
             )
           ),
@@ -193,6 +234,18 @@ mod_06_pathway_ui <- function(id) {
               ),
               ns = ns
             )
+          ),
+          
+          tabPanel(
+            "Tree",
+            plotOutput(
+              outputId = ns("enrichment_tree"),
+              width = "100%"
+            )
+          ),
+          tabPanel(
+            "Network",
+            NULL
           )
         )
       )
@@ -206,6 +259,9 @@ mod_06_pathway_ui <- function(id) {
 mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    # Interactive heatmap environment
+    path_env <- new.env()
 
     # GMT choices for enrichment ----------
     output$select_go_selector <- renderUI({
@@ -366,7 +422,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
 		    sample_info = pre_process$sample_info(),
 		    select_factors_model = deg$select_factors_model(),
 		    select_model_comprions = deg$select_model_comprions(), 
-		    reference_levels = deg$factor_reference_levels(),
+		    reference_levels = deg$reference_levels(),
 		    counts_deg_method = deg$counts_deg_method(),
 		    data_file_format = pre_process$data_file_format()
 	    )
@@ -477,9 +533,6 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       )
     })
 
-
-
-
     output$reactome_pa_pathway <- renderTable({
       req(!is.null(reactome_pa_pathway_data()))
 	    
@@ -492,6 +545,116 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         rownames = FALSE
       )
 	  })
+
+    selected_pathway_data <- reactive({
+      req(!is.null(input$sig_pathways))
+      req(!is.null(gene_sets()))
+      
+      pathway_select_data(
+        sig_pathways = input$sig_pathways,
+        gene_sets = gene_sets(),
+        contrast_samples = contrast_samples(),
+        data = pre_process$data(),
+        select_org = pre_process$select_org(),
+        all_gene_names = pre_process$all_gene_names()
+      )
+    })
+
+    # Heatmap Colors ----------
+    heatmap_colors <- list(
+      "Green-Black-Red" = c("green", "black", "red"),
+      "Blue-White-Red" = c("blue", "white", "red"),
+      "Green-Black-Magenta" = c("green", "black", "magenta"),
+      "Blue-Yellow-Red" = c("blue", "yellow", "red"),
+      "Blue-White-Brown" = c("blue", "white", "brown")
+    )
+    heatmap_choices <- c(
+      "Green-Black-Red",
+      "Blue-White-Red",
+      "Green-Black-Magenta",
+      "Blue-Yellow-Red",
+      "Blue-White-Brown"
+    )
+    observe({
+      updateSelectInput(
+        session = session,
+        inputId = "heatmap_color_select",
+        choices = heatmap_choices
+      )
+    })
+
+    output$path_main_heatmap <- renderPlot({
+      req(!is.null(selected_pathway_data()))
+
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Creating Heatmap",
+        color = "#000000"
+      )
+
+      # Assign heatmap to be used in multiple components
+      path_env$ht <- pathway_heatmap(
+        data = selected_pathway_data(),
+        heatmap_color_select = heatmap_colors[[input$heatmap_color_select]]
+      )
+
+      # Use heatmap position in multiple components
+      path_env$ht_pos_main <- InteractiveComplexHeatmap::htPositionsOnDevice(path_env$ht)
+
+      shinybusy::remove_modal_spinner()
+
+      return(path_env$ht)
+    })
+
+    output$path_sub_heatmap <- renderPlot({
+      if (is.null(input$ht_brush)) {
+        grid::grid.newpage()
+        grid::grid.text("No region is selected.", 0.5, 0.5)
+      } else {
+        path_heat_return <- path_heat_sub(
+          ht_brush = input$ht_brush,
+          ht = path_env$ht,
+          ht_pos_main = path_env$ht_pos_main,
+          heatmap_data = selected_pathway_data()
+        )
+
+        path_env$ht_select <- path_heat_return$ht_select
+        path_env$submap_data <- path_heat_return$submap_data
+        path_env$group_colors <- path_heat_return$group_colors
+        path_env$column_groups <- path_heat_return$column_groups
+        
+        path_env$ht_sub <- ComplexHeatmap::draw(
+          path_env$ht_select,
+          annotation_legend_side = "top",
+          heatmap_legend_side = "top"
+        )
+
+        path_env$ht_pos_sub <- InteractiveComplexHeatmap::htPositionsOnDevice(path_env$ht_sub)
+
+        return(path_env$ht_sub)
+      }
+    })
+
+    # Sub Heatmap Click Value ---------
+    output$ht_click_content <- renderUI({
+      if (is.null(input$ht_click)) { 
+        "Click for Info."
+      } else {
+        path_click_info(
+          click = input$ht_click,
+          ht_sub = path_env$ht_sub,
+          ht_sub_obj = path_env$ht_select,
+          ht_pos_sub = path_env$ht_pos_sub,
+          sub_groups = path_env$column_groups,
+          group_colors = path_env$group_colors,
+          data = path_env$submap_data
+        )
+      }
+    })
+    
+    # List of pathways with details
+    pahtway_list_data <- reactive({
+    })
   })
 }
 
