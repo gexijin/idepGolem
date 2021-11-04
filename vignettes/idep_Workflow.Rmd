@@ -574,7 +574,7 @@ pathway_heatmap(
   c("green", "black", "red")
 )
 
-pahtway_list_data <- get_pathway_list_data(
+pathway_list_data <- get_pathway_list_data(
   pathway_method = 1,
   gage_pathway_data = gage,
   fgsea_pathway_data = NULL,
@@ -582,12 +582,23 @@ pahtway_list_data <- get_pathway_list_data(
   pgsea_plot_all_samples_data = NULL,
   go = "GOBP",
   select_org = "BestMatch",
-  gene_info = all_gene_info
+  gene_info = all_gene_info,
+  gene_sets = gene_sets
 )
 
-enrichment_plot_deg(
-  go_table = pathway_list_data,
-  45
+enrichment_plot(
+  go_table = pathway_list_data
+)
+
+kegg_pathway(
+  go = "KEGG",
+  gage_pathway_data = gage,
+  sig_pathways = "Oocyte meiosis",
+  select_contrast = "I:p53_null.Treatment_IR",
+  limma = limma,
+  converted = converted,
+  idep_data = idep_data,
+  select_org = "BestMatch"
 )
 ```
 

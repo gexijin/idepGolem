@@ -10,16 +10,13 @@
 NULL
 
 
-# Change comparison names in limma from "KO_ko-WT_ko" to    "KO-WT_for_ko"
-#' FUNCTION_TITLE
+#' Change comparison names 
 #'
-#' FUNCTION_DESCRIPTION
+#' Change comparison names in limma from "KO_ko-WT_ko" to    "KO-WT_for_ko"
 #'
-#' @param comparison DESCRIPTION.
+#' @param comparison Comparison to change the name for
 #'
-#' @return RETURN_DESCRIPTION
-#' @examples
-#' # ADD_EXAMPLES_HERE
+#' @return The altered comparison string, see the description for example.
 change_names <- function(comparison) {
   # check to see if work needs to be done
   # if no work needs to be done return input
@@ -44,15 +41,27 @@ change_names <- function(comparison) {
   return(comparison)
 }
 
-#' LIST FACTORS UI
+#' Create choices and title for model factors
+#' 
+#' Create a list of options for comparisons from the 
+#' sample_info. Also create a title to be used in a 
+#' UI checkbox based off the date file format and the
+#' DEG method. The list of options will become
+#' checkboxes for the user to create their experiment
+#' design from.
+#' 
+#' @param sample_info Experiment file information for grouping
+#' @param data_file_format Type of data being examined
+#' @param counts_deg_method Method of DEG being performed (See
+#'  DEG UI for options)
+#' 
+#' @return A list containing a string title and a vector of
+#'  comparisons to choose from.
 list_factors_ui <- function(
   sample_info,
   data_file_format,
-  counts_deg_method,
-  id
+  counts_deg_method
 ) {
-  ns <- NS(id)
-
   if (is.null(sample_info)) {
     return(
       HTML(
@@ -70,27 +79,30 @@ list_factors_ui <- function(
       title <- "1. Select 6 or less main factors. Or skip this step and just choose 
                 pairs of sample groups below."
     }
-    return(
-      checkboxGroupInput(
-        inputId = ns("select_factors_model"), 
-        h5(title), 
-        choices = choices,
-        selected = NULL
-      )
-    )	   	  
+    return(list(
+      title = title,
+      choices = choices
+    ))	   	  
 	}
 }
 
-#' LIST BLOCK FACTORS UI
+#' Get the block factor choices
+#' 
+#' This function uses the sample_info file and the selected
+#' factors for the model to create a selection for the batch
+#' effect. Returns a vector that turns into a checkbox for
+#' the User.
+#' 
+#' @param sample_info Experiment file information for grouping
+#' @param select_factors_model The selected factors for the model
+#'  expression
+#' 
+#' @return This function returns a vector of choices for a batch
+#'  effect or paired samples.
 list_block_factors_ui <- function(
   sample_info,
-  select_factors_model,
-  data_file_format,
-  deg_method,
-  id
+  select_factors_model
 ) {
-  ns <- NS(id)
-
   if (is.null(sample_info)) {
 		return(NULL)		   
 	} else { 
@@ -101,29 +113,33 @@ list_block_factors_ui <- function(
       return(NULL)
     }
 
-		choices = setNames(factors, factors)
-		title <- "Select a factor for batch effect or paired samples, if needed."	
+		choices = setNames(factors, factors)	
 
-    return(
-      checkboxGroupInput(
-        inputId = ns("select_block_factors_model"), 
-        h5(title), 
-        choices = choices,
-        selected = NULL
-      )
-    )
+    return(choices)
 	}
 }
 
-#' MODEL COMPARISONS UI
+#' Create model comparisons choices
+#' 
+#' This function uses the sample_info file and the selected
+#' factors to create a list of options for model comparisons.
+#' Changes with the input of select_factors_model. If there
+#' is no selected factor then it defaults to comparisons that
+#' can be created from the processed data.
+#' 
+#' @param sample_info Experiment file information for grouping
+#' @param select_factors_model The selected factors for the model
+#'  expression
+#' @param processed_data Data that has been through the pre-processing
+#'  function
+#' 
+#' @return Returns a list containing a vector of choices and a
+#'  title for the UI element.
 list_model_comparisons_ui <- function(
   sample_info,
   select_factors_model,
-  processed_data,
-  id
+  processed_data
 ) {
-  ns <- NS(id)
-
 	if (is.null(sample_info) | is.null(select_factors_model)) { 
     factors <- as.character (
       detect_groups(
@@ -146,15 +162,12 @@ list_model_comparisons_ui <- function(
     )	
 		comparisons <- sort(comparisons)
 		choices <- stats::setNames(gsub(" vs\\. ","-",comparisons), comparisons)
+    title <- "Select comparisons among sample groups:"
 
-    return(
-      checkboxGroupInput(
-        inputId = ns("select_model_comprions"), 
-			  label = h5("Select comparisons among sample groups:"),
-        choices = choices,
-        selected = choices[[1]]
-      )
-    )
+    return(list(
+      choices = choices,
+      title = title
+    ))
   } else { 
 		choices = list()
 				
@@ -182,19 +195,16 @@ list_model_comparisons_ui <- function(
 				comparisons <- sort(comparisons)
 				comparisons <- paste0(selected_factors, ": ", comparisons)
 				choices <- append(choices, stats::setNames(comparisons, comparisons))
+        title <- "2. Select one or more comparisons:"
 		}
 			
     if(length(choices) == 0) {
       return(NULL)
     } else {
-      return(
-        checkboxGroupInput(
-          inputId = ns("select_model_comprions"), 
-					label = h5("2. Select one or more comparisons:"), 
-					choices = choices,
-					selected = choices[[1]]
-        )	   
-      )
+      return(list(
+        choices = choices,
+        title = title
+      ))
     }
 	} 
 }
@@ -2151,7 +2161,7 @@ plot_deg_scatter <- function(
 }
 
 #' ENRICHMENT TREE
-enrichment_plot_deg <- function(
+enrichment_plot <- function(
   go_table,
   right_margin = 33
 ) {
@@ -2194,7 +2204,7 @@ enrichment_plot_deg <- function(
     for(j in 1:(i-1)) {
       w[i, j] <- w[j, i]
     } 
-  }    
+  }
 
   Terms <- paste(
     sprintf("%-1.0e",
@@ -2266,7 +2276,7 @@ go_table_data <- function(
   return(data)
 }
 
-network_deg_data <- function(
+network_data <- function(
   network,
   up_down_reg_deg,
   wrap_text_network_deg,

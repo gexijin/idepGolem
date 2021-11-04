@@ -9,7 +9,20 @@
 #' @name fct_01_load_data.R
 NULL
 
-# retrieve detailed info on genes
+#' Retrieve detailed info on genes
+#' 
+#' This function retrieves detailed gene information from the
+#' database for the matched species. 
+#' 
+#' @param converted Return value from the convert_id function. Contains
+#'  information about the gene IDs for the matched species.
+#' @param select_org The user selected organism for the expression data.
+#'  Default is "BestMatch."
+#' @param idep_data Read data files from the database. 
+#' 
+#' @return A data frame containing information on all ensembl IDs for the
+#'  matched species. Usually a very large data frame due to the amount
+#'  of IDs that the data base contains.
 gene_info <- function(
   converted,
   select_org,

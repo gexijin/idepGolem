@@ -207,18 +207,17 @@ pre_process <- function(
   return(results)
 }
 
-#' @title Creates a barplot of the count data
+#' Creates a barplot of the count data
 #'
-#' @description This function takes in the rount count data
+#' This function takes in the rount count data
 #' and creates a formatted gg barplot that shows the number
 #' of genes mapped to each sample in millions.
-#''
+#'
 #' @param counts_data Raw counts from gene expression data
 #' @param sample_info Experiment file information for grouping
 #' samples
 #'
 #' @return formatted ggbarplot
-#'
 total_counts_ggplot <- function(
   counts_data,
   sample_info
@@ -299,7 +298,6 @@ total_counts_ggplot <- function(
 #' @param plot_yaxis Sample to plot on the y axis
 #'
 #' @return Returns a formatted gg scatterplot
-#'
 eda_scatter <- function(
   processed_data,
   plot_xaxis,
@@ -349,8 +347,7 @@ eda_scatter <- function(
 #' @param sample_info Sample_info from the experiment file
 #'
 #' @return Formatted gg boxplot of the distribution of counts for each
-#' sample
-#'
+#'  sample
 eda_boxplot <- function(
   processed_data,
   sample_info
@@ -526,10 +523,9 @@ eda_density <- function(
 #' @param select_org Species the expression data is from
 #'
 #' @return A formatted ggplot. For gene_plot_box = TRUE the return will be a
-#' lineplot for the expression of each individual sample for the selected gene.
-#' If gene_plot_box = FALSE the return will be a barplot for the groups provided
-#' in the sample information.
-#'
+#'  lineplot for the expression of each individual sample for the selected gene.
+#'  If gene_plot_box = FALSE the return will be a barplot for the groups provided
+#'  in the sample information.
 individual_plots <- function(
   individual_data,
   sample_info,
@@ -748,8 +744,7 @@ counts_bias_message <- function(
 #' @param heat_cols Heat color to use with black in the plot
 #' 
 #' @return A formatted ggplot hexplot of the mean and standard
-#' deviation of the processed data
-#' 
+#'  deviation of the processed data
 mean_sd_plot <- function(
   processed_data,
   rank,
@@ -760,7 +755,6 @@ mean_sd_plot <- function(
       processed_data,
       1,
       mean
-      
     ),
     "y_axis" = apply(
       processed_data,
