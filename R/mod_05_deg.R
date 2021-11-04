@@ -87,11 +87,11 @@ mod_05_deg_1_ui <- function(id) {
             fluidRow(
               column(
                 width = 6,
-                htmlOutput(outputId = ns("list_factors_de"))
+                htmlOutput(outputId = ns("list_factors_deg"))
               ),
               column(
                 width = 6,
-                htmlOutput(outputId = ns("list_block_factors_de"))
+                htmlOutput(outputId = ns("list_block_factors_deg"))
               ) 
             ),
             fluidRow(
@@ -356,33 +356,54 @@ mod_05_deg_server <- function(id, pre_process) {
     )
 
     # Experiment Design UI Elements ------------
-    output$list_factors_de <- renderUI({
-      list_factors_ui(
+    output$list_factors_deg <- renderUI({
+      list_factors <- list_factors_ui(
         sample_info = pre_process$sample_info(),
         data_file_format = pre_process$data_file_format(),
-        counts_deg_method = input$counts_deg_method,
-        id = id
+        counts_deg_method = input$counts_deg_method
+      )
+      req(!is.null(list_factors))
+      return(
+        checkboxGroupInput(
+          inputId = ns("select_factors_model"), 
+          h5(list_factors$title), 
+          choices = list_factors$choices,
+          selected = NULL
+        )
       )
 	  })
 
-    output$list_block_factors_de <- renderUI({ 
-      list_block_factors_ui(
+    output$list_block_factors_deg <- renderUI({ 
+      choices <- list_block_factors_ui(
         sample_info = pre_process$sample_info(),
         select_factors_model = input$select_factors_model,
-        data_file_format = pre_process$data_file_format(),
-        deg_method = input$counts_deg_method,
-        id = id
+        data_file_format = pre_process$data_file_format()
+      )
+      req(!is.null(choices))
+      return(
+        checkboxGroupInput(
+          inputId = ns("select_block_factors_model"), 
+          h5("Select a factor for batch effect or paired samples, if needed."), 
+          choices = choices,
+          selected = NULL
+        )
       )
 	  })
 
     output$list_model_comparisons <- renderUI({
       req(pre_process$data())
 
-		  list_model_comparisons_ui(
+		  model_comparisons <- list_model_comparisons_ui(
         sample_info = pre_process$sample_info(),
         select_factors_model = input$select_factors_model,
-        processed_data = pre_process$data(),
-        id = id
+        processed_data = pre_process$data()
+      )
+      req(!is.null(model_comparisons))
+      checkboxGroupInput(
+        inputId = ns("select_model_comprions"), 
+			  label = h5(model_comparisons$title),
+        choices = model_comparisons$choices,
+        selected = model_comparisons$choices[[1]]
       )
 	  })
 
@@ -891,7 +912,7 @@ mod_05_deg_server <- function(id, pre_process) {
     output$enrichment_tree <- renderPlot({
       req(!is.null(go_table()))
 	    
-      enrichment_plot_deg(
+      enrichment_plot(
         go_table = go_table(),
         45
       )
@@ -901,7 +922,7 @@ mod_05_deg_server <- function(id, pre_process) {
     network_data_deg <- reactive({
       req(!is.null(go_table()))
 
-      network_deg_data(
+      network_data(
         network = go_table(),
         up_down_reg_deg = input$up_down_reg_deg,
         wrap_text_network_deg= input$wrap_text_network_deg,

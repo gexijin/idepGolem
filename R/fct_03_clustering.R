@@ -10,40 +10,6 @@
 NULL
 
 
-#' Get color choice list for the heatmap
-#'
-#' get_heatmap_colors
-#'
-#' Calling the function will provide a list of heatmap colors
-#' for the select input bar to use and gives the colors that the
-#' heatmap will use for the selected color set.
-#'
-#' @return Returns a list containing color choices and a data frame
-#' of hex color values.
-get_heatmap_colors <- function() {
-  hmcols <- grDevices::colorRampPalette(rev(c(
-    "#D73027", "#FC8D59", "#FEE090", "#FFFFBF",
-    "#E0F3F8", "#91BFDB", "#4575B4"
-  )))(75)
-  heat_colors <- rbind(
-    gplots::greenred(75), gplots::bluered(75),
-    gplots::colorpanel(75, "green", "black", "magenta"),
-    gplots::colorpanel(75, "blue", "yellow", "red"), hmcols
-  )
-  rownames(heat_colors) <- c(
-    "Green-Black-Red", "Blue-White-Red", "Green-Black-Magenta",
-    "Blue-Yellow-Red", "Blue-white-brown"
-  )
-  color_choices <- setNames(1:dim(heat_colors)[1], rownames(heat_colors))
-
-  return(
-    list(
-      color_choices = color_choices,
-      heat_colors = heat_colors
-    )
-  )
-}
-
 #' Density plot of data standard deviation
 #'
 #' Draw a denisty plot of the standard deviation in the
@@ -182,7 +148,7 @@ sd_density <- function(
 #' @param sample_normalize TRUE/FALSE divide by SD in sample columns
 #' @param all_gene_names Data frame of gene names
 #' @param select_gene_id Desired ID type for heatmap labels
-#'   (User_ID, ensembl_ID, symbol)
+#'  (User_ID, ensembl_ID, symbol)
 #'
 #' @return Subsetted data matrix ([n_genes_min:n_genes_max, ]) with
 #'   gene IDs as the select_gene_id
@@ -522,8 +488,7 @@ k_means_elbow <- function(
 #' @param select_factors_heatmap Factor to group by in the samples
 #' 
 #' @return A list containing a ComplexHeatmap annotation object,
-#' a ComplexHeatmap legend, list of groups, and list of group colors.
-#' 
+#'  a ComplexHeatmap legend, list of groups, and list of group colors.
 sub_heat_ann <- function(
   data,
   sample_info,
@@ -583,7 +548,7 @@ sub_heat_ann <- function(
 #' @param click_data Data matrix to get the data value from
 #' 
 #' @return HTML code to produce a table with information
-#' about the selected cell.
+#'  about the selected cell.
 heat_click_info <- function(
   click,
   ht_sub,
@@ -664,9 +629,8 @@ Group: @{group_name} <span style='background-color:@{group_col};width=50px;'>   
 #' @param cluster_meth Type of clustering being performed
 #' 
 #' @return A list containing a Heatmap from the brush selection
-#' of the main heatmap, the submap data matrix, the groups for
-#' the submap, the submap legend, and data for the click info.
-#' 
+#'  of the main heatmap, the submap data matrix, the groups for
+#'  the submap, the submap legend, and data for the click info.
 heat_sub <- function(
   ht_brush,
   ht,

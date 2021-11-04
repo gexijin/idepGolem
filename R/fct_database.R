@@ -498,8 +498,8 @@ read_pathway_sets <- function (
     return(id_not_recognized)
   } 
 
-	ix = grep(converted$species[1,1], idep_data$gmt_files)
-  total_genes <- converted$species[1,7]
+	ix = grep(converted$species[1, 1], idep_data$gmt_files)
+  total_genes <- converted$species[1, 7]
 
 	# If selected species is not the default "bestMatch", use that species directly
 	if(select_org != "BestMatch") {  
@@ -898,4 +898,57 @@ convert_ensembl_to_entrez <- function(
 	tem <- query[ix]
   names(tem) <- result$id
   return(tem)
+}
+
+#' Given a KEGG pathway description, find pathway ids
+kegg_pathway_id <- function (
+  pathway_description,
+  Species,
+  GO,
+  select_org,
+  gmt_files,
+  org_info
+) {
+	ix <- grep(Species, gmt_files)
+
+	if(length(ix) == 0) {
+    return(NULL)
+  }
+	
+	# If selected species is not the default "bestMatch", use that species directly
+	if(select_org != "BestMatch") {  
+		ix <- grep(find_species_by_id(select_org)[1, 1], gmt_files)
+		if(length(ix) == 0) {
+      return(NULL)
+    }
+		total_genes <- org_info[which(org_info$id == as.numeric(select_org)), 7]
+	}
+	pathway <- DBI::dbConnect(
+    drv = RSQLite::dbDriver("SQLite"),
+    dbname = idep_data$gmt_files[ix],
+    flags = RSQLite::SQLITE_RO
+  )
+	
+	# change Parkinson's disease to Parkinson\'s disease    otherwise SQL 
+	pathway_description <- gsub("\'", "\'\'", pathway_description)
+							
+	pathway_info <- DBI::dbGetQuery(
+    pathway,
+    paste(
+      " select * from pathwayInfo where description =  '", 
+			pathway_description,
+      "' AND name LIKE '",
+      GO,
+      "%'",
+      sep = ""
+    )
+  )
+	DBI::dbDisconnect(pathway)
+	
+  if(dim(pathway_info)[1] != 1) {
+    return(NULL)
+  }
+	tem <- gsub(".*:", "", pathway_info[1, 2])  
+	
+  return(gsub("_.*", "", tem))
 }

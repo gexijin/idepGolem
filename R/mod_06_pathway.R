@@ -218,10 +218,7 @@ mod_06_pathway_ui <- function(id) {
                 )
               ),
               ns = ns
-            )
-          ),
-          tabPanel(
-            "KEGG",
+            ),
             conditionalPanel(
               condition = "(input.pathway_method == 1 | input.pathway_method == 2 | 
                             input.pathway_method == 3 | input.pathway_method == 4) &
@@ -235,7 +232,6 @@ mod_06_pathway_ui <- function(id) {
               ns = ns
             )
           ),
-          
           tabPanel(
             "Tree",
             plotOutput(
@@ -245,7 +241,62 @@ mod_06_pathway_ui <- function(id) {
           ),
           tabPanel(
             "Network",
-            NULL
+            h5("Connected gene sets share more genes. Color of node correspond to adjuested Pvalues."),
+            fluidRow(
+              column(
+                width = 2,
+                actionButton(
+                  inputId = ns("layout_vis_deg"),
+                  label = "Change layout"
+                )
+              ),
+              column(
+                width = 1,
+                h5("Cutoff:"),
+                align="right"
+              ),
+              column(
+                width = 2,
+                numericInput(
+                  inputId = ns("edge_cutoff_deg"),
+                  label = NULL,
+                  value = 0.30,
+                  min = 0,
+                  max = 1,
+                  step = .1
+                ),
+                align="left"
+              ),
+              column(
+                width = 2,
+                checkboxInput(
+                  inputId = ns("wrap_text_network_deg"),
+                  label = "Wrap text",
+                  value = TRUE
+                )
+              )
+            ),
+            selectInput(
+              inputId = ns("up_down_reg_deg"),
+              NULL,
+              choices = c(
+                "Both Up & Down" = "Both",
+                "Up regulated" = "Up",
+                "Down regulated" = "Down"
+              )
+            ),
+            h6(
+              "Two pathways (nodes) are connected if they share 30% (default, adjustable) or more genes.
+              Green and red represents down- and up-regulated pathways. You can move the nodes by 
+              dragging them, zoom in and out by scrolling, and shift the entire network by click on an 
+              empty point and drag. Darker nodes are more significantly enriched gene sets. Bigger nodes
+              represent larger gene sets. Thicker edges represent more overlapped genes."
+            ),
+            visNetwork::visNetworkOutput(
+              outputId = ns("vis_network_path"),
+              height = "800px",
+              width = "100%"
+            )
           )
         )
       )
@@ -651,9 +702,66 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         )
       }
     })
+
+    output$kegg_image <- renderImage({
+
+      kegg_pathway(
+        go = input$select_go,
+        gage_pathway_data = gage_pathway_data(),
+        sig_pathways = input$sig_pathways,
+        select_contrast = input$select_contrast,
+        limma = deg$limma(),
+        converted = pre_process$converted(),
+        idep_data = idep_data,
+        select_org = pre_process$select_org()
+      )
+    }, deleteFile = TRUE)
     
     # List of pathways with details
-    pahtway_list_data <- reactive({
+    pathway_list_data <- reactive({
+      get_pathway_list_data(
+        pathway_method = input$pathway_method,
+        gage_pathway_data = gage_pathway_data(),
+        fgsea_pathway_data = fgsea_pathway_data(),
+        pgsea_plot_data = pgsea_plot_data(),
+        pgsea_plot_all_samples_data = pgsea_plot_all_samples_data(),
+        go = input$select_go,
+        select_org = pre_process$select_org(),
+        gene_info = pre_process$all_gene_info(),
+        gene_sets = gene_sets()
+      )
+    })
+
+    # Enrichment Tree -----------
+    output$enrichment_tree <- renderPlot({
+      req(!is.null(pathway_list_data()))
+
+      enrichment_plot(
+        go_table = pathway_list_data(),
+        45
+      )
+    })
+
+    # Define a Network
+    network_data_path <- reactive({
+      req(!is.null(pathway_list_data()))
+
+      network_data(
+        network = pathway_list_data(),
+        up_down_reg_deg = input$up_down_reg_deg,
+        wrap_text_network_deg= input$wrap_text_network_deg,
+        layout_vis_deg = input$layout_vis_deg,
+        edge_cutoff_deg = input$edge_cutoff_deg
+      )
+    })
+
+    # Interactive vis network plot
+    output$vis_network_path <- visNetwork::renderVisNetwork({
+      req(!is.null(network_data_path()))
+      
+      vis_network_plot(
+        network_data = network_data_path()
+      )
     })
   })
 }
