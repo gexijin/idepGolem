@@ -54,8 +54,12 @@ and sample names as columns.
 ```{r Create Data Paths}
 idep_data <- get_idep_data()
 
-YOUR_DATA_PATH <- "D:/data/data103/data_go/BcellGSE71176_p53.csv"
-YOUR_EXPERIMENT_PATH <- "D:/data/data103/data_go/BcellGSE71176_p53_sampleInfo.csv"
+#YOUR_DATA_PATH <- "D:/data/data103/data_go/BcellGSE71176_p53.csv"
+#YOUR_EXPERIMENT_PATH <- "D:/data/data103/data_go/BcellGSE71176_p53_sampleInfo.csv"
+
+
+YOUR_DATA_PATH <- "C:/Users/bdere/OneDrive/Documents/Bioinformatics/idepGolem/data/data103/data_go/BcellGSE71176_p53.csv"
+YOUR_EXPERIMENT_PATH <- "C:/Users/bdere/OneDrive/Documents/Bioinformatics/idepGolem/data/data103/data_go/BcellGSE71176_p53_sampleInfo.csv"
 
 expression_file <- data.frame(
   datapath = YOUR_DATA_PATH
@@ -481,5 +485,211 @@ plot_volcano(
   limma_p_val = .1,
   limma_fc = 2
 )
+```
+
+
+
+
+
+
+
+# PCA
+```{r}
+
+x<-processed_data$data
+y<-loaded_data$sample_info
+
+pca.object <- prcomp(t(x))
+npc=5
+pcaData = as.data.frame(pca.object$x[,1:npc]); 
+	pvals = matrix(1,nrow=npc,ncol=ncol(y))
+	for (i in 1:npc ){
+		for (j in 1:ncol(y) )
+			pvals[i,j] =summary( aov(pcaData[,i] ~ as.factor(y[,j])))[[1]][["Pr(>F)"]][1]
+	}
+	
+	pvals = pvals * npc* ncol(y)   # correcting for multiple testing
+	pvals[pvals>1] = 1
+
+	colnames(pvals) = colnames(y)
+	rownames(pvals) = paste0("PC",1:npc)
+
+
+
+a="<h4>Correlation between Principal Components (PCs) with factors </h4>"
+	nchar0 = nchar(a)
+	for ( i in 1:npc){
+		j = which.min(pvals[i,])
+		if(pvals[i,j]< 0.05) a=paste0(a,rownames(pvals)[i], 
+					" is correlated with ", colnames(pvals)[j],
+					" (p=",   sprintf("%-3.2e",pvals[i,j]),").<br>")
+	}
+	if(nchar(a) == nchar0 ) return(NULL) else 
+
+	  colnames(processed_data$raw_counts)
+groups <- detect_groups(sample_names=colnames(processed_data$raw_counts), sample_info=loaded_data$sample_info)
+
+
+			#p=ggplot2::ggplot(pcaData, ggplot2::aes(PC1, PC2, color=Sample_Name, shape = Sample_Name)) 
+			p=ggplot2::ggplot(pcaData, ggplot2::aes(PC1, PC2, color=groups,shape=groups)) 
+p<-p+ggplot2::geom_point()
+PCAx<- 1
+PCAy <- 2
+    PCAxy <- c(as.integer(PCAx ),as.integer(PCAy) ) # selected principal components
+		percentVar=round(100*summary(pca.object)$importance[2, PCAxy],0)
+
+p=p+ggplot2::xlab(paste0("PC", PCAx ,": ", percentVar[1],"% variance")) 
+		p=p+ggplot2::ylab(paste0("PC", PCAy ,": ",percentVar[2],"% variance")) 
+		p=p+ggplot2::ggtitle("Principal component analysis (PCA)")+ggplot2::coord_fixed(ratio=1.0)+ 
+		 ggplot2::theme(plot.title = ggplot2::element_text(size = 16,hjust = 0.5)) + ggplot2::theme(aspect.ratio=1) +
+		 ggplot2::theme(axis.text.x = ggplot2::element_text( size = 16),
+			   axis.text.y = ggplot2::element_text( size = 16),
+			   axis.title.x = ggplot2::element_text( size = 16),
+			   axis.title.y = ggplot2::element_text( size = 16) ) +
+		ggplot2::theme(legend.text=ggplot2::element_text(size=16))
+		 print(p)
+
+
+p
+
+
+```
+
+
+
+
+# Detect Groups function
+```{r}
+ detectGroups <- function (x, sampleInfo = NULL){  # x are col names
+# parsing samples by either the name or using a data frame of sample infos. 
+# Note that each row of the sampleInfo data frame represents a sample.
+# Revised 4-19-2020
+  if(is.null(sampleInfo)) {
+  #if(1) {
+    # Define sample groups based on column names
+    # Args:
+    #   x are vector of characters, column names in data file
+    # Returns: 
+    #   a character vector, representing sample groups.
+    g <- gsub("[0-9]*$","",x) # Remove all numbers from end
+    #g = gsub("_Rep|_rep|_REP","", g)
+    g <- gsub("_$", "", g); # remove "_" from end
+    g <- gsub("_Rep$", "", g); # remove "_Rep" from end
+    g <- gsub("_rep$", "", g); # remove "_rep" from end
+    g <- gsub("_REP$", "", g)  # remove "_REP" from end
+    return( g ) 
+  } else {
+    
+    # the orders of samples might not be the same.The total number of samples might also differ
+    iy = match(x, row.names(sampleInfo))
+    sampleInfo2 = sampleInfo[iy, , drop = FALSE]
+    
+   if(ncol(sampleInfo2) == 1) {  # if there's only one factor
+     g = sampleInfo2[, 1] 
+     
+     } else {   # multiple columns/factors
+
+      #old comments: This does not work as sometimes there is no replicates wt vs mt, 1, 2, 3 paired replicates as factors 
+      g = unlist( apply(sampleInfo2, 1, function (y) paste(y, collapse = "_")) )
+      names(g) = row.names(sampleInfo2)
+      
+      if( min( table(g) ) ==  1 ) # no replicates? 
+         g = sampleInfo2[, 1]        
+
+     }
+   }
+   
+  return( as.character(g) )
+ }
+```
+
+# PCA -- MultiDimensional Scaling
+```{r}
+dist2 <- function(x, ...)
+{
+  as.dist(1-cor(t(x), method="pearson"))
+}
+dist2(t(x))
+
+		 fit = cmdscale( dist2(t(x) ), eig=T, k=2)
+
+
+		plot( fit$points[,1],fit$points[,2],pch = 1,cex = 2,#col = detectGroups(colnames(x), y),
+			 xlim=c(min(fit$points[,1]),max(fit$points[,1])*1.5   ),
+		  xlab = "First dimension", ylab="Second dimension"  )
+		 text( fit$points[,1], fit$points[,2],  pos=4, labels =colnames(x), offset=.5, cex=1)
+
+		 
+		 
+		 		pcaData = as.data.frame(fit$points[,1:2])
+		 	pcaData = cbind(pcaData,detectGroups(colnames(x), y) )
+		 	
+		colnames(pcaData) = c("x1", "x2", "Sample_Name")		 	
+		 	
+		 	
+		 			p=ggplot2::ggplot(pcaData, ggplot2::aes(x1, x2, color=Sample_Name, shape = Sample_Name))  
+		 	
+		 	p<- p+ggplot2::geom_point()
+		 	
+		 		#	p <- p+	 scale_shape_manual(values= shapes)	 
+		
+		p=p+ggplot2::xlab("Dimension 1") 
+		p=p+ggplot2::ylab("Dimension 2") 
+		p=p+ggplot2::ggtitle("Multidimensional scaling (MDS)")+ ggplot2::coord_fixed(ratio=1.)+ 
+		 ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) + ggplot2::theme(aspect.ratio=1) +
+			 ggplot2::theme(axis.text.x = ggplot2::element_text( size = 16),
+			   axis.text.y = ggplot2::element_text( size = 16),
+			   axis.title.x = ggplot2::element_text( size = 16),
+			   axis.title.y = ggplot2::element_text( size = 16) ) +
+		ggplot2::theme(legend.text=ggplot2::element_text(size=16))
+		   print(p)
+		 	
+		 	
+```
+
+
+
+# t-SNE
+```{r}
+
+install.packages("Rtsne")
+
+		 tsne <- Rtsne::Rtsne(t(x), dims = 2, perplexity=1, verbose=FALSE, max_iter = 400)
+
+		pcaData = as.data.frame(tsne$Y);
+		pcaData = cbind(pcaData,detectGroups(colnames(x), y) )
+		
+				colnames(pcaData) = c("x1", "x2", "Sample_Name")
+		
+		
+					p=ggplot2::ggplot(pcaData, ggplot2::aes(x1, x2, color=Sample_Name, shape = Sample_Name)) 
+		
+	p<-	p+ggplot2::geom_point()
+		
+				p=p+ggplot2::xlab("Dimension 1") 
+		p=p+ggplot2::ylab("Dimension 2") 
+		p=p+ggplot2::ggtitle("t-SNE plot")+ ggplot2::coord_fixed(ratio=1.)+ 
+		 ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) + ggplot2::theme(aspect.ratio=1) +
+			 ggplot2::theme(axis.text.x = ggplot2::element_text( size = 16),
+			   axis.text.y = ggplot2::element_text( size = 16),
+			   axis.title.x = ggplot2::element_text( size = 16),
+			   axis.title.y = ggplot2::element_text( size = 16) ) +
+		ggplot2::theme(legend.text=ggplot2::element_text(size=16))
+		   print(p)
+		
+		
+		
+```
+
+# Pathway analysis of PCA rotation
+```{r}
+
+
+
+
+
+
+
+
 ```
 
