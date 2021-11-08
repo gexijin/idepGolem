@@ -2,10 +2,21 @@
 % Please edit documentation in R/fct_05_deg.R
 \name{go_table_data}
 \alias{go_table_data}
-\title{GO TABLE DATA}
+\title{Create a single table from up and down enrichments}
 \usage{
 go_table_data(up_enrich_data, down_enrich_data)
 }
+\arguments{
+\item{up_enrich_data}{Enrichment table from the up-regulated
+genes pathway analysis}
+
+\item{down_enrich_data}{Enrichment table from the down-regulated
+genes pathway analysis.}
+}
+\value{
+A combined enrichment analysis table.
+}
 \description{
-GO TABLE DATA
+Use the enrichment table from the down genes analysis and
+the up genes analysis to creeate a single table.
 }

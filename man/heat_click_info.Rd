@@ -34,7 +34,7 @@ heat_click_info(
 }
 \value{
 HTML code to produce a table with information
-about the selected cell.
+ about the selected cell.
 }
 \description{
 Create a text output to tell the user the cell

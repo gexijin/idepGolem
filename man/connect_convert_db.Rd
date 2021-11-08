@@ -2,16 +2,17 @@
 % Please edit documentation in R/fct_database.R
 \name{connect_convert_db}
 \alias{connect_convert_db}
-\title{connect_convert_db connects to the converID.db and returns the objects.}
+\title{connect_convert_db connects to the convertIDs.db and returns the
+objects.}
 \usage{
 connect_convert_db(datapath = DATAPATH)
 }
 \arguments{
-\item{datapath}{}
+\item{datapath}{Folder path to the data file}
 }
 \value{
-
+Database connection.
 }
 \description{
-
+Create a database connection with the DBI package.
 }

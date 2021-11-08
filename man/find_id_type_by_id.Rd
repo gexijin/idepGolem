@@ -2,21 +2,15 @@
 % Please edit documentation in R/fct_database.R
 \name{find_id_type_by_id}
 \alias{find_id_type_by_id}
-\title{FUNCTION_TITLE}
+\title{Find the ID type}
 \usage{
 find_id_type_by_id(id, id_index)
 }
 \arguments{
-\item{id}{DESCRIPTION.}
+\item{id}{ID to find the type from}
 
-\item{id_index}{DESCRIPTION.}
-}
-\value{
-RETURN_DESCRIPTION
+\item{id_index}{Index of IDs to use}
 }
 \description{
-FUNCTION_DESCRIPTION
-}
-\examples{
-# ADD_EXAMPLES_HERE
+Using an inputted ID, find the type of IDs
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/fct_05_deg.R
 \name{experiment_design_txt}
 \alias{experiment_design_txt}
-\title{EXPERIMENT DESIGN TEXT}
+\title{Create a string of the model design}
 \usage{
 experiment_design_txt(
   sample_info,
@@ -11,6 +11,23 @@ experiment_design_txt(
   select_interactions
 )
 }
+\arguments{
+\item{sample_info}{Experiment file information for grouping}
+
+\item{select_factors_model}{The selected factors for the model
+expression}
+
+\item{select_block_factors_model}{The selected factors for
+batch effect}
+
+\item{select_interactions}{The interaction terms being used in
+the model design}
+}
+\value{
+Returns a string of the model design being used for
+ the DEG analysis
+}
 \description{
-EXPERIMENT DESIGN TEXT
+Use the model design selections to create a string of the
+model design being used for the DEG analysis.
 }

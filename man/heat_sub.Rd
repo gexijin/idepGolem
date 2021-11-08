@@ -31,8 +31,8 @@ heat_sub(
 }
 \value{
 A list containing a Heatmap from the brush selection
-of the main heatmap, the submap data matrix, the groups for
-the submap, the submap legend, and data for the click info.
+ of the main heatmap, the submap data matrix, the groups for
+ the submap, the submap legend, and data for the click info.
 }
 \description{
 Use the brush input from the main heatmap to

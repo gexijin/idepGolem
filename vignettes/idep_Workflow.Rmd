@@ -558,6 +558,18 @@ reactome_data(
   #n_pathway_show = 30
 #)
 
+pgsea_plot_data <- get_pgsea_plot_data(
+  my_range = c(15, 2000),
+  data = processed_data$data,
+  select_contrast = "I:p53_null.Treatment_IR",
+  gene_sets = gene_sets,
+  sample_info = loaded_data$sample_info,
+  select_factors_model = c("p53", "Treatment"),
+  select_model_comprions = "p53: null vs. wt",
+  pathway_p_val_cutoff = .1,
+  n_pathway_show = 30
+) 
+
 gage[, 2]
 
 select_data <- pathway_select_data(

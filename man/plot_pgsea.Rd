@@ -2,7 +2,7 @@
 % Please edit documentation in R/fct_06_pathway.R
 \name{plot_pgsea}
 \alias{plot_pgsea}
-\title{PLOT PGSEA}
+\title{Heatmap of PGSEA pathway analysis}
 \usage{
 plot_pgsea(
   my_range,
@@ -13,6 +13,29 @@ plot_pgsea(
   n_pathway_show
 )
 }
+\arguments{
+\item{my_range}{Vector of the (min_set_size, max_set_size)}
+
+\item{processed_data}{Data that has been through the pre-processing}
+
+\item{contrast_samples}{Sample columns that correspond to the
+selected comparison}
+
+\item{gene_sets}{List of vectors with each vector being the
+set of genes that correspond to a particular pathway in
+the database (from read_gene_sets function)}
+
+\item{pathway_p_val_cutoff}{Significant p-value to determine
+enriched pathways}
+
+\item{n_pathway_show}{Number of significant pathways to show}
+}
+\value{
+A heatmap plot with the rows as the significant
+ pathways and the columns corresponding to the samples.
+}
 \description{
-PLOT PGSEA
+Create a heatmap from the pathway analysis using the PGSEA
+package. The heatmap shows the expression in each group for
+each significantly enriched pathway.
 }

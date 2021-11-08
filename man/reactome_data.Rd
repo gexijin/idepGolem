@@ -2,7 +2,7 @@
 % Please edit documentation in R/fct_06_pathway.R
 \name{reactome_data}
 \alias{reactome_data}
-\title{REACTOME DATA}
+\title{Pathway analysis with reactome package}
 \usage{
 reactome_data(
   select_contrast,
@@ -16,6 +16,39 @@ reactome_data(
   absolute_fold
 )
 }
+\arguments{
+\item{select_contrast}{Comparison from DEG analysis to
+use the top genes from in the pathway analysis}
+
+\item{my_range}{Vector of the (min_set_size, max_set_size)}
+
+\item{limma}{Results list from the \code{limma_value}
+function}
+
+\item{gene_p_val_cutoff}{Significant p-value to filter
+the top genes fold change by}
+
+\item{converted}{Return value from the convert_id function, contains
+information about the gene IDs for the matched species}
+
+\item{idep_data}{Read data files from the database}
+
+\item{pathway_p_val_cutoff}{Significant p-value to determine
+enriched pathways}
+
+\item{n_pathway_show}{Number of pathways to return in final
+result}
+
+\item{absolute_fold}{Use the absolute value of the fold
+change}
+}
+\value{
+A data frame with the results of the pathway analysis.
+ The data frame has five columns for the direction of the
+ regulation, the pathway description, the stat value, the
+ number of overlapping genes, and the p-value.
+}
 \description{
-REACTOME DATA
+Run pathway analysis with the reactome package using the results
+from the limma_value function.
 }

@@ -13,7 +13,7 @@ eda_boxplot(processed_data, sample_info)
 }
 \value{
 Formatted gg boxplot of the distribution of counts for each
-sample
+ sample
 }
 \description{
 This function takes the processed data and creates

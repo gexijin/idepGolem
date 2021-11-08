@@ -2,7 +2,7 @@
 % Please edit documentation in R/fct_analysis_random.R
 \name{find_overlap_gmt}
 \alias{find_overlap_gmt}
-\title{FUNCTION_TITLE}
+\title{Calculate overlap for species with GMT file}
 \usage{
 find_overlap_gmt(
   query,
@@ -13,22 +13,19 @@ find_overlap_gmt(
 )
 }
 \arguments{
-\item{query}{DESCRIPTION.}
+\item{query}{Vector of genes to calculate the overlap on}
 
-\item{gene_set}{DESCRIPTION.}
+\item{gene_set}{Gene sets from the custom GMT file to use in
+the overlap}
 
-\item{min_fdr}{DESCRIPTION.}
+\item{min_fdr}{Significant p-value to determine significantly
+expressed genes}
 
-\item{min_size}{DESCRIPTION.}
+\item{min_size}{Minimum size for a pathway gene set}
 
-\item{max_size}{DESCRIPTION.}
-}
-\value{
-RETURN_DESCRIPTION
+\item{max_size}{Maximum size for a pathway gene set}
 }
 \description{
-FUNCTION_DESCRIPTION
-}
-\examples{
-# ADD_EXAMPLES_HERE
+For a species not in the iDEP database, calculate the overlap
+ for pathway analysis.
 }

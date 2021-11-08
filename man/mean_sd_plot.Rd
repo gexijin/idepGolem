@@ -15,7 +15,7 @@ mean_sd_plot(processed_data, rank, heat_cols)
 }
 \value{
 A formatted ggplot hexplot of the mean and standard
-deviation of the processed data
+ deviation of the processed data
 }
 \description{
 Create a plot that shows the standard deviation as the

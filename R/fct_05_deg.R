@@ -1508,7 +1508,7 @@ deg_limma <- function(
 #' @param results Results matrix from the limma_value function
 #'  returned list
 #' 
-#' @results Formatted gg barplot of the significantly expressed
+#' @return Formatted gg barplot of the significantly expressed
 #'  genes.
 sig_genes_plot <- function(
   results
@@ -2008,7 +2008,7 @@ deg_heat_sub <- function(
   ))
 }
 
-#' HTML code sub heatmap selected cell
+#' HTML code for sub-heatmap selected cell
 #' 
 #' Create HTML code for a cell of information on the cell of the
 #' sub-heatmap that the User clicks on. The cell contains the
@@ -2023,7 +2023,8 @@ deg_heat_sub <- function(
 #' @param sub_groups Vector of the groups that the samples
 #'  belong to
 #' @param group_colors The color of the top annotation that
-#'  is used for each group
+#'  is used for each group and the side annotation that denotes
+#'  the direction of the expression regulation
 #' @param bar Vector to signify a positive (1) expression fold
 #'  change or a negative (-1) change
 #' @param data Sub data matrix that is plotted in the sub-heatmap
@@ -2410,7 +2411,17 @@ plot_deg_scatter <- function(
 	} 
 }
 
-#' ENRICHMENT TREE
+#' Dendogram of enriched pathways
+#' 
+#' Create a dendogram plot of the enriched pathways to illustrate
+#' which paths contain similar genes.
+#' 
+#' @param go_table Enrichment table from the pathway analysis
+#'  functions
+#' @param right_margin Control the size of the dendogram labels
+#' 
+#' @return A dendogram plot that shows the users what pathways are
+#'  that are enriched share genes.
 enrichment_plot <- function(
   go_table,
   right_margin = 33
@@ -2500,7 +2511,17 @@ enrichment_plot <- function(
   )
 }
 
-#' GO TABLE DATA
+#' Create a single table from up and down enrichments
+#' 
+#' Use the enrichment table from the down genes analysis and
+#' the up genes analysis to creeate a single table.
+#' 
+#' @param up_enrich_data Enrichment table from the up-regulated
+#'  genes pathway analysis
+#' @param down_enrich_data Enrichment table from the down-regulated
+#'  genes pathway analysis.
+#' 
+#' @return A combined enrichment analysis table.
 go_table_data <- function(
  up_enrich_data,
  down_enrich_data 
@@ -2526,6 +2547,19 @@ go_table_data <- function(
   return(data)
 }
 
+#' VisNetwork data
+#' 
+#' Create VisNetwork data that can be inputted in the vis_network_plot
+#' function to create an interactive network of enriched pathways.
+#' 
+#' @param network GO table from the pathway analysis
+#' @param up_down_reg_deg Plot just up/down or both
+#' @param wrap_text_network_deg Wrap the text from the pathway description
+#' @param layout_vis_deg BUtton to reset the layout of the network
+#' @param edge_cutoff_deg P-value to cutoff enriched pathways
+#' 
+#' @return Data that can be inputted in the vis_network_plot function
+#'  to create an interactive network.
 network_data <- function(
   network,
   up_down_reg_deg,

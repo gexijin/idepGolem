@@ -2,10 +2,22 @@
 % Please edit documentation in R/fct_database.R
 \name{convert_ensembl_to_entrez}
 \alias{convert_ensembl_to_entrez}
-\title{ENSEMBL TO ENTREZ}
+\title{Convert IDs from ensembl to entrez}
 \usage{
 convert_ensembl_to_entrez(query, species, org_info)
 }
+\arguments{
+\item{query}{Vector of IDs to convert}
+
+\item{species}{Species to map the IDs for}
+
+\item{org_info}{org_info file from the \code{get_idep_data}
+function}
+}
+\value{
+The qeuried genes with converted IDs.
+}
 \description{
-ENSEMBL TO ENTREZ
+Convert an ID qeury for a species from the ensembl
+ID type to entrez type.
 }

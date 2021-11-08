@@ -16,11 +16,9 @@ convert_id(query, idep_data, select_org = "BestMatch")
 default to \code{"BestMatch"}}
 }
 \value{
-RETURN_DESCRIPTION
+A large list of the conversion ID information that was gathered
+ from querying the database with the original IDs.
 }
 \description{
 FUNCTION_DESCRIPTION
-}
-\examples{
-# ADD_EXAMPLES_HERE
 }

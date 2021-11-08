@@ -215,7 +215,7 @@ pre_process <- function(
 #'
 #' @param counts_data Raw counts from gene expression data
 #' @param sample_info Experiment file information for grouping
-#' samples
+#'  samples
 #'
 #' @return formatted ggbarplot
 total_counts_ggplot <- function(

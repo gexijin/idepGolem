@@ -13,6 +13,7 @@ mod_05_deg_1_ui <- function(id) {
     title = "DEG Design (Step 1)",
     sidebarLayout(
       sidebarPanel(
+        # DEG analysis methods for read counts data
         conditionalPanel(
           condition = "output.data_file_format == 1",
           selectInput(
@@ -30,6 +31,7 @@ mod_05_deg_1_ui <- function(id) {
             "#deg-counts_deg_method {width:100%;   margin-top:-12px}"
           )
         ),
+        # Label when the limma method is selected
         conditionalPanel(
           condition = "output.data_file_format == 2",
           h5("Using the limma package")
@@ -37,6 +39,7 @@ mod_05_deg_1_ui <- function(id) {
         fluidRow(
           column(
             width = 5,
+            # Adjusted significant p-value to use
             numericInput(
               inputId = ns("limma_p_val"),
               label = h5("FDR cutoff"), 
@@ -48,6 +51,7 @@ mod_05_deg_1_ui <- function(id) {
           ),
           column(
             width = 7,
+            # Min fold change to use
             numericInput(
               inputId = ns("limma_fc"),
               label = h5("Min fold change"),
@@ -57,6 +61,7 @@ mod_05_deg_1_ui <- function(id) {
               step = 0.5
             )
           ),
+          # Style both numeric inputs
           tags$style(
             type = "text/css",
             "#deg-limma_p_val { width:100%;   margin-top:-12px}"
@@ -66,6 +71,7 @@ mod_05_deg_1_ui <- function(id) {
             "#deg-limma_fc { width:100%;   margin-top:-12px}"
           )
         ),
+        # Button to run DEG analysis for the specified model
         actionButton(
           inputId = ns("submit_model_button"),
           label = "Submit & Calculate",
@@ -376,8 +382,7 @@ mod_05_deg_server <- function(id, pre_process) {
     output$list_block_factors_deg <- renderUI({ 
       choices <- list_block_factors_ui(
         sample_info = pre_process$sample_info(),
-        select_factors_model = input$select_factors_model,
-        data_file_format = pre_process$data_file_format()
+        select_factors_model = input$select_factors_model
       )
       req(!is.null(choices))
       return(
@@ -408,11 +413,11 @@ mod_05_deg_server <- function(id, pre_process) {
 	  })
 
     output$list_interaction_terms <- renderUI({
-      interaction <- list_interaction_terms_ui(
+      interactions <- list_interaction_terms_ui(
         sample_info = pre_process$sample_info(),
         select_factors_model = input$select_factors_model
       )
-      req(!is.null(interaction_terms))
+      req(!is.null(interactions))
       checkboxGroupInput(
         inputId = ns("select_interactions"), 
 				label = h5(

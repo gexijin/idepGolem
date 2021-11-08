@@ -2,21 +2,19 @@
 % Please edit documentation in R/fct_database.R
 \name{find_species_by_id_name}
 \alias{find_species_by_id_name}
-\title{FUNCTION_TITLE}
+\title{Find a species by ID}
 \usage{
 find_species_by_id_name(species_id, org_info)
 }
 \arguments{
-\item{species_id}{DESCRIPTION.}
+\item{species_id}{Species ID to search the database with}
 
-\item{org_info}{DESCRIPTION.}
+\item{org_info}{iDEP data org_info file}
 }
 \value{
-RETURN_DESCRIPTION
+Only return the species name with this function.
 }
 \description{
-FUNCTION_DESCRIPTION
-}
-\examples{
-# ADD_EXAMPLES_HERE
+Find a species in the iDEP database with an
+ID.
 }
