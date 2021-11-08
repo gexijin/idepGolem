@@ -408,10 +408,19 @@ mod_05_deg_server <- function(id, pre_process) {
 	  })
 
     output$list_interaction_terms <- renderUI({
-      list_interaction_terms_ui(
+      interaction <- list_interaction_terms_ui(
         sample_info = pre_process$sample_info(),
-        select_factors_model = input$select_factors_model,
-        id = id
+        select_factors_model = input$select_factors_model
+      )
+      req(!is.null(interaction_terms))
+      checkboxGroupInput(
+        inputId = ns("select_interactions"), 
+				label = h5(
+          "Interaction terms between factors(e.g. genotypes repond differently
+          to treatment?):"
+        ),
+				choices = interactions,
+        selected = NULL
       )
 	  }) 
 
@@ -461,13 +470,33 @@ mod_05_deg_server <- function(id, pre_process) {
     })
 
     output$select_reference_levels <- renderUI({
-      select_reference_levels_ui(
+      select_choices <- select_reference_levels_ui(
         sample_info = pre_process$sample_info(),
         select_factors_model = input$select_factors_model,
         data_file_format = pre_process$data_file_format(),
-        counts_deg_method = input$counts_deg_method,
-        id = id
+        counts_deg_method = input$counts_deg_method
       )
+      req(!is.null(select_choices))
+      lapply(names(select_choices), function(x) {
+        tagList(
+          column(
+            width = 4,
+            selectInput(
+              inputId = ns(
+                paste0(
+                  "reference_level_factor_",
+                  which(names(select_choices) == x)
+                )
+              ), 
+							label = h5(paste0("Reference/baseline level for ", x)),
+							choices = setNames(
+                as.list(paste0(x, ":", select_choices[[x]])),
+                select_choices[[x]]
+              )
+            )
+          )
+        )
+      })
     })
 
     factor_reference_levels <- reactive(
@@ -539,11 +568,26 @@ mod_05_deg_server <- function(id, pre_process) {
     output$list_comparisons_venn <- renderUI({
       req(!is.null(deg$limma))
 
-      list_comp_venn(
+      venn_comp <- list_comp_venn(
         limma = deg$limma,
-        up_down_regulated = input$up_down_regulated,
-        id = id
+        up_down_regulated = input$up_down_regulated
       )
+      if(is.null(venn_comp$choices)) {
+        selectInput(
+          inputId = ns("select_comparisons_venn"),
+          label = NULL,
+          choices = list("All" = "All"),
+          selected = "All"
+        )
+      } else {
+        checkboxGroupInput(
+          inputId = ns("select_comparisons_venn"), 
+			    label = h4("Select up to 5 comparisons"), 
+			    choices = venn_comp$choices,
+			    selected = venn_comp$choices_first_three
+        )
+      }
+
 	  })
 
     output$venn_plot <- renderPlot({
