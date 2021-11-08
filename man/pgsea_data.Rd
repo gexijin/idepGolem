@@ -2,7 +2,7 @@
 % Please edit documentation in R/fct_06_pathway.R
 \name{pgsea_data}
 \alias{pgsea_data}
-\title{PGSEA FUNCTION}
+\title{Pathway analysis with the PGSEA package}
 \usage{
 pgsea_data(
   processed_data,
@@ -12,6 +12,25 @@ pgsea_data(
   n_pathway_show
 )
 }
+\arguments{
+\item{processed_data}{Data that has been through the pre-processing}
+
+\item{gene_sets}{List of vectors with each vector being the
+set of genes that correspond to a particular pathway in
+the database (from read_gene_sets function)}
+
+\item{my_range}{Vector of the (min_set_size, max_set_size)}
+
+\item{pathway_p_val_cutoff}{Significant p-value to determine
+enriched pathways}
+
+\item{n_pathway_show}{Number of significant pathways to show}
+}
+\value{
+A list with a data frame and a numeric value that is used
+ in the plot_pgsea function to create a heatmap.
+}
 \description{
-PGSEA FUNCTION
+Run pathway analysis with the PGSEA package using the results
+from the limma_value function.
 }

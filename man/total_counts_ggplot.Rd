@@ -19,5 +19,4 @@ formatted ggbarplot
 This function takes in the rount count data
 and creates a formatted gg barplot that shows the number
 of genes mapped to each sample in millions.
-'
 }

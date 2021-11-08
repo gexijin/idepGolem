@@ -2,10 +2,32 @@
 % Please edit documentation in R/fct_05_deg.R
 \name{plot_volcano}
 \alias{plot_volcano}
-\title{VOLCANO PLOT}
+\title{Volcano DEG plot}
 \usage{
 plot_volcano(select_contrast, comparisons, top_genes, limma_p_val, limma_fc)
 }
+\arguments{
+\item{select_contrast}{Comparison from DEG analysis to filter
+for the significant genes}
+
+\item{comparisons}{The comparisons vector from the results list
+of the limma_value function}
+
+\item{top_genes}{top_genes list from results list of the
+limma_value function}
+
+\item{limma_p_val}{Significant p-value to use to in determining
+the expressed genes}
+
+\item{limma_fc}{Minimum fold change value to use in determining
+the expressed genes}
+}
+\value{
+ggplot with the fold value as the X-axis and the log 10
+ value of the adjusted p-value as the Y-axis.
+}
 \description{
-VOLCANO PLOT
+Use the results from limma-value to create a volcano plot to
+illustrate the significantly expressed genes. Up and down
+regulated genes are colored on the ggplot.
 }

@@ -2,19 +2,16 @@
 % Please edit documentation in R/fct_05_deg.R
 \name{change_names}
 \alias{change_names}
-\title{FUNCTION_TITLE}
+\title{Change comparison names}
 \usage{
 change_names(comparison)
 }
 \arguments{
-\item{comparison}{DESCRIPTION.}
+\item{comparison}{Comparison to change the name for}
 }
 \value{
-RETURN_DESCRIPTION
+The altered comparison string, see the description for example.
 }
 \description{
-FUNCTION_DESCRIPTION
-}
-\examples{
-# ADD_EXAMPLES_HERE
+Change comparison names in limma from "KO_ko-WT_ko" to    "KO-WT_for_ko"
 }

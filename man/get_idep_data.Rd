@@ -2,16 +2,17 @@
 % Please edit documentation in R/fct_database.R
 \name{get_idep_data}
 \alias{get_idep_data}
-\title{get_idep_data}
+\title{Load iDEP data}
 \usage{
 get_idep_data(datapath = DATAPATH)
 }
 \arguments{
-\item{datapath}{}
+\item{datapath}{Folder path to the iDEP data}
 }
 \value{
-
+Large list of the iDEP data.
 }
 \description{
-
+Use this function call to load data that can is
+used in other functions.
 }

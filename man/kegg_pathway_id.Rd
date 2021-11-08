@@ -2,7 +2,7 @@
 % Please edit documentation in R/fct_database.R
 \name{kegg_pathway_id}
 \alias{kegg_pathway_id}
-\title{Given a KEGG pathway description, find pathway ids}
+\title{Find pathway IDs for a KEGG description}
 \usage{
 kegg_pathway_id(
   pathway_description,
@@ -13,6 +13,24 @@ kegg_pathway_id(
   org_info
 )
 }
+\arguments{
+\item{pathway_description}{Description for a pathway in the
+iDEP database}
+
+\item{Species}{Species that the pathway is for}
+
+\item{GO}{Portion of the database to query ("KEGG")}
+
+\item{select_org}{The organism that the gene data is for}
+
+\item{gmt_files}{GMT files from the iDEP database}
+
+\item{org_info}{Organism information files from the iDEP
+database}
+}
+\value{
+Return the KEGG ID for the pathway.
+}
 \description{
-Given a KEGG pathway description, find pathway ids
+From a pathway description find the KEGG ID.
 }

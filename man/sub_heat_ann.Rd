@@ -15,7 +15,7 @@ sub_heat_ann(data, sample_info, select_factors_heatmap)
 }
 \value{
 A list containing a ComplexHeatmap annotation object,
-a ComplexHeatmap legend, list of groups, and list of group colors.
+ a ComplexHeatmap legend, list of groups, and list of group colors.
 }
 \description{
 Use the heatmap data to make an annotation for the

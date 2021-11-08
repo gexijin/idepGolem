@@ -2,7 +2,7 @@
 % Please edit documentation in R/fct_06_pathway.R
 \name{path_click_info}
 \alias{path_click_info}
-\title{PATH SUB CLICK INFO}
+\title{HTML code for sub-heatmap selected cell}
 \usage{
 path_click_info(
   click,
@@ -14,6 +14,30 @@ path_click_info(
   data
 )
 }
+\arguments{
+\item{click}{Information from the User clicking on a cell of
+the sub-heatmap}
+
+\item{ht_sub}{The drawn sub-heatmap}
+
+\item{ht_sub_obj}{The sub-heatmap ComplexHeatmap object}
+
+\item{ht_pos_sub}{Position information for the sub-heatmap}
+
+\item{sub_groups}{Vector of the groups that the samples
+belong to}
+
+\item{group_colors}{color of the top annotation that
+is used for each group}
+
+\item{data}{Sub data matrix that is plotted in the sub-heatmap}
+}
+\value{
+HTML code that will be used in the shiny UI to tell
+ the user the information of the cell they selected.
+}
 \description{
-PATH SUB CLICK INFO
+Create HTML code for a cell of information on the cell of the
+sub-heatmap that the User clicks on. The cell contains the
+expression value, the sample, the gene, and the group.
 }

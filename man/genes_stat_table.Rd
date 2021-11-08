@@ -2,10 +2,15 @@
 % Please edit documentation in R/fct_05_deg.R
 \name{genes_stat_table}
 \alias{genes_stat_table}
-\title{SIG GENES STAT TABLE}
+\title{Create a table from DEG results}
 \usage{
 genes_stat_table(limma)
 }
+\arguments{
+\item{limma}{Return list from the limma_value function}
+}
 \description{
-SIG GENES STAT TABLE
+Using the limma_value return list, create a table of the
+number of significantly expressed genes for each analyzed
+comparison.
 }

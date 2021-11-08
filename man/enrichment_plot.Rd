@@ -2,10 +2,21 @@
 % Please edit documentation in R/fct_05_deg.R
 \name{enrichment_plot}
 \alias{enrichment_plot}
-\title{ENRICHMENT TREE}
+\title{Dendogram of enriched pathways}
 \usage{
 enrichment_plot(go_table, right_margin = 33)
 }
+\arguments{
+\item{go_table}{Enrichment table from the pathway analysis
+functions}
+
+\item{right_margin}{Control the size of the dendogram labels}
+}
+\value{
+A dendogram plot that shows the users what pathways are
+ that are enriched share genes.
+}
 \description{
-ENRICHMENT TREE
+Create a dendogram plot of the enriched pathways to illustrate
+which paths contain similar genes.
 }

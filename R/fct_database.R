@@ -14,19 +14,14 @@ NULL
 DATAPATH <- "D:/data/data103/"
 
 
-#' connect_convert_db connects to the converID.db and returns the objects.
+#' connect_convert_db connects to the convertIDs.db and returns the
+#' objects.
 #'
+#' Create a database connection with the DBI package.
 #'
-#' @description
+#' @param datapath Folder path to the data file
 #'
-#'
-#' @param datapath
-#'
-#'
-#' @return
-#'
-#'
-#' @examples
+#' @return Database connection.
 connect_convert_db <- function(datapath = DATAPATH) {
   return(DBI::dbConnect(
     drv = RSQLite::dbDriver("SQLite"),
@@ -36,19 +31,15 @@ connect_convert_db <- function(datapath = DATAPATH) {
 }
 
 
-#' get_idep_data
+#' Load iDEP data
+#'
+#' Use this function call to load data that can is
+#' used in other functions.
 #'
 #'
-#' @description
+#' @param datapath Folder path to the iDEP data
 #'
-#'
-#' @param datapath
-#'
-#'
-#' @return
-#'
-#'
-#' @examples
+#' @return Large list of the iDEP data.
 get_idep_data <- function(datapath = DATAPATH) {
   kegg_species_id <- read.csv(paste0(datapath, "data_go/KEGG_Species_ID.csv"))
 
@@ -165,50 +156,41 @@ get_idep_data <- function(datapath = DATAPATH) {
 
 idep_data <- get_idep_data()
 
-
-#' FUNCTION_TITLE
+#' Find the ID type
 #'
-#' FUNCTION_DESCRIPTION
+#' Using an inputted ID, find the type of IDs
 #'
-#' @param id DESCRIPTION.
-#' @param id_index DESCRIPTION.
-#'
-#' @return RETURN_DESCRIPTION
-#' @examples
-#' # ADD_EXAMPLES_HERE
+#' @param id ID to find the type from
+#' @param id_index Index of IDs to use
 find_id_type_by_id <- function(id, id_index) {
   # find idType based on index
   return(id_index$idType[as.numeric(id)])
 }
 
-
-# find species name use id
-#' FUNCTION_TITLE
+#' Find a species by ID
 #'
-#' FUNCTION_DESCRIPTION
+#' Find a species in the iDEP database with an
+#' ID.
 #'
-#' @param species_id DESCRIPTION.
-#' @param org_info DESCRIPTION.
+#' @param species_id Species ID to search the database with
+#' @param org_info iDEP data org_info file
 #'
-#' @return RETURN_DESCRIPTION
-#' @examples
-#' # ADD_EXAMPLES_HERE
+#' @return Species information in \code{org_info} from the
+#'  matched ID.
 find_species_by_id <- function(species_id, org_info) {
   return(org_info[which(org_info$id == species_id), ])
 }
 
 
-# just return name
-#' FUNCTION_TITLE
+#' Find a species by ID
 #'
-#' FUNCTION_DESCRIPTION
+#' Find a species in the iDEP database with an
+#' ID.
+#' 
+#' @param species_id Species ID to search the database with
+#' @param org_info iDEP data org_info file
 #'
-#' @param species_id DESCRIPTION.
-#' @param org_info DESCRIPTION.
-#'
-#' @return RETURN_DESCRIPTION
-#' @examples
-#' # ADD_EXAMPLES_HERE
+#' @return Only return the species name with this function.
 find_species_by_id_name <- function(species_id, org_info) {
   # find species name use id
   return(org_info[which(org_info$id == species_id), 3])
@@ -226,9 +208,8 @@ find_species_by_id_name <- function(species_id, org_info) {
 #' @param select_org A character of the species that wants to be looked up,
 #'  default to \code{"BestMatch"}
 #'
-#' @return RETURN_DESCRIPTION
-#' @examples
-#' # ADD_EXAMPLES_HERE
+#' @return A large list of the conversion ID information that was gathered
+#'  from querying the database with the original IDs.
 convert_id <- function(
   query,
   idep_data,
@@ -357,78 +338,6 @@ convert_id <- function(
     species_matched = species_matched,
     conversion_table = conversion_table
   ))
-}
-
-
-#CAN WE GET RID OF THIS?
-#' FUNCTION_TITLE
-#'
-#' FUNCTION_DESCRIPTION
-#'
-#' @param query DESCRIPTION.
-#' @param species DESCRIPTION.
-#' @param idep_date DESCRIPTION.
-#' @param convert_type DESCRIPTION.
-#'
-#' @return RETURN_DESCRIPTION
-#' @examples
-#' # ADD_EXAMPLES_HERE
-convert_ensembl <- function(
-  query,
-  species,
-  idep_data,
-  convert_type = "entrez"
-) {
-  query_set <- clean_query(query_input = query)
-  # note uses species Identifying
-  species_id <-
-    idep_date$orgInfo$id[which(idep_date$orgInfo$ensembl_dataset == species)]
-
-  conn_db <- connect_convert_db()
-  if (convert_type == "entrez") {
-    id_type_entrez <- DBI::dbGetQuery(
-      conn = conn_db,
-      statement = "select distinct * from idIndex
-      where idType = 'entrezgene_id'"
-    )
-    id_type_entrez <- as.numeric(id_type_entrez[1, 1])
-    result <- DBI::dbGetQuery(
-      conn = conn_db,
-      statement = "select id,ens,species from mapping
-     where ens IN (?) AND idType = ?",
-      params = list(query_set, id_type_entrez)
-    ) # slow
-    # idType 6 for entrez gene ID
-  } else {
-    id_type_kegg <- DBI::dbGetQuery(
-      conn = conn_db,
-      statement = "select distinct * from idIndex
-      where idType = 'kegg'"
-    )
-    id_type_entrez <- as.numeric(id_type_entrez[1, 1])
-    result <- DBI::dbGetQuery(
-      conn = conn_db,
-      statement = "select id,ens,species from mapping
-     where ens IN (?) AND idType = ?",
-      params = list(query_set, id_type_kegg)
-    ) # slow
-  }
-  DBI::dbDisconnect(conn = conn_db)
-
-  if (nrow(result) == 0) {
-    return(NULL)
-  }
-  result <- subset(
-    x = result,
-    subset = species == species_id,
-    select = -species
-  )
-
-  ix <- match(x = result$ens, table = names(query))
-
-  tem <- query[ix]
-  names(tem) <- result$id
-  return(tem)
 }
 
 #' Read pathway sets for gene query
@@ -768,7 +677,24 @@ gmt_category <- function(
 	return(category_choices)
 }
 
-#' READ GENE SETS
+#' Read pathway gene sets
+#' 
+#' Use the IDs from the converted database to find the
+#' gene sets for all the pathways in the database. Returns
+#' a list with each entry a vector of IDs corresponding to
+#' a description of a pathway in the database.
+#' 
+#' @param converted Return value from the \code{convert_id} function,
+#'  contains information about the gene IDs for the matched species
+#' @param all_gene_names Data frame with all gene names
+#' @param go Portion of the database to use for the pathway analysis
+#' @param select_org The user selected organism for the expression data,
+#'  default is "BestMatch"
+#' @param idep_data Read data files from the database
+#' @param my_range Vector of the (min_set_size, max_set_size)
+#' 
+#' @return A list with each entry a list of gene IDs that correspond to
+#'  a pathway.
 read_gene_sets <- function(
   converted,
   all_gene_names,
@@ -853,7 +779,17 @@ read_gene_sets <- function(
 	return(gene_sets)
 }
 
-#' ENSEMBL TO ENTREZ
+#' Convert IDs from ensembl to entrez
+#' 
+#' Convert an ID qeury for a species from the ensembl
+#' ID type to entrez type.
+#' 
+#' @param query Vector of IDs to convert
+#' @param species Species to map the IDs for
+#' @param org_info org_info file from the \code{get_idep_data}
+#'  function
+#' 
+#' @return The qeuried genes with converted IDs.
 convert_ensembl_to_entrez <- function(
   query,
   species,
@@ -900,7 +836,20 @@ convert_ensembl_to_entrez <- function(
   return(tem)
 }
 
-#' Given a KEGG pathway description, find pathway ids
+#' Find pathway IDs for a KEGG description
+#' 
+#' From a pathway description find the KEGG ID.
+#' 
+#' @param pathway_description Description for a pathway in the
+#'  iDEP database
+#' @param Species Species that the pathway is for
+#' @param GO Portion of the database to query ("KEGG")
+#' @param select_org The organism that the gene data is for
+#' @param gmt_files GMT files from the iDEP database
+#' @param org_info Organism information files from the iDEP
+#'  database
+#' 
+#' @return Return the KEGG ID for the pathway.
 kegg_pathway_id <- function (
   pathway_description,
   Species,

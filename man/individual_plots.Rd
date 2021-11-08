@@ -28,9 +28,9 @@ individual_plots(
 }
 \value{
 A formatted ggplot. For gene_plot_box = TRUE the return will be a
-lineplot for the expression of each individual sample for the selected gene.
-If gene_plot_box = FALSE the return will be a barplot for the groups provided
-in the sample information.
+ lineplot for the expression of each individual sample for the selected gene.
+ If gene_plot_box = FALSE the return will be a barplot for the groups provided
+ in the sample information.
 }
 \description{
 Takes in the merged data and other data to provide

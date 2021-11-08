@@ -2,10 +2,25 @@
 % Please edit documentation in R/fct_05_deg.R
 \name{list_comp_venn}
 \alias{list_comp_venn}
-\title{COMPARISON LIST FOR VENN DIAGRAM}
+\title{List comparisons for venn diagram plot}
 \usage{
-list_comp_venn(limma, up_down_regulated, id)
+list_comp_venn(limma, up_down_regulated)
+}
+\arguments{
+\item{limma}{Returned list of results from the limma_value
+function}
+
+\item{up_down_regulated}{Split the comparisons into either
+up or down regulated}
+}
+\value{
+A character vector of the comparisons that were used
+ in the DEG analysis and can be plotted with the venn_plot
+ function.
 }
 \description{
-COMPARISON LIST FOR VENN DIAGRAM
+Create a list of the comparisons that were detected and
+analyzed by the limma_value function. These comparisons
+can be used in the plot_venn function to find the number
+of overlapping significantly expressed genes.
 }

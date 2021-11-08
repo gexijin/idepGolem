@@ -12,20 +12,19 @@
 #' @name fct_analysis_random.R
 NULL
 
-### work in process
-#' FUNCTION_TITLE
+### work in process (Needs to be tested)
+#' Calculate overlap for species with GMT file
 #'
-#' FUNCTION_DESCRIPTION
+#' For a species not in the iDEP database, calculate the overlap
+#'  for pathway analysis.
 #'
-#' @param query DESCRIPTION.
-#' @param gene_set DESCRIPTION.
-#' @param min_fdr DESCRIPTION.
-#' @param min_size DESCRIPTION.
-#' @param max_size DESCRIPTION.
-#'
-#' @return RETURN_DESCRIPTION
-#' @examples
-#' # ADD_EXAMPLES_HERE
+#' @param query Vector of genes to calculate the overlap on
+#' @param gene_set Gene sets from the custom GMT file to use in
+#'  the overlap
+#' @param min_fdr Significant p-value to determine significantly
+#'  expressed genes
+#' @param min_size Minimum size for a pathway gene set
+#' @param max_size Maximum size for a pathway gene set
 find_overlap_gmt <- function(
   query, 
   gene_set,
@@ -244,7 +243,30 @@ find_overlap <- function(
   return(pathway_table)
 }
 
-# SAMPLE INDEX FOR SELECTED COMPARISON
+#' Determine samples in selected contrast
+#' 
+#' Find the samples that are in the group of the selected
+#' contrast. Can be used to subset the data to only include
+#' the samples that correspond to the chosen comparison.
+#' 
+#' @param select_contrast Comparison from DEG analysis to filter
+#'  for the significant genes
+#' @param all_sample_names The column names of the processed data
+#' @param sample_info Experiment file information for grouping
+#'  samples
+#' @param select_factors_model The selected factors for the model
+#'  expression
+#' @param select_model_comprions Selected comparisons to analyze
+#'  in the DEG analysis
+#' @param reference_levels Vector of reference levels to use for the
+#'  selected factors
+#' @param counts_deg_method Method of DEG being performed (See
+#'  DEG UI for options)
+#' @param data_file_format Type of data being examined
+#' 
+#' @return A numeric vector that can be used to index the processed
+#'  data and subset to only include the columns from the selected
+#'  contrast.
 find_contrast_samples <- function(
   select_contrast,
   all_sample_names,
