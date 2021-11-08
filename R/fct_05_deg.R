@@ -209,13 +209,23 @@ list_model_comparisons_ui <- function(
 	} 
 }
 
-#' LIST INTERACTION TERMS
+#' List model interaction terms
+#' 
+#' This functions uses the sample info file and the selected
+#' model factors to create interaction terms to be used in the 
+#' DEG process. 
+#' 
+#' @param sample_info Experiment file information for grouping
+#' @param select_factors_model The selected factors for the model
+#'  expression
+#' 
+#' @return Returns a character string of an interaction term
+#'  between the selected factors. Used in a checkbox for the
+#'  User to create a model expression
 list_interaction_terms_ui <- function(
   sample_info,
-  select_factors_model,
-  id
+  select_factors_model
 ) {
-  ns <- NS(id)
 	if (is.null(sample_info) | is.null(select_factors_model)) {
     return(NULL)
 	}	 else { 
@@ -229,22 +239,25 @@ list_interaction_terms_ui <- function(
       1,
       function(x) paste(x, collapse = ":")
     )
-		# choices <- setNames(interactions, interactions)
-    return(
-      checkboxGroupInput(
-        inputId = ns("select_interactions"), 
-				label = h5(
-          "Interaction terms between factors(e.g. genotypes repond differently
-          to treatment?):"
-        ),
-				choices = interactions,
-        selected = NULL
-      )
-    )
+    return(interactions)
   }
 }
 
-#' EXPERIMENT DESIGN TEXT
+#' Create a string of the model design
+#' 
+#' Use the model design selections to create a string of the
+#' model design being used for the DEG analysis.
+#' 
+#' @param sample_info Experiment file information for grouping
+#' @param select_factors_model The selected factors for the model
+#'  expression
+#' @param select_block_factors_model The selected factors for
+#'  batch effect
+#' @param select_interactions The interaction terms being used in
+#'  the model design
+#' 
+#' @return Returns a string of the model design being used for
+#'  the DEG analysis
 experiment_design_txt <- function(
   sample_info,
   select_factors_model,
@@ -277,16 +290,28 @@ experiment_design_txt <- function(
 	}
 }
 
-#' SELECT REFERENCE LEVELS
+#' Refernce levels for selected factor
+#' 
+#' This function uses a vector of selected factors to create
+#' choices for the reference level to use for the factor in
+#' the DEG analysis. 
+#' 
+#' @param sample_info Experiment file information for grouping
+#' @param select_factors_model The selected factors for the model
+#'  expression
+#' @param data_file_format Type of gene data being examined
+#' @param counts_deg_method The method or package being used for
+#'  the DEG analysis
+#' 
+#' @return A list the same length as the vector of selected factors.
+#'  Each entry in the list corresponds to the choice of group to
+#'  use for the reference level.
 select_reference_levels_ui <- function(
   sample_info,
   select_factors_model,
   data_file_format,
-  counts_deg_method,
-  id
+  counts_deg_method
 ) {
-  ns <- NS(id)
-
   if (is.null(sample_info) | is.null(select_factors_model)) {
     return(NULL)
   }	else {
@@ -308,38 +333,54 @@ select_reference_levels_ui <- function(
         )      
       }
     }
-
-    return(lapply(names(select_choices), function(x) {
-        tagList(
-          column(
-            width = 4,
-            selectInput(
-              inputId = ns(
-                paste0(
-                  "reference_level_factor_",
-                  which(names(select_choices) == x)
-                )
-              ), 
-							label = h5(paste0("Reference/baseline level for ", x)),
-							choices= setNames(
-                as.list(
-                  paste0(
-                    x,
-                    ":",
-                    select_choices[[x]]
-                  )
-                ),
-                select_choices[[x]]
-              )
-            )
-          )
-        )
-      })
-    )	
+    return(select_choices)	
 	}
 }
 
-#' LIMMA REACTIVE VALUE
+#' DEG analysis function
+#' 
+#' Use the limma or DESeq2 package to perform DEG analysis
+#' with the specified model design. Core function for the
+#' DEG panel of iDEP.
+#' 
+#' @param data_file_format Type of gene data being examined
+#' @param counts_deg_method The method or package being used for
+#'  the DEG analysis
+#' @param raw_counts The matrix of counts before processing for
+#'  gene expression data
+#' @param limma_p_val Significant p-value to use for expressed
+#'  genes
+#' @param limma_fc Minimum fold-change cutoff for the DEG
+#'  analysis
+#' @param select_model_comprions Selected comparisons to analyze
+#'  in the DEG analysis
+#' @param sample_info Experiment file information for grouping
+#' @param select_factors_model The selected factors for the model
+#'  expression
+#' @param select_interactions The interaction terms being used in
+#'  the model design
+#' @param select_block_factors_model The selected factors for
+#'  batch effect
+#' @param factor_reference_levels Vector of reference levels to
+#'  use for the selected factors
+#' @param processed_data Data that has been through the pre-processing
+#' @param counts_log_start The constant added to the log transformation
+#'  from pre-processing
+#' @param p_vals The vector of p-vals calculated in pre-process for
+#'  significant expression
+#' 
+#' @return List with the results of the DEG analysis. When the function
+#'  is successful there are four entries in the list. "results" is a
+#'  matrix with the same dimensions as the processed data. The entries
+#'  in "results" are c(-1, 0, 1) for (negative fold change, no significant
+#'  change, positive fold change) respectively. The second entry is
+#'  "comparisons" and is a character vector of the different comparisons
+#'  that were analyzed in the function. Third is "exp_type" and details
+#'  the model expression that was used for the DEG analysis. Lastly is
+#'  "top_genes" which is itself a list. The "top_genes" list has an entry
+#'  for each comparison. Each entry is a data frame with two columns. One
+#'  column is the calculated fold change for the comparison and the other
+#'  is the adjusted p-value for the fold change calculation.
 limma_value <- function(
   data_file_format,
   counts_deg_method,
@@ -400,7 +441,7 @@ limma_value <- function(
 				selected_comparisons = select_model_comprions,
         sample_info = sample_info,
 				model_factors = c(select_factors_model, select_interactions),
-				block_factor = select_block_factors_model
+				block_factor = select_block_factors_model,
       )
     )
 	} else {
@@ -464,7 +505,27 @@ limma_value <- function(
   }
 }
 
-# Differential expression using DESeq2
+#' Differential expression using DESeq2 package
+#' 
+#' Used in the limma_value function to perform DEG analysis using the
+#' DESeq2 package. It is not recommended to use this function on its own.
+#' 
+#' @param raw_counts The matrix of counts before processing for
+#'  gene expression data
+#' @param max_p_limma Significant p-value to use for the fold-change
+#'  values
+#' @param min_fc_limma Minimum fold-change to include in the results
+#' @param selected_comparisons Comparisons being analyzed in the DEG
+#'  analysis
+#' @param sample_info Experiment file information for grouping
+#' @param model_factors Vector of selected factors and interaction terms
+#'  from the model design
+#' @param block_factor The selected factors for batch effect
+#' @param reference_levels Vector of reference levels to use for the
+#'  selected factors
+#' 
+#' @return The return value is the results of the DEG analysis. These
+#'  results are filtered and formatted by the limma_value function.
 deg_deseq2 <- function(
   raw_counts,
   max_p_limma = .05,
@@ -898,6 +959,32 @@ split_interaction_terms <- function(
   )
 }
 
+
+#' Differential expression using limma package
+#' 
+#' Used in the limma_value function to perform DEG analysis using the 
+#' limma package. It is not recommended to use this function on its own.
+#' 
+#' @param processed_data Data that has been through the pre-processing
+#' @param max_p_limma Significant p-value to use for the fold-change
+#'  values
+#' @param min_fc_limma Minimum fold-change to include in the results
+#' @param raw_counts The matrix of counts before processing for
+#'  gene expression data
+#' @param counts_deg_method The method or package being used for
+#'  the DEG analysis
+#' @param prior_counts The constant added to the log transformation
+#'  from pre-processing
+#' @param data_file_format Type of gene data being examined
+#' @param selected_comparisons Selected comparisons to analyze
+#'  in the DEG analysis
+#' @param sample_info Experiment file information for grouping
+#' @param model_factors Vector of selected factors and interaction terms
+#'  from the model design
+#' @param block_factor The selected factors for batch effect
+#' 
+#' @return The return value is the results of the DEG analysis. These
+#'  results are filtered and formatted by the limma_value function.
 deg_limma <- function(
   processed_data,
   max_p_limma = .1,
@@ -1411,6 +1498,18 @@ deg_limma <- function(
   )) 
 }
 
+#' Significant genes bar plot
+#' 
+#' Create a bar plot of the number of genes with a significant fold
+#' change. The plot will break down all of the comparisons that
+#' were analyzed and the count of significant genes for both up
+#' and down changes.
+#' 
+#' @param results Results matrix from the limma_value function
+#'  returned list
+#' 
+#' @results Formatted gg barplot of the significantly expressed
+#'  genes.
 sig_genes_plot <- function(
   results
 ) {
@@ -1446,7 +1545,13 @@ sig_genes_plot <- function(
 	return(plot_bar)
 }
 
-#' SIG GENES STAT TABLE
+#' Create a table from DEG results
+#' 
+#' Using the limma_value return list, create a table of the
+#' number of significantly expressed genes for each analyzed
+#' comparison.
+#' 
+#' @param limma Return list from the limma_value function
 genes_stat_table <- function(
   limma
 ) {
@@ -1476,22 +1581,27 @@ genes_stat_table <- function(
   return(as.data.frame(stats))
 }
 
-#' COMPARISON LIST FOR VENN DIAGRAM
+#' List comparisons for venn diagram plot
+#' 
+#' Create a list of the comparisons that were detected and
+#' analyzed by the limma_value function. These comparisons
+#' can be used in the plot_venn function to find the number
+#' of overlapping significantly expressed genes.
+#' 
+#' @param limma Returned list of results from the limma_value
+#'  function
+#' @param up_down_regulated Split the comparisons into either
+#'  up or down regulated
+#' 
+#' @return A character vector of the comparisons that were used
+#'  in the DEG analysis and can be plotted with the venn_plot
+#'  function.
 list_comp_venn <- function(
   limma,
-  up_down_regulated,
-  id
+  up_down_regulated
 ) {
-  ns <- NS(id)
   if(is.null(limma$comparisons)) {
-    return(
-      selectInput(
-        inputId = ns("select_comparisons_venn"),
-        label = NULL,
-        choices = list("All" = "All"),
-        selected = "All"
-      )
-    )  
+    return(NULL)  
 	}	else {
     choices <- setNames(limma$comparisons, limma$comparisons)
 		
@@ -1509,18 +1619,26 @@ list_comp_venn <- function(
       # By default only 3 are selected
       choices_first_three <- choices[1:3]
     }
-		return(
-      checkboxGroupInput(
-        inputId = ns("select_comparisons_venn"), 
-			  label = h4("Select up to 5 comparisons"), 
-			  choices = choices,
-			  selected = choices_first_three
-      )
-    )	
+		return(list(
+      choices = choices,
+      choices_first_three = choices_first_three
+    ))	
 	} 
 }
 
-#' VENN DIAGRAM PLOT FUNCTION
+#' Create a venn diagram plot
+#' 
+#' Plot a venn diagram that illustrates the number of significantly
+#' expressed genes that overlap for multiple comparisons. 
+#' 
+#' @param limma limma Returned list of results from the limma_value
+#'  function
+#' @param up_down_regulated Split the comparisons into either
+#'  up or down regulated
+#' @param select_comparisons_venn The comparisons to plot on the
+#'  venn diagram
+#' 
+#' @return A formatted venn diagram plot of the selected comparisons.
 plot_venn <- function(
   limma,
   up_down_regulated,
@@ -1575,7 +1693,23 @@ plot_venn <- function(
   )
 }
 
-#' HEATMAP DATA FOR DEG
+#' Find data for the heatmap
+#' 
+#' Filter the processed data into a submatrix that only contains
+#' the genes that had a significant fold change. The samples will
+#' also be subsetted to only contain samples that pertain to the
+#' selected comparison or contrast. 
+#' 
+#' @param limma Return results list from the limma_value function
+#' @param select_contrast Comparison from DEG analysis to filter
+#'  for the significant genes
+#' @param processed_data Data that has been through the pre-processing
+#' @param contrast_samples Columns that are in the group of the
+#'  selected comparison
+#' 
+#' @return Submatrix of the processed data with only the significantly
+#'  expressed genes and the columns that are in the selected contrast
+#'  group.
 deg_heat_data <- function(
   limma,
   select_contrast,
@@ -1642,7 +1776,21 @@ deg_heat_data <- function(
   ))
 }
 
-#' SELECTED HEATMAP
+#' Heatmap for significant contrast genes
+#' 
+#' Create a ComplexHeatmap of the processed expression data for
+#' the genes that were significantly expressed in the selected 
+#' comparison. The data for this heatmap comes from the
+#' deg_heat_data function.
+#' 
+#' @param data Submatrix of the processed data matrix from the
+#'  deg_heta_data function
+#' @param bar Vector to signify a positive (1) expression fold
+#'  change or a negative (-1) change
+#' @param heatmap_color_select Color vector to use for the
+#'  heatmap expression scale
+#' 
+#' @return A drawn heatmap from the filtered data.
 deg_heatmap <- function(
   data,
   bar,
@@ -1732,7 +1880,22 @@ deg_heatmap <- function(
   )
 }
 
-#' SUBHEATMAP
+#' Plot brush selection from main heatmap
+#' 
+#' Create a ComplexHeatmap object from the User brush selection
+#' that is a sub plot of the main plot.
+#' 
+#' @param ht_brush Input from the user creating a brush selection
+#'  on the main heatmap
+#' @param ht Main heatmap from the deg_heatmap function
+#' @param ht_pos_main Main heatmap position information to use
+#'  for the sub heatmap
+#' @param heatmap_data Original data matrix that was plotted in
+#'  the main heatmap
+#' @param all_gene_names Data matrix of all the mapped gene names
+#' 
+#' @return A ComplexHeatmap object of the brushed selection from
+#'  the main heatmap.
 deg_heat_sub <- function(
   ht_brush,
   ht,
@@ -1845,7 +2008,28 @@ deg_heat_sub <- function(
   ))
 }
 
-#' DEG SUB CLICK INFO
+#' HTML code sub heatmap selected cell
+#' 
+#' Create HTML code for a cell of information on the cell of the
+#' sub-heatmap that the User clicks on. The cell contains the
+#' expression value, the sample, the gene, the group and the
+#' direction of the fold change. 
+#' 
+#' @param click Information fro what cell is clicked in the
+#'  sub-heatmap
+#' @param ht_sub The drawn sub-heatmap
+#' @param ht_sub_obj The sub-heatmap ComplexHeatmap object
+#' @param ht_pos_sub Position information for the sub-heatmap
+#' @param sub_groups Vector of the groups that the samples
+#'  belong to
+#' @param group_colors The color of the top annotation that
+#'  is used for each group
+#' @param bar Vector to signify a positive (1) expression fold
+#'  change or a negative (-1) change
+#' @param data Sub data matrix that is plotted in the sub-heatmap
+#' 
+#' @return HTML code that will be used in the shiny UI to tell
+#'  the user the information of the cell they selected.
 deg_click_info <- function(
   click,
   ht_sub,
@@ -1899,7 +2083,25 @@ Regulation: @{up_down} <span style='background-color:@{up_down_col};width=50px;'
  return(HTML(html))
 }
 
-#' VOLCANO PLOT
+#' Volcano DEG plot
+#' 
+#' Use the results from limma-value to create a volcano plot to
+#' illustrate the significantly expressed genes. Up and down
+#' regulated genes are colored on the ggplot.
+#' 
+#' @param select_contrast Comparison from DEG analysis to filter
+#'  for the significant genes
+#' @param comparisons The comparisons vector from the results list
+#'  of the limma_value function
+#' @param top_genes top_genes list from results list of the
+#'  limma_value function
+#' @param limma_p_val Significant p-value to use to in determining
+#'  the expressed genes
+#' @param limma_fc Minimum fold change value to use in determining
+#'  the expressed genes
+#' 
+#' @return ggplot with the fold value as the X-axis and the log 10
+#'  value of the adjusted p-value as the Y-axis.
 plot_volcano <- function(
   select_contrast,
   comparisons,
@@ -1976,6 +2178,28 @@ plot_volcano <- function(
   ) 
 }
 
+#' Plot mean expression and fold change
+#' 
+#' Draw a ggplot of the overal mean expression for each gene 
+#' and the calculated fold change for the selected comparison.
+#' 
+#' @param select_contrast Comparison from DEG analysis to filter
+#'  for the significant genes
+#' @param comparisons The comparisons vector from the results list
+#'  of the limma_value function
+#' @param top_genes top_genes list from results list of the
+#'  limma_value function
+#' @param limma_p_val Significant p-value to use to in determining
+#'  the expressed genes
+#' @param limma_fc Minimum fold change value to use in determining
+#'  the expressed genes
+#' @param contrast_samples Samples that are included in the selected
+#'  comparison
+#' @param processed_data Data matrix that has gone through
+#'  pre-processing
+#' 
+#' @return A ggplot with the X-axis the mean expression value and
+#'  the Y-axis the calculated fold-change from the DEG analysis.
 plot_ma <- function(
   select_contrast,
   comparisons,
@@ -2061,6 +2285,32 @@ plot_ma <- function(
   ) 
 }
 
+#' Scatter plot of the comparison groups
+#' 
+#' Create a scatter plot of the expression value for each gene 
+#' in the two groups for the selected contrast. For the selected
+#' contrast, the mean expression is calculated for a gene in both
+#' group of samples in the contrast and plotted in a scatter plot.
+#' 
+#' @param select_contrast Comparison from DEG analysis to filter
+#'  for the significant genes
+#' @param comparisons The comparisons vector from the results list
+#'  of the limma_value function
+#' @param top_genes top_genes list from results list of the
+#'  limma_value function
+#' @param limma_p_val Significant p-value to use to in determining
+#'  the expressed genes
+#' @param limma_fc Minimum fold change value to use in determining
+#'  the expressed genes
+#' @param contrast_samples Samples that are included in the selected
+#'  comparison
+#' @param processed_data Data matrix that has gone through
+#'  pre-processing
+#' @param sample_info Experiment file information for grouping
+#' 
+#' @return A formatted ggplot with the X-axis as the mean expression
+#'  of one contrast group and the Y-axis as the mean expression of
+#'  the other contrast group.
 plot_deg_scatter <- function(
   select_contrast,
   comparisons,
