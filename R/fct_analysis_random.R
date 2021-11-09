@@ -454,3 +454,46 @@ read_gmt_robust <- function (in_file) {
 
 	return(y)
 }
+
+# retrieve detailed info on genes
+gene_info <- function(
+  converted,
+  select_org,
+  gene_info_files,
+) {
+	if(is.null(converted)) {
+    return(as.data.frame("ID not recognized!"))
+  } 
+	query_set <- converted$IDs
+	if(length(query_set) == 0) {
+    return(as.data.frame("ID not recognized!"))
+  }
+	ix <- grep(converted$species[1, 1], gene_info_files)
+	if(length(ix) == 0) {
+    return(as.data.frame("No matching gene info file found") )
+  } else {
+	  # If selected species is not the default "bestMatch", use that species directly
+	  if(select_org != "BestMatch") {  
+		  ix <- grep(find_species_by_id(select_org)[1, 1], gene_info_files)
+	  }
+	  if(length(ix) == 1) {
+      x <- read.csv(as.character(gene_info_files[ix])) 
+      x[, 1] <- toupper(x[, 1]) 
+      # If symbol is missing use Ensembl IDs
+      x$symbol[is.na(x$symbol) ] <- x[, 1]
+      # If duplicated symbol, paste Ensembl id to the end
+      n_occur <- data.frame(table(x$symbol))
+      # Rows with duplicated symbols
+      ix_duplicated <- which(n_occur$Freq > 1) 
+      x$symbol[ix_duplicated] <- paste(x$symbol[ix_duplicated], x[ix_duplicated, 1])
+    } else {
+      # Read in the chosen file 
+      return(as.data.frame("Multiple geneInfo file found!"))
+    }
+	  Set <- match(x$ensembl_gene_id, query_set)
+	  Set[which(is.na(Set))] = "Genome"
+	  Set[which(Set!="Genome")] = "List"
+
+	  return(cbind(x, Set))
+  }
+}
