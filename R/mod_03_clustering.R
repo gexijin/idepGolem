@@ -516,7 +516,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       if (is.null(input$ht_click)) { 
         "Click for Info."
       } else {
-        heat_click_info(
+        cluster_heat_click_info(
           click = input$ht_click,
           ht_sub = shiny_env$ht_sub,
           ht_sub_obj = shiny_env$ht_sub_obj,

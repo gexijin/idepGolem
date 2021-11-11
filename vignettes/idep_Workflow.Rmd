@@ -614,4 +614,68 @@ kegg_pathway(
 )
 ```
 
+# Genome Tab
+```{r}
+all_gene_info <- get_gene_info(
+  converted = converted,
+  select_org = "BestMatch",
+  gene_info_files = idep_data$gene_info_files
+)
 
+chromosome_plotly(
+  limma = limma,
+  select_contrast = "I:p53_null.Treatment_IR",
+  all_gene_info = all_gene_info,
+  ignore_non_coding = FALSE,
+  limma_p_val_viz = .1,
+  limma_fc_viz = 4,
+  label_gene_symbol = FALSE,
+  ma_window_size = 6,
+  ma_window_steps = 2,
+  ch_region_p_val = .1
+)
+
+genome_plot_data_pre <- get_genome_plot_data_pre(
+  select_contrast = "I:p53_null.Treatment_IR",
+  limma = limma,
+  all_gene_info = all_gene_info
+)
+
+genome_plot_data <- get_genome_plot_data(
+  genome_plot_data_pre = genome_plot_data_pre,
+  all_gene_info = all_gene_info,
+  select_contrast = "I:p53_null.Treatment_IR",
+  limma = limma,
+  regions_p_val_cutoff = .01,
+  statistic_cutoff = .5
+)
+
+get_genome_plot(
+  genome_plot_data = genome_plot_data,
+  regions_p_val_cutoff = .01,
+  statistic_cutoff = .5
+)
+```
+
+# Bicluster Functions
+```{r}
+#"BCCC()" biclust
+#"BCQU()" QUBIC
+#"BCUnibic()" runibic
+#"BCXmotifs()" biclust
+#"BCPlaid()" biclust
+#"BCSpectral()" biclust
+#"BCBimax()" biclust
+#"BCQuest()" biclust
+biclust_data <- get_biclustering(
+  data = processed_data$data,
+  n_genes = 1000,
+  biclust_method = "biclust::BCCC()"
+)
+
+x <- biclust::bicluster(biclust_data$data, biclust_data$res, 1)[[1]]
+basic_heatmap(
+  data = x,
+  c("green", "black", "red")
+)
+```

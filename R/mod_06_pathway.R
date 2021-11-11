@@ -644,7 +644,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       )
 
       # Assign heatmap to be used in multiple components
-      path_env$ht <- pathway_heatmap(
+      path_env$ht <- basic_heatmap(
         data = selected_pathway_data(),
         heatmap_color_select = heatmap_colors[[input$heatmap_color_select]]
       )
@@ -662,7 +662,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         grid::grid.newpage()
         grid::grid.text("No region is selected.", 0.5, 0.5)
       } else {
-        path_heat_return <- path_heat_sub(
+        path_heat_return <- basic_heat_sub(
           ht_brush = input$ht_brush,
           ht = path_env$ht,
           ht_pos_main = path_env$ht_pos_main,
@@ -691,7 +691,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       if (is.null(input$ht_click)) { 
         "Click for Info."
       } else {
-        path_click_info(
+        heat_click_info(
           click = input$ht_click,
           ht_sub = path_env$ht_sub,
           ht_sub_obj = path_env$ht_select,

@@ -686,7 +686,11 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       req(!is.null(load_data$converted()))
 
       return(
-        gene_info(load_data$converted(), load_data$select_org())
+        get_gene_info(
+          load_data$converted(),
+          load_data$select_org(),
+          all_gene_info = idep_data$gene_info_files
+        )
       ) 
 		})
 

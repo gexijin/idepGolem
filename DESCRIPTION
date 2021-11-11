@@ -9,6 +9,7 @@ Authors@R:
 Description: What the package does (one paragraph).
 License: What license is it under?
 Imports: 
+    Biobase,
     ComplexHeatmap,
     config (>= 0.3.1),
     DBI,
@@ -24,6 +25,8 @@ Imports:
     grid,
     htmltools (>= 0.5.2),
     InteractiveComplexHeatmap,
+    PREDA,
+    PREDAsampledata,
     reshape2,
     RSQLite,
     shiny (>= 1.6.0),

@@ -39,4 +39,15 @@ app_server <- function(input, output, session) {
     idep_data = idep_data,
     tab = tab
   )
+  mod_07_genome_server(
+    id = "genome",
+    pre_process = pre_process,
+    deg = deg,
+    idep_data = idep_data
+  )
+  mod_08_bicluster_server(
+    id = "bicluster",
+    pre_process = pre_process,
+    tab = tab
+  )
 }

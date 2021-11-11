@@ -24,10 +24,13 @@ usethis::use_package("utils")
 usethis::use_package("htmltools")
 usethis::use_package("InteractiveComplexHeatmap")
 usethis::use_package("reshape2")
+usethis::use_package("PREDA")
+usethis::use_package("PREDAsampledata")
+usethis::use_package("Biobase")
 
 ## Add modules ----
 ## Create a module infrastructure in R/
-#golem::add_module( name = "name_of_module1" ) # Name of the module
+golem::add_module( name = "08_bicluster" ) # Name of the module
 #golem::add_module( name = "name_of_module2" ) # Name of the module
 
 ## Add helper functions ----

@@ -16,7 +16,7 @@ mod_07_genome_ui <- function(id){
         htmlOutput(outputId = ns("list_comparisons_genome")),
         tags$style(
           type = "text/css",
-          "#genome-list_comparisons_pathway{ width:100%;   margin-top:-12px}"
+          "#genome-list_comparisons_genome{ width:100%;   margin-top:-12px}"
         ),
         fluidRow(
           column(
@@ -93,7 +93,7 @@ mod_07_genome_ui <- function(id){
           )
         ),
         selectInput(
-          inputId = "chRegionPval", 
+          inputId = ns("ch_region_p_val"), 
           label = h5("FDR cutoff for window"),
           selected = 0.0001,
           choices = c(0.1, 0.05, 0.01, 0.001, 0.0001, 0.00001)
@@ -163,7 +163,7 @@ mod_07_genome_ui <- function(id){
           ),
           tabPanel(
             "Chromosome Plot",
-            plotlyOutput(
+            plotly::plotlyOutput(
               outputId = ns("genome_plotly"),
               height = "900px"
             )
@@ -194,7 +194,19 @@ mod_07_genome_ui <- function(id){
                 )
               )
             ),
-            plotOutput("genome_plot")
+            plotOutput(
+              outputId = ns("genome_plot"),
+              height = "700px",
+              width = "100%"
+            )
+          ),
+          tabPanel(
+            "(PREDA) Significant Loci",
+            DT::dataTableOutput(outputId = ns("chr_regions"))
+          ),
+          tabPanel(
+            "(PREDA) Genes",
+            DT::dataTableOutput(outputId = ns("genes_chr_regions"))
           )
         )
       )
@@ -205,13 +217,114 @@ mod_07_genome_ui <- function(id){
 #' mod_07_genome Server Functions
 #'
 #' @noRd 
-mod_07_genome_server <- function(id, pre_process){
+mod_07_genome_server <- function(id, pre_process, deg, idep_data){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
-    
+
+    output$list_comparisons_genome <- renderUI({
+      if(is.null(deg$limma()$comparisons)) {
+        selectInput(
+          inputId = ns("select_contrast"),
+          label = NULL,
+          choices = list("All" = "All"),
+          selected = "All"
+        )  
+			}	else {
+        selectInput(
+          inputId = ns("select_contrast"),
+          label = 
+            "Select a comparison to examine. \"A-B\" means A vs. B (See heatmap).
+            Interaction terms start with \"I:\"",
+          choices = deg$limma()$comparisons
+	     )
+      } 
+	  })
     
     # visualizing fold change on chrs. 
-    output$genome_plotly <- renderPlotly({
+    output$genome_plotly <- plotly::renderPlotly({
+      req(!is.null(deg$limma()))
+
+      chromosome_plotly(
+        limma = deg$limma(),
+        select_contrast = input$select_contrast,
+        all_gene_info = pre_process$all_gene_info(),
+        ignore_non_coding = input$ignore_non_coding,
+        limma_p_val_viz = input$limma_p_val_viz,
+        limma_fc_viz = input$limma_fc_viz,
+        label_gene_symbol = input$label_gene_symbol,
+        ma_window_size = input$ma_window_size,
+        ma_window_steps = input$ma_window_steps,
+        ch_region_p_val = input$ch_region_p_val
+      )
+    })
+
+    # Pre-calculating PREDA, so that changing FDR cutoffs does not trigger entire calculation
+    genome_plot_data_pre <- reactive({
+      req(!is.null(deg$limma()))
+
+      get_genome_plot_data_pre(
+        select_contrast = input$select_contrast,
+        limma = deg$limma(),
+        all_gene_info = pre_process$all_gene_info()
+      ) 
+    })
+
+    # Results from PREDA
+    genome_plot_data <- reactive({
+      req(!is.null(genome_plot_data_pre()))
+
+      get_genome_plot_data(
+        genome_plot_data_pre = genome_plot_data_pre(),
+        all_gene_info = pre_process$all_gene_info(),
+        select_contrast = input$select_contrast,
+        limma = deg$limma(),
+        regions_p_val_cutoff = input$regions_p_val_cutoff,
+        statistic_cutoff = input$statistic_cutoff
+      )
+    })
+
+    # Using PREDA to identify significant genomic regions 
+    output$genome_plot <- renderPlot({
+      req(!is.null(genome_plot_data()))
+
+	    get_genome_plot(
+        genome_plot_data = genome_plot_data(),
+        regions_p_val_cutoff = input$regions_p_val_cutoff,
+        statistic_cutoff = input$statistic_cutoff
+      )
+    })
+
+    output$chr_regions <- DT::renderDataTable({
+	    req(!is.null(genome_plot_data()))
+
+      region_data <- genome_plot_data()$Regions[, c(8, 1:6, 9)]
+	    colnames(region_data)[1] <- "RegionID"
+
+      DT::datatable(
+        region_data,
+        options = list(
+          pageLength = 20,
+          scrollX = "400px"
+        ),
+        rownames = FALSE
+      )
+    })
+
+    output$genes_chr_regions <- DT::renderDataTable({
+	    req(!is.null(genome_plot_data()))
+
+      genes <- genome_plot_data()$Genes[, -c(5, 10, 12)]
+	    genes$Fold <- round(genes$Fold, 3)
+	    colnames(genes)[2] <- "Dir"
+
+      DT::datatable(
+        genes,
+        options = list(
+          pageLength = 20,
+          scrollX = "400px"
+        ),
+        rownames = FALSE
+      )
     })
   })
 }

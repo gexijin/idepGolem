@@ -195,6 +195,12 @@ pre_process <- function(
     )
   )
 
+  data <- data[order(-apply(
+    data[, 1:dim(data)[2]],
+    1,
+    sd
+  )), ]
+
   results <- list(
     data = as.matrix(data),
     mean_kurtosis = mean_kurtosis,

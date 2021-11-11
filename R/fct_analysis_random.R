@@ -456,15 +456,15 @@ read_gmt_robust <- function (in_file) {
 }
 
 # retrieve detailed info on genes
-gene_info <- function(
+get_gene_info <- function(
   converted,
   select_org,
-  gene_info_files,
+  gene_info_files
 ) {
 	if(is.null(converted)) {
     return(as.data.frame("ID not recognized!"))
   } 
-	query_set <- converted$IDs
+	query_set <- converted$ids
 	if(length(query_set) == 0) {
     return(as.data.frame("ID not recognized!"))
   }
