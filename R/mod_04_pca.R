@@ -13,32 +13,27 @@ mod_04_pca_ui <- function(id) {
     "PCA",
     sidebarLayout(
       sidebarPanel(
-        # Buttons for data file format ----------
-        radioButtons(
-          inputId = ns("data_file_format"),
-          label = "2. Choose data type",
-          choices = list(
-            "Read counts data (recommended)" = 1,
-            "Normalized expression values (RNA-seq FPKM, microarray, etc.)" = 2,
-            "Fold-changes and corrected P values from CuffDiff or any other
-             program" = 3
-          ),
-          selected = 1
-        ),
-
-        # Conditional panel for fold changes data file ----------
-        conditionalPanel(
-          condition = "input.data_file_format == 3",
-          checkboxInput(
-            inputId = ns("no_fdr"),
-            label = "Fold-changes only, no corrected P values",
-            value = FALSE
-          ),
-          ns = ns
-        )
+        NULL
       ),
       mainPanel(
-        NULL
+        tabsetPanel(
+          tabPanel(
+            "Principal Component Analysis",
+            NULL
+          ),
+          tabPanel(
+            "Multi-Dimensional Scaling",
+            NULL
+          ),
+          tabPanel(
+            "t-SNE",
+            NULL
+          ),
+          tabPanel(
+            "Pathway Analysis of PCA",
+            NULL
+          )
+        )
       )
     )
   )

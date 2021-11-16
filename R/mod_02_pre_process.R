@@ -682,6 +682,19 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       removeNotification("read_counts_message")
     })
 
+    all_gene_info <- reactive({
+      req(!is.null(load_data$converted()))
+
+      return(
+        get_gene_info(
+          load_data$converted(),
+          load_data$select_org(),
+          all_gene_info = idep_data$gene_info_files
+        )
+      ) 
+		})
+
+
     # Return Values -----------
     list(
       raw_counts = reactive(processed_data()$raw_counts),
@@ -695,7 +708,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       gmt_file = reactive(load_data$gmt_file()),
       all_gene_info = reactive(load_data$all_gene_info()),
       data_file_format = reactive(load_data$data_file_format()),
-      counts_log_start = reactive(input$counts_log_start)
+      counts_log_start = reactive(input$counts_log_start),
+      all_gene_info = reactive(all_gene_info())
     )
   })
 }

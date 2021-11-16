@@ -54,8 +54,8 @@ and sample names as columns.
 ```{r Create Data Paths}
 idep_data <- get_idep_data()
 
-YOUR_DATA_PATH <- "D:/data/data103/data_go/BcellGSE71176_p53.csv"
-YOUR_EXPERIMENT_PATH <- "D:/data/data103/data_go/BcellGSE71176_p53_sampleInfo.csv"
+YOUR_DATA_PATH <- "E:/idep_9_24/data/data103/data_go/BcellGSE71176_p53.csv"
+YOUR_EXPERIMENT_PATH <- "E:/idep_9_24/data/data103/data_go/BcellGSE71176_p53_sampleInfo.csv"
 
 expression_file <- data.frame(
   datapath = YOUR_DATA_PATH
@@ -581,7 +581,7 @@ select_data <- pathway_select_data(
   all_gene_names = gene_names
 )
 
-pathway_heatmap(
+basic_heatmap(
   data = select_data,
   c("green", "black", "red")
 )
@@ -614,4 +614,120 @@ kegg_pathway(
 )
 ```
 
+# Genome Tab
+```{r}
+all_gene_info <- get_gene_info(
+  converted = converted,
+  select_org = "BestMatch",
+  gene_info_files = idep_data$gene_info_files
+)
+
+chromosome_plotly(
+  limma = limma,
+  select_contrast = "I:p53_null.Treatment_IR",
+  all_gene_info = all_gene_info,
+  ignore_non_coding = FALSE,
+  limma_p_val_viz = .1,
+  limma_fc_viz = 4,
+  label_gene_symbol = FALSE,
+  ma_window_size = 6,
+  ma_window_steps = 2,
+  ch_region_p_val = .1
+)
+
+genome_plot_data_pre <- get_genome_plot_data_pre(
+  select_contrast = "I:p53_null.Treatment_IR",
+  limma = limma,
+  all_gene_info = all_gene_info
+)
+
+genome_plot_data <- get_genome_plot_data(
+  genome_plot_data_pre = genome_plot_data_pre,
+  all_gene_info = all_gene_info,
+  select_contrast = "I:p53_null.Treatment_IR",
+  limma = limma,
+  regions_p_val_cutoff = .01,
+  statistic_cutoff = .5
+)
+
+get_genome_plot(
+  genome_plot_data = genome_plot_data,
+  regions_p_val_cutoff = .01,
+  statistic_cutoff = .5
+)
+```
+
+# Bicluster Functions
+```{r}
+#"BCCC()" biclust
+#"BCQU()" QUBIC
+#"BCUnibic()" runibic
+#"BCXmotifs()" biclust
+#"BCPlaid()" biclust
+#"BCSpectral()" biclust
+#"BCBimax()" biclust
+#"BCQuest()" biclust
+biclustering <- get_biclustering(
+  data = processed_data$data,
+  n_genes = 1000,
+  biclust_method = "biclust::BCCC()"
+)
+
+biclust_data <- biclust::bicluster(biclustering$data, biclustering$res, 1)[[1]]
+
+basic_heatmap(
+  data = biclust_data,
+  c("green", "black", "red")
+)
+
+biclust_gene_names <- merge_data(
+  all_gene_names = gene_names,
+  data = biclust_data,
+  merge_ID = "ensembl_ID"
+)
+# Only keep the gene names and scrap the data
+gene_names_query <- dplyr::select_if(biclust_gene_names, is.character)
+
+gene_sets <- read_pathway_sets(
+  all_gene_names_query = gene_names_query,
+  converted = converted,
+  go = "GOBP",
+  select_org = "BestMatch",
+  gmt_file = NULL,
+  idep_data = idep_data,
+  gene_info = all_gene_info
+)
+
+pathway_info <- find_overlap(
+  pathway_table = gene_sets$pathway_table,
+  query_set = gene_sets$query_set,
+  total_genes = gene_sets$total_genes,
+  processed_data = processed_data$data,
+  gene_info = all_gene_info,
+  go = "GOBP",
+  idep_data = idep_data,
+  select_org = "GOBP",
+  sub_pathway_files = gene_sets$pathway_files,
+  use_filtered_background = FALSE,
+  reduced = FALSE
+)
+
+biclust_table <- get_biclust_table_data(
+  res = biclustering$res,
+  biclust_data = biclust_data,
+  select_go = "GOBP",
+  select_org = "BestMatch",
+  all_gene_info = all_gene_info
+)
+```
+
+# NETWORK TAB
+```{r}
+wgcna <- get_wgcna(
+  data = processed_data$data,
+  n_genes = 1000,
+  soft_power = 5,
+  min_module_size = 20
+)
+```
 

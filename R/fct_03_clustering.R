@@ -549,7 +549,7 @@ sub_heat_ann <- function(
 #' 
 #' @return HTML code to produce a table with information
 #'  about the selected cell.
-heat_click_info <- function(
+cluster_heat_click_info <- function(
   click,
   ht_sub,
   ht_sub_obj,

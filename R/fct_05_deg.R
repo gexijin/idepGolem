@@ -62,7 +62,7 @@ list_factors_ui <- function(
   data_file_format,
   counts_deg_method
 ) {
-  if (is.null(sample_info)) {
+  if(is.null(sample_info)) {
     return(
       HTML(
         "<font size = \"2\">A <a href=\"https://idepsite.wordpress.com/data-format/\">

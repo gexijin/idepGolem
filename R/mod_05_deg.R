@@ -368,15 +368,18 @@ mod_05_deg_server <- function(id, pre_process) {
         data_file_format = pre_process$data_file_format(),
         counts_deg_method = input$counts_deg_method
       )
-      req(!is.null(list_factors))
-      return(
-        checkboxGroupInput(
-          inputId = ns("select_factors_model"), 
-          h5(list_factors$title), 
-          choices = list_factors$choices,
-          selected = NULL
+      if(class(list_factors)[1] == "list") {
+        return(
+          checkboxGroupInput(
+            inputId = ns("select_factors_model"), 
+            h5(list_factors$title), 
+            choices = list_factors$choices,
+            selected = NULL
+          )
         )
-      )
+      } else {
+        return(list_factors)
+      }
 	  })
 
     output$list_block_factors_deg <- renderUI({ 
@@ -397,7 +400,6 @@ mod_05_deg_server <- function(id, pre_process) {
 
     output$list_model_comparisons <- renderUI({
       req(pre_process$data())
-
 		  model_comparisons <- list_model_comparisons_ui(
         sample_info = pre_process$sample_info(),
         select_factors_model = input$select_factors_model,
