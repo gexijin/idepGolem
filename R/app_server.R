@@ -48,6 +48,7 @@ app_server <- function(input, output, session) {
   mod_08_bicluster_server(
     id = "bicluster",
     pre_process = pre_process,
+    idep_data = idep_data,
     tab = tab
   )
 }

@@ -54,8 +54,8 @@ and sample names as columns.
 ```{r Create Data Paths}
 idep_data <- get_idep_data()
 
-YOUR_DATA_PATH <- "D:/data/data103/data_go/BcellGSE71176_p53.csv"
-YOUR_EXPERIMENT_PATH <- "D:/data/data103/data_go/BcellGSE71176_p53_sampleInfo.csv"
+YOUR_DATA_PATH <- "E:/idep_9_24/data/data103/data_go/BcellGSE71176_p53.csv"
+YOUR_EXPERIMENT_PATH <- "E:/idep_9_24/data/data103/data_go/BcellGSE71176_p53_sampleInfo.csv"
 
 expression_file <- data.frame(
   datapath = YOUR_DATA_PATH
@@ -581,7 +581,7 @@ select_data <- pathway_select_data(
   all_gene_names = gene_names
 )
 
-pathway_heatmap(
+basic_heatmap(
   data = select_data,
   c("green", "black", "red")
 )
@@ -667,15 +667,67 @@ get_genome_plot(
 #"BCSpectral()" biclust
 #"BCBimax()" biclust
 #"BCQuest()" biclust
-biclust_data <- get_biclustering(
+biclustering <- get_biclustering(
   data = processed_data$data,
   n_genes = 1000,
   biclust_method = "biclust::BCCC()"
 )
 
-x <- biclust::bicluster(biclust_data$data, biclust_data$res, 1)[[1]]
+biclust_data <- biclust::bicluster(biclustering$data, biclustering$res, 1)[[1]]
+
 basic_heatmap(
-  data = x,
+  data = biclust_data,
   c("green", "black", "red")
 )
+
+biclust_gene_names <- merge_data(
+  all_gene_names = gene_names,
+  data = biclust_data,
+  merge_ID = "ensembl_ID"
+)
+# Only keep the gene names and scrap the data
+gene_names_query <- dplyr::select_if(biclust_gene_names, is.character)
+
+gene_sets <- read_pathway_sets(
+  all_gene_names_query = gene_names_query,
+  converted = converted,
+  go = "GOBP",
+  select_org = "BestMatch",
+  gmt_file = NULL,
+  idep_data = idep_data,
+  gene_info = all_gene_info
+)
+
+pathway_info <- find_overlap(
+  pathway_table = gene_sets$pathway_table,
+  query_set = gene_sets$query_set,
+  total_genes = gene_sets$total_genes,
+  processed_data = processed_data$data,
+  gene_info = all_gene_info,
+  go = "GOBP",
+  idep_data = idep_data,
+  select_org = "GOBP",
+  sub_pathway_files = gene_sets$pathway_files,
+  use_filtered_background = FALSE,
+  reduced = FALSE
+)
+
+biclust_table <- get_biclust_table_data(
+  res = biclustering$res,
+  biclust_data = biclust_data,
+  select_go = "GOBP",
+  select_org = "BestMatch",
+  all_gene_info = all_gene_info
+)
 ```
+
+# NETWORK TAB
+```{r}
+wgcna <- get_wgcna(
+  data = processed_data$data,
+  n_genes = 1000,
+  soft_power = 5,
+  min_module_size = 20
+)
+```
+

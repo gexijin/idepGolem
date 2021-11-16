@@ -15,7 +15,7 @@ get_biclustering <- function(
   biclust_method
 ) {
   if(n_genes > dim(data)[1]) {
-    n_genes <- dim(x)[1]
+    n_genes <- dim(data)[1]
   }
   if(n_genes < 10) {
     n_genes <- 10
@@ -68,7 +68,79 @@ bicluster_summary_message <- function(
       )	
     )
 	}
-				
-
-		
 }
+
+#' BICLUST TABLE
+get_biclust_table_data <- function(
+  res,
+  biclust_data,
+  select_go,
+  select_org,
+  all_gene_info
+) {
+	if(res@Number == 0) {
+    return(as.data.frame("No clusters found!")) 
+  }
+		 
+	if(select_go == "ID not recognized!" | 
+		 select_org == "NEW" | 
+		 dim(all_gene_info)[1] == 1) {
+		biclust_genes <- as.data.frame(rownames(biclust_data))
+		colnames(biclust_genes) <- "Genes"
+	} else {
+		clust_info <- merge(
+      biclust_data,
+      all_gene_info,
+      by.x = "row.names",
+      by.y = "ensembl_gene_id",
+      all.x = T
+    )
+		
+		clust_info <- clust_info[!duplicated(clust_info$Row.names), ]
+		  
+		if(sum(is.na(clust_info$band)) == dim(clust_info)[1]) {
+      clust_info$chr <- clust_info$chromosome_name 
+    } else {
+      clust_info$chr <- paste(
+        clust_info$chromosome_name,
+        clust_info$band,
+        sep = ""
+      )
+    }
+
+		gene_mean <- rowMeans(biclust_data)
+
+    clust_info <- cbind(clust_info, gene_mean)
+		  
+		clust_info <- clust_info[order(
+      clust_info$gene_mean, decreasing = T
+    ), ]
+		  
+		clust_info <- clust_info[, c(
+      "Row.names",
+      "gene_mean",
+      "symbol",
+      "chr",
+      "gene_biotype"
+    )]
+		  
+		clust_info$gene_mean <- sprintf(
+      "%-4.2f",
+      as.numeric(clust_info$gene_mean)
+    )
+
+		colnames(clust_info) <- c(
+      "Ensembl ID",
+      "Mean",
+      "Symbol",
+      "Chr",
+      "Type"
+    )
+		
+    if(sum(is.na(clust_info$Symbol)) == dim(clust_info)[1]) {
+      clust_info <- clust_info[, -3]
+    } 
+	}
+		  
+  return(clust_info)
+} 

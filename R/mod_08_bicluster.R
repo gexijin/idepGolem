@@ -103,9 +103,33 @@ mod_08_bicluster_ui <- function(id){
           ),
           tabPanel(
             "Enrichment",
+            fluidRow(
+              column(
+                width = 4,
+                checkboxInput(
+                  inputId = ns("filtered_background"), 
+                  label = "Use filtered data as background in enrichment (slow)", 
+                  value = TRUE
+                )
+              ),
+              column(
+                width = 4,
+                checkboxInput(
+                  inputId = ns("remove_redudant"),
+                  label = "Remove Redudant Gene Sets",
+                  value = FALSE
+                )
+              )
+            ),
             h3("Enriched gene sets in selected bicluster"),
-            tableOutput(
-              outputId = ns("gene_list_biclust_go")
+            DT::dataTableOutput(
+              outputId = ns("pathway_data_biclust")
+            )
+          ),
+          tabPanel(
+            "Cluster Gene Table",
+            DT::dataTableOutput(
+              outputId = ns("gene_list_bicluster")
             )
           )
         )
@@ -117,7 +141,7 @@ mod_08_bicluster_ui <- function(id){
 #' 08_bicluster Server Functions
 #'
 #' @noRd 
-mod_08_bicluster_server <- function(id, pre_process, tab){
+mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 
@@ -181,7 +205,7 @@ mod_08_bicluster_server <- function(id, pre_process, tab){
       )
     })
 
-    heatmap_data <- reactive({
+    biclust_data <- reactive({
       req(!is.null(biclustering()) && !is.null(input$select_bicluster))
       req(biclustering()$res@Number != 0)
 
@@ -195,7 +219,7 @@ mod_08_bicluster_server <- function(id, pre_process, tab){
     })
 
     output$biclust_main_heatmap <- renderPlot({
-      req(!is.null(heatmap_data()))
+      req(!is.null(biclust_data()))
 
       shinybusy::show_modal_spinner(
         spin = "orbit",
@@ -205,7 +229,7 @@ mod_08_bicluster_server <- function(id, pre_process, tab){
 
       # Assign heatmap to be used in multiple components
       biclust_env$ht <- basic_heatmap(
-        data = heatmap_data(),
+        data = biclust_data(),
         heatmap_color_select = heatmap_colors[[input$heatmap_color_select]]
       )
 
@@ -226,7 +250,7 @@ mod_08_bicluster_server <- function(id, pre_process, tab){
           ht_brush = input$ht_brush,
           ht = biclust_env$ht,
           ht_pos_main = biclust_env$ht_pos_main,
-          heatmap_data = heatmap_data()
+          heatmap_data = biclust_data()
         )
 
         biclust_env$ht_select <- biclust_heat_return$ht_select
@@ -288,18 +312,94 @@ mod_08_bicluster_server <- function(id, pre_process, tab){
       )
     })
 
-    output$gene_list_biclust_go <- renderTable({		
-		  NULL
-    },
-      digits = 0,
-      spacing = "s",
-      striped = TRUE,
-      bordered = TRUE,
-      width = "auto",
-      hover = T, 
-     sanitize.text.function = function(x) x
-    )
+    pathway_table_biclust <- reactive({
+      req(!is.null(biclust_data()))
 
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Running Analysis",
+        color = "#000000"
+      )
+
+      gene_names <- merge_data(
+        all_gene_names = pre_process$all_gene_names(),
+        data = biclust_data(),
+        merge_ID = "ensembl_ID"
+      )
+      # Only keep the gene names and scrap the data
+      gene_names_query <- dplyr::select_if(gene_names, is.character)
+
+      req(!is.null(input$select_go))
+
+      gene_sets <- read_pathway_sets(
+        all_gene_names_query = gene_names_query,
+        converted = pre_process$converted(),
+        go = input$select_go,
+        select_org = pre_process$select_org(),
+        gmt_file = pre_process$gmt_file(),
+        idep_data = idep_data,
+        gene_info = pre_process$all_gene_info()
+      )
+
+      pathway_info <- find_overlap(
+        pathway_table = gene_sets$pathway_table,
+        query_set = gene_sets$query_set,
+        total_genes = gene_sets$total_genes,
+        processed_data = pre_process$data(),
+        gene_info = pre_process$all_gene_info(),
+        go = input$select_go,
+        idep_data = idep_data,
+        select_org = pre_process$select_org(),
+        sub_pathway_files = gene_sets$pathway_files,
+        use_filtered_background = input$filtered_background,
+        reduced = input$remove_redudant
+      )
+
+      shinybusy::remove_modal_spinner()
+
+      return(pathway_info)
+    })
+
+    # Subheatmap Data Table ----------
+    output$pathway_data_biclust <- DT::renderDataTable({
+      req(!is.null(pathway_table_biclust()))
+
+      if(ncol(pathway_table_biclust()) > 1) {
+        pathway_table <- pathway_table_biclust()[, 1:4]
+      } else {
+        pathway_table <- pathway_table_biclust()
+      }
+
+      DT::datatable(
+        pathway_table,
+        options = list(
+          pageLength = 20,
+          scrollX = "400px"
+        ),
+        rownames = FALSE
+      )
+    })
+
+    output$gene_list_bicluster <- DT::renderDataTable({
+      req(!is.null(biclust_data()))
+
+      biclust_table <- get_biclust_table_data(
+        res = biclustering()$res,
+        biclust_data = biclust_data(),
+        select_go = input$select_go,
+        select_org = pre_process$select_org(),
+        all_gene_info = pre_process$all_gene_info()
+      )
+
+      DT::datatable(
+        biclust_table,
+        options = list(
+          pageLength = 20,
+          scrollX = "400px"
+        ),
+        rownames = FALSE
+      )
+    })
   })
 }
     
