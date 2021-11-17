@@ -44,6 +44,12 @@ chromosome_plotly <- function(
   if(dim(top_1)[1] == 0) {
     return(plotly::ggplotly(p))
   }
+
+  # Species in STRING-db do not have chr. location data
+  if(sum(!is.na(all_gene_info$start_position)) < 5) { 
+   return(p) 
+  }
+
   colnames(top_1) <- c("Fold", "FDR")
   
   x <- merge(
@@ -359,6 +365,11 @@ get_genome_plot_data <- function(
 	
   if(dim(top_1)[1] == 0) {
     return(NULL)
+  }
+
+  # Species in STRING-db do not have chr. location data
+  if(sum(!is.na(all_gene_info$start_position)) < 5) { 
+   return(NULL) 
   }
 	colnames(top_1) <- c("Fold", "FDR")
 	  
