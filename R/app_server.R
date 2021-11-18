@@ -51,4 +51,10 @@ app_server <- function(input, output, session) {
     idep_data = idep_data,
     tab = tab
   )
+  mod_09_network_server(
+    id = "network",
+    pre_process = pre_process,
+    idep_data = idep_data,
+    tab = tab
+  )
 }

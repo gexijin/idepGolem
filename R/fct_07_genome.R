@@ -134,15 +134,31 @@ chromosome_plotly <- function(
       x$R <- as.factor(sign(x$Fold))
         
       colnames(x)[which(colnames(x) == "start_position")] <- "x"
+      x$R <- as.character(x$R)
+      x$R[x$R == "-1"] <- "Down"
+      x$R[x$R == "1"] <- "Up"
+      x$R <- as.factor(x$R)
         
       # Don't define x and y, so that we could plot use two datasets
       p <- ggplot2::ggplot() +
         ggplot2::geom_point(
           data = x,
-          ggplot2::aes(x = x, y = y, colour = R, text = symbol),
+          ggplot2::aes(
+            x = x,
+            y = y,
+            color = R,
+            text = paste0(
+              "Symbol: ",
+              symbol,
+              "\nRegulation: ",
+              R,
+              "\nChr Pos: ",
+              x
+            )
+          ),
           shape = 20,
           size = 0.2
-        ) 
+        )
 
       if(label_gene_symbol) {
         p <- p + ggplot2::geom_text(
@@ -180,7 +196,7 @@ chromosome_plotly <- function(
       p <- p + ggplot2::scale_colour_manual(
         name = "",   
         values = c("red", "blue"),
-        breaks = c("1", "-1"),
+        breaks = c("Up", "Down"),
         labels = c("Up", "Dn")
       ) 
       p <- p + ggplot2::xlab("Position on chrs. (Mbp)") +
@@ -242,8 +258,13 @@ chromosome_plotly <- function(
         dplyr::filter(pval < as.numeric(ch_region_p_val)) |>
         dplyr::mutate(y = ifelse(ma > 0, 1, -1)) |>
         dplyr::mutate(y = chNum * chD + 3 * y) |>
-        dplyr::mutate( ma = ifelse(ma > 0, 1, -1)) |>
-        dplyr::mutate( ma = as.factor(ma))
+        dplyr::mutate(ma = ifelse(ma > 0, 1, -1)) |>
+        dplyr::mutate(ma = as.factor(ma))
+
+      moving_average$ma <- as.character(moving_average$ma)
+      moving_average$ma[moving_average$ma == "-1"] <- "Down"
+      moving_average$ma[moving_average$ma == "1"] <- "Up"
+      moving_average$ma <- as.factor(moving_average$ma)
 
       # Significant regions are marked as horizontal error bars 
       if(dim(moving_average)[1] > 0) {
@@ -253,8 +274,20 @@ chromosome_plotly <- function(
             x = x, 
             y = y, 
             xmin = x - window_size / 2, 
-            xmax = x + window_size/2,
-            colour = ma
+            xmax = x + window_size / 2,
+            colour = ma,
+            text = paste0(
+              paste0(
+              "Window: ",
+              x - window_size / 2,
+              " - ",
+              x + window_size / 2,
+              "\nRegulation: ",
+              ma,
+              "\nChr Pos: ",
+              x
+            )
+            )
           ), 
           size = 2, 
           height = 15
@@ -293,7 +326,7 @@ chromosome_plotly <- function(
       }
     } 		
   }
-  plotly::ggplotly(p) 
+  plotly::ggplotly(p, tooltip = "text") 
 }
 
 get_genome_plot <- function(

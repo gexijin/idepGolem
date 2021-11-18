@@ -416,8 +416,8 @@ read_pathway_sets <- function (
       find_species_by_id(select_org, idep_data$org_info)[1, 1],
       idep_data$gmt_files
     )
-		total_genes <- org_info[which(
-      org_info$id == as.numeric(select_org)
+		total_genes <- idep_data$org_info[which(
+      idep_data$org_info$id == as.numeric(select_org)
     ), 7]
 	}
 

@@ -299,7 +299,7 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
       )	
 	  }) 
 
-    # Show messages when on the Genome tab or button is clicked
+    # Show messages when on the Bicluster tab or button is clicked
     observe({
       req(input$show_messages || tab() == "Bicluster")
       req(!is.null(bicluster_info()))
@@ -360,7 +360,7 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
       return(pathway_info)
     })
 
-    # Subheatmap Data Table ----------
+    # Enrichment Data Table ----------
     output$pathway_data_biclust <- DT::renderDataTable({
       req(!is.null(pathway_table_biclust()))
 
