@@ -7,103 +7,125 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
+
 mod_04_pca_ui <- function(id) {
   ns <- NS(id)
   tabPanel(
     "PCA",
     sidebarLayout(
       sidebarPanel(
-        radioButtons(
-          inputId = ns("pca_meth"),
-          label = "Methods", 
-          choices = list(
-            "Principal Component Analysis" = 1,            
-            "Multidimensional Scaling" = 3, 
-            "t-SNE" = 4,
-            "Pathway Analysis of PCA rotation" = 2             
-          )
+        
+        fluidRow( 
+          column(4, selectInput(inputId = ns("PCAx"), "Principal component for x-axis", choices = 1:5, selected = 1))  
+          ,column(4, selectInput(inputId = ns("PCAy"), "Principal component for y-axis", choices = 1:5, selected = 2) )
+        
         ),
-        conditionalPanel(
-          condition = "input.pca_meth == 2",
-          htmlOutput(outputId = ns("select_go_pca")),
-          ns = ns
-        ),
-        conditionalPanel(
-          condition = "input.pca_meth != 2",
-          htmlOutput(outputId = ns("list_factors_color")),
-          htmlOutput(outputId = ns("list_factors_shape")),
-          ns = ns
-        ),
-
-        br(),
-        downloadButton(
-          outputId = ns("down_pca_data"),
-          label = "Coordinates"
-        ),
-        a(h5(
-          "Questions?",
-          align = "right"
-          ),
-          href="https://idepsite.wordpress.com/pca/",
-          target="_blank"
-        )        
+        
+        textOutput(ns("test"))
       ),
       mainPanel(
-        conditionalPanel(
-          condition = "input.pca_meth == 1",
-          fluidRow( 
-            column(
-              width = 6,
-              selectInput(
-                inputId = ns("pca_x"),
-                label = "Principal component for x-axis",
-                choices = 1:5,
-                selected = 1
-              )
-            ),
-            column(
-              width = 6,
-              selectInput(
-                inputId = ns("pca_y"),
-                label = "Principal component for y-axis",
-                choices = 1:5,
-                selected = 2
-              )
+        tabsetPanel(
+          tabPanel(
+            title="Principal Component Analysis",
+            br(),
+            plotOutput(
+              outputId = ns("PCA_plot_call"),
+              width = "100%",
+              height = "500px"
             )
           ),
-          ns = ns
-        ),
-        plotOutput(
-          outputId = ns("pca_plot"), inline=TRUE
-        ),
-        br(),
-        conditionalPanel(
-          condition = "input.pca_meth == 4", 
-          actionButton(
-            inputId = ns("tsne_seed"),
-            label = "Re-calculate t-SNE"),
+          tabPanel(
+            "Multi-Dimensional Scaling",
             br(),
+            plotOutput(
+              outputId = ns("MDS"),
+              width = "100%",
+              height = "500px"
+            )
+          ),
+          tabPanel(
+            "t-SNE",
             br(),
-          ns = ns
-        ),
-        conditionalPanel(
-          conditon = "input.pca_meth == 1 | input.pca_meth == 2 ",
-          htmlOutput(ns("pca_2_factore")),
-          br(),
-          br(),
-          ns = ns
+            plotOutput(
+              outputId = ns("tSNE"),
+              width = "100%",
+              height = "500px"
+            ),
+            actionButton("seedTSNE", "Re-calculate using different random numbers")
+          ),
+          tabPanel(
+            "Pathway Analysis of PCA",
+            NULL
+          )
         )
       )
     )
   )
 }
-
 #' 05_pca Server Functions
 #'
 #' @noRd
-mod_04_pca_server <- function(id) {
+mod_04_pca_server <- function(id, pre_process) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+    
+    #output$test <- renderText({paste0(pre_process$data()[1,1])})
+    
+    
+    # PCA plot ------------
+    output$PCA_plot_call <- renderPlot({
+      req(!is.null(pre_process$data()))
+      #browser()
+      
+      PCA_plot(
+        data = pre_process$data(),
+        sample_info = pre_process$sample_info(),
+        PCAx = input$PCAx,
+        PCAy = input$PCAy
+        
+      )
+    })
+    
+    # Update PCA Input ---------
+    # observe({
+    # #  req(tab() == "Principal Component Analysis")
+    #   req(!is.null(pre_process$data()))
+    # 
+    #   updateSelectInput(
+    #     inputId = "PCAx"
+    #     
+    #   )
+    # })
+    
+    #t_SNE plot -----------------
+    output$tSNE <- renderPlot({
+      req(!is.null(pre_process$data()))
+
+      t_SNE_plot(
+        data = pre_process$data(),
+        sample_info = pre_process$sample_info()
+      )
+      
+      
+    })
+    
+    
+    
+    # MDS plot ------------
+    output$MDS <- renderPlot({
+      req(!is.null(pre_process$data()))
+      #browser()
+      
+      MDS_plot(
+        data = pre_process$data(),
+        sample_info = pre_process$sample_info()
+        
+      )
+    })
+    
+    
+    #Pathway Analysis ------------------
+    
   })
 }
 

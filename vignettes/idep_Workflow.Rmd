@@ -558,50 +558,35 @@ p
 
 
 
-# Detect Groups function
+
+
+
+#Skree plot
 ```{r}
- detectGroups <- function (x, sampleInfo = NULL){  # x are col names
-# parsing samples by either the name or using a data frame of sample infos. 
-# Note that each row of the sampleInfo data frame represents a sample.
-# Revised 4-19-2020
-  if(is.null(sampleInfo)) {
-  #if(1) {
-    # Define sample groups based on column names
-    # Args:
-    #   x are vector of characters, column names in data file
-    # Returns: 
-    #   a character vector, representing sample groups.
-    g <- gsub("[0-9]*$","",x) # Remove all numbers from end
-    #g = gsub("_Rep|_rep|_REP","", g)
-    g <- gsub("_$", "", g); # remove "_" from end
-    g <- gsub("_Rep$", "", g); # remove "_Rep" from end
-    g <- gsub("_rep$", "", g); # remove "_rep" from end
-    g <- gsub("_REP$", "", g)  # remove "_REP" from end
-    return( g ) 
-  } else {
-    
-    # the orders of samples might not be the same.The total number of samples might also differ
-    iy = match(x, row.names(sampleInfo))
-    sampleInfo2 = sampleInfo[iy, , drop = FALSE]
-    
-   if(ncol(sampleInfo2) == 1) {  # if there's only one factor
-     g = sampleInfo2[, 1] 
-     
-     } else {   # multiple columns/factors
+pca_obj <- PCAtools::pca(processed_data$data, metadata = loaded_data$sample_info, removeVar = 0.1)
 
-      #old comments: This does not work as sometimes there is no replicates wt vs mt, 1, 2, 3 paired replicates as factors 
-      g = unlist( apply(sampleInfo2, 1, function (y) paste(y, collapse = "_")) )
-      names(g) = row.names(sampleInfo2)
-      
-      if( min( table(g) ) ==  1 ) # no replicates? 
-         g = sampleInfo2[, 1]        
 
-     }
-   }
-   
-  return( as.character(g) )
- }
+horn <- PCAtools::parallelPCA(processed_data$data)
+horn$n
+
+elbow <- PCAtools::findElbowPoint(pca_obj$variance)
+elbow
+
+PCAtools::screeplot(pca_obj,
+    vline = c(horn$n, elbow)) +
+
+    ggplot2::geom_label(ggplot2::aes(x = horn$n + 1, y = 50,
+      label = 'Horn\'s', vjust = -3, size = 8)) +
+    ggplot2::geom_label(ggplot2::aes(x = elbow + 1, y = 50,
+      label = 'Elbow', vjust = -1, size = 8))
+
+
 ```
+
+
+
+
+
 
 # PCA -- MultiDimensional Scaling
 ```{r}
@@ -652,12 +637,12 @@ dist2(t(x))
 # t-SNE
 ```{r}
 
-install.packages("Rtsne")
+#install.packages("Rtsne")
 
 		 tsne <- Rtsne::Rtsne(t(x), dims = 2, perplexity=1, verbose=FALSE, max_iter = 400)
 
 		pcaData = as.data.frame(tsne$Y);
-		pcaData = cbind(pcaData,detectGroups(colnames(x), y) )
+		pcaData = cbind(pcaData,detect_groups(colnames(x), y) )
 		
 				colnames(pcaData) = c("x1", "x2", "Sample_Name")
 		
@@ -678,11 +663,79 @@ install.packages("Rtsne")
 		   print(p)
 		
 		
+t_SNE_plot <- function(data, sample_info){
+  
+  x <- data
+  y <- sample_info		 
+  tsne <- Rtsne::Rtsne(t(x), dims = 2, perplexity=1, verbose=FALSE, max_iter = 400)
+
+		pcaData = as.data.frame(tsne$Y);
+		pcaData = cbind(pcaData,detect_groups(colnames(x), y) )
 		
+				colnames(pcaData) = c("x1", "x2", "Sample_Name")
+		
+		
+					p=ggplot2::ggplot(pcaData, ggplot2::aes(x1, x2, color=Sample_Name, shape = Sample_Name)) 
+		
+	p<-	p+ggplot2::geom_point()
+		
+				p=p+ggplot2::xlab("Dimension 1") 
+		p=p+ggplot2::ylab("Dimension 2") 
+		p=p+ggplot2::ggtitle("t-SNE plot")+ ggplot2::coord_fixed(ratio=1.)+ 
+		 ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) + ggplot2::theme(aspect.ratio=1) +
+			 ggplot2::theme(axis.text.x = ggplot2::element_text( size = 16),
+			   axis.text.y = ggplot2::element_text( size = 16),
+			   axis.title.x = ggplot2::element_text( size = 16),
+			   axis.title.y = ggplot2::element_text( size = 16) ) +
+		ggplot2::theme(legend.text=ggplot2::element_text(size=16))
+
+		return(p)
+}
+		   
+t_SNE_plot(processed_data$data, loaded_data$sample_info)		
 ```
 
 # Pathway analysis of PCA rotation
 ```{r}
+library(PGSEA,verbose=FALSE)
+		pca.object <- prcomp(t(x))
+		pca = 100*pca.object$rotation 
+		Npca = 5
+		Nterms = 6
+		if (Npca > dim(pca)[2]) { Npca = dim(pca)[2] } else pca <-  pca[,1:Npca]
+		#pca = pca[,1:5]
+		if(is.null(GeneSetsPCA() ) ) return(NULL)  # no species recognized
+		if(length(GeneSetsPCA() ) <= 1 ) return(NULL)
+		#cat("\n\nGene Sets:",length( GeneSets()))
+		pg = myPGSEA (pca,cl=GeneSetsPCA(),range=c(15,2000),p.value=TRUE, weighted=FALSE,nPermutation=1)
+		incProgress(2/8)
+		# correcting for multiple testing
+		p.matrix = pg$p.result
+		tem = p.adjust(as.numeric(p.matrix),"fdr")
+		p.matrix = matrix(tem, nrow=dim(p.matrix)[1], ncol = dim(p.matrix)[2] )
+		rownames(p.matrix) = rownames(pg$p.result); colnames(p.matrix) = colnames(pg$p.result)
+
+
+		selected =c()
+		for( i in 1:dim(p.matrix)[2]) {
+		  tem = which( rank(p.matrix[,i],ties.method='first') <= Nterms)  # rank by P value
+		 #tem = which( rank(pg$result[,i],ties.method='first') >= dim(p.matrix)[1]-3.1) # rank by mean
+		 names(tem) = paste("PC",i," ", rownames(p.matrix)[tem], sep="" )
+		 selected = c(selected, tem)
+		}
+		rowids = gsub(" .*","",names(selected))
+		rowids = as.numeric( gsub("PC","",rowids) )
+		pvals = p.matrix[ cbind(selected,rowids) ]
+		a=sprintf("%-1.0e",pvals)
+		tem = pg$result[selected,]
+		rownames(tem) = paste(a,names(selected)); #colnames(tem)= paste("PC",colnames(tem),sep="")
+		
+		tem = tem[!duplicated(selected),] 
+		incProgress(3/8, detail ="Running PGSEA")
+		#tem = t(tem); tem = t( (tem - apply(tem,1,mean)) ) #/apply(tem,1,sd) )
+
+		smcPlot(tem,scale =  c(-max(tem), max(tem)), show.grid = T, margins = c(1,1, 3, 35),
+			col = .rwb,cex.lab=0.8)
 
 
 
