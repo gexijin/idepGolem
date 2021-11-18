@@ -21,7 +21,8 @@ app_ui <- function(request) {
       mod_05_deg_2_ui(id = "deg"),
       mod_06_pathway_ui(id = "pathway"),
       mod_07_genome_ui(id = "genome"),
-      mod_08_bicluster_ui(id = "bicluster")
+      mod_08_bicluster_ui(id = "bicluster"),
+      mod_09_network_ui(id = "network")
     )
   )
 }

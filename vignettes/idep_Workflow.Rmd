@@ -632,7 +632,7 @@ chromosome_plotly(
   label_gene_symbol = FALSE,
   ma_window_size = 6,
   ma_window_steps = 2,
-  ch_region_p_val = .1
+  ch_region_p_val = .01
 )
 
 genome_plot_data_pre <- get_genome_plot_data_pre(
@@ -728,6 +728,59 @@ wgcna <- get_wgcna(
   n_genes = 1000,
   soft_power = 5,
   min_module_size = 20
+)
+
+get_wgcna_modules(wgcna)
+
+network_plot <- get_network_plot(
+  select_wgcna_module = "1. turquoise (495 genes)",
+  wgcna = wgcna,
+  top_genes_network = 10,
+  select_go = "GOBP",
+  select_org = "BestMatch",
+  all_gene_info = all_gene_info,
+  edge_threshold = .4
+)
+
+network_plot()
+
+network_query <- network_enrich_data(
+  select_wgcna_module = "1. turquoise (495 genes)",
+  wgcna = wgcna
+)
+
+gene_query <- dplyr::filter(gene_names, ensembl_ID %in% network_query)
+
+gene_sets <- read_pathway_sets(
+  all_gene_names_query = gene_query,
+  converted = converted,
+  go = "GOBP",
+  select_org = "BestMatch",
+  gmt_file = NULL,
+  idep_data = idep_data,
+  gene_info = all_gene_info
+)
+
+pathway_info <- find_overlap(
+  pathway_table = gene_sets$pathway_table,
+  query_set = gene_sets$query_set,
+  total_genes = gene_sets$total_genes,
+  processed_data = processed_data$data,
+  gene_info = all_gene_info,
+  go = "GOBP",
+  idep_data = idep_data,
+  select_org = "BestMatch",
+  sub_pathway_files = gene_sets$pathway_files,
+  use_filtered_background = TRUE,
+  reduced = FALSE
+)
+
+plot_scale_independence(
+  wgcna = wgcna
+)
+
+plot_mean_connectivity(
+  wgcna = wgcna
 )
 ```
 
