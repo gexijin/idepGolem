@@ -193,7 +193,7 @@ chromosome_plotly <- function(
       }
       # Change legend  http://ggplot2.tidyverse.org/reference/scale_manual.html
       # Customize legend text
-      p <- p + ggplot2::scale_colour_manual(
+      p <- p + ggplot2::scale_color_manual(
         name = "",   
         values = c("red", "blue"),
         breaks = c("Up", "Down"),
@@ -585,7 +585,6 @@ get_genome_plot_data <- function(
 
 #' genome plot data pre
 #' 
-#' @importFrom Biobase sampleNames
 #' @importFrom PREDA statisticsForPREDAfromEset
 get_genome_plot_data_pre <- function(
   select_contrast,

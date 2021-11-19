@@ -1603,14 +1603,14 @@ list_comp_venn <- function(
   if(is.null(limma$comparisons)) {
     return(NULL)  
 	}	else {
-    choices <- setNames(limma$comparisons, limma$comparisons)
+    choices <- stats::setNames(limma$comparisons, limma$comparisons)
 		
     if(up_down_regulated) {
       tem <- c(
         paste0("Up_", limma$comparisons),
         paste0("Down_", limma$comparisons)
       )
-			choices <- setNames(tem, tem)
+			choices <- stats::setNames(tem, tem)
 		}
 				
 		choices_first_three <- choices
