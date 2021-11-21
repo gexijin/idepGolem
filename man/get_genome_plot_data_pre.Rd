@@ -2,10 +2,10 @@
 % Please edit documentation in R/fct_07_genome.R
 \name{get_genome_plot_data_pre}
 \alias{get_genome_plot_data_pre}
-\title{genome plot data pre}
+\title{PREDA PACKAGE ERROR ########################}
 \usage{
 get_genome_plot_data_pre(select_contrast, limma, all_gene_info)
 }
 \description{
-genome plot data pre
+PREDA PACKAGE ERROR ########################
 }

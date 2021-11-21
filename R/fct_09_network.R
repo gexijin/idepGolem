@@ -8,7 +8,32 @@
 #' @name fct_08_bicluster.R
 NULL
 
-#' WGCNA DATA
+#' Utilize WGCNA function
+#' 
+#' Run the WGCNA package on the processed data. 
+#' 
+#' @param data Data matrix that has been through the pre-processing
+#' @param n_genes Number of most variable genes to use in the function
+#' @param soft_power Value between 1-20 
+#'  (https://support.bioconductor.org/p/87024/)
+#' @param min_module_size For modules detected by WGCNA, set a minimum size
+#' 
+#' @return A list of 8 objects. \code{data} is a submatrix of the input
+#'  parameter \code{data} which on contains the genes that were selected with
+#'  \code{n_genes}. \code{powers} is a numeric vector from 1-10 and then the
+#'  even numbers from 10-20. \code{sft} is a return from the WGCNA package that
+#'  is a list containing \code{powerEstimate} and \code{fitIndices}. For
+#'  information on these objects visit 
+#'  https://www.rdocumentation.org/packages/WGCNA/versions/1.70-3/topics/pickSoftThreshold.
+#'  \code{tom} is another return from the WGCNA package, for information on this
+#'  matrix visit https://www.rdocumentation.org/packages/WGCNA/versions/1.70-3/topics/TOMsimilarityFromExpr.
+#'  \code{dynamic_colors} is a vector of colors created by the WGCNA package to
+#'  correspond to the modules that were identified by the pacakage.
+#'  \code{module_info} is a data frame with a gene name, a color, and the
+#'  identified module for the gene. \code{n_modules} gives the number of modules
+#'  calculated. \code{n_genes} tells the number of genes included in the
+#'  modules.
+#' 
 get_wgcna <- function(
   data,
   n_genes,
@@ -96,7 +121,15 @@ get_wgcna <- function(
   ))
 }
 
-#' MODULE NETWORK PLOT
+#' Dendogram plot of WGCNA modules
+#' 
+#' Create a dendogram of the WGCNA return that color codes the modules and
+#' includes a hierarchical dendogram.
+#' 
+#' @param wgcna List returned from the \code{get_wgcna}
+#' 
+#' @return A dendogram plot of hierarchical clustering with a color bar to
+#'  identify the modules.
 get_module_plot <- function(
   wgcna
 ) {
@@ -119,7 +152,22 @@ get_module_plot <- function(
   )
 }
 
-#' MODULE PLOT
+#' Network of top genes
+#' 
+#' Create a network plot of the top genes found with the WGCNA package. 
+#' 
+#' @param select_wgcna_module The module to create a plot of hte top genes for,
+#'  options can be found with the \code{get_wgcna_modules} function
+#' @param wgcna List returned from the \code{get_wgcna}
+#' @param top_genes_network Number of genes to include in the network plot
+#' @param select_go Portion of the database to use in enrichment querying
+#' @param select_org Organism the expression data is for
+#' @param all_gene_info Gene info that was found from querying the database
+#' @param edge_threshold Wavlue from 1-.1 (.4 recommended)
+#' 
+#' @return A function that can be stored as an object and then called to produce
+#'  the plot that the function created. If it is note stored and called the
+#'  function will only return another funciton.
 get_network_plot <- function(
   select_wgcna_module,
   wgcna,
@@ -195,7 +243,15 @@ get_network_plot <- function(
   return(net_plot)
 }
 
-#' GET WGCNA MODULES
+#' List WGCNA modules
+#' 
+#' Get the options for modules to select from running the \code{get_wgcna}
+#' function.
+#' 
+#' @param wgcna List returned from the \code{get_wgcna}
+#' 
+#' @return A character vector with all the strings that can be filled into the
+#'  inut parameter \code{select_wgcna_module} in other WGCNA functions.
 get_wgcna_modules <- function(
   wgcna
 ) {
@@ -217,7 +273,16 @@ get_wgcna_modules <- function(
   }
 }
 
-#' NETWORK ENRICHMENT DATA
+#' Gene vector query for enrichment
+#' 
+#' Select a module to create a vector of gene IDs to use in an enrichment
+#' analysis.
+#' 
+#' @param select_wgcna_modules The module to create a plot of hte top genes for,
+#'  options can be found with the \code{get_wgcna_modules} function
+#' @param wgcna List returned from the \code{get_wgcna}
+#' 
+#' @return A vector of genes that are included in the selected module.
 network_enrich_data <- function(
   select_wgcna_module,
   wgcna
@@ -235,6 +300,14 @@ network_enrich_data <- function(
   return(query)
 }
 
+#' Scale independence plot
+#' 
+#' Using the WGCNA return, create a ggplot of scale independence.
+#' 
+#' @param wgcna List returned from the \code{get_wgcna}
+#' 
+#' @return A formatted ggplot displaying the scale independence for the
+#'  \code{get_wgcna} function return.
 plot_scale_independence <- function(
   wgcna
 ) {
@@ -278,6 +351,14 @@ plot_scale_independence <- function(
   return(scale_plot)
 }
 
+#' Mean connectivity plot
+#' 
+#' Create a ggplot from the wgcna object to display the mean connectivity.
+#' 
+#' @param wgcna List returned from the \code{get_wgcna}
+#' 
+#' @return A formatted ggplot displaying the mean connectivityfor the
+#'  \code{get_wgcna} function return.
 plot_mean_connectivity <- function(
   wgcna
 ) {

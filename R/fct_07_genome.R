@@ -8,7 +8,25 @@
 #' @name fct_07_genome.R
 NULL
 
-#' MAIN PLOTLY FUNCTION
+#' Plotly of chromosome position
+#' 
+#' Calculate a plotly that shows the chromosome position of significant genes
+#' and significantly enriched regions.
+#' 
+#' @param limma Return from \code{limma_value} function
+#' @param select_contrast DEG contrast to examine
+#' @param all_gene_info Gene information return from \code{get_gene_info}
+#' @param ignore_non_coding When TRUE only use protein coding genes
+#' @param limma_p_val_viz Adjusted p-value to use for significant genes
+#' @param limma_fc_viz Minimum fold-change value to filter with
+#' @param label_gene_symbol Paste the gene symbol label on the plot
+#' @param ma_window_size Moving average window size for a chromosome 
+#'   (1, 2, 4, 6, 8, 10, 15, 20)
+#' @param ma_window_steps Number of moving average window steps (1, 2, 3, 4)
+#' @param ch_region_p_val P-value to use for finding significant chromosome
+#'  region enrichment
+#'
+#' @return Plotly visualization of chromosomes and significantly enriched genes
 chromosome_plotly <- function(
   limma,
   select_contrast,
@@ -329,6 +347,7 @@ chromosome_plotly <- function(
   plotly::ggplotly(p, tooltip = "text") 
 }
 
+#' PREDA PACKAGE ERRORR #########################
 get_genome_plot <- function(
   genome_plot_data,
   regions_p_val_cutoff,
@@ -371,6 +390,7 @@ get_genome_plot <- function(
 	}
 }
 
+#' PREDA PACKAGE ERROR ###########################
 get_genome_plot_data <- function(
   genome_plot_data_pre,
   all_gene_info,
@@ -583,9 +603,7 @@ get_genome_plot_data <- function(
   ))
 }
 
-#' genome plot data pre
-#' 
-#' @importFrom PREDA statisticsForPREDAfromEset
+#' PREDA PACKAGE ERROR ########################
 get_genome_plot_data_pre <- function(
   select_contrast,
   limma,

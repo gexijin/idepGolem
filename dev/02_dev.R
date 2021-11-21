@@ -91,8 +91,8 @@ usethis::use_test( "app" )
 # Documentation
 
 ## Vignette ----
-#usethis::use_vignette("idepGolem")
-devtools::build_vignettes()
+usethis::use_vignette("Pre_Process")
+devtools::build_vignettes("Load Data")
 
 ## Code Coverage----
 ## Set the code coverage service ("codecov" or "coveralls")

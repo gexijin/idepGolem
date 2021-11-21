@@ -2,10 +2,18 @@
 % Please edit documentation in R/fct_09_network.R
 \name{get_wgcna_modules}
 \alias{get_wgcna_modules}
-\title{GET WGCNA MODULES}
+\title{List WGCNA modules}
 \usage{
 get_wgcna_modules(wgcna)
 }
+\arguments{
+\item{wgcna}{List returned from the \code{get_wgcna}}
+}
+\value{
+A character vector with all the strings that can be filled into the
+ inut parameter \code{select_wgcna_module} in other WGCNA functions.
+}
 \description{
-GET WGCNA MODULES
+Get the options for modules to select from running the \code{get_wgcna}
+function.
 }

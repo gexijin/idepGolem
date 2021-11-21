@@ -8,7 +8,25 @@
 #' @name fct_08_bicluster.R
 NULL
 
-#' BICLUSTERING MAIN FUNCTION
+#' Run biclustering
+#' 
+#' Utilize the biclust package to run biclustering on the processed data for a
+#' selected number of genes.
+#' 
+#' @param data Data matrix that has been through the pre-processing function
+#' @param n_genes Number of most variable genes to include in the analysis
+#' @param biclust_method Method of biclustering to perform (biclust::BCCC(), 
+#'  QUBIC::BCQU(), runibic::BCUnibic(), biclust::BCXmotifs(), 
+#'  biclust::BCPlaid(), biclust::BCSpectral(), biclust::BCBimax(), 
+#'  biclust::BCQuest())
+#' 
+#' @return A list containing two object. \code{data} is the submatrix from the
+#'  processed data with the biclust function \code{discetize} performed on it.
+#'  For information on this function visit 
+#'  https://rdrr.io/cran/biclust/man/discretize.html. \code{res} is the return
+#'  from using the \code{biclust} function with the selected method. For
+#'  information on this function visit 
+#'  https://www.rdocumentation.org/packages/biclust/versions/2.0.3/topics/biclust.
 get_biclustering <- function(
   data,
   n_genes,
@@ -40,6 +58,15 @@ get_biclustering <- function(
   ))	 
 }
 
+#' Summary of biclust
+#' 
+#' Give the summary of the identified clusters from the \code{get_biclustering}
+#' function which gives the number of clusters found and the samples used.
+#' 
+#' @param biclustering Return list from \code{get_biclustering} function
+#' @param select_bicluster Selected cluster to return information on
+#' 
+#' @return A character string message with the requested summary information.
 bicluster_summary_message <- function(
   biclustering,
   select_bicluster
@@ -70,7 +97,7 @@ bicluster_summary_message <- function(
 	}
 }
 
-#' BICLUST TABLE
+#' Table of biclustering data
 get_biclust_table_data <- function(
   res,
   biclust_data,

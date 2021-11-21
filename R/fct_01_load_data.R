@@ -96,14 +96,15 @@ gene_info <- function(
 #' sample info table. The data undergoes very basic filtering
 #' and transformation before entering the table.
 #'
-#' @param expression_file The data path for the input into the
-#' expression file file input bar
-#' @param experiment_file The data path for the input into the
-#' experiment file file input bar
-#' @param go_button Action button input that tells the app to
+#' @param expression_file The data path for the expression file, should be
+#'  accessed with \code{expression_file$datapath}
+#' @param experiment_file The data path for the experiment file, should be
+#'  accessed with \code{experiment_file$datapath}
+#' @param go_button TRUE/FALSE that tells the app to
 #' load the demo data files
-#' @param demo_data_file Expression demo data path
-#' @param demo_metadata_file Experiment demo data path
+#' @param demo_data_file Expression demo data path (idep_data$demo_data_file)
+#' @param demo_metadata_file Experiment demo data path 
+#'  (idep_data$demo_metadata_file)
 #'
 #' @return This returns a list that contains the expression data
 #' and the sample information. If there is no experiment file it
