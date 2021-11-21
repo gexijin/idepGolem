@@ -2,10 +2,18 @@
 % Please edit documentation in R/fct_09_network.R
 \name{get_module_plot}
 \alias{get_module_plot}
-\title{MODULE NETWORK PLOT}
+\title{Dendogram plot of WGCNA modules}
 \usage{
 get_module_plot(wgcna)
 }
+\arguments{
+\item{wgcna}{List returned from the \code{get_wgcna}}
+}
+\value{
+A dendogram plot of hierarchical clustering with a color bar to
+ identify the modules.
+}
 \description{
-MODULE NETWORK PLOT
+Create a dendogram of the WGCNA return that color codes the modules and
+includes a hierarchical dendogram.
 }
