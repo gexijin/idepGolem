@@ -281,7 +281,7 @@ merged_data <- merge_data(
 #### SEARCHING
 ```{r}
 # Gene search for individual plotting
-merged_data[grep("H4c1", merged_data$symbol),]
+merged_data[grep("H4c1", gene_names),]
 
 heatmap_data <- process_heatmap_data(
   data = processed_data$data,
