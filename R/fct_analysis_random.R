@@ -220,8 +220,8 @@ find_overlap <- function(
       "Functional Category", "Genes"
     )
 
-    # Remove redudant gene sets
-		if(reduced != FALSE ){
+    # Remove redudant gene sets; only do it when there are more than 5. Error when there is only 1 or 2.
+		if(reduced != FALSE && dim(pathway_table)[1] > 5){
 			n <- nrow(pathway_table)
 			tem <- rep(TRUE, n)
 			gene_lists = pathway_table$Genes
