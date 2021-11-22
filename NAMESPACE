@@ -2,8 +2,6 @@
 
 export(run_app)
 import(shiny)
-importFrom(Biobase,sampleNames)
-importFrom(PREDA,statisticsForPREDAfromEset)
 importFrom(golem,activate_js)
 importFrom(golem,add_resource_path)
 importFrom(golem,bundle_resources)

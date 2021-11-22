@@ -1,0 +1,173 @@
+---
+title: "Pre-Process"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Pre_Process}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+options(rmarkdown.html_vignette.check_title = FALSE)
+```
+
+```{r setup}
+#library(idepGolem)
+devtools::load_all()
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+# Make data for pre-processing functions
+idep_data <- get_idep_data()
+
+YOUR_DATA_PATH <- "E:/idep_9_24/data/data103/data_go/BcellGSE71176_p53.csv"
+YOUR_EXPERIMENT_PATH <- "E:/idep_9_24/data/data103/data_go/BcellGSE71176_p53_sampleInfo.csv"
+
+expression_file <- data.frame(
+  datapath = YOUR_DATA_PATH
+)
+experiment_file <- data.frame(
+  datapath = YOUR_EXPERIMENT_PATH
+)
+
+load_data <- input_data(
+  expression_file = expression_file,
+  experiment_file = experiment_file,
+  go_button = FALSE,
+  demo_data_file = idep_data$demo_data_file,
+  demo_metadata_file = idep_data$demo_metadata_file
+)
+
+converted <- convert_id(
+  query = rownames(load_data$data),
+  idep_data = idep_data,
+  select_org = "BestMatch"
+)
+
+all_gene_info <- gene_info(
+  converted = converted,
+  select_org = "BestMatch",
+  idep_data = idep_data
+)
+
+converted_data <- convert_data(
+  converted = converted,
+  no_id_conversion = FALSE,
+  data = load_data$data
+)
+
+gene_names <- get_all_gene_names(
+  mapped_ids = converted_data$mapped_ids,
+  all_gene_info = all_gene_info
+)
+```
+
+This instruction builds off the objects and functions from the "Load_Data"
+vignette. Please see that document before using the functions described below.
+We will now transform and process the data based off the type that is being
+studied. The package also provides visualization functions that will provide a
+foundation for exploratory data analysis and good overview of the data.
+
+#### **`pre_process`** Function
+
+Processing the data requires many options to ensure the data gets to the desired
+form. This is the data that will be used in the exploratory analysis to come.
+The data to be processed is the `converted_data` from above. The parameters
+`missing_value` and `data_file_format` have a list of input values to select 
+from for processing. These values and descriptions can be found in the tables 
+below. `missing_value` determines how missing data entries will be filled in, 
+and `data_file_format` tells the function what type of data is being processed.
+
+<div style="text-align: left">
+
+Input (`missing_value`)    Description
+-------------------------  -----------------------------------------------------------
+`geneMedian`               Substitute median expression value for gene across all samples
+`treatAsZero`              Substitute "0" for all missing values
+`geneMedianInGroup`        Substitute median expression value for gene within sample group
+
+Input (`data_file_format`)   Description
+---------------------------  -----------------------------------------------------------------------
+`1`                          Read counts data (recommended)
+`2`                          Normalized expression values (RNA-seq FPKM, micro-array, etc.)
+`3`                          Fold-changes and corrected P values from CuffDiff or any other program
+
+</div>
+
+<br>
+
+##### **Read counts data**
+
+For read counts data, the parameters `min_counts`, `n_min_samples_counts`,
+`counts_transform` and `counts_log_start` need input values. `min_counts` and
+`n_min_samples` work to filter the genes out of the data that do not have
+sufficient counts. The function counts the columns that have more counts than
+`min_counts` for each gene and filters out the genes with less columns than
+`n_min_samples`. For example, if you only wanted genes with more than 0 counts
+for each sample, you would set `min_counts = .5` and 
+`n_min_samples = ncol(converted_data)`. `counts_transform` specifies the
+transformation to perform on the counts data. This parameter has 3 input options
+which are outlined below. If `counts_transform = 1`, `counts_log_start`
+determines the constant to add to CPM to ensure that there are no `log(0)`
+errors. All other parameters can be set to `NULL`
+
+Input (`counts_transform`)   Description
+---------------------------  --------------------------------------------------
+`1`                          EdgeR: log2(CPM+c) (Counts per Million + constant) (Visit https://www.rdocumentation.org/packages/SparkR/versions/2.1.2/topics/log2)
+`2`                          VST: variance stabilizing transform (Visit https://www.rdocumentation.org/packages/DESeq2/versions/1.12.3/topics/vst)
+`3`                          rlog: regularized log (slow) (Visit https://www.rdocumentation.org/packages/DESeq2/versions/1.12.3/topics/rlog)
+
+<br>
+
+##### **Normalized expression values Parameters**
+
+If the data being processed is for normalized expression values, the parameters
+`low_filter_fpkm`, `n_min_samples_fpkm`, `log_transform_fpkm` and 
+`log_start_fpkm` need input values. `low_filter_fpkm` and `n_min_samples_fpkm`
+work together to filter out the genes that do not have enough counts. The
+function will count the columns that are greater than `low_filter_fpkm` and 
+discard the gene if it is not more than `n_min_samples_fpkm` columns. The
+parameter `log_transform_fpkm` is `TRUE/FALSE` for whether to perform a log
+transform on the data or not. If `log_transform = TRUE`, then `log_start_fpkm`
+is the value that will be added to ensure there are no `log(0)` errors. All
+other values can be set to `NULL`.
+
+<br>
+
+##### **Fold-changes and corrected P values**
+
+For this data type, there is only one additional parameter to provide an input
+for, `no_fdr`. This is a logical `TRUE/FALSE` to specify whether the data
+contains corrected p-values or not. `TRUE` denotes fold-change only data. All
+other parameters can be set to `NULL`.
+
+<br>
+<br>
+
+The demonstration loaded in the first instruction is read counts data. The code
+below shows an example use of the `pre_process` function using the example data.
+Again, the data that is used is the data with the converted ensembl IDs. We will
+return a large list of the results of the processing from this function. The
+objects in this list can be found in the table below.
+
+```{r}
+processed_data <- pre_process(
+  data = converted_data$data,
+  missing_value = "geneMedian",
+  data_file_format = 1,
+  low_filter_fpkm = NULL,
+  n_min_samples_fpkm = NULL,
+  log_transform_fpkm = NULL,
+  log_start_fpkm = NULL,
+  min_counts = .5,
+  n_min_samples_count = 1,
+  counts_transform = 1,
+  counts_log_start = 4,
+  no_fdr = NULL
+)
+```
+

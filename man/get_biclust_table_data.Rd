@@ -2,10 +2,10 @@
 % Please edit documentation in R/fct_08_bicluster.R
 \name{get_biclust_table_data}
 \alias{get_biclust_table_data}
-\title{BICLUST TABLE}
+\title{Table of biclustering data}
 \usage{
 get_biclust_table_data(res, biclust_data, select_go, select_org, all_gene_info)
 }
 \description{
-BICLUST TABLE
+Table of biclustering data
 }

@@ -745,7 +745,7 @@ colorpanel2 <- function (
     low <- grDevices::col2rgb(low)
     if (missing(high))
       high <- grDevices::col2rgb(mid)
-    else high <- col2rgb(high)
+    else high <- grDevices::col2rgb(high)
     red <- seq(low[1, 1], high[1, 1], length = n)/255
     green <- seq(low[3, 1], high[3, 1], length = n)/255
     blue <- seq(low[2, 1], high[2, 1], length = n)/255
