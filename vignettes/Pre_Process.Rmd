@@ -82,8 +82,6 @@ from for processing. These values and descriptions can be found in the tables
 below. `missing_value` determines how missing data entries will be filled in, 
 and `data_file_format` tells the function what type of data is being processed.
 
-<div style="text-align: left">
-
 Input (`missing_value`)    Description
 -------------------------  -----------------------------------------------------------
 `geneMedian`               Substitute median expression value for gene across all samples
@@ -95,8 +93,6 @@ Input (`data_file_format`)   Description
 `1`                          Read counts data (recommended)
 `2`                          Normalized expression values (RNA-seq FPKM, micro-array, etc.)
 `3`                          Fold-changes and corrected P values from CuffDiff or any other program
-
-</div>
 
 <br>
 
@@ -152,7 +148,16 @@ The demonstration loaded in the first instruction is read counts data. The code
 below shows an example use of the `pre_process` function using the example data.
 Again, the data that is used is the data with the converted ensembl IDs. We will
 return a large list of the results of the processing from this function. The
-objects in this list can be found in the table below.
+objects in this list are defined in the table below.
+
+Output               Description
+-------------------  -------------
+data                 Data matrix that has the pre-process operations performed to it.
+mean_kurtosis        The calculated kurtosis of the mean counts for a gene. (Visit https://www.rdocumentation.org/packages/e1071/versions/1.7-2/topics/kurtosis)
+raw_counts           The raw counts before pre-processing.
+data_type_warning    Set to "1" if iDEP recognizes the data as different than the inputted `data_file_format`.
+data_size            Length 4 vector giving the dimensions of the data before and after processing.
+p_vals               For fold-change data has p-values, they are returned here. 
 
 ```{r}
 processed_data <- pre_process(
@@ -171,3 +176,98 @@ processed_data <- pre_process(
 )
 ```
 
+#### Exploratory Data Analysis
+
+Now that the data has been processed, we can begin data analysis. It is possible
+to create unique and informative plots with the processed data, and iDEP has
+built in functions to assist with that.
+
+<br>
+
+#### **`total_counts_ggplot`** Function
+
+This function will only work for read counts data, so if that is not the format
+of the processed data, please skip this function. For read counts data, this
+function creates a barplot to show the counts in millions for each sample in the
+data. `counts_data` is the raw counts that is returned from the `pre_process`
+function. `sample_info` is the experiment design data from the `input_data`
+function. 
+
+```{r fig.height=5.5, fig.width=7.5}
+total_counts_ggplot(
+  counts_data = processed_data$raw_counts,
+  sample_info = load_data$sample_info
+)
+```
+
+<br>
+
+#### **`eda_scatter`** Function
+
+Another useful plot is a scatter plot of the transformed expression for two
+samples in the data. `eda_scatter` provides a scatter plot of two specified
+sample (columns) of the processed data. `plot_xaxis` and `plot_yaxis` are
+string names of the columns to be plotted. The options for these inputs can be
+seen using `colnames(processed_data$data)`. `processed_data` is the returned
+data from the `pre_process` function. 
+
+```{r fig.height=5.5, fig.width=7.5}
+colnames(processed_data$data)
+
+eda_scatter(
+  processed_data = processed_data$data,
+  plot_xaxis = "p53_IR_1",
+  plot_yaxis = "p53_mock_1"
+)
+```
+
+<br>
+
+#### **`eda_density`** Function
+
+This plotting function provides a plot of the distribution of counts values for
+each sample in the data. The information is displayed in a density ridge plot in
+the ggplot format. Again, the data provided is returned from the `pre_process`
+function. The `sample_info` provides information on each sample in the dataset.
+
+```{r fig.height=5.5, fig.width=7.5}
+eda_density(
+  processed_data = processed_data$data,
+  sample_info = load_data$sample_info
+)
+```
+
+<br>
+
+#### `merge_data` Function
+
+The current data is using the converted ensembl IDs as rownames in a large data
+matrix, but the following function will create a data frame containing the gene
+names from the `get_all_gene_names` function. `merge_data` takes the
+`gene_names` data frame and a data matrix with ID rownames and creates a data
+frame with columns for each ID that idep has matched from the original IDs.
+This is useful to view different IDs for the same gene. It also enables writing
+CSV files that can be saved and be used to reproduce results from idep. The
+following code will merge the gene names with the raw counts data and the
+transformed data from `pre_process`.
+
+```{r}
+merged_raw_counts <- merge_data(
+  all_gene_names = gene_names,
+  data = processed_data$raw_counts,
+  merge_ID = "ensembl_ID"
+)
+
+merged_data <- merge_data(
+  all_gene_names = gene_names,
+  data = processed_data$data,
+  merge_ID = "ensembl_ID"
+)
+```
+
+<br>
+
+#### Plotting Individual Genes
+
+iDEP also has a function that enables you to look at individual genes and
+visualize their expression behavior.
