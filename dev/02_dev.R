@@ -91,7 +91,7 @@ usethis::use_test( "app" )
 # Documentation
 
 ## Vignette ----
-usethis::use_vignette("Pre_Process")
+usethis::use_vignette("Clustering")
 devtools::build_vignettes("Load Data")
 
 ## Code Coverage----

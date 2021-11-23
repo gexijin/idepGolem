@@ -220,7 +220,6 @@ process_heatmap_data <- function(
 #'
 #' @param data Data returned from process_heatmap_data
 #' @param cluster_meth Type of clustering to use (Hierarchical/k-Means)
-#' @param n_genes Amount of genes included in the heatmap
 #' @param heatmap_cutoff Z score max to filter data
 #' @param sample_info Experiment design information from load data
 #' @param select_factors_heatmap Factor group for annotation legend

@@ -13,18 +13,19 @@ input_data(
 )
 }
 \arguments{
-\item{expression_file}{The data path for the input into the
-expression file file input bar}
+\item{expression_file}{The data path for the expression file, should be
+accessed with \code{expression_file$datapath}}
 
-\item{experiment_file}{The data path for the input into the
-experiment file file input bar}
+\item{experiment_file}{The data path for the experiment file, should be
+accessed with \code{experiment_file$datapath}}
 
-\item{go_button}{Action button input that tells the app to
+\item{go_button}{TRUE/FALSE that tells the app to
 load the demo data files}
 
-\item{demo_data_file}{Expression demo data path}
+\item{demo_data_file}{Expression demo data path (idep_data$demo_data_file)}
 
-\item{demo_metadata_file}{Experiment demo data path}
+\item{demo_metadata_file}{Experiment demo data path 
+(idep_data$demo_metadata_file)}
 }
 \value{
 This returns a list that contains the expression data
