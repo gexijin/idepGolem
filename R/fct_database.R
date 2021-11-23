@@ -255,24 +255,26 @@ convert_id <- function(
     # 1:3 are Ensembl species
     # and #2 come earlier (ensembl) than #1
     tmp <- sum(idep_data$annotated_species_counts[1:3])
-    if(length(sortedCounts) > 1) # if more than 1 matched. data is a regular vector
-    if (!is.integer(sorted_counts) &&
-      sorted_counts[1] <= sorted_counts[2] * 1.1 &&
-      as.numeric(gsub(
-        pattern = " .*", "",
-        x = names(sorted_counts[1])
-      )) > tmp &&
-      as.numeric(gsub(
-        pattern = " .*", "",
-        x = names(sorted_counts[2])
-      )) < tmp) {
-      tem <- sorted_counts[2]
-      sorted_counts[2] <- sorted_counts[1]
-      names(sorted_counts)[2] <- names(sorted_counts)[1]
-      sorted_counts[1] <- tem
-      names(sorted_counts)[1] <- names(tem)
+    # If more than 1 matched. data is a regular vector
+    if(length(sorted_counts) > 1) {
+      if (!is.integer(sorted_counts) &&
+        sorted_counts[1] <= sorted_counts[2] * 1.1 &&
+        as.numeric(gsub(
+          pattern = " .*", "",
+          x = names(sorted_counts[1])
+        )) > tmp &&
+        as.numeric(gsub(
+          pattern = " .*", "",
+          x = names(sorted_counts[2])
+        )) < tmp) {
+          tem <- sorted_counts[2]
+          sorted_counts[2] <- sorted_counts[1]
+          names(sorted_counts)[2] <- names(sorted_counts)[1]
+          sorted_counts[1] <- tem
+          names(sorted_counts)[1] <- names(tem)
+      }
     }
-
+    
     result <- result[which(combination == names(sorted_counts[1])), ]
     species_matched <- sorted_counts
     tmp <- as.numeric(gsub(pattern = " .*", "", x = names(sorted_counts)))

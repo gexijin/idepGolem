@@ -269,5 +269,60 @@ merged_data <- merge_data(
 
 #### Plotting Individual Genes
 
-iDEP also has a function that enables you to look at individual genes and
-visualize their expression behavior.
+iDEP also has a function that visualizes individual genes and their expression
+behavior across the samples. It is possible to determine the genes to plot by
+looking at the merged or processed data. It is also possible to use the 
+`gene_names` data frame to search for a gene ID. The code below demonstrates how
+to search for a gene ID.
+
+```{r}
+gene_names[grep("H4c1", gene_names$symbol), ]
+```
+
+Depending on the type of gene ID that is desired for the plot, the function
+below will swap the gene IDs with the processed data matrix. This new data
+matrix will be used in the individual plot function using the selected ID type
+and the desired gene. The code below shows how to swap the gene IDs to the
+symbol name.
+
+```{r}
+ind_plot_data <- rowname_id_swap(
+  data_matrix = processed_data$data,
+  all_gene_names = gene_names,
+  select_gene_id = "symbol"
+)
+```
+
+The function `individual_plots` will create the plot for the desired gene. We
+will use the data that we created in the code above for `individual_data`. If
+the data comes with an experiment file, the sample information that was loaded
+in the first instruction will be used in `sample_info`. The gene to be plotted
+can be specified in the `selected_gene` parameter. Multiple genes can be
+inputted as a vector to plot them at the same time and compare. There are two
+different types of plots that can be outputted with this function. The parameter
+`gene_plot_box` controls which plot will be outputted. Setting this input to
+TRUE will output a lineplot that gives the expression across all samples. FALSE
+will output a bar plot that gives the mean expression across the groups detected
+in the sample names. For the barplot, `use_sd` as TRUE will give a standard
+deviation bar instead of a standard error bar. `lab_rotate` controls the
+rotation of the x-axis labels. The outputted object is a formatted ggplot.
+
+```{r fig.height=5.5, fig.width=7.5}
+individual_plots(
+  individual_data = ind_plot_data,
+  sample_info = load_data$sample_info,
+  selected_gene = "H4c1",
+  gene_plot_box = FALSE,
+  use_sd = FALSE,
+  lab_rotate = 90
+)
+```
+
+<br>
+
+#### Conclusion
+
+This concludes all the functions utilized in the Pre-Process portion of the iDEP
+package. The data can be plotted in many different ways, but hopefully the
+functions detailed above provide a good starting point. For troubleshooting, all
+functions have documentation and the code is available on Github.
