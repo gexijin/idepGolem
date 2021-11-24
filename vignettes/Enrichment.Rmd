@@ -1,0 +1,162 @@
+---
+title: "Enrichment"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Enrichment}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(idepGolem)
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+# Make data for enrichment functions
+idep_data <- get_idep_data()
+
+YOUR_DATA_PATH <- "E:/idep_9_24/data/data103/data_go/BcellGSE71176_p53.csv"
+YOUR_EXPERIMENT_PATH <- "E:/idep_9_24/data/data103/data_go/BcellGSE71176_p53_sampleInfo.csv"
+
+expression_file <- data.frame(
+  datapath = YOUR_DATA_PATH
+)
+experiment_file <- data.frame(
+  datapath = YOUR_EXPERIMENT_PATH
+)
+
+load_data <- input_data(
+  expression_file = expression_file,
+  experiment_file = experiment_file,
+  go_button = FALSE,
+  demo_data_file = idep_data$demo_data_file,
+  demo_metadata_file = idep_data$demo_metadata_file
+)
+
+converted <- convert_id(
+  query = rownames(load_data$data),
+  idep_data = idep_data,
+  select_org = "BestMatch"
+)
+
+all_gene_info <- gene_info(
+  converted = converted,
+  select_org = "BestMatch",
+  idep_data = idep_data
+)
+
+converted_data <- convert_data(
+  converted = converted,
+  no_id_conversion = FALSE,
+  data = load_data$data
+)
+
+gene_names <- get_all_gene_names(
+  mapped_ids = converted_data$mapped_ids,
+  all_gene_info = all_gene_info
+)
+
+processed_data <- pre_process(
+  data = converted_data$data,
+  missing_value = "geneMedian",
+  data_file_format = 1,
+  low_filter_fpkm = NULL,
+  n_min_samples_fpkm = NULL,
+  log_transform_fpkm = NULL,
+  log_start_fpkm = NULL,
+  min_counts = .5,
+  n_min_samples_count = 1,
+  counts_transform = 1,
+  counts_log_start = 4,
+  no_fdr = NULL
+)
+```
+
+One important aspect of iDEP is the ability to take a subset of genes and
+perform pathway analysis to determine the pathways that are significantly
+enriched with different testing effects. The iDEP data base has biological
+pathways for each species in the database, and with each pathway there is a
+list of gene IDs that correspond with that process. We then calculate a p-value
+for the proportion of genes from a pathway in the subset to the proportion of 
+genes subsetted to the entire background. The link below explains the most basic
+and popular method of determining overlap and enrichment. There are two
+functions to perform pathway analysis. The first one will be described in the
+section below.
+
+**Enrichment Link**
+https://tv.qiagenbioinformatics.com/video/19605716/understanding-the-p-value-of
+
+###### Get Gene Sets
+
+Performing pathway analysis for the subsetted list of genes requires only the
+pahtways that have at least one gene in their gene list. We use a database
+query to ensure that all the pathways that have genes from the subset will be
+returned in the gene sets. Creating a query requires a subset of the
+`gene_names` data frame. For this example, we will simply use the first 100 rows
+of the data. iDEP has many different methods to create interesting subsets,
+including differential expression analysis. Depending on the structure of the
+subsetted genes, use the code chunk below to filter `gene_names`.
+
+```{r eval=FALSE}
+gene_names_query <- gene_names[gene_names$ensembl_ID == rownames(example_data), ]
+```
+
+The `converted` parameter will be the return from the `convert_id` function
+call. The input for `go` determines which portion of the pathway database to use
+for the analysis. To determine the choices for this input, we can run the
+function `gmt_category`. This will return the portions of the database that have
+pathways corresponding to the matched species. The first two parameters are
+returned objects in the "Load_Data" instruction. The next is the organism that
+the expression data is for, an input that has been used in previous functions.
+`gmt_file` is a datapath to a gmt file, but only if the species is new and not
+in the iDEP database. Lastly, the data from the `get_idep_data` call is filled
+in. An example call for the demonstration data is in the code chunk below.
+
+```{r}
+gmt_choices <- gmt_category(
+  converted = converted,
+  converted_data = converted_data$data,
+  select_org = "BestMatch",
+  gmt_file = NULL,
+  idep_data = idep_data
+)
+```
+
+Search this list for the desired portion, and specify it with either
+`gmt_choices[[2]]` or the string denoting the section. For `gmt_choices[[2]]` it
+would be "GOBP". The next parameter, `select_org`, should be the same as the
+chunk above.
+
+```{r eval=FALSE}
+gene_sets <- read_pathway_sets(
+  all_gene_names_query = gene_names_query,
+  converted = converted,
+  go = "GOBP",
+  select_org = "BestMatch",
+  gmt_file = NULL,
+  idep_data = idep_data,
+  gene_info = all_gene_info
+)
+
+pathway_info[["Hierarchical_Selection"]] <- find_overlap(
+  pathway_table = gene_sets$pathway_table,
+  query_set = gene_sets$query_set,
+  total_genes = gene_sets$total_genes,
+  processed_data = processed_data$data,
+  gene_info = all_gene_info,
+  go = "GOBP",
+  idep_data = idep_data,
+  select_org = "BestMatch",
+  sub_pathway_files = gene_sets$pathway_files,
+  use_filtered_background = TRUE,
+  reduced = FALSE
+)
+```
+
