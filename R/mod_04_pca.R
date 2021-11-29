@@ -14,17 +14,36 @@ mod_04_pca_ui <- function(id) {
     "PCA",
     sidebarLayout(
       sidebarPanel(
+        conditionalPanel(
+          condition = "input.PCA_panels == 'Principal Component Analysis'",
         
         fluidRow( 
-          column(4, selectInput(inputId = ns("PCAx"), "Principal component for x-axis", choices = 1:5, selected = 1))  
-          ,column(4, selectInput(inputId = ns("PCAy"), "Principal component for y-axis", choices = 1:5, selected = 2) )
+          column(12, selectInput(inputId = ns("PCAx"), "Principal component for x-axis", choices = 1:5, selected = 1))  
+          ,column(12, selectInput(inputId = ns("PCAy"), "Principal component for y-axis", choices = 1:5, selected = 2) )
         
         ),
         
-        textOutput(ns("test"))
+        ns=ns
+        ),
+        
+        
+        conditionalPanel(
+          condition = "input.PCA_panels == 't-SNE'",
+          
+          fluidRow( 
+            actionButton(inputId = ns("seedTSNE"), label = "Re-calculate from new seed")
+            
+          ),
+          
+          ns=ns
+        ),
+        
+        
+        
       ),
       mainPanel(
         tabsetPanel(
+          id = ns("PCA_panels"),
           tabPanel(
             title="Principal Component Analysis",
             br(),
@@ -51,7 +70,6 @@ mod_04_pca_ui <- function(id) {
               width = "100%",
               height = "500px"
             ),
-            actionButton("seedTSNE", "Re-calculate using different random numbers")
           ),
           tabPanel(
             "Pathway Analysis of PCA",
@@ -100,6 +118,8 @@ mod_04_pca_server <- function(id, pre_process) {
     #t_SNE plot -----------------
     output$tSNE <- renderPlot({
       req(!is.null(pre_process$data()))
+      
+      input$seedTSNE
 
       t_SNE_plot(
         data = pre_process$data(),
