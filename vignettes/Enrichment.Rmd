@@ -15,7 +15,8 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup}
-library(idepGolem)
+#library(idepGolem)
+devtools::load_all()
 ```
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
@@ -132,9 +133,31 @@ gmt_choices <- gmt_category(
 Search this list for the desired portion, and specify it with either
 `gmt_choices[[2]]` or the string denoting the section. For `gmt_choices[[2]]` it
 would be "GOBP". The next parameter, `select_org`, should be the same as the
-chunk above.
+chunk above. The input  `gmt_file` is only used if you are working with a
+species that is not in the iDEP database. If this is the case, and there is a
+GMT file that goes with the species, the input will be the datapath stored in a
+data frame. For details on this, see the first instruction `Load_Data`. The next
+inputs are objects that are also covered in the first instruction. With all the
+correct inputs, we are now going to actually subset `gene_names` and create a
+query. We will use the `process_heatmap_data` function which is described in the
+"Clustering" instruction. This final workflow is demonstrated in the chunk
+below.
 
 ```{r eval=FALSE}
+heatmap_data <- process_heatmap_data(
+  data = processed_data$data,
+  n_genes_max = 150,
+  n_genes_min = 0,
+  gene_centering = TRUE,
+  gene_normalize = TRUE,
+  sample_centering = FALSE,
+  sample_normalize = FALSE,
+  all_gene_names = gene_names,
+  select_gene_id = "symbol"
+)
+
+gene_names_query <- gene_names[gene_names$symbol == rownames(heatmap_data), ]
+
 gene_sets <- read_pathway_sets(
   all_gene_names_query = gene_names_query,
   converted = converted,
@@ -144,8 +167,17 @@ gene_sets <- read_pathway_sets(
   idep_data = idep_data,
   gene_info = all_gene_info
 )
+```
 
-pathway_info[["Hierarchical_Selection"]] <- find_overlap(
+<br>
+
+####### Calculating Overlap
+
+To use the `find_overlap` function, we are going to work with the returned
+object `gene_sets` from above. This function is 
+
+```{r}
+pathway_info <- find_overlap(
   pathway_table = gene_sets$pathway_table,
   query_set = gene_sets$query_set,
   total_genes = gene_sets$total_genes,
@@ -153,10 +185,10 @@ pathway_info[["Hierarchical_Selection"]] <- find_overlap(
   gene_info = all_gene_info,
   go = "GOBP",
   idep_data = idep_data,
-  select_org = "BestMatch",
   sub_pathway_files = gene_sets$pathway_files,
   use_filtered_background = TRUE,
-  reduced = FALSE
+  select_org = "BestMatch",
+  reduced = .75
 )
 ```
 
