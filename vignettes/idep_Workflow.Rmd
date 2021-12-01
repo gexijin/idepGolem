@@ -28,8 +28,14 @@ devtools::load_all()
 ```{r Create Data Paths}
 idep_data <- get_idep_data()
 
-YOUR_DATA_PATH <- "E:/idep_9_24/data/data103/data_go/BcellGSE71176_p53.csv"
-YOUR_EXPERIMENT_PATH <- "E:/idep_9_24/data/data103/data_go/BcellGSE71176_p53_sampleInfo.csv"
+
+#YOUR_DATA_PATH <- "D:/data/data103/data_go/BcellGSE71176_p53.csv"
+#YOUR_EXPERIMENT_PATH <- "D:/data/data103/data_go/BcellGSE71176_p53_sampleInfo.csv"
+
+
+YOUR_DATA_PATH <- "C:/Users/bdere/OneDrive/Documents/Bioinformatics/idepGolem/data/data103/data_go/BcellGSE71176_p53.csv"
+YOUR_EXPERIMENT_PATH <- "C:/Users/bdere/OneDrive/Documents/Bioinformatics/idepGolem/data/data103/data_go/BcellGSE71176_p53_sampleInfo.csv"
+
 
 expression_file <- data.frame(
   datapath = YOUR_DATA_PATH
@@ -46,16 +52,11 @@ load_data <- input_data(
   demo_metadata_file = idep_data$demo_metadata_file
 )
 
-# Species search for input data
-idep_data$species_choice[grep("Mouse", names(idep_data$species_choice))]
-
 converted <- convert_id(
   query = rownames(load_data$data),
   idep_data = idep_data,
   select_org = "BestMatch"
 )
-
-print(converted$species_matched[1,])
 
 all_gene_info <- gene_info(
   converted = converted,
@@ -75,85 +76,7 @@ gene_names <- get_all_gene_names(
 )
 ```
 
-## Process Data
-
-Now that the gene information has been retrieved and the IDs converted, it is
-possible to process the data and perform a transformation for analysis.
-
-<br>
-
-#### **`pre_process`** Function
-
-Processing the data requires many options to ensure the data gets to the desired
-form. This is the data that will be used in the exploratory analysis to come.
-The data to be processed is the `converted_data` from above. The parameters
-`missing_value` and `data_file_format` have a list of input values to select 
-from for processing. These values and descriptions can be found in the tables 
-below. `missing_value` determines how missing data entries will be filled in, 
-and `data_file_format` tells the function what type of data is being processed.
-
-<div style="text-align: left">
-
-Input (`missing_value`)    Description
--------------------------  -----------------------------------------------------------
-`geneMedian`               Substitute median expression value for gene across all samples
-`treatAsZero`              Substitute "0" for all missing values
-`geneMedianInGroup`        Substitute median expression value for gene within sample group
-
-Input (`data_file_format`)   Description
----------------------------  -----------------------------------------------------------------------
-`1`                          Read counts data (recommended)
-`2`                          Normalized expression values (RNA-seq FPKM, micro-array, etc.)
-`3`                          Fold-changes and corrected P values from CuffDiff or any other program
-
-</div>
-
-<br>
-
-##### **Read counts data**
-
-For read counts data, the parameters `min_counts`, `n_min_samples_counts`,
-`counts_transform` and `counts_log_start` need input values. `min_counts` and
-`n_min_samples` work to filter the genes out of the data that do not have
-sufficient counts. The function counts the columns that have more counts than
-`min_counts` for each gene and filters out the genes with less columns than
-`n_min_samples`. For example, if you only wanted genes with more than 0 counts
-for each sample, you would set `min_counts = .5` and 
-`n_min_samples = ncol(converted_data)`. `counts_transform` specifies the
-transformation to perform on the counts data. This parameter has 3 input options
-which are outlined below. If `counts_transform = 1`, `counts_log_start`
-determines the constant to add to CPM to ensure that there are no `log(0)`
-errors. All other parameters can be set to `NULL`
-
-Input (`counts_transform`)   Description
----------------------------  --------------------------------------------------
-`1`                          EdgeR: log2(CPM+c) (Counts per Million + constant)
-`2`                          VST: variance stabilizing transform
-`3`                          rlog: regularized log (slow)
-
-<br>
-
-##### **Normalized expression values Parameters**
-
-If the data being processed is for normalized expression values, the parameters
-`low_filter_fpkm`, `n_min_samples_fpkm`, `log_transform_fpkm` and 
-`log_start_fpkm` need input values. `low_filter_fpkm` and `n_min_samples_fpkm`
-work together to filter out the genes that do not have enough counts. The
-function will count the columns that are greater than `low_filter_fpkm` and 
-discard the gene if it is not more than `n_min_samples_fpkm` columns. The
-parameter `log_transform_fpkm` is `TRUE/FALSE` for whether to perform a log
-transform on the data or not. If `log_transform = TRUE`, then `log_start_fpkm`
-is the value that will be added to ensure there are no `log(0)` errors. All
-other values can be set to `NULL`.
-
-<br>
-
-##### **Fold-changes and corrected P values**
-
-For this data type, there is only one additional parameter to provide an input
-for, `no_fdr`. This is a logical `TRUE/FALSE` to specify whether the data
-contains corrected p-values or not. `TRUE` denotes fold-change only data. All
-other parameters can be set to `NULL`.
+## PRE-PROCESS FUNCTIONS
 
 ```{r Pre-Process Data}
 processed_data <- pre_process(
@@ -171,24 +94,6 @@ processed_data <- pre_process(
   no_fdr = NULL
 )
 ```
-<br>
-
-## Exploratory Data Analysis
-
-Now that the data has been processed, it is possible to begin data analysis. It
-is possible to create unique and informative plots with the processed data, and
-idep has built in functions to assist with that.
-
-<br>
-
-#### **`total_counts_ggplot`** Function
-
-This function will only work for read counts data, so if that is not the format
-of the processed data, please skip this function. For read counts data, this
-function creates a barplot to show the counts in millions for each sample in the
-data. `counts_data` is the raw counts that is returned from the `pre_process`
-function. `sample_info` is the experiment design data from the `input_data`
-function. 
 
 ```{r fig.height=5.5, fig.width=7.5}
 total_counts_ggplot(
@@ -196,17 +101,6 @@ total_counts_ggplot(
   sample_info = load_data$sample_info
 )
 ```
-
-<br>
-
-#### **`eda_scatter`** Function
-
-Another useful plot is a scatter plot of the transformed expression for two
-samples in the data. `eda_scatter` provides a scatter plot of two specified
-sample (columns) of the processed data. `plot_xaxis` and `plot_yaxis` are
-string names of the columns to be plotted. The options for these inputs can be
-seen using `colnames(processed_data$data)`. `processed_data` is the returned
-data from the `pre_process` function. 
 
 ```{r fig.height=5.5, fig.width=7.5}
 colnames(processed_data$data)
@@ -218,15 +112,6 @@ eda_scatter(
 )
 ```
 
-<br>
-
-#### **`eda_boxplot`** Function
-
-`eda_boxplot` will show the distribution of the counts data after the 
-pre-processing transformation. This function returns a ggplot boxplot of each
-column in the data. `processed_data` is the transformed counts and `sample_info`
-is the experiment design information from the `input_data` function. 
-
 ```{r fig.height=5.5, fig.width=7.5}
 eda_boxplot(
   processed_data = processed_data$data,
@@ -234,35 +119,12 @@ eda_boxplot(
 )
 ```
 
-<br>
-
-#### **`eda_density`** Function
-
-This plotting function provides a plot of the distribution of counts values for
-each sample in the data. The information is displayed in a density ridge plot in
-the ggplot format. Again, the data provided is returned from the `pre_process`
-function. The `sample_info` provides information on each sample in the dataset.
-
 ```{r fig.height=5.5, fig.width=7.5}
 eda_density(
   processed_data = processed_data$data,
   sample_info = load_data$sample_info
 )
 ```
-
-<br>
-
-#### `merge_data` Function
-
-The current data is using the converted ensembl IDs as rownames in a large data
-matrix, but the following function will create a data frame containing the gene
-names from the `get_all_gene_names` function. `merge_data` takes the
-`gene_names` data frame and a data matrix with ID rownames and creates a data
-frame with columns for each ID that idep has matched from the original IDs.
-This is useful to view different IDs for the same gene. It also enables writing
-CSV files that can be saved and be used to reproduce results from idep. The
-following code will merge the gene names with the raw counts data and the
-transformed data from `pre_process`.
 
 ```{r}
 merged_raw_counts <- merge_data(
@@ -280,9 +142,6 @@ merged_data <- merge_data(
 
 #### SEARCHING
 ```{r}
-# Gene search for individual plotting
-merged_data[grep("H4c1", gene_names),]
-
 heatmap_data <- process_heatmap_data(
   data = processed_data$data,
   n_genes_max = 50,
@@ -386,6 +245,7 @@ plot_volcano(
   limma_fc = 2
 )
 ```
+
 
 # Pathway Tab Stuff
 ```{r}
@@ -688,5 +548,256 @@ plot_scale_independence(
 plot_mean_connectivity(
   wgcna = wgcna
 )
+=======
+
+
+
+
+
+
+# PCA
+```{r}
+
+x<-processed_data$data
+y<-loaded_data$sample_info
+
+pca.object <- prcomp(t(x))
+npc=5
+pcaData = as.data.frame(pca.object$x[,1:npc]); 
+	pvals = matrix(1,nrow=npc,ncol=ncol(y))
+	for (i in 1:npc ){
+		for (j in 1:ncol(y) )
+			pvals[i,j] =summary( aov(pcaData[,i] ~ as.factor(y[,j])))[[1]][["Pr(>F)"]][1]
+	}
+	
+	pvals = pvals * npc* ncol(y)   # correcting for multiple testing
+	pvals[pvals>1] = 1
+
+	colnames(pvals) = colnames(y)
+	rownames(pvals) = paste0("PC",1:npc)
+
+
+
+a="<h4>Correlation between Principal Components (PCs) with factors </h4>"
+	nchar0 = nchar(a)
+	for ( i in 1:npc){
+		j = which.min(pvals[i,])
+		if(pvals[i,j]< 0.05) a=paste0(a,rownames(pvals)[i], 
+					" is correlated with ", colnames(pvals)[j],
+					" (p=",   sprintf("%-3.2e",pvals[i,j]),").<br>")
+	}
+	if(nchar(a) == nchar0 ) return(NULL) else 
+
+	  colnames(processed_data$raw_counts)
+groups <- detect_groups(sample_names=colnames(processed_data$raw_counts), sample_info=loaded_data$sample_info)
+
+
+			#p=ggplot2::ggplot(pcaData, ggplot2::aes(PC1, PC2, color=Sample_Name, shape = Sample_Name)) 
+			p=ggplot2::ggplot(pcaData, ggplot2::aes(PC1, PC2, color=groups,shape=groups)) 
+p<-p+ggplot2::geom_point()
+PCAx<- 1
+PCAy <- 2
+    PCAxy <- c(as.integer(PCAx ),as.integer(PCAy) ) # selected principal components
+		percentVar=round(100*summary(pca.object)$importance[2, PCAxy],0)
+
+p=p+ggplot2::xlab(paste0("PC", PCAx ,": ", percentVar[1],"% variance")) 
+		p=p+ggplot2::ylab(paste0("PC", PCAy ,": ",percentVar[2],"% variance")) 
+		p=p+ggplot2::ggtitle("Principal component analysis (PCA)")+ggplot2::coord_fixed(ratio=1.0)+ 
+		 ggplot2::theme(plot.title = ggplot2::element_text(size = 16,hjust = 0.5)) + ggplot2::theme(aspect.ratio=1) +
+		 ggplot2::theme(axis.text.x = ggplot2::element_text( size = 16),
+			   axis.text.y = ggplot2::element_text( size = 16),
+			   axis.title.x = ggplot2::element_text( size = 16),
+			   axis.title.y = ggplot2::element_text( size = 16) ) +
+		ggplot2::theme(legend.text=ggplot2::element_text(size=16))
+		 print(p)
+
+
+p
+
+
+```
+
+
+
+
+
+
+
+#Skree plot
+```{r}
+pca_obj <- PCAtools::pca(processed_data$data, metadata = loaded_data$sample_info, removeVar = 0.1)
+
+
+horn <- PCAtools::parallelPCA(processed_data$data)
+horn$n
+
+elbow <- PCAtools::findElbowPoint(pca_obj$variance)
+elbow
+
+PCAtools::screeplot(pca_obj,
+    vline = c(horn$n, elbow)) +
+
+    ggplot2::geom_label(ggplot2::aes(x = horn$n + 1, y = 50,
+      label = 'Horn\'s', vjust = -3, size = 8)) +
+    ggplot2::geom_label(ggplot2::aes(x = elbow + 1, y = 50,
+      label = 'Elbow', vjust = -1, size = 8))
+
+
+```
+
+
+
+
+
+
+# PCA -- MultiDimensional Scaling
+```{r}
+dist2 <- function(x, ...)
+{
+  as.dist(1-cor(t(x), method="pearson"))
+}
+dist2(t(x))
+
+		 fit = cmdscale( dist2(t(x) ), eig=T, k=2)
+
+
+		plot( fit$points[,1],fit$points[,2],pch = 1,cex = 2,#col = detectGroups(colnames(x), y),
+			 xlim=c(min(fit$points[,1]),max(fit$points[,1])*1.5   ),
+		  xlab = "First dimension", ylab="Second dimension"  )
+		 text( fit$points[,1], fit$points[,2],  pos=4, labels =colnames(x), offset=.5, cex=1)
+
+		 
+		 
+		 		pcaData = as.data.frame(fit$points[,1:2])
+		 	pcaData = cbind(pcaData,detectGroups(colnames(x), y) )
+		 	
+		colnames(pcaData) = c("x1", "x2", "Sample_Name")		 	
+		 	
+		 	
+		 			p=ggplot2::ggplot(pcaData, ggplot2::aes(x1, x2, color=Sample_Name, shape = Sample_Name))  
+		 	
+		 	p<- p+ggplot2::geom_point()
+		 	
+		 		#	p <- p+	 scale_shape_manual(values= shapes)	 
+		
+		p=p+ggplot2::xlab("Dimension 1") 
+		p=p+ggplot2::ylab("Dimension 2") 
+		p=p+ggplot2::ggtitle("Multidimensional scaling (MDS)")+ ggplot2::coord_fixed(ratio=1.)+ 
+		 ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) + ggplot2::theme(aspect.ratio=1) +
+			 ggplot2::theme(axis.text.x = ggplot2::element_text( size = 16),
+			   axis.text.y = ggplot2::element_text( size = 16),
+			   axis.title.x = ggplot2::element_text( size = 16),
+			   axis.title.y = ggplot2::element_text( size = 16) ) +
+		ggplot2::theme(legend.text=ggplot2::element_text(size=16))
+		   print(p)
+		 	
+		 	
+```
+
+
+
+# t-SNE
+```{r}
+
+#install.packages("Rtsne")
+
+		 tsne <- Rtsne::Rtsne(t(x), dims = 2, perplexity=1, verbose=FALSE, max_iter = 400)
+
+		pcaData = as.data.frame(tsne$Y);
+		pcaData = cbind(pcaData,detect_groups(colnames(x), y) )
+		
+				colnames(pcaData) = c("x1", "x2", "Sample_Name")
+		
+		
+					p=ggplot2::ggplot(pcaData, ggplot2::aes(x1, x2, color=Sample_Name, shape = Sample_Name)) 
+		
+	p<-	p+ggplot2::geom_point()
+		
+				p=p+ggplot2::xlab("Dimension 1") 
+		p=p+ggplot2::ylab("Dimension 2") 
+		p=p+ggplot2::ggtitle("t-SNE plot")+ ggplot2::coord_fixed(ratio=1.)+ 
+		 ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) + ggplot2::theme(aspect.ratio=1) +
+			 ggplot2::theme(axis.text.x = ggplot2::element_text( size = 16),
+			   axis.text.y = ggplot2::element_text( size = 16),
+			   axis.title.x = ggplot2::element_text( size = 16),
+			   axis.title.y = ggplot2::element_text( size = 16) ) +
+		ggplot2::theme(legend.text=ggplot2::element_text(size=16))
+		   print(p)
+		
+		
+t_SNE_plot <- function(data, sample_info){
+  
+  x <- data
+  y <- sample_info		 
+  tsne <- Rtsne::Rtsne(t(x), dims = 2, perplexity=1, verbose=FALSE, max_iter = 400)
+
+		pcaData = as.data.frame(tsne$Y);
+		pcaData = cbind(pcaData,detect_groups(colnames(x), y) )
+		
+				colnames(pcaData) = c("x1", "x2", "Sample_Name")
+		
+		
+					p=ggplot2::ggplot(pcaData, ggplot2::aes(x1, x2, color=Sample_Name, shape = Sample_Name)) 
+		
+	p<-	p+ggplot2::geom_point()
+		
+				p=p+ggplot2::xlab("Dimension 1") 
+		p=p+ggplot2::ylab("Dimension 2") 
+		p=p+ggplot2::ggtitle("t-SNE plot")+ ggplot2::coord_fixed(ratio=1.)+ 
+		 ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) + ggplot2::theme(aspect.ratio=1) +
+			 ggplot2::theme(axis.text.x = ggplot2::element_text( size = 16),
+			   axis.text.y = ggplot2::element_text( size = 16),
+			   axis.title.x = ggplot2::element_text( size = 16),
+			   axis.title.y = ggplot2::element_text( size = 16) ) +
+		ggplot2::theme(legend.text=ggplot2::element_text(size=16))
+
+		return(p)
+}
+		   
+t_SNE_plot(processed_data$data, loaded_data$sample_info)		
+```
+
+# Pathway analysis of PCA rotation
+```{r}
+library(PGSEA,verbose=FALSE)
+		pca.object <- prcomp(t(x))
+		pca = 100*pca.object$rotation 
+		Npca = 5
+		Nterms = 6
+		if (Npca > dim(pca)[2]) { Npca = dim(pca)[2] } else pca <-  pca[,1:Npca]
+		#pca = pca[,1:5]
+		if(is.null(GeneSetsPCA() ) ) return(NULL)  # no species recognized
+		if(length(GeneSetsPCA() ) <= 1 ) return(NULL)
+		#cat("\n\nGene Sets:",length( GeneSets()))
+		pg = myPGSEA (pca,cl=GeneSetsPCA(),range=c(15,2000),p.value=TRUE, weighted=FALSE,nPermutation=1)
+		incProgress(2/8)
+		# correcting for multiple testing
+		p.matrix = pg$p.result
+		tem = p.adjust(as.numeric(p.matrix),"fdr")
+		p.matrix = matrix(tem, nrow=dim(p.matrix)[1], ncol = dim(p.matrix)[2] )
+		rownames(p.matrix) = rownames(pg$p.result); colnames(p.matrix) = colnames(pg$p.result)
+
+
+		selected =c()
+		for( i in 1:dim(p.matrix)[2]) {
+		  tem = which( rank(p.matrix[,i],ties.method='first') <= Nterms)  # rank by P value
+		 #tem = which( rank(pg$result[,i],ties.method='first') >= dim(p.matrix)[1]-3.1) # rank by mean
+		 names(tem) = paste("PC",i," ", rownames(p.matrix)[tem], sep="" )
+		 selected = c(selected, tem)
+		}
+		rowids = gsub(" .*","",names(selected))
+		rowids = as.numeric( gsub("PC","",rowids) )
+		pvals = p.matrix[ cbind(selected,rowids) ]
+		a=sprintf("%-1.0e",pvals)
+		tem = pg$result[selected,]
+		rownames(tem) = paste(a,names(selected)); #colnames(tem)= paste("PC",colnames(tem),sep="")
+		
+		tem = tem[!duplicated(selected),] 
+		incProgress(3/8, detail ="Running PGSEA")
+		#tem = t(tem); tem = t( (tem - apply(tem,1,mean)) ) #/apply(tem,1,sd) )
+
+		smcPlot(tem,scale =  c(-max(tem), max(tem)), show.grid = T, margins = c(1,1, 3, 35),
+			col = .rwb,cex.lab=0.8)
+
 ```
 

@@ -46,8 +46,6 @@ heatmap_main(
 \item{k_clusters}{Number of clusters to use for k-means}
 
 \item{re_run}{Re-run k-means with a different seed}
-
-\item{n_genes}{Amount of genes included in the heatmap}
 }
 \value{
 Heatmap of the processed data.
