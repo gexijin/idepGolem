@@ -16,7 +16,7 @@ app_ui <- function(request) {
       mod_01_load_data_ui(id = "load_data"),
       mod_02_pre_process_ui(id = "pre_process"),
       mod_03_clustering_ui(id = "clustering"),
-      mod_04_pca_ui(id = "k_means"),
+      mod_04_pca_ui(id = "pca"),
       mod_05_deg_1_ui(id = "deg"),
       mod_05_deg_2_ui(id = "deg"),
       mod_06_pathway_ui(id = "pathway"),
