@@ -156,7 +156,7 @@ heatmap_data <- process_heatmap_data(
   select_gene_id = "symbol"
 )
 
-gene_names_query <- gene_names[gene_names$symbol == rownames(heatmap_data), ]
+gene_names_query <- gene_names[gene_names$symbol %in% rownames(heatmap_data), ]
 
 gene_sets <- read_pathway_sets(
   all_gene_names_query = gene_names_query,
@@ -174,7 +174,11 @@ gene_sets <- read_pathway_sets(
 ####### Calculating Overlap
 
 To use the `find_overlap` function, we are going to work with the returned
-object `gene_sets` from above. This function is 
+object `gene_sets` from above. This function performs the operation to
+statistically determine the pathways that are enriched according to the gene
+query that was submitted. The function above returns a list with objects that
+will be inputted into parameters of the `find_overlap` function. `pathway_table`
+is found at `gene_sets$pathway_table`. 
 
 ```{r}
 pathway_info <- find_overlap(

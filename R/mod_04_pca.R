@@ -1,4 +1,4 @@
-#' 05_pca UI Function
+#' 04_pca UI Function
 #'
 #' @description A shiny Module.
 #'
@@ -14,33 +14,37 @@ mod_04_pca_ui <- function(id) {
     "PCA",
     sidebarLayout(
       sidebarPanel(
-
         conditionalPanel(
           condition = "input.PCA_panels == 'Principal Component Analysis'",
-        
-        fluidRow( 
-          column(12, selectInput(inputId = ns("PCAx"), "Principal component for x-axis", choices = 1:5, selected = 1))  
-          ,column(12, selectInput(inputId = ns("PCAy"), "Principal component for y-axis", choices = 1:5, selected = 2) )
-        
-        ),
-        
-        ns=ns
-        ),
-        
-        
-        conditionalPanel(
-          condition = "input.PCA_panels == 't-SNE'",
-          
           fluidRow( 
-            actionButton(inputId = ns("seedTSNE"), label = "Re-calculate from new seed")
-            
+            column(
+              width = 12,
+              selectInput(
+                inputId = ns("PCAx"),
+                "Principal component for x-axis",
+                choices = 1:5,
+                selected = 1
+              )
+            ),
+            column(
+              width = 12,
+              selectInput(
+                inputId = ns("PCAy"),
+                "Principal component for y-axis",
+                choices = 1:5,
+                selected = 2
+              )
+            )
           ),
-          
           ns=ns
         ),
-        
-        
-        
+        conditionalPanel(
+          condition = "input.PCA_panels == 't-SNE'",
+          fluidRow( 
+            actionButton(inputId = ns("seedTSNE"), label = "Re-calculate from new seed")
+          ),
+          ns=ns
+        )
       ),
       mainPanel(
         tabsetPanel(
@@ -49,7 +53,7 @@ mod_04_pca_ui <- function(id) {
             title="Principal Component Analysis",
             br(),
             plotOutput(
-              outputId = ns("PCA_plot_call"),
+              outputId = ns("pca_plot_obj"),
               width = "100%",
               height = "500px"
             )
@@ -58,7 +62,7 @@ mod_04_pca_ui <- function(id) {
             "Multi-Dimensional Scaling",
             br(),
             plotOutput(
-              outputId = ns("MDS"),
+              outputId = ns("mds_plot_obj"),
               width = "100%",
               height = "500px"
             )
@@ -67,11 +71,10 @@ mod_04_pca_ui <- function(id) {
             "t-SNE",
             br(),
             plotOutput(
-              outputId = ns("tSNE"),
+              outputId = ns("t_sne"),
               width = "100%",
               height = "500px"
             ),
-
           ),
           tabPanel(
             "Pathway Analysis of PCA",
@@ -85,40 +88,24 @@ mod_04_pca_ui <- function(id) {
 #' 05_pca Server Functions
 #'
 #' @noRd
-mod_04_pca_server <- function(id, pre_process) {
+mod_04_pca_server <- function(id, pre_process, idep_data) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
-    #output$test <- renderText({paste0(pre_process$data()[1,1])})
-    
-    
     # PCA plot ------------
-    output$PCA_plot_call <- renderPlot({
+    output$pca_plot_obj <- renderPlot({
       req(!is.null(pre_process$data()))
-      #browser()
       
       PCA_plot(
         data = pre_process$data(),
         sample_info = pre_process$sample_info(),
         PCAx = input$PCAx,
         PCAy = input$PCAy
-        
       )
     })
     
-    # Update PCA Input ---------
-    # observe({
-    # #  req(tab() == "Principal Component Analysis")
-    #   req(!is.null(pre_process$data()))
-    # 
-    #   updateSelectInput(
-    #     inputId = "PCAx"
-    #     
-    #   )
-    # })
-    
-    #t_SNE plot -----------------
-    output$tSNE <- renderPlot({
+    # t_SNE plot -----------------
+    output$t_sne <- renderPlot({
       req(!is.null(pre_process$data()))
       
       input$seedTSNE
@@ -127,16 +114,13 @@ mod_04_pca_server <- function(id, pre_process) {
         data = pre_process$data(),
         sample_info = pre_process$sample_info()
       )
-      
-      
     })
     
     
     
     # MDS plot ------------
-    output$MDS <- renderPlot({
+    output$mds_plot_obj <- renderPlot({
       req(!is.null(pre_process$data()))
-      #browser()
       
       MDS_plot(
         data = pre_process$data(),

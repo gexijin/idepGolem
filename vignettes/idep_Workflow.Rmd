@@ -29,12 +29,12 @@ devtools::load_all()
 idep_data <- get_idep_data()
 
 
-#YOUR_DATA_PATH <- "D:/data/data103/data_go/BcellGSE71176_p53.csv"
-#YOUR_EXPERIMENT_PATH <- "D:/data/data103/data_go/BcellGSE71176_p53_sampleInfo.csv"
+YOUR_DATA_PATH <- "E:/idep_9_24/data/data104/data_go/BcellGSE71176_p53.csv"
+YOUR_EXPERIMENT_PATH <- "E:/idep_9_24/data/data104/data_go/BcellGSE71176_p53_sampleInfo.csv"
 
 
-YOUR_DATA_PATH <- "C:/Users/bdere/OneDrive/Documents/Bioinformatics/idepGolem/data/data103/data_go/BcellGSE71176_p53.csv"
-YOUR_EXPERIMENT_PATH <- "C:/Users/bdere/OneDrive/Documents/Bioinformatics/idepGolem/data/data103/data_go/BcellGSE71176_p53_sampleInfo.csv"
+#YOUR_DATA_PATH <- "C:/Users/bdere/OneDrive/Documents/Bioinformatics/idepGolem/data/data103/data_go/BcellGSE71176_p53.csv"
+#YOUR_EXPERIMENT_PATH <- "C:/Users/bdere/OneDrive/Documents/Bioinformatics/idepGolem/data/data103/data_go/BcellGSE71176_p53_sampleInfo.csv"
 
 
 expression_file <- data.frame(
@@ -156,12 +156,10 @@ heatmap_data <- process_heatmap_data(
 dist_funs <- dist_functions()
 hclust_funs <- hcluster_functions()
 
-devtools::load_all()
-
 gene_sets <- read_pathway_sets(
   all_gene_names_query = gene_names[1:500, ],
   converted = converted,
-  go = NULL,
+  go = "GOBP",
   select_org = "BestMatch",
   gmt_file = NULL,
   idep_data = idep_data,
@@ -192,31 +190,31 @@ limma <- limma_value(
   raw_counts = processed_data$raw_counts,
   limma_p_val = .1,
   limma_fc = 2,
-  select_model_comprions = "p53: null vs. wt",
+  select_model_comprions = "p53: NULL vs. WT",
   sample_info = load_data$sample_info,
   select_factors_model = c("p53", "Treatment"),
   select_interactions = "p53:Treatment",
   select_block_factors_model = NULL,
-  factor_reference_levels = c("p53:wt", "Treatment:mock"),
+  factor_reference_levels = c("p53:WT", "Treatment:MOCK"),
   processed_data = processed_data$data,
   counts_log_start = 4,
   p_vals = processed_data$p_vals
 )
 
 contrast_samples <- find_contrast_samples(
-  select_contrast = "null-wt", 
+  select_contrast = "NULL-WT", 
 	all_sample_names = colnames(processed_data$data),
 	sample_info = load_data$sample_info,
 	select_factors_model = c("p53", "Treatment"),
-	select_model_comprions = "p53: null vs. wt", 
-  reference_levels = c("p53:wt", "Treatment:mock"),
+	select_model_comprions = "p53: NULL vs. WT", 
+  reference_levels = c("p53:WT", "Treatment:MOCK"),
 	counts_deg_method = "3",
 	data_file_format = "1"
 )
 
 deg_heat <- deg_heat_data(
   limma = limma,
-  select_contrast = "null-wt",
+  select_contrast = "NULL-WT",
   processed_data = processed_data$data,
   contrast_samples = contrast_samples
 )
@@ -238,7 +236,7 @@ main_heat_deg <- deg_heatmap(
 ComplexHeatmap::draw(main_heat_deg)
 
 plot_volcano(
-  select_contrast = "null-wt",
+  select_contrast = "NULL-WT",
   comparisons = limma$comparisons,
   top_genes = limma$top_genes,
   limma_p_val = .1,
@@ -260,7 +258,7 @@ gene_sets <- read_gene_sets(
 
 gage <- gage_data(
   select_go = "GOBP",
-  select_contrast = "I:p53_null.Treatment_IR",
+  select_contrast = "I:p53_NULL.Treatment_IR",
   min_set_size = 15,
   max_set_size = 2000,
   limma = limma,
@@ -272,12 +270,12 @@ gage <- gage_data(
 )
 
 contrast_samples_pgsea <- find_contrast_samples(
-  select_contrast = "I:p53_null.Treatment_IR", 
+  select_contrast = "I:p53_NULL.Treatment_IR", 
 	all_sample_names = colnames(processed_data$data),
 	sample_info = load_data$sample_info,
 	select_factors_model = c("p53", "Treatment"),
-	select_model_comprions = "p53: null vs. wt", 
-  reference_levels = c("p53:wt", "Treatment:mock"),
+	select_model_comprions = "p53: NULL vs. WT", 
+  reference_levels = c("p53:WT", "Treatment:MOCK"),
 	counts_deg_method = "3",
 	data_file_format = "1"
 )
@@ -292,7 +290,7 @@ contrast_samples_pgsea <- find_contrast_samples(
 #)
 
 fgsea <- fgsea_data(
-  select_contrast = "I:p53_null.Treatment_IR",
+  select_contrast = "I:p53_NULL.Treatment_IR",
   my_range = c(15, 2000),
   limma = limma,
   gene_p_val_cutoff = 1,
@@ -303,7 +301,7 @@ fgsea <- fgsea_data(
 )
 
 reactome_data(
-  select_contrast = "I:p53_null.Treatment_IR",
+  select_contrast = "I:p53_NULL.Treatment_IR",
   my_range = c(15, 2000),
   limma = limma,
   gene_p_val_cutoff = 1,
@@ -327,11 +325,11 @@ reactome_data(
 pgsea_plot_data <- get_pgsea_plot_data(
   my_range = c(15, 2000),
   data = processed_data$data,
-  select_contrast = "I:p53_null.Treatment_IR",
+  select_contrast = "I:p53_NULL.Treatment_IR",
   gene_sets = gene_sets,
   sample_info = load_data$sample_info,
   select_factors_model = c("p53", "Treatment"),
-  select_model_comprions = "p53: null vs. wt",
+  select_model_comprions = "p53: NULL vs. WT",
   pathway_p_val_cutoff = .1,
   n_pathway_show = 30
 ) 
@@ -372,7 +370,7 @@ kegg_pathway(
   go = "KEGG",
   gage_pathway_data = gage,
   sig_pathways = "Oocyte meiosis",
-  select_contrast = "I:p53_null.Treatment_IR",
+  select_contrast = "I:p53_NULL.Treatment_IR",
   limma = limma,
   converted = converted,
   idep_data = idep_data,
@@ -390,7 +388,7 @@ all_gene_info <- get_gene_info(
 
 chromosome_plotly(
   limma = limma,
-  select_contrast = "I:p53_null.Treatment_IR",
+  select_contrast = "I:p53_NULL.Treatment_IR",
   all_gene_info = all_gene_info,
   ignore_non_coding = FALSE,
   limma_p_val_viz = .1,
@@ -402,7 +400,7 @@ chromosome_plotly(
 )
 
 genome_plot_data_pre <- get_genome_plot_data_pre(
-  select_contrast = "I:p53_null.Treatment_IR",
+  select_contrast = "I:p53_NULL.Treatment_IR",
   limma = limma,
   all_gene_info = all_gene_info
 )
@@ -410,7 +408,7 @@ genome_plot_data_pre <- get_genome_plot_data_pre(
 genome_plot_data <- get_genome_plot_data(
   genome_plot_data_pre = genome_plot_data_pre,
   all_gene_info = all_gene_info,
-  select_contrast = "I:p53_null.Treatment_IR",
+  select_contrast = "I:p53_NULL.Treatment_IR",
   limma = limma,
   regions_p_val_cutoff = .01,
   statistic_cutoff = .5
@@ -548,11 +546,7 @@ plot_scale_independence(
 plot_mean_connectivity(
   wgcna = wgcna
 )
-=======
-
-
-
-
+```
 
 
 # PCA

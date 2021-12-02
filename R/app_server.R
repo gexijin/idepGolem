@@ -26,7 +26,9 @@ app_server <- function(input, output, session) {
     tab = tab
   )
   mod_04_pca_server(
-    id = "pca"
+    id = "pca",
+    pre_process = pre_process,
+    idep_data = idep_data
   )
   deg <- mod_05_deg_server(
     id = "deg",

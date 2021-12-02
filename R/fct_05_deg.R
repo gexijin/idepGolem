@@ -603,11 +603,11 @@ deg_deseq2 <- function(
 		comparisons <- comparisons[1:max_comparisons]
 	}	
 	
-	col_data = cbind(colnames(raw_counts), groups)
+	col_data <- cbind(colnames(raw_counts), groups)
 
 	# No sample file, but user selected comparisons using column names
 	if(is.null(model_factors) & length(selected_comparisons) > 0) {
-		comparisons = selected_comparisons
+		comparisons <- selected_comparisons
   }
 
 	comparison_names <- comparisons
@@ -624,7 +624,7 @@ deg_deseq2 <- function(
     # Using selected factors and comparisons ----------
 		# Build model
     # Block factor is just added in
-		model_factors = c(model_factors, block_factor)  
+		model_factors <- c(model_factors, block_factor)  
     
     # Selected factors and interactions:
     # c( "strain", "treatment", "strain:treatment")
@@ -642,7 +642,7 @@ deg_deseq2 <- function(
     # All columns named A B C D  
 		colnames(col_data) <- factors_coded  
 
-		col_data = as.data.frame(col_data)
+		col_data <- as.data.frame(col_data)
 		
 		# Set reference levels for factors
     # c("genotype:wt", "treatment:control")
@@ -657,7 +657,7 @@ deg_deseq2 <- function(
           )
 					col_data[, ix] <- as.factor(col_data[, ix])
 					col_data[, ix] <- relevel(
-            col_data[,ix],
+            col_data[, ix],
             gsub(".*:", "", refs)
           )
 				}
