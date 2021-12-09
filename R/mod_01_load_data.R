@@ -429,20 +429,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       removeNotification("species_match")
     })
 
-    # Species list and genome assemblies ---------
-    output$genome_species_table <- DT::renderDataTable({
-      df <- idep_data$org_info[, c("ensembl_dataset", "name", "totalGenes")]
-      colnames(df) <- c("Ensembl/STRING-db ID", "Name (Assembly)", "Total Genes")
-      row.names(df) <- NULL
-      DT::datatable(
-        df,
-        options = list(
-          pageLength = 20,
-          scrollY = "400px"
-        ),
-        rownames = FALSE
-      )
-    })
 
     # Return data used in the following panels --------
     list(
