@@ -231,17 +231,6 @@ mod_01_load_data_ui <- function(id) {
           align = "center",
           width = "562",
           height = "383"
-        ),
-        shinyBS::bsModal(
-          id = ns("species_list"),
-          title = "Species List and Genome Assemblies",
-          trigger = ns("genome_assembl_button"),
-          size = "large",
-          DT::dataTableOutput(
-            outputId = ns("genome_species_table"),
-            width = "100%",
-            height = "auto"
-          )
         )
       )
     )
@@ -255,6 +244,27 @@ mod_01_load_data_ui <- function(id) {
 mod_01_load_data_server <- function(id, idep_data, tab) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    observeEvent(input$genome_assembl_button, {
+      shiny::showModal(
+        shiny::modalDialog(
+          size = "l",
+          DT::renderDataTable({
+            df <- idep_data$org_info[, c("ensembl_dataset", "name", "totalGenes")]
+            colnames(df) <- c("Ensembl/STRING-db ID", "Name (Assembly)", "Total Genes")
+            row.names(df) <- NULL
+            DT::datatable(
+              df,
+              options = list(
+                pageLength = 20,
+                scrollY = "400px"
+              ),
+              rownames = FALSE
+            )
+          })
+        )
+      )
+    })
 
     # Provide species list for dropdown selection -----------
     observe({
