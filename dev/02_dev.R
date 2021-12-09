@@ -91,7 +91,7 @@ usethis::use_test( "app" )
 # Documentation
 
 ## Vignette ----
-usethis::use_vignette("Clustering")
+usethis::use_vignette("DEG")
 devtools::build_vignettes("Load Data")
 
 ## Code Coverage----
