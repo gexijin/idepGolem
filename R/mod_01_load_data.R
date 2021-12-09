@@ -54,7 +54,11 @@ mod_01_load_data_ui <- function(id) {
           ),
           column(
             width = 3, 
-            actionButton("MorgInfo", "Info")
+            # Species list and genome assemblies ----------
+            actionButton(
+              inputId = ns("genome_assembl_button"),
+              label = "Info"
+            )
           )  
         ), 
 
@@ -150,11 +154,7 @@ mod_01_load_data_ui <- function(id) {
           "Check this out for a list of species and their genome assemblies."
         ),
 
-        # Species list and genome assemblies ----------
-        actionButton(
-          inputId = ns("genome_assembl_button"),
-          label = "Species List and Genome Assembly"
-        ),
+
 
         a(
           h5("Questions?", align = "right"),
@@ -235,7 +235,7 @@ mod_01_load_data_ui <- function(id) {
         shinyBS::bsModal(
           id = ns("species_list"),
           title = "Species List and Genome Assemblies",
-          trigger = ns("gene_id_button"),
+          trigger = ns("genome_assembl_button"),
           size = "large",
           DT::dataTableOutput(
             outputId = ns("genome_species_table"),

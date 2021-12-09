@@ -141,8 +141,7 @@ get_idep_data <- function(datapath = DATAPATH) {
     go_levels = go_levels,
     go_level_2_terms = go_level_2_terms,
     id_index = id_index,
-    species_choice = species_choice,
-    genome_assembl = genome_assembl
+    species_choice = species_choice
   ))
 }
 
