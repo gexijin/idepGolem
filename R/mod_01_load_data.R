@@ -37,17 +37,30 @@ mod_01_load_data_ui <- function(id) {
 
         # Species Match Drop Down ------------
         strong("1. Select or search for your species."),
-        selectizeInput(
-          inputId = ns("select_org"),
-          label = NULL,
-          choices = " ",
-          multiple = TRUE,
-          options = list(
-            maxItems = 1,
-            placeholder = "Best matching species",
-            onInitialize = I('function() { this.setValue(""); }')
-          )
-        ),
+        fluidRow( 
+          column(
+            width = 9, 
+            selectizeInput(
+              inputId = ns("select_org"),
+              label = NULL,
+              choices = " ",
+              multiple = TRUE,
+              options = list(
+                maxItems = 1,
+                placeholder = "Best matching species",
+                onInitialize = I('function() { this.setValue(""); }')
+              )
+            )
+          ),
+          column(
+            width = 3, 
+            # Species list and genome assemblies ----------
+            actionButton(
+              inputId = ns("genome_assembl_button"),
+              label = "Info"
+            )
+          )  
+        ), 
 
         # Conditional .GMT file input bar ----------
         conditionalPanel(
@@ -141,11 +154,7 @@ mod_01_load_data_ui <- function(id) {
           "Check this out for a list of species and their genome assemblies."
         ),
 
-        # Species list and genome assemblies ----------
-        actionButton(
-          inputId = ns("genome_assembl_button"),
-          label = "Species List and Genome Assembly"
-        ),
+
 
         a(
           h5("Questions?", align = "right"),
@@ -178,9 +187,7 @@ mod_01_load_data_ui <- function(id) {
               width = "100",
               height = "100"
             )
-          )
-          
-          
+          )      
         ),
         div(
           id = ns("load_message"),
@@ -228,7 +235,7 @@ mod_01_load_data_ui <- function(id) {
         shinyBS::bsModal(
           id = ns("species_list"),
           title = "Species List and Genome Assemblies",
-          trigger = ns("gene_id_button"),
+          trigger = ns("genome_assembl_button"),
           size = "large",
           DT::dataTableOutput(
             outputId = ns("genome_species_table"),
@@ -414,8 +421,11 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
     # Species list and genome assemblies ---------
     output$genome_species_table <- DT::renderDataTable({
+      df <- idep_data$org_info[, c("ensembl_dataset", "name", "totalGenes")]
+      colnames(df) <- c("Ensembl/STRING-db ID", "Name (Assembly)", "Total Genes")
+      row.names(df) <- NULL
       DT::datatable(
-        idep_data$genome_assembl,
+        df,
         options = list(
           pageLength = 20,
           scrollY = "400px"
