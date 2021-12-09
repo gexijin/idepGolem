@@ -37,17 +37,26 @@ mod_01_load_data_ui <- function(id) {
 
         # Species Match Drop Down ------------
         strong("1. Select or search for your species."),
-        selectizeInput(
-          inputId = ns("select_org"),
-          label = NULL,
-          choices = " ",
-          multiple = TRUE,
-          options = list(
-            maxItems = 1,
-            placeholder = "Best matching species",
-            onInitialize = I('function() { this.setValue(""); }')
-          )
-        ),
+        fluidRow( 
+          column(
+            width = 9, 
+            selectizeInput(
+              inputId = ns("select_org"),
+              label = NULL,
+              choices = " ",
+              multiple = TRUE,
+              options = list(
+                maxItems = 1,
+                placeholder = "Best matching species",
+                onInitialize = I('function() { this.setValue(""); }')
+              )
+            )
+          ),
+          column(
+            width = 3, 
+            actionButton("MorgInfo", "Info")
+          )  
+        ), 
 
         # Conditional .GMT file input bar ----------
         conditionalPanel(
@@ -178,9 +187,7 @@ mod_01_load_data_ui <- function(id) {
               width = "100",
               height = "100"
             )
-          )
-          
-          
+          )      
         ),
         div(
           id = ns("load_message"),
@@ -414,8 +421,11 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
     # Species list and genome assemblies ---------
     output$genome_species_table <- DT::renderDataTable({
+      df <- idep_data$org_info[, c("ensembl_dataset", "name", "totalGenes")]
+      colnames(df) <- c("Ensembl/STRING-db ID", "Name (Assembly)", "Total Genes")
+      row.names(df) <- NULL
       DT::datatable(
-        idep_data$genome_assembl,
+        df,
         options = list(
           pageLength = 20,
           scrollY = "400px"
