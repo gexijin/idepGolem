@@ -21,7 +21,7 @@ devtools::load_all()
 ```
 
 This instruction will document how to Load Data and create the data objects that
-will be used in the rest of iDEPs functions. This corresponds to the functions
+will be used in the rest of iDEP's functions. This corresponds to the functions
 that are utilized in the Load Data tab of the iDEP webpage. The step-by-step
 will guide you through loading and running the initial functions to set up the
 rest of iDEP analysis.
@@ -187,4 +187,4 @@ This concludes the function calls and processes from the first tab of the iDEP
 program. There is no real data manipulation that happens, but the objects that
 are created are essential for the processes that will happen in the following
 instructions. For troubleshooting, all functions have documentation and the code
-is available on Github.
+is available on Github. (https://github.com/gexijin/idepGolem)

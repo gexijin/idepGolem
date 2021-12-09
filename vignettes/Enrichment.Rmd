@@ -143,7 +143,7 @@ query. We will use the `process_heatmap_data` function which is described in the
 "Clustering" instruction. This final workflow is demonstrated in the chunk
 below.
 
-```{r eval=FALSE}
+```{r}
 heatmap_data <- process_heatmap_data(
   data = processed_data$data,
   n_genes_max = 150,
@@ -171,14 +171,42 @@ gene_sets <- read_pathway_sets(
 
 <br>
 
-####### Calculating Overlap
+###### Calculating Overlap
 
 To use the `find_overlap` function, we are going to work with the returned
 object `gene_sets` from above. This function performs the operation to
 statistically determine the pathways that are enriched according to the gene
 query that was submitted. The function above returns a list with objects that
-will be inputted into parameters of the `find_overlap` function. `pathway_table`
-is found at `gene_sets$pathway_table`. 
+will be inputted into parameters of the `find_overlap` function. The parameter 
+`pathway_table` is found at `gene_sets$pathway_table`. This input is a table
+that is returned from the `read_pathway_sets` function. It contains information
+on the pathways that were found by querying the database. The parameter
+`query_set` is the vector of ensembl IDs that were used as the query subset.
+The next input parameter `total_genes`, is the total number of genes in the
+database for the matched species. `processed_data` is the input parameter for
+the data matrix that has gone through the pre-processing functions. The
+`gene_info` parameter takes in the `all_gene_info` list that was create in the
+"Load_Data" instruction. The input parameter `go` takes in the selection for the
+portion of the database. This input should be the same as what was inputted for
+`go` in the function `read_pathway_sets`. 
+
+The next parameter takes in the `idep_data` list that is created from the iDEP
+database. `sub_pathway_files` is the parameter that takes in the pathway files
+that were found in the previous function to have information for the matched
+species. `use_filtered_background` is TURE/FALSE for which gene set to use as
+the background when calculating overlap. For TRUE, the background gene set will
+be the genes in the processed data matrix that passed the filtering. If the
+value is set to FALSE, the background will be all the gene IDs that were found
+in the iDEP database for the matched species. It is recommended to use the value
+TRUE, as this will give the most accurate p-value for which pathways are
+enriched. The video in the  introduction gives details about the meaning of
+enriched. `select_org` is the input that specifies the species that the
+expression data is for. Finally, the last input parameter is `reduced` and can
+be set to FALSE, or a decimal value. If a decimal value is inputted, this will
+filter out all the pathways that have a greater proportion of genes in common
+with another pathway than the inputted decimal. If FALSE is inputted, no
+pathways will be removed with redudant gene sets. This results of this function
+be examined in the next section.
 
 ```{r}
 pathway_info <- find_overlap(
@@ -196,3 +224,40 @@ pathway_info <- find_overlap(
 )
 ```
 
+<br>
+
+###### Examining Results
+
+The table below is the first four columns of the results data frame that was 
+created in the example enrichment analysis. The fifth column is difficult to put
+into a table because it contains the gene sets for all the significant pathways
+that were found. The first column in this table is the adjusted p-value for the
+significance of the overlap calculated for the pathway. The next column denotes
+the amount of genes from the query that were associated with the given pathway.
+The next column gives the total number of genes that were associated with the
+pathway. Finally, the last column is the functional category or description of
+what the pathway is biologically responsible for. To see the genes for the
+functional category from the query, run `pathway_info[, 5]`. If there is no
+significantly enriched pathways, the data frame will say "No significant
+enrichment found!" 
+
+```{r}
+DT::datatable(
+  pathway_info[, 1:4],
+  options = list(dom = "ft"),
+  rownames = FALSE,
+  selection = "single"
+)
+```
+
+<br>
+
+###### Conclusion
+
+This instruction covered the steps needed to perform enrichment analysis on a
+subset of genes. Using these steps it is possible to determine the pathways that
+are enriched based off the ratio of genes in the subset corresponding to the
+pathway and genes in the background corresponding to the pathway. The goal is to
+determine the pathways that are being affected by the different treatments and
+effects. For troubleshooting, all functions have documentation and the code is
+available on Github. (https://github.com/gexijin/idepGolem)
