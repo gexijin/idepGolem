@@ -9,9 +9,36 @@
 #' @importFrom shiny NS tagList 
 mod_10_doc_ui <- function(id){
   ns <- NS(id)
-  fluidPage(
-    p("test!"),
-    plotOutput(ns("test1"))
+tabPanel(
+    "R",
+    sidebarLayout(
+      sidebarPanel(
+        h5(
+          "Test new tab",
+        ),
+        numericInput(
+          inputId = ns("sampleID"), 
+          label = h5("sample ID"), 
+          min = 1, 
+          max = 5, 
+          value = 1
+        ),       
+      ),
+      mainPanel(
+        tabsetPanel(
+          id = ns("test_tabs"),
+          tabPanel(
+            "Histogram",
+            p("test!"),
+            plotOutput(
+              outputId = ns("test1"),
+              width = "100%",
+              height = "500px"
+            )
+          )
+        )
+      )
+    )
   )
 
 }
