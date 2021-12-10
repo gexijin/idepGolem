@@ -9,7 +9,7 @@
 #' @importFrom shiny NS tagList 
 mod_10_doc_ui <- function(id){
   ns <- NS(id)
-tabPanel(
+  tabPanel(
     "R",
     sidebarLayout(
       sidebarPanel(
@@ -22,13 +22,13 @@ tabPanel(
           min = 1, 
           max = 5, 
           value = 1
-        ),       
+        ),
       ),
       mainPanel(
         tabsetPanel(
           id = ns("test_tabs"),
           tabPanel(
-            "Histogram",
+            tile = "Histogram",
             p("test!"),
             plotOutput(
               outputId = ns("test1"),
@@ -50,10 +50,11 @@ mod_10_doc_server <- function(id, pre_process, idep_data, tab){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
 
-    output$test1 <- ({
+    output$test1 <- renderPlot({
       req(!is.null(pre_process$data()))
-      hist(pre_process$data()[, 2])
-
+      doc_hist(
+        processed_data = pre_process$data(),
+        sampleID = input$sampleID )
     })
  
   })
