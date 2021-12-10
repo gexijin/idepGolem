@@ -61,6 +61,7 @@ usethis::use_package("QUBIC")
 usethis::use_package("runibic")
 usethis::use_package("grDevices")
 usethis::use_package("loose.rock")
+usethis::use_package("hgu133plus2.db")
 
 ## Add modules ----
 ## Create a module infrastructure in R/

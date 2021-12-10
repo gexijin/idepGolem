@@ -34,6 +34,7 @@ Imports:
     graphics,
     grDevices,
     grid,
+    hgu133plus2.db,
     htmltools (>= 0.5.2),
     igraph,
     InteractiveComplexHeatmap,
