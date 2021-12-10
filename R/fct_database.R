@@ -145,7 +145,6 @@ get_idep_data <- function(datapath = DATAPATH) {
   ))
 }
 
-idep_data <- get_idep_data()
 
 #' Find the ID type
 #'

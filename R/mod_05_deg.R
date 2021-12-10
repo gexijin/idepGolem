@@ -10,7 +10,7 @@
 mod_05_deg_1_ui <- function(id) {
   ns <- NS(id)
   tabPanel(
-    title = "DEG Design (Step 1)",
+    title = "DEG1",
     sidebarLayout(
       sidebarPanel(
         # DEG analysis methods for read counts data
@@ -150,7 +150,7 @@ mod_05_deg_1_ui <- function(id) {
 mod_05_deg_2_ui <- function(id) {
   ns <- NS(id)
   tabPanel(
-    title = "DEG Analysis (Step 2)",
+    title = "DEG2",
     sidebarLayout(
       sidebarPanel(
         h5("Examine the results of DEGs for each comparison"),
