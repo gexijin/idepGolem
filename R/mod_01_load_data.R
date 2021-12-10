@@ -249,6 +249,9 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       shiny::showModal(
         shiny::modalDialog(
           size = "l",
+          p("Search annotated species by common or scientific names, 
+          or NCBI taxonomy id. If your species cannot be found here, 
+          you can still use iDEP without pathway analysis."),
           DT::renderDataTable({
             df <- idep_data$org_info[, c("ensembl_dataset", "name", "totalGenes")]
             colnames(df) <- c("Ensembl/STRING-db ID", "Name (Assembly)", "Total Genes")
