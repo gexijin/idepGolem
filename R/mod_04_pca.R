@@ -56,6 +56,10 @@ mod_04_pca_ui <- function(id) {
               outputId = ns("pca_plot_obj"),
               width = "100%",
               height = "500px"
+            ),
+            br(),
+            shiny::textOutput(
+              outputId = ns("pc_correlation")
             )
           ),
           tabPanel(
@@ -101,6 +105,15 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
         sample_info = pre_process$sample_info(),
         PCAx = input$PCAx,
         PCAy = input$PCAy
+      )
+    })
+    
+    # PC Factor Correlation ---------
+    output$pc_correlation <- renderText({
+      req(!is.null(pre_process$data()))
+      pc_factor_correlation(
+        data = pre_process$data(),
+        sample_info = pre_process$sample_info()
       )
     })
     
