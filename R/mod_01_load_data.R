@@ -40,16 +40,12 @@ mod_01_load_data_ui <- function(id) {
         fluidRow( 
           column(
             width = 9, 
-            selectizeInput(
+            selectInput(
               inputId = ns("select_org"),
               label = NULL,
               choices = " ",
-              multiple = TRUE,
-              options = list(
-                maxItems = 1,
-                placeholder = "Best matching species",
-                onInitialize = I('function() { this.setValue(""); }')
-              )
+              multiple = FALSE,
+              selectize = TRUE
             )
           ),
           column(
@@ -268,12 +264,11 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
     # Provide species list for dropdown selection -----------
     observe({
-      updateSelectizeInput(
+      updateSelectInput(
         session = session,
         inputId = "select_org",
         choices = idep_data$species_choice,
         selected = idep_data$species_choice[1],
-        server = TRUE
       )
     })
 
