@@ -11,7 +11,7 @@
 NULL
 
 
-DATAPATH <- "E:/idep_9_24/data/data104/"
+DATAPATH <- "d:/idep_9_24/data/data104b/"
 
 
 #' connect_convert_db connects to the convertIDs.db and returns the
@@ -145,7 +145,6 @@ get_idep_data <- function(datapath = DATAPATH) {
   ))
 }
 
-idep_data <- get_idep_data()
 
 #' Find the ID type
 #'
