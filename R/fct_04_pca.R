@@ -14,7 +14,6 @@ NULL
 #' Principal Component Analysis
 #'
 #' Draw a PCA plot where user selects which PCs on axes
-#' 
 #'
 #' @param data Data that has been through pre-processing
 #' @param sample_info Matrix array with experiment info
@@ -28,169 +27,362 @@ PCA_plot <- function(
   sample_info,
   PCAx = 1,
   PCAy = 2
-){
+) {
+  counts <- data
+  memo <- ""
   
-  ##x<-processed_data$data
-  ##y<-loaded_data$sample_info
+  if (ncol(counts) > 100) {
+    part <- 1:100
+    counts <- counts[, part]
+    memo <- paste("(only showing 100 samples)")
+  }
   
+  if (ncol(counts) < 31) {
+    x_axis_labels <- 16
+  } else {
+    x_axis_labels <- 12
+  }
+  
+  ## x<-processed_data$data
+  ## y<-loaded_data$sample_info
   x <- data
   y <- sample_info
-  
-  
-  pca_object <- prcomp(t(x))
+  pca.object <- prcomp(t(x))
   npc <- 5
-  pca_data <- as.data.frame(pca_object$x[, 1:npc]) 
-  pvals <- matrix(1, nrow = npc, ncol = ncol(y))
-  for (i in 1:npc) {
-    for (j in 1:ncol(y)) {
-      pvals[i, j] <- summary(aov(pca_data[, i] ~ as.factor(y[, j])))[[1]][["Pr(>F)"]][1]
-    }
-  }
-  
-  # Correcting for multiple testing
-  pvals <- pvals * npc * ncol(y)
-  pvals[pvals > 1] <- 1
-  
-  colnames(pvals) <- colnames(y)
-  rownames(pvals) <- paste0("PC", 1:npc)
-  
-  
-  
-  a <- "<h4> Correlation between Principal Components (PCs) with factors </h4>"
-  nchar_0 <- nchar(a)
-  for (i in 1:npc) {
-    j <- which.min(pvals[i,])
-    if (pvals[i,j]< 0.05) {
-      a <- paste0(
-        a,
-        rownames(pvals)[i], 
-        " is correlated with ",
-        colnames(pvals)[j],
-        " (p=",
-        sprintf("%-3.2e", pvals[i, j]), 
-        ").<br>"
-      )
-    }
-  }
-  if(nchar(a) == nchar_0) {
-    return(NULL)
-  } else {
+  pcaData <- as.data.frame(pca.object$x[, 1:npc])
+  # pvals <- matrix(1, nrow = npc, ncol = ncol(y))
+  # for (i in 1:npc) {
+  #   for (j in 1:ncol(y)) {
+  #     pvals[i, j] <- summary(aov(pcaData[, i] ~ as.factor(y[, j])))[[1]][["Pr(>F)"]][1]
+  #   }
+  # }
+  # pvals <- pvals * npc * ncol(y) # correcting for multiple testing
+  # pvals[pvals > 1] <- 1
+  # colnames(pvals) <- colnames(y)
+  # rownames(pvals) <- paste0("PC", 1:npc)
+  # a <- "<h4>Correlation between Principal Components (PCs) with factors </h4>"
+  # nchar0 <- nchar(a)
+  # for (i in 1:npc) {
+  #   j <- which.min(pvals[i, ])
+  #   if (pvals[i, j] < 0.05) {
+  #     a <- paste0(
+  #       a, rownames(pvals)[i],
+  #       " is correlated with ", colnames(pvals)[j],
+  #       " (p=", sprintf("%-3.2e", pvals[i, j]), ").<br>"
+  #     )
+  #   }
+  # }
+  # if (nchar(a) == nchar0) {
+  #   return(NULL)
+  # } else {
     groups <- detect_groups(sample_names = colnames(data), sample_info = sample_info)
-
-    P1 <- paste("PC", PCAx, sep = "")
-    P2 <- paste("PC", PCAy, sep = "")
   
-    p <- ggplot2::ggplot(
-      pca_data,
-      ggplot2::aes(
-        x = pca_data[, as.integer(PCAx)],
-        y = pca_data[, as.integer(PCAy)],
-        color = groups,
-        shape = groups
-      )
-    ) + ggplot2::geom_point()
-
-    # Selected principal components
-    PCA_xy <- c(as.integer(PCAx), as.integer(PCAy))
-    percent_var <- round(100 * summary(pca_object)$importance[2, PCA_xy], 0)
   
-    p <- p + ggplot2::xlab(paste0("PC", PCAx, ": ", percent_var[1], "% variance")) +
-      ggplot2::ylab(paste0("PC", PCAy, ": ", percent_var[2], "% variance")) + 
-      ggplot2::ggtitle("Principal Component Analysis (PCA)") + 
-      ggplot2::coord_fixed(ratio = 1.0) + 
-      ggplot2::theme(
-        plot.title = ggplot2::element_text(size = 16,hjust = 0.5),
-        aspect.ratio = 1,
-        axis.text.x = ggplot2::element_text(size = 16),
-        axis.text.y = ggplot2::element_text(size = 16),
-        axis.title.x = ggplot2::element_text(size = 16),
-        axis.title.y = ggplot2::element_text(size = 16),
-        legend.text = ggplot2::element_text(size=16)
-      )
-  
-    return(p)
+  if (nlevels(groups) <= 1 | nlevels(groups) > 20) {
+    group_fill <- NULL
+    legend <- "none"
+  } else {
+    group_fill <- groups
+    legend <- "right"
   }
+  
+  if (ncol(counts) < 31) {
+    x_axis_labels <- 16
+  } else {
+    x_axis_labels <- 12
+  }
+  
+  P1 <- paste("PC", PCAx, sep = "")
+  P2 <- paste("PC", PCAy, sep = "")
+  
+  # Set point & text size based on number of sample
+  point_size <- 6
+  if (ncol(x) >= 40) {
+    point_size <- 3
+  }
+  
+  plot_PCA <- ggplot2::ggplot(
+    data = pcaData, 
+    ggplot2::aes(
+      x = pcaData[, as.integer(PCAx)],
+      y = pcaData[, as.integer(PCAy)],
+      color = groups,
+      shape = groups
+    )
+  ) +
+  ggplot2::geom_point(size = point_size) +
+  
+  ggplot2::theme_light() +
+  ggplot2::theme(
+      legend.position = "right", # TODO no legend for large data
+      axis.title.y = ggplot2::element_text(
+        color = "black",
+        size = 14
+      ),
+      axis.title.x = ggplot2::element_text(
+        color = "black",
+        size = 14
+      ),
+      axis.text.x = ggplot2::element_text(
+        angle = 90,
+        size = x_axis_labels
+      ),
+      axis.text.y = ggplot2::element_text(
+        size = 16
+      ),
+      plot.title = ggplot2::element_text(
+        color = "black",
+        size = 16,
+        face = "bold",
+        hjust = .5
+      )
+    ) +
+    ggplot2::labs(
+      title = paste("Principal Component Analysis (PCA) ", memo),
+      y = "Dimension 2",
+      x = "Dimension 1"
+    )
+  # selected principal components
+  PCAxy <- c(as.integer(PCAx), as.integer(PCAy))
+  percentVar <- round(100 * summary(pca.object)$importance[2, PCAxy], 0)
+  plot_PCA <- plot_PCA + ggplot2::xlab(paste0("PC", PCAx, ": ", percentVar[1], "% Variance"))
+  plot_PCA <- plot_PCA + ggplot2::ylab(paste0("PC", PCAy, ": ", percentVar[2], "% Variance"))
+  return(plot_PCA)
 }
 
 #' TSNE FUNCTION 
+#'
+#' Draw a t-sne plot where user selects which PCs on axes
+#'
+#'
+#' @param data Data that has been through pre-processing
+#' @param sample_info Matrix array with experiment info
+#'
+#' @return Formatted T-sne plot
+#'
+#'
 t_SNE_plot <- function(
   data,
   sample_info
-) {	 
-  tsne <- Rtsne::Rtsne(
-    t(data),
-    dims = 2,
-    perplexity = 1,
-    verbose = FALSE,
-    max_iter = 400
-  )
+) {
+  counts <- data
+  memo <- ""
   
-  pca_data <- as.data.frame(tsne$Y);
-  pca_data <- cbind(pca_data, detect_groups(colnames(data), sample_info))
+  if (ncol(counts) > 100) {
+    part <- 1:100
+    counts <- counts[, part]
+    memo <- paste("(only showing 100 samples)")
+  }
+
+  if (ncol(counts) < 31) {
+    x_axis_labels <- 16
+  } else {
+    x_axis_labels <- 12
+  }
+
   
-  colnames(pca_data) <- c("x1", "x2", "Sample_Name")
+  x <- data
+  y <- sample_info
+  tsne <- Rtsne::Rtsne(t(x), dims = 2, perplexity = 1, verbose = FALSE, max_iter = 400)
+  pcaData <- as.data.frame(tsne$Y)
+  pcaData <- cbind(pcaData, detect_groups(colnames(x), y))
+
+  colnames(pcaData) <- c("x1", "x2", "Sample_Name")
   
-  p <- ggplot2::ggplot(
-    pca_data,
-    ggplot2::aes(x1, x2, color = Sample_Name, shape = Sample_Name)
-  ) + 
-    ggplot2::geom_point() +
-    ggplot2::xlab("Dimension 1") + 
-    ggplot2::ylab("Dimension 2") +
-    ggplot2::ggtitle("t-SNE plot") +
-    ggplot2::coord_fixed(ratio=1.) +
-    ggplot2::theme(
-      plot.title = ggplot2::element_text(hjust = 0.5),
-      aspect.ratio = 1,
-      axis.text.x = ggplot2::element_text(size = 16),
-      axis.text.y = ggplot2::element_text(size = 16),
-      axis.title.x = ggplot2::element_text(size = 16),
-      axis.title.y = ggplot2::element_text(size = 16),
-      legend.text = ggplot2::element_text(size = 16)
+  # Set point size based on number of sample
+  point_size <- 6
+  if (ncol(x) >= 40) {
+    point_size <- 3
+  }
+  
+  #Generate plot
+  plot_t_SNE <- ggplot2::ggplot(
+    data = pcaData,
+    ggplot2::aes(
+      x = x1,
+      y = x2,
+      color = Sample_Name,
+      shape = Sample_Name)
+    ) +
+  ggplot2::geom_point(size = point_size) +
+  ggplot2::theme_light() +
+  ggplot2::theme(
+    legend.position = "right",
+    axis.title.y = ggplot2::element_text(
+      color = "black",
+      size = 14
+    ),
+    axis.title.x = ggplot2::element_text(
+      color = "black",
+      size = 14
+    ),
+    axis.text.x = ggplot2::element_text(
+      angle = 90,
+      size = x_axis_labels
+    ),
+    axis.text.y = ggplot2::element_text(
+      size = 16
+    ),
+    plot.title = ggplot2::element_text(
+      color = "black",
+      size = 16,
+      face = "bold",
+      hjust = .5
     )
-  
-  return(p)
+  ) +
+    ggplot2::labs(
+      title = paste("T-SNE ", memo),
+      y = "Dimension 2",
+      x = "Dimension 1"
+    )
+
+  return(plot_t_SNE)
 }
 
-# MDS FUNCTION
+#' MDS FUNCTION
+#'
+#' Draw a MDS plot
+#'
+#'
+#' @param data Data that has been through pre-processing
+#' @param sample_info Matrix array with experiment info
+#'
+#' @return Formatted PCA plot
+#'
 MDS_plot <- function(
   data,
   sample_info
-){
+) {
+  counts <- data
+  memo <- ""
+  
+  if (ncol(counts) > 100) {
+    part <- 1:100
+    counts <- counts[, part]
+    memo <- paste("(only showing 100 samples)")
+  }
+  
+  if (ncol(counts) < 31) {
+    x_axis_labels <- 16
+  } else {
+    x_axis_labels <- 12
+  }
+  
+  x <- data
+  y <- sample_info
+
   fit <- cmdscale(
-    dist_functions()$pearson_correlation(t(data)),
+    dist_functions()$pearson_correlation(t(x)),
     eig = T,
     k = 2
   )
+  pcaData <- as.data.frame(fit$points[, 1:2])
+  pcaData <- cbind(pcaData, detect_groups(colnames(x), y))
+  colnames(pcaData) <- c("x1", "x2", "Sample_Name")
   
-  pca_data <- as.data.frame(fit$points[, 1:2])
-  pca_data <- cbind(pca_data, detect_groups(colnames(data), sample_info))
-  
-  colnames(pca_data) <- c("x1", "x2", "Sample_Name")		 	
-  
+  # Set point & text size based on number of sample
+  point_size <- 6
+
+  if (ncol(x) >= 40) {
+    point_size <- 3
+    #text_size <- 16
+  }
   p <- ggplot2::ggplot(
-    pca_data,
+    data = pcaData,
     ggplot2::aes(
-      x1,
-      x2,
+      x = x1,
+      y = x2,
       color = Sample_Name,
       shape = Sample_Name
     )
-  ) +
-    ggplot2::geom_point() +
-    ggplot2::xlab("Dimension 1") +
-    ggplot2::ylab("Dimension 2") +
-    ggplot2::ggtitle("Multidimensional scaling (MDS)") +
-    ggplot2::coord_fixed(ratio = 1.) + 
+  )
+  p <- p + ggplot2::geom_point(size = point_size) +
+  ggplot2::theme_light() +
     ggplot2::theme(
-      plot.title = ggplot2::element_text(hjust = 0.5),
-      aspect.ratio = 1,
-      axis.text.x = ggplot2::element_text(size = 16),
-      axis.text.y = ggplot2::element_text(size = 16),
-      axis.title.x = ggplot2::element_text(size = 16),
-      axis.title.y = ggplot2::element_text(size = 16),
-      legend.text = ggplot2::element_text(size = 16)
+      legend.position = "right",
+      axis.title.y = ggplot2::element_text(
+        color = "black",
+        size = 14
+      ),
+      axis.title.x = ggplot2::element_text(
+        color = "black",
+        size = 14
+      ),
+      axis.text.x = ggplot2::element_text(
+        angle = 90,
+        size = x_axis_labels
+      ),
+      axis.text.y = ggplot2::element_text(
+        size = 16
+      ),
+      plot.title = ggplot2::element_text(
+        color = "black",
+        size = 16,
+        face = "bold",
+        hjust = .5
+      )
+    ) +
+    ggplot2::labs(
+      title = paste("Multi-Dimensional Scaling (MDS) ", memo),
+      y = "Dimension 2",
+      x = "Dimension 1"
     )
- 
   return(p)
+}
+
+
+#' Correlations Between Principle Components and Factors
+#'
+#' Desc
+#'
+#'
+#' @param data Data that has been through pre-processing
+#' @param sample_info Matrix array with experiment info
+#'
+#' @return text with correlation
+#'
+pc_factor_correlation <- function(
+  data,
+  sample_info
+) {
+  x <- data
+  y <- sample_info
+  if (is.null(y)){
+    y <- as.matrix(detect_groups(colnames(data)))
+  }
+  
+  if(dim(y)[2] == 1)
+  {
+    return("No design file uploaded")
+  }
+  pca.object <- prcomp(t(x))
+  npc <- 5
+  pcaData <- as.data.frame(pca.object$x[, 1:npc])
+  pvals <- matrix(1, nrow = npc, ncol = ncol(y))
+  for (i in 1:npc) {
+    for (j in 1:ncol(y)) {
+      pvals[i, j] <- summary(
+        aov(
+          pcaData[, i] ~ as.factor(y[, j])
+          )
+        )[[1]][["Pr(>F)"]][1]
+    }
+  }
+  pvals <- pvals * npc * ncol(y) # correcting for multiple testing
+  pvals[pvals > 1] <- 1
+  colnames(pvals) <- colnames(y)
+  rownames(pvals) <- paste0("PC", 1:npc)
+  a <- "Correlation between Principal Components (PCs) with factors: "
+  nchar0 <- nchar(a)
+  for (i in 1:npc) {
+    j <- which.min(pvals[i, ])
+    if (pvals[i, j] < 0.05) {
+      a <- paste0(
+        a, rownames(pvals)[i],
+        " is correlated with ", colnames(pvals)[j],
+        " (p=", sprintf("%-3.2e", pvals[i, j]), ")."
+      )
+    }
+  }
+  return(a)
 }

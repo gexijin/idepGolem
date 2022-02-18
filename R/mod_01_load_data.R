@@ -410,7 +410,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       req(tab() == "Load Data" && !is.null(conversion_info()$converted))
 
       tem <- conversion_info()$converted$species_match
-      showNotification(
+       showNotification(
         ui = paste("Matched species is '", tem[1, ],".' If that is not your
                     species, please reset and use the dropdown to select
                     the correct species."),

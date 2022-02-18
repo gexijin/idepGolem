@@ -286,8 +286,8 @@ total_counts_ggplot <- function(
       )
     ) +
     ggplot2::labs(
-      title = paste("Total read counts (millions)", memo),
-      y = "Counts (Millions)"
+      title = paste("Total Raw Read Counts (Millions)", memo),
+      y = "Raw Counts (Millions)"
     )
 
   return(plot)
