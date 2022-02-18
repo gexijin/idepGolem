@@ -438,7 +438,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       req(!is.null(processed_data()$data))
 
       total_counts_ggplot(
-        counts_data = processed_data()$data,
+        counts_data = processed_data()$raw_counts,
         sample_info = load_data$sample_info()
       )
     })
