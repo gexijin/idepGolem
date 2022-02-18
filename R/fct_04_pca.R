@@ -50,33 +50,33 @@ PCA_plot <- function(
   pca.object <- prcomp(t(x))
   npc <- 5
   pcaData <- as.data.frame(pca.object$x[, 1:npc])
-  pvals <- matrix(1, nrow = npc, ncol = ncol(y))
-  for (i in 1:npc) {
-    for (j in 1:ncol(y)) {
-      pvals[i, j] <- summary(aov(pcaData[, i] ~ as.factor(y[, j])))[[1]][["Pr(>F)"]][1]
-    }
-  }
-  pvals <- pvals * npc * ncol(y) # correcting for multiple testing
-  pvals[pvals > 1] <- 1
-  colnames(pvals) <- colnames(y)
-  rownames(pvals) <- paste0("PC", 1:npc)
-  a <- "<h4>Correlation between Principal Components (PCs) with factors </h4>"
-  nchar0 <- nchar(a)
-  for (i in 1:npc) {
-    j <- which.min(pvals[i, ])
-    if (pvals[i, j] < 0.05) {
-      a <- paste0(
-        a, rownames(pvals)[i],
-        " is correlated with ", colnames(pvals)[j],
-        " (p=", sprintf("%-3.2e", pvals[i, j]), ").<br>"
-      )
-    }
-  }
-  if (nchar(a) == nchar0) {
-    return(NULL)
-  } else {
+  # pvals <- matrix(1, nrow = npc, ncol = ncol(y))
+  # for (i in 1:npc) {
+  #   for (j in 1:ncol(y)) {
+  #     pvals[i, j] <- summary(aov(pcaData[, i] ~ as.factor(y[, j])))[[1]][["Pr(>F)"]][1]
+  #   }
+  # }
+  # pvals <- pvals * npc * ncol(y) # correcting for multiple testing
+  # pvals[pvals > 1] <- 1
+  # colnames(pvals) <- colnames(y)
+  # rownames(pvals) <- paste0("PC", 1:npc)
+  # a <- "<h4>Correlation between Principal Components (PCs) with factors </h4>"
+  # nchar0 <- nchar(a)
+  # for (i in 1:npc) {
+  #   j <- which.min(pvals[i, ])
+  #   if (pvals[i, j] < 0.05) {
+  #     a <- paste0(
+  #       a, rownames(pvals)[i],
+  #       " is correlated with ", colnames(pvals)[j],
+  #       " (p=", sprintf("%-3.2e", pvals[i, j]), ").<br>"
+  #     )
+  #   }
+  # }
+  # if (nchar(a) == nchar0) {
+  #   return(NULL)
+  # } else {
     groups <- detect_groups(sample_names = colnames(data), sample_info = sample_info)
-  }
+  
   
   if (nlevels(groups) <= 1 | nlevels(groups) > 20) {
     group_fill <- NULL
@@ -147,17 +147,6 @@ PCA_plot <- function(
   percentVar <- round(100 * summary(pca.object)$importance[2, PCAxy], 0)
   plot_PCA <- plot_PCA + ggplot2::xlab(paste0("PC", PCAx, ": ", percentVar[1], "% Variance"))
   plot_PCA <- plot_PCA + ggplot2::ylab(paste0("PC", PCAy, ": ", percentVar[2], "% Variance"))
-  # #plot_PCA <- plot_PCA + ggplot2::ggtitle("Principal Component Analysis (PCA)") +
-  #   ggplot2::coord_fixed(ratio = 1.0) +
-  #   ggplot2::theme(plot.title = ggplot2::element_text(size = text_size, hjust = 0.5)) +
-  #   ggplot2::theme(aspect.ratio = 1) +
-  #   ggplot2::theme(
-  #     axis.text.x = ggplot2::element_text(size = text_size),
-  #     axis.text.y = ggplot2::element_text(size = text_size),
-  #     axis.title.x = ggplot2::element_text(size = text_size),
-  #     axis.title.y = ggplot2::element_text(size = text_size)
-  #   ) +
-   # ggplot2::theme(legend.text = ggplot2::element_text())
   return(plot_PCA)
 }
 
@@ -358,6 +347,14 @@ pc_factor_correlation <- function(
 ) {
   x <- data
   y <- sample_info
+  if (is.null(y)){
+    y <- as.matrix(detect_groups(colnames(data)))
+  }
+  
+  if(dim(y)[2] == 1)
+  {
+    return("No design file uploaded")
+  }
   pca.object <- prcomp(t(x))
   npc <- 5
   pcaData <- as.data.frame(pca.object$x[, 1:npc])

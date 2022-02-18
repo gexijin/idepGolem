@@ -428,9 +428,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         counts_log_start = input$counts_log_start,
         no_fdr = load_data$no_fdr()
       )
-
       shinybusy::remove_modal_spinner()
-
+      
       return(processed_data)
     })
 

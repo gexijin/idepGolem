@@ -178,7 +178,8 @@ input_data <- function(
   in_file_expr <- in_file_expr$datapath
   if (is.null(in_file_expr) && go_button == 0) {
     return(list(
-      data = data
+      data = data,
+      sample_info = NULL
     ))
   } else if (go_button > 0) {
     sample_info_demo <- t(read.csv(
