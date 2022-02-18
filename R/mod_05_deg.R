@@ -10,7 +10,7 @@
 mod_05_deg_1_ui <- function(id) {
   ns <- NS(id)
   tabPanel(
-    title = "DEG Design (Step 1)",
+    title = "DEG1",
     sidebarLayout(
       sidebarPanel(
         # DEG analysis methods for read counts data
@@ -24,17 +24,20 @@ mod_05_deg_1_ui <- function(id) {
               "limma-voom" = 2,
               "limma-trend" = 1
             ),
-            selected = 3
+            selected = 3 
+            
           ),
           tags$style(
             type = 'text/css',
             "#deg-counts_deg_method {width:100%;   margin-top:-12px}"
-          )
+          ), 
+          ns = ns
         ),
         # Label when the limma method is selected
         conditionalPanel(
           condition = "output.data_file_format == 2",
-          h5("Using the limma package")
+          h5("Using the limma package"), 
+          ns = ns
         ),
         fluidRow(
           column(
@@ -150,7 +153,7 @@ mod_05_deg_1_ui <- function(id) {
 mod_05_deg_2_ui <- function(id) {
   ns <- NS(id)
   tabPanel(
-    title = "DEG Analysis (Step 2)",
+    title = "DEG2",
     sidebarLayout(
       sidebarPanel(
         h5("Examine the results of DEGs for each comparison"),

@@ -40,16 +40,12 @@ mod_01_load_data_ui <- function(id) {
         fluidRow( 
           column(
             width = 9, 
-            selectizeInput(
+            selectInput(
               inputId = ns("select_org"),
               label = NULL,
               choices = " ",
-              multiple = TRUE,
-              options = list(
-                maxItems = 1,
-                placeholder = "Best matching species",
-                onInitialize = I('function() { this.setValue(""); }')
-              )
+              multiple = FALSE,
+              selectize = TRUE
             )
           ),
           column(
@@ -249,6 +245,9 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       shiny::showModal(
         shiny::modalDialog(
           size = "l",
+          p("Search annotated species by common or scientific names, 
+          or NCBI taxonomy id. If your species cannot be found here, 
+          you can still use iDEP without pathway analysis."),
           DT::renderDataTable({
             df <- idep_data$org_info[, c("ensembl_dataset", "name", "totalGenes")]
             colnames(df) <- c("Ensembl/STRING-db ID", "Name (Assembly)", "Total Genes")
@@ -268,12 +267,11 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
     # Provide species list for dropdown selection -----------
     observe({
-      updateSelectizeInput(
+      updateSelectInput(
         session = session,
         inputId = "select_org",
         choices = idep_data$species_choice,
         selected = idep_data$species_choice[1],
-        server = TRUE
       )
     })
 
@@ -429,20 +427,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       removeNotification("species_match")
     })
 
-    # Species list and genome assemblies ---------
-    output$genome_species_table <- DT::renderDataTable({
-      df <- idep_data$org_info[, c("ensembl_dataset", "name", "totalGenes")]
-      colnames(df) <- c("Ensembl/STRING-db ID", "Name (Assembly)", "Total Genes")
-      row.names(df) <- NULL
-      DT::datatable(
-        df,
-        options = list(
-          pageLength = 20,
-          scrollY = "400px"
-        ),
-        rownames = FALSE
-      )
-    })
 
     # Return data used in the following panels --------
     list(

@@ -59,4 +59,10 @@ app_server <- function(input, output, session) {
     idep_data = idep_data,
     tab = tab
   )
+  mod_10_doc_server(
+    id = "doc",
+    pre_process = pre_process,
+    idep_data = idep_data,
+    tab = tab
+  )
 }
