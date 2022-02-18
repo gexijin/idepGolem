@@ -24,17 +24,20 @@ mod_05_deg_1_ui <- function(id) {
               "limma-voom" = 2,
               "limma-trend" = 1
             ),
-            selected = 3
+            selected = 3 
+            
           ),
           tags$style(
             type = 'text/css',
             "#deg-counts_deg_method {width:100%;   margin-top:-12px}"
-          )
+          ), 
+          ns = ns
         ),
         # Label when the limma method is selected
         conditionalPanel(
           condition = "output.data_file_format == 2",
-          h5("Using the limma package")
+          h5("Using the limma package"), 
+          ns = ns
         ),
         fluidRow(
           column(
