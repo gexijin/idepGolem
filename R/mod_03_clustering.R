@@ -15,13 +15,13 @@ mod_03_clustering_ui <- function(id) {
 
       # Heatmap Panel Sidebar ----------
       sidebarPanel(
-        sliderInput(
-          inputId = ns("n_genes"),
-          label = h4("Most variable genes to include:"),
-          min = 0,
-          max = 12000,
-          value = c(0, 100),
-          step = 50
+        numericInput(
+          inputId = ns("n_genes"), 
+          label = h4("Top n most variable genes to include:"), 
+          min = 5, 
+          max = 12000, 
+          value = 100, 
+          step = 10
         ),
 
         # k- means slidebar -----------
@@ -364,11 +364,11 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       if (nrow(pre_process$data()) > 12000) {
         max_genes <- 12000
       } else {
-        max_genes <- round(nrow(pre_process$data()) + 50, -2)
+        max_genes <- round(nrow(pre_process$data()), -2)
       }
-      updateSliderInput(
-        inputId = "n_genes",
-        value = c(0, 100),
+      updateNumericInput(
+        inputId = "n_genes", 
+        value = 100, 
         max = max_genes
       )
     })
@@ -444,6 +444,8 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         selected = "GOBP"
       )
     })
+    
+    n_genes_min <- 5 
 
     # Standard Deviation Density Plot ----------
     output$sd_density_plot <- renderPlot({
@@ -451,8 +453,8 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
 
       sd_density(
         data = pre_process$data(),
-        n_genes_max = input$n_genes[2],
-        n_genes_min = input$n_genes[1]
+        n_genes_max = input$n_genes,
+        n_genes_min = n_genes_min
       )
     })
 
@@ -462,8 +464,8 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
 
       process_heatmap_data(
         data = pre_process$data(),
-        n_genes_max = input$n_genes[2],
-        n_genes_min = input$n_genes[1],
+        n_genes_max = input$n_genes,
+        n_genes_min = n_genes_min,
         gene_centering = input$gene_centering,
         gene_normalize = input$gene_normalize,
         sample_centering = input$sample_centering,
