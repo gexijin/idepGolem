@@ -4,7 +4,7 @@
 \alias{sd_density}
 \title{Density plot of data standard deviation}
 \usage{
-sd_density(data, n_genes_max, n_genes_min)
+sd_density(data, n_genes_max)
 }
 \arguments{
 \item{data}{Data that has been through pre-processing}

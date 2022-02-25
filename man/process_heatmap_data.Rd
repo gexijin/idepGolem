@@ -7,7 +7,6 @@
 process_heatmap_data(
   data,
   n_genes_max,
-  n_genes_min,
   gene_centering,
   gene_normalize,
   sample_centering,
@@ -21,8 +20,6 @@ process_heatmap_data(
 
 \item{n_genes_max}{Row number upper limit to display in heatmap}
 
-\item{n_genes_min}{Row number lower limit to display in heatmap}
-
 \item{gene_centering}{TRUE/FALSE subtract mean from gene rows}
 
 \item{gene_normalize}{TRUE/FALSE divide by SD in gene rows}
@@ -35,6 +32,8 @@ process_heatmap_data(
 
 \item{select_gene_id}{Desired ID type for heatmap labels
 (User_ID, ensembl_ID, symbol)}
+
+\item{n_genes_min}{Row number lower limit to display in heatmap}
 }
 \value{
 Subsetted data matrix ([n_genes_min:n_genes_max, ]) with

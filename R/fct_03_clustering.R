@@ -23,9 +23,10 @@ NULL
 #' distribution.
 sd_density <- function(
   data,
-  n_genes_max,
-  n_genes_min
+  n_genes_max #,
+  #n_genes_min
 ) {
+  n_genes_min <- 5
   sds <- apply(data[, 1:dim(data)[2]], 1, sd)
   max_sd <- mean(sds) + 4 * sd(sds)
   sds[sds > max_sd] <- max_sd
@@ -155,7 +156,7 @@ sd_density <- function(
 process_heatmap_data <- function(
   data, 
   n_genes_max,
-  n_genes_min,
+  #n_genes_min,
   gene_centering,
   gene_normalize,
   sample_centering,
@@ -163,6 +164,7 @@ process_heatmap_data <- function(
   all_gene_names,
   select_gene_id
 ) {
+  n_genes_min <- 5
   data <- rowname_id_swap(
     data_matrix = data,
     all_gene_names = all_gene_names,
