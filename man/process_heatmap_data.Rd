@@ -32,8 +32,6 @@ process_heatmap_data(
 
 \item{select_gene_id}{Desired ID type for heatmap labels
 (User_ID, ensembl_ID, symbol)}
-
-\item{n_genes_min}{Row number lower limit to display in heatmap}
 }
 \value{
 Subsetted data matrix ([n_genes_min:n_genes_max, ]) with

@@ -444,8 +444,6 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         selected = "GOBP"
       )
     })
-    
-    #n_genes_min <- 5 
 
     # Standard Deviation Density Plot ----------
     output$sd_density_plot <- renderPlot({
@@ -453,8 +451,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
 
       sd_density(
         data = pre_process$data(),
-        n_genes_max = input$n_genes#,
-        #n_genes_min = n_genes_min
+        n_genes_max = input$n_genes
       )
     })
 
@@ -465,7 +462,6 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       process_heatmap_data(
         data = pre_process$data(),
         n_genes_max = input$n_genes,
-        #n_genes_min = n_genes_min,
         gene_centering = input$gene_centering,
         gene_normalize = input$gene_normalize,
         sample_centering = input$sample_centering,

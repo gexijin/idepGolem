@@ -10,8 +10,6 @@ sd_density(data, n_genes_max)
 \item{data}{Data that has been through pre-processing}
 
 \item{n_genes_max}{Upper limit of gene range}
-
-\item{n_genes_min}{Lower limit of gene range}
 }
 \value{
 Formatted density plot of the standard deviation

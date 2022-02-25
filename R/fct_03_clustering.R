@@ -17,14 +17,12 @@ NULL
 #'
 #' @param data Data that has been through pre-processing
 #' @param n_genes_max Upper limit of gene range
-#' @param n_genes_min Lower limit of gene range
 #'
 #' @return Formatted density plot of the standard deviation
 #' distribution.
 sd_density <- function(
   data,
-  n_genes_max #,
-  #n_genes_min
+  n_genes_max 
 ) {
   n_genes_min <- 5
   sds <- apply(data[, 1:dim(data)[2]], 1, sd)
@@ -142,7 +140,6 @@ sd_density <- function(
 #'
 #' @param data Processed data matrix
 #' @param n_genes_max Row number upper limit to display in heatmap
-#' @param n_genes_min Row number lower limit to display in heatmap
 #' @param gene_centering TRUE/FALSE subtract mean from gene rows
 #' @param gene_normalize TRUE/FALSE divide by SD in gene rows
 #' @param sample_centering TRUE/FALSE subtract mean from sample columns
@@ -156,7 +153,6 @@ sd_density <- function(
 process_heatmap_data <- function(
   data, 
   n_genes_max,
-  #n_genes_min,
   gene_centering,
   gene_normalize,
   sample_centering,
