@@ -31,7 +31,7 @@ idep_data <- get_idep_data()
 #BcellGSE71176_p53.csv
 #GSE37704_sailfish_genecounts
 YOUR_DATA_PATH <- "F:/data104b_final/data_go/GSE37704_sailfish_genecounts.csv"
-YOUR_EXPERIMENT_PATH <- "F:/data104b_final/data_go/BcellGSE71176_p53_sampleInfo.csv"
+YOUR_EXPERIMENT_PATH <- "F:/data104b_final/data_go/GSE37704_sailfish_design.csv"
 
 
 expression_file <- data.frame(
@@ -43,7 +43,7 @@ experiment_file <- data.frame(
 
 load_data <- input_data(
   expression_file = expression_file,
-  experiment_file = NULL, #experiment_file,
+  experiment_file = NULL,#experiment_file,
   go_button = FALSE,
   demo_data_file = idep_data$demo_data_file,
   demo_metadata_file = idep_data$demo_metadata_file
@@ -141,13 +141,18 @@ merged_data <- merge_data(
 
 ## PCA plots
 ```{r}
+detect_groups(colnames(processed_data$data), NULL)
 PCA_plot(
   data = processed_data$data,
-  sample_info = load_data$sample_info
+  sample_info = load_data$sample_info,
+  selected_color = "Sample_Name",
+  selected_shape = "Sample_Name"
 )
 t_SNE_plot(
   data= processed_data$data,
-  sample_info = load_data$sample_info
+  sample_info = load_data$sample_info,
+  selected_color = "p53",
+  selected_shape = "p53"
   )
 pc_factor_correlation(
   data = processed_data$data,
@@ -155,7 +160,9 @@ pc_factor_correlation(
 )
 MDS_plot(
   data = processed_data$data,
-  sample_info = load_data$sample_info
+  sample_info = load_data$sample_info,
+  shape = "Treatment",
+  color = "Treatment"
 )
 ```
 

@@ -265,7 +265,7 @@ total_counts_ggplot <- function(
     ggplot2::geom_bar(stat = "identity") +
     ggplot2::theme_light() +
     ggplot2::theme(
-      legend.position = "none",
+      legend.position = "right",
       axis.title.x = ggplot2::element_blank(),
       axis.title.y = ggplot2::element_text(
         color = "black",
@@ -397,7 +397,7 @@ eda_boxplot <- function(
     ggplot2::geom_boxplot() +
     ggplot2::theme_light() +
     ggplot2::theme(
-      legend.position = "none",
+      legend.position = "right",
       axis.title.x = ggplot2::element_blank(),
       axis.title.y = ggplot2::element_text(
         color = "black",
