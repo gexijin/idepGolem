@@ -240,6 +240,9 @@ mod_01_load_data_ui <- function(id) {
 mod_01_load_data_server <- function(id, idep_data, tab) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+    
+    #increase max input file size
+    options(shiny.maxRequestSize = 2001024^2)
 
     observeEvent(input$genome_assembl_button, {
       shiny::showModal(
