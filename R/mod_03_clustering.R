@@ -560,20 +560,6 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       }
     })
 
-    # Subheatmap Data Table ----------
-    output$subheat_data <- DT::renderDataTable({
-      req(!is.null(input$ht_brush))
-
-      DT::datatable(
-        shiny_env$submap_data,
-        options = list(
-          pageLength = 10,
-          scrollX = "400px"
-        ),
-        rownames = TRUE
-      )
-    })
-
     # Enrichment Analysis ----------
     # Gene sets reactive
     pathway_table <- reactive({
