@@ -228,8 +228,6 @@ mod_03_clustering_ui <- function(id) {
                 )
               )
             ),
-            h4("Sub-heatmap Data Table", align = "center"),
-            DT::dataTableOutput(outputId = ns("subheat_data"))
           ),
 
           # Enrichment panel ----------
