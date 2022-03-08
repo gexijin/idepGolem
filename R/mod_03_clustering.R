@@ -41,6 +41,12 @@ mod_03_clustering_ui <- function(id) {
             inputId = ns("k_means_re_run"),
             label = "Re-Run"
           ),
+          
+          # Elbow plot pop-up 
+          actionButton(
+            inputId = ns("elbow_pop_up"),
+            label = "How many clusters?"
+          ),
           ns = ns
         ),
 
@@ -203,6 +209,13 @@ mod_03_clustering_ui <- function(id) {
             title = "Heatmap",
             h5("Brush for sub-heatmap, click for value. (Shown Below)"),
             br(),
+            shinyBS::bsModal(
+              id = ns("elbow_modal"),
+              title = "How many clusters to use.", 
+              trigger = ns("elbow_pop_up"), 
+              size = "large", 
+              plotOutput(outputId = ns("k_clusters"))
+            ),
             fluidRow(
               column(
                 width = 3,
@@ -334,11 +347,11 @@ mod_03_clustering_ui <- function(id) {
                 target = "_blank"
               )
             ),
-            plotOutput(
-              outputId = ns("k_clusters"),
-              width = "100%",
-              height = "500px"
-            )
+            # plotOutput(
+            #   outputId = ns("k_clusters"),
+            #   width = "100%",
+            #   height = "500px"
+            #)
           )
         )
       )
