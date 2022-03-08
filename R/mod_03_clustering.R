@@ -209,12 +209,23 @@ mod_03_clustering_ui <- function(id) {
             title = "Heatmap",
             h5("Brush for sub-heatmap, click for value. (Shown Below)"),
             br(),
+            
+            #k means pop up for elbow graph 
             shinyBS::bsModal(
               id = ns("elbow_modal"),
-              title = "How many clusters to use.", 
+              title = tags$h5(
+                "Following the elbow method, one should choose k so that adding 
+                  another cluster does not substantially reduce the within groups sum of squares.",
+                tags$a(
+                  "Wikipedia",
+                  href = "https://en.wikipedia.org/wiki/Determining_the_number_of_clusters_in_a_data_set",
+                  target = "_blank"
+                )
+              ), 
               trigger = ns("elbow_pop_up"), 
               size = "large", 
               plotOutput(outputId = ns("k_clusters"))
+              
             ),
             fluidRow(
               column(
@@ -332,26 +343,6 @@ mod_03_clustering_ui <- function(id) {
               width = "100%",
               height = "400px"
             )
-          ),
-
-          # K-means elbow plot ----------
-          tabPanel(
-            title = "k-Cluster Plot",
-            h4("Determining the number of clusters (k)"),
-            h5(
-              "Following the elbow method, one should choose k so that adding another 
-               cluster does not substantially reduce the within groups sum of squares.",
-              a(
-                "Wikipedia",
-                href = "https://en.wikipedia.org/wiki/Determining_the_number_of_clusters_in_a_data_set",
-                target = "_blank"
-              )
-            ),
-            # plotOutput(
-            #   outputId = ns("k_clusters"),
-            #   width = "100%",
-            #   height = "500px"
-            #)
           )
         )
       )
