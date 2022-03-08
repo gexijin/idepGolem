@@ -270,11 +270,12 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
     # Provide species list for dropdown selection -----------
     observe({
-      updateSelectInput(
+      updateSelectizeInput(
         session = session,
         inputId = "select_org",
         choices = idep_data$species_choice,
         selected = idep_data$species_choice[1],
+        server = TRUE
       )
     })
 
