@@ -285,42 +285,7 @@ mod_03_clustering_ui <- function(id) {
             verbatimTextOutput(ns("test")),
             uiOutput(outputId = ns("pathway_data"))
           ),
-
-          # Enrichment panel ----------
-          # tabPanel(
-          #   title = "Enrichment",
-          #   br(),
-          #   fluidRow(
-          #     column(
-          #       width = 4,
-          #       htmlOutput(outputId = ns("select_go_selector"))
-          #     ),
-          #     column(
-          #       width = 8,
-          #       checkboxInput(
-          #         inputId = ns("filtered_background"), 
-          #         label = "Use filtered data as background in enrichment (slow)", 
-          #         value = TRUE
-          #       ),
-          #       checkboxInput(
-          #         inputId = ns("remove_redudant"),
-          #         label = "Remove Redudant Gene Sets",
-          #         value = FALSE
-          #       )
-          #     ),
-          #     tags$style(
-          #       type='text/css',
-          #       "#clustering-min_set_size {width:100%; margin-top:-12px}"
-          #     ),
-          #     tags$style(
-          #       type='text/css',
-          #       "#clustering-max_set_size {width:100%; margin-top:-12px}"
-          #     )
-          #   ),
-          #   verbatimTextOutput(ns("test")),
-          #   uiOutput(outputId = ns("pathway_data"))
-          # ),
-
+          
           # Gene Standard Deviation Distribution ----------
           tabPanel(
             title = "Gene SD Distribution",
