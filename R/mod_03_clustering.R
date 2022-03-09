@@ -58,7 +58,7 @@ mod_03_clustering_ui <- function(id) {
 
         # Select Clustering Method ----------
         conditionalPanel(
-          condition = "input.cluster_panels == 'Heatmap'",
+          condition = "input.cluster_panels == 'Heatmap/Enrichment'",
           
           selectInput(
             inputId = ns("cluster_meth"),
@@ -86,7 +86,7 @@ mod_03_clustering_ui <- function(id) {
 
         # Heatmap customizing features ----------
         conditionalPanel(
-          condition = "input.cluster_panels == 'Heatmap' ||
+          condition = "input.cluster_panels == 'Heatmap/Enrichment' ||
                        input.cluster_panels == 'Correlation Matrix'",
 
           strong("Customize heatmap (Default values work well):"),
@@ -109,7 +109,7 @@ mod_03_clustering_ui <- function(id) {
 
         # Clustering methods for hierarchical ----------
         conditionalPanel(
-          condition = "input.cluster_meth == 1 && input.cluster_panels == 'Heatmap'",
+          condition = "input.cluster_meth == 1 && input.cluster_panels == 'Heatmap/Enrichment'",
           fluidRow(
             column(width = 4, h5("Distance")),
             column(
@@ -176,7 +176,7 @@ mod_03_clustering_ui <- function(id) {
         ),
 
         conditionalPanel(
-          condition = "input.cluster_panels == 'Heatmap'",
+          condition = "input.cluster_panels == 'Heatmap/Enrichment'",
           checkboxInput(
             inputId = ns("no_sample_clustering"),
             label = "Do not re-order or cluster samples",
@@ -206,7 +206,7 @@ mod_03_clustering_ui <- function(id) {
 
           # Heatmap panel ----------
           tabPanel(
-            title = "Heatmap",
+            title = "Heatmap/Enrichment",
             h5("Brush for sub-heatmap, click for value. (Shown Below)"),
             br(),
             
