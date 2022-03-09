@@ -52,6 +52,7 @@ Imports:
     RSQLite,
     runibic,
     shiny (>= 1.6.0),
+    shinyBS,
     shinybusy,
     shinyjs,
     stats,

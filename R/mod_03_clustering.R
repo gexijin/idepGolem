@@ -41,6 +41,12 @@ mod_03_clustering_ui <- function(id) {
             inputId = ns("k_means_re_run"),
             label = "Re-Run"
           ),
+          
+          # Elbow plot pop-up 
+          actionButton(
+            inputId = ns("elbow_pop_up"),
+            label = "How many clusters?"
+          ),
           ns = ns
         ),
 
@@ -203,6 +209,24 @@ mod_03_clustering_ui <- function(id) {
             title = "Heatmap",
             h5("Brush for sub-heatmap, click for value. (Shown Below)"),
             br(),
+            
+            #k means pop up for elbow graph 
+            shinyBS::bsModal(
+              id = ns("elbow_modal"),
+              title = tags$h5(
+                "Following the elbow method, one should choose k so that adding 
+                  another cluster does not substantially reduce the within groups sum of squares.",
+                tags$a(
+                  "Wikipedia",
+                  href = "https://en.wikipedia.org/wiki/Determining_the_number_of_clusters_in_a_data_set",
+                  target = "_blank"
+                )
+              ), 
+              trigger = ns("elbow_pop_up"), 
+              size = "large", 
+              plotOutput(outputId = ns("k_clusters"))
+              
+            ),
             fluidRow(
               column(
                 width = 3,
@@ -318,26 +342,6 @@ mod_03_clustering_ui <- function(id) {
               outputId = ns("sample_tree"),
               width = "100%",
               height = "400px"
-            )
-          ),
-
-          # K-means elbow plot ----------
-          tabPanel(
-            title = "k-Cluster Plot",
-            h4("Determining the number of clusters (k)"),
-            h5(
-              "Following the elbow method, one should choose k so that adding another 
-               cluster does not substantially reduce the within groups sum of squares.",
-              a(
-                "Wikipedia",
-                href = "https://en.wikipedia.org/wiki/Determining_the_number_of_clusters_in_a_data_set",
-                target = "_blank"
-              )
-            ),
-            plotOutput(
-              outputId = ns("k_clusters"),
-              width = "100%",
-              height = "500px"
             )
           )
         )
