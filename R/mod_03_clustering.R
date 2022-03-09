@@ -212,21 +212,21 @@ mod_03_clustering_ui <- function(id) {
             br(),
             
             #k means pop up for elbow graph 
-            shinyBS::bsModal(
-              id = ns("elbow_modal"),
-              title = tags$h5(
-                "Following the elbow method, one should choose k so that adding 
-                  another cluster does not substantially reduce the within groups sum of squares.",
-                tags$a(
-                  "Wikipedia",
-                  href = "https://en.wikipedia.org/wiki/Determining_the_number_of_clusters_in_a_data_set",
-                  target = "_blank"
-                )
-              ), 
-              trigger = ns("elbow_pop_up"), 
-              size = "large", 
-              plotOutput(outputId = ns("k_clusters"))
-            ),
+            # shinyBS::bsModal(
+            #   id = ns("elbow_modal"),
+            #   title = tags$h5(
+            #     "Following the elbow method, one should choose k so that adding 
+            #       another cluster does not substantially reduce the within groups sum of squares.",
+            #     tags$a(
+            #       "Wikipedia",
+            #       href = "https://en.wikipedia.org/wiki/Determining_the_number_of_clusters_in_a_data_set",
+            #       target = "_blank"
+            #     )
+            #   ), 
+            #   trigger = ns("elbow_pop_up"), 
+            #   size = "large", 
+            #   plotOutput(outputId = ns("k_clusters"))
+            # ),
             
             fluidRow(
               column(
@@ -760,6 +760,22 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       k_means_elbow(
         heatmap_data = heatmap_data()
       )
+    })
+    observeEvent(input$elbow_pop_up, {
+      showModal(modalDialog(
+        plotOutput(ns("k_clusters")), 
+        footer = NULL, 
+        easyClose = TRUE, 
+        title = tags$h5(
+          "Following the elbow method, one should choose k so that adding 
+          another cluster does not substantially reduce the within groups sum of squares.",
+          tags$a(
+            "Wikipedia",
+            href = "https://en.wikipedia.org/wiki/Determining_the_number_of_clusters_in_a_data_set",
+            target = "_blank"
+          )
+        ),  
+      ))
     })
 
      # Heatmap Download Data -----------
