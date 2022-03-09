@@ -252,8 +252,6 @@ mod_03_clustering_ui <- function(id) {
                 )
               )
             ),
-            h4("Sub-heatmap Data Table", align = "center"),
-            DT::dataTableOutput(outputId = ns("subheat_data"))
           ),
 
           # Enrichment panel ----------
@@ -564,20 +562,6 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
 
         return(shiny_env$ht_sub)
       }
-    })
-
-    # Subheatmap Data Table ----------
-    output$subheat_data <- DT::renderDataTable({
-      req(!is.null(input$ht_brush))
-
-      DT::datatable(
-        shiny_env$submap_data,
-        options = list(
-          pageLength = 10,
-          scrollX = "400px"
-        ),
-        rownames = TRUE
-      )
     })
 
     # Enrichment Analysis ----------
