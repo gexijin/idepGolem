@@ -207,6 +207,7 @@ mod_03_clustering_ui <- function(id) {
           # Heatmap panel ----------
           tabPanel(
             title = "Heatmap/Enrichment",
+            h3("Heatmap"), 
             h5("Brush for sub-heatmap, click for value. (Shown Below)"),
             br(),
             
@@ -252,6 +253,8 @@ mod_03_clustering_ui <- function(id) {
                 )
               )
             ),
+            h3("Enrichment"), 
+            h5("Enrichment analysis is  based on selected genes from heatmap."), 
             fluidRow(
               column(
                 width = 4,
