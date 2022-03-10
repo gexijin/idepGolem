@@ -58,7 +58,7 @@ mod_03_clustering_ui <- function(id) {
 
         # Select Clustering Method ----------
         conditionalPanel(
-          condition = "input.cluster_panels == 'Heatmap'",
+          condition = "input.cluster_panels == 'Heatmap/Enrichment'",
           
           selectInput(
             inputId = ns("cluster_meth"),
@@ -86,7 +86,7 @@ mod_03_clustering_ui <- function(id) {
 
         # Heatmap customizing features ----------
         conditionalPanel(
-          condition = "input.cluster_panels == 'Heatmap' ||
+          condition = "input.cluster_panels == 'Heatmap/Enrichment' ||
                        input.cluster_panels == 'Correlation Matrix'",
 
           strong("Customize heatmap (Default values work well):"),
@@ -109,7 +109,7 @@ mod_03_clustering_ui <- function(id) {
 
         # Clustering methods for hierarchical ----------
         conditionalPanel(
-          condition = "input.cluster_meth == 1 && input.cluster_panels == 'Heatmap'",
+          condition = "input.cluster_meth == 1 && input.cluster_panels == 'Heatmap/Enrichment'",
           fluidRow(
             column(width = 4, h5("Distance")),
             column(
@@ -176,7 +176,7 @@ mod_03_clustering_ui <- function(id) {
         ),
 
         conditionalPanel(
-          condition = "input.cluster_panels == 'Heatmap'",
+          condition = "input.cluster_panels == 'Heatmap/Enrichment'",
           checkboxInput(
             inputId = ns("no_sample_clustering"),
             label = "Do not re-order or cluster samples",
@@ -206,27 +206,11 @@ mod_03_clustering_ui <- function(id) {
 
           # Heatmap panel ----------
           tabPanel(
-            title = "Heatmap",
+            title = "Heatmap/Enrichment",
+            h3("Heatmap"), 
             h5("Brush for sub-heatmap, click for value. (Shown Below)"),
             br(),
             
-            #k means pop up for elbow graph 
-            shinyBS::bsModal(
-              id = ns("elbow_modal"),
-              title = tags$h5(
-                "Following the elbow method, one should choose k so that adding 
-                  another cluster does not substantially reduce the within groups sum of squares.",
-                tags$a(
-                  "Wikipedia",
-                  href = "https://en.wikipedia.org/wiki/Determining_the_number_of_clusters_in_a_data_set",
-                  target = "_blank"
-                )
-              ), 
-              trigger = ns("elbow_pop_up"), 
-              size = "large", 
-              plotOutput(outputId = ns("k_clusters"))
-              
-            ),
             fluidRow(
               column(
                 width = 3,
@@ -252,12 +236,8 @@ mod_03_clustering_ui <- function(id) {
                 )
               )
             ),
-          ),
-
-          # Enrichment panel ----------
-          tabPanel(
-            title = "Enrichment",
-            br(),
+            h3("Enrichment"), 
+            h5("Enrichment analysis is  based on selected genes from heatmap."), 
             fluidRow(
               column(
                 width = 4,
@@ -288,7 +268,7 @@ mod_03_clustering_ui <- function(id) {
             verbatimTextOutput(ns("test")),
             uiOutput(outputId = ns("pathway_data"))
           ),
-
+          
           # Gene Standard Deviation Distribution ----------
           tabPanel(
             title = "Gene SD Distribution",
@@ -763,6 +743,23 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       k_means_elbow(
         heatmap_data = heatmap_data()
       )
+    })
+    # pop-up modal 
+    observeEvent(input$elbow_pop_up, {
+      showModal(modalDialog(
+        plotOutput(ns("k_clusters")), 
+        footer = NULL, 
+        easyClose = TRUE, 
+        title = tags$h5(
+          "Following the elbow method, one should choose k so that adding 
+          another cluster does not substantially reduce the within groups sum of squares.",
+          tags$a(
+            "Wikipedia",
+            href = "https://en.wikipedia.org/wiki/Determining_the_number_of_clusters_in_a_data_set",
+            target = "_blank"
+          )
+        ),  
+      ))
     })
 
      # Heatmap Download Data -----------
