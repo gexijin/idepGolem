@@ -297,6 +297,34 @@ mod_03_clustering_ui <- function(id) {
               outputId = ns("sd_density_plot"),
               width = "100%",
               height = "500px"
+            ),
+            column(
+              width = 2, 
+              wellPanel(
+                tags$h3("Download image"), 
+                numericInput(
+                  inputId = ns("sd_height"), 
+                  label = "Height (in)", 
+                  value = 4, 
+                  min = 1, 
+                  max = 100
+                ),
+                numericInput(
+                  inputId = ns("sd_width"), 
+                  label = "Width (in)", 
+                  value = 5, 
+                  min = 1, 
+                  max = 100
+                ),
+                downloadButton(
+                  outputId = ns("dl_sd_pdf"),
+                  label = "PDF"
+                ),
+                downloadButton(
+                  outputId = ns("dl_sd_png"), 
+                  label = "PNG"
+                )
+              )
             )
           ),
 
@@ -451,11 +479,46 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     output$sd_density_plot <- renderPlot({
       req(!is.null(pre_process$data()))
 
-      sd_density(
+      sd_density_plot <- sd_density(
         data = pre_process$data(),
         n_genes_max = input$n_genes
       )
+      return(sd_density_plot)
     })
+    
+    output$dl_sd_pdf <- downloadHandler(
+      filename = "geneSD.pdf", 
+      content = function(file){
+        pdf(
+          file, 
+          width = input$sd_width, 
+          height = input$sd_height
+        )
+        print(sd_density(
+          data = pre_process$data(),
+          n_genes_max = input$n_genes
+        ))
+        dev.off()
+      }
+    )
+    
+    output$dl_sd_png <- downloadHandler(
+      filename = "geneSD.png", 
+      content = function(file){
+        png(
+          file, 
+          res = 360, 
+          width = input$sd_width, 
+          height = input$sd_height, 
+          units = "in"
+        )
+        print(sd_density(
+          data = pre_process$data(),
+          n_genes_max = input$n_genes
+        ))
+        dev.off()
+      }
+    )
 
     # Heatmap Data -----------
     heatmap_data <- reactive({
