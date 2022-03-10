@@ -26,8 +26,18 @@ PCA_plot <- function(
   data,
   sample_info,
   PCAx = 1,
-  PCAy = 2
+  PCAy = 2,
+  selected_color = "Sample_Name",
+  selected_shape = "Sample_Name"
 ) {
+
+  #no design file
+  if(is.null(selected_color)){
+    selected_color <- "Sample_Name"
+  }
+  if(is.null(selected_shape)){
+    selected_shape <- "Sample_Name"
+  }
   counts <- data
   memo <- ""
   
@@ -50,33 +60,15 @@ PCA_plot <- function(
   pca.object <- prcomp(t(x))
   npc <- 5
   pcaData <- as.data.frame(pca.object$x[, 1:npc])
-  # pvals <- matrix(1, nrow = npc, ncol = ncol(y))
-  # for (i in 1:npc) {
-  #   for (j in 1:ncol(y)) {
-  #     pvals[i, j] <- summary(aov(pcaData[, i] ~ as.factor(y[, j])))[[1]][["Pr(>F)"]][1]
-  #   }
-  # }
-  # pvals <- pvals * npc * ncol(y) # correcting for multiple testing
-  # pvals[pvals > 1] <- 1
-  # colnames(pvals) <- colnames(y)
-  # rownames(pvals) <- paste0("PC", 1:npc)
-  # a <- "<h4>Correlation between Principal Components (PCs) with factors </h4>"
-  # nchar0 <- nchar(a)
-  # for (i in 1:npc) {
-  #   j <- which.min(pvals[i, ])
-  #   if (pvals[i, j] < 0.05) {
-  #     a <- paste0(
-  #       a, rownames(pvals)[i],
-  #       " is correlated with ", colnames(pvals)[j],
-  #       " (p=", sprintf("%-3.2e", pvals[i, j]), ").<br>"
-  #     )
-  #   }
-  # }
-  # if (nchar(a) == nchar0) {
-  #   return(NULL)
-  # } else {
-    groups <- detect_groups(sample_names = colnames(data), sample_info = sample_info)
-  
+
+  groups <- detect_groups(sample_names = colnames(data), sample_info = sample_info)
+  #Missing design clause
+  if( is.null(sample_info)){
+    pcaData <- cbind(pcaData, detect_groups(colnames(x), y))
+  } else {
+    pcaData <- cbind(pcaData, detect_groups(colnames(x), y), sample_info)
+  }
+  colnames(pcaData)[6] <- "Sample_Name"
   
   if (nlevels(groups) <= 1 | nlevels(groups) > 20) {
     group_fill <- NULL
@@ -95,6 +87,7 @@ PCA_plot <- function(
   P1 <- paste("PC", PCAx, sep = "")
   P2 <- paste("PC", PCAy, sep = "")
   
+  
   # Set point & text size based on number of sample
   point_size <- 6
   if (ncol(x) >= 40) {
@@ -103,15 +96,14 @@ PCA_plot <- function(
   
   plot_PCA <- ggplot2::ggplot(
     data = pcaData, 
-    ggplot2::aes(
-      x = pcaData[, as.integer(PCAx)],
-      y = pcaData[, as.integer(PCAy)],
-      color = groups,
-      shape = groups
+    ggplot2::aes_string(
+      x = paste0("PC",PCAx),
+      y = paste0("PC",PCAy),
+      color = selected_color,
+      shape = selected_shape
     )
-  ) +
-  ggplot2::geom_point(size = point_size) +
-  
+  )   +
+  ggplot2::geom_point(size = point_size)+
   ggplot2::theme_light() +
   ggplot2::theme(
       legend.position = "right", # TODO no legend for large data
@@ -141,7 +133,8 @@ PCA_plot <- function(
       title = paste("Principal Component Analysis (PCA) ", memo),
       y = "Dimension 2",
       x = "Dimension 1"
-    )
+    ) +
+    ggplot2::guides(color=ggplot2::guide_legend(override.aes=list(shape=15)))
   # selected principal components
   PCAxy <- c(as.integer(PCAx), as.integer(PCAy))
   percentVar <- round(100 * summary(pca.object)$importance[2, PCAxy], 0)
@@ -163,8 +156,19 @@ PCA_plot <- function(
 #'
 t_SNE_plot <- function(
   data,
-  sample_info
+  sample_info,
+  selected_color,
+  selected_shape
 ) {
+  
+  #no design file
+  if(is.null(selected_color)){
+    selected_color <- "Sample_Name"
+  }
+  if(is.null(selected_shape)){
+    selected_shape <- "Sample_Name"
+  }
+  
   counts <- data
   memo <- ""
   
@@ -185,9 +189,15 @@ t_SNE_plot <- function(
   y <- sample_info
   tsne <- Rtsne::Rtsne(t(x), dims = 2, perplexity = 1, verbose = FALSE, max_iter = 400)
   pcaData <- as.data.frame(tsne$Y)
-  pcaData <- cbind(pcaData, detect_groups(colnames(x), y))
+  
+  #Missing design clause
+  if( is.null(sample_info)){
+    pcaData <- cbind(pcaData, detect_groups(colnames(x), y))
+  } else {
+    pcaData <- cbind(pcaData, detect_groups(colnames(x), y), sample_info)
+  }
 
-  colnames(pcaData) <- c("x1", "x2", "Sample_Name")
+  colnames(pcaData)[1:3] <- c("x1", "x2", "Sample_Name")
   
   # Set point size based on number of sample
   point_size <- 6
@@ -198,11 +208,11 @@ t_SNE_plot <- function(
   #Generate plot
   plot_t_SNE <- ggplot2::ggplot(
     data = pcaData,
-    ggplot2::aes(
-      x = x1,
-      y = x2,
-      color = Sample_Name,
-      shape = Sample_Name)
+    ggplot2::aes_string(
+      x = "x1",
+      y = "x2",
+      color = selected_color,
+      shape = selected_shape)
     ) +
   ggplot2::geom_point(size = point_size) +
   ggplot2::theme_light() +
@@ -251,8 +261,19 @@ t_SNE_plot <- function(
 #'
 MDS_plot <- function(
   data,
-  sample_info
+  sample_info,
+  selected_shape = "Sample_Name",
+  selected_color = "Sample_Name"
 ) {
+
+  #no design file
+  if(is.null(selected_color)){
+    selected_color <- "Sample_Name"
+  }
+  if(is.null(selected_shape)){
+    selected_shape <- "Sample_Name"
+  }
+  
   counts <- data
   memo <- ""
   
@@ -277,9 +298,15 @@ MDS_plot <- function(
     k = 2
   )
   pcaData <- as.data.frame(fit$points[, 1:2])
-  pcaData <- cbind(pcaData, detect_groups(colnames(x), y))
-  colnames(pcaData) <- c("x1", "x2", "Sample_Name")
   
+  #Missing design clause
+  if( is.null(sample_info)){
+    pcaData <- cbind(pcaData, detect_groups(colnames(x), y))
+  } else {
+    pcaData <- cbind(pcaData, detect_groups(colnames(x), y), sample_info)
+  }
+  colnames(pcaData)[1:3] <- c("x1", "x2", "Sample_Name")
+
   # Set point & text size based on number of sample
   point_size <- 6
 
@@ -287,16 +314,18 @@ MDS_plot <- function(
     point_size <- 3
     #text_size <- 16
   }
+
+  
   p <- ggplot2::ggplot(
     data = pcaData,
-    ggplot2::aes(
-      x = x1,
-      y = x2,
-      color = Sample_Name,
-      shape = Sample_Name
+    ggplot2::aes_string(
+      x = "x1",
+      y = "x2",
+      color = selected_color,
+      shape = selected_shape 
     )
   )
-  p <- p + ggplot2::geom_point(size = point_size) +
+  p <- p + ggplot2::geom_point(size = point_size)+ 
   ggplot2::theme_light() +
     ggplot2::theme(
       legend.position = "right",
@@ -320,7 +349,7 @@ MDS_plot <- function(
         size = 16,
         face = "bold",
         hjust = .5
-      )
+      ) 
     ) +
     ggplot2::labs(
       title = paste("Multi-Dimensional Scaling (MDS) ", memo),

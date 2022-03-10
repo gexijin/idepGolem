@@ -34,17 +34,39 @@ mod_04_pca_ui <- function(id) {
                 choices = 1:5,
                 selected = 2
               )
-            )
+            ),
           ),
           ns=ns
+        ),
+        conditionalPanel(
+          condition = "1==1",
+          fluidRow(
+            column(
+              width = 12,
+              uiOutput(
+                outputId = ns("listFactors2")
+              ),
+              uiOutput(
+                outputId = ns("listFactors1")
+              )
+            ),
+          ),
+          ns= ns
         ),
         conditionalPanel(
           condition = "input.PCA_panels == 't-SNE'",
           fluidRow( 
             actionButton(inputId = ns("seedTSNE"), label = "Re-calculate from new seed")
           ),
+          
           ns=ns
+        ),
+        a(
+          h5("Questions?", align = "right"),
+          href = "https://idepsite.wordpress.com/pca/",
+          target = "_blank"
         )
+        
       ),
       mainPanel(
         tabsetPanel(
@@ -79,11 +101,11 @@ mod_04_pca_ui <- function(id) {
               width = "100%",
               height = "500px"
             ),
-          ),
-          tabPanel(
-            "Pathway Analysis of PCA",
-            NULL
           )
+          # tabPanel(
+          #   "Pathway Analysis of PCA",
+          #   NULL
+          # )
         )
       )
     )
@@ -104,7 +126,9 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
         data = pre_process$data(),
         sample_info = pre_process$sample_info(),
         PCAx = input$PCAx,
-        PCAy = input$PCAy
+        PCAy = input$PCAy,
+        selected_shape = input$selectFactors2,
+        selected_color = input$selectFactors1
       )
     })
     
@@ -125,7 +149,9 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
 
       t_SNE_plot(
         data = pre_process$data(),
-        sample_info = pre_process$sample_info()
+        sample_info = pre_process$sample_info(),
+        selected_shape = input$selectFactors2,
+        selected_color = input$selectFactors1
       )
     })
     
@@ -137,10 +163,45 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       
       MDS_plot(
         data = pre_process$data(),
-        sample_info = pre_process$sample_info()
+        sample_info = pre_process$sample_info(),
+        selected_shape = input$selectFactors2,
+        selected_color = input$selectFactors1
         
       )
     })
+    # select color
+    output$listFactors1 <- renderUI({
+      req(!is.null(pre_process$data()))
+
+      if (is.null(pre_process$sample_info()) )
+      { return(HTML("Upload a sample info file to customize this plot.") ) }	 else { 
+        selectInput(
+          inputId = ns("selectFactors1"),
+          label = "Color: ",
+          choices = c( colnames(pre_process$sample_info()), "Sample_Name")
+                    , selected = "Sample_Name")   } 
+    })
+    
+    #select shape
+    output$listFactors2 <- renderUI({
+      req(!is.null(pre_process$data()))
+
+      
+      if (is.null(pre_process$sample_info()) )
+      { return(NULL) }
+      else { 
+        tem <- c( colnames(pre_process$sample_info()), "Sample_Name")
+        #if(length(tem)>1) { tem2 = tem[1]; tem[1] <- tem[2]; tem[1] = tem2; } # swap 2nd factor with first
+        selectInput(inputId = ns("selectFactors2"),
+                    label="Shape:",
+                    choices=tem,
+                    selected = "Sample_Name"
+                    )
+      } 
+    })
+    
+    
+    
     
     
     #Pathway Analysis ------------------

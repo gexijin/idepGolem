@@ -81,7 +81,7 @@ mod_02_pre_process_ui <- function(id) {
                   label = NULL,
                   value = 4
                 )
-              )
+              ) 
             ),
             ns = ns
           ),
@@ -163,6 +163,11 @@ mod_02_pre_process_ui <- function(id) {
           outputId = ns("download_processed_data"),
           label = "Processed data"
         ),
+        # downloadButton(
+        #   outputId = ns("report"),
+        #   label = "Generate report"
+        # ),
+
 
         # Conditional panel for read count data ------------
         conditionalPanel(
@@ -190,6 +195,7 @@ mod_02_pre_process_ui <- function(id) {
           target = "_blank"
         ),
       ),
+      
 
       # Pre-Process Panel Main -----------
       mainPanel(
@@ -197,6 +203,7 @@ mod_02_pre_process_ui <- function(id) {
           "Aspect ratios of figures can be adjusted by changing
            the width of browser window. (To save a plot, right-click)"
         ),
+       
         tabsetPanel(
           id = ns("eda_tabs"),
 
@@ -214,7 +221,7 @@ mod_02_pre_process_ui <- function(id) {
           # Scatterplot with interactive axises ----------
           tabPanel(
             title = "Scatterplot",
-            # Axis selectors -----------
+          # Axis selectors -----------
             br(),
             fluidRow(
               column(
@@ -351,7 +358,7 @@ mod_02_pre_process_ui <- function(id) {
         )
       )
     )
-  )
+    )
 }
 
 #' 01_pre_process Server Functions
@@ -621,6 +628,53 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         write.csv(merged_raw_counts_data(), file)
       }
     )
+
+    # Markdown report
+    # output$report <- downloadHandler(
+    #   # For PDF output, change this to "report.pdf"
+    #   filename ="report.pdf",
+    #   content = function(file) {
+    #     # Copy the report file to a temporary directory before processing it, in
+    #     # case we don't have write permissions to the current working dir (which
+    #     # can happen when deployed).
+    #     #tempReport <- file.path(tempdir(), "test_workflow.Rmd")
+    #     #tempReport
+    #     #tempReport<-gsub("\\", "/",tempReport,fixed = TRUE)
+    #     
+    #     #This should retrieve the project location on your device:
+    #     #"C:/Users/bdere/Documents/GitHub/idepGolem"
+    #     wd <- getwd()
+    #     
+    #     markdown_location <-paste0(wd, "/vignettes/test_workflow2.Rmd")
+    #     #file.copy(from=markdown_location,to= tempReport, overwrite = TRUE)
+    # 
+    #     # Set up parameters to pass to Rmd document
+    #     params <- list(
+    #       loaded_data = load_data$converted_data(),
+    #       sample_info = load_data$sample_info(),
+    #       data_file_format = load_data$data_file_format(),
+    #       no_id_conversion = input$no_id_conversion,
+    #       min_counts = input$min_counts,
+    #       n_min_samples_count = input$n_min_samples_count,
+    #       counts_transform = input$counts_transform,
+    #       counts_log_start = input$counts_log_start,
+    #       log_transform_fpkm = input$log_transform_fpkm,
+    #       log_start_fpkm = input$log_start_fpkm,
+    #       missing_value = input$missing_value
+    # 
+    #     )
+    # 
+    #     # Knit the document, passing in the `params` list, and eval it in a
+    #     # child of the global environment (this isolates the code in the document
+    #     # from the code in this app).
+    #     rmarkdown::render(
+    #       input = markdown_location,
+    #       output_file = file,
+    #       params = params,
+    #       envir = new.env(parent = globalenv())
+    #     )
+    #   }
+    # )
 
     # Number of converted IDs ---------
     n_matched <- reactive({
