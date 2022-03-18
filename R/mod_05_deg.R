@@ -236,7 +236,11 @@ mod_05_deg_2_ui <- function(id) {
               outputId = ns("volcano_plot"),
               height = "500px",
               width = "100%"
-            )  
+            ),
+            actionButton(
+              inputId = ns("volcano_popup"), 
+              label = "Download Plot"
+            )
           ),
           tabPanel(
             title = "MA Plot",
@@ -1001,7 +1005,84 @@ mod_05_deg_server <- function(id, pre_process) {
       reference_levels = reactive(factor_reference_levels()),
       counts_deg_method = reactive(input$counts_deg_method)
     )
+    
+    
+    # Download plots -----------
+    
+    # Volcano plot 
+    observeEvent(
+      input$volcano_popup, 
+      {
+        showModal(modalDialog(
+          numericInput(
+            inputId = ns("vol_width"), 
+            label = "Width (in)", 
+            value = 5, 
+            min = 1, 
+            max = 100
+          ),
+          numericInput(
+            inputId = ns("vol_height"), 
+            label = "Height (in)", 
+            value = 4, 
+            min = 1, 
+            max = 100
+          ), 
+          downloadButton(
+            outputId = ns("vol_dl_pdf"),
+            label = "PDF"
+          ), 
+          downloadButton(
+            outputId = ns("vol_dl_png"), 
+            label = "PNG"
+          )
+        ))
+      }
+    )
+    output$vol_dl_pdf <- downloadHandler(
+      filename = "deg_volcano.pdf", 
+      content = function(file){
+        pdf(
+          file, 
+          width = input$vol_width, 
+          height = input$vol_height
+        )
+        print(
+          plot_volcano(
+            select_contrast = input$select_contrast,
+            comparisons = deg$limma$comparisons,
+            top_genes = deg$limma$top_genes,
+            limma_p_val = input$limma_p_val,
+            limma_fc = input$limma_fc
+          )
+        )
+        dev.off()
+      }
+    )
+    output$vol_dl_png <- downloadHandler(
+      filename = "deg_volcano.png", 
+      content = function(file){
+        png(
+          file, 
+          res = 360, 
+          width = input$vol_width, 
+          height = input$vol_height, 
+          units = "in"
+        )
+        print(
+          plot_volcano(
+            select_contrast = input$select_contrast,
+            comparisons = deg$limma$comparisons,
+            top_genes = deg$limma$top_genes,
+            limma_p_val = input$limma_p_val,
+            limma_fc = input$limma_fc
+          )
+        )
+        dev.off()
+      }
+    )
   })
+  
 }
 
 ## To be copied in the UI
