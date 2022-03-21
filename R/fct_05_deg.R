@@ -2199,6 +2199,8 @@ plot_volcano <- function(
 #'  comparison
 #' @param processed_data Data matrix that has gone through
 #'  pre-processing
+#' @param plot_colors List containing three colors to differentiate between   
+#'  the up-regulated, down-regulated, and other genes
 #' 
 #' @return A ggplot with the X-axis the mean expression value and
 #'  the Y-axis the calculated fold-change from the DEG analysis.
@@ -2209,7 +2211,8 @@ plot_ma <- function(
   limma_p_val,
   limma_fc,
   contrast_samples,
-  processed_data
+  processed_data, 
+  plot_colors
 ) {
   if(grepl("I:", select_contrast)) {
     return(NULL)
@@ -2248,12 +2251,11 @@ plot_ma <- function(
 		
 	genes <-  merge(average_data, top_1, by = "row.names")
 
-  colors <- gg_color_hue(2)
 
   return(
     ggplot2::ggplot(genes, ggplot2::aes(x = Average, y = Fold)) +
       ggplot2::geom_point(ggplot2::aes(color = upOrDown))	+
-      ggplot2::scale_color_manual(values = c(colors[1], "grey45", colors[2])) +
+      ggplot2::scale_color_manual(values = plot_colors) +
       ggplot2::theme_light() +
       ggplot2::theme(
         legend.position = "right",
