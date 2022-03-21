@@ -2100,6 +2100,8 @@ Regulation: @{up_down} <span style='background-color:@{up_down_col};width=50px;'
 #'  the expressed genes
 #' @param limma_fc Minimum fold change value to use in determining
 #'  the expressed genes
+#' @param plot_colors List containing three colors to differentiate between   
+#'  the up-regulated, down-regulated, and other genes
 #' 
 #' @return ggplot with the fold value as the X-axis and the log 10
 #'  value of the adjusted p-value as the Y-axis.
@@ -2141,16 +2143,10 @@ plot_volcano <- function(
     top_1$FDR <= limma_p_val & top_1$Fold  <= -log2(limma_fc)
   )] <- "Down"
 
-  #colors <- gg_color_hue(2)
-	col_1 <- plot_colors[[1]]
-	print(col_1)
-	col_2 <- plot_colors[[2]]
-	col_3 <- plot_colors[[3]]
-  
   return(
     ggplot2::ggplot(top_1, ggplot2::aes(x = Fold, y = -log10(FDR))) +
       ggplot2::geom_point(ggplot2::aes(color = upOrDown))	+
-      ggplot2::scale_color_manual(values = c(col_1, col_2, col_3)) +
+      ggplot2::scale_color_manual(values = plot_colors) + 
       ggplot2::theme_light() +
       ggplot2::theme(
         legend.position = "right",
