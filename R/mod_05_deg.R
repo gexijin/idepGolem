@@ -195,10 +195,16 @@ mod_05_deg_2_ui <- function(id) {
           label = "Remove Redudant Gene Sets",
           value = FALSE
         ),
-        selectInput(
-          inputId = ns("plot_color_select"), 
-          label = NULL, 
-          choices = "Green-Red"
+        conditionalPanel(
+          condition = "input.step_2 == 'Volcano Plot'", 
+          fluidRow(
+            selectInput(
+              inputId = ns("plot_color_select"), 
+              label = "Select Plot Colors", 
+              choices = "Red-Green"
+            )
+          ), 
+          ns = ns
         )
       ),
       mainPanel(
@@ -360,15 +366,15 @@ mod_05_deg_server <- function(id, pre_process) {
     
     # Plot colors ------- 
     plot_colors <- list(
-      "Green-Red" = c("green", "grey45", "red"), 
-      "Blue-Red" = c("blue", "grey45", "red"), 
-      "Blue-Orange" = c("blue", "grey45", "orange")
+      "Red-Green" = c("red", "grey45", "green"), 
+      "Red-Blue" = c("red", "grey45", "blue"), 
+      "Orange-Blue" = c("orange", "grey45", "blue")
     )
     
     plot_choices <- c(
-      "Green-Red", 
-      "Blue-Red", 
-      "Blue-Orange"
+      "Red-Green", 
+      "Red-Blue", 
+      "Orange-Blue"
     )
 
     observe({

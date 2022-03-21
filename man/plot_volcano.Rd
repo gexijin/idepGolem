@@ -28,6 +28,9 @@ the expressed genes}
 
 \item{limma_fc}{Minimum fold change value to use in determining
 the expressed genes}
+
+\item{plot_colors}{List containing three colors to differentiate between
+the up-regulated, down-regulated, and other genes}
 }
 \value{
 ggplot with the fold value as the X-axis and the log 10
