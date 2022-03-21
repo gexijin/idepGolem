@@ -680,10 +680,10 @@ mod_05_deg_server <- function(id, pre_process) {
     
     # Plot colors ------- 
     plot_colors <- list(
-      "Green-Red" = c("green", "grey45", "green"), 
+      "Green-Red" = c("green", "grey45", "red"), 
       "Red-Green" = c("red", "grey45", "green"), 
       "Blue-Red" = c("blue", "grey45", "red"), 
-      "Green-Magenta" = c("blue", "grey45", "magenta"),
+      "Green-Magenta" = c("green", "grey45", "magenta"),
       "Orange-Blue" = c("orange", "grey45", "blue")
     )
     
