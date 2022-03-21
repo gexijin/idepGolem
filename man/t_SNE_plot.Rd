@@ -4,7 +4,7 @@
 \alias{t_SNE_plot}
 \title{TSNE FUNCTION}
 \usage{
-t_SNE_plot(data, sample_info)
+t_SNE_plot(data, sample_info, selected_color, selected_shape)
 }
 \arguments{
 \item{data}{Data that has been through pre-processing}

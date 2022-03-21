@@ -4,7 +4,12 @@
 \alias{MDS_plot}
 \title{MDS FUNCTION}
 \usage{
-MDS_plot(data, sample_info)
+MDS_plot(
+  data,
+  sample_info,
+  selected_shape = "Sample_Name",
+  selected_color = "Sample_Name"
+)
 }
 \arguments{
 \item{data}{Data that has been through pre-processing}
