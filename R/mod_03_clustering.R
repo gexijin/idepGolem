@@ -280,34 +280,6 @@ mod_03_clustering_ui <- function(id) {
             )
           ),
 
-          # Correlation matrix panel ----------
-          tabPanel(
-            title = "Correlation Matrix",
-            br(),
-            fluidRow(
-              column(
-                width = 4,
-                selectInput(
-                  inputId = ns("cor_text_col"),
-                  label = "Select Text Color:",
-                  choices = c("White", "Black"),
-                  selected = "White"
-                )
-              ),
-              column(
-                width = 8,
-                checkboxInput(
-                  ns("label_pcc"),
-                  label = "Label w/ Pearson's correlation coefficients",
-                  value = TRUE
-                )
-              )
-            ),
-            plotOutput(
-              outputId = ns("correlation_matrix")
-            )
-          ),
-
           # Sample Tree Plot ---------
           tabPanel(
             title = "Sample Tree",
@@ -709,16 +681,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       )
     })
 
-    # Correlation Matrix ----------
-    output$correlation_matrix <- renderPlot({
-		  cor_plot(
-        data = pre_process$data(),
-        label_pcc = input$label_pcc,
-        heat_cols = heatmap_colors[[input$heatmap_color_select]],
-        text_col = stringr::str_to_lower(input$cor_text_col)
-      )
-    }, height = 600, width = 700)
-
+  
     # Sample Tree ----------
     output$sample_tree <- renderPlot({
       req(!is.null(pre_process$data()))
