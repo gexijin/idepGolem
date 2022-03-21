@@ -2108,7 +2108,8 @@ plot_volcano <- function(
   comparisons,
   top_genes,
   limma_p_val,
-  limma_fc
+  limma_fc,
+  plot_colors
 ) {
   if(is.null(select_contrast) || is.null(comparisons) ||
      length(top_genes) == 0) {
@@ -2140,12 +2141,16 @@ plot_volcano <- function(
     top_1$FDR <= limma_p_val & top_1$Fold  <= -log2(limma_fc)
   )] <- "Down"
 
-  colors <- gg_color_hue(2)
+  #colors <- gg_color_hue(2)
+	col_1 <- plot_colors[[1]]
+	print(col_1)
+	col_2 <- plot_colors[[2]]
+	col_3 <- plot_colors[[3]]
   
   return(
     ggplot2::ggplot(top_1, ggplot2::aes(x = Fold, y = -log10(FDR))) +
       ggplot2::geom_point(ggplot2::aes(color = upOrDown))	+
-      ggplot2::scale_color_manual(values = c(colors[1], "grey45", colors[2])) +
+      ggplot2::scale_color_manual(values = c(col_1, col_2, col_3)) +
       ggplot2::theme_light() +
       ggplot2::theme(
         legend.position = "right",

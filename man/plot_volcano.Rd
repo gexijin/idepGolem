@@ -4,7 +4,14 @@
 \alias{plot_volcano}
 \title{Volcano DEG plot}
 \usage{
-plot_volcano(select_contrast, comparisons, top_genes, limma_p_val, limma_fc)
+plot_volcano(
+  select_contrast,
+  comparisons,
+  top_genes,
+  limma_p_val,
+  limma_fc,
+  plot_colors
+)
 }
 \arguments{
 \item{select_contrast}{Comparison from DEG analysis to filter

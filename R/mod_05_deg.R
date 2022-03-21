@@ -194,6 +194,11 @@ mod_05_deg_2_ui <- function(id) {
           inputId = ns("remove_redudant"),
           label = "Remove Redudant Gene Sets",
           value = FALSE
+        ),
+        selectInput(
+          inputId = ns("plot_color_select"), 
+          label = NULL, 
+          choices = "Green-Red"
         )
       ),
       mainPanel(
@@ -352,7 +357,27 @@ mod_05_deg_server <- function(id, pre_process) {
 
     # Interactive heatmap environment
     deg_env <- new.env()
+    
+    # Plot colors ------- 
+    plot_colors <- list(
+      "Green-Red" = c("green", "grey45", "red"), 
+      "Blue-Red" = c("blue", "grey45", "red"), 
+      "Blue-Orange" = c("blue", "grey45", "orange")
+    )
+    
+    plot_choices <- c(
+      "Green-Red", 
+      "Blue-Red", 
+      "Blue-Orange"
+    )
 
+    observe({
+      updateSelectInput(
+        session = session, 
+        inputId = "plot_color_select", 
+        choices = plot_choices
+      )
+    })
 
     # DEG STEP 1 ----------
     output$data_file_format <- reactive({
@@ -766,7 +791,8 @@ mod_05_deg_server <- function(id, pre_process) {
         comparisons = deg$limma$comparisons,
         top_genes = deg$limma$top_genes,
         limma_p_val = input$limma_p_val,
-        limma_fc = input$limma_fc
+        limma_fc = input$limma_fc,
+        plot_colors = plot_colors[[input$plot_color_select]]
       )
     })
 
