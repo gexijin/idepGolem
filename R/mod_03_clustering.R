@@ -348,17 +348,21 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     # Heatmap Colors ----------
     heatmap_colors <- list(
       "Green-Black-Red" = c("green", "black", "red"),
+      "Red-Black-Green" = c("red", "black", "green"), 
       "Blue-White-Red" = c("blue", "white", "red"),
       "Green-Black-Magenta" = c("green", "black", "magenta"),
       "Blue-Yellow-Red" = c("blue", "yellow", "red"),
-      "Blue-White-Brown" = c("blue", "white", "brown")
+      "Blue-White-Brown" = c("blue", "white", "brown"), 
+      "Orange-White-Blue" = c("orange", "white", "blue")
     )
     heatmap_choices <- c(
       "Green-Black-Red",
+      "Red-Black-Green", 
       "Blue-White-Red",
       "Green-Black-Magenta",
       "Blue-Yellow-Red",
-      "Blue-White-Brown"
+      "Blue-White-Brown", 
+      "Orange-White-Blue"
     )
     observe({
       updateSelectInput(
