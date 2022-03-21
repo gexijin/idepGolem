@@ -2100,6 +2100,8 @@ Regulation: @{up_down} <span style='background-color:@{up_down_col};width=50px;'
 #'  the expressed genes
 #' @param limma_fc Minimum fold change value to use in determining
 #'  the expressed genes
+#' @param plot_colors List containing three colors to differentiate between   
+#'  the up-regulated, down-regulated, and other genes
 #' 
 #' @return ggplot with the fold value as the X-axis and the log 10
 #'  value of the adjusted p-value as the Y-axis.
@@ -2108,7 +2110,8 @@ plot_volcano <- function(
   comparisons,
   top_genes,
   limma_p_val,
-  limma_fc
+  limma_fc,
+  plot_colors
 ) {
   if(is.null(select_contrast) || is.null(comparisons) ||
      length(top_genes) == 0) {
@@ -2140,12 +2143,10 @@ plot_volcano <- function(
     top_1$FDR <= limma_p_val & top_1$Fold  <= -log2(limma_fc)
   )] <- "Down"
 
-  colors <- gg_color_hue(2)
-  
   return(
     ggplot2::ggplot(top_1, ggplot2::aes(x = Fold, y = -log10(FDR))) +
       ggplot2::geom_point(ggplot2::aes(color = upOrDown))	+
-      ggplot2::scale_color_manual(values = c(colors[1], "grey45", colors[2])) +
+      ggplot2::scale_color_manual(values = plot_colors) + 
       ggplot2::theme_light() +
       ggplot2::theme(
         legend.position = "right",
@@ -2198,6 +2199,8 @@ plot_volcano <- function(
 #'  comparison
 #' @param processed_data Data matrix that has gone through
 #'  pre-processing
+#' @param plot_colors List containing three colors to differentiate between   
+#'  the up-regulated, down-regulated, and other genes
 #' 
 #' @return A ggplot with the X-axis the mean expression value and
 #'  the Y-axis the calculated fold-change from the DEG analysis.
@@ -2208,7 +2211,8 @@ plot_ma <- function(
   limma_p_val,
   limma_fc,
   contrast_samples,
-  processed_data
+  processed_data, 
+  plot_colors
 ) {
   if(grepl("I:", select_contrast)) {
     return(NULL)
@@ -2247,12 +2251,11 @@ plot_ma <- function(
 		
 	genes <-  merge(average_data, top_1, by = "row.names")
 
-  colors <- gg_color_hue(2)
 
   return(
     ggplot2::ggplot(genes, ggplot2::aes(x = Average, y = Fold)) +
       ggplot2::geom_point(ggplot2::aes(color = upOrDown))	+
-      ggplot2::scale_color_manual(values = c(colors[1], "grey45", colors[2])) +
+      ggplot2::scale_color_manual(values = plot_colors) +
       ggplot2::theme_light() +
       ggplot2::theme(
         legend.position = "right",

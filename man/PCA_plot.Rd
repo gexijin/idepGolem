@@ -4,7 +4,14 @@
 \alias{PCA_plot}
 \title{Principal Component Analysis}
 \usage{
-PCA_plot(data, sample_info, PCAx = 1, PCAy = 2)
+PCA_plot(
+  data,
+  sample_info,
+  PCAx = 1,
+  PCAy = 2,
+  selected_color = "Sample_Name",
+  selected_shape = "Sample_Name"
+)
 }
 \arguments{
 \item{data}{Data that has been through pre-processing}
