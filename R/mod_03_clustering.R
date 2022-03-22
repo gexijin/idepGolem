@@ -18,7 +18,7 @@ mod_03_clustering_ui <- function(id) {
         numericInput(
           inputId = ns("n_genes"), 
           label = h4("Top n most variable genes to include:"), 
-          min = 5, 
+          min = 10, 
           max = 12000, 
           value = 100, 
           step = 10
