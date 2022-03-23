@@ -164,16 +164,6 @@ mod_03_clustering_ui <- function(id) {
           label = "Normalize genes (divide by SD)",
           value = FALSE
         ),
-        checkboxInput(
-          inputId = ns("sample_centering"),
-          label = "Center samples (substract mean)",
-          value = FALSE
-        ),
-        checkboxInput(
-          inputId = ns("sample_normalize"),
-          label = "Normalize samples(divide by SD)",
-          value = FALSE
-        ),
 
         conditionalPanel(
           condition = "input.cluster_panels == 'Heatmap/Enrichment'",
@@ -330,17 +320,21 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     # Heatmap Colors ----------
     heatmap_colors <- list(
       "Green-Black-Red" = c("green", "black", "red"),
+      "Red-Black-Green" = c("red", "black", "green"), 
       "Blue-White-Red" = c("blue", "white", "red"),
       "Green-Black-Magenta" = c("green", "black", "magenta"),
       "Blue-Yellow-Red" = c("blue", "yellow", "red"),
-      "Blue-White-Brown" = c("blue", "white", "brown")
+      "Blue-White-Brown" = c("blue", "white", "brown"), 
+      "Orange-White-Blue" = c("orange", "white", "blue")
     )
     heatmap_choices <- c(
       "Green-Black-Red",
+      "Red-Black-Green", 
       "Blue-White-Red",
       "Green-Black-Magenta",
       "Blue-Yellow-Red",
-      "Blue-White-Brown"
+      "Blue-White-Brown", 
+      "Orange-White-Blue"
     )
     observe({
       updateSelectInput(
@@ -418,8 +412,8 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         n_genes_max = input$n_genes,
         gene_centering = input$gene_centering,
         gene_normalize = input$gene_normalize,
-        sample_centering = input$sample_centering,
-        sample_normalize = input$sample_normalize,
+        sample_centering = FALSE,
+        sample_normalize = FALSE,
         all_gene_names = pre_process$all_gene_names(),
         select_gene_id = input$select_gene_id
       )
@@ -690,8 +684,8 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         tree_data = pre_process$data(),
         gene_centering = input$gene_centering,
         gene_normalize = input$gene_normalize,
-        sample_centering = input$sample_centering,
-        sample_normalize = input$sample_normalize,
+        sample_centering = FALSE,
+        sample_normalize = FALSE,
         hclust_funs = hclust_funs,
         hclust_function = input$hclust_function,
         dist_funs = dist_funs,
