@@ -409,6 +409,8 @@ draw_sample_tree <- function(
     scale = sample_normalize
   )
   
+  par(mar = c(5.1,4.1,4.1,20))
+  
   plot(
     stats::as.dendrogram(
       hclust_funs[[hclust_function]]
@@ -419,7 +421,9 @@ draw_sample_tree <- function(
       names(dist_funs)[as.numeric(dist_function)], "(",
       hclust_function, "linkage", ")"
     ),
-    type = "rectangle"
+    type = "rectangle", 
+    #leaflab = "textlike"
+    horiz = TRUE
   )
 
 }
