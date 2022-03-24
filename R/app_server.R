@@ -32,7 +32,8 @@ app_server <- function(input, output, session) {
   )
   deg <- mod_05_deg_server(
     id = "deg",
-    pre_process = pre_process
+    pre_process = pre_process, 
+    idep_data = idep_data
   )
   mod_06_pathway_server(
     id = "pathway",
