@@ -263,6 +263,7 @@ mod_05_deg_2_ui <- function(id) {
               width = "100%"
             )
           ),
+          
           tabPanel(
             title = "Scatter Plot",
             br(),
