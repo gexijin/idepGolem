@@ -263,6 +263,7 @@ mod_05_deg_2_ui <- function(id) {
               width = "100%"
             )
           ),
+          
           tabPanel(
             title = "Scatter Plot",
             br(),
@@ -362,7 +363,7 @@ mod_05_deg_2_ui <- function(id) {
 #' 05_deg1 Server Functions
 #'
 #' @noRd
-mod_05_deg_server <- function(id, pre_process) {
+mod_05_deg_server <- function(id, pre_process, idep_data) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 

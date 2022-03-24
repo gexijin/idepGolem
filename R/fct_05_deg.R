@@ -2364,7 +2364,7 @@ plot_deg_scatter <- function(
 	 
 	if(length(unique(g)) > 2) {
     plot.new()
-    text(0.5,0.5, "Not available.")
+    text(0.5,0.5, "Not available for more than two groups.")
   } else{
 		average_1 <- apply(genes[, which(g == unique(g)[1])], 1, mean)
 
@@ -2427,7 +2427,7 @@ plot_deg_scatter <- function(
 #'  that are enriched share genes.
 enrichment_plot <- function(
   go_table,
-  right_margin = 33
+  right_margin = 10
 ) {
   # a program for ploting enrichment results by highlighting the similarities among terms
   # must have columns: Direction, adj.Pval   Pathways Genes
