@@ -443,8 +443,8 @@ k_means_elbow <- function(
   k.max = 20
   
   validate(
-    expr = (nrow(heatmap_data) > k.max), 
-    message = paste(paste("To create the elbow plot, please select at least", k.max  + 1), "genes.")
+    need(nrow(heatmap_data) > k.max, 
+    message = paste(paste("To create the elbow plot, please select at least", k.max  + 1), "genes."))
   )
   
 
