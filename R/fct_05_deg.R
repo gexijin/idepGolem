@@ -2427,7 +2427,7 @@ plot_deg_scatter <- function(
 #'  that are enriched share genes.
 enrichment_plot <- function(
   go_table,
-  right_margin = 33
+  right_margin = 10
 ) {
   # a program for ploting enrichment results by highlighting the similarities among terms
   # must have columns: Direction, adj.Pval   Pathways Genes
