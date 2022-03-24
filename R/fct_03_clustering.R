@@ -440,12 +440,19 @@ draw_sample_tree <- function(
 k_means_elbow <- function(
   heatmap_data
 ) {
+  k.max = 20
+  
+  validate(
+    expr = (nrow(heatmap_data) > k.max), 
+    message = paste(paste("To create the elbow plot, please select at least", k.max  + 1), "genes.")
+  )
+  
 
   factoextra::fviz_nbclust(
     heatmap_data,
     kmeans,
     method = "wss",
-    k.max = 20
+    k.max = k.max
   ) +
   ggplot2::theme_light() +
   ggplot2::theme(
