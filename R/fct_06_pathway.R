@@ -1616,7 +1616,7 @@ kegg_pathway <- function(
 
 	# Get fold change
 	if(length(limma$comparisons)  == 1) {
-    top1 <- limma$top_genes[[1]]  
+    top_1 <- limma$top_genes[[1]]  
 	} else {
 	  top <- limma$top_genes
 	  ix <- match(select_contrast, names(top))
