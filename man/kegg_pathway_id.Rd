@@ -10,7 +10,8 @@ kegg_pathway_id(
   GO,
   select_org,
   gmt_files,
-  org_info
+  org_info,
+  idep_data
 )
 }
 \arguments{
