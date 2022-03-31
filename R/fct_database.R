@@ -841,6 +841,7 @@ convert_ensembl_to_entrez <- function(
 #' @param gmt_files GMT files from the iDEP database
 #' @param org_info Organism information files from the iDEP
 #'  database
+#' @param idep_data Background idep_data
 #' 
 #' @return Return the KEGG ID for the pathway.
 kegg_pathway_id <- function (
@@ -849,7 +850,8 @@ kegg_pathway_id <- function (
   GO,
   select_org,
   gmt_files,
-  org_info
+  org_info,
+  idep_data
 ) {
 	ix <- grep(Species, gmt_files)
 
