@@ -7,7 +7,6 @@
 process_heatmap_data(
   data,
   n_genes_max,
-  n_genes_min,
   gene_centering,
   gene_normalize,
   sample_centering,
@@ -20,8 +19,6 @@ process_heatmap_data(
 \item{data}{Processed data matrix}
 
 \item{n_genes_max}{Row number upper limit to display in heatmap}
-
-\item{n_genes_min}{Row number lower limit to display in heatmap}
 
 \item{gene_centering}{TRUE/FALSE subtract mean from gene rows}
 

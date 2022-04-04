@@ -487,6 +487,7 @@ reactome_data <- function(
     org_info = idep_data$org_info
   )  
 	
+	
   fold <- sort(fold, decreasing = T)
 	paths <- ReactomePA::gsePathway(
     fold,
@@ -982,6 +983,7 @@ kegg_pathway <- function(
     height = 300,
     alt = " "
   )	
+  
 
 	if(is.null(go) || go != "KEGG") {
     return(blank)
@@ -1616,7 +1618,7 @@ kegg_pathway <- function(
 
 	# Get fold change
 	if(length(limma$comparisons)  == 1) {
-    top1 <- limma$top_genes[[1]]  
+    top_1 <- limma$top_genes[[1]]  
 	} else {
 	  top <- limma$top_genes
 	  ix <- match(select_contrast, names(top))
@@ -1628,6 +1630,7 @@ kegg_pathway <- function(
 	if(dim(top_1)[1] == 0 ) {
     return(blank)
 	}
+  
 	 
 	colnames(top_1) <- c("Fold","FDR")
   Species <- converted$species[1,1]
@@ -1656,7 +1659,8 @@ kegg_pathway <- function(
     "KEGG",
     select_org,
     idep_data$gmt_files,
-    idep_data$org_info
+    idep_data$org_info, 
+    idep_data
   )
   
   # Kegg pathway id not found.

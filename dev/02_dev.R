@@ -62,6 +62,8 @@ usethis::use_package("runibic")
 usethis::use_package("grDevices")
 usethis::use_package("loose.rock")
 usethis::use_package("PCAtools")
+usethis::use_package("shinyBS")
+
 
 ## Add modules ----
 ## Create a module infrastructure in R/

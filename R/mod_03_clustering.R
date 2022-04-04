@@ -15,13 +15,13 @@ mod_03_clustering_ui <- function(id) {
 
       # Heatmap Panel Sidebar ----------
       sidebarPanel(
-        sliderInput(
-          inputId = ns("n_genes"),
-          label = h4("Most variable genes to include:"),
-          min = 0,
-          max = 12000,
-          value = c(0, 100),
-          step = 50
+        numericInput(
+          inputId = ns("n_genes"), 
+          label = h4("Top n most variable genes to include:"), 
+          min = 10, 
+          max = 12000, 
+          value = 100, 
+          step = 10
         ),
 
         # k- means slidebar -----------
@@ -41,6 +41,12 @@ mod_03_clustering_ui <- function(id) {
             inputId = ns("k_means_re_run"),
             label = "Re-Run"
           ),
+          
+          # Elbow plot pop-up 
+          actionButton(
+            inputId = ns("elbow_pop_up"),
+            label = "How many clusters?"
+          ),
           ns = ns
         ),
 
@@ -52,7 +58,7 @@ mod_03_clustering_ui <- function(id) {
 
         # Select Clustering Method ----------
         conditionalPanel(
-          condition = "input.cluster_panels == 'Heatmap'",
+          condition = "input.cluster_panels == 'Heatmap/Enrichment'",
           
           selectInput(
             inputId = ns("cluster_meth"),
@@ -80,7 +86,7 @@ mod_03_clustering_ui <- function(id) {
 
         # Heatmap customizing features ----------
         conditionalPanel(
-          condition = "input.cluster_panels == 'Heatmap' ||
+          condition = "input.cluster_panels == 'Heatmap/Enrichment' ||
                        input.cluster_panels == 'Correlation Matrix'",
 
           strong("Customize heatmap (Default values work well):"),
@@ -103,7 +109,7 @@ mod_03_clustering_ui <- function(id) {
 
         # Clustering methods for hierarchical ----------
         conditionalPanel(
-          condition = "input.cluster_meth == 1 && input.cluster_panels == 'Heatmap'",
+          condition = "input.cluster_meth == 1 && input.cluster_panels == 'Heatmap/Enrichment'",
           fluidRow(
             column(width = 4, h5("Distance")),
             column(
@@ -158,19 +164,9 @@ mod_03_clustering_ui <- function(id) {
           label = "Normalize genes (divide by SD)",
           value = FALSE
         ),
-        checkboxInput(
-          inputId = ns("sample_centering"),
-          label = "Center samples (substract mean)",
-          value = FALSE
-        ),
-        checkboxInput(
-          inputId = ns("sample_normalize"),
-          label = "Normalize samples(divide by SD)",
-          value = FALSE
-        ),
 
         conditionalPanel(
-          condition = "input.cluster_panels == 'Heatmap'",
+          condition = "input.cluster_panels == 'Heatmap/Enrichment'",
           checkboxInput(
             inputId = ns("no_sample_clustering"),
             label = "Do not re-order or cluster samples",
@@ -200,9 +196,11 @@ mod_03_clustering_ui <- function(id) {
 
           # Heatmap panel ----------
           tabPanel(
-            title = "Heatmap",
+            title = "Heatmap/Enrichment",
+            h3("Heatmap"), 
             h5("Brush for sub-heatmap, click for value. (Shown Below)"),
             br(),
+            
             fluidRow(
               column(
                 width = 3,
@@ -228,14 +226,10 @@ mod_03_clustering_ui <- function(id) {
                 )
               )
             ),
-            h4("Sub-heatmap Data Table", align = "center"),
-            DT::dataTableOutput(outputId = ns("subheat_data"))
-          ),
-
-          # Enrichment panel ----------
-          tabPanel(
-            title = "Enrichment",
-            br(),
+            h3("Enrichment"), 
+            h5("Enrichment analysis is  based on selected genes from heatmap."),
+            h6("List of genes included in each pathway can be found 
+               in downloaded data."),
             fluidRow(
               column(
                 width = 4,
@@ -266,7 +260,7 @@ mod_03_clustering_ui <- function(id) {
             verbatimTextOutput(ns("test")),
             uiOutput(outputId = ns("pathway_data"))
           ),
-
+          
           # Gene Standard Deviation Distribution ----------
           tabPanel(
             title = "Gene SD Distribution",
@@ -275,34 +269,6 @@ mod_03_clustering_ui <- function(id) {
               outputId = ns("sd_density_plot"),
               width = "100%",
               height = "500px"
-            )
-          ),
-
-          # Correlation matrix panel ----------
-          tabPanel(
-            title = "Correlation Matrix",
-            br(),
-            fluidRow(
-              column(
-                width = 4,
-                selectInput(
-                  inputId = ns("cor_text_col"),
-                  label = "Select Text Color:",
-                  choices = c("White", "Black"),
-                  selected = "White"
-                )
-              ),
-              column(
-                width = 8,
-                checkboxInput(
-                  ns("label_pcc"),
-                  label = "Label w/ Pearson's correlation coefficients",
-                  value = TRUE
-                )
-              )
-            ),
-            plotOutput(
-              outputId = ns("correlation_matrix")
             )
           ),
 
@@ -318,26 +284,6 @@ mod_03_clustering_ui <- function(id) {
               outputId = ns("sample_tree"),
               width = "100%",
               height = "400px"
-            )
-          ),
-
-          # K-means elbow plot ----------
-          tabPanel(
-            title = "k-Cluster Plot",
-            h4("Determining the number of clusters (k)"),
-            h5(
-              "Following the elbow method, one should choose k so that adding another 
-               cluster does not substantially reduce the within groups sum of squares.",
-              a(
-                "Wikipedia",
-                href = "https://en.wikipedia.org/wiki/Determining_the_number_of_clusters_in_a_data_set",
-                target = "_blank"
-              )
-            ),
-            plotOutput(
-              outputId = ns("k_clusters"),
-              width = "100%",
-              height = "500px"
             )
           )
         )
@@ -364,11 +310,11 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       if (nrow(pre_process$data()) > 12000) {
         max_genes <- 12000
       } else {
-        max_genes <- round(nrow(pre_process$data()) + 50, -2)
+        max_genes <- round(nrow(pre_process$data()), -2)
       }
-      updateSliderInput(
-        inputId = "n_genes",
-        value = c(0, 100),
+      updateNumericInput(
+        inputId = "n_genes", 
+        value = 100, 
         max = max_genes
       )
     })
@@ -376,17 +322,21 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     # Heatmap Colors ----------
     heatmap_colors <- list(
       "Green-Black-Red" = c("green", "black", "red"),
+      "Red-Black-Green" = c("red", "black", "green"), 
       "Blue-White-Red" = c("blue", "white", "red"),
       "Green-Black-Magenta" = c("green", "black", "magenta"),
       "Blue-Yellow-Red" = c("blue", "yellow", "red"),
-      "Blue-White-Brown" = c("blue", "white", "brown")
+      "Blue-White-Brown" = c("blue", "white", "brown"), 
+      "Orange-White-Blue" = c("orange", "white", "blue")
     )
     heatmap_choices <- c(
       "Green-Black-Red",
+      "Red-Black-Green", 
       "Blue-White-Red",
       "Green-Black-Magenta",
       "Blue-Yellow-Red",
-      "Blue-White-Brown"
+      "Blue-White-Brown", 
+      "Orange-White-Blue"
     )
     observe({
       updateSelectInput(
@@ -451,8 +401,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
 
       sd_density(
         data = pre_process$data(),
-        n_genes_max = input$n_genes[2],
-        n_genes_min = input$n_genes[1]
+        n_genes_max = input$n_genes
       )
     })
 
@@ -462,12 +411,11 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
 
       process_heatmap_data(
         data = pre_process$data(),
-        n_genes_max = input$n_genes[2],
-        n_genes_min = input$n_genes[1],
+        n_genes_max = input$n_genes,
         gene_centering = input$gene_centering,
         gene_normalize = input$gene_normalize,
-        sample_centering = input$sample_centering,
-        sample_normalize = input$sample_normalize,
+        sample_centering = FALSE,
+        sample_normalize = FALSE,
         all_gene_names = pre_process$all_gene_names(),
         select_gene_id = input$select_gene_id
       )
@@ -562,20 +510,6 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
 
         return(shiny_env$ht_sub)
       }
-    })
-
-    # Subheatmap Data Table ----------
-    output$subheat_data <- DT::renderDataTable({
-      req(!is.null(input$ht_brush))
-
-      DT::datatable(
-        shiny_env$submap_data,
-        options = list(
-          pageLength = 10,
-          scrollX = "400px"
-        ),
-        rownames = TRUE
-      )
     })
 
     # Enrichment Analysis ----------
@@ -694,18 +628,28 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       }
 
       shinybusy::remove_modal_spinner()
+      
+
 
       return(pathway_info)
     })
+    
+    
 
     # Pathway Data Table ----------
     output$pathway_data <- renderUI({
       req(!is.null(pathway_table()))
-
+      
+      
+      #exclude gene list column from displayed table, but keep for download
       lapply(names(pathway_table()), function(x) {
         output[[x]] = DT::renderDataTable({
           DT::datatable(
-            pathway_table()[[x]],
+            if (ncol(pathway_table()[[x]]) < 5){
+              data = pathway_table()[[x]]
+            } else {
+              data = pathway_table()[[x]][,1:4]
+            },
             options = list(
               pageLength = 20,
               scrollX = "400px",
@@ -731,28 +675,19 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       return(lapply(names(pathway_table()), function(x) {
         tagList(
           br(),
-          strong(h3(gsub("_", " ", x))),
-          DT::dataTableOutput(ns(x)),
-          br(),
           downloadButton(
             outputId = ns(paste0("table_", x)),
             label = paste0("Enrichment: ", gsub("_", " ", x))
-          )
+          ),
+          br(),
+          strong(h3(gsub("_", " ", x))),
+          DT::dataTableOutput(ns(x))
         )
       })
       )
     })
 
-    # Correlation Matrix ----------
-    output$correlation_matrix <- renderPlot({
-		  cor_plot(
-        data = pre_process$data(),
-        label_pcc = input$label_pcc,
-        heat_cols = heatmap_colors[[input$heatmap_color_select]],
-        text_col = stringr::str_to_lower(input$cor_text_col)
-      )
-    }, height = 600, width = 700)
-
+  
     # Sample Tree ----------
     output$sample_tree <- renderPlot({
       req(!is.null(pre_process$data()))
@@ -761,8 +696,8 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         tree_data = pre_process$data(),
         gene_centering = input$gene_centering,
         gene_normalize = input$gene_normalize,
-        sample_centering = input$sample_centering,
-        sample_normalize = input$sample_normalize,
+        sample_centering = FALSE,
+        sample_normalize = FALSE,
         hclust_funs = hclust_funs,
         hclust_function = input$hclust_function,
         dist_funs = dist_funs,
@@ -777,6 +712,23 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       k_means_elbow(
         heatmap_data = heatmap_data()
       )
+    })
+    # pop-up modal 
+    observeEvent(input$elbow_pop_up, {
+      showModal(modalDialog(
+        plotOutput(ns("k_clusters")), 
+        footer = NULL, 
+        easyClose = TRUE, 
+        title = tags$h5(
+          "Following the elbow method, one should choose k so that adding 
+          another cluster does not substantially reduce the within groups sum of squares.",
+          tags$a(
+            "Wikipedia",
+            href = "https://en.wikipedia.org/wiki/Determining_the_number_of_clusters_in_a_data_set",
+            target = "_blank"
+          )
+        ),  
+      ))
     })
 
      # Heatmap Download Data -----------
