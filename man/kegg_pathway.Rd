@@ -12,7 +12,9 @@ kegg_pathway(
   limma,
   converted,
   idep_data,
-  select_org
+  select_org,
+  low_color = "green",
+  high_color = "red"
 )
 }
 \arguments{
@@ -36,6 +38,10 @@ information about the gene IDs for the matched species}
 \item{idep_data}{Read data files from the database}
 
 \item{select_org}{The organism that the gene data is for}
+
+\item{low_color}{Color value for the low-ly expressed genes}
+
+\item{high_color}{Color vlaue for the high-ly expressed genes}
 }
 \value{
 Make an image and return the path to the image to be
