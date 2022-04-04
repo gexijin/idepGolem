@@ -190,7 +190,7 @@ mod_06_pathway_ui <- function(id) {
                     condition = "input.select_go == 'KEGG'", 
                     selectInput(
                       inputId = ns("kegg_color_select"), 
-                      label = "Select colors for KEGG map (low-high)", 
+                      label = "Select colors (low-high)", 
                       choices = "green-red", 
                       width = "100%"
                     ), 
@@ -745,8 +745,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         converted = pre_process$converted(),
         idep_data = idep_data,
         select_org = pre_process$select_org(), 
-        low_color = kegg_colors[[input$kegg_color_select[1]]], 
-        high_color = kegg_colors[[input$kegg_color_select[2]]]
+        low_color = kegg_colors[[input$kegg_color_select]][1], 
+        high_color = kegg_colors[[input$kegg_color_select]][2]
       )
     }, deleteFile = TRUE)
     
