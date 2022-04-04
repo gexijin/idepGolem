@@ -39,10 +39,10 @@ mod_04_pca_ui <- function(id) {
           ns=ns
         ),
         conditionalPanel(
-          condition = "1==1",
+          condition = "input.PCA_panels != 'PCAtools Package Plots'",
           fluidRow(
             column(
-              width = 12,
+              width = 9,
               uiOutput(
                 outputId = ns("listFactors2")
               ),
@@ -61,7 +61,37 @@ mod_04_pca_ui <- function(id) {
           
           ns=ns
         ),
-        a(
+        #PCATools plot options
+        conditionalPanel(
+          condition = "input.PCA_panels == 'PCAtools Package Plots'",
+          fluidRow(
+            selectInput(inputId = ns("x_axis_pc"),
+                        label = "X-Axis",
+                        choices = c("PC1", "PC2", "PC3", "PC4", "PC5"),
+                        selected = "PC1"
+            ),
+            selectInput(inputId = ns("y_axis_pc"),
+                        label = "Y-Axis",
+                        choices = c("PC1", "PC2", "PC3", "PC4", "PC5"),
+                        selected = "PC2"
+            ),
+            #Dynamic Color and Shape options
+            uiOutput(
+              outputId = ns("pcatools_shape")
+            ),
+            uiOutput(
+              outputId = ns("pcatools_color")
+            ),
+            #plot customization
+            checkboxInput(inputId = ns("showLoadings"), label = "Show Loadings", value = FALSE),
+            checkboxInput(inputId = ns("encircle"), label = "Encircle", value = FALSE),
+            checkboxInput(inputId = ns("pointLabs"), label = "Point Labels", value = TRUE),
+            numericInput(inputId = ns("pointSize"), label = "Point Size (Reccomded: 1-10)",value = 3.0, min = 1, max = 15)
+          ),
+          
+          ns=ns
+        ),
+                a(
           h5("Questions?", align = "right"),
           href = "https://idepsite.wordpress.com/pca/",
           target = "_blank"
@@ -101,6 +131,24 @@ mod_04_pca_ui <- function(id) {
               width = "100%",
               height = "500px"
             ),
+          ),
+          tabPanel(
+            "PCAtools Package Plots",
+            br(),
+            plotOutput(
+              outputId = ns("pcatools_biplot"),
+              width = "100%",
+              height = "500px"
+            ),
+            br(),
+            br(),
+            br(),
+            plotOutput(
+              outputId = ns("pcatools_scree"),
+              width = "100%",
+              height = "500px"
+            )
+            
           )
           # tabPanel(
           #   "Pathway Analysis of PCA",
@@ -154,9 +202,7 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
         selected_color = input$selectFactors1
       )
     })
-    
-    
-    
+
     # MDS plot ------------
     output$mds_plot_obj <- renderPlot({
       req(!is.null(pre_process$data()))
@@ -169,6 +215,34 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
         
       )
     })
+    
+    #PCAtools biplot  ---------------------
+    output$pcatools_biplot <- renderPlot({
+      req(!is.null(pre_process$data()))
+      
+      PCA_biplot(
+        data = pre_process$data(),
+        sample_info = pre_process$sample_info(),
+        selected_x = input$x_axis_pc,
+        selected_y = input$y_axis_pc,
+        encircle = input$encircle,
+        showLoadings = input$showLoadings,
+        pointlabs = input$pointLabs,
+        point_size = input$pointSize,
+        ui_color = input$selectColor,
+        ui_shape = input$selectShape
+      )
+    }) 
+    #PCAtools Scree Plot --------------------
+    output$pcatools_scree <- renderPlot({
+      req(!is.null(pre_process$data()))
+      
+      PCA_Scree(
+        processed_data = pre_process$data()
+      )
+      
+    })    
+    
     # select color
     output$listFactors1 <- renderUI({
       req(!is.null(pre_process$data()))
@@ -191,15 +265,39 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       { return(NULL) }
       else { 
         tem <- c( colnames(pre_process$sample_info()), "Sample_Name")
-        #if(length(tem)>1) { tem2 = tem[1]; tem[1] <- tem[2]; tem[1] = tem2; } # swap 2nd factor with first
         selectInput(inputId = ns("selectFactors2"),
-                    label="Shape:",
+                    label="Shape",
                     choices=tem,
                     selected = "Sample_Name"
                     )
       } 
     })
     
+    # select color & shape for pcatools
+    output$pcatools_color <- renderUI({
+      req(!is.null(pre_process$data()))
+      
+      if (is.null(pre_process$sample_info()) )
+      { return(HTML("Upload a sample info file to customize this plot.") ) }	 else { 
+        selectInput(
+          inputId = ns("selectColor"),
+          label = "Color",
+          choices = colnames(pre_process$sample_info()),
+          selected = colnames(pre_process$sample_info())[1]
+          )   } 
+    })
+    output$pcatools_shape <- renderUI({
+      req(!is.null(pre_process$data()))
+      
+      if (is.null(pre_process$sample_info()) )
+      { return(HTML("Upload a sample info file to customize this plot.") ) }	 else { 
+        selectInput(
+          inputId = ns("selectShape"),
+          label = "Shape",
+          choices = colnames(pre_process$sample_info()),
+          selected = colnames(pre_process$sample_info())[1]
+        )   } 
+    })    
     
     
     
