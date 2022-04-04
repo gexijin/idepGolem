@@ -64,10 +64,11 @@ PCA_plot <- function(
   groups <- detect_groups(sample_names = colnames(data), sample_info = sample_info)
   #Missing design clause
   if( is.null(sample_info)){
-    pcaData <- cbind(pcaData, detect_groups(colnames(x), y))
+    pcaData <- cbind(pcaData, detect_groups(colnames(data), sample_info))
   } else {
     pcaData <- cbind(pcaData, detect_groups(colnames(x), y), sample_info)
   }
+  dim(pcaData)[2]
   colnames(pcaData)[6] <- "Sample_Name"
   
   if (nlevels(groups) <= 1 | nlevels(groups) > 20) {
@@ -414,4 +415,104 @@ pc_factor_correlation <- function(
     }
   }
   return(a)
+}
+
+
+
+#' Principal Component Analysis with PCAtools package
+#'
+#' Draw a PCA plot using PCAtools package
+#'
+#' @param data Data that has been through pre-processing
+#' @param sample_info Matrix array with experiment info
+#'
+#' @return Formatted PCA plot using PCAtools package
+#' 
+PCA_biplot <- function(
+  data,
+  sample_info,
+  selected_x = "PC1",
+  selected_y = "PC2",
+  encircle = TRUE,
+  encircleFill = TRUE,
+  showLoadings = TRUE,
+  pointlabs = TRUE,
+  point_size = 4.0,
+  ui_color = NULL,
+  ui_shape = NULL
+) {
+  #missing design
+  if(is.null(sample_info)) {
+    meta_data <- as.data.frame(colnames(data))
+  } else {
+    meta_data <- sample_info
+  }
+  
+  #rownames(meta_data) <- meta_data$`colnames(data)`
+  
+  pca_obj <- PCAtools::pca(data, metadata = meta_data, removeVar = 0.1)
+  
+  if(pointlabs == TRUE){
+    show_point_labels <- rownames(pca_obj$metadata)
+  } else{
+    show_point_labels <- NULL
+  }
+
+   PCAtools::biplot(
+    pcaobj = pca_obj,
+    x = selected_x,
+    y = selected_y,
+    colby = ui_color,
+    shape = ui_shape,
+    #colLegendTitle = 'Color?',
+    encircle = encircle,
+    encircleFill = encircleFill,
+    showLoadings = showLoadings,
+    lab = show_point_labels,
+    legendPosition = 'right',
+    legendLabSize = 16,
+    legendIconSize = 8.0,
+    pointSize = point_size,
+    title = "Principal Component Scores"
+    )
+
+}
+
+#' Principal Component Analysis with PCAtools package
+#'
+#' Draw a Scree plot with Horn's and Elbow suggestion for cutoffs using PCAtools package
+#'
+#' @param data Data that has been through pre-processing
+#'
+#' @return Formatted Scree plot using PCAtools package
+PCA_Scree <- function(
+  processed_data 
+) {
+
+  pca_obj <- PCAtools::pca(mat = processed_data, removeVar = 0.1)
+  
+  horn <- PCAtools::parallelPCA(processed_data)
+  elbow <- PCAtools::findElbowPoint(pca_obj$variance)
+
+  p <- plot(PCAtools::screeplot(
+    pca_obj,
+    vline = c(horn$n, elbow)) +
+    ggplot2::geom_label(
+      ggplot2::aes(
+        x = horn$n + .1, 
+        y = 60,
+        label = 'Horn\'s', 
+        vjust = .5,
+        hjust = .5,
+        size = 8)
+      ) +
+    ggplot2::geom_label(
+      ggplot2::aes(x = elbow + .1,
+                   y = 70,
+                   label = 'Elbow',
+                   vjust = .5,
+                   hjust = .5,
+                   size = 8))
+  )
+  return(p)
 }
