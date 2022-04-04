@@ -176,11 +176,25 @@ mod_06_pathway_ui <- function(id) {
                 ),
                 column(
                   width = 4, 
-                  selectInput(
-                    inputId = ns("heatmap_color_select"),
-                    label = "Select Heatmap Color: ",
-                    choices = "green-black-red",
-                    width = "100%"
+                  conditionalPanel(
+                    condition =  "input.select_go != 'KEGG'", 
+                    selectInput(
+                      inputId = ns("heatmap_color_select"),
+                      label = "Select Heatmap Color: ",
+                      choices = "green-black-red",
+                      width = "100%"
+                    ), 
+                    ns = ns
+                  ), 
+                  conditionalPanel(
+                    condition = "input.select_go == 'KEGG'", 
+                    selectInput(
+                      inputId = ns("kegg_color_select"), 
+                      label = "Select colors for KEGG map (low-high)", 
+                      choices = "green-red", 
+                      width = "100%"
+                    ), 
+                    ns = ns
                   )
                 )
               ),
@@ -633,6 +647,23 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         choices = heatmap_choices
       )
     })
+    
+    # Kegg Colors --------
+    kegg_colors <- list(
+      "Green-Red" = c("green", "red"), 
+      "Blue-Orange" = c("blue", "orange")
+    )
+    kegg_choices <- c(
+      "Green-Red", 
+      "Blue-Orange"
+    )
+    observe({
+      updateSelectInput(
+        session = session, 
+        inputId = "kegg_color_select", 
+        choices = kegg_choices
+      )
+    })
 
     output$path_main_heatmap <- renderPlot({
       req(!is.null(selected_pathway_data()))
@@ -713,7 +744,9 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         limma = deg$limma(),
         converted = pre_process$converted(),
         idep_data = idep_data,
-        select_org = pre_process$select_org()
+        select_org = pre_process$select_org(), 
+        low_color = kegg_colors[[input$kegg_color_select[1]]], 
+        high_color = kegg_colors[[input$kegg_color_select[2]]]
       )
     }, deleteFile = TRUE)
     
