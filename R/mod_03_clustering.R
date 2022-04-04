@@ -227,7 +227,9 @@ mod_03_clustering_ui <- function(id) {
               )
             ),
             h3("Enrichment"), 
-            h5("Enrichment analysis is  based on selected genes from heatmap."), 
+            h5("Enrichment analysis is  based on selected genes from heatmap."),
+            h6("List of genes included in each pathway can be found 
+               in downloaded data."),
             fluidRow(
               column(
                 width = 4,
@@ -626,18 +628,29 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       }
 
       shinybusy::remove_modal_spinner()
+      
+
 
       return(pathway_info)
     })
+    
+    
 
     # Pathway Data Table ----------
     output$pathway_data <- renderUI({
       req(!is.null(pathway_table()))
-
+      
+      print(ncol(pathway_table()[[1]]))
+      
+      #exclude gene list column from displayed table, but keep for download
       lapply(names(pathway_table()), function(x) {
         output[[x]] = DT::renderDataTable({
           DT::datatable(
-            pathway_table()[[x]],
+            if (ncol(pathway_table()[[x]]) < 5){
+              data = pathway_table()[[x]]
+            } else {
+              data = pathway_table()[[x]][,1:4]
+            },
             options = list(
               pageLength = 20,
               scrollX = "400px",
@@ -663,13 +676,13 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       return(lapply(names(pathway_table()), function(x) {
         tagList(
           br(),
-          strong(h3(gsub("_", " ", x))),
-          DT::dataTableOutput(ns(x)),
-          br(),
           downloadButton(
             outputId = ns(paste0("table_", x)),
             label = paste0("Enrichment: ", gsub("_", " ", x))
-          )
+          ),
+          br(),
+          strong(h3(gsub("_", " ", x))),
+          DT::dataTableOutput(ns(x))
         )
       })
       )

@@ -28,6 +28,8 @@ iDEP database}
 
 \item{org_info}{Organism information files from the iDEP
 database}
+
+\item{idep_data}{Background idep_data}
 }
 \value{
 Return the KEGG ID for the pathway.
