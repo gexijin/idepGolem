@@ -640,7 +640,6 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     output$pathway_data <- renderUI({
       req(!is.null(pathway_table()))
       
-      print(ncol(pathway_table()[[1]]))
       
       #exclude gene list column from displayed table, but keep for download
       lapply(names(pathway_table()), function(x) {
