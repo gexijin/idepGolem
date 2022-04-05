@@ -448,8 +448,6 @@ PCA_biplot <- function(
     meta_data <- sample_info
   }
   
-  #rownames(meta_data) <- meta_data$`colnames(data)`
-  
   pca_obj <- PCAtools::pca(data, metadata = meta_data, removeVar = 0.1)
   
   if(pointlabs == TRUE){
@@ -516,3 +514,38 @@ PCA_Scree <- function(
   )
   return(p)
 }
+
+#' Principal Component Analysis with PCAtools package
+#'
+#' Generates a plot showing correlations between Principal Components and design factors
+#'
+#' @param data Data that has been through pre-processing
+#' @param sample_info Design Matrix
+#' @return Formatted plot generated with PCAtools package
+PCAtools_eigencorplot <- function(
+  processed_data,
+  sample_info
+)
+{
+  #missing design
+  if(is.null(sample_info)) {
+    meta_data <- as.data.frame(colnames(processed_data))
+  } else {
+    meta_data <- sample_info
+  }
+  
+  #Design Factors must be converted to numeric
+  meta_data <- as.data.frame(meta_data)
+  meta_data <- sapply(meta_data, function(x) as.numeric(factor(x)))
+  meta_data <- as.data.frame(meta_data)
+  
+  #maintain rownames
+  rownames(meta_data) <- rownames(sample_info)
+  
+  #create PCA object
+  pca_obj <- PCAtools::pca(processed_data, metadata = meta_data, removeVar = 0.1)
+  
+  #plot
+  p <- PCAtools::eigencorplot(pca_obj, metavars = colnames(meta_data))
+  return(p)
+  }

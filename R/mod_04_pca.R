@@ -152,6 +152,14 @@ mod_04_pca_ui <- function(id) {
               outputId = ns("pcatools_scree"),
               width = "100%",
               height = "500px"
+            ),
+            br(),
+            br(),
+            br(),
+            plotOutput(
+              outputId = ns("pcatools_eigencor"),
+              width = "100%",
+              height = "500px"
             )
             
           )
@@ -248,6 +256,15 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       
     })    
     
+    #PCAtools Eigencor Plot --------------------
+    output$pcatools_eigencor <- renderPlot({
+      req(!is.null(pre_process$data()))
+      
+      PCAtools_eigencorplot(
+        processed_data = pre_process$data(),
+        sample_info = pre_process$sample_info()
+      )
+    })   
     # select color
     output$listFactors1 <- renderUI({
       req(!is.null(pre_process$data()))
@@ -256,7 +273,7 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       { return(HTML("Upload a sample info file to customize this plot.") ) }	 else { 
         selectInput(
           inputId = ns("selectFactors1"),
-          label = "Color: ",
+          label = "Color ",
           choices = c( colnames(pre_process$sample_info()), "Sample_Name")
                     , selected = "Sample_Name")   } 
     })
