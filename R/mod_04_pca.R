@@ -66,10 +66,10 @@ mod_04_pca_ui <- function(id) {
         ),
         #PCATools plot options
         conditionalPanel(
-          condition = "input.PCA_panels == 'PCAtools Package Plots'",
+          condition = "input.PCA_panels == 'Plots from PCAtools Package'",
           fluidRow(
             column(
-              width = 12,
+              width = 9,
               selectInput(inputId = ns("x_axis_pc"),
                         label = "X-Axis",
                         choices = c("PC1", "PC2", "PC3", "PC4", "PC5"),
@@ -138,7 +138,7 @@ mod_04_pca_ui <- function(id) {
             ),
           ),
           tabPanel(
-            "PCAtools Package Plots",
+            "Plots from PCAtools Package",
             br(),
             plotOutput(
               outputId = ns("pcatools_biplot"),

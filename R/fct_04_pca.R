@@ -443,10 +443,14 @@ PCA_biplot <- function(
 ) {
   #missing design
   if(is.null(sample_info)) {
+    cat("NULL sample info\n")
     meta_data <- as.data.frame(colnames(data))
+    rownames(meta_data) <- colnames(data)
   } else {
     meta_data <- sample_info
+    cat(meta_data)
   }
+  
   
   pca_obj <- PCAtools::pca(data, metadata = meta_data, removeVar = 0.1)
   
@@ -529,23 +533,25 @@ PCAtools_eigencorplot <- function(
 {
   #missing design
   if(is.null(sample_info)) {
-    meta_data <- as.data.frame(colnames(processed_data))
+    return("Upload Design file to see EigenCor plot.")
+    #meta_data <- as.data.frame(colnames(processed_data))
+    #colnames(meta_data)[1] <- "Sample_Name"
   } else {
     meta_data <- sample_info
+    
+    #Design Factors must be converted to numeric
+    meta_data <- as.data.frame(meta_data)
+    meta_data <- sapply(meta_data, function(x) as.numeric(factor(x)))
+    meta_data <- as.data.frame(meta_data)
+    
+    #maintain rownames
+    rownames(meta_data) <- rownames(sample_info)
+    
+    #create PCA object
+    pca_obj <- PCAtools::pca(processed_data, metadata = meta_data, removeVar = 0.1)
+    
+    #plot
+    p <- PCAtools::eigencorplot(pca_obj, metavars = colnames(meta_data))
+    return(p)
   }
-  
-  #Design Factors must be converted to numeric
-  meta_data <- as.data.frame(meta_data)
-  meta_data <- sapply(meta_data, function(x) as.numeric(factor(x)))
-  meta_data <- as.data.frame(meta_data)
-  
-  #maintain rownames
-  rownames(meta_data) <- rownames(sample_info)
-  
-  #create PCA object
-  pca_obj <- PCAtools::pca(processed_data, metadata = meta_data, removeVar = 0.1)
-  
-  #plot
-  p <- PCAtools::eigencorplot(pca_obj, metavars = colnames(meta_data))
-  return(p)
   }
