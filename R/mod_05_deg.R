@@ -761,17 +761,21 @@ mod_05_deg_server <- function(id, pre_process) {
         )
       }
     })
-
-    output$volcano_plot <- renderPlot({
+    
+    vol_plot <- reactive({
       req(!is.null(deg$limma$top_genes))
-
-      plot_volcano(
+      
+      vol <- plot_volcano(
         select_contrast = input$select_contrast,
         comparisons = deg$limma$comparisons,
         top_genes = deg$limma$top_genes,
         limma_p_val = input$limma_p_val,
         limma_fc = input$limma_fc
       )
+    })
+
+    output$volcano_plot <- renderPlot({
+      print(vol_plot())
     })
 
     output$ma_plot <- renderPlot({
@@ -1048,14 +1052,9 @@ mod_05_deg_server <- function(id, pre_process) {
           height = input$vol_height
         )
         print(
-          plot_volcano(
-            select_contrast = input$select_contrast,
-            comparisons = deg$limma$comparisons,
-            top_genes = deg$limma$top_genes,
-            limma_p_val = input$limma_p_val,
-            limma_fc = input$limma_fc
-          )
-        )
+          vol_plot()
+        ) 
+        
         dev.off()
       }
     )
