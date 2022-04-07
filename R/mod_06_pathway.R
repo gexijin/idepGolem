@@ -542,7 +542,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       )
     })
 
-    output$fgsea_pathway <- renderTable({
+    output$fgsea_pathway <- DT::renderDataTable({
       req(!is.null(fgsea_pathway_data()))
       
       DT::datatable(
@@ -598,7 +598,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       )
     })
 
-    output$reactome_pa_pathway <- renderTable({
+    output$reactome_pa_pathway <- DT::renderDataTable({
       req(!is.null(reactome_pa_pathway_data()))
 	    
       DT::datatable(
