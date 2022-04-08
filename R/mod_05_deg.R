@@ -249,7 +249,8 @@ mod_05_deg_2_ui <- function(id) {
               outputId = ns("ma_plot"),
               height = "500px",
               width = "100%"
-            )
+            ), 
+            mod_download_images_ui(ns("download_ma"))
           ),
           tabPanel(
             title = "Scatter Plot",
@@ -356,8 +357,7 @@ mod_05_deg_server <- function(id, pre_process) {
 
     # Interactive heatmap environment
     deg_env <- new.env()
-
-
+    
     # DEG STEP 1 ----------
     output$data_file_format <- reactive({
       pre_process$data_file_format()
@@ -762,6 +762,7 @@ mod_05_deg_server <- function(id, pre_process) {
       }
     })
     
+    # volcano plot -----
     vol_plot <- reactive({
       req(!is.null(deg$limma$top_genes))
       
@@ -773,13 +774,16 @@ mod_05_deg_server <- function(id, pre_process) {
         limma_fc = input$limma_fc
       )
     })
+    
+    
 
     output$volcano_plot <- renderPlot({
       print(vol_plot())
     })
-
-    output$ma_plot <- renderPlot({
-	    req(!is.null(deg$limma$top_genes))
+    
+    # ma plot----------------
+    ma_plot <- reactive({
+      req(!is.null(deg$limma$top_genes))
       
       plot_ma(
         select_contrast = input$select_contrast,
@@ -791,6 +795,16 @@ mod_05_deg_server <- function(id, pre_process) {
         processed_data = pre_process$data()
       )
     })
+    
+    output$ma_plot <- renderPlot({
+	    print(ma_plot())
+    })
+    
+    download_ma <- mod_download_images_server(
+      "download_ma", 
+      filename = "ma", 
+      figure = ma_plot()
+    )
 
     output$scatter_plot <- renderPlot({
       req(!is.null(deg$limma$top_genes))
