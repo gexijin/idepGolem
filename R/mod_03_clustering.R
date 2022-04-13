@@ -18,7 +18,7 @@ mod_03_clustering_ui <- function(id) {
         numericInput(
           inputId = ns("n_genes"), 
           label = h4("Top n most variable genes to include:"), 
-          min = 5, 
+          min = 10, 
           max = 12000, 
           value = 100, 
           step = 10
@@ -164,16 +164,6 @@ mod_03_clustering_ui <- function(id) {
           label = "Normalize genes (divide by SD)",
           value = FALSE
         ),
-        checkboxInput(
-          inputId = ns("sample_centering"),
-          label = "Center samples (substract mean)",
-          value = FALSE
-        ),
-        checkboxInput(
-          inputId = ns("sample_normalize"),
-          label = "Normalize samples(divide by SD)",
-          value = FALSE
-        ),
 
         conditionalPanel(
           condition = "input.cluster_panels == 'Heatmap/Enrichment'",
@@ -237,7 +227,9 @@ mod_03_clustering_ui <- function(id) {
               )
             ),
             h3("Enrichment"), 
-            h5("Enrichment analysis is  based on selected genes from heatmap."), 
+            h5("Enrichment analysis is  based on selected genes from heatmap."),
+            h6("List of genes included in each pathway can be found 
+               in downloaded data."),
             fluidRow(
               column(
                 width = 4,
@@ -277,34 +269,6 @@ mod_03_clustering_ui <- function(id) {
               outputId = ns("sd_density_plot"),
               width = "100%",
               height = "500px"
-            )
-          ),
-
-          # Correlation matrix panel ----------
-          tabPanel(
-            title = "Correlation Matrix",
-            br(),
-            fluidRow(
-              column(
-                width = 4,
-                selectInput(
-                  inputId = ns("cor_text_col"),
-                  label = "Select Text Color:",
-                  choices = c("White", "Black"),
-                  selected = "White"
-                )
-              ),
-              column(
-                width = 8,
-                checkboxInput(
-                  ns("label_pcc"),
-                  label = "Label w/ Pearson's correlation coefficients",
-                  value = TRUE
-                )
-              )
-            ),
-            plotOutput(
-              outputId = ns("correlation_matrix")
             )
           ),
 
@@ -358,17 +322,21 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     # Heatmap Colors ----------
     heatmap_colors <- list(
       "Green-Black-Red" = c("green", "black", "red"),
+      "Red-Black-Green" = c("red", "black", "green"), 
       "Blue-White-Red" = c("blue", "white", "red"),
       "Green-Black-Magenta" = c("green", "black", "magenta"),
       "Blue-Yellow-Red" = c("blue", "yellow", "red"),
-      "Blue-White-Brown" = c("blue", "white", "brown")
+      "Blue-White-Brown" = c("blue", "white", "brown"), 
+      "Orange-White-Blue" = c("orange", "white", "blue")
     )
     heatmap_choices <- c(
       "Green-Black-Red",
+      "Red-Black-Green", 
       "Blue-White-Red",
       "Green-Black-Magenta",
       "Blue-Yellow-Red",
-      "Blue-White-Brown"
+      "Blue-White-Brown", 
+      "Orange-White-Blue"
     )
     observe({
       updateSelectInput(
@@ -446,8 +414,8 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         n_genes_max = input$n_genes,
         gene_centering = input$gene_centering,
         gene_normalize = input$gene_normalize,
-        sample_centering = input$sample_centering,
-        sample_normalize = input$sample_normalize,
+        sample_centering = FALSE,
+        sample_normalize = FALSE,
         all_gene_names = pre_process$all_gene_names(),
         select_gene_id = input$select_gene_id
       )
@@ -660,18 +628,28 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       }
 
       shinybusy::remove_modal_spinner()
+      
+
 
       return(pathway_info)
     })
+    
+    
 
     # Pathway Data Table ----------
     output$pathway_data <- renderUI({
       req(!is.null(pathway_table()))
-
+      
+      
+      #exclude gene list column from displayed table, but keep for download
       lapply(names(pathway_table()), function(x) {
         output[[x]] = DT::renderDataTable({
           DT::datatable(
-            pathway_table()[[x]],
+            if (ncol(pathway_table()[[x]]) < 5){
+              data = pathway_table()[[x]]
+            } else {
+              data = pathway_table()[[x]][,1:4]
+            },
             options = list(
               pageLength = 20,
               scrollX = "400px",
@@ -697,28 +675,19 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       return(lapply(names(pathway_table()), function(x) {
         tagList(
           br(),
-          strong(h3(gsub("_", " ", x))),
-          DT::dataTableOutput(ns(x)),
-          br(),
           downloadButton(
             outputId = ns(paste0("table_", x)),
             label = paste0("Enrichment: ", gsub("_", " ", x))
-          )
+          ),
+          br(),
+          strong(h3(gsub("_", " ", x))),
+          DT::dataTableOutput(ns(x))
         )
       })
       )
     })
 
-    # Correlation Matrix ----------
-    output$correlation_matrix <- renderPlot({
-		  cor_plot(
-        data = pre_process$data(),
-        label_pcc = input$label_pcc,
-        heat_cols = heatmap_colors[[input$heatmap_color_select]],
-        text_col = stringr::str_to_lower(input$cor_text_col)
-      )
-    }, height = 600, width = 700)
-
+  
     # Sample Tree ----------
     output$sample_tree <- renderPlot({
       req(!is.null(pre_process$data()))
@@ -727,8 +696,8 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         tree_data = pre_process$data(),
         gene_centering = input$gene_centering,
         gene_normalize = input$gene_normalize,
-        sample_centering = input$sample_centering,
-        sample_normalize = input$sample_normalize,
+        sample_centering = FALSE,
+        sample_normalize = FALSE,
         hclust_funs = hclust_funs,
         hclust_function = input$hclust_function,
         dist_funs = dist_funs,

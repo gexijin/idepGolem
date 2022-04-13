@@ -175,6 +175,22 @@ mod_05_deg_2_ui <- function(id) {
           ),
           ns = ns
         ),
+        conditionalPanel(
+          condition = "input.step_2 == 'Volcano Plot' | 
+            input.step_2 == 'MA Plot'", 
+          fluidRow(
+            column(width = 3, h5("Plot colors:")), 
+            column(
+              width = 9, 
+              selectInput(
+                inputId = ns("plot_color_select"), 
+                label = NULL, 
+                choices = "Red-Green"
+              )
+            )
+          ), 
+          ns = ns
+        ),
         HTML(
           "<hr style='height:1px;border:none;color:
           #333;background-color:#333;' />"
@@ -249,6 +265,7 @@ mod_05_deg_2_ui <- function(id) {
             ), 
             mod_download_images_ui(ns("download_ma"))
           ),
+          
           tabPanel(
             title = "Scatter Plot",
             br(),
@@ -349,7 +366,7 @@ mod_05_deg_2_ui <- function(id) {
 #' 05_deg1 Server Functions
 #'
 #' @noRd
-mod_05_deg_server <- function(id, pre_process) {
+mod_05_deg_server <- function(id, pre_process, idep_data) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -663,21 +680,50 @@ mod_05_deg_server <- function(id, pre_process) {
         contrast_samples = contrast_samples()
       )
     })
+    
+    # Plot colors ------- 
+    plot_colors <- list(
+      "Green-Red" = c("green", "grey45", "red"), 
+      "Red-Green" = c("red", "grey45", "green"), 
+      "Blue-Red" = c("blue", "grey45", "red"), 
+      "Green-Magenta" = c("green", "grey45", "magenta"),
+      "Orange-Blue" = c("orange", "grey45", "blue")
+    )
+    
+    plot_choices <- c(
+      "Green-Red", 
+      "Red-Green", 
+      "Blue-Red", 
+      "Green-Magenta", 
+      "Orange-Blue"
+    )
+    
+    observe({
+      updateSelectInput(
+        session = session, 
+        inputId = "plot_color_select", 
+        choices = plot_choices
+      )
+    })
 
     # Heatmap Colors ----------
     heatmap_colors <- list(
       "Green-Black-Red" = c("green", "black", "red"),
+      "Red-Black-Green" = c("red", "black", "red"), 
       "Blue-White-Red" = c("blue", "white", "red"),
       "Green-Black-Magenta" = c("green", "black", "magenta"),
       "Blue-Yellow-Red" = c("blue", "yellow", "red"),
-      "Blue-White-Brown" = c("blue", "white", "brown")
+      "Blue-White-Brown" = c("blue", "white", "brown"), 
+      "Orange-White-Blue" = c("orange", "white", "blue")
     )
     heatmap_choices <- c(
       "Green-Black-Red",
+      "Red-Black-Green", 
       "Blue-White-Red",
       "Green-Black-Magenta",
       "Blue-Yellow-Red",
-      "Blue-White-Brown"
+      "Blue-White-Brown", 
+      "Orange-White-Blue"
     )
     observe({
       updateSelectInput(
@@ -769,7 +815,8 @@ mod_05_deg_server <- function(id, pre_process) {
         comparisons = deg$limma$comparisons,
         top_genes = deg$limma$top_genes,
         limma_p_val = input$limma_p_val,
-        limma_fc = input$limma_fc
+        limma_fc = input$limma_fc,
+        plot_colors = plot_colors[[input$plot_color_select]]
       )
     })
     
@@ -796,7 +843,8 @@ mod_05_deg_server <- function(id, pre_process) {
         limma_p_val = input$limma_p_val,
         limma_fc = input$limma_fc,
         contrast_samples = contrast_samples(),
-        processed_data = pre_process$data()
+        processed_data = pre_process$data(), 
+        plot_colors = plot_colors[[input$plot_color_select]]
       )
     })
     

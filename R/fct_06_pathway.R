@@ -487,6 +487,7 @@ reactome_data <- function(
     org_info = idep_data$org_info
   )  
 	
+	
   fold <- sort(fold, decreasing = T)
 	paths <- ReactomePA::gsePathway(
     fold,
@@ -956,6 +957,8 @@ get_pathway_list_data <- function(
 #'  information about the gene IDs for the matched species
 #' @param idep_data Read data files from the database
 #' @param select_org The organism that the gene data is for
+#' @param low_color Color value for the low-ly expressed genes 
+#' @param high_color Color vlaue for the high-ly expressed genes 
 #' 
 #' @return Make an image and return the path to the image to be
 #'  rendered in the server.
@@ -967,7 +970,9 @@ kegg_pathway <- function(
   limma,
   converted,
   idep_data,
-  select_org
+  select_org, 
+  low_color = "green", 
+  high_color = "red"
 ) {
   # First generate a blank image. Otherwise return(NULL) gives us errors.
   out_file <- tempfile(fileext = '.png')
@@ -982,6 +987,7 @@ kegg_pathway <- function(
     height = 300,
     alt = " "
   )	
+  
 
 	if(is.null(go) || go != "KEGG") {
     return(blank)
@@ -1016,9 +1022,9 @@ kegg_pathway <- function(
     bins = list(gene = 10, cpd = 10),
     both.dirs = list(gene = T, cpd = T),
     trans.fun = list(gene = NULL, cpd = NULL), 
-    low = list(gene = "green", cpd = "blue"),
+    low = list(gene = low_color, cpd = "blue"),
     mid = list(gene = "gray", cpd = "gray"),
-    high = list(gene = "red", cpd = "yellow"), 
+    high = list(gene = high_color, cpd = "yellow"), 
     na.col = "transparent",
     ...
   ) {
@@ -1616,7 +1622,7 @@ kegg_pathway <- function(
 
 	# Get fold change
 	if(length(limma$comparisons)  == 1) {
-    top1 <- limma$top_genes[[1]]  
+    top_1 <- limma$top_genes[[1]]  
 	} else {
 	  top <- limma$top_genes
 	  ix <- match(select_contrast, names(top))
@@ -1628,6 +1634,7 @@ kegg_pathway <- function(
 	if(dim(top_1)[1] == 0 ) {
     return(blank)
 	}
+  
 	 
 	colnames(top_1) <- c("Fold","FDR")
   Species <- converted$species[1,1]
@@ -1656,7 +1663,8 @@ kegg_pathway <- function(
     "KEGG",
     select_org,
     idep_data$gmt_files,
-    idep_data$org_info
+    idep_data$org_info, 
+    idep_data
   )
   
   # Kegg pathway id not found.

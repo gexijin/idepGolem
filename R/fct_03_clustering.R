@@ -160,7 +160,7 @@ process_heatmap_data <- function(
   all_gene_names,
   select_gene_id
 ) {
-  n_genes_min <- 5
+  
   data <- rowname_id_swap(
     data_matrix = data,
     all_gene_names = all_gene_names,
@@ -173,19 +173,17 @@ process_heatmap_data <- function(
     sd
   )), ]
 
-  if (n_genes_max - n_genes_min < 10) {
-    n_genes_max <- n_genes_min + 10
-  } else if (n_genes_max > nrow(data)) {
+  if (n_genes_max > nrow(data)) {
     n_genes_max <- nrow(data)
-  } else if (n_genes_min > nrow(data)) {
-    n_genes_min <- nrow(data) - 10
+  } else if (n_genes_max < 10) {
+    n_genes_max <- 10
   }
 
   # Center by genes, cutoff really large values ---------
   if (gene_centering) {
     data <-
-      data[(n_genes_min + 1):n_genes_max, ] -
-      apply(data[(n_genes_min + 1):n_genes_max, ], 1, mean)
+      data[1:n_genes_max, ] -
+      apply(data[1:n_genes_max, ], 1, mean)
   }
 
   # Standardize by gene ---------
@@ -203,7 +201,7 @@ process_heatmap_data <- function(
   if (gene_centering) {
     return(round(data, 3))
   } else {
-    data <- data[(n_genes_min + 1):n_genes_max, ]
+    data <- data[1:n_genes_max, ]
   }
 
   return(round(data, 3))
@@ -409,6 +407,8 @@ draw_sample_tree <- function(
     scale = sample_normalize
   )
   
+  par(mar = c(5.1,4.1,4.1,20))
+  
   plot(
     stats::as.dendrogram(
       hclust_funs[[hclust_function]]
@@ -419,7 +419,9 @@ draw_sample_tree <- function(
       names(dist_funs)[as.numeric(dist_function)], "(",
       hclust_function, "linkage", ")"
     ),
-    type = "rectangle"
+    type = "rectangle", 
+    #leaflab = "textlike"
+    horiz = TRUE
   )
 
 }
@@ -436,12 +438,19 @@ draw_sample_tree <- function(
 k_means_elbow <- function(
   heatmap_data
 ) {
+  k.max = 20
+  
+  validate(
+    need(nrow(heatmap_data) > k.max, 
+    message = paste(paste("To create the elbow plot, please select at least", k.max  + 1), "genes."))
+  )
+  
 
   factoextra::fviz_nbclust(
     heatmap_data,
     kmeans,
     method = "wss",
-    k.max = 20
+    k.max = k.max
   ) +
   ggplot2::theme_light() +
   ggplot2::theme(

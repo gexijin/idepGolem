@@ -5,6 +5,8 @@
 #' @import shiny
 #' @noRd
 app_server <- function(input, output, session) {
+  # file size is 5MB by default. This changes it to 30MB
+  #options(shiny.maxRequestSize=30*1024^2)
   idep_data <- get_idep_data()
   # Tab Variable to control reactivity
   tab <- reactive(input$navbar)
@@ -32,7 +34,8 @@ app_server <- function(input, output, session) {
   )
   deg <- mod_05_deg_server(
     id = "deg",
-    pre_process = pre_process
+    pre_process = pre_process, 
+    idep_data = idep_data
   )
   mod_06_pathway_server(
     id = "pathway",

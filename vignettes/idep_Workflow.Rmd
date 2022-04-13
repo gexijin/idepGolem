@@ -28,12 +28,13 @@ devtools::load_all()
 ```{r Create Data Paths}
 idep_data <- get_idep_data()
 
-#BcellGSE71176_p53.csv
-#GSE37704_sailfish_genecounts
-YOUR_DATA_PATH <- "F:/data104b_final/data_go/GSE37704_sailfish_genecounts.csv"
-YOUR_EXPERIMENT_PATH <- "F:/data104b_final/data_go/GSE37704_sailfish_design.csv"
+
+YOUR_DATA_PATH <- "F:/data104b_final/data_go/BcellGSE71176_p53.csv"
+YOUR_EXPERIMENT_PATH <- "F:/data104b_final/data_go/BcellGSE71176_p53_sampleInfo.csv"
 
 
+YOUR_DATA_PATH <- "d:/idep_9_24/data/data104/data_go/GSE37704_sailfish_genecounts.csv"
+YOUR_EXPERIMENT_PATH <- "d:/idep_9_24/data/data104/data_go/GSE37704_sailfish_design.csv"
 expression_file <- data.frame(
   datapath = YOUR_DATA_PATH
 )
@@ -43,7 +44,7 @@ experiment_file <- data.frame(
 
 load_data <- input_data(
   expression_file = expression_file,
-  experiment_file = NULL,#experiment_file,
+  experiment_file = experiment_file,
   go_button = FALSE,
   demo_data_file = idep_data$demo_data_file,
   demo_metadata_file = idep_data$demo_metadata_file
@@ -165,13 +166,28 @@ MDS_plot(
   color = "Treatment"
 )
 ```
+#Other PCA
+```{r}
+
+
+PCA_biplot(
+  data = processed_data$data,
+  sample_info = load_data$sample_info
+)
+```
+
+
+
+
+
+
+
 
 #### SEARCHING
 ```{r}
 heatmap_data <- process_heatmap_data(
   data = processed_data$data,
   n_genes_max = 50,
-  n_genes_min = 0,
   gene_centering = TRUE,
   gene_normalize = FALSE,
   sample_centering = FALSE,

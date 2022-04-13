@@ -11,7 +11,8 @@ plot_ma(
   limma_p_val,
   limma_fc,
   contrast_samples,
-  processed_data
+  processed_data,
+  plot_colors
 )
 }
 \arguments{
@@ -35,6 +36,9 @@ comparison}
 
 \item{processed_data}{Data matrix that has gone through
 pre-processing}
+
+\item{plot_colors}{List containing three colors to differentiate between
+the up-regulated, down-regulated, and other genes}
 }
 \value{
 A ggplot with the X-axis the mean expression value and
