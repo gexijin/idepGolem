@@ -53,16 +53,17 @@ mod_download_images_server <- function(id, filename, figure){
           downloadButton(
             outputId = ns("dl_png"), 
             label = "PNG"
+          ),
+          textOutput(
+            outputId = ns("text")
           )
         ))
-      }
+      },
+      
     )
     
-  
-    
-    output$dl_pdf <- downloadHandler(
-      req(input$height < 100),
-      
+   
+    output$dl_pdf <-downloadHandler(
       filename = paste0(filename, ".pdf"), 
       content = function(file){
         pdf(
@@ -76,10 +77,10 @@ mod_download_images_server <- function(id, filename, figure){
         dev.off()
       }
     )
-      
-    
+   
+
     output$dl_png <- downloadHandler(
-      filename = paste0(filename, ".pdf"), 
+      filename = paste0(filename, ".png"), 
       content = function(file){
         png(
           file, 

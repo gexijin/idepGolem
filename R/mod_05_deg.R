@@ -139,7 +139,7 @@ mod_05_deg_1_ui <- function(id) {
             checkboxInput(
               inputId = ns("up_down_regulated"),
               label = "Split gene lists by up- or down-regulation",
-              value = FALSE
+              value = TRUE
             ),
             htmlOutput(outputId = ns("list_comparisons_venn")),
             plotOutput(outputId = ns("venn_plot"))
@@ -237,10 +237,7 @@ mod_05_deg_2_ui <- function(id) {
               height = "500px",
               width = "100%"
             ),
-            actionButton(
-              inputId = ns("volcano_popup"), 
-              label = "Download Plot"
-            )
+            mod_download_images_ui(ns("download_volcano"))
           ),
           tabPanel(
             title = "MA Plot",
@@ -285,7 +282,8 @@ mod_05_deg_2_ui <- function(id) {
           ),
           tabPanel(
             title = "Pathway Network",
-            h5("Connected gene sets share more genes. Color of node correspond to adjuested Pvalues."),
+            h5("Connected gene sets share more genes. 
+               Color of node correspond to adjuested Pvalues."),
             fluidRow(
               column(
                 width = 2,
@@ -604,19 +602,19 @@ mod_05_deg_server <- function(id, pre_process) {
 
 	  })
 
+    # venn diagram ----- 
+    
     output$venn_plot <- renderPlot({
       req(!is.null(deg$limma))
       req(!is.null(input$select_comparisons_venn))
       
-		  plot_venn(
+      venn <- plot_venn(
         limma = deg$limma,
         up_down_regulated = input$up_down_regulated,
         select_comparisons_venn = input$select_comparisons_venn
       )
-    },
-      height = 600,
-      width = 600
-    )
+    })
+    
 
     # DEG STEP 2 --------
     output$list_comparisons <- renderUI({
@@ -781,6 +779,12 @@ mod_05_deg_server <- function(id, pre_process) {
       print(vol_plot())
     })
     
+    download_volcano <- mod_download_images_server(
+      "download_volcano", 
+      filename = "volcano_plot", 
+      figure = vol_plot()
+    )
+    
     # ma plot----------------
     ma_plot <- reactive({
       req(!is.null(deg$limma$top_genes))
@@ -802,7 +806,7 @@ mod_05_deg_server <- function(id, pre_process) {
     
     download_ma <- mod_download_images_server(
       "download_ma", 
-      filename = "ma", 
+      filename = "ma_plot", 
       figure = ma_plot()
     )
 
