@@ -54,8 +54,9 @@ mod_download_images_server <- function(id, filename, figure){
             outputId = ns("dl_png"), 
             label = "PNG"
           ),
-          textOutput(
-            outputId = ns("text")
+          downloadButton(
+            outputId = ns("dl_svg"), 
+            label = "SVG"
           )
         ))
       },
@@ -68,8 +69,8 @@ mod_download_images_server <- function(id, filename, figure){
       content = function(file){
         pdf(
           file,
-          width = input$width, 
-          height = input$height
+          width = min(100, input$width, na.rm = TRUE), 
+          height = min(100, input$height, na.rm = TRUE)
         )
         print(
           figure
@@ -77,7 +78,6 @@ mod_download_images_server <- function(id, filename, figure){
         dev.off()
       }
     )
-   
 
     output$dl_png <- downloadHandler(
       filename = paste0(filename, ".png"), 
@@ -85,9 +85,24 @@ mod_download_images_server <- function(id, filename, figure){
         png(
           file, 
           res = 360, 
-          width = input$width, 
-          height = input$height, 
+          width = min(100, input$width, na.rm = TRUE), 
+          height = min(100, input$height, na.rm = TRUE),
           units = "in"
+        )
+        print(
+          figure
+        )
+        dev.off()
+      }
+    )
+    
+    output$dl_svg <- downloadHandler(
+      filename = paste0(filename, ".svg"), 
+      content = function(file){
+        svg(
+          file, 
+          width = min(100, input$width, na.rm = TRUE), 
+          height = min(100, input$height, na.rm = TRUE)
         )
         print(
           figure
