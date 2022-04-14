@@ -69,8 +69,8 @@ mod_download_images_server <- function(id, filename, figure){
       content = function(file){
         pdf(
           file,
-          width = min(100, input$width, na.rm = TRUE), 
-          height = min(100, input$height, na.rm = TRUE)
+          width = max(1, min(100, input$width, na.rm = TRUE)), 
+          height = max(1, min(100, input$height, na.rm = TRUE))
         )
         print(
           figure
@@ -85,8 +85,8 @@ mod_download_images_server <- function(id, filename, figure){
         png(
           file, 
           res = 360, 
-          width = min(100, input$width, na.rm = TRUE), 
-          height = min(100, input$height, na.rm = TRUE),
+          width = max(1, min(100, input$width, na.rm = TRUE)), 
+          height = max(1, min(100, input$height, na.rm = TRUE)),
           units = "in"
         )
         print(
@@ -101,8 +101,8 @@ mod_download_images_server <- function(id, filename, figure){
       content = function(file){
         svg(
           file, 
-          width = min(100, input$width, na.rm = TRUE), 
-          height = min(100, input$height, na.rm = TRUE)
+          width = max(1, min(100, input$width, na.rm = TRUE)), 
+          height = max(1, min(100, input$height, na.rm = TRUE))
         )
         print(
           figure
