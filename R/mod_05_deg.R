@@ -139,7 +139,7 @@ mod_05_deg_1_ui <- function(id) {
             checkboxInput(
               inputId = ns("up_down_regulated"),
               label = "Split gene lists by up- or down-regulation",
-              value = FALSE
+              value = TRUE
             ),
             htmlOutput(outputId = ns("list_comparisons_venn")),
             plotOutput(outputId = ns("venn_plot"))
@@ -252,7 +252,8 @@ mod_05_deg_2_ui <- function(id) {
               outputId = ns("volcano_plot"),
               height = "500px",
               width = "100%"
-            )  
+            ),
+            mod_download_images_ui(ns("download_volcano"))
           ),
           tabPanel(
             title = "MA Plot",
@@ -261,7 +262,8 @@ mod_05_deg_2_ui <- function(id) {
               outputId = ns("ma_plot"),
               height = "500px",
               width = "100%"
-            )
+            ), 
+            mod_download_images_ui(ns("download_ma"))
           ),
           
           tabPanel(
@@ -297,7 +299,8 @@ mod_05_deg_2_ui <- function(id) {
           ),
           tabPanel(
             title = "Pathway Network",
-            h5("Connected gene sets share more genes. Color of node correspond to adjuested Pvalues."),
+            h5("Connected gene sets share more genes. 
+               Color of node correspond to adjuested Pvalues."),
             fluidRow(
               column(
                 width = 2,
@@ -370,7 +373,6 @@ mod_05_deg_server <- function(id, pre_process, idep_data) {
     # Interactive heatmap environment
     deg_env <- new.env()
     
-
     # DEG STEP 1 ----------
     output$data_file_format <- reactive({
       pre_process$data_file_format()
@@ -617,19 +619,19 @@ mod_05_deg_server <- function(id, pre_process, idep_data) {
 
 	  })
 
+    # venn diagram ----- 
+    
     output$venn_plot <- renderPlot({
       req(!is.null(deg$limma))
       req(!is.null(input$select_comparisons_venn))
       
-		  plot_venn(
+      venn <- plot_venn(
         limma = deg$limma,
         up_down_regulated = input$up_down_regulated,
         select_comparisons_venn = input$select_comparisons_venn
       )
-    },
-      height = 600,
-      width = 600
-    )
+    })
+    
 
     # DEG STEP 2 --------
     output$list_comparisons <- renderUI({
@@ -803,11 +805,12 @@ mod_05_deg_server <- function(id, pre_process, idep_data) {
         )
       }
     })
-
-    output$volcano_plot <- renderPlot({
+    
+    # volcano plot -----
+    vol_plot <- reactive({
       req(!is.null(deg$limma$top_genes))
-
-      plot_volcano(
+      
+      vol <- plot_volcano(
         select_contrast = input$select_contrast,
         comparisons = deg$limma$comparisons,
         top_genes = deg$limma$top_genes,
@@ -816,9 +819,22 @@ mod_05_deg_server <- function(id, pre_process, idep_data) {
         plot_colors = plot_colors[[input$plot_color_select]]
       )
     })
+    
+    
 
-    output$ma_plot <- renderPlot({
-	    req(!is.null(deg$limma$top_genes))
+    output$volcano_plot <- renderPlot({
+      print(vol_plot())
+    })
+    
+    download_volcano <- mod_download_images_server(
+      "download_volcano", 
+      filename = "volcano_plot", 
+      figure = vol_plot()
+    )
+    
+    # ma plot----------------
+    ma_plot <- reactive({
+      req(!is.null(deg$limma$top_genes))
       
       plot_ma(
         select_contrast = input$select_contrast,
@@ -831,6 +847,16 @@ mod_05_deg_server <- function(id, pre_process, idep_data) {
         plot_colors = plot_colors[[input$plot_color_select]]
       )
     })
+    
+    output$ma_plot <- renderPlot({
+	    print(ma_plot())
+    })
+    
+    download_ma <- mod_download_images_server(
+      "download_ma", 
+      filename = "ma_plot", 
+      figure = ma_plot()
+    )
 
     output$scatter_plot <- renderPlot({
       req(!is.null(deg$limma$top_genes))
@@ -1049,7 +1075,79 @@ mod_05_deg_server <- function(id, pre_process, idep_data) {
       reference_levels = reactive(factor_reference_levels()),
       counts_deg_method = reactive(input$counts_deg_method)
     )
+    
+    
+    # Download plots -----------
+    
+    # Volcano plot 
+    observeEvent(
+      input$volcano_popup, 
+      {
+        showModal(modalDialog(
+          numericInput(
+            inputId = ns("vol_width"), 
+            label = "Width (in)", 
+            value = 5, 
+            min = 1, 
+            max = 100
+          ),
+          numericInput(
+            inputId = ns("vol_height"), 
+            label = "Height (in)", 
+            value = 4, 
+            min = 1, 
+            max = 100
+          ), 
+          downloadButton(
+            outputId = ns("vol_dl_pdf"),
+            label = "PDF"
+          ), 
+          downloadButton(
+            outputId = ns("vol_dl_png"), 
+            label = "PNG"
+          )
+        ))
+      }
+    )
+    output$vol_dl_pdf <- downloadHandler(
+      filename = "deg_volcano.pdf", 
+      content = function(file){
+        pdf(
+          file, 
+          width = input$vol_width, 
+          height = input$vol_height
+        )
+        print(
+          vol_plot()
+        ) 
+        
+        dev.off()
+      }
+    )
+    output$vol_dl_png <- downloadHandler(
+      filename = "deg_volcano.png", 
+      content = function(file){
+        png(
+          file, 
+          res = 360, 
+          width = input$vol_width, 
+          height = input$vol_height, 
+          units = "in"
+        )
+        print(
+          plot_volcano(
+            select_contrast = input$select_contrast,
+            comparisons = deg$limma$comparisons,
+            top_genes = deg$limma$top_genes,
+            limma_p_val = input$limma_p_val,
+            limma_fc = input$limma_fc
+          )
+        )
+        dev.off()
+      }
+    )
   })
+  
 }
 
 ## To be copied in the UI
