@@ -168,8 +168,8 @@ mod_03_clustering_ui <- function(id) {
 
         # Checkbox features ------------
         conditionalPanel(
-          condition = "input.cluster_panels == 'Heatmap/Enrichment' | 
-            input.cluster_panels == 'Sample Tree", 
+          condition = "input.cluster_panels == 'Heatmap/Enrichment' | input.cluster_panels == 'Sample Tree' ",
+          
           checkboxInput(
             inputId = ns("gene_centering"),
             label = "Center genes (substract mean)",
@@ -182,9 +182,10 @@ mod_03_clustering_ui <- function(id) {
           ),
           ns = ns
         ),
-
+        
         conditionalPanel(
-          condition = "input.cluster_panels == 'Heatmap/Enrichment'",
+          condition = "input.cluster_panels == 'Heatmap/Enrichment' ",
+          
           checkboxInput(
             inputId = ns("no_sample_clustering"),
             label = "Do not re-order or cluster samples",
@@ -200,8 +201,10 @@ mod_03_clustering_ui <- function(id) {
             outputId = ns("download_heatmap_data"),
             label = "Heatmap data"
           ),
+          
           ns = ns
         ),
+
         a(
           h5("Questions?", align = "right"),
           href = "https://idepsite.wordpress.com/heatmap/",
