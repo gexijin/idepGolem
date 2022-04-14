@@ -82,6 +82,13 @@ mod_03_clustering_ui <- function(id) {
             selected = 1
           ),
 
+          ns = ns
+        ),
+
+        # Heatmap customizing features ----------
+        conditionalPanel(
+          condition = "input.cluster_panels == 'Heatmap/Enrichment' ",
+          
           # Gene ID Selection -----------
           selectInput(
             inputId = ns("select_gene_id"),
@@ -89,16 +96,9 @@ mod_03_clustering_ui <- function(id) {
             choices = NULL,
             selected = NULL
           ),
-
+          
           # Sample coloring bar -----------
           htmlOutput(ns("list_factors_heatmap")),
-
-          ns = ns
-        ),
-
-        # Heatmap customizing features ----------
-        conditionalPanel(
-          condition = "input.cluster_panels == 'Heatmap/Enrichment' ",
 
           strong("Customize heatmap (Default values work well):"),
           fluidRow(
