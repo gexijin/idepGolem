@@ -15,50 +15,62 @@ mod_03_clustering_ui <- function(id) {
 
       # Heatmap Panel Sidebar ----------
       sidebarPanel(
-        numericInput(
-          inputId = ns("n_genes"), 
-          label = h4("Top n most variable genes to include:"), 
-          min = 10, 
-          max = 12000, 
-          value = 100, 
-          step = 10
-        ),
-
-        # k- means slidebar -----------
         conditionalPanel(
-          condition = "input.cluster_meth == 2",
-          sliderInput(
-            inputId = ns("k_clusters"),
-            label = "Number of Clusters:",
-            min   = 2,
-            max   = 20,
-            value = 4,
-            step  = 1
-          ),
-
-          # Re-run k-means with a different seed
-          actionButton(
-            inputId = ns("k_means_re_run"),
-            label = "Re-Run"
-          ),
+          condition = "input.cluster_panels == 'Heatmap/Enrichment' | 
+          input.cluster_panels == 'Gene SD Distribution' ",
           
-          # Elbow plot pop-up 
-          actionButton(
-            inputId = ns("elbow_pop_up"),
-            label = "How many clusters?"
-          ),
+          numericInput(
+            inputId = ns("n_genes"), 
+            label = h4("Top n most variable genes to include:"), 
+            min = 10, 
+            max = 12000, 
+            value = 100, 
+            step = 10
+          ), 
           ns = ns
         ),
-
-        # Line break ---------
-        HTML(
-          '<hr style="height:1px;border:none;
+        
+        conditionalPanel(
+          condition = "(input.cluster_panels == 'Heatmap/Enrichment' | 
+            input.cluster_panels == 'Sample Tree') &&  input.cluster_meth == 2",
+          
+          # k- means slidebar -----------
+            
+            sliderInput(
+              inputId = ns("k_clusters"),
+              label = "Number of Clusters:",
+              min   = 2,
+              max   = 20,
+              value = 4,
+              step  = 1
+            ),
+            
+            # Re-run k-means with a different seed
+            actionButton(
+              inputId = ns("k_means_re_run"),
+              label = "Re-Run"
+            ),
+            
+            # Elbow plot pop-up 
+            actionButton(
+              inputId = ns("elbow_pop_up"),
+              label = "How many clusters?"
+            ),
+            # Line break ---------
+            HTML(
+              '<hr style="height:1px;border:none;
            color:#333;background-color:#333;" />'
+            ),
+          
+          ns = ns 
         ),
+
+      
 
         # Select Clustering Method ----------
         conditionalPanel(
-          condition = "input.cluster_panels == 'Heatmap/Enrichment'",
+          condition = "input.cluster_panels == 'Heatmap/Enrichment' | 
+            input.cluster_panels == 'Sample Tree'",
           
           selectInput(
             inputId = ns("cluster_meth"),
@@ -86,8 +98,7 @@ mod_03_clustering_ui <- function(id) {
 
         # Heatmap customizing features ----------
         conditionalPanel(
-          condition = "input.cluster_panels == 'Heatmap/Enrichment' ||
-                       input.cluster_panels == 'Correlation Matrix'",
+          condition = "input.cluster_panels == 'Heatmap/Enrichment' ",
 
           strong("Customize heatmap (Default values work well):"),
           fluidRow(
@@ -109,7 +120,9 @@ mod_03_clustering_ui <- function(id) {
 
         # Clustering methods for hierarchical ----------
         conditionalPanel(
-          condition = "input.cluster_meth == 1 && input.cluster_panels == 'Heatmap/Enrichment'",
+          condition = "input.cluster_meth == 1 && 
+            (input.cluster_panels == 'Heatmap/Enrichment' | 
+            input.cluster_panels == 'Sample Tree')",
           fluidRow(
             column(width = 4, h5("Distance")),
             column(
@@ -154,15 +167,20 @@ mod_03_clustering_ui <- function(id) {
         ),
 
         # Checkbox features ------------
-        checkboxInput(
-          inputId = ns("gene_centering"),
-          label = "Center genes (substract mean)",
-          value = TRUE
-        ),
-        checkboxInput(
-          inputId = ns("gene_normalize"),
-          label = "Normalize genes (divide by SD)",
-          value = FALSE
+        conditionalPanel(
+          condition = "input.cluster_panels == 'Heatmap/Enrichment' | 
+            input.cluster_panels == 'Sample Tree", 
+          checkboxInput(
+            inputId = ns("gene_centering"),
+            label = "Center genes (substract mean)",
+            value = TRUE
+          ),
+          checkboxInput(
+            inputId = ns("gene_normalize"),
+            label = "Normalize genes (divide by SD)",
+            value = FALSE
+          ),
+          ns = ns
         ),
 
         conditionalPanel(
