@@ -8,16 +8,17 @@
 #' By Emma Spors, Ben Derenge 
 #'
 #' @param id,input,output,session Internal parameters for {shiny}.
-#'
+#' @param label is the label for the download button
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
-mod_download_images_ui <- function(id) {
+#' 
+mod_download_images_ui <- function(id, label = "Download Plot") {
   ns <- NS(id)
   tagList(
     actionButton(
       inputId = ns("download_popup"),
-      label = "Download Plot"
+      label = label
     )
   )
 }
@@ -30,16 +31,19 @@ mod_download_images_ui <- function(id) {
 #' @param filename is a name of the output file without extensions
 #' @param figure is a graphics object. Note that ggplot2 objects can 
 #' be directly used, while base R graphics, we need to use 
-#' the savePlot() function.
+#' the savePlot() function. 
+#' Unsolved: When the rendered image is changed because of an input change,
+#' the downloaded image does not update.
 #' 
+#' @param width specifies a default width in inches
+#' @param height specifies default height in inches
 #' 
-mod_download_images_server <- function(id, filename, figure) {
+mod_download_images_server <- function(id, filename, figure, width = 8, height = 6) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
+
     min_size <- 2 # min for width or height
     max_size <- 30 # max for width or height
-
     #Check width
     figure_width <- reactive({
       if (is.numeric(input$width)) {
@@ -47,7 +51,7 @@ mod_download_images_server <- function(id, filename, figure) {
         return(max(min_size, min(max_size, input$width, na.rm = TRUE)))
       } else {
         # use default value when entered text
-        return(5)
+        return(width)
       }
     })
 
@@ -58,7 +62,7 @@ mod_download_images_server <- function(id, filename, figure) {
         return(max(min_size, min(max_size, input$height, na.rm = TRUE)))
       } else {
         # use default value when entered text
-        return(4)
+        return(height)
       }
     })
 
@@ -71,17 +75,19 @@ mod_download_images_server <- function(id, filename, figure) {
             numericInput(               #Figure width
               inputId = ns("width"),
               label = "Width (in)",
-              value = 5,
+              value = width,
               min = min_size,
               max = max_size
             ),
             numericInput(               #Figure Height
               inputId = ns("height"),
               label = "Height (in)",
-              value = 4,
+              value = height,
               min = min_size,
               max = max_size
             ),
+            h5("The plot will be rendered differently depending on size.
+            When the dimensions are too small, error or blank plot will be generated."),
             downloadButton(             #buttons
               outputId = ns("dl_pdf"),
               label = "PDF"
@@ -93,7 +99,8 @@ mod_download_images_server <- function(id, filename, figure) {
             downloadButton(
               outputId = ns("dl_svg"),
               label = "SVG"
-            )
+            ),
+            size = "s" # small dialog modal
           )
         )
       }
@@ -104,7 +111,7 @@ mod_download_images_server <- function(id, filename, figure) {
       filename = paste0(filename, ".pdf"),
       content = function(file) {
         # remove popup when downloaded
-        on.exit(removeModal())
+        #on.exit(removeModal())
         pdf(
           file,
           width = figure_width(),
@@ -120,7 +127,7 @@ mod_download_images_server <- function(id, filename, figure) {
       filename = paste0(filename, ".png"),
       content = function(file) {
         # remove popup when downloaded
-        on.exit(removeModal())
+        #on.exit(removeModal())
         png(
           file,
           res = 360,
@@ -138,7 +145,7 @@ mod_download_images_server <- function(id, filename, figure) {
       filename = paste0(filename, ".svg"),
       content = function(file) {
         # remove popup when downloaded
-        on.exit(removeModal())
+        #on.exit(removeModal())
         svg(
           file,
           width = figure_width(),
