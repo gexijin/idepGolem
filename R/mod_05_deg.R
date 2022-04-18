@@ -844,7 +844,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data) {
     download_volcano <- mod_download_images_server(
       "download_volcano", 
       filename = "volcano_plot", 
-      figure = vol_plot()
+      figure = reactive({ vol_plot() }) # stays as a reactive variable
     )
     
     # ma plot----------------
@@ -870,7 +870,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data) {
     download_ma <- mod_download_images_server(
       "download_ma", 
       filename = "ma_plot", 
-      figure = ma_plot()
+      figure = reactive({ ma_plot() })
     )
 
     output$scatter_plot <- renderPlot({
