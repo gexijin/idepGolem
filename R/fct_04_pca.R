@@ -431,6 +431,8 @@ pc_factor_correlation <- function(
 PCA_biplot <- function(
   data,
   sample_info,
+  select_gene_id = "symbol",
+  all_gene_names, # = pre_process$all_gene_names(),
   selected_x = "PC1",
   selected_y = "PC2",
   encircle = TRUE,
@@ -443,14 +445,18 @@ PCA_biplot <- function(
 ) {
   #missing design
   if(is.null(sample_info)) {
-    cat("NULL sample info\n")
     meta_data <- as.data.frame(colnames(data))
     rownames(meta_data) <- colnames(data)
   } else {
     meta_data <- sample_info
-    cat(meta_data)
   }
-  
+
+  #Swap rownames
+  data <- rowname_id_swap(
+    data_matrix = data,
+    all_gene_names = all_gene_names,
+    select_gene_id = select_gene_id
+  )
   
   pca_obj <- PCAtools::pca(data, metadata = meta_data, removeVar = 0.1)
   
@@ -491,11 +497,18 @@ PCA_Scree <- function(
   processed_data 
 ) {
 
+  suppressWarnings(
   pca_obj <- PCAtools::pca(mat = processed_data, removeVar = 0.1)
-  
+  )
+  suppressWarnings(
   horn <- PCAtools::parallelPCA(processed_data)
+  )
+  
+  suppressWarnings(
   elbow <- PCAtools::findElbowPoint(pca_obj$variance)
+  )
 
+  suppressWarnings(
   p <- plot(PCAtools::screeplot(
     pca_obj,
     vline = c(horn$n, elbow)) +
@@ -515,6 +528,8 @@ PCA_Scree <- function(
                    vjust = .5,
                    hjust = .5,
                    size = 8))
+  )
+
   )
   return(p)
 }

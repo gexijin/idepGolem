@@ -42,7 +42,7 @@ mod_04_pca_ui <- function(id) {
         ),
         #select design elements dynamically
         conditionalPanel(
-          condition = "input.PCA_panels != 'PCAtools Package Plots'",
+          condition = "input.PCA_panels != 'Plots from PCAtools Package'",
           fluidRow(
             column(
               width = 12,
@@ -80,12 +80,20 @@ mod_04_pca_ui <- function(id) {
                         choices = c("PC1", "PC2", "PC3", "PC4", "PC5"),
                         selected = "PC2"
             ),
+
             #Dynamic Color and Shape options
             uiOutput(
               outputId = ns("pcatools_shape")
             ),
             uiOutput(
               outputId = ns("pcatools_color")
+            ),
+            # Gene ID Selection -----------
+            selectInput(
+              inputId = ns("select_gene_id"),
+              label = "Select Gene ID Label (<= 50 genes):",
+              choices = NULL,
+              selected = NULL
             ),
             #plot customization
             checkboxInput(inputId = ns("showLoadings"), label = "Show Loadings", value = FALSE),
@@ -236,6 +244,8 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       PCA_biplot(
         data = pre_process$data(),
         sample_info = pre_process$sample_info(),
+        select_gene_id = input$select_gene_id,
+        all_gene_names = pre_process$all_gene_names(),
         selected_x = input$x_axis_pc,
         selected_y = input$y_axis_pc,
         encircle = input$encircle,
@@ -321,6 +331,16 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
         )   } 
     })    
     
+    # Gene ID Name Choices ----------
+    observe({
+      req(!is.null(pre_process$all_gene_names()))
+      
+      updateSelectInput(
+        session = session,
+        inputId = "select_gene_id",
+        choices = colnames(pre_process$all_gene_names())
+      )
+    })
     
     
     

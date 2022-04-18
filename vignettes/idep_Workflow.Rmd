@@ -33,8 +33,8 @@ YOUR_DATA_PATH <- "F:/data104b_final/data_go/BcellGSE71176_p53.csv"
 YOUR_EXPERIMENT_PATH <- "F:/data104b_final/data_go/BcellGSE71176_p53_sampleInfo.csv"
 
 
-YOUR_DATA_PATH <- "d:/idep_9_24/data/data104/data_go/GSE37704_sailfish_genecounts.csv"
-YOUR_EXPERIMENT_PATH <- "d:/idep_9_24/data/data104/data_go/GSE37704_sailfish_design.csv"
+#YOUR_DATA_PATH <- "d:/idep_9_24/data/data104/data_go/GSE37704_sailfish_genecounts.csv"
+#YOUR_EXPERIMENT_PATH <- "d:/idep_9_24/data/data104/data_go/GSE37704_sailfish_design.csv"
 expression_file <- data.frame(
   datapath = YOUR_DATA_PATH
 )
@@ -169,11 +169,17 @@ MDS_plot(
 #Other PCA
 ```{r}
 
-
+devtools::load_all()
 PCA_biplot(
   data = processed_data$data,
   sample_info = load_data$sample_info
 )
+PCA_Scree(processed_data = processed_data$data)
+
+PCAtools_eigencorplot(
+  processed_data = processed_data$data,
+  sample_info = load_data$sample_info
+      )
 ```
 
 
