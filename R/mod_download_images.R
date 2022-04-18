@@ -32,8 +32,6 @@ mod_download_images_ui <- function(id, label = "Download Plot") {
 #' @param figure is a graphics object. Note that ggplot2 objects can 
 #' be directly used, while base R graphics, we need to use 
 #' the savePlot() function. 
-#' Unsolved: When the rendered image is changed because of an input change,
-#' the downloaded image does not update.
 #' 
 #' @param width specifies a default width in inches
 #' @param height specifies default height in inches
@@ -86,8 +84,8 @@ mod_download_images_server <- function(id, filename, figure, width = 8, height =
               min = min_size,
               max = max_size
             ),
-            h5("The plot will be rendered differently depending on size.
-            When the dimensions are too small, error or blank plot will be generated."),
+            h5("The plot will be rendered differently depending on size. When the dimensions are too small, 
+            error or blank plot will be generated."),
             downloadButton(             #buttons
               outputId = ns("dl_pdf"),
               label = "PDF"
@@ -117,7 +115,7 @@ mod_download_images_server <- function(id, filename, figure, width = 8, height =
           width = figure_width(),
           height = figure_height()
         )
-        print(figure)
+        print(figure())
         dev.off()
       }
     )
@@ -135,7 +133,7 @@ mod_download_images_server <- function(id, filename, figure, width = 8, height =
           height = figure_height(),
           units = "in"
         )
-        print(figure)
+        print(figure())
         dev.off()
       }
     )
@@ -151,7 +149,7 @@ mod_download_images_server <- function(id, filename, figure, width = 8, height =
           width = figure_width(),
           height = figure_height()
         )
-        print(figure)
+        print(figure())
         dev.off()
       }
     )
