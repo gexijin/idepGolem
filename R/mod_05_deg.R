@@ -290,6 +290,9 @@ mod_05_deg_2_ui <- function(id) {
           tabPanel(
             title = "Enrich Table",
             br(),
+            tags$p("To see the list of genes that were differently expressed in
+                    each category, download the data in the left-hand panel."),
+            br(),
             strong(h3("Up Regulated Genes")),
             br(),
             DT::dataTableOutput(
