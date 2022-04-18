@@ -163,11 +163,6 @@ mod_02_pre_process_ui <- function(id) {
           outputId = ns("download_processed_data"),
           label = "Processed data"
         ),
-        # downloadButton(
-        #   outputId = ns("report"),
-        #   label = "Generate report"
-        # ),
-
 
         # Conditional panel for read count data ------------
         conditionalPanel(
@@ -181,8 +176,17 @@ mod_02_pre_process_ui <- function(id) {
           ns = ns
         ),
         br(),
+        
         br(),
-
+        strong("Download R-Markdown Report"),
+        br(),
+        
+        downloadButton(
+          outputId = ns("report"),
+          label = "Generate report"
+        ),  
+        br(),
+        br(),
         # Show transform messages
         actionButton(
           inputId = ns("show_messages"),
@@ -630,51 +634,61 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     )
 
     # Markdown report
-    # output$report <- downloadHandler(
-    #   # For PDF output, change this to "report.pdf"
-    #   filename ="report.pdf",
-    #   content = function(file) {
-    #     # Copy the report file to a temporary directory before processing it, in
-    #     # case we don't have write permissions to the current working dir (which
-    #     # can happen when deployed).
-    #     #tempReport <- file.path(tempdir(), "test_workflow.Rmd")
-    #     #tempReport
-    #     #tempReport<-gsub("\\", "/",tempReport,fixed = TRUE)
-    #     
-    #     #This should retrieve the project location on your device:
-    #     #"C:/Users/bdere/Documents/GitHub/idepGolem"
-    #     wd <- getwd()
-    #     
-    #     markdown_location <-paste0(wd, "/vignettes/test_workflow2.Rmd")
-    #     #file.copy(from=markdown_location,to= tempReport, overwrite = TRUE)
-    # 
-    #     # Set up parameters to pass to Rmd document
-    #     params <- list(
-    #       loaded_data = load_data$converted_data(),
-    #       sample_info = load_data$sample_info(),
-    #       data_file_format = load_data$data_file_format(),
-    #       no_id_conversion = input$no_id_conversion,
-    #       min_counts = input$min_counts,
-    #       n_min_samples_count = input$n_min_samples_count,
-    #       counts_transform = input$counts_transform,
-    #       counts_log_start = input$counts_log_start,
-    #       log_transform_fpkm = input$log_transform_fpkm,
-    #       log_start_fpkm = input$log_start_fpkm,
-    #       missing_value = input$missing_value
-    # 
-    #     )
-    # 
-    #     # Knit the document, passing in the `params` list, and eval it in a
-    #     # child of the global environment (this isolates the code in the document
-    #     # from the code in this app).
-    #     rmarkdown::render(
-    #       input = markdown_location,
-    #       output_file = file,
-    #       params = params,
-    #       envir = new.env(parent = globalenv())
-    #     )
-    #   }
-    # )
+    output$report <- downloadHandler(
+      
+      # For PDF output, change this to "report.pdf"
+      filename ="pre_process_report.pdf",
+      content = function(file) {
+        #Show Loading popup
+        shinybusy::show_modal_spinner(
+          spin = "orbit",
+          text = "Generating Report",
+          color = "#000000"
+        )
+        # Copy the report file to a temporary directory before processing it, in
+        # case we don't have write permissions to the current working dir (which
+        # can happen when deployed).
+        #tempReport <- file.path(tempdir(), "test_workflow2.Rmd")
+        #tempReport
+        #tempReport<-gsub("\\", "/",tempReport,fixed = TRUE)
+
+        #This should retrieve the project location on your device:
+        #"C:/Users/bdere/Documents/GitHub/idepGolem"
+        wd <- getwd()
+
+        markdown_location <-paste0(wd, "/vignettes/Reports/test_workflow2.Rmd")
+        #file.copy(from=markdown_location,to = tempReport, overwrite = TRUE)
+
+        # Set up parameters to pass to Rmd document
+        params <- list(
+          loaded_data = load_data$converted_data(),
+          sample_info = load_data$sample_info(),
+          data_file_format = load_data$data_file_format(),
+          no_id_conversion = input$no_id_conversion,
+          min_counts = input$min_counts,
+          n_min_samples_count = input$n_min_samples_count,
+          counts_transform = input$counts_transform,
+          counts_log_start = input$counts_log_start,
+          log_transform_fpkm = input$log_transform_fpkm,
+          log_start_fpkm = input$log_start_fpkm,
+          missing_value = input$missing_value
+
+        )
+
+        # Knit the document, passing in the `params` list, and eval it in a
+        # child of the global environment (this isolates the code in the document
+        # from the code in this app).
+        rmarkdown::render(
+          input = markdown_location, #tempReport,
+          output_file = file,
+          params = params,
+          envir = new.env(parent = globalenv())
+        )
+        shinybusy::remove_modal_spinner()
+        
+      }
+      
+    )
 
     # Number of converted IDs ---------
     n_matched <- reactive({

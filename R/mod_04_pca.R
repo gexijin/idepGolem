@@ -14,6 +14,8 @@ mod_04_pca_ui <- function(id) {
     "PCA",
     sidebarLayout(
       sidebarPanel(
+        #width of shaded part of screen
+        width = 3,
         conditionalPanel(
           condition = "input.PCA_panels == 'Principal Component Analysis'",
           fluidRow( 
@@ -38,11 +40,12 @@ mod_04_pca_ui <- function(id) {
           ),
           ns=ns
         ),
+        #select design elements dynamically
         conditionalPanel(
-          condition = "input.PCA_panels != 'PCAtools Package Plots'",
+          condition = "input.PCA_panels != 'Plots from PCAtools Package'",
           fluidRow(
             column(
-              width = 9,
+              width = 12,
               uiOutput(
                 outputId = ns("listFactors2")
               ),
@@ -63,9 +66,11 @@ mod_04_pca_ui <- function(id) {
         ),
         #PCATools plot options
         conditionalPanel(
-          condition = "input.PCA_panels == 'PCAtools Package Plots'",
+          condition = "input.PCA_panels == 'Plots from PCAtools Package'",
           fluidRow(
-            selectInput(inputId = ns("x_axis_pc"),
+            column(
+              width = 9,
+              selectInput(inputId = ns("x_axis_pc"),
                         label = "X-Axis",
                         choices = c("PC1", "PC2", "PC3", "PC4", "PC5"),
                         selected = "PC1"
@@ -75,6 +80,7 @@ mod_04_pca_ui <- function(id) {
                         choices = c("PC1", "PC2", "PC3", "PC4", "PC5"),
                         selected = "PC2"
             ),
+
             #Dynamic Color and Shape options
             uiOutput(
               outputId = ns("pcatools_shape")
@@ -82,16 +88,23 @@ mod_04_pca_ui <- function(id) {
             uiOutput(
               outputId = ns("pcatools_color")
             ),
+            # Gene ID Selection -----------
+            selectInput(
+              inputId = ns("select_gene_id"),
+              label = "Select Gene ID Label (<= 50 genes):",
+              choices = NULL,
+              selected = NULL
+            ),
             #plot customization
             checkboxInput(inputId = ns("showLoadings"), label = "Show Loadings", value = FALSE),
             checkboxInput(inputId = ns("encircle"), label = "Encircle", value = FALSE),
             checkboxInput(inputId = ns("pointLabs"), label = "Point Labels", value = TRUE),
             numericInput(inputId = ns("pointSize"), label = "Point Size (Reccomded: 1-10)",value = 3.0, min = 1, max = 15)
           ),
-          
+          ),
           ns=ns
         ),
-                a(
+        a(
           h5("Questions?", align = "right"),
           href = "https://idepsite.wordpress.com/pca/",
           target = "_blank"
@@ -133,7 +146,7 @@ mod_04_pca_ui <- function(id) {
             ),
           ),
           tabPanel(
-            "PCAtools Package Plots",
+            "Plots from PCAtools Package",
             br(),
             plotOutput(
               outputId = ns("pcatools_biplot"),
@@ -145,6 +158,14 @@ mod_04_pca_ui <- function(id) {
             br(),
             plotOutput(
               outputId = ns("pcatools_scree"),
+              width = "100%",
+              height = "500px"
+            ),
+            br(),
+            br(),
+            br(),
+            plotOutput(
+              outputId = ns("pcatools_eigencor"),
               width = "100%",
               height = "500px"
             )
@@ -223,6 +244,8 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       PCA_biplot(
         data = pre_process$data(),
         sample_info = pre_process$sample_info(),
+        select_gene_id = input$select_gene_id,
+        all_gene_names = pre_process$all_gene_names(),
         selected_x = input$x_axis_pc,
         selected_y = input$y_axis_pc,
         encircle = input$encircle,
@@ -243,6 +266,15 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       
     })    
     
+    #PCAtools Eigencor Plot --------------------
+    output$pcatools_eigencor <- renderPlot({
+      req(!is.null(pre_process$data()))
+      
+      PCAtools_eigencorplot(
+        processed_data = pre_process$data(),
+        sample_info = pre_process$sample_info()
+      )
+    })   
     # select color
     output$listFactors1 <- renderUI({
       req(!is.null(pre_process$data()))
@@ -251,7 +283,7 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       { return(HTML("Upload a sample info file to customize this plot.") ) }	 else { 
         selectInput(
           inputId = ns("selectFactors1"),
-          label = "Color: ",
+          label = "Color ",
           choices = c( colnames(pre_process$sample_info()), "Sample_Name")
                     , selected = "Sample_Name")   } 
     })
@@ -299,6 +331,16 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
         )   } 
     })    
     
+    # Gene ID Name Choices ----------
+    observe({
+      req(!is.null(pre_process$all_gene_names()))
+      
+      updateSelectInput(
+        session = session,
+        inputId = "select_gene_id",
+        choices = colnames(pre_process$all_gene_names())
+      )
+    })
     
     
     

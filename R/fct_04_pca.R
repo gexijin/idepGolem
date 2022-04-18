@@ -431,6 +431,8 @@ pc_factor_correlation <- function(
 PCA_biplot <- function(
   data,
   sample_info,
+  select_gene_id = "symbol",
+  all_gene_names, # = pre_process$all_gene_names(),
   selected_x = "PC1",
   selected_y = "PC2",
   encircle = TRUE,
@@ -444,11 +446,17 @@ PCA_biplot <- function(
   #missing design
   if(is.null(sample_info)) {
     meta_data <- as.data.frame(colnames(data))
+    rownames(meta_data) <- colnames(data)
   } else {
     meta_data <- sample_info
   }
-  
-  #rownames(meta_data) <- meta_data$`colnames(data)`
+
+  #Swap rownames
+  data <- rowname_id_swap(
+    data_matrix = data,
+    all_gene_names = all_gene_names,
+    select_gene_id = select_gene_id
+  )
   
   pca_obj <- PCAtools::pca(data, metadata = meta_data, removeVar = 0.1)
   
@@ -489,11 +497,18 @@ PCA_Scree <- function(
   processed_data 
 ) {
 
+  suppressWarnings(
   pca_obj <- PCAtools::pca(mat = processed_data, removeVar = 0.1)
-  
+  )
+  suppressWarnings(
   horn <- PCAtools::parallelPCA(processed_data)
+  )
+  
+  suppressWarnings(
   elbow <- PCAtools::findElbowPoint(pca_obj$variance)
+  )
 
+  suppressWarnings(
   p <- plot(PCAtools::screeplot(
     pca_obj,
     vline = c(horn$n, elbow)) +
@@ -514,5 +529,44 @@ PCA_Scree <- function(
                    hjust = .5,
                    size = 8))
   )
+
+  )
   return(p)
 }
+
+#' Principal Component Analysis with PCAtools package
+#'
+#' Generates a plot showing correlations between Principal Components and design factors
+#'
+#' @param data Data that has been through pre-processing
+#' @param sample_info Design Matrix
+#' @return Formatted plot generated with PCAtools package
+PCAtools_eigencorplot <- function(
+  processed_data,
+  sample_info
+)
+{
+  #missing design
+  if(is.null(sample_info)) {
+    return("Upload Design file to see EigenCor plot.")
+    #meta_data <- as.data.frame(colnames(processed_data))
+    #colnames(meta_data)[1] <- "Sample_Name"
+  } else {
+    meta_data <- sample_info
+    
+    #Design Factors must be converted to numeric
+    meta_data <- as.data.frame(meta_data)
+    meta_data <- sapply(meta_data, function(x) as.numeric(factor(x)))
+    meta_data <- as.data.frame(meta_data)
+    
+    #maintain rownames
+    rownames(meta_data) <- rownames(sample_info)
+    
+    #create PCA object
+    pca_obj <- PCAtools::pca(processed_data, metadata = meta_data, removeVar = 0.1)
+    
+    #plot
+    p <- PCAtools::eigencorplot(pca_obj, metavars = colnames(meta_data))
+    return(p)
+  }
+  }
