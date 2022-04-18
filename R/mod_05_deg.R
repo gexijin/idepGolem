@@ -210,6 +210,18 @@ mod_05_deg_2_ui <- function(id) {
           inputId = ns("remove_redudant"),
           label = "Remove Redudant Gene Sets",
           value = FALSE
+        ), 
+        conditionalPanel(
+          condition = "input.step_2 == 'Enrich Table'", 
+          downloadButton(
+            outputId = ns("dl_enrich_up"), 
+            label = "Up Enrichment"
+          ),
+          downloadButton(
+            outputId = ns("dl_enrich_down"), 
+            label = "Down Enrichment"
+          ),
+          ns = ns
         )
       ),
       mainPanel(
@@ -946,6 +958,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data) {
       )
 
       shinybusy::remove_modal_spinner()
+      
+    
 
       return(pathway_info)
     })
@@ -953,9 +967,15 @@ mod_05_deg_server <- function(id, pre_process, idep_data) {
     # Subheatmap Data Table ----------
     output$pathway_data_up <- DT::renderDataTable({
       req(!is.null(pathway_table_up()))
+      
+      print(summary(pathway_table_up()))
 
       DT::datatable(
-        pathway_table_up(),
+        if (ncol(pathway_table_up()) < 5){
+          data = pathway_table_up()
+        } else {
+          data = pathway_table_up()[ ,1:4]
+        },
         options = list(
           pageLength = 20,
           scrollX = "400px"
@@ -963,6 +983,14 @@ mod_05_deg_server <- function(id, pre_process, idep_data) {
         rownames = TRUE
       )
     })
+    output$dl_enrich_up <- downloadHandler(
+      filename = function() {
+        "deg_up_enrichment.csv"
+      }, 
+      content = function(file) {
+        write.csv(data_frame_with_list(pathway_table_up()), file)
+      }
+    )
 
     # Enrichment Analysis Down Data -----------
     pathway_table_down <- reactive({
@@ -1018,7 +1046,11 @@ mod_05_deg_server <- function(id, pre_process, idep_data) {
       req(!is.null(pathway_table_down()))
 
       DT::datatable(
-        pathway_table_down(),
+        if (ncol(pathway_table_down()) < 5){
+          data = pathway_table_down()
+        } else {
+          data = pathway_table_down()[ ,1:4]
+        },
         options = list(
           pageLength = 20,
           scrollX = "400px"
@@ -1026,6 +1058,14 @@ mod_05_deg_server <- function(id, pre_process, idep_data) {
         rownames = TRUE
       )
     })
+    output$dl_enrich_down <- downloadHandler(
+      filename = function() {
+        "deg_down_enrichment.csv"
+      }, 
+      content = function(file) {
+        write.csv(data_frame_with_list(pathway_table_down()), file)
+      }
+    )
 
     go_table <- reactive({
       req(!is.null(pathway_table_up()) || !is.null(pathway_data_down()))
