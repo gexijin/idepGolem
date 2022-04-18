@@ -957,6 +957,8 @@ get_pathway_list_data <- function(
 #'  information about the gene IDs for the matched species
 #' @param idep_data Read data files from the database
 #' @param select_org The organism that the gene data is for
+#' @param low_color Color value for the low-ly expressed genes 
+#' @param high_color Color vlaue for the high-ly expressed genes 
 #' 
 #' @return Make an image and return the path to the image to be
 #'  rendered in the server.
@@ -968,7 +970,9 @@ kegg_pathway <- function(
   limma,
   converted,
   idep_data,
-  select_org
+  select_org, 
+  low_color = "green", 
+  high_color = "red"
 ) {
   # First generate a blank image. Otherwise return(NULL) gives us errors.
   out_file <- tempfile(fileext = '.png')
@@ -1018,9 +1022,9 @@ kegg_pathway <- function(
     bins = list(gene = 10, cpd = 10),
     both.dirs = list(gene = T, cpd = T),
     trans.fun = list(gene = NULL, cpd = NULL), 
-    low = list(gene = "green", cpd = "blue"),
+    low = list(gene = low_color, cpd = "blue"),
     mid = list(gene = "gray", cpd = "gray"),
-    high = list(gene = "red", cpd = "yellow"), 
+    high = list(gene = high_color, cpd = "yellow"), 
     na.col = "transparent",
     ...
   ) {
