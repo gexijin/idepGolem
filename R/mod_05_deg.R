@@ -91,6 +91,7 @@ mod_05_deg_1_ui <- function(id) {
       ),
       mainPanel(
         tabsetPanel(
+          id = ns("step_1"),
           tabPanel(
             title = "Experiment Design",
             fluidRow(
@@ -121,6 +122,7 @@ mod_05_deg_1_ui <- function(id) {
           ),
           tabPanel(
             title = "Results",
+            value = ("results_tab"),
             plotOutput(
               outputId = ns("sig_gene_stats")
             ),
@@ -539,6 +541,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data) {
       )
     )
 
+      # Observe submit button ------ 
     deg <- reactiveValues(limma = NULL)
     observeEvent(
       input$submit_model_button, {
@@ -565,6 +568,12 @@ mod_05_deg_server <- function(id, pre_process, idep_data) {
           processed_data = pre_process$data(),
           counts_log_start = pre_process$counts_log_start(),
           p_vals = pre_process$p_vals()
+        )
+        
+        updateTabsetPanel(
+          session = session, 
+          inputId = "step_1", 
+          selected = "results_tab"
         )
 
         shinybusy::remove_modal_spinner()
