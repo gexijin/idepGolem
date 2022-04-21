@@ -20,7 +20,7 @@ mod_04_pca_ui <- function(id) {
           condition = "input.PCA_panels == 'Principal Component Analysis'",
           fluidRow( 
             column(
-              width = 12,
+              width = 6,
               selectInput(
                 inputId = ns("PCAx"),
                 "Principal component for x-axis",
@@ -29,7 +29,7 @@ mod_04_pca_ui <- function(id) {
               )
             ),
             column(
-              width = 12,
+              width = 6,
               selectInput(
                 inputId = ns("PCAy"),
                 "Principal component for y-axis",
@@ -69,7 +69,7 @@ mod_04_pca_ui <- function(id) {
           condition = "input.PCA_panels == 'Plots from PCAtools Package'",
           fluidRow(
             column(
-              width = 9,
+              width = 12,
               selectInput(inputId = ns("x_axis_pc"),
                         label = "X-Axis",
                         choices = c("PC1", "PC2", "PC3", "PC4", "PC5"),
@@ -116,7 +116,6 @@ mod_04_pca_ui <- function(id) {
           id = ns("PCA_panels"),
           tabPanel(
             title="Principal Component Analysis",
-            br(),
             plotOutput(
               outputId = ns("pca_plot_obj"),
               width = "100%",
@@ -125,7 +124,13 @@ mod_04_pca_ui <- function(id) {
             br(),
             shiny::textOutput(
               outputId = ns("pc_correlation")
-            )
+            ),
+            br(),
+            shiny::textOutput(ns("image_dimensions")),
+            mod_download_images_ui(ns("download_pca")),
+            br(),
+            br(),
+            
           ),
           tabPanel(
             "Multi-Dimensional Scaling",
@@ -134,7 +139,10 @@ mod_04_pca_ui <- function(id) {
               outputId = ns("mds_plot_obj"),
               width = "100%",
               height = "500px"
-            )
+            ),
+            mod_download_images_ui(ns("download_mds")),
+          
+            
           ),
           tabPanel(
             "t-SNE",
@@ -144,6 +152,9 @@ mod_04_pca_ui <- function(id) {
               width = "100%",
               height = "500px"
             ),
+            br(),
+            mod_download_images_ui(ns("download_t_sne")),
+            br()
           ),
           tabPanel(
             "Plots from PCAtools Package",
@@ -153,6 +164,7 @@ mod_04_pca_ui <- function(id) {
               width = "100%",
               height = "500px"
             ),
+            mod_download_images_ui(ns("download_biplot")),
             br(),
             br(),
             br(),
@@ -161,6 +173,7 @@ mod_04_pca_ui <- function(id) {
               width = "100%",
               height = "500px"
             ),
+            mod_download_images_ui(ns("download_scree")),
             br(),
             br(),
             br(),
@@ -168,7 +181,10 @@ mod_04_pca_ui <- function(id) {
               outputId = ns("pcatools_eigencor"),
               width = "100%",
               height = "500px"
-            )
+            ),
+            mod_download_images_ui(ns("download_eigencor")),
+            br(),
+            br()
             
           )
           # tabPanel(
@@ -187,11 +203,23 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
+    # Store client info in a convenience variable
+    cdata <- session$clientData
+    
+    #get pca image dimensions
+    output$image_dimensions <- renderText({
+      paste("Plot size (pixels): ",
+            cdata[['output_pca-pca_plot_obj_width']],
+            " x ",
+            cdata[['output_pca-pca_plot_obj_height']])
+    })
+    
     # PCA plot ------------
-    output$pca_plot_obj <- renderPlot({
+    # reactive part -----
+    pca_plot <- reactive({
       req(!is.null(pre_process$data()))
       
-      PCA_plot(
+      p <- PCA_plot(
         data = pre_process$data(),
         sample_info = pre_process$sample_info(),
         PCAx = input$PCAx,
@@ -200,6 +228,16 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
         selected_color = input$selectFactors1
       )
     })
+    output$pca_plot_obj <- renderPlot({
+      print(pca_plot())
+    })
+
+    # Download Button
+    download_pca <- mod_download_images_server(
+      id = "download_pca", 
+      filename = "pca_plot", 
+      figure = reactive({ pca_plot() }) # stays as a reactive variable
+    )
     
     # PC Factor Correlation ---------
     output$pc_correlation <- renderText({
@@ -208,14 +246,16 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
         data = pre_process$data(),
         sample_info = pre_process$sample_info()
       )
+      
     })
+
     
     # t_SNE plot -----------------
-    output$t_sne <- renderPlot({
+    t_SNE_plot_obj <- reactive({
       req(!is.null(pre_process$data()))
       
       input$seedTSNE
-
+      
       t_SNE_plot(
         data = pre_process$data(),
         sample_info = pre_process$sample_info(),
@@ -223,25 +263,50 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
         selected_color = input$selectFactors1
       )
     })
-
+    output$t_sne <- renderPlot({
+      print(t_SNE_plot_obj())
+    })
+    # Download Button
+    download_t_sne <- mod_download_images_server(
+      id = "download_t_sne", 
+      filename = "t_sne_plot", 
+      figure = reactive({ t_SNE_plot_obj() }) # stays as a reactive variable
+    )
+    
     # MDS plot ------------
-    output$mds_plot_obj <- renderPlot({
+    
+    mds_plot <- reactive({
       req(!is.null(pre_process$data()))
-      
+
       MDS_plot(
         data = pre_process$data(),
         sample_info = pre_process$sample_info(),
         selected_shape = input$selectFactors2,
         selected_color = input$selectFactors1
-        
+
       )
     })
+    output$mds_plot_obj <- renderPlot({
+      print(mds_plot())
+    })
+    # Download Button
+    download_mds <- mod_download_images_server(
+      id = "download_mds", 
+      filename = "mds_plot", 
+      figure = reactive({mds_plot() }) # stays as a reactive variable
+    )
     
     #PCAtools biplot  ---------------------
-    output$pcatools_biplot <- renderPlot({
+    biplot <- reactive({
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Generating Plots",
+        color = "#000000"
+      )
+      
       req(!is.null(pre_process$data()))
       
-      PCA_biplot(
+      p <- PCA_biplot(
         data = pre_process$data(),
         sample_info = pre_process$sample_info(),
         select_gene_id = input$select_gene_id,
@@ -255,26 +320,63 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
         ui_color = input$selectColor,
         ui_shape = input$selectShape
       )
-    }) 
+      shinybusy::remove_modal_spinner()
+      return(p)
+    })
+    
+    output$pcatools_biplot <- renderPlot({
+      print(biplot())
+    })
+
+    
+    # Download Button
+    download_biplot <- mod_download_images_server(
+      id = "download_biplot", 
+      filename = "biplot", 
+      figure = reactive({biplot() }) # stays as a reactive variable
+    )
+    
     #PCAtools Scree Plot --------------------
-    output$pcatools_scree <- renderPlot({
+    scree <- reactive({
       req(!is.null(pre_process$data()))
       
       PCA_Scree(
         processed_data = pre_process$data()
       )
       
-    })    
+    })
+    output$pcatools_scree <- renderPlot({
+      print(scree())
+    }) 
+    
+    # Download Button
+    download_scree <- mod_download_images_server(
+      id = "download_scree", 
+      filename = "scree", 
+      figure = reactive({scree() }) # stays as a reactive variable
+    )
+    
     
     #PCAtools Eigencor Plot --------------------
-    output$pcatools_eigencor <- renderPlot({
+    eigencor <- reactive({
       req(!is.null(pre_process$data()))
       
-      PCAtools_eigencorplot(
+      p <- PCAtools_eigencorplot(
         processed_data = pre_process$data(),
         sample_info = pre_process$sample_info()
       )
-    })   
+      return(p)
+    })
+    output$pcatools_eigencor <- renderPlot({
+      print(eigencor())
+    })
+
+    # Download Button
+    download_eigencor <- mod_download_images_server(
+      id = "download_eigencor", 
+      filename = "eigencor", 
+      figure = reactive({ eigencor() }) # stays as a reactive variable
+    )
     # select color
     output$listFactors1 <- renderUI({
       req(!is.null(pre_process$data()))
