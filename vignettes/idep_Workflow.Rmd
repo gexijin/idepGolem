@@ -285,7 +285,8 @@ plot_volcano(
   comparisons = limma$comparisons,
   top_genes = limma$top_genes,
   limma_p_val = .1,
-  limma_fc = 2
+  limma_fc = 2, 
+  plot_colors = c("red", "grey", "blue")
 )
 ```
 
