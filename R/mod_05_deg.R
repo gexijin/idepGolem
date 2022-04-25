@@ -575,7 +575,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data) {
           inputId = "step_1", 
           selected = "results_tab"
         )
-
+      print(summary(deg$limma))
         shinybusy::remove_modal_spinner()
       }  
     )

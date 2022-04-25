@@ -1334,7 +1334,7 @@ deg_limma <- function(
 					contrast_compare <- contrast_compare[, which(
             apply(abs(contrast_compare), 2, max) == 1), drop = F
           ]
-					contrast_compare <- contrast_comapre[, which(
+					contrast_compare <- contrast_compare[, which(
             apply(abs(contrast_compare), 2, sum) == 4), drop = F
           ]
           # Remove duplicate columns
