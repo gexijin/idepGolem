@@ -222,7 +222,7 @@ mod_02_pre_process_ui <- function(id) {
             )
           ),
 
-          # Scatterplot with interactive axises ----------
+          # Scatterplot with interactive axes ----------
           tabPanel(
             title = "Scatterplot",
           # Axis selectors -----------
@@ -387,14 +387,15 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       updateSelectInput(
         session,
         inputId = "scatter_x",
-        choices = colnames(load_data$converted_data()),
-        selected = colnames(load_data$converted_data())[1]
+        choices = colnames(processed_data()$data),
+        selected = colnames(processed_data()$data)[1]
+      #load_data$converted_data())[1]
       )
       updateSelectInput(
         session,
         inputId = "scatter_y",
-        choices = colnames(load_data$converted_data()),
-        selected = colnames(load_data$converted_data())[2]
+        choices = colnames(processed_data()$data),
+        selected = colnames(processed_data()$data)[2]
       )
     })
 
