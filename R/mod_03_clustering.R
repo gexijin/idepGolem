@@ -290,7 +290,8 @@ mod_03_clustering_ui <- function(id) {
               outputId = ns("sd_density_plot"),
               width = "100%",
               height = "500px"
-            )
+            ),
+            ottoPlots::mod_download_figure_ui(ns("dl_gene_dist"))
           ),
 
           # Sample Tree Plot ---------
@@ -305,7 +306,8 @@ mod_03_clustering_ui <- function(id) {
               outputId = ns("sample_tree"),
               width = "100%",
               height = "400px"
-            )
+            ),
+            ottoPlots::mod_download_figure_ui(ns("dl_sample_tree"))
           )
         )
       )
@@ -417,14 +419,26 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     })
 
     # Standard Deviation Density Plot ----------
-    output$sd_density_plot <- renderPlot({
+    sd_density_plot <- reactive({
       req(!is.null(pre_process$data()))
-
+      
       sd_density(
         data = pre_process$data(),
         n_genes_max = input$n_genes
       )
     })
+    
+    output$sd_density_plot <- renderPlot({
+      print(sd_density_plot())
+    })
+    
+    dl_gene_dist <- ottoPlots::mod_download_figure_server(
+      id = "dl_gene_dist", 
+      filename = "sd_density_plot", 
+      figure = reactive({ sd_density_plot() })
+    )
+    
+    
 
     # Heatmap Data -----------
     heatmap_data <- reactive({
@@ -710,9 +724,9 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
 
   
     # Sample Tree ----------
-    output$sample_tree <- renderPlot({
+    sample_tree <- reactive({
       req(!is.null(pre_process$data()))
-
+      
       draw_sample_tree(
         tree_data = pre_process$data(),
         gene_centering = input$gene_centering,
@@ -723,9 +737,21 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         hclust_function = input$hclust_function,
         dist_funs = dist_funs,
         dist_function = input$dist_function
-      )
+      )  
+      p <- recordPlot() 
+      return(p)
     })
-
+    
+    output$sample_tree <- renderPlot({
+      print(sample_tree())
+    })
+    
+    dl_sample_tree <- ottoPlots::mod_download_figure_server(
+      id = "dl_sample_tree", 
+      filename = "sample_tree", 
+      figure = reactive({ sample_tree() })
+    )
+    
     # k-Cluster elbow plot ----------
     output$k_clusters <- renderPlot({
       req(!is.null(heatmap_data()))
