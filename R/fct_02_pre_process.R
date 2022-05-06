@@ -173,8 +173,9 @@ pre_process <- function(
         normalized = TRUE
       ) + counts_log_start)
     }
-  } else if (data_file_format == 3) {
+  } else if (data_file_format == 3) { # LFC and P-values
     n2 <- (ncol(data) %/% 2)
+    raw_counts <- data
     if (!no_fdr) {
       pvals <- data[, 2 * (1:n2), drop = FALSE]
       data <- data[, 2 * (1:n2) - 1, drop = FALSE]

@@ -58,7 +58,9 @@ PCA_plot <- function(
   x <- data
   y <- sample_info
   pca.object <- prcomp(t(x))
-  npc <- 5
+  
+  #5 pc's or number of columns if <5
+  npc <- min(5, ncol(data))
   pcaData <- as.data.frame(pca.object$x[, 1:npc])
 
   groups <- detect_groups(sample_names = colnames(data), sample_info = sample_info)
@@ -69,8 +71,8 @@ PCA_plot <- function(
     pcaData <- cbind(pcaData, detect_groups(colnames(x), y), sample_info)
   }
   dim(pcaData)[2]
-  colnames(pcaData)[6] <- "Sample_Name"
-  
+  #colnames(pcaData)[6] <- "Sample_Name"
+  colnames(pcaData)[ncol(pcaData)] <- "Sample_Name"
   if (nlevels(groups) <= 1 | nlevels(groups) > 20) {
     group_fill <- NULL
     legend <- "none"
@@ -386,7 +388,10 @@ pc_factor_correlation <- function(
     return("No design file uploaded")
   }
   pca.object <- prcomp(t(x))
-  npc <- 5
+  
+  #5 pc's or number of columns if <5
+  npc <- min(5, ncol(data))
+  
   pcaData <- as.data.frame(pca.object$x[, 1:npc])
   pvals <- matrix(1, nrow = npc, ncol = ncol(y))
   for (i in 1:npc) {

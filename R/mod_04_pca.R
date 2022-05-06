@@ -99,7 +99,7 @@ mod_04_pca_ui <- function(id) {
             checkboxInput(inputId = ns("showLoadings"), label = "Show Loadings", value = FALSE),
             checkboxInput(inputId = ns("encircle"), label = "Encircle", value = FALSE),
             checkboxInput(inputId = ns("pointLabs"), label = "Point Labels", value = TRUE),
-            numericInput(inputId = ns("pointSize"), label = "Point Size (Reccomded: 1-10)",value = 3.0, min = 1, max = 15)
+            numericInput(inputId = ns("pointSize"), label = "Point Size (Recommended: 1-10)",value = 3.0, min = 1, max = 15)
           ),
           ),
           ns=ns
