@@ -126,7 +126,7 @@ mod_04_pca_ui <- function(id) {
               outputId = ns("pc_correlation")
             ),
             br(),
-            shiny::textOutput(ns("image_dimensions")),
+            shiny::verbatimTextOutput(ns("image_dimensions")),
             mod_download_images_ui(ns("download_pca")),
             br(),
             br(),
@@ -211,7 +211,8 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       paste("Plot size (pixels): ",
             cdata[['output_pca-pca_plot_obj_width']],
             " x ",
-            cdata[['output_pca-pca_plot_obj_height']])
+            cdata[['output_pca-pca_plot_obj_height']],
+            "\nAspect Ratio: ", cdata[['output_pca-pca_plot_obj_width']] / cdata[['output_pca-pca_plot_obj_height']])
     })
     
     # PCA plot ------------
