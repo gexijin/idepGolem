@@ -7,6 +7,8 @@
 PCA_biplot(
   data,
   sample_info,
+  select_gene_id = "symbol",
+  all_gene_names,
   selected_x = "PC1",
   selected_y = "PC2",
   encircle = TRUE,
