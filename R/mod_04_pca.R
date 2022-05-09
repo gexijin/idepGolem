@@ -140,7 +140,7 @@ mod_04_pca_ui <- function(id) {
               width = "100%",
               height = "500px"
             ),
-            ot(ns("download_mds")),
+            ottoPlots::mod_download_figure_ui(ns("download_mds")),
           
             
           ),
