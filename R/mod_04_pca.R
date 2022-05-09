@@ -99,7 +99,7 @@ mod_04_pca_ui <- function(id) {
             checkboxInput(inputId = ns("showLoadings"), label = "Show Loadings", value = FALSE),
             checkboxInput(inputId = ns("encircle"), label = "Encircle", value = FALSE),
             checkboxInput(inputId = ns("pointLabs"), label = "Point Labels", value = TRUE),
-            numericInput(inputId = ns("pointSize"), label = "Point Size (Reccomded: 1-10)",value = 3.0, min = 1, max = 15)
+            numericInput(inputId = ns("pointSize"), label = "Point Size (Recommended: 1-10)",value = 3.0, min = 1, max = 15)
           ),
           ),
           ns=ns
@@ -126,7 +126,7 @@ mod_04_pca_ui <- function(id) {
               outputId = ns("pc_correlation")
             ),
             br(),
-            shiny::textOutput(ns("image_dimensions")),
+            shiny::verbatimTextOutput(ns("image_dimensions")),
             mod_download_images_ui(ns("download_pca")),
             br(),
             br(),
@@ -211,7 +211,8 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       paste("Plot size (pixels): ",
             cdata[['output_pca-pca_plot_obj_width']],
             " x ",
-            cdata[['output_pca-pca_plot_obj_height']])
+            cdata[['output_pca-pca_plot_obj_height']],
+            "\nAspect Ratio: ", cdata[['output_pca-pca_plot_obj_width']] / cdata[['output_pca-pca_plot_obj_height']])
     })
     
     # PCA plot ------------
