@@ -265,7 +265,7 @@ mod_05_deg_2_ui <- function(id) {
               height = "500px",
               width = "100%"
             ),
-            mod_download_images_ui(ns("download_volcano"))
+            ottoPlots::mod_download_figure_ui(ns("download_volcano"))
           ),
           tabPanel(
             title = "MA Plot",
@@ -275,7 +275,7 @@ mod_05_deg_2_ui <- function(id) {
               height = "500px",
               width = "100%"
             ), 
-            mod_download_images_ui(ns("download_ma"))
+            ottoPlots::mod_download_figure_ui(ns("download_ma"))
           ),
           
           tabPanel(
@@ -841,7 +841,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data) {
       print(vol_plot())
     })
     
-    download_volcano <- mod_download_images_server(
+    download_volcano <- ottoPlots::mod_download_figure_server(
       "download_volcano", 
       filename = "volcano_plot", 
       figure = reactive({ vol_plot() }) # stays as a reactive variable
@@ -867,7 +867,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data) {
 	    print(ma_plot())
     })
     
-    download_ma <- mod_download_images_server(
+    download_ma <- ottoPlots::mod_download_figure_server(
       "download_ma", 
       filename = "ma_plot", 
       figure = reactive({ ma_plot() })
