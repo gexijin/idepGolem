@@ -134,6 +134,9 @@ mod_05_deg_1_ui <- function(id) {
             ),
             tableOutput(
               outputId = ns("sig_gene_stats_table")
+            ), 
+            DT::dataTableOutput(
+              outputId = ns("sig_genes_table")
             )
           ),
           tabPanel(
@@ -575,9 +578,27 @@ mod_05_deg_server <- function(id, pre_process, idep_data) {
           inputId = "step_1", 
           selected = "results_tab"
         )
-      print(summary(deg$limma))
         shinybusy::remove_modal_spinner()
       }  
+    )
+    
+    output$sig_genes_table <- DT::renderDataTable({
+      req(!is.null(deg$limma$results))
+      
+      deg_information(
+        limma_value = deg$limma, 
+        gene_names = gene_names
+      )[[1]]
+    }
+      
+    # }, 
+    #   digits = -4, 
+    #   spacing = "s", 
+    #   include.rownames = FALSE, 
+    #   striped = TRUE, 
+    #   bordered = TRUE, 
+    #   width = "auto", 
+    #   hover = T
     )
 
     output$sig_gene_stats <- renderPlot({

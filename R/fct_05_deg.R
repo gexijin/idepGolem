@@ -2597,3 +2597,31 @@ network_data <- function(
     
   return(vis_net)
 }
+
+deg_information <- function(
+    limma_value, 
+    gene_names
+){
+  
+  degs_data <- limma_value$top_genes[[1]]
+  degs_data$ensembl_ID <- rownames(degs_data)
+  
+  if (length(names(limma_value$top_genes)) > 1){
+    for (i in 2:length(names(limma_value$top_genes))){
+      temp <- limma_value$top_genes[[i]]
+      temp$ensembl_ID <- rownames(temp)
+      degs_data <- dplyr::inner_join(degs_data, temp, by = "ensembl_ID")
+    }
+  }
+  
+  degs_data <- dplyr::left_join(degs_data, gene_names, by = "ensembl_ID")
+  
+  degs_data <- degs_data %>%
+    dplyr::relocate(User_ID) %>%
+    dplyr::relocate(ensembl_ID) %>%
+    dplyr::relocate(symbol)
+  
+  print(summary(degs_data))
+  
+  return(list(degs_data, limma_value$Results))
+}
