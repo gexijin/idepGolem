@@ -40,6 +40,7 @@ Imports:
     KEGGREST,
     limma,
     loose.rock,
+    magrittr,
     pathview,
     PGSEA,
     plotly,
