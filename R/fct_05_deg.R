@@ -2600,8 +2600,10 @@ network_data <- function(
 
 deg_information <- function(
     limma_value, 
-    gene_names
+    gene_names, 
+    processed_data
 ){
+  
   
   degs_data <- limma_value$top_genes[[1]]
   degs_data$ensembl_ID <- rownames(degs_data)
@@ -2614,14 +2616,14 @@ deg_information <- function(
     }
   }
   
-  degs_data <- dplyr::left_join(degs_data, gene_names, by = "ensembl_ID")
+  degs_data <- dplyr::full_join(degs_data, gene_names, by = "ensembl_ID")
+  degs_data <- dplyr::full_join(degs_data, processed_data, by = "ensembl_ID")
   
   degs_data <- degs_data %>%
     dplyr::relocate(User_ID) %>%
     dplyr::relocate(ensembl_ID) %>%
     dplyr::relocate(symbol)
   
-  print(summary(degs_data))
   
   return(list(degs_data, limma_value$Results))
 }

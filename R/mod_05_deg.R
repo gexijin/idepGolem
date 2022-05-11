@@ -584,22 +584,14 @@ mod_05_deg_server <- function(id, pre_process, idep_data) {
     
     output$sig_genes_table <- DT::renderDataTable({
       req(!is.null(deg$limma$results))
-      
+      print(class(pre_process$data()))
       deg_information(
         limma_value = deg$limma, 
-        gene_names = gene_names
+        gene_names = pre_process$all_gene_names(),
+        processed_data = pre_process$data()
       )[[1]]
-    }
-      
-    # }, 
-    #   digits = -4, 
-    #   spacing = "s", 
-    #   include.rownames = FALSE, 
-    #   striped = TRUE, 
-    #   bordered = TRUE, 
-    #   width = "auto", 
-    #   hover = T
-    )
+    })
+    
 
     output$sig_gene_stats <- renderPlot({
       req(!is.null(deg$limma$results))
