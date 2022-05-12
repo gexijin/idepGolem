@@ -2604,7 +2604,6 @@ deg_information <- function(
     processed_data
 ){
   
-  
   degs_data <- limma_value$top_genes[[1]]
   degs_data$ensembl_ID <- rownames(degs_data)
   
@@ -2615,6 +2614,10 @@ deg_information <- function(
       degs_data <- dplyr::inner_join(degs_data, temp, by = "ensembl_ID")
     }
   }
+  
+  processed_data <- as.data.frame(processed_data)
+  
+  processed_data$ensembl_ID <- rownames(processed_data)
   
   degs_data <- dplyr::full_join(degs_data, gene_names, by = "ensembl_ID")
   degs_data <- dplyr::full_join(degs_data, processed_data, by = "ensembl_ID")

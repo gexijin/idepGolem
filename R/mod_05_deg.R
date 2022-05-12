@@ -584,7 +584,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data) {
     
     output$sig_genes_table <- DT::renderDataTable({
       req(!is.null(deg$limma$results))
-      print(class(pre_process$data()))
+      
       deg_information(
         limma_value = deg$limma, 
         gene_names = pre_process$all_gene_names(),
