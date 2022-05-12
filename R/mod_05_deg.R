@@ -88,10 +88,14 @@ mod_05_deg_1_ui <- function(id) {
           href = "https://idepsite.wordpress.com/degs/",
           target = "_blank"
         ), 
-        downloadButton(
-          outputId = ns("download_lfc"), 
-          "Download DEG Information"
-        )
+        conditionalPanel(
+          condition = "input.updateButton == 0", 
+          downloadButton(
+            outputId = ns("download_lfc"), 
+            "Download DEG Data"
+          ), 
+          ns = ns
+        ),
       ),
       mainPanel(
         tabsetPanel(
@@ -587,6 +591,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
     )
     
     deg_info <- reactive({
+      req(!is.null(deg$limma$results))
+      
       deg_information(
         limma_value = deg$limma, 
         gene_names = pre_process$all_gene_names(),
@@ -604,7 +610,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
     )
     
     output$sig_genes_table <- DT::renderDataTable({
-      req(!is.null(deg$limma$results))
+
       
       deg_information(
         limma_value = deg$limma, 
