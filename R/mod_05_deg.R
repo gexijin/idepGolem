@@ -599,7 +599,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
         "deg_data.csv"
       }, 
       content = function(file) {
-        write.csv(deg_info(), file)
+        write.csv(deg_info(), file, row.names = FALSE)
       }
     )
     
