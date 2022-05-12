@@ -87,6 +87,10 @@ mod_05_deg_1_ui <- function(id) {
           h5("Questions?", align = "right"),
           href = "https://idepsite.wordpress.com/degs/",
           target = "_blank"
+        ), 
+        downloadButton(
+          outputId = ns("download_lfc"), 
+          "Download DEG Information"
         )
       ),
       mainPanel(
@@ -368,7 +372,7 @@ mod_05_deg_2_ui <- function(id) {
 #' 05_deg1 Server Functions
 #'
 #' @noRd
-mod_05_deg_server <- function(id, pre_process, idep_data) {
+mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -580,6 +584,23 @@ mod_05_deg_server <- function(id, pre_process, idep_data) {
         )
         shinybusy::remove_modal_spinner()
       }  
+    )
+    
+    deg_info <- reactive({
+      deg_information(
+        limma_value = deg$limma, 
+        gene_names = pre_process$all_gene_names(),
+        processed_data = pre_process$data()
+      )[[1]]
+    })
+    
+    output$download_lfc <- downloadHandler(
+      filename = function(){
+        "deg_data.csv"
+      }, 
+      content = function(file) {
+        write.csv(deg_info(), file)
+      }
     )
     
     output$sig_genes_table <- DT::renderDataTable({
