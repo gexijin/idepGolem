@@ -150,13 +150,7 @@ mod_05_deg_1_ui <- function(id) {
               value = FALSE
             ),
             htmlOutput(outputId = ns("list_comparisons_venn")),
-            plotOutput(outputId = ns("venn_plot")),
-            fluidRow(
-              ottoPlots::mod_download_figure_ui(
-                id = ns("dl_venn_plot"), 
-                label = "Download Venn Diagram"
-              )
-            )
+            plotOutput(outputId = ns("venn_plot"))
           )
         )
       )
@@ -684,31 +678,19 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
       }
 
 	  })
-    
-    venn_plot <- reactive({
+
+    output$venn_plot <- renderPlot({
       req(!is.null(deg$limma))
       req(!is.null(input$select_comparisons_venn))
       
-      plot_venn(
+		  plot_venn(
         limma = deg$limma,
         up_down_regulated = input$up_down_regulated,
         select_comparisons_venn = input$select_comparisons_venn
       )
-      p <- recordPlot()
-      return(p)
-    })
-
-    output$venn_plot <- renderPlot({
-      print(venn_plot())
     },
-      #height = 600,
+      height = 600,
       width = 600
-    )
-    
-    dl_venn_plot <- ottoPlots::mod_download_figure_server(
-      id = "dl_venn_plot", 
-      filename = "venn_plot", 
-      figure = reactive({ venn_plot() })
     )
 
     # DEG STEP 2 --------
