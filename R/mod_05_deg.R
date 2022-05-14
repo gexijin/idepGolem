@@ -83,19 +83,14 @@ mod_05_deg_1_ui <- function(id) {
         tags$head(tags$style(
           "#deg-submit_model_button{font-size: 20px;}"
         )),
+        tags$br(),
+        tags$br(),
+        uiOutput(ns("download_lfc_button")),
         a(
           h5("Questions?", align = "right"),
           href = "https://idepsite.wordpress.com/degs/",
           target = "_blank"
-        ), 
-        conditionalPanel(
-          condition = "input.updateButton == 0", 
-          downloadButton(
-            outputId = ns("download_lfc"), 
-            "Download DEG Data"
-          ), 
-          ns = ns
-        ),
+        )
       ),
       mainPanel(
         tabsetPanel(
@@ -608,6 +603,15 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
         write.csv(deg_info(), file, row.names = FALSE)
       }
     )
+    
+    output$download_lfc_button <- renderUI({
+      req(!is.null(deg_info()))
+      
+      downloadButton(
+        outputId = ns("download_lfc"), 
+        "Download DEG Data"
+      )
+    })
     
     output$sig_genes_table <- DT::renderDataTable({
 
