@@ -86,6 +86,7 @@ mod_05_deg_1_ui <- function(id) {
         tags$br(),
         tags$br(),
         uiOutput(ns("download_lfc_button")),
+        uiOutput(ns("note")),
         a(
           h5("Questions?", align = "right"),
           href = "https://idepsite.wordpress.com/degs/",
@@ -116,7 +117,9 @@ mod_05_deg_1_ui <- function(id) {
               "#deg-experiment_design{color: red;font-size: 16px;}"
             )),
             htmlOutput(outputId = ns("list_model_comparisons")),
-            h3("Use the submit button in the sidebar once the desired design is selected!"),
+            h3("Use the submit button in the sidebar once the desired 
+               design is selected!"
+            ),
             a(
               h5("More info on DESeq2 experiment design", align = "right"),
               href = "http://rpubs.com/ge600/deseq2",
@@ -618,11 +621,16 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
     
     output$download_lfc_button <- renderUI({
       req(!is.null(deg_info()))
-      
       downloadButton(
         outputId = ns("download_lfc"), 
         "Download DEG Data"
       )
+    })
+    
+    output$note <- renderUI({
+      req(!is.null(deg_info()))
+      tags$h5("Includes log fold change, adjusted p-value and processed data
+                from Pre-Process tab.")
     })
 
     output$sig_gene_stats <- renderPlot({
