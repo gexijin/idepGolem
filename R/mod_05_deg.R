@@ -600,7 +600,11 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
     )
     
     name <- reactive({
-      paste0("deg_values_", deg_method[as.numeric(input$counts_deg_method)], ".csv")
+      paste0(
+        "deg_values_", 
+        deg_method[as.numeric(input$counts_deg_method)], 
+        ".csv"
+      )
     })
     
     output$download_lfc <- downloadHandler(
