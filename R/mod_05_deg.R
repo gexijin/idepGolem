@@ -593,9 +593,19 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
       )[[1]]
     })
     
+    deg_method <- c(
+      "limma_trend", 
+      "limma_voom", 
+      "DESeq2"
+    )
+    
+    name <- reactive({
+      paste0("deg_values_", deg_method[as.numeric(input$counts_deg_method)], ".csv")
+    })
+    
     output$download_lfc <- downloadHandler(
       filename = function(){
-        "deg_data.csv"
+        name()
       }, 
       content = function(file) {
         write.csv(deg_info(), file, row.names = FALSE)

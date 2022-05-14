@@ -2634,12 +2634,20 @@ deg_information <- function(
     
     # get the first comparison level 
     degs_data <- limma_value$top_genes[[1]]
+    colnames(degs_data) <- c(
+      (paste(limma_value$comparisons[[1]], "logFC", sep = "_")), 
+      (paste(limma_value$comparisons[[1]], "adjPval", sep = "_"))
+    )
     degs_data$ensembl_ID <- rownames(degs_data)
     
     # get the additional comparison levels if they exists 
     if (length(names(limma_value$top_genes)) > 1){
       for (i in 2:length(names(limma_value$top_genes))){
         temp <- limma_value$top_genes[[i]]
+        colnames(temp) <- c(
+          (paste(limma_value$comparisons[[i]], "logFC", sep = "_")),
+          (paste(limma_value$comparisons[[i]], "adjPval", sep = "_"))
+        )
         temp$ensembl_ID <- rownames(temp)
         degs_data <- dplyr::inner_join(degs_data, temp, by = "ensembl_ID")
       }
