@@ -588,7 +588,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
       deg_information(
         limma_value = deg$limma, 
         gene_names = pre_process$all_gene_names(),
-        processed_data = pre_process$data()
+        processed_data = pre_process$data(), 
+        no_id_conversion = load_data$no_id_conversion()
       )[[1]]
     })
     

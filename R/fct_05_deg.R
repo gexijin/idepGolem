@@ -2604,12 +2604,34 @@ deg_information <- function(
     processed_data, 
     no_id_conversion = FALSE 
 ){
-  
   if (no_id_conversion){
     
-    print(no_id_conversion)
+    # get the first comparison level 
+    degs_data <- limma_value$top_genes[[1]]
+    degs_data$User_ID <- rownames(degs_data)
+    
+    # get the additional comparison levels if they exists 
+    if (length(names(limma_value$top_genes)) > 1){
+      for (i in 2:length(names(limma_value$top_genes))){
+        temp <- limma_value$top_genes[[i]]
+        temp$User_ID <- rownames(temp)
+        degs_data <- dplyr::inner_join(degs_data, temp, by = "User_ID")
+      }
+    }
+    
+    # connect to gene symbols and original user id 
+    processed_data <- as.data.frame(processed_data)
+    processed_data$User_ID <- rownames(processed_data)
+    
+    degs_data <- dplyr::full_join(degs_data, gene_names, by = "User_ID")
+    degs_data <- dplyr::full_join(degs_data, processed_data, by = "User_ID")
+    
+    
+    degs_data <- degs_data %>%
+      dplyr::relocate(User_ID)
     
   } else {
+    
     # get the first comparison level 
     degs_data <- limma_value$top_genes[[1]]
     degs_data$ensembl_ID <- rownames(degs_data)
