@@ -137,9 +137,6 @@ mod_05_deg_1_ui <- function(id) {
             ),
             tableOutput(
               outputId = ns("sig_gene_stats_table")
-            ), 
-            DT::dataTableOutput(
-              outputId = ns("sig_genes_table")
             )
           ),
           tabPanel(
@@ -612,17 +609,6 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
         "Download DEG Data"
       )
     })
-    
-    output$sig_genes_table <- DT::renderDataTable({
-
-      
-      deg_information(
-        limma_value = deg$limma, 
-        gene_names = pre_process$all_gene_names(),
-        processed_data = pre_process$data()
-      )[[1]]
-    })
-    
 
     output$sig_gene_stats <- renderPlot({
       req(!is.null(deg$limma$results))
