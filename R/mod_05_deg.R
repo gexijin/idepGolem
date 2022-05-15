@@ -83,6 +83,10 @@ mod_05_deg_1_ui <- function(id) {
         tags$head(tags$style(
           "#deg-submit_model_button{font-size: 20px;}"
         )),
+        tags$br(),
+        tags$br(),
+        uiOutput(ns("download_lfc_button")),
+        uiOutput(ns("note")),
         a(
           h5("Questions?", align = "right"),
           href = "https://idepsite.wordpress.com/degs/",
@@ -91,6 +95,7 @@ mod_05_deg_1_ui <- function(id) {
       ),
       mainPanel(
         tabsetPanel(
+          id = ns("step_1"),
           tabPanel(
             title = "Experiment Design",
             fluidRow(
@@ -112,7 +117,9 @@ mod_05_deg_1_ui <- function(id) {
               "#deg-experiment_design{color: red;font-size: 16px;}"
             )),
             htmlOutput(outputId = ns("list_model_comparisons")),
-            h3("Use the submit button in the sidebar once the desired design is selected!"),
+            h3("Use the submit button in the sidebar once the desired 
+               design is selected!"
+            ),
             a(
               h5("More info on DESeq2 experiment design", align = "right"),
               href = "http://rpubs.com/ge600/deseq2",
@@ -121,6 +128,7 @@ mod_05_deg_1_ui <- function(id) {
           ),
           tabPanel(
             title = "Results",
+            value = ("results_tab"),
             plotOutput(
               outputId = ns("sig_gene_stats")
             ),
@@ -381,7 +389,7 @@ mod_05_deg_2_ui <- function(id) {
 #' 05_deg1 Server Functions
 #'
 #' @noRd
-mod_05_deg_server <- function(id, pre_process, idep_data) {
+mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -556,6 +564,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data) {
       )
     )
 
+      # Observe submit button ------ 
     deg <- reactiveValues(limma = NULL)
     observeEvent(
       input$submit_model_button, {
@@ -583,10 +592,67 @@ mod_05_deg_server <- function(id, pre_process, idep_data) {
           counts_log_start = pre_process$counts_log_start(),
           p_vals = pre_process$p_vals()
         )
-
+        
+        updateTabsetPanel(
+          session = session, 
+          inputId = "step_1", 
+          selected = "results_tab"
+        )
         shinybusy::remove_modal_spinner()
       }  
     )
+    
+    deg_info <- reactive({
+      req(!is.null(deg$limma$results))
+      
+      deg_information(
+        limma_value = deg$limma, 
+        gene_names = pre_process$all_gene_names(),
+        processed_data = pre_process$data(), 
+        no_id_conversion = load_data$no_id_conversion()
+      )[[1]]
+    })
+    
+    deg_method <- c(
+      "limma_trend", 
+      "limma_voom", 
+      "DESeq2"
+    )
+    
+    name <- reactive({
+      paste0(
+        "deg_values_", 
+        deg_method[as.numeric(input$counts_deg_method)], 
+        ".csv"
+      )
+    })
+    
+    output$download_lfc <- downloadHandler(
+      filename = function(){
+        name()
+      }, 
+      content = function(file) {
+        write.csv(deg_info(), file, row.names = FALSE)
+      }
+    )
+    
+    output$download_lfc_button <- renderUI({
+      req(!is.null(deg_info()))
+      downloadButton(
+        outputId = ns("download_lfc"), 
+        "Download DEG Data"
+      )
+    })
+    
+    output$note <- renderUI({
+      req(!is.null(deg_info()))
+      tippy::tippy_this(
+        elementId = ns("download_lfc"),
+        tooltip = "This data includes log fold change, adjusted p-value and 
+            processed data from Pre-Process tab.",
+        theme = "light-border"
+      )
+    })
 
     output$sig_gene_stats <- renderPlot({
       req(!is.null(deg$limma$results))

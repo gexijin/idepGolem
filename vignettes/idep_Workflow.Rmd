@@ -33,8 +33,14 @@ idep_data <- get_idep_data()
 #YOUR_EXPERIMENT_PATH <- "F:/data104b_final/data_go/BcellGSE71176_p53_sampleInfo.csv"
 
 
+
 #YOUR_DATA_PATH <- "d:/idep_9_24/data/data104/data_go/GSE37704_sailfish_genecounts.csv"
 #YOUR_EXPERIMENT_PATH <- "d:/idep_9_24/data/data104/data_go/GSE37704_sailfish_design.csv"
+
+YOUR_DATA_PATH <- "d:/idep_9_24/data/data104/data_go/BcellGSE71176_p53.csv"
+YOUR_EXPERIMENT_PATH <- "d:/idep_9_24/data/data104/data_go/BcellGSE71176_p53_sampleInfo.csv"
+
+
 
 expression_file <- data.frame(
   datapath = YOUR_DATA_PATH
@@ -163,12 +169,11 @@ pc_factor_correlation(
 MDS_plot(
   data = processed_data$data,
   sample_info = load_data$sample_info,
-  shape = "Treatment",
-  color = "Treatment"
 )
 ```
 #Other PCA
 ```{r}
+
 
 devtools::load_all()
 PCA_biplot(
@@ -289,7 +294,8 @@ plot_volcano(
   comparisons = limma$comparisons,
   top_genes = limma$top_genes,
   limma_p_val = .1,
-  limma_fc = 2
+  limma_fc = 2, 
+  plot_colors = c("red", "grey", "blue")
 )
 ```
 

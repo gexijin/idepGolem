@@ -1334,7 +1334,7 @@ deg_limma <- function(
 					contrast_compare <- contrast_compare[, which(
             apply(abs(contrast_compare), 2, max) == 1), drop = F
           ]
-					contrast_compare <- contrast_comapre[, which(
+					contrast_compare <- contrast_compare[, which(
             apply(abs(contrast_compare), 2, sum) == 4), drop = F
           ]
           # Remove duplicate columns
@@ -2596,4 +2596,75 @@ network_data <- function(
   vis_net$nodes$size <- 5 + vis_net$nodes$size^2 
     
   return(vis_net)
+}
+
+deg_information <- function(
+    limma_value, 
+    gene_names, 
+    processed_data, 
+    no_id_conversion = FALSE 
+){
+  if (no_id_conversion){
+    
+    # get the first comparison level 
+    degs_data <- limma_value$top_genes[[1]]
+    degs_data$User_ID <- rownames(degs_data)
+    
+    # get the additional comparison levels if they exists 
+    if (length(names(limma_value$top_genes)) > 1){
+      for (i in 2:length(names(limma_value$top_genes))){
+        temp <- limma_value$top_genes[[i]]
+        temp$User_ID <- rownames(temp)
+        degs_data <- dplyr::inner_join(degs_data, temp, by = "User_ID")
+      }
+    }
+    
+    # connect to gene symbols and original user id 
+    processed_data <- as.data.frame(processed_data)
+    processed_data$User_ID <- rownames(processed_data)
+    
+    degs_data <- dplyr::full_join(degs_data, gene_names, by = "User_ID")
+    degs_data <- dplyr::full_join(degs_data, processed_data, by = "User_ID")
+    
+    
+    degs_data <- degs_data %>%
+      dplyr::relocate(User_ID)
+    
+  } else {
+    
+    # get the first comparison level 
+    degs_data <- limma_value$top_genes[[1]]
+    colnames(degs_data) <- c(
+      (paste(limma_value$comparisons[[1]], "logFC", sep = "_")), 
+      (paste(limma_value$comparisons[[1]], "adjPval", sep = "_"))
+    )
+    degs_data$ensembl_ID <- rownames(degs_data)
+    
+    # get the additional comparison levels if they exists 
+    if (length(names(limma_value$top_genes)) > 1){
+      for (i in 2:length(names(limma_value$top_genes))){
+        temp <- limma_value$top_genes[[i]]
+        colnames(temp) <- c(
+          (paste(limma_value$comparisons[[i]], "logFC", sep = "_")),
+          (paste(limma_value$comparisons[[i]], "adjPval", sep = "_"))
+        )
+        temp$ensembl_ID <- rownames(temp)
+        degs_data <- dplyr::inner_join(degs_data, temp, by = "ensembl_ID")
+      }
+    }
+    
+    # connect to gene symbols and original user id 
+    processed_data <- as.data.frame(processed_data)
+    processed_data$ensembl_ID <- rownames(processed_data)
+    
+    degs_data <- dplyr::full_join(degs_data, gene_names, by = "ensembl_ID")
+    degs_data <- dplyr::full_join(degs_data, processed_data, by = "ensembl_ID")
+    
+    
+    degs_data <- degs_data %>%
+      dplyr::relocate(User_ID) %>%
+      dplyr::relocate(ensembl_ID) %>%
+      dplyr::relocate(symbol)
+  }
+  return(list(degs_data, limma_value$Results))
 }

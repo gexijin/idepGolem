@@ -40,6 +40,7 @@ Imports:
     KEGGREST,
     limma,
     loose.rock,
+    magrittr,
     ottoPlots,
     pathview,
     PGSEA,
@@ -60,6 +61,7 @@ Imports:
     SummarizedExperiment,
     tidyr,
     tidyselect,
+    tippy,
     utils,
     visNetwork,
     WGCNA
