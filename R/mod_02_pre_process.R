@@ -219,6 +219,10 @@ mod_02_pre_process_ui <- function(id) {
               outputId = ns("total_counts_gg"),
               width = "100%",
               height = "500px"
+            ), 
+            ottoPlots::mod_download_figure_ui(
+              id = ns("dl_total_counts"), 
+              label = "Download barplot"
             )
           ),
 
@@ -252,6 +256,10 @@ mod_02_pre_process_ui <- function(id) {
               outputId = ns("eda_scatter"),
               width = "100%",
               height = "500px"
+            ), 
+            ottoPlots::mod_download_figure_ui(
+              id = ns("dl_eda_scatter"), 
+              label = "Download scatterplot"
             )
           ),
 
@@ -263,6 +271,10 @@ mod_02_pre_process_ui <- function(id) {
               outputId = ns("eda_boxplot"),
               width = "100%",
               height = "500px"
+            ), 
+            ottoPlots::mod_download_figure_ui(
+              id = ns("dl_eda_boxplot"),
+              label = "Download boxplot"
             )
           ),
 
@@ -275,6 +287,10 @@ mod_02_pre_process_ui <- function(id) {
               width = "100%",
               height = "500px"
             ),
+            ottoPlots::mod_download_figure_ui(
+              id = ns("dl_eda_density"), 
+              label = "Download density plot"
+            )
           ),
 
           # Density plot of transformed data ---------
@@ -302,6 +318,10 @@ mod_02_pre_process_ui <- function(id) {
               outputId = ns("dev_transfrom"),
               width = "100%",
               height = "500px"
+            ), 
+            ottoPlots::mod_download_figure_ui(
+              id = ns("dl_dev_transform"), 
+              label = "Download transformed plot"
             )
           ),
 
@@ -357,6 +377,10 @@ mod_02_pre_process_ui <- function(id) {
               outputId = ns("gene_plot"),
               width = "100%",
               height = "500px"
+            ), 
+            ottoPlots::mod_download_figure_ui(
+              id = ns("dl_gene_plot"), 
+              label = "Download gene plot"
             )
           )
         )
@@ -446,45 +470,77 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     })
 
     # Counts barplot ------------
-    output$total_counts_gg <- renderPlot({
+    total_counts <- reactive({
       req(!is.null(processed_data()$data))
-
+      
       total_counts_ggplot(
         counts_data = processed_data()$raw_counts,
         sample_info = load_data$sample_info()
       )
     })
+    output$total_counts_gg <- renderPlot({
+      print(total_counts())
+    })
+    dl_total_counts <- ottoPlots::mod_download_figure_server(
+      id = "dl_total_counts", 
+      filename = "total_counts_barplot", 
+      figure = reactive({ total_counts() })
+    )
 
     # Scatter eda plot ----------
-    output$eda_scatter <- renderPlot({
+    scatter <- reactive({
       req(!is.null(processed_data()$data))
-
+      
       eda_scatter(
         processed_data = processed_data()$data,
         plot_xaxis = input$scatter_x,
         plot_yaxis = input$scatter_y
       )
     })
+    output$eda_scatter <- renderPlot({
+      print(scatter())
+    })
+    dl_eda_scatter <- ottoPlots::mod_download_figure_server(
+      id = "dl_eda_scatter", 
+      filename = "scatter_plot", 
+      figure = reactive({ scatter() })
+    )
 
     # Box eda plot ----------
-    output$eda_boxplot <- renderPlot({
+    eda_box <- reactive({
       req(!is.null(processed_data()$data))
-
+      
       eda_boxplot(
         processed_data = processed_data()$data,
         sample_info = load_data$sample_info()
       )
     })
+    output$eda_boxplot <- renderPlot({
+      print(eda_box())
+    })
+    dl_eda_boxplot <- ottoPlots::mod_download_figure_server(
+      id = "dl_eda_boxplot", 
+      filename = "transformed_boxplot", 
+      figure = reactive({ eda_box() })
+    )
 
     # Density eda plot ----------
-    output$eda_density <- renderPlot({
+    density <- reactive({
       req(!is.null(processed_data()$data))
-
+      
       eda_density(
         processed_data = processed_data()$data,
         sample_info = load_data$sample_info()
       )
     })
+    output$eda_density <- renderPlot({
+      print(density())
+    })
+    dl_eda_density <- ottoPlots::mod_download_figure_server(
+      id = "dl_eda_density", 
+      filename = "density_plot", 
+      figure = reactive({ density() })
+    )
 
     # Standard deviation vs mean plot ----------
     # Heatmap Colors ----------
@@ -511,15 +567,23 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     })
     
     # Mean vs SD plot --------
-    output$dev_transfrom <- renderPlot({
+    dev <- reactive({
       req(!is.null(processed_data()$data))
-
+      
       mean_sd_plot(
         processed_data = processed_data()$data,
         heat_cols = heat_colors[[input$heat_color_select]],
         rank = input$rank
       )
     })
+    output$dev_transfrom <- renderPlot({
+      print(dev())
+    })
+    dl_dev_transform <- ottoPlots::mod_download_figure_server(
+      id = "dl_dev_transform", 
+      filename = "transform_plot", 
+      figure = reactive({ dev() })
+    )
 
     # Merge Data Sets with Gene names ----------
     merged_processed_data <- reactive({
@@ -602,10 +666,10 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     })
 
     # Individual gene plot ---------
-    output$gene_plot <- renderPlot({
+    gene_plot <- reactive({
       req(!is.null(individual_data()))
       req(!is.null(input$selected_gene))
-
+      
       individual_plots(
         individual_data = individual_data(),
         sample_info = load_data$sample_info(),
@@ -615,6 +679,16 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         lab_rotate = input$angle_ind_axis_lab
       )
     })
+    output$gene_plot <- renderPlot({
+      print(gene_plot())
+    })
+    dl_gene_plot <- ottoPlots::mod_download_figure_server(
+      id = "dl_gene_plot", 
+      filename = "gene_plot", 
+      figure = reactive({ gene_plot() })
+    )
+    
+    
 
     # Download buttons ----------
     output$download_processed_data <- downloadHandler(
