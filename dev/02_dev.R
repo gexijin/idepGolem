@@ -63,6 +63,7 @@ usethis::use_package("grDevices")
 usethis::use_package("loose.rock")
 usethis::use_package("PCAtools")
 usethis::use_package("shinyBS")
+usethis::use_package("tippy")
 
 
 ## Add modules ----

@@ -629,8 +629,12 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
     
     output$note <- renderUI({
       req(!is.null(deg_info()))
-      tags$h5("Includes log fold change, adjusted p-value and processed data
-                from Pre-Process tab.")
+      tippy::tippy_this(
+        elementId = ns("download_lfc"),
+        tooltip = "This data includes log fold change, adjusted p-value and 
+            processed data from Pre-Process tab.",
+        theme = "light-border"
+      )
     })
 
     output$sig_gene_stats <- renderPlot({
