@@ -41,6 +41,7 @@ Imports:
     limma,
     loose.rock,
     magrittr,
+    ottoPlots,
     pathview,
     PGSEA,
     plotly,

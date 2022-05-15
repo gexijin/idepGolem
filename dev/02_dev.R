@@ -64,7 +64,7 @@ usethis::use_package("loose.rock")
 usethis::use_package("PCAtools")
 usethis::use_package("shinyBS")
 usethis::use_package("tippy")
-
+usethis::use_package("ottoPlots")
 
 ## Add modules ----
 ## Create a module infrastructure in R/
