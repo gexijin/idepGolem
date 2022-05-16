@@ -150,7 +150,11 @@ mod_05_deg_1_ui <- function(id) {
               value = TRUE
             ),
             htmlOutput(outputId = ns("list_comparisons_venn")),
-            plotOutput(outputId = ns("venn_plot"))
+            plotOutput(outputId = ns("venn_plot")), 
+            ottoPlots::mod_download_figure_ui(
+              id = ns("dl_venn"), 
+              label = "Dowload venn diagram"
+            )
           )
         )
       )
@@ -701,8 +705,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
 	  })
 
     # venn diagram ----- 
-    
-    output$venn_plot <- renderPlot({
+    venn <- reactive({
       req(!is.null(deg$limma))
       req(!is.null(input$select_comparisons_venn))
       
@@ -711,7 +714,17 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
         up_down_regulated = input$up_down_regulated,
         select_comparisons_venn = input$select_comparisons_venn
       )
+      p <- recordPlot()
+      return(p)
     })
+    output$venn_plot <- renderPlot({
+      print(venn())
+    })
+    dl_venn <- ottoPlots::mod_download_figure_server(
+      id = "dl_venn", 
+      filename = "venn_diagram", 
+      figure = reactive({ venn() })
+    )
     
 
     # DEG STEP 2 --------
@@ -1037,8 +1050,6 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
     output$pathway_data_up <- DT::renderDataTable({
       req(!is.null(pathway_table_up()))
       
-      print(summary(pathway_table_up()))
-
       DT::datatable(
         if (ncol(pathway_table_up()) < 5){
           data = pathway_table_up()
@@ -1184,79 +1195,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
       reference_levels = reactive(factor_reference_levels()),
       counts_deg_method = reactive(input$counts_deg_method)
     )
-    
-    
-    # Download plots -----------
-    
-    # Volcano plot 
-    observeEvent(
-      input$volcano_popup, 
-      {
-        showModal(modalDialog(
-          numericInput(
-            inputId = ns("vol_width"), 
-            label = "Width (in)", 
-            value = 5, 
-            min = 1, 
-            max = 100
-          ),
-          numericInput(
-            inputId = ns("vol_height"), 
-            label = "Height (in)", 
-            value = 4, 
-            min = 1, 
-            max = 100
-          ), 
-          downloadButton(
-            outputId = ns("vol_dl_pdf"),
-            label = "PDF"
-          ), 
-          downloadButton(
-            outputId = ns("vol_dl_png"), 
-            label = "PNG"
-          )
-        ))
-      }
-    )
-    output$vol_dl_pdf <- downloadHandler(
-      filename = "deg_volcano.pdf", 
-      content = function(file){
-        pdf(
-          file, 
-          width = input$vol_width, 
-          height = input$vol_height
-        )
-        print(
-          vol_plot()
-        ) 
-        
-        dev.off()
-      }
-    )
-    output$vol_dl_png <- downloadHandler(
-      filename = "deg_volcano.png", 
-      content = function(file){
-        png(
-          file, 
-          res = 360, 
-          width = input$vol_width, 
-          height = input$vol_height, 
-          units = "in"
-        )
-        print(
-          plot_volcano(
-            select_contrast = input$select_contrast,
-            comparisons = deg$limma$comparisons,
-            top_genes = deg$limma$top_genes,
-            limma_p_val = input$limma_p_val,
-            limma_fc = input$limma_fc
-          )
-        )
-        dev.off()
-      }
-    )
   })
-  
 }
 
 ## To be copied in the UI
