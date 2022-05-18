@@ -121,10 +121,8 @@ mod_08_bicluster_ui <- function(id){
                 )
               )
             ),
-            h3("Enriched gene sets in selected bicluster"),
-            DT::dataTableOutput(
-              outputId = ns("pathway_data_biclust")
-            )
+            tableOutput(ns("pathway_data_biclust"))
+
           ),
           tabPanel(
             "Cluster Gene Table",
@@ -352,7 +350,7 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
     })
 
     # Enrichment Data Table ----------
-    output$pathway_data_biclust <- DT::renderDataTable({
+    output$pathway_data_biclust <- renderTable({
       req(!is.null(pathway_table_biclust()))
 
       if(ncol(pathway_table_biclust()) > 1) {
@@ -360,16 +358,14 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
       } else {
         pathway_table <- pathway_table_biclust()
       }
-
-      DT::datatable(
-        pathway_table,
-        options = list(
-          pageLength = 20,
-          scrollX = "400px"
-        ),
-        rownames = FALSE
-      )
-    })
+      pathway_table
+    }, digits = -1, 
+     spacing="s", 
+     striped=TRUE,
+     bordered = TRUE, 
+     width = "auto",
+     hover=TRUE, 
+     sanitize.text.function = function(x) x )
 
     output$gene_list_bicluster <- DT::renderDataTable({
       req(!is.null(biclust_data()))
@@ -388,6 +384,7 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
           pageLength = 20,
           scrollX = "400px"
         ),
+        class = 'cell-border stripe',
         rownames = FALSE
       )
     })
