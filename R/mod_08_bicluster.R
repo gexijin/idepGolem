@@ -297,10 +297,6 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
       )	
 	  }) 
 
-
-
-    
-
     pathway_table_biclust <- reactive({
       req(!is.null(biclust_data()))
 
@@ -369,6 +365,7 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
 
     output$gene_list_bicluster <- DT::renderDataTable({
       req(!is.null(biclust_data()))
+      req(!is.null(biclustering()) && !is.null(input$select_bicluster) && !is.null(input$select_go))
 
       biclust_table <- get_biclust_table_data(
         res = biclustering()$res,
@@ -382,7 +379,8 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
         biclust_table,
         options = list(
           pageLength = 20,
-          scrollX = "400px"
+          scrollX = "400px",
+          dom = 'ft' # hide "Show 20 entries"
         ),
         class = 'cell-border stripe',
         rownames = FALSE
