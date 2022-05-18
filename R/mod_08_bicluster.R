@@ -15,12 +15,21 @@ mod_08_bicluster_ui <- function(id){
       sidebarPanel(
         h5(
           "Biclustering can discover genes correlated on subset of samples. 
-           Only useful when  sample size is large(>10). 
-           Uses methods implemented in the biclust R package."
+           Only useful when sample size is large(N>15)
+           and more than 2 sample groups. 
+           Based on the", 
+           a("biclust", 
+             href="https://cran.r-project.org/web/packages/biclust/index.html"
+           ),
+           " and ", 
+           a("QUBIC", 
+             href="https://www.bioconductor.org/packages/release/bioc/html/QUBIC.html"
+           ),
+           " R packages."
         ),
         numericInput(
           inputId = ns("n_genes"), 
-          label = h5("Most variable genes to include "), 
+          label = h5("Most variable genes to include: "), 
           min = 10, 
           max = 2000, 
           value = 1000
@@ -46,22 +55,8 @@ mod_08_bicluster_ui <- function(id){
           choices = "green-black-red",
           width = "100%"
         ),
-        htmlOutput(outputId = ns("list_biclusters")),
-        h5("Enrichment database"),
-        htmlOutput(outputId = ns("select_go_selector")),
-        tags$style(
-          type = "text/css",
-          "#bicluster-select_go{ width:100%;   margin-top:-9px}"
-        ),
-        br(),
-        br(),
-        
-        # Show biclust message
-        actionButton(
-          inputId = ns("show_messages"),
-          label = "Show Biclust Summary"
-        ),
-
+        htmlOutput(outputId = ns("list_biclusters")),    
+        textOutput(ns("bicluster_info")),
         a(
           h5(
             "Questions?",
@@ -104,6 +99,11 @@ mod_08_bicluster_ui <- function(id){
           tabPanel(
             "Enrichment",
             fluidRow(
+              column(
+                width = 4,
+                style = "margin-top: 15px;",
+                htmlOutput(outputId = ns("select_go_selector")),
+              ),
               column(
                 width = 4,
                 checkboxInput(
@@ -154,7 +154,7 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
 
 	    selectInput(
         inputId = ns("select_go"),
-        label = "Select Geneset:",
+        label = NULL,
         choices = pre_process$gmt_choices(),
         selected = "GOBP"
       )
@@ -290,7 +290,7 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
     })
 
     # Biclustering summary message -----------
-    bicluster_info <- reactive({		
+    output$bicluster_info <- renderText({		
       req(!is.null(biclustering()) && !is.null(input$select_bicluster))
 
       bicluster_summary_message(
@@ -299,18 +299,9 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
       )	
 	  }) 
 
-    # Show messages when on the Bicluster tab or button is clicked
-    observe({
-      req(input$show_messages || tab() == "Bicluster")
-      req(!is.null(bicluster_info()))
 
-      showNotification(
-        ui = bicluster_info(),
-        id = "biclust_summary",
-        duration = NULL,
-        type = "default"
-      )
-    })
+
+    
 
     pathway_table_biclust <- reactive({
       req(!is.null(biclust_data()))
