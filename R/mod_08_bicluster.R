@@ -15,12 +15,21 @@ mod_08_bicluster_ui <- function(id){
       sidebarPanel(
         h5(
           "Biclustering can discover genes correlated on subset of samples. 
-           Only useful when  sample size is large(>10). 
-           Uses methods implemented in the biclust R package."
+           Only useful when sample size is large(N>15)
+           and more than 2 sample groups. 
+           Based on the", 
+           a("biclust", 
+             href="https://cran.r-project.org/web/packages/biclust/index.html"
+           ),
+           " and ", 
+           a("QUBIC", 
+             href="https://www.bioconductor.org/packages/release/bioc/html/QUBIC.html"
+           ),
+           " R packages."
         ),
         numericInput(
           inputId = ns("n_genes"), 
-          label = h5("Most variable genes to include "), 
+          label = h5("Most variable genes to include: "), 
           min = 10, 
           max = 2000, 
           value = 1000
@@ -47,21 +56,7 @@ mod_08_bicluster_ui <- function(id){
           width = "100%"
         ),
         htmlOutput(outputId = ns("list_biclusters")),
-        h5("Enrichment database"),
-        htmlOutput(outputId = ns("select_go_selector")),
-        tags$style(
-          type = "text/css",
-          "#bicluster-select_go{ width:100%;   margin-top:-9px}"
-        ),
-        br(),
-        br(),
-        
-        # Show biclust message
-        actionButton(
-          inputId = ns("show_messages"),
-          label = "Show Biclust Summary"
-        ),
-
+        textOutput(ns("bicluster_info")),
         a(
           h5(
             "Questions?",
@@ -106,6 +101,11 @@ mod_08_bicluster_ui <- function(id){
             fluidRow(
               column(
                 width = 4,
+                style = "margin-top: 15px;",
+                htmlOutput(outputId = ns("select_go_selector")),
+              ),
+              column(
+                width = 4,
                 checkboxInput(
                   inputId = ns("filtered_background"), 
                   label = "Use filtered data as background in enrichment (slow)", 
@@ -121,16 +121,16 @@ mod_08_bicluster_ui <- function(id){
                 )
               )
             ),
-            h3("Enriched gene sets in selected bicluster"),
-            DT::dataTableOutput(
-              outputId = ns("pathway_data_biclust")
-            )
+            tableOutput(ns("pathway_data_biclust"))
+
           ),
           tabPanel(
-            "Cluster Gene Table",
+            "Genes",
             DT::dataTableOutput(
-              outputId = ns("gene_list_bicluster")
-            )
+              outputId = ns("gene_list_bicluster"),
+            ),
+            br(),
+            uiOutput(ns("download_biclust_button"))
           )
         )
       )
@@ -138,6 +138,14 @@ mod_08_bicluster_ui <- function(id){
   )
 }
     
+
+
+
+
+#------------------------------------------------------------------------
+
+
+
 #' 08_bicluster Server Functions
 #'
 #' @noRd 
@@ -154,12 +162,13 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
 
 	    selectInput(
         inputId = ns("select_go"),
-        label = "Select Geneset:",
+        label = NULL,
         choices = pre_process$gmt_choices(),
         selected = "GOBP"
       )
     })
 
+    # all clusters
     biclustering <- reactive({
       req(!is.null(pre_process$data()))
 
@@ -178,6 +187,7 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
 			selectInput(
         inputId = ns("select_bicluster"), 
 				label = "Select a cluster",
+        selected = 1,
 			  choices = 1:biclustering()$res@Number  
 			)		
 	  })
@@ -205,6 +215,7 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
       )
     })
 
+    # information for a specific cluster
     biclust_data <- reactive({
       req(!is.null(biclustering()) && !is.null(input$select_bicluster))
       req(biclustering()$res@Number != 0)
@@ -290,7 +301,7 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
     })
 
     # Biclustering summary message -----------
-    bicluster_info <- reactive({		
+    output$bicluster_info <- renderText({		
       req(!is.null(biclustering()) && !is.null(input$select_bicluster))
 
       bicluster_summary_message(
@@ -298,19 +309,6 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
         select_bicluster = input$select_bicluster
       )	
 	  }) 
-
-    # Show messages when on the Bicluster tab or button is clicked
-    observe({
-      req(input$show_messages || tab() == "Bicluster")
-      req(!is.null(bicluster_info()))
-
-      showNotification(
-        ui = bicluster_info(),
-        id = "biclust_summary",
-        duration = NULL,
-        type = "default"
-      )
-    })
 
     pathway_table_biclust <- reactive({
       req(!is.null(biclust_data()))
@@ -361,7 +359,7 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
     })
 
     # Enrichment Data Table ----------
-    output$pathway_data_biclust <- DT::renderDataTable({
+    output$pathway_data_biclust <- renderTable({
       req(!is.null(pathway_table_biclust()))
 
       if(ncol(pathway_table_biclust()) > 1) {
@@ -369,21 +367,21 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
       } else {
         pathway_table <- pathway_table_biclust()
       }
+      pathway_table
+    }, digits = -1, 
+     spacing="s", 
+     striped=TRUE,
+     bordered = TRUE, 
+     width = "auto",
+     hover=TRUE, 
+     sanitize.text.function = function(x) x )
 
-      DT::datatable(
-        pathway_table,
-        options = list(
-          pageLength = 20,
-          scrollX = "400px"
-        ),
-        rownames = FALSE
-      )
-    })
-
-    output$gene_list_bicluster <- DT::renderDataTable({
+    # list of genes and symbols in the currently selected cluster
+    genes_in_selected_cluster <- reactive({
       req(!is.null(biclust_data()))
+      req(!is.null(biclustering()) && !is.null(input$select_bicluster) && !is.null(input$select_go))
 
-      biclust_table <- get_biclust_table_data(
+      get_biclust_table_data(
         res = biclustering()$res,
         biclust_data = biclust_data(),
         select_go = input$select_go,
@@ -391,20 +389,41 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
         all_gene_info = pre_process$all_gene_info()
       )
 
+    })
+
+    output$gene_list_bicluster <- DT::renderDataTable({
+      req(!is.null(biclust_data()) && !is.null(genes_in_selected_cluster()))
+      req(!is.null(biclustering()) && !is.null(input$select_bicluster) && !is.null(input$select_go))
+
       DT::datatable(
-        biclust_table,
+        genes_in_selected_cluster(),
         options = list(
           pageLength = 20,
           scrollX = "400px"
+          #dom = 'ftg' # hide "Show 20 entries"
         ),
+        class = 'cell-border stripe',
         rownames = FALSE
       )
     })
+
+    output$download_biclust <- downloadHandler(
+      filename = "bicluster.csv", 
+      content = function(file) {
+        write.csv(genes_in_selected_cluster(), file, row.names = FALSE)
+      }
+    )
+    
+    output$download_biclust_button <- renderUI({
+      req(!is.null(biclust_data()) && !is.null(genes_in_selected_cluster()))
+      req(!is.null(biclustering()) && !is.null(input$select_bicluster) && !is.null(input$select_go))
+      downloadButton(
+        outputId = ns("download_biclust"), 
+        "All genes"
+      )
+    })
+
+
+
   })
 }
-    
-## To be copied in the UI
-# mod_08_bicluster_ui("08_bicluster_ui_1")
-    
-## To be copied in the server
-# mod_08_bicluster_server("08_bicluster_ui_1")
