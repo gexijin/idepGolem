@@ -55,7 +55,7 @@ mod_08_bicluster_ui <- function(id){
           choices = "green-black-red",
           width = "100%"
         ),
-        htmlOutput(outputId = ns("list_biclusters")),    
+        htmlOutput(outputId = ns("list_biclusters")),
         textOutput(ns("bicluster_info")),
         a(
           h5(
@@ -125,11 +125,10 @@ mod_08_bicluster_ui <- function(id){
 
           ),
           tabPanel(
-            "Genes in cluster",
+            "Genes",
             DT::dataTableOutput(
               outputId = ns("gene_list_bicluster"),
             ),
-            br(),
             br(),
             uiOutput(ns("download_biclust_button"))
           )
@@ -139,6 +138,14 @@ mod_08_bicluster_ui <- function(id){
   )
 }
     
+
+
+
+
+#------------------------------------------------------------------------
+
+
+
 #' 08_bicluster Server Functions
 #'
 #' @noRd 
@@ -180,6 +187,7 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
 			selectInput(
         inputId = ns("select_bicluster"), 
 				label = "Select a cluster",
+        selected = 1,
 			  choices = 1:biclustering()$res@Number  
 			)		
 	  })
@@ -391,7 +399,7 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
         genes_in_selected_cluster(),
         options = list(
           pageLength = 20,
-          scrollX = "400px",
+          scrollX = "400px"
           #dom = 'ftg' # hide "Show 20 entries"
         ),
         class = 'cell-border stripe',
@@ -411,7 +419,7 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
       req(!is.null(biclustering()) && !is.null(input$select_bicluster) && !is.null(input$select_go))
       downloadButton(
         outputId = ns("download_biclust"), 
-        "Download genes in this cluster"
+        "All genes"
       )
     })
 
