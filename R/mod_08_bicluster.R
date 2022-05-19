@@ -125,10 +125,11 @@ mod_08_bicluster_ui <- function(id){
 
           ),
           tabPanel(
-            "Cluster Gene Table",
+            "Genes in cluster",
             DT::dataTableOutput(
-              outputId = ns("gene_list_bicluster")
-            )
+              outputId = ns("gene_list_bicluster"),
+            ),
+            uiOutput(ns("download_biclust_button"))
           )
         )
       )
@@ -158,6 +159,7 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
       )
     })
 
+    # all clusters
     biclustering <- reactive({
       req(!is.null(pre_process$data()))
 
@@ -203,6 +205,7 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
       )
     })
 
+    # information for a specific cluster
     biclust_data <- reactive({
       req(!is.null(biclustering()) && !is.null(input$select_bicluster))
       req(biclustering()$res@Number != 0)
@@ -363,11 +366,12 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
      hover=TRUE, 
      sanitize.text.function = function(x) x )
 
-    output$gene_list_bicluster <- DT::renderDataTable({
+    # list of genes and symbols in the currently selected cluster
+    genes_in_selected_cluster <- reactive({
       req(!is.null(biclust_data()))
       req(!is.null(biclustering()) && !is.null(input$select_bicluster) && !is.null(input$select_go))
 
-      biclust_table <- get_biclust_table_data(
+      get_biclust_table_data(
         res = biclustering()$res,
         biclust_data = biclust_data(),
         select_go = input$select_go,
@@ -375,22 +379,40 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
         all_gene_info = pre_process$all_gene_info()
       )
 
+    })
+
+    output$gene_list_bicluster <- DT::renderDataTable({
+      req(!is.null(biclust_data()) && !is.null(genes_in_selected_cluster()))
+      req(!is.null(biclustering()) && !is.null(input$select_bicluster) && !is.null(input$select_go))
+
       DT::datatable(
-        biclust_table,
+        genes_in_selected_cluster(),
         options = list(
           pageLength = 20,
-          scrollX = "400px",
-          dom = 'ft' # hide "Show 20 entries"
+          scrollX = "400px"
+          #dom = 'ft' # hide "Show 20 entries"
         ),
         class = 'cell-border stripe',
         rownames = FALSE
       )
     })
+
+    output$download_biclust <- downloadHandler(
+      filename = "bicluster.csv", 
+      content = function(file) {
+        write.csv(genes_in_selected_cluster(), file, row.names = FALSE)
+      }
+    )
+    
+    output$download_biclust_button <- renderUI({
+      req(!is.null(biclustering()) && !is.null(input$select_bicluster) && !is.null(input$select_go))
+      downloadButton(
+        outputId = ns("download_biclust"), 
+        "Download"
+      )
+    })
+
+
+
   })
 }
-    
-## To be copied in the UI
-# mod_08_bicluster_ui("08_bicluster_ui_1")
-    
-## To be copied in the server
-# mod_08_bicluster_server("08_bicluster_ui_1")
