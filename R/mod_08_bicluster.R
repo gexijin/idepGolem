@@ -129,6 +129,8 @@ mod_08_bicluster_ui <- function(id){
             DT::dataTableOutput(
               outputId = ns("gene_list_bicluster"),
             ),
+            br(),
+            br(),
             uiOutput(ns("download_biclust_button"))
           )
         )
@@ -389,8 +391,8 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
         genes_in_selected_cluster(),
         options = list(
           pageLength = 20,
-          scrollX = "400px"
-          #dom = 'ft' # hide "Show 20 entries"
+          scrollX = "400px",
+          #dom = 'ftg' # hide "Show 20 entries"
         ),
         class = 'cell-border stripe',
         rownames = FALSE
@@ -405,10 +407,11 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
     )
     
     output$download_biclust_button <- renderUI({
+      req(!is.null(biclust_data()) && !is.null(genes_in_selected_cluster()))
       req(!is.null(biclustering()) && !is.null(input$select_bicluster) && !is.null(input$select_go))
       downloadButton(
         outputId = ns("download_biclust"), 
-        "Download"
+        "Download genes in this cluster"
       )
     })
 
