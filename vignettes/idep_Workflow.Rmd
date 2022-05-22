@@ -7,10 +7,13 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r eval=FALSE}
+```{r eval=TRUE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  echo = TRUE, #Change to TRUE to see code
+  fig.height=5.5, 
+  fig.width=7.5
 )
 ```
 
@@ -37,8 +40,8 @@ idep_data <- get_idep_data()
 #YOUR_DATA_PATH <- "d:/idep_9_24/data/data104/data_go/GSE37704_sailfish_genecounts.csv"
 #YOUR_EXPERIMENT_PATH <- "d:/idep_9_24/data/data104/data_go/GSE37704_sailfish_design.csv"
 
-YOUR_DATA_PATH <- "d:/idep_9_24/data/data104/data_go/BcellGSE71176_p53.csv"
-YOUR_EXPERIMENT_PATH <- "d:/idep_9_24/data/data104/data_go/BcellGSE71176_p53_sampleInfo.csv"
+YOUR_DATA_PATH <- "F:/data104b_final/data_go/BcellGSE71176_p53.csv"
+YOUR_EXPERIMENT_PATH <- "F:/data104b_final/data_go/BcellGSE71176_p53_sampleInfo.csv"
 
 
 
@@ -100,7 +103,7 @@ processed_data <- pre_process(
 )
 ```
 
-```{r fig.height=1.5, fig.width=2.5}
+```{r}
 total_counts_ggplot(
   counts_data = processed_data$raw_counts,
   sample_info = load_data$sample_info
@@ -108,8 +111,6 @@ total_counts_ggplot(
 ```
 
 ```{r fig.height=5.5, fig.width=7.5}
-colnames(processed_data$data)
-
 eda_scatter(
   processed_data = processed_data$data,
   #plot_xaxis = "p53_IR_1",
@@ -149,7 +150,6 @@ merged_data <- merge_data(
 
 ## PCA plots
 ```{r}
-detect_groups(colnames(processed_data$data), NULL)
 PCA_plot(
   data = processed_data$data,
   sample_info = load_data$sample_info,
@@ -171,28 +171,22 @@ MDS_plot(
   sample_info = load_data$sample_info,
 )
 ```
-#Other PCA
-```{r}
-
-
-devtools::load_all()
+# PCAtools plots
+```{r, eval=FALSE}
+#devtools::load_all()
 PCA_biplot(
   data = processed_data$data,
-  sample_info = load_data$sample_info
-)
+  sample_info = load_data$sample_info,
+  select_gene_id = "symbol",
+  all_gene_names = gene_names
+  )
 PCA_Scree(processed_data = processed_data$data)
-
+# 
 PCAtools_eigencorplot(
   processed_data = processed_data$data,
   sample_info = load_data$sample_info
       )
 ```
-
-
-
-
-
-
 
 
 #### SEARCHING
@@ -233,7 +227,7 @@ pathway_info <- find_overlap(
   select_org = "BestMatch",
   reduced = .75
 )
-pathway_info
+#pathway_info
 ```
 
 
@@ -276,11 +270,11 @@ deg_heat <- deg_heat_data(
 up_reg_data <- pathway_info
 up_reg_data <- as.data.frame(up_reg_data)
 up_reg_data$direction <- rep("Up", nrow(up_reg_data))
-up_reg_data
+#up_reg_data
 down_reg_data <- deg_heat$genes[deg_heat$bar == -1, ]
 down_reg_data <- as.data.frame(down_reg_data)
 down_reg_data$direction <- rep("Down", nrow(down_reg_data))
-down_reg_data
+#down_reg_data
 
 main_heat_deg <- deg_heatmap(
   data = deg_heat$genes,
@@ -296,6 +290,17 @@ plot_volcano(
   limma_p_val = .1,
   limma_fc = 2, 
   plot_colors = c("red", "grey", "blue")
+)
+
+plot_ma(
+  select_contrast = "NULL-WT",
+  comparisons = limma$comparisons,
+  top_genes = limma$top_genes,
+  limma_p_val = .1,
+  limma_fc = 2,
+  contrast_samples = contrast_samples,
+  processed_data = processed_data$data, 
+  plot_colors = c("red","yellow", "blue")
 )
 ```
 
@@ -344,28 +349,29 @@ contrast_samples_pgsea <- find_contrast_samples(
   #n_pathway_show = 30
 #)
 
-fgsea <- fgsea_data(
-  select_contrast = "I:p53_NULL.Treatment_IR",
-  my_range = c(15, 2000),
-  limma = limma,
-  gene_p_val_cutoff = 1,
-  gene_sets = gene_sets,
-  absolute_fold = FALSE,
-  pathway_p_val_cutoff = .1,
-  n_pathway_show = 30
-)
 
-reactome_data(
-  select_contrast = "I:p53_NULL.Treatment_IR",
-  my_range = c(15, 2000),
-  limma = limma,
-  gene_p_val_cutoff = 1,
-  converted = converted,
-  idep_data = idep_data,
-  pathway_p_val_cutoff = .1,
-  n_pathway_show = 30,
-  absolute_fold = FALSE
-)
+# fgsea <- fgsea_data(
+#   select_contrast = "I:p53_NULL.Treatment_IR",
+#   my_range = c(15, 2000),
+#   limma = limma,
+#   gene_p_val_cutoff = 1,
+#   gene_sets = gene_sets,
+#   absolute_fold = FALSE,
+#   pathway_p_val_cutoff = .1,
+#   n_pathway_show = 30
+# )
+
+# reactome_data(
+#   select_contrast = "I:p53_NULL.Treatment_IR",
+#   my_range = c(15, 2000),
+#   limma = limma,
+#   gene_p_val_cutoff = 1,
+#   converted = converted,
+#   idep_data = idep_data,
+#   pathway_p_val_cutoff = .1,
+#   n_pathway_show = 30,
+#   absolute_fold = FALSE
+# )
 
 #pgsea_plot_all(
   #go = "GOBP",
@@ -377,17 +383,17 @@ reactome_data(
   #n_pathway_show = 30
 #)
 
-pgsea_plot_data <- get_pgsea_plot_data(
-  my_range = c(15, 2000),
-  data = processed_data$data,
-  select_contrast = "I:p53_NULL.Treatment_IR",
-  gene_sets = gene_sets,
-  sample_info = load_data$sample_info,
-  select_factors_model = c("p53", "Treatment"),
-  select_model_comprions = "p53: NULL vs. WT",
-  pathway_p_val_cutoff = .1,
-  n_pathway_show = 30
-) 
+# pgsea_plot_data <- get_pgsea_plot_data(
+#   my_range = c(15, 2000),
+#   data = processed_data$data,
+#   select_contrast = "I:p53_NULL.Treatment_IR",
+#   gene_sets = gene_sets,
+#   sample_info = load_data$sample_info,
+#   select_factors_model = c("p53", "Treatment"),
+#   select_model_comprions = "p53: NULL vs. WT",
+#   pathway_p_val_cutoff = .1,
+#   n_pathway_show = 30
+# ) 
 
 gage[, 2]
 
@@ -421,59 +427,59 @@ enrichment_plot(
   go_table = pathway_list_data
 )
 
-kegg_pathway(
-  go = "KEGG",
-  gage_pathway_data = gage,
-  sig_pathways = "Oocyte meiosis",
-  select_contrast = "I:p53_NULL.Treatment_IR",
-  limma = limma,
-  converted = converted,
-  idep_data = idep_data,
-  select_org = "BestMatch"
-)
+# kegg_pathway(
+#   go = "KEGG",
+#   gage_pathway_data = gage,
+#   sig_pathways = "Oocyte meiosis",
+#   select_contrast = "I:p53_NULL.Treatment_IR",
+#   limma = limma,
+#   converted = converted,
+#   idep_data = idep_data,
+#   select_org = "BestMatch"
+# )
 ```
 
 # Genome Tab
-```{r}
-all_gene_info <- get_gene_info(
-  converted = converted,
-  select_org = "BestMatch",
-  gene_info_files = idep_data$gene_info_files
-)
-
-chromosome_plotly(
-  limma = limma,
-  select_contrast = "I:p53_NULL.Treatment_IR",
-  all_gene_info = all_gene_info,
-  ignore_non_coding = FALSE,
-  limma_p_val_viz = .1,
-  limma_fc_viz = 4,
-  label_gene_symbol = FALSE,
-  ma_window_size = 6,
-  ma_window_steps = 2,
-  ch_region_p_val = .01
-)
-
-genome_plot_data_pre <- get_genome_plot_data_pre(
-  select_contrast = "I:p53_NULL.Treatment_IR",
-  limma = limma,
-  all_gene_info = all_gene_info
-)
-
-genome_plot_data <- get_genome_plot_data(
-  genome_plot_data_pre = genome_plot_data_pre,
-  all_gene_info = all_gene_info,
-  select_contrast = "I:p53_NULL.Treatment_IR",
-  limma = limma,
-  regions_p_val_cutoff = .01,
-  statistic_cutoff = .5
-)
-
-get_genome_plot(
-  genome_plot_data = genome_plot_data,
-  regions_p_val_cutoff = .01,
-  statistic_cutoff = .5
-)
+```{r, include=FALSE}
+# all_gene_info <- get_gene_info(
+#   converted = converted,
+#   select_org = "BestMatch",
+#   gene_info_files = idep_data$gene_info_files
+# )
+# 
+# chromosome_plotly(
+#   limma = limma,
+#   select_contrast = "I:p53_NULL.Treatment_IR",
+#   all_gene_info = all_gene_info,
+#   ignore_non_coding = FALSE,
+#   limma_p_val_viz = .1,
+#   limma_fc_viz = 4,
+#   label_gene_symbol = FALSE,
+#   ma_window_size = 6,
+#   ma_window_steps = 2,
+#   ch_region_p_val = .01
+# )
+# 
+# genome_plot_data_pre <- get_genome_plot_data_pre(
+#   select_contrast = "I:p53_NULL.Treatment_IR",
+#   limma = limma,
+#   all_gene_info = all_gene_info
+# )
+# 
+# genome_plot_data <- get_genome_plot_data(
+#   genome_plot_data_pre = genome_plot_data_pre,
+#   all_gene_info = all_gene_info,
+#   select_contrast = "I:p53_NULL.Treatment_IR",
+#   limma = limma,
+#   regions_p_val_cutoff = .01,
+#   statistic_cutoff = .5
+# )
+# 
+# get_genome_plot(
+#   genome_plot_data = genome_plot_data,
+#   regions_p_val_cutoff = .01,
+#   statistic_cutoff = .5
+# )
 ```
 
 # Bicluster Functions
@@ -604,77 +610,4 @@ plot_mean_connectivity(
 ```
 
 
-
-#Skree plot
-```{r}
-pca_obj <- PCAtools::pca(processed_data$data, metadata = loaded_data$sample_info, removeVar = 0.1)
-
-
-horn <- PCAtools::parallelPCA(processed_data$data)
-horn$n
-
-elbow <- PCAtools::findElbowPoint(pca_obj$variance)
-elbow
-
-PCAtools::screeplot(pca_obj,
-    vline = c(horn$n, elbow)) +
-
-    ggplot2::geom_label(ggplot2::aes(x = horn$n + 1, y = 50,
-      label = 'Horn\'s', vjust = -3, size = 8)) +
-    ggplot2::geom_label(ggplot2::aes(x = elbow + 1, y = 50,
-      label = 'Elbow', vjust = -1, size = 8))
-
-
-```
-
-
-
-
-
-
 		
-
-# Pathway analysis of PCA rotation
-```{r}
-library(PGSEA,verbose=FALSE)
-		pca.object <- prcomp(t(x))
-		pca = 100*pca.object$rotation 
-		Npca = 5
-		Nterms = 6
-		if (Npca > dim(pca)[2]) { Npca = dim(pca)[2] } else pca <-  pca[,1:Npca]
-		#pca = pca[,1:5]
-		if(is.null(GeneSetsPCA() ) ) return(NULL)  # no species recognized
-		if(length(GeneSetsPCA() ) <= 1 ) return(NULL)
-		#cat("\n\nGene Sets:",length( GeneSets()))
-		pg = myPGSEA (pca,cl=GeneSetsPCA(),range=c(15,2000),p.value=TRUE, weighted=FALSE,nPermutation=1)
-		incProgress(2/8)
-		# correcting for multiple testing
-		p.matrix = pg$p.result
-		tem = p.adjust(as.numeric(p.matrix),"fdr")
-		p.matrix = matrix(tem, nrow=dim(p.matrix)[1], ncol = dim(p.matrix)[2] )
-		rownames(p.matrix) = rownames(pg$p.result); colnames(p.matrix) = colnames(pg$p.result)
-
-
-		selected =c()
-		for( i in 1:dim(p.matrix)[2]) {
-		  tem = which( rank(p.matrix[,i],ties.method='first') <= Nterms)  # rank by P value
-		 #tem = which( rank(pg$result[,i],ties.method='first') >= dim(p.matrix)[1]-3.1) # rank by mean
-		 names(tem) = paste("PC",i," ", rownames(p.matrix)[tem], sep="" )
-		 selected = c(selected, tem)
-		}
-		rowids = gsub(" .*","",names(selected))
-		rowids = as.numeric( gsub("PC","",rowids) )
-		pvals = p.matrix[ cbind(selected,rowids) ]
-		a=sprintf("%-1.0e",pvals)
-		tem = pg$result[selected,]
-		rownames(tem) = paste(a,names(selected)); #colnames(tem)= paste("PC",colnames(tem),sep="")
-		
-		tem = tem[!duplicated(selected),] 
-		incProgress(3/8, detail ="Running PGSEA")
-		#tem = t(tem); tem = t( (tem - apply(tem,1,mean)) ) #/apply(tem,1,sd) )
-
-		smcPlot(tem,scale =  c(-max(tem), max(tem)), show.grid = T, margins = c(1,1, 3, 35),
-			col = .rwb,cex.lab=0.8)
-
-```
-

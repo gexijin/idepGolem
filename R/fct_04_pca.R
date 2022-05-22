@@ -53,8 +53,6 @@ PCA_plot <- function(
     x_axis_labels <- 12
   }
   
-  ## x<-processed_data$data
-  ## y<-loaded_data$sample_info
   x <- data
   y <- sample_info
   pca.object <- prcomp(t(x))
@@ -71,8 +69,7 @@ PCA_plot <- function(
     pcaData <- cbind(pcaData, detect_groups(colnames(x), y), sample_info)
   }
   dim(pcaData)[2]
-  #colnames(pcaData)[6] <- "Sample_Name"
-  colnames(pcaData)[ncol(pcaData)] <- "Sample_Name"
+  colnames(pcaData)[npc + 1] <- "Sample_Name"
   if (nlevels(groups) <= 1 | nlevels(groups) > 20) {
     group_fill <- NULL
     legend <- "none"
