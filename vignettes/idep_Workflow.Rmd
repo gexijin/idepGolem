@@ -171,21 +171,21 @@ MDS_plot(
   sample_info = load_data$sample_info,
 )
 ```
-# Other PCA
+# PCAtools plots
 ```{r, eval=FALSE}
 #devtools::load_all()
-# PCA_biplot(
-#   data = processed_data$data,
-#   sample_info = load_data$sample_info,
-#   select_gene_id = "symbol",
-#   all_gene_names = gene_names
-#   )
-# PCA_Scree(processed_data = processed_data$data)
+PCA_biplot(
+  data = processed_data$data,
+  sample_info = load_data$sample_info,
+  select_gene_id = "symbol",
+  all_gene_names = gene_names
+  )
+PCA_Scree(processed_data = processed_data$data)
 # 
-# PCAtools_eigencorplot(
-#   processed_data = processed_data$data,
-#   sample_info = load_data$sample_info
-#       )
+PCAtools_eigencorplot(
+  processed_data = processed_data$data,
+  sample_info = load_data$sample_info
+      )
 ```
 
 
@@ -348,6 +348,7 @@ contrast_samples_pgsea <- find_contrast_samples(
   #pathway_p_val_cutoff = .1,
   #n_pathway_show = 30
 #)
+
 
 # fgsea <- fgsea_data(
 #   select_contrast = "I:p53_NULL.Treatment_IR",
