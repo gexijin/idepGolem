@@ -7,7 +7,12 @@
 app_server <- function(input, output, session) {
   # file size is 5MB by default. This changes it to 30MB
   #options(shiny.maxRequestSize=30*1024^2)
-  idep_data <- get_idep_data()
+
+  # load static data files such as list of species, gmt files, etc
+  # This could be moved to run_app. Global variable
+  # see https://github.com/ThinkR-open/golem/issues/6
+  idep_data <- get_idep_data() 
+
   # Tab Variable to control reactivity
   tab <- reactive(input$navbar)
 
