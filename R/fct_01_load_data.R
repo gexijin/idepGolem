@@ -122,7 +122,7 @@ input_data <- function(
 
   if (is.null(in_file_data) && go_button == 0) {
     return(NULL)
-  } else if (go_button > 0) {
+  } else if (go_button > 0) {    # use demo data
     in_file_data <- demo_data_file
   }
 

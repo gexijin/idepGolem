@@ -191,24 +191,9 @@ mod_01_load_data_ui <- function(id) {
         ),
         htmlOutput(ns("file_format")),
         h3(
-          "We found an issue with the Gene Onotology database derived from
-           Ensembl Release 103, which is used in iDEP 0.93. While we are fixing
-           this issue, we have reverted the database to a previous version used
-           in iDEP 0.92. "
+          "All nwe iDEP 2.0 in testing model."
         ),
-        h4("Postdoc and GRA positions available!"),
-        h4(
-          "If your gene IDs are not recognized, please let us know. We might be
-           able to add customized gene mappings to Ensembl gene IDs."
-        ),
-        h3(
-          "New version 0.93 released on 5/23/2021 includes upgrades to R 4.05,
-           Bioconductor 3.12, larger database (5000+ species) from Ensembl
-           Release 103 and STRING-db v11. Massive, manually-collected pathway
-           database for 20 model organisms. Fixed KEGG pathway chart and gene
-           plot.",
-          style = "color:red"
-        ),
+  
         h4(
           "We recently hired Jenny Qi for database updates and user support.",
           a(
@@ -220,7 +205,6 @@ mod_01_load_data_ui <- function(id) {
           "iDEP has not been thoroughly tested. Please let us know if you find
            any issue/bug."
         ),
-        h5("We will be happy to help prepare your data for iDEP."),
         br(),
         img(
           src = "www/flowchart.png",
@@ -232,6 +216,18 @@ mod_01_load_data_ui <- function(id) {
     )
   )
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 #' 01_load_data Server Functions
 #'

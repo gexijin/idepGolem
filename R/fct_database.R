@@ -33,14 +33,38 @@ connect_convert_db <- function(datapath = DATAPATH) {
 
 #' Load iDEP data
 #'
-#' Use this function call to load data that can is
+#' Use this function call to load data that is
 #' used in other functions.
 #'
-#'
+#' 
 #' @param datapath Folder path to the iDEP data
-#'
+#'  
 #' @return Large list of the iDEP data.
+#' 1. kegg_species_id:  KEGG species list
+#' 2. gmt_files: list of pathway files
+#' 3. gene_info_files: list of geneInfo files
+#' 4. demo_data_file: demo data file 
+#' 5. demo_metadata_file: experimental design file for demo data
+#' 6. quotes:  quotes
+#' 7. string_species_go_data: List of STRING species
+#' 8. org_info: orgInfo for Ensembl species
+#' 9. annotated_species_count: total number of annotated species
+#' 10. go_levels: GO levels
+#' 11. go_level_2_terms: mapping of GO levels to terms
+#' 12. id_index: idtype and index
+#' 13. species_choice: list of species for populating selection.
 get_idep_data <- function(datapath = DATAPATH) {
+
+  # if prepared RData files exists, return the objects.
+  # file is prepared with this command
+  #  saveRDS(get_idep_data(), file="prepared_data.RData", compress=FALSE)
+  # then this file needs to be copied to /data_go/
+  # BE CAREFUL: the RDS file is not checked. It should be updated if the files change.
+  if(file.exists(paste0(datapath, "data_go/prepared_data.RData"))) {
+    return(readRDS(paste0(datapath, "data_go/prepared_data.RData")))
+  } 
+  # Code below will not be executed if RData file exists.
+  
   kegg_species_id <- read.csv(paste0(datapath, "data_go/KEGG_Species_ID.csv"))
 
   gmt_files <- list.files(
