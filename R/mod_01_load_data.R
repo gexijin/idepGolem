@@ -408,7 +408,11 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
     # Species match message ----------
     observe({
-      req(tab() == "Load Data" && !is.null(conversion_info()$converted))
+      req(
+        tab() == "Load Data"
+        && !is.null(conversion_info()$converted) 
+        && input$select_org == idep_data$species_choice[[1]] # species not selected
+      )
 
       tem <- conversion_info()$converted$species_match
        showNotification(
