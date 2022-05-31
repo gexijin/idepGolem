@@ -9,7 +9,7 @@ app_server <- function(input, output, session) {
   #options(shiny.maxRequestSize=30*1024^2)
 
   # load static data files such as list of species, gmt files, etc
-  # This could be moved to run_app. Global variable
+  # This could be moved to run_app as global variable, as in global.R
   # see https://github.com/ThinkR-open/golem/issues/6
   idep_data <- get_idep_data() 
 
