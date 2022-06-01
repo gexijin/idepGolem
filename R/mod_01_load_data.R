@@ -13,7 +13,9 @@ mod_01_load_data_ui <- function(id) {
     "Load Data",
     sidebarLayout(
 
-      # Load Data Panel Sidebar -----------
+      ##################################################################
+      #       Load Data sidebar panel
+      ##################################################################
       sidebarPanel(
 
         # Button to load demo dataset ----------
@@ -149,9 +151,6 @@ mod_01_load_data_ui <- function(id) {
         h5(
           "Check this out for a list of species and their genome assemblies."
         ),
-
-
-
         a(
           h5("Questions?", align = "right"),
           href = "https://idepsite.wordpress.com/data-format/",
@@ -159,7 +158,12 @@ mod_01_load_data_ui <- function(id) {
         )
       ),
 
-      # Load Data panel main -----------
+
+
+
+      ##################################################################
+      #       Load Data panel main 
+      ##################################################################
       mainPanel(
         shinyjs::useShinyjs(),
 
@@ -170,11 +174,12 @@ mod_01_load_data_ui <- function(id) {
         # Display first 20 rows of the data ----------
         DT::dataTableOutput(ns("sample_20")),
 
+        # conditionalPanel("input.go_button == 0",  # welcome screen   
         # Instructions and flowchart ------------
         fluidRow(
           column(
             width = 5,
-            h1("Welcome to iDEP!")
+            h4("Welcome to iDEP!")
           ),
           column(
             width = 6,
@@ -211,16 +216,19 @@ mod_01_load_data_ui <- function(id) {
           align = "center",
           width = "562",
           height = "383"
+        ),
+        br(),
+        img(
+          src='www/figs.gif', 
+          align = "center",
+          width="640", 
+          height="480"
         )
+       # )  # conditionalPanel not working
       )
     )
   )
 }
-
-
-
-
-
 
 
 
@@ -303,7 +311,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           tem
         }),
         options = list(
-          pageLength = 20,
+          pageLength = 10,
           scrollX = "400px",
           dom = "t",
           ordering = F
@@ -319,7 +327,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       DT::datatable(
         conversion_info()$converted_data[1:20, ],
         options = list(
-          pageLength = 20,
+          pageLength = 10,
           scrollX = "400px",
           dom = "t"
         ),
@@ -388,6 +396,9 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         }
         isolate({
           tem <- conversion_info()$converted$species_match
+          if(nrow(tem) > 50) { # show only 50 
+            tem <- tem[1:50, ]
+          }
           if (is.null(tem)) {
             as.data.frame("ID not recognized.")
           } else {
@@ -416,9 +427,9 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
       tem <- conversion_info()$converted$species_match
        showNotification(
-        ui = paste("Matched species is '", tem[1, ],".' If that is not your
-                    species, please reset and use the dropdown to select
-                    the correct species."),
+        ui = paste0("Matched species is '", tem[1, ],".' If that is not your
+                    species, please click Reset and use the dropdown to select
+                    the correct species first."),
         id = "species_match",
         duration = NULL,
         type = "warning"
