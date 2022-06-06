@@ -196,7 +196,7 @@ mod_01_load_data_ui <- function(id) {
         ),
         htmlOutput(ns("file_format")),
         h3(
-          "All nwe iDEP 2.0 in testing model."
+          "All new iDEP 2.0 in testing model."
         ),
   
         h4(
