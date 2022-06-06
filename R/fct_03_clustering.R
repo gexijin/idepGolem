@@ -18,6 +18,7 @@ NULL
 #' @param data Data that has been through pre-processing
 #' @param n_genes_max Upper limit of gene range
 #'
+#' @export
 #' @return Formatted density plot of the standard deviation
 #' distribution.
 sd_density <- function(
@@ -148,6 +149,7 @@ sd_density <- function(
 #' @param select_gene_id Desired ID type for heatmap labels
 #'  (User_ID, ensembl_ID, symbol)
 #'
+#' @export
 #' @return Subsetted data matrix ([n_genes_min:n_genes_max, ]) with
 #'   gene IDs as the select_gene_id
 process_heatmap_data <- function(
@@ -228,6 +230,7 @@ process_heatmap_data <- function(
 #' @param k_clusters Number of clusters to use for k-means
 #' @param re_run Re-run k-means with a different seed
 #'
+#' @export
 #' @return Heatmap of the processed data.
 heatmap_main <- function(
   data,
@@ -377,6 +380,7 @@ heatmap_main <- function(
 #' @param dist_funs Distance functions defined in idep
 #' @param dist_function Selected distance function
 #' 
+#' @export
 #' @return Dendogram plot of dataset samples
 draw_sample_tree <- function(
   tree_data,
@@ -434,6 +438,7 @@ draw_sample_tree <- function(
 #' 
 #' @param heatmap_data Processed heatmap data
 #' 
+#' @export
 #' @return Formatted elbow plot for the data
 k_means_elbow <- function(
   heatmap_data
@@ -493,6 +498,7 @@ k_means_elbow <- function(
 #' @param sample_info Experiment design file from load data
 #' @param select_factors_heatmap Factor to group by in the samples
 #' 
+#' @export
 #' @return A list containing a ComplexHeatmap annotation object,
 #'  a ComplexHeatmap legend, list of groups, and list of group colors.
 sub_heat_ann <- function(
@@ -553,6 +559,7 @@ sub_heat_ann <- function(
 #' @param cluster_meth Type of clustering being performed
 #' @param click_data Data matrix to get the data value from
 #' 
+#' @export
 #' @return HTML code to produce a table with information
 #'  about the selected cell.
 cluster_heat_click_info <- function(
@@ -634,6 +641,7 @@ Group: @{group_name} <span style='background-color:@{group_col};width=50px;'>   
 #' @param select_factors_heatmap Group design to label by
 #' @param cluster_meth Type of clustering being performed
 #' 
+#' @export
 #' @return A list containing a Heatmap from the brush selection
 #'  of the main heatmap, the submap data matrix, the groups for
 #'  the submap, the submap legend, and data for the click info.
@@ -762,6 +770,7 @@ heat_sub <- function(
 #' @param heat_cols Heat colors to use in the correlation matrix
 #' @param text_col Color to make the text labels in the plot
 #' 
+#' @export
 #' @return ggplot heatmap of correlation matrix
 cor_plot <- function(
   data,

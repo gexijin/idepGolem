@@ -25,6 +25,8 @@ NULL
 #'  expressed genes
 #' @param min_size Minimum size for a pathway gene set
 #' @param max_size Maximum size for a pathway gene set
+#' 
+#' @export
 find_overlap_gmt <- function(
   query, 
   gene_set,
@@ -111,7 +113,8 @@ find_overlap_gmt <- function(
 #'   pertaining to
 #' @param reduced T/F Remove gene sets that are redudant
 #'   from the final result
-#' 
+#'   
+#' @export
 #' @return If there is significant enrichment, the data frame
 #'   that is returned has a pathway for each row with the
 #'   total genes in the database mapping to it as well as the
@@ -264,6 +267,7 @@ find_overlap <- function(
 #'  DEG UI for options)
 #' @param data_file_format Type of data being examined
 #' 
+#' @export
 #' @return A numeric vector that can be used to index the processed
 #'  data and subset to only include the columns from the selected
 #'  contrast.
@@ -425,6 +429,7 @@ find_contrast_samples <- function(
 
 #' Read gene sets GMT file
 #' This functions cleans and converts to upper case
+#' @export
 read_gmt_robust <- function (in_file) {
 	# Read in the first file 
 	x <- scan(in_file, what = "", sep = "\n")

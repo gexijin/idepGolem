@@ -5,7 +5,6 @@
 #' @section fct_01_load_data.R functions:
 #'
 #'
-#'
 #' @name fct_01_load_data.R
 NULL
 
@@ -20,6 +19,7 @@ NULL
 #'  Default is "BestMatch."
 #' @param idep_data Read data files from the database. 
 #' 
+#' @export
 #' @return A data frame containing information on all ensembl IDs for the
 #'  matched species. Usually a very large data frame due to the amount
 #'  of IDs that the data base contains.
@@ -106,6 +106,7 @@ gene_info <- function(
 #' @param demo_metadata_file Experiment demo data path 
 #'  (idep_data$demo_metadata_file)
 #'
+#' @export
 #' @return This returns a list that contains the expression data
 #' and the sample information. If there is no experiment file it
 #' only returns the expression data.
@@ -274,7 +275,7 @@ input_data <- function(
 #' @param converted Data from convert_id function containing converted ids
 #' @param no_id_conversion TRUE/FALSE for converting data ids or not
 #' @param data Data from inputed expression file
-#'
+#' @export
 #' @return Returns original data with rownames converted to ensembl
 convert_data <- function(
   converted,
@@ -330,7 +331,7 @@ convert_data <- function(
 #'
 #' @param mapped_ids Matched IDs from the convert_data functions
 #' @param all_gene_info Gene information matched species in idep database
-#'
+#' @export
 #' @return Data frame containing all the matched ID names from idep
 #' database. Three columns denotes a recognized species for which
 #' idep had gene names for. Two columns means the IDs were converted

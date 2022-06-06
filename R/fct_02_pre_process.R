@@ -29,7 +29,8 @@ NULL
 #' @param counts_transform Type of transformation for counts data
 #' @param counts_log_start Value added to log for counts data
 #' @param no_fdr Fold changes only data with no p values
-#'
+#' 
+#' @export
 #' @return A list containing the transformed data, the mean kurtosis,
 #' the raw counts, a data type warning, the size of the original data,
 #' and p-values.
@@ -224,6 +225,7 @@ pre_process <- function(
 #' @param sample_info Experiment file information for grouping
 #'  samples
 #'
+#' @export
 #' @return formatted ggbarplot
 total_counts_ggplot <- function(
   counts_data,
@@ -304,6 +306,7 @@ total_counts_ggplot <- function(
 #' @param plot_xaxis Sample to plot on the x-axis
 #' @param plot_yaxis Sample to plot on the y axis
 #'
+#' @export 
 #' @return Returns a formatted gg scatterplot
 eda_scatter <- function(
   processed_data,
@@ -353,6 +356,7 @@ eda_scatter <- function(
 #' @param processed_data Data that has gone through the pre-processing
 #' @param sample_info Sample_info from the experiment file
 #'
+#' @export 
 #' @return Formatted gg boxplot of the distribution of counts for each
 #'  sample
 eda_boxplot <- function(
@@ -435,6 +439,7 @@ eda_boxplot <- function(
 #' @param processed_data Data that has gone through the pre-processing
 #' @param sample_info Sample_info from the experiment file
 #'
+#' @export 
 #' @return Returns a formatted gg density plot
 eda_density <- function(
   processed_data,
@@ -529,6 +534,7 @@ eda_density <- function(
 #' @param use_sd T/F for standard error or standard deviation bars on bar plot
 #' @param select_org Species the expression data is from
 #'
+#' @export 
 #' @return A formatted ggplot. For gene_plot_box = TRUE the return will be a
 #'  lineplot for the expression of each individual sample for the selected gene.
 #'  If gene_plot_box = FALSE the return will be a barplot for the groups provided
@@ -661,6 +667,7 @@ individual_plots <- function(
 #' @param all_gene_names Data frame with all gene names
 #' @param n_matched Count of matched IDs after processing
 #'
+#' @export 
 #' @return Message about processed data
 conversion_counts_message <- function(
   data_size,
@@ -692,6 +699,7 @@ conversion_counts_message <- function(
 #' @param raw_counts Raw counts data from the processing function
 #' @param sample_info Experiment file information about each sample
 #'
+#' @export 
 #' @return Message for the UI
 counts_bias_message <- function(
   raw_counts,
@@ -750,6 +758,7 @@ counts_bias_message <- function(
 #' @param rank TRUE/FALSE whether to use the rank of the mean or not
 #' @param heat_cols Heat color to use with black in the plot
 #' 
+#' @export 
 #' @return A formatted ggplot hexplot of the mean and standard
 #'  deviation of the processed data
 mean_sd_plot <- function(

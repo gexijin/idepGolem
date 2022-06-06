@@ -18,6 +18,7 @@ NULL
 #'  (https://support.bioconductor.org/p/87024/)
 #' @param min_module_size For modules detected by WGCNA, set a minimum size
 #' 
+#' @export
 #' @return A list of 8 objects. \code{data} is a submatrix of the input
 #'  parameter \code{data} which on contains the genes that were selected with
 #'  \code{n_genes}. \code{powers} is a numeric vector from 1-10 and then the
@@ -128,6 +129,7 @@ get_wgcna <- function(
 #' 
 #' @param wgcna List returned from the \code{get_wgcna}
 #' 
+#' @export
 #' @return A dendogram plot of hierarchical clustering with a color bar to
 #'  identify the modules.
 get_module_plot <- function(
@@ -165,6 +167,7 @@ get_module_plot <- function(
 #' @param all_gene_info Gene info that was found from querying the database
 #' @param edge_threshold Wavlue from 1-.1 (.4 recommended)
 #' 
+#' @export
 #' @return A function that can be stored as an object and then called to produce
 #'  the plot that the function created. If it is note stored and called the
 #'  function will only return another funciton.
@@ -250,6 +253,7 @@ get_network_plot <- function(
 #' 
 #' @param wgcna List returned from the \code{get_wgcna}
 #' 
+#' @export
 #' @return A character vector with all the strings that can be filled into the
 #'  inut parameter \code{select_wgcna_module} in other WGCNA functions.
 get_wgcna_modules <- function(
@@ -282,6 +286,7 @@ get_wgcna_modules <- function(
 #'  options can be found with the \code{get_wgcna_modules} function
 #' @param wgcna List returned from the \code{get_wgcna}
 #' 
+#' @export
 #' @return A vector of genes that are included in the selected module.
 network_enrich_data <- function(
   select_wgcna_module,
@@ -306,6 +311,7 @@ network_enrich_data <- function(
 #' 
 #' @param wgcna List returned from the \code{get_wgcna}
 #' 
+#' @export
 #' @return A formatted ggplot displaying the scale independence for the
 #'  \code{get_wgcna} function return.
 plot_scale_independence <- function(
@@ -357,6 +363,7 @@ plot_scale_independence <- function(
 #' 
 #' @param wgcna List returned from the \code{get_wgcna}
 #' 
+#' @export
 #' @return A formatted ggplot displaying the mean connectivityfor the
 #'  \code{get_wgcna} function return.
 plot_mean_connectivity <- function(

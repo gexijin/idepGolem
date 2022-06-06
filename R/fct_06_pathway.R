@@ -32,6 +32,7 @@ NULL
 #' @param n_pathway_show Number of pathways to return in final
 #'  result
 #' 
+#' @export
 #' @return A data frame with the results of the pathway analysis.
 #'  The data frame has five columns for the direction of the
 #'  regulation, the pathway description, the stat value, the
@@ -135,6 +136,7 @@ gage_data <- function(
 #'  enriched pathways
 #' @param n_pathway_show Number of significant pathways to show
 #' 
+#' @export
 #' @return A list with a data frame and a numeric value that is used
 #'  in the plot_pgsea function to create a heatmap.
 pgsea_data <- function(
@@ -246,6 +248,7 @@ pgsea_data <- function(
 #'  enriched pathways
 #' @param n_pathway_show Number of significant pathways to show
 #' 
+#' @export
 #' @return A heatmap plot with the rows as the significant
 #'  pathways and the columns corresponding to the samples.
 plot_pgsea <- function(
@@ -310,6 +313,7 @@ plot_pgsea <- function(
 #' @param n_pathway_show Number of pathways to return in final
 #'  result
 #' 
+#' @export
 #' @return A data frame with the results of the pathway analysis.
 #'  The data frame has five columns for the direction of the
 #'  regulation, the pathway description, the stat value, the
@@ -424,6 +428,7 @@ fgsea_data <- function(
 #' @param absolute_fold Use the absolute value of the fold
 #'  change
 #' 
+#' @export
 #' @return A data frame with the results of the pathway analysis.
 #'  The data frame has five columns for the direction of the
 #'  regulation, the pathway description, the stat value, the
@@ -565,6 +570,7 @@ reactome_data <- function(
 #' @param n_pathway_show Number of pathways to return in final
 #'  result
 #' 
+#' @export
 #' @return A data frame with the results of the pathway analysis.
 #'  The data frame has five columns for the direction of the
 #'  regulation, the pathway description, the stat value, the
@@ -629,6 +635,7 @@ pgsea_plot_all <- function(
 #' @param n_pathway_show Number of pathways to return in final
 #'  result
 #' 
+#' @export
 #' @return Data matrix with the rownames the descriptions of pathways
 #'  and the matrix the returned expression calculation from the PGSEA
 #'  package.
@@ -715,6 +722,7 @@ get_pgsea_plot_data <- function(
 #' @param n_pathway_show Number of pathways to return in final
 #'  result
 #' 
+#' @export
 #' @return Data matrix with the rownames the descriptions of pathways
 #'  and the matrix the returned expression calculation from the PGSEA
 #'  package.
@@ -767,6 +775,7 @@ get_pgsea_plot_all_samples_data <- function(
 #' @param all_gene_names Matrix of all the matched and converted
 #'  gene IDs
 #' 
+#' @export
 #' @return Sub-data matrix from the processed data. Only contains
 #'  genes from the selected pathway and samples that correspond to
 #'  the comparison being analyzed.
@@ -827,6 +836,7 @@ pathway_select_data <- function(
 #'  set of genes that correspond to a particular pathway in
 #'  the database (from read_gene_sets function)
 #' 
+#' @export
 #' @return A data frame with the pathway analysis statistics and 
 #'  the gene sets for each significantly enriched pathway.
 get_pathway_list_data <- function(
@@ -960,6 +970,7 @@ get_pathway_list_data <- function(
 #' @param low_color Color value for the low-ly expressed genes 
 #' @param high_color Color vlaue for the high-ly expressed genes 
 #' 
+#' @export
 #' @return Make an image and return the path to the image to be
 #'  rendered in the server.
 kegg_pathway <- function(
