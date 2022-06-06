@@ -11,8 +11,8 @@
 NULL
 
 
-DATAPATH <- "d:/idep_9_24/data/data104/"
-
+#DATAPATH <- "d:/idep_9_24/data/data104/"
+DATAPATH <- "F:/data104b_final/"
 
 #' connect_convert_db connects to the convertIDs.db and returns the
 #' objects.
@@ -21,6 +21,7 @@ DATAPATH <- "d:/idep_9_24/data/data104/"
 #'
 #' @param datapath Folder path to the data file
 #'
+#' @export
 #' @return Database connection.
 connect_convert_db <- function(datapath = DATAPATH) {
   return(DBI::dbConnect(
@@ -38,7 +39,7 @@ connect_convert_db <- function(datapath = DATAPATH) {
 #'
 #' 
 #' @param datapath Folder path to the iDEP data
-#'  
+#' @export
 #' @return Large list of the iDEP data.
 #' 1. kegg_species_id:  KEGG species list
 #' 2. gmt_files: list of pathway files
@@ -176,6 +177,8 @@ get_idep_data <- function(datapath = DATAPATH) {
 #'
 #' @param id ID to find the type from
 #' @param id_index Index of IDs to use
+#' 
+#' @export
 find_id_type_by_id <- function(id, id_index) {
   # find idType based on index
   return(id_index$idType[as.numeric(id)])
@@ -189,6 +192,7 @@ find_id_type_by_id <- function(id, id_index) {
 #' @param species_id Species ID to search the database with
 #' @param org_info iDEP data org_info file
 #'
+#' @export
 #' @return Species information in \code{org_info} from the
 #'  matched ID.
 find_species_by_id <- function(species_id, org_info) {
@@ -204,6 +208,7 @@ find_species_by_id <- function(species_id, org_info) {
 #' @param species_id Species ID to search the database with
 #' @param org_info iDEP data org_info file
 #'
+#' @export
 #' @return Only return the species name with this function.
 find_species_by_id_name <- function(species_id, org_info) {
   # find species name use id
@@ -222,6 +227,7 @@ find_species_by_id_name <- function(species_id, org_info) {
 #' @param select_org A character of the species that wants to be looked up,
 #'  default to \code{"BestMatch"}
 #'
+#' @export
 #' @return A large list of the conversion ID information that was gathered
 #'  from querying the database with the original IDs.
 convert_id <- function(
@@ -378,6 +384,7 @@ convert_id <- function(
 #' @param gene_info The gene info from the converted IDs and
 #'   the function gene_info()
 #' 
+#' @export
 #' @return This function returns a list with values that are
 #'   used in the find_overlap function. The list contains
 #'   pathway_table which is the overlap and total genes for
@@ -535,6 +542,7 @@ read_pathway_sets <- function (
 #' @param sub_pathway_files The subset of GMT files that contain
 #'   information for the matched species
 #' 
+#' @export
 #' @return Pathway gene set table for the background genes. Used
 #'   in find_overlap to calculate pvals for the filtered background
 background_pathway_sets <- function(
@@ -624,6 +632,7 @@ background_pathway_sets <- function(
 #' @param gmt_file Inputed gene set pathway file for NEW species
 #' @param idep_data Data built in to idep
 #' 
+#' @export
 #' @return A character vector of names of the section of data to perform
 #'   pathway analysis on
 gmt_category <- function(
@@ -711,6 +720,7 @@ gmt_category <- function(
 #' @param idep_data Read data files from the database
 #' @param my_range Vector of the (min_set_size, max_set_size)
 #' 
+#' @export
 #' @return A list with each entry a list of gene IDs that correspond to
 #'  a pathway.
 read_gene_sets <- function(
@@ -807,6 +817,7 @@ read_gene_sets <- function(
 #' @param org_info org_info file from the \code{get_idep_data}
 #'  function
 #' 
+#' @export
 #' @return The qeuried genes with converted IDs.
 convert_ensembl_to_entrez <- function(
   query,
@@ -868,6 +879,7 @@ convert_ensembl_to_entrez <- function(
 #'  database
 #' @param idep_data Background idep_data
 #' 
+#' @export
 #' @return Return the KEGG ID for the pathway.
 kegg_pathway_id <- function (
   pathway_description,

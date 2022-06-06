@@ -26,6 +26,7 @@ NULL
 #' @param ch_region_p_val P-value to use for finding significant chromosome
 #'  region enrichment
 #'
+#' @export
 #' @return Plotly visualization of chromosomes and significantly enriched genes
 chromosome_plotly <- function(
   limma,

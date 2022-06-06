@@ -20,6 +20,7 @@ NULL
 #' @param PCAx PC on x axis
 #' @param PCAy PC on y axis
 #'
+#' @export
 #' @return Formatted PCA plot 
 #' 
 PCA_plot <- function(
@@ -68,7 +69,7 @@ PCA_plot <- function(
   } else {
     pcaData <- cbind(pcaData, detect_groups(colnames(x), y), sample_info)
   }
-  dim(pcaData)[2]
+  #dim(pcaData)[2]
   colnames(pcaData)[npc + 1] <- "Sample_Name"
   if (nlevels(groups) <= 1 | nlevels(groups) > 20) {
     group_fill <- NULL
@@ -151,6 +152,7 @@ PCA_plot <- function(
 #' @param data Data that has been through pre-processing
 #' @param sample_info Matrix array with experiment info
 #'
+#' @export
 #' @return Formatted T-sne plot
 #'
 #'
@@ -257,6 +259,7 @@ t_SNE_plot <- function(
 #' @param data Data that has been through pre-processing
 #' @param sample_info Matrix array with experiment info
 #'
+#' @export
 #' @return Formatted PCA plot
 #'
 MDS_plot <- function(
@@ -368,6 +371,7 @@ MDS_plot <- function(
 #' @param data Data that has been through pre-processing
 #' @param sample_info Matrix array with experiment info
 #'
+#' @export
 #' @return text with correlation
 #'
 pc_factor_correlation <- function(
@@ -428,6 +432,7 @@ pc_factor_correlation <- function(
 #' @param data Data that has been through pre-processing
 #' @param sample_info Matrix array with experiment info
 #'
+#' @export
 #' @return Formatted PCA plot using PCAtools package
 #' 
 PCA_biplot <- function(
@@ -494,6 +499,7 @@ PCA_biplot <- function(
 #'
 #' @param data Data that has been through pre-processing
 #'
+#' @export
 #' @return Formatted Scree plot using PCAtools package
 PCA_Scree <- function(
   processed_data 

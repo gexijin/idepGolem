@@ -16,6 +16,7 @@ NULL
 #'
 #' @param comparison Comparison to change the name for
 #'
+#' @export
 #' @return The altered comparison string, see the description for example.
 change_names <- function(comparison) {
   # check to see if work needs to be done
@@ -55,6 +56,7 @@ change_names <- function(comparison) {
 #' @param counts_deg_method Method of DEG being performed (See
 #'  DEG UI for options)
 #' 
+#' @export
 #' @return A list containing a string title and a vector of
 #'  comparisons to choose from.
 list_factors_ui <- function(
@@ -97,6 +99,7 @@ list_factors_ui <- function(
 #' @param select_factors_model The selected factors for the model
 #'  expression
 #' 
+#' @export
 #' @return This function returns a vector of choices for a batch
 #'  effect or paired samples.
 list_block_factors_ui <- function(
@@ -133,6 +136,7 @@ list_block_factors_ui <- function(
 #' @param processed_data Data that has been through the pre-processing
 #'  function
 #' 
+#' @export
 #' @return Returns a list containing a vector of choices and a
 #'  title for the UI element.
 list_model_comparisons_ui <- function(
@@ -219,6 +223,7 @@ list_model_comparisons_ui <- function(
 #' @param select_factors_model The selected factors for the model
 #'  expression
 #' 
+#' @export
 #' @return Returns a character string of an interaction term
 #'  between the selected factors. Used in a checkbox for the
 #'  User to create a model expression
@@ -256,6 +261,7 @@ list_interaction_terms_ui <- function(
 #' @param select_interactions The interaction terms being used in
 #'  the model design
 #' 
+#' @export
 #' @return Returns a string of the model design being used for
 #'  the DEG analysis
 experiment_design_txt <- function(
@@ -303,6 +309,7 @@ experiment_design_txt <- function(
 #' @param counts_deg_method The method or package being used for
 #'  the DEG analysis
 #' 
+#' @export
 #' @return A list the same length as the vector of selected factors.
 #'  Each entry in the list corresponds to the choice of group to
 #'  use for the reference level.
@@ -369,6 +376,7 @@ select_reference_levels_ui <- function(
 #' @param p_vals The vector of p-vals calculated in pre-process for
 #'  significant expression
 #' 
+#' @export
 #' @return List with the results of the DEG analysis. When the function
 #'  is successful there are four entries in the list. "results" is a
 #'  matrix with the same dimensions as the processed data. The entries
@@ -524,6 +532,7 @@ limma_value <- function(
 #' @param reference_levels Vector of reference levels to use for the
 #'  selected factors
 #' 
+#' @export
 #' @return The return value is the results of the DEG analysis. These
 #'  results are filtered and formatted by the limma_value function.
 deg_deseq2 <- function(
@@ -983,6 +992,7 @@ split_interaction_terms <- function(
 #'  from the model design
 #' @param block_factor The selected factors for batch effect
 #' 
+#' @export
 #' @return The return value is the results of the DEG analysis. These
 #'  results are filtered and formatted by the limma_value function.
 deg_limma <- function(
@@ -1508,6 +1518,7 @@ deg_limma <- function(
 #' @param results Results matrix from the limma_value function
 #'  returned list
 #' 
+#' @export
 #' @return Formatted gg barplot of the significantly expressed
 #'  genes.
 sig_genes_plot <- function(
@@ -1593,6 +1604,7 @@ genes_stat_table <- function(
 #' @param up_down_regulated Split the comparisons into either
 #'  up or down regulated
 #' 
+#' @export
 #' @return A character vector of the comparisons that were used
 #'  in the DEG analysis and can be plotted with the venn_plot
 #'  function.
@@ -1638,6 +1650,7 @@ list_comp_venn <- function(
 #' @param select_comparisons_venn The comparisons to plot on the
 #'  venn diagram
 #' 
+#' @export
 #' @return A formatted venn diagram plot of the selected comparisons.
 plot_venn <- function(
   limma,
@@ -1707,6 +1720,7 @@ plot_venn <- function(
 #' @param contrast_samples Columns that are in the group of the
 #'  selected comparison
 #' 
+#' @export
 #' @return Submatrix of the processed data with only the significantly
 #'  expressed genes and the columns that are in the selected contrast
 #'  group.
@@ -1790,6 +1804,7 @@ deg_heat_data <- function(
 #' @param heatmap_color_select Color vector to use for the
 #'  heatmap expression scale
 #' 
+#' @export
 #' @return A drawn heatmap from the filtered data.
 deg_heatmap <- function(
   data,
@@ -1894,6 +1909,7 @@ deg_heatmap <- function(
 #'  the main heatmap
 #' @param all_gene_names Data matrix of all the mapped gene names
 #' 
+#' @export
 #' @return A ComplexHeatmap object of the brushed selection from
 #'  the main heatmap.
 deg_heat_sub <- function(
@@ -2029,6 +2045,7 @@ deg_heat_sub <- function(
 #'  change or a negative (-1) change
 #' @param data Sub data matrix that is plotted in the sub-heatmap
 #' 
+#' @export
 #' @return HTML code that will be used in the shiny UI to tell
 #'  the user the information of the cell they selected.
 deg_click_info <- function(
@@ -2103,6 +2120,7 @@ Regulation: @{up_down} <span style='background-color:@{up_down_col};width=50px;'
 #' @param plot_colors List containing three colors to differentiate between   
 #'  the up-regulated, down-regulated, and other genes
 #' 
+#' @export
 #' @return ggplot with the fold value as the X-axis and the log 10
 #'  value of the adjusted p-value as the Y-axis.
 plot_volcano <- function(
@@ -2202,6 +2220,7 @@ plot_volcano <- function(
 #' @param plot_colors List containing three colors to differentiate between   
 #'  the up-regulated, down-regulated, and other genes
 #' 
+#' @export
 #' @return A ggplot with the X-axis the mean expression value and
 #'  the Y-axis the calculated fold-change from the DEG analysis.
 plot_ma <- function(
@@ -2312,6 +2331,7 @@ plot_ma <- function(
 #'  pre-processing
 #' @param sample_info Experiment file information for grouping
 #' 
+#' @export
 #' @return A formatted ggplot with the X-axis as the mean expression
 #'  of one contrast group and the Y-axis as the mean expression of
 #'  the other contrast group.
@@ -2423,6 +2443,7 @@ plot_deg_scatter <- function(
 #'  functions
 #' @param right_margin Control the size of the dendogram labels
 #' 
+#' @export
 #' @return A dendogram plot that shows the users what pathways are
 #'  that are enriched share genes.
 enrichment_plot <- function(
@@ -2524,6 +2545,7 @@ enrichment_plot <- function(
 #' @param down_enrich_data Enrichment table from the down-regulated
 #'  genes pathway analysis.
 #' 
+#' @export
 #' @return A combined enrichment analysis table.
 go_table_data <- function(
  up_enrich_data,
@@ -2561,6 +2583,7 @@ go_table_data <- function(
 #' @param layout_vis_deg BUtton to reset the layout of the network
 #' @param edge_cutoff_deg P-value to cutoff enriched pathways
 #' 
+#' @export
 #' @return Data that can be inputted in the vis_network_plot function
 #'  to create an interactive network.
 network_data <- function(

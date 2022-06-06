@@ -20,6 +20,7 @@ NULL
 #'  biclust::BCPlaid(), biclust::BCSpectral(), biclust::BCBimax(), 
 #'  biclust::BCQuest())
 #' 
+#' @export
 #' @return A list containing two object. \code{data} is the submatrix from the
 #'  processed data with the biclust function \code{discetize} performed on it.
 #'  For information on this function visit 
@@ -66,6 +67,7 @@ get_biclustering <- function(
 #' @param biclustering Return list from \code{get_biclustering} function
 #' @param select_bicluster Selected cluster to return information on
 #' 
+#' @export
 #' @return A character string message with the requested summary information.
 bicluster_summary_message <- function(
   biclustering,

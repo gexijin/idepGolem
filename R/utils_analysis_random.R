@@ -113,6 +113,7 @@ dynamic_range <- function(num_set) {
 #' @param sample_names DESCRIPTION.
 #' @param sample_info DESCRIPTION.
 #'
+#' @export
 #' @return RETURN_DESCRIPTION
 #' @examples
 #' # ADD_EXAMPLES_HERE
@@ -168,6 +169,7 @@ detect_groups <- function(sample_names, sample_info = NULL) {
 #'
 #' @param gene_set DESCRIPTION.
 #'
+#' @export
 #' @return RETURN_DESCRIPTION
 #' @examples
 #' # ADD_EXAMPLES_HERE
@@ -186,6 +188,7 @@ clean_gene_set <- function(gene_set) {
 #'
 #' @param query_input DESCRIPTION.
 #'
+#' @export
 #' @return RETURN_DESCRIPTION
 #' @examples
 #' # ADD_EXAMPLES_HERE
@@ -344,7 +347,7 @@ check_object_state <- function(
 #' the ggplot2 package uses for plots.
 #'
 #' @param n Number of colors to return
-#'
+#' 
 #' @return Vector of hex color codes for a plot.
 gg_color_hue <- function(n) {
   hues <- seq(15, 375, length = n + 1)
@@ -364,6 +367,7 @@ gg_color_hue <- function(n) {
 #' @param select_gene_id Desired ID type for rownames
 #'   (User_ID, ensembl_ID, symbol)
 #'
+#' @export
 #' @return Data matrix with changed rownames
 rowname_id_swap <- function(
   data_matrix,
@@ -435,7 +439,8 @@ rowname_id_swap <- function(
 #'
 #' @param all_gene_names All matched gene names from idep data
 #' @param data Data matrix with rownames to merge with gene names
-#'
+#' 
+#' @export
 #' @return Inputted data with all gene name information.
 merge_data <- function(
   all_gene_names,
@@ -900,7 +905,7 @@ pathview.stamp <- function(
 #' @param data A basic data matrix
 #' @param heatmap_color_select Vector of colors to use for the fill
 #'  in the heatmap
-#' 
+#' @export
 #' @return A drawn ComplexHeatmap.
 basic_heatmap <- function(
   data,
@@ -991,6 +996,7 @@ basic_heatmap <- function(
 #' @param heatmap_data Data matrix that is being plotted in the
 #'  main heatmap
 #' 
+#' @export
 #' @return A ComplexHeatmap object that will be inputted into the
 #'  draw function in the server, the sub-heatmap data matrix, the
 #'  group color mapping for the annotation, and the groups that
