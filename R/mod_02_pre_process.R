@@ -746,7 +746,9 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
           counts_log_start = input$counts_log_start,
           log_transform_fpkm = input$log_transform_fpkm,
           log_start_fpkm = input$log_start_fpkm,
-          missing_value = input$missing_value
+          missing_value = input$missing_value,
+          scatter_x = input$scatter_x,
+          scatter_y = input$scatter_y
 
         )
 

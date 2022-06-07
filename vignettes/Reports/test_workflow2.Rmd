@@ -45,6 +45,14 @@ params:
     value: geneMedian
     input: select
     choices: ["geneMedian", "treatAsZero", "geneMedianInGroup"]
+  scatter_x:
+    label: "X axis"
+    value: ""
+    input: text
+  scatter_y:
+    label: "Y axis"
+    value: ""
+    input: text
   date:
     label: "Date: "
     value: !r Sys.Date()
@@ -106,10 +114,9 @@ total_counts_ggplot(
 ```{r fig.height=5.5, fig.width=7.5 }
 eda_scatter(
   processed_data = processed_data$data,
-  #plot_xaxis = "p53_IR_1",
-  #plot_yaxis = "p53_mock_1"
-  plot_yaxis = colnames(processed_data$data)[1],
-  plot_xaxis = colnames(processed_data$data)[2]
+  plot_xaxis = params$scatter_x,
+  plot_yaxis = params$scatter_y
+  
 )
 ```
 
