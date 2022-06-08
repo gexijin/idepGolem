@@ -53,6 +53,14 @@ params:
     label: "Y axis"
     value: ""
     input: text
+  sd_color:
+    label: "SD_vs_mean"
+    value: "Red"
+    input: text
+  rank:
+    label: "Use mean of Rank values"
+    value: False
+    input: checkbox
   date:
     label: "Date: "
     value: !r Sys.Date()
@@ -132,6 +140,14 @@ eda_boxplot(
 eda_density(
   processed_data = processed_data$data,
   sample_info = params$sample_info
+)
+```
+
+```{r}
+mean_sd_plot(
+  processed_data = processed_data$data,
+  heat_cols = params$sd_color,
+  rank = params$rank
 )
 ```
 

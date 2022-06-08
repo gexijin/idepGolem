@@ -748,7 +748,9 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
           log_start_fpkm = input$log_start_fpkm,
           missing_value = input$missing_value,
           scatter_x = input$scatter_x,
-          scatter_y = input$scatter_y
+          scatter_y = input$scatter_y,
+          sd_color = heat_colors[[input$heat_color_select]],
+          rank = input$rank
 
         )
 
