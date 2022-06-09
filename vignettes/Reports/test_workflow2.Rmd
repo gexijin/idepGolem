@@ -90,8 +90,8 @@ counts_transform guide:
 
 
 ```{r, include = FALSE}
-devtools::load_all()
-#library(idepGolem)
+#devtools::load_all()
+library(idepGolem)
 ```
 
 # Plots
@@ -115,7 +115,7 @@ processed_data <- idepGolem::pre_process(
 
 
 ```{r }
-total_counts_ggplot(
+idepGolem::total_counts_ggplot(
   counts_data = processed_data$raw_counts,
   sample_info = params$sample_info
 )
@@ -123,7 +123,7 @@ total_counts_ggplot(
 
 
 ```{r fig.height=5.5, fig.width=7.5 }
-eda_scatter(
+idepGolem::eda_scatter(
   processed_data = processed_data$data,
   plot_xaxis = params$scatter_x,
   plot_yaxis = params$scatter_y
@@ -133,21 +133,21 @@ eda_scatter(
 
 
 ```{r fig.height=5.5, fig.width=7.5}
-eda_boxplot(
+idepGolem::eda_boxplot(
   processed_data = processed_data$data,
   sample_info = params$sample_info
 )
 ```
 
 ```{r }
-eda_density(
+idepGolem::eda_density(
   processed_data = processed_data$data,
   sample_info = params$sample_info
 )
 ```
 
 ```{r}
-mean_sd_plot(
+idepGolem::mean_sd_plot(
   processed_data = processed_data$data,
   heat_cols = params$sd_color,
   rank = params$rank
