@@ -83,7 +83,10 @@ for (i in 1:length(params)){
 }
 ```
 
-
+counts_transform guide:
+"VST: variance stabilizing transform" = 2
+"rlog: regularized log (slow) " = 3
+"EdgeR: log2(CPM+c)" = 1
 
 
 ```{r, include = FALSE}

@@ -723,16 +723,16 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         # Copy the report file to a temporary directory before processing it, in
         # case we don't have write permissions to the current working dir (which
         # can happen when deployed).
-        #tempReport <- file.path(tempdir(), "test_workflow2.Rmd")
-        #tempReport
-        #tempReport<-gsub("\\", "/",tempReport,fixed = TRUE)
+        tempReport <- file.path(tempdir(), "test_workflow2.Rmd")
+        tempReport
+        tempReport<-gsub("\\", "/",tempReport,fixed = TRUE)
 
         #This should retrieve the project location on your device:
         #"C:/Users/bdere/Documents/GitHub/idepGolem"
         wd <- getwd()
 
         markdown_location <-paste0(wd, "/vignettes/Reports/test_workflow2.Rmd")
-        #file.copy(from=markdown_location,to = tempReport, overwrite = TRUE)
+        file.copy(from=markdown_location,to = tempReport, overwrite = TRUE)
 
         # Set up parameters to pass to Rmd document
         params <- list(
@@ -758,7 +758,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         # child of the global environment (this isolates the code in the document
         # from the code in this app).
         rmarkdown::render(
-          input = markdown_location, #tempReport,
+          input = tempReport,#markdown_location, 
           output_file = file,
           params = params,
           envir = new.env(parent = globalenv())
