@@ -61,6 +61,10 @@ params:
     label: "Use mean of Rank values"
     value: False
     input: checkbox
+  no_fdr:
+    label: "[LFC] No P values"
+    value: FALSE
+    input: checkbox
   date:
     label: "Date: "
     value: !r Sys.Date()
@@ -82,10 +86,17 @@ for (i in 1:length(params)){
     cat(paste0(names(params)[i], ": ", params[[i]], "\n"))
 }
 ```
-
+"Read counts data (recommended)" = 1
+"Normalized expression values (RNA-seq FPKM, microarray, etc.)" = 2,
+"Fold-changes and corrected P values from CuffDiff or any other program" = 3
+              
+             
 counts_transform guide:
+
 "VST: variance stabilizing transform" = 2
+
 "rlog: regularized log (slow) " = 3
+
 "EdgeR: log2(CPM+c)" = 1
 
 
@@ -109,7 +120,7 @@ processed_data <- idepGolem::pre_process(
   n_min_samples_count = params$n_min_samples_count,
   counts_transform = params$counts_transform,
   counts_log_start = params$counts_log_start,
-  no_fdr = NULL
+  no_fdr = params$no_fdr
 )
 ```
 

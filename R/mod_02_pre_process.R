@@ -750,7 +750,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
           scatter_x = input$scatter_x,
           scatter_y = input$scatter_y,
           sd_color = heat_colors[[input$heat_color_select]],
-          rank = input$rank
+          rank = input$rank,
+          no_fdr = load_data$no_fdr()
 
         )
 
