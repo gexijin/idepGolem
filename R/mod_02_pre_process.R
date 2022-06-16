@@ -820,13 +820,33 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         type = "error"
       )
     })
+    # Data type warning -------
+    observe({
+      req(input$show_messages || tab() == "Pre-Process")
+      req(processed_data()$data_type_warning != 0)
+      
+      message <- switch(processed_data()$data_type_warning,
+             "-1" = "Integers detected. Did you mean to select 'read counts'?",
+             "1" = "Non count values detected. Did you mean select 'Normalized expression values'?"
+  )
+  
+      
+      showNotification(
+        ui = message,
+        id = "data_type_warning",
+        duration = NULL,
+        type = "error"
+      )
+    })
 
+    
     # Remove messages if the tab changes --------
     observe({
       req(tab() != "Pre-Process")
 
       removeNotification("conversion_counts")
       removeNotification("read_counts_message")
+      removeNotification("data_type_warning")
     })
 
     all_gene_info <- reactive({
