@@ -436,6 +436,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       )
     })
 
+    
     # Remove message if the tab changes --------
     observe({
       req(tab() != "Load Data")
