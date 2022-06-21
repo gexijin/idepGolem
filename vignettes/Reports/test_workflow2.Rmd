@@ -6,7 +6,7 @@ params:
   sample_info:
   data_file_format:
     label: "Format"
-    value: 1
+    value: 2
     input: radio
     choices: [1,2,3] 
   no_id_conversion:
@@ -31,13 +31,19 @@ params:
     value: 4
     input: numeric
   log_transform_fpkm:
-    label: "Log transform?"
-    value: TRUE
-    input: radio
-    choiceNames: ["No", "Yes"]
-    choiceValues: [FALSE, TRUE]
+    label: "(Normalized Expression) Log transform?"
+    value: FALSE
+    input: checkbox
   log_start_fpkm:
-    label: "Constant c for started log(x+c)"
+    label: "(Normalized Expression) Constant c for started log(x+c)"
+    value: 3
+    input: numeric
+  low_filter_fpkm:
+    label: "(Normalized Expression) fpkm Minimum level"
+    value: .1
+    input: numeric
+  n_min_samples_fpkm:
+    label: "(Normalized Expression) Minimum Samples"
     value: 1
     input: numeric
   missing_value:
@@ -45,6 +51,26 @@ params:
     value: geneMedian
     input: select
     choices: ["geneMedian", "treatAsZero", "geneMedianInGroup"]
+  scatter_x:
+    label: "X axis"
+    value: ""
+    input: text
+  scatter_y:
+    label: "Y axis"
+    value: ""
+    input: text
+  sd_color:
+    label: "SD_vs_mean"
+    value: "Red"
+    input: text
+  rank:
+    label: "Use mean of Rank values"
+    value: False
+    input: checkbox
+  no_fdr:
+    label: "[LFC] No P values"
+    value: FALSE
+    input: checkbox
   date:
     label: "Date: "
     value: !r Sys.Date()
@@ -59,72 +85,110 @@ knitr::opts_chunk$set(echo = params$printcode)
 This pdf documents what parameters values were selected on the IDEP interface. It also includes the plots generated from those selections. 
 
 <!-- This document cannot be knit directly from R studio -->
-# Print All Selections
+# ALL SELECTED PARAMETERS
 ```{r}
 for (i in 1:length(params)){
-  if( i != 3 && i != 4) # exclude loaded data & sample info
+  # exclude loaded data & sample info
+  if(names(params)[i] != "sample_info" && names(params)[i] != "loaded_data")
     cat(paste0(names(params)[i], ": ", params[[i]], "\n"))
 }
+
+
 ```
+<!-- "Read counts data (recommended)" = 1 -->
+
+<!-- "Normalized expression values (RNA-seq FPKM, microarray, etc.)" = 2, -->
+
+<!-- "Fold-changes and corrected P values from CuffDiff or any other program" = 3 -->
 
 
+<!-- counts_transform guide: -->
+
+<!-- "VST: variance stabilizing transform" = 2 -->
+
+<!-- "rlog: regularized log (slow) " = 3 -->
+
+<!-- "EdgeR: log2(CPM+c)" = 1 -->
 
 
 ```{r, include = FALSE}
-devtools::load_all()
-#library(idepGolem)
+#devtools::load_all()
+library(idepGolem)
 ```
+# CITATION
 
-# Plots
+`r switch(params$data_file_format,
+"1" = "Read Counts data",
+"2" = "Normalized expression values",
+"3" = "Log Fold Change and corrected P values data")` were analyzed using iDEP v0.97 [[Citation]]. 
+`r switch(params$data_file_format, 
+"1" = paste0("The data was first filtered to remove reads below ", params$min_counts," CPM in at least ", params$n_min_samples_count, " sample(s). Then the data was transformed with ", 
+switch(params$counts_transform,
+"1" = paste0("EdgeR using a pseudocount of ", params$counts_log_start),
+"2" = "VST: Variance Stabilizing Transformation", 
+"3" = "Regularized log"), ". Missing values were imputed using ", params$missing_value, "."),
+"2" = paste0("The data was ",switch(toString(params$log_transform_fpkm), "FALSE" = "not log transformed.", "TRUE" = paste0(" log transformed with a psuedocount of ", params$log_start_fpkm, ".")), " Then it was filtered to only keep genes above level ", params$low_filter_fpkm, " in at least ", params$n_min_samples_fpkm, " sample(s). Missing values were imputed using ", params$missing_value, "."))`
+
+# PLOTS
 
 ```{r Pre-Process Data, include = FALSE }
 processed_data <- idepGolem::pre_process(
   data = params$loaded_data,
   missing_value = params$missing_value,
   data_file_format = params$data_file_format,
-  low_filter_fpkm = NULL,
-  n_min_samples_fpkm = NULL,
+  low_filter_fpkm = params$low_filter_fpkm,
+  n_min_samples_fpkm = params$n_min_samples_fpkm,
   log_transform_fpkm = params$log_transform_fpkm,
   log_start_fpkm = params$log_start_fpkm,
   min_counts = params$min_counts,
   n_min_samples_count = params$n_min_samples_count,
   counts_transform = params$counts_transform,
   counts_log_start = params$counts_log_start,
-  no_fdr = NULL
+  no_fdr = params$no_fdr
 )
 ```
 
 
 ```{r }
-total_counts_ggplot(
-  counts_data = processed_data$raw_counts,
-  sample_info = params$sample_info
-)
+if (params$data_file_format == 1){
+  idepGolem::total_counts_ggplot(
+    counts_data = processed_data$raw_counts,
+    sample_info = params$sample_info
+  )  
+}
+
 ```
 
 
 ```{r fig.height=5.5, fig.width=7.5 }
-eda_scatter(
+idepGolem::eda_scatter(
   processed_data = processed_data$data,
-  #plot_xaxis = "p53_IR_1",
-  #plot_yaxis = "p53_mock_1"
-  plot_yaxis = colnames(processed_data$data)[1],
-  plot_xaxis = colnames(processed_data$data)[2]
+  plot_xaxis = params$scatter_x,
+  plot_yaxis = params$scatter_y
+  
 )
 ```
 
 
 ```{r fig.height=5.5, fig.width=7.5}
-eda_boxplot(
+idepGolem::eda_boxplot(
   processed_data = processed_data$data,
   sample_info = params$sample_info
 )
 ```
 
 ```{r }
-eda_density(
+idepGolem::eda_density(
   processed_data = processed_data$data,
   sample_info = params$sample_info
+)
+```
+
+```{r}
+idepGolem::mean_sd_plot(
+  processed_data = processed_data$data,
+  heat_cols = params$sd_color,
+  rank = params$rank
 )
 ```
 

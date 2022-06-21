@@ -13,65 +13,80 @@ params:
     value: null
     input: file
   data_file_format:
-    label: Format
-    value: 1
-    input: select
-    choices:
-    - 1
-    - 2
-    - 3
+    label: "Format"
+    value: 2
+    input: radio
+    choices: [1,2,3] 
   no_id_conversion:
-    label: Do not convert to ensembl
-    value: no
+    label: "Do not convert to ensembl"
+    value: FALSE
     input: checkbox
   min_counts:
-    label: min PCM
-    value: 0.5
+    label: "min PCM"
+    value: .5
     input: numeric
   n_min_samples_count:
-    label: n libaries
+    label: "n libaries"
     value: 1
     input: numeric
   counts_transform:
-    label: Transform counts data for clustering & PCA.
+    label: "Transform counts data for clustering & PCA."
     value: 1
     input: radio
-    choices:
-    - edgeR
-    - vst
-    - rlog
+    choices: [edgeR, vst, rlog]
   counts_log_start:
-    label: psuedocount
+    label: "psuedocount"
     value: 4
     input: numeric
   log_transform_fpkm:
-    label: Log transform?
-    value: yes
+    label: "(Normalized Expression) Log transform?"
+    value: NULL
     input: radio
-    choiceNames:
-    - 'No'
-    - 'Yes'
-    choiceValues:
-    - no
-    - yes
+    choiceNames: ["No", "Yes"]
+    choiceValues: [FALSE, TRUE]
   log_start_fpkm:
-    label: Constant c for started log(x+c)
-    value: 1
+    label: "(Normalized Expression) Constant c for started log(x+c)"
+    value: 3
+    input: numeric
+  low_filter_fpkm:
+    label: "(Normalized Expression) fpkm Minimum level"
+    value: 4
+    input: numeric
+  n_min_samples_fpkm:
+    label: "(Normalized Expression) Minimum Samples"
+    value: 5
     input: numeric
   missing_value:
-    label: missing value imputation
+    label: "missing value imputation"
     value: geneMedian
     input: select
-    choices:
-    - geneMedian
-    - treatAsZero
-    - geneMedianInGroup
+    choices: ["geneMedian", "treatAsZero", "geneMedianInGroup"]
+  scatter_x:
+    label: "X axis"
+    value: ""
+    input: text
+  scatter_y:
+    label: "Y axis"
+    value: ""
+    input: text
+  sd_color:
+    label: "SD_vs_mean"
+    value: "Red"
+    input: text
+  rank:
+    label: "Use mean of Rank values"
+    value: False
+    input: checkbox
+  no_fdr:
+    label: "[LFC] No P values"
+    value: FALSE
+    input: checkbox
   date:
-    label: 'Date: '
+    label: "Date: "
     value: !r Sys.Date()
   printcode:
-    label: 'Display Code'
-    value: yes
+    label: "Display Code"
+    value: TRUE
     input: checkbox
 ---
 
@@ -83,7 +98,7 @@ knitr::opts_chunk$set(echo = params$printcode)
 # Print All Selections
 ```{r}
 for (i in 1:length(params)){
-  if( i != 3 && i != 4) # exclude loaded data & sample info
+  if( TRUE)
     cat(paste0(names(params)[i], ": ", params[[i]], "\n"))
 }
 ```
@@ -152,40 +167,43 @@ gene_names <- get_all_gene_names(
 
 processed_data <- pre_process(
   data = converted_data$data,
-  missing_value = "geneMedian",#params$missing_value,
-  data_file_format = 1, #params$data_file_format,
-  low_filter_fpkm = NULL,
-  n_min_samples_fpkm = NULL,
-  log_transform_fpkm = NULL, #params$log_transform_fpkm,
-  log_start_fpkm = NULL,#params$log_start_fpkm,
+  missing_value = params$missing_value,
+  data_file_format = params$data_file_format,
+  low_filter_fpkm = params$low_filter_fpkm,
+  n_min_samples_fpkm = params$n_min_samples_fpkm,
+  log_transform_fpkm = params$log_transform_fpkm,
+  log_start_fpkm = params$log_start_fpkm,
   min_counts = params$min_counts,
   n_min_samples_count = params$n_min_samples_count,
   counts_transform = params$counts_transform,
   counts_log_start = params$counts_log_start,
-  no_fdr = NULL
+  no_fdr = params$no_fdr
 )
-processed_data <- pre_process(
-  data = converted_data$data,
-  missing_value = "geneMedian",
-  data_file_format = 1,
-  low_filter_fpkm = NULL,
-  n_min_samples_fpkm = NULL,
-  log_transform_fpkm = NULL,
-  log_start_fpkm = NULL,
-  min_counts = .5,
-  n_min_samples_count = 1,
-  counts_transform = 1,
-  counts_log_start = 4,
-  no_fdr = NULL
-)
+# processed_data <- pre_process(
+#   data = converted_data$data,
+#   missing_value = "geneMedian",
+#   data_file_format = 1,
+#   low_filter_fpkm = NULL,
+#   n_min_samples_fpkm = NULL,
+#   log_transform_fpkm = NULL,
+#   log_start_fpkm = NULL,
+#   min_counts = .5,
+#   n_min_samples_count = 1,
+#   counts_transform = 1,
+#   counts_log_start = 4,
+#   no_fdr = NULL
+# )
 ```
 
 fig.height=1.5, fig.width=2.5
 ```{r}
-total_counts_ggplot(
+if(params$data_file_format == 1){
+ total_counts_ggplot(
   counts_data = processed_data$raw_counts,
   sample_info = load_data$sample_info
-)
+) 
+}
+
 ```
 
 

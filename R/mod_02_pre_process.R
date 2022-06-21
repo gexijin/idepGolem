@@ -723,16 +723,16 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         # Copy the report file to a temporary directory before processing it, in
         # case we don't have write permissions to the current working dir (which
         # can happen when deployed).
-        #tempReport <- file.path(tempdir(), "test_workflow2.Rmd")
-        #tempReport
-        #tempReport<-gsub("\\", "/",tempReport,fixed = TRUE)
+        tempReport <- file.path(tempdir(), "test_workflow2.Rmd")
+        tempReport
+        tempReport<-gsub("\\", "/",tempReport,fixed = TRUE)
 
         #This should retrieve the project location on your device:
         #"C:/Users/bdere/Documents/GitHub/idepGolem"
         wd <- getwd()
 
         markdown_location <-paste0(wd, "/vignettes/Reports/test_workflow2.Rmd")
-        #file.copy(from=markdown_location,to = tempReport, overwrite = TRUE)
+        file.copy(from=markdown_location,to = tempReport, overwrite = TRUE)
 
         # Set up parameters to pass to Rmd document
         params <- list(
@@ -746,7 +746,13 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
           counts_log_start = input$counts_log_start,
           log_transform_fpkm = input$log_transform_fpkm,
           log_start_fpkm = input$log_start_fpkm,
-          missing_value = input$missing_value
+          low_filter_fpkm = input$low_filter_fpkm,
+          missing_value = input$missing_value,
+          scatter_x = input$scatter_x,
+          scatter_y = input$scatter_y,
+          sd_color = heat_colors[[input$heat_color_select]],
+          rank = input$rank,
+          no_fdr = load_data$no_fdr()
 
         )
 
@@ -754,7 +760,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         # child of the global environment (this isolates the code in the document
         # from the code in this app).
         rmarkdown::render(
-          input = markdown_location, #tempReport,
+          input = tempReport,#markdown_location, 
           output_file = file,
           params = params,
           envir = new.env(parent = globalenv())
@@ -815,13 +821,33 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         type = "error"
       )
     })
+    # Data type warning -------
+    observe({
+      req(input$show_messages || tab() == "Pre-Process")
+      req(processed_data()$data_type_warning != 0)
+      
+      message <- switch(processed_data()$data_type_warning,
+             "-1" = "Integers detected. Did you mean to select 'read counts'?",
+             "1" = "Non count values detected. Did you mean select 'Normalized expression values'?"
+  )
+  
+      
+      showNotification(
+        ui = message,
+        id = "data_type_warning",
+        duration = NULL,
+        type = "error"
+      )
+    })
 
+    
     # Remove messages if the tab changes --------
     observe({
       req(tab() != "Pre-Process")
 
       removeNotification("conversion_counts")
       removeNotification("read_counts_message")
+      removeNotification("data_type_warning")
     })
 
     all_gene_info <- reactive({
