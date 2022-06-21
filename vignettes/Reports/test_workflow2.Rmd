@@ -32,10 +32,8 @@ params:
     input: numeric
   log_transform_fpkm:
     label: "(Normalized Expression) Log transform?"
-    value: "No"
-    input: radio
-    choiceNames: ["No", "Yes"]
-    choiceValues: [FALSE, TRUE]
+    value: FALSE
+    input: checkbox
   log_start_fpkm:
     label: "(Normalized Expression) Constant c for started log(x+c)"
     value: 3
@@ -87,10 +85,11 @@ knitr::opts_chunk$set(echo = params$printcode)
 This pdf documents what parameters values were selected on the IDEP interface. It also includes the plots generated from those selections. 
 
 <!-- This document cannot be knit directly from R studio -->
-# Print All Selections
+# ALL SELECTED PARAMETERS
 ```{r}
 for (i in 1:length(params)){
-  if(names(params)[i] != "sample_info" && names(params)[i] != "loaded_data") # exclude loaded data & sample info
+  # exclude loaded data & sample info
+  if(names(params)[i] != "sample_info" && names(params)[i] != "loaded_data")
     cat(paste0(names(params)[i], ": ", params[[i]], "\n"))
 }
 
@@ -115,26 +114,22 @@ for (i in 1:length(params)){
 ```{r, include = FALSE}
 #devtools::load_all()
 library(idepGolem)
-
-#The data was`r 
-# switch(params$data_file_format, "1" = paste0("transformed with", switch(params$counts_transform, "1" = paste0("EdgeR using a psudocount of ", params$counts_log_start), "2" = "VST: Variance Stabilizing Transformation", "3" = "Regularized log"), " and imputed missing values using ", params$missing_value, "."), "2" = paste0(switch(params$log_transform_fpkm, "No" = "not log transformed", "Yes" = paste0(" log transformed with a psuedocount of ", params$log_start_fpkm)), " then filtered to only keep genes above level ", params$low_filter_fpkm, " in at least ", params$n_min_samples_fpkm, "sample(s) and imputed missing values using ", params$missing_value, "."))
-
 ```
+# CITATION
 
 `r switch(params$data_file_format,
-"1" = "Read Counts",
-"2" = "Normalized data",
-"3" = "LFC and P values")` were analyzed using iDEP v0.97 [Citation]. Data was first filtered to remove reads below `r params$min_counts` CPM in at least `r params$n_min_samples_count` sample(s). 
-
-The data was`r switch(params$data_file_format, 
-"1" = paste0("transformed with ", 
+"1" = "Read Counts data",
+"2" = "Normalized expression values",
+"3" = "Log Fold Change and corrected P values data")` were analyzed using iDEP v0.97 [[Citation]]. 
+`r switch(params$data_file_format, 
+"1" = paste0("The data was first filtered to remove reads below ", params$min_counts," CPM in at least ", params$n_min_samples_count, " sample(s). Then the data was transformed with ", 
 switch(params$counts_transform,
-"1" = paste0("EdgeR using a psudocount of ", params$counts_log_start),
+"1" = paste0("EdgeR using a pseudocount of ", params$counts_log_start),
 "2" = "VST: Variance Stabilizing Transformation", 
-"3" = "Regularized log"), " and imputed missing values using ", params$missing_value, "."),
-"2" = paste0(switch(params$log_transform_fpkm, "No" = "not log transformed", "Yes" = paste0(" log transformed with a psuedocount of ", params$log_start_fpkm)), " then filtered to only keep genes above level ", params$low_filter_fpkm, " in at least ", params$n_min_samples_fpkm, "sample(s) and imputed missing values using ", params$missing_value, "."))`
+"3" = "Regularized log"), ". Missing values were imputed using ", params$missing_value, "."),
+"2" = paste0("The data was ",switch(toString(params$log_transform_fpkm), "FALSE" = "not log transformed.", "TRUE" = paste0(" log transformed with a psuedocount of ", params$log_start_fpkm, ".")), " Then it was filtered to only keep genes above level ", params$low_filter_fpkm, " in at least ", params$n_min_samples_fpkm, " sample(s). Missing values were imputed using ", params$missing_value, "."))`
 
-# Plots
+# PLOTS
 
 ```{r Pre-Process Data, include = FALSE }
 processed_data <- idepGolem::pre_process(
