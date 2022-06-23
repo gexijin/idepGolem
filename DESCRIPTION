@@ -9,6 +9,31 @@ Authors@R:
 Description: What the package does (one paragraph).
 License: What license is it under?
 remotes: bioc::release/Biobase,
+    bioc::release/ComplexHeatmap,
+    bioc::release/DESeq2,
+    bioc::release/edgeR,    
+    bioc::release/fgsea,
+    bioc::release/gage,
+    bioc::release/InteractiveComplexHeatmap,
+    bioc::release/KEGGREST,
+    bioc::release/limma,
+    bioc::release/pathview,
+    bioc::release/PREDA,
+    bioc::release/PREDAsampledata,
+    bioc::release/QUBIC,
+    bioc::release/ReactomePA,
+    bioc::release/runibic,
+    bioc::release/SummarizedExperiment,
+    bioc::release/WGCNA,
+    bioc::release/GO.db,
+    bioc::release/anaffy,
+    github::espors/ottoPlots,
+    url::https://cran.r-project.org/src/contrib/Archive/loose.rock/loose.rock_1.2.0.tar.gz,
+    url::https://bioconductor.org/packages/3.10/bioc/src/contrib/PGSEA_1.60.0.tar.gz,
+    url::http://www.bioconductor.org/packages//2.11/data/annotation/src/contrib/KEGG.db_2.8.0.tar.gz
+    
+
+
 Imports: 
     remotes,
     biclust,
