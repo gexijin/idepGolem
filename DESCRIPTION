@@ -32,6 +32,7 @@ remotes: bioc::release/Biobase,
     url::https://cran.r-project.org/src/contrib/Archive/loose.rock/loose.rock_1.2.0.tar.gz,
     url::https://bioconductor.org/packages/3.10/bioc/src/contrib/PGSEA_1.60.0.tar.gz,
     url::http://www.bioconductor.org/packages//2.11/data/annotation/src/contrib/KEGG.db_2.8.0.tar.gz
+    
 Imports: 
     remotes,
     biclust,
