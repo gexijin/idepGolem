@@ -84,6 +84,12 @@ knitr::opts_chunk$set(echo = params$printcode)
 ```
 This pdf documents what parameters values were selected on the IDEP interface. It also includes the plots generated from those selections. 
 
+# DOWNLOAD PARAMETERS
+```{r}
+names(params)
+#saveRDS(object = params, file = "data_and_selection.RDS")
+```
+
 <!-- This document cannot be knit directly from R studio -->
 # ALL SELECTED PARAMETERS
 ```{r}

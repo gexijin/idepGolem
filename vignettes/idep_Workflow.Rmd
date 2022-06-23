@@ -18,12 +18,12 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup}
-#library(idepGolem)
+library(idepGolem)
 ```
 
 
 ```{r}
-devtools::load_all()
+#devtools::load_all()
 ```
 
 # LOAD DATA FUNCTIONS
@@ -42,6 +42,9 @@ idep_data <- get_idep_data()
 
 YOUR_DATA_PATH <- "F:/data104b_final/data_go/BcellGSE71176_p53.csv"
 YOUR_EXPERIMENT_PATH <- "F:/data104b_final/data_go/BcellGSE71176_p53_sampleInfo.csv"
+
+#YOUR_DATA_PATH <- "F:/data104b_final/data_go/GSE71176_FC_Pval.csv"
+#OUR_EXPERIMENT_PATH <- "F:/data104b_final/data_go/BcellGSE71176_p53_sampleInfo.csv"
 
 
 
@@ -99,7 +102,7 @@ processed_data <- pre_process(
   n_min_samples_count = 1,
   counts_transform = 1,
   counts_log_start = 4,
-  no_fdr = NULL
+  no_fdr = FALSE
 )
 ```
 
@@ -159,8 +162,8 @@ PCA_plot(
 t_SNE_plot(
   data= processed_data$data,
   sample_info = load_data$sample_info,
-  selected_color = "p53",
-  selected_shape = "p53"
+  selected_color = "Sample_Name",
+  selected_shape = "Sample_Name"
   )
 pc_factor_correlation(
   data = processed_data$data,

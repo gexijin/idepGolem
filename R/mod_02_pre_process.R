@@ -178,16 +178,19 @@ mod_02_pre_process_ui <- function(id) {
         br(),
         
         br(),
-        strong("Download R-Markdown Report"),
+        strong("R-Markdown Report"),
         br(),
         
         downloadButton(
           outputId = ns("report"),
-          label = "Generate report"
+          label = "Generate Report"
         ), 
+        br(),
+        strong("Data and Selections"),
+        br(),
         downloadButton(
           outputId = ns("rds"),
-          label = "download RDS file with selctions and data"
+          label = "Download .RData File"
         ),         
         br(),
         br(),
@@ -794,8 +797,9 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
             scatter_x = input$scatter_x,
             scatter_y = input$scatter_y,
             sd_color = heat_colors[[input$heat_color_select]],
-            rank = input$rank,
+            rank = input$rank
           )
+          save(params_r, file = file)
         }
         if(load_data$data_file_format() == 2){
           params_r <- list(
@@ -810,8 +814,9 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
             scatter_x = input$scatter_x,
             scatter_y = input$scatter_y,
             sd_color = heat_colors[[input$heat_color_select]],
-            rank = input$rank,
-          )  
+            rank = input$rank
+          ) 
+          save(params_r, file = file)
         }
         if (load_data$data_file_format() == 3){
           params_r <- list(
@@ -825,10 +830,9 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
             sd_color = heat_colors[[input$heat_color_select]],
             rank = input$rank,
             no_fdr = load_data$no_fdr()
-            
-          )   
+          )
+          save(params_r, file = file)
         }
-        save(params_r, file = file)
       }
     )
 
