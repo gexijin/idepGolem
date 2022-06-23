@@ -790,6 +790,19 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
             n_min_samples_count = input$n_min_samples_count,
             counts_transform = input$counts_transform,
             counts_log_start = input$counts_log_start,
+            missing_value = input$missing_value,
+            scatter_x = input$scatter_x,
+            scatter_y = input$scatter_y,
+            sd_color = heat_colors[[input$heat_color_select]],
+            rank = input$rank,
+          )
+        }
+        if(load_data$data_file_format() == 2){
+          params_r <- list(
+            loaded_data = load_data$converted_data(),
+            sample_info = load_data$sample_info(),
+            data_file_format = load_data$data_file_format(),
+            no_id_conversion = input$no_id_conversion,
             log_transform_fpkm = input$log_transform_fpkm,
             log_start_fpkm = input$log_start_fpkm,
             low_filter_fpkm = input$low_filter_fpkm,
@@ -798,34 +811,24 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
             scatter_y = input$scatter_y,
             sd_color = heat_colors[[input$heat_color_select]],
             rank = input$rank,
+          )  
+        }
+        if (load_data$data_file_format() == 3){
+          params_r <- list(
+            loaded_data = load_data$converted_data(),
+            sample_info = load_data$sample_info(),
+            data_file_format = load_data$data_file_format(),
+            no_id_conversion = input$no_id_conversion,
+            missing_value = input$missing_value,
+            scatter_x = input$scatter_x,
+            scatter_y = input$scatter_y,
+            sd_color = heat_colors[[input$heat_color_select]],
+            rank = input$rank,
             no_fdr = load_data$no_fdr()
             
-          )
-          save(params_r
-               ,file = file) 
+          )   
         }
-        params_r <- list(
-          loaded_data = load_data$converted_data(),
-          sample_info = load_data$sample_info(),
-          data_file_format = load_data$data_file_format(),
-          no_id_conversion = input$no_id_conversion,
-          min_counts = input$min_counts,
-          n_min_samples_count = input$n_min_samples_count,
-          counts_transform = input$counts_transform,
-          counts_log_start = input$counts_log_start,
-          log_transform_fpkm = input$log_transform_fpkm,
-          log_start_fpkm = input$log_start_fpkm,
-          low_filter_fpkm = input$low_filter_fpkm,
-          missing_value = input$missing_value,
-          scatter_x = input$scatter_x,
-          scatter_y = input$scatter_y,
-          sd_color = heat_colors[[input$heat_color_select]],
-          rank = input$rank,
-          no_fdr = load_data$no_fdr()
-          
-        )
-        save(params_r
-                ,file = file)
+        save(params_r, file = file)
       }
     )
 
