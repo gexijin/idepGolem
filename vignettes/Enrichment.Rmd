@@ -23,8 +23,10 @@ devtools::load_all()
 # Make data for enrichment functions
 idep_data <- get_idep_data()
 
-YOUR_DATA_PATH <- "E:/idep_9_24/data/data103/data_go/BcellGSE71176_p53.csv"
-YOUR_EXPERIMENT_PATH <- "E:/idep_9_24/data/data103/data_go/BcellGSE71176_p53_sampleInfo.csv"
+# YOUR_DATA_PATH <- "E:/idep_9_24/data/data103/data_go/BcellGSE71176_p53.csv"
+# YOUR_EXPERIMENT_PATH <- "E:/idep_9_24/data/data103/data_go/BcellGSE71176_p53_sampleInfo.csv"
+YOUR_DATA_PATH <- "F:/data104b_final/data_go/BcellGSE71176_p53.csv"
+YOUR_EXPERIMENT_PATH <- "F:/data104b_final/data_go/BcellGSE71176_p53_sampleInfo.csv"
 
 expression_file <- data.frame(
   datapath = YOUR_DATA_PATH
@@ -84,11 +86,7 @@ One important aspect of iDEP is the ability to take a subset of genes and
 perform pathway analysis to determine the pathways that are significantly
 enriched with different testing effects. The iDEP data base has biological
 pathways for each species in the database, and with each pathway there is a
-list of gene IDs that correspond with that process. We then calculate a p-value
-for the proportion of genes from a pathway in the subset to the proportion of 
-genes subsetted to the entire background. The link below explains the most basic
-and popular method of determining overlap and enrichment. There are two
-functions to perform pathway analysis. The first one will be described in the
+list of gene IDs that correspond with that process. We then calculate a p-value for the proportion of genes from a pathway in the subset to the proportion of genes subsetted to the entire background. The link below explains the most basic and popular method of determining overlap and enrichment. There are two functions to perform pathway analysis. The first one will be described in the
 section below.
 
 **Enrichment Link**
@@ -97,16 +95,15 @@ https://tv.qiagenbioinformatics.com/video/19605716/understanding-the-p-value-of
 ###### Get Gene Sets
 
 Performing pathway analysis for the subsetted list of genes requires only the
-pahtways that have at least one gene in their gene list. We use a database
+pathways that have at least one gene in their gene list. We use a database
 query to ensure that all the pathways that have genes from the subset will be
 returned in the gene sets. Creating a query requires a subset of the
-`gene_names` data frame. For this example, we will simply use the first 100 rows
-of the data. iDEP has many different methods to create interesting subsets,
-including differential expression analysis. Depending on the structure of the
-subsetted genes, use the code chunk below to filter `gene_names`.
+`gene_names` data frame. For this example, we will simply use the first 100 rows of the data. iDEP has many different methods to create interesting subsets, including differential expression analysis. Depending on the structure of the subsetted genes, use the code chunk below to filter `gene_names`.
 
 ```{r eval=FALSE}
-gene_names_query <- gene_names[gene_names$ensembl_ID == rownames(example_data), ]
+#gene_names_query <- gene_names[gene_names$ensembl_ID == rownames(example_data), ]
+gene_names_query <- gene_names[gene_names$ensembl_ID == rownames(processed_data$data), ]
+
 ```
 
 The `converted` parameter will be the return from the `convert_id` function
@@ -135,19 +132,14 @@ Search this list for the desired portion, and specify it with either
 would be "GOBP". The next parameter, `select_org`, should be the same as the
 chunk above. The input  `gmt_file` is only used if you are working with a
 species that is not in the iDEP database. If this is the case, and there is a
-GMT file that goes with the species, the input will be the datapath stored in a
-data frame. For details on this, see the first instruction `Load_Data`. The next
-inputs are objects that are also covered in the first instruction. With all the
-correct inputs, we are now going to actually subset `gene_names` and create a
-query. We will use the `process_heatmap_data` function which is described in the
-"Clustering" instruction. This final workflow is demonstrated in the chunk
+GMT file that goes with the species, the input will be the datapath stored in a data frame. For details on this, see the first instruction `Load_Data`. The next inputs are objects that are also covered in the first instruction. With all the correct inputs, we are now going to actually subset `gene_names` and create a query. We will use the `process_heatmap_data` function which is described in the "Clustering" instruction. This final workflow is demonstrated in the chunk
 below.
 
 ```{r}
 heatmap_data <- process_heatmap_data(
   data = processed_data$data,
   n_genes_max = 150,
-  n_genes_min = 0,
+  #n_genes_min = 0,
   gene_centering = TRUE,
   gene_normalize = TRUE,
   sample_centering = FALSE,
@@ -197,16 +189,8 @@ species. `use_filtered_background` is TURE/FALSE for which gene set to use as
 the background when calculating overlap. For TRUE, the background gene set will
 be the genes in the processed data matrix that passed the filtering. If the
 value is set to FALSE, the background will be all the gene IDs that were found
-in the iDEP database for the matched species. It is recommended to use the value
-TRUE, as this will give the most accurate p-value for which pathways are
-enriched. The video in the  introduction gives details about the meaning of
-enriched. `select_org` is the input that specifies the species that the
-expression data is for. Finally, the last input parameter is `reduced` and can
-be set to FALSE, or a decimal value. If a decimal value is inputted, this will
-filter out all the pathways that have a greater proportion of genes in common
-with another pathway than the inputted decimal. If FALSE is inputted, no
-pathways will be removed with redudant gene sets. This results of this function
-be examined in the next section.
+in the iDEP database for the matched species. It is recommended to use the value TRUE, as this will give the most accurate p-value for which pathways are enriched. The video in the  introduction gives details about the meaning of enriched. `select_org` is the input that specifies the species that the
+expression data is for. Finally, the last input parameter is `reduced` and can be set to FALSE, or a decimal value. If a decimal value is inputted, this will filter out all the pathways that have a greater proportion of genes in common with another pathway than the inputted decimal. If FALSE is inputted, no pathways will be removed with redudant gene sets. This results of this function be examined in the next section.
 
 ```{r}
 pathway_info <- find_overlap(

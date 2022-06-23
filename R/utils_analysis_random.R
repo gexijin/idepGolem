@@ -61,7 +61,7 @@ hcluster_functions <- function() {
 #'
 #' @description
 #'
-#'
+#' @export
 #' @return
 #'
 #'
@@ -303,6 +303,7 @@ extract_word <- function(word_list) {
 #'  \code{bool} is either true or false depending on \code{check_exp} evaluation
 #'
 #'  \code{content} either message and depended on \code{check_exp} evaluation
+#' @export
 #' @examples
 #' check <- check_object_state(
 #'   check_exp = (is.null(NULL)),
