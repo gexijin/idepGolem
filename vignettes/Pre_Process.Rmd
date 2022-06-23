@@ -24,8 +24,11 @@ devtools::load_all()
 # Make data for pre-processing functions
 idep_data <- get_idep_data()
 
-YOUR_DATA_PATH <- "E:/idep_9_24/data/data103/data_go/BcellGSE71176_p53.csv"
-YOUR_EXPERIMENT_PATH <- "E:/idep_9_24/data/data103/data_go/BcellGSE71176_p53_sampleInfo.csv"
+# YOUR_DATA_PATH <- "E:/idep_9_24/data/data103/data_go/BcellGSE71176_p53.csv"
+# YOUR_EXPERIMENT_PATH <- "E:/idep_9_24/data/data103/data_go/BcellGSE71176_p53_sampleInfo.csv"
+
+YOUR_DATA_PATH <- "F:/data104b_final/data_go/BcellGSE71176_p53.csv"
+YOUR_EXPERIMENT_PATH <- "F:/data104b_final/data_go/BcellGSE71176_p53_sampleInfo.csv"
 
 expression_file <- data.frame(
   datapath = YOUR_DATA_PATH
@@ -312,11 +315,27 @@ deviation bar instead of a standard error bar. `lab_rotate` controls the
 rotation of the x-axis labels. The outputted object is a formatted ggplot.
 
 ```{r fig.height=5.5, fig.width=7.5}
+# individual_plots(
+#   individual_data = ind_plot_data,
+#   sample_info = load_data$sample_info,
+#   selected_gene = " H4c1",
+#   gene_plot_box = FALSE,
+#   use_sd = FALSE,
+#   lab_rotate = 90
+# )
 individual_plots(
   individual_data = ind_plot_data,
   sample_info = load_data$sample_info,
-  selected_gene = "H4c1",
+  selected_gene = " Ankrd13b",
   gene_plot_box = FALSE,
+  use_sd = FALSE,
+  lab_rotate = 90
+)
+individual_plots(
+  individual_data = ind_plot_data,
+  sample_info = load_data$sample_info,
+  selected_gene = " Ankrd13b",
+  gene_plot_box = TRUE,
   use_sd = FALSE,
   lab_rotate = 90
 )
