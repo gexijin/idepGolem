@@ -730,7 +730,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         # Copy the report file to a temporary directory before processing it, in
         # case we don't have write permissions to the current working dir (which
         # can happen when deployed).
-        tempReport <- file.path(tempdir(), "test_workflow2.Rmd")
+        tempReport <- file.path(tempdir(), "pre_process_workflow.Rmd")
         #tempReport
         tempReport<-gsub("\\", "/",tempReport,fixed = TRUE)
 
@@ -738,7 +738,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         #"C:/Users/bdere/Documents/GitHub/idepGolem"
         wd <- getwd()
 
-        markdown_location <-paste0(wd, "/vignettes/Reports/test_workflow2.Rmd")
+        markdown_location <-paste0(wd, "/vignettes/Reports/pre_process_workflow.Rmd")
         file.copy(from=markdown_location,to = tempReport, overwrite = TRUE)
 
         # Set up parameters to pass to Rmd document
@@ -784,22 +784,35 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       content = function(file){
         if(load_data$data_file_format() == 1)
         {
-          params_r <- list(
-            loaded_data = load_data$converted_data(),
-            sample_info = load_data$sample_info(),
-            data_file_format = load_data$data_file_format(),
-            no_id_conversion = input$no_id_conversion,
-            min_counts = input$min_counts,
-            n_min_samples_count = input$n_min_samples_count,
-            counts_transform = input$counts_transform,
-            counts_log_start = input$counts_log_start,
-            missing_value = input$missing_value,
-            scatter_x = input$scatter_x,
-            scatter_y = input$scatter_y,
-            sd_color = heat_colors[[input$heat_color_select]],
-            rank = input$rank
-          )
-          save(params_r, file = file)
+
+          loaded_data <- load_data$converted_data()
+          sample_info <- load_data$sample_info()
+          data_file_format <- load_data$data_file_format()
+          no_id_conversion <- input$no_id_conversion
+          min_counts <- input$min_counts
+          n_min_samples_count <- input$n_min_samples_count
+          counts_transform <- input$counts_transform
+          counts_log_start <- input$counts_log_start
+          missing_value <- input$missing_value
+          scatter_x <- input$scatter_x
+          scatter_y <- input$scatter_y
+          sd_color <- heat_colors[[input$heat_color_select]]
+          rank <- input$rank
+
+          save(loaded_data, 
+               sample_info,
+               data_file_format,
+               no_id_conversion,
+               min_counts,
+               n_min_samples_count,
+               counts_transform,
+               counts_log_start,
+               missing_value,
+               scatter_x,
+               scatter_y,
+               sd_color,
+               rank,
+               file = file)
         }
         if(load_data$data_file_format() == 2){
           params_r <- list(
