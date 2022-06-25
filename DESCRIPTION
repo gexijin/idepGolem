@@ -46,7 +46,8 @@ Imports:
     tippy,
     utils,
     visNetwork,
-    WGCNA
+    WGCNA,
+    loose.rock
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.2
