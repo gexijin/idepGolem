@@ -1,6 +1,6 @@
 ---
-title: "Pre_Process Workflow"
-output: pdf_document
+title: "Pre-Process Workflow"
+output: html_document
 params:
   loaded_data:
   sample_info:
@@ -82,31 +82,21 @@ params:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = params$printcode)
 ```
-This pdf documents what parameters values were selected on the IDEP interface. It also includes the plots generated from those selections. 
-
-# DOWNLOAD PARAMETERS
-```{r}
-names(params)
-#saveRDS(object = params, file = "data_and_selection.RDS")
-```
-
 <!-- This document cannot be knit directly from R studio -->
-# ALL SELECTED PARAMETERS
-```{r}
+
+
+This html document contains what parameters values were selected on the IDEP interface. It also includes the plots generated from those selections. 
+
+
+<!--# ALL SELECTED PARAMETERS-->
+```{r, include=FALSE}
 for (i in 1:length(params)){
   # exclude loaded data & sample info
-  if(names(params)[i] != "sample_info" && names(params)[i] != "loaded_data")
-    cat(paste0(names(params)[i], ": ", params[[i]], "\n"))
+  #if(names(params)[i] != "sample_info" && names(params)[i] != "loaded_data")
+   # cat(paste0(names(params)[i], ": ", params[[i]], "\n")
+ #   )
 }
-
-
 ```
-<!-- "Read counts data (recommended)" = 1 -->
-
-<!-- "Normalized expression values (RNA-seq FPKM, microarray, etc.)" = 2, -->
-
-<!-- "Fold-changes and corrected P values from CuffDiff or any other program" = 3 -->
-
 
 <!-- counts_transform guide: -->
 
