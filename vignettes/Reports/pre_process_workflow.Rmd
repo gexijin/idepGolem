@@ -1,6 +1,6 @@
 ---
 title: "Pre-Process Workflow"
-output: pdf_document
+output: html_document
 params:
   loaded_data:
   sample_info:
@@ -85,11 +85,11 @@ knitr::opts_chunk$set(echo = params$printcode)
 <!-- This document cannot be knit directly from R studio -->
 
 
-This pdf documents what parameters values were selected on the IDEP interface. It also includes the plots generated from those selections. 
+This html document contains what parameters values were selected on the IDEP interface. It also includes the plots generated from those selections. 
 
 
-# ALL SELECTED PARAMETERS
-```{r}
+<!--# ALL SELECTED PARAMETERS-->
+```{r, include=FALSE}
 for (i in 1:length(params)){
   # exclude loaded data & sample info
   #if(names(params)[i] != "sample_info" && names(params)[i] != "loaded_data")

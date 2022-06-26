@@ -719,7 +719,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     output$report <- downloadHandler(
       
       # For PDF output, change this to "report.pdf"
-      filename ="pre_process_report.pdf",
+      filename ="pre_process_report.html",
       content = function(file) {
         #Show Loading popup
         shinybusy::show_modal_spinner(
