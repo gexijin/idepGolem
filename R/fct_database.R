@@ -11,7 +11,7 @@
 NULL
 
 
-DATAPATH <- "d:/idep_9_24/data/data104/"
+DATAPATH <- "D:/idep_9_24/data/data104/"
 #DATAPATH <- "F:/data104b_final/"
 
 #' connect_convert_db connects to the convertIDs.db and returns the
