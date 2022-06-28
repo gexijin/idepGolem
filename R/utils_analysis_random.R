@@ -244,29 +244,31 @@ read_gmt <- function(file_path) { # size restriction
   return(gmt_data)
 }
 
-### edit later
+
 # This function convert gene set names
 # x="GOBP_mmu_mgi_GO:0000183_chromatin_silencing_at_rDNA"
 # chromatin silencing at rDNA
-#' FUNCTION_TITLE
+
+#' proper
 #'
-#' FUNCTION_DESCRIPTION
+#' This function converts gene set names to a more readable format
 #'
-#' @param x DESCRIPTION.
+#' @param x string
 #'
-#' @return RETURN_DESCRIPTION
+#' @return cleaned string
 #' @examples
-#' # ADD_EXAMPLES_HERE
+#' proper("GOBP_mmu_mgi_GO:0000183_chromatin_silencing_at_rDNA")
 proper <- function(x) paste0(toupper(substr(x, 1, 1)), substring(x, 2))
 
 
-#' FUNCTION_TITLE
+#' extract_word
 #'
-#' FUNCTION_DESCRIPTION
+#' finds words in list
 #'
-#' @param word_list DESCRIPTION.
+#' @param word_list word list
 #'
-#' @return RETURN_DESCRIPTION
+#' @return extracted words
+#' @export
 #' @examples
 #' # ADD_EXAMPLES_HERE
 extract_word <- function(word_list) {
