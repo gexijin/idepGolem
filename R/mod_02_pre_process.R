@@ -197,7 +197,6 @@ mod_02_pre_process_ui <- function(id) {
           outputId = ns("report"),
           label = "Report"
         ),
-        br(),
         # Show transform messages
         actionButton(
           inputId = ns("show_messages"),
@@ -304,7 +303,7 @@ mod_02_pre_process_ui <- function(id) {
 
           # Density plot of transformed data ---------
           tabPanel(
-            title = "SD vs. Mean Plot",
+            title = "Dispersion",
             br(),
             fluidRow(
               column(
@@ -336,14 +335,14 @@ mod_02_pre_process_ui <- function(id) {
 
           # Searchable table of transformed converted data ---------
           tabPanel(
-            title = "Converted Data",
+            title = "Normalized Data",
             br(),
             DT::dataTableOutput(outputId = ns("examine_data"))
           ),
 
           # Plot panel for individual genes ---------
           tabPanel(
-            title = "Individual Genes",
+            title = "Gene plot",
             br(),
             fluidRow(
               column(
