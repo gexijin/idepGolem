@@ -15,7 +15,7 @@ NULL
 #'
 #' @description
 #'
-#'
+#' @export
 #' @return
 #'
 #'
@@ -84,13 +84,13 @@ dist_functions <- function() {
 }
 
 
-#' FUNCTION_TITLE
+#' Dynamic Range
 #'
-#' FUNCTION_DESCRIPTION
+#' Find the difference between 2nd largest and 2nd smallest number in set
 #'
-#' @param num_set DESCRIPTION.
+#' @param num_set Vector of values
 #'
-#' @return RETURN_DESCRIPTION
+#' @return distance between 2nd largest and 2nd smallest value
 #' @examples
 #' # ADD_EXAMPLES_HERE
 dynamic_range <- function(num_set) {
@@ -106,15 +106,15 @@ dynamic_range <- function(num_set) {
 }
 
 
-#' FUNCTION_TITLE
+#' detect_groups
 #'
-#' FUNCTION_DESCRIPTION
+#' Detects groups from column names in sample_info file.
 #'
-#' @param sample_names DESCRIPTION.
-#' @param sample_info DESCRIPTION.
+#' @param sample_names column headings from data file or design file
+#' @param sample_info Experiment design matrix
 #'
 #' @export
-#' @return RETURN_DESCRIPTION
+#' @return char vector 
 #' @examples
 #' # ADD_EXAMPLES_HERE
 detect_groups <- function(sample_names, sample_info = NULL) {
@@ -162,15 +162,14 @@ detect_groups <- function(sample_names, sample_info = NULL) {
 }
 
 
-# Clean up gene sets. Remove spaces and other control characters from gene names
-#' FUNCTION_TITLE
+#' clean_gene_set
 #'
-#' FUNCTION_DESCRIPTION
+#' Clean up gene sets. Remove spaces and other control characters from gene names
 #'
-#' @param gene_set DESCRIPTION.
+#' @param gene_set Gene Set
 #'
 #' @export
-#' @return RETURN_DESCRIPTION
+#' @return cleaned gene set
 #' @examples
 #' # ADD_EXAMPLES_HERE
 clean_gene_set <- function(gene_set) {
@@ -182,14 +181,14 @@ clean_gene_set <- function(gene_set) {
 }
 
 
-#' FUNCTION_TITLE
+#' clean_query
 #'
-#' FUNCTION_DESCRIPTION
+#' adds tabs and new lines after each gene
 #'
-#' @param query_input DESCRIPTION.
+#' @param query_input string with list of genes
 #'
 #' @export
-#' @return RETURN_DESCRIPTION
+#' @return string of cleaned gene list
 #' @examples
 #' # ADD_EXAMPLES_HERE
 clean_query <- function(query_input) {
@@ -200,15 +199,14 @@ clean_query <- function(query_input) {
 }
 
 
-# Read gene sets GMT file
-# This functions cleans and converts to upper case
-#' FUNCTION_TITLE
+#' read_gmt
 #'
-#' FUNCTION_DESCRIPTION
+#' This functions cleans and converts to upper case genes in .gmt file to upper case
 #'
-#' @param file_path DESCRIPTION.
+#' @param file_path string with path to file
 #'
-#' @return RETURN_DESCRIPTION
+#' @return data frame with data from gmt file
+#' @export
 #' @examples
 #' # ADD_EXAMPLES_HERE
 read_gmt <- function(file_path) { # size restriction
@@ -246,29 +244,31 @@ read_gmt <- function(file_path) { # size restriction
   return(gmt_data)
 }
 
-### edit later
+
 # This function convert gene set names
 # x="GOBP_mmu_mgi_GO:0000183_chromatin_silencing_at_rDNA"
 # chromatin silencing at rDNA
-#' FUNCTION_TITLE
+
+#' proper
 #'
-#' FUNCTION_DESCRIPTION
+#' This function converts gene set names to a more readable format
 #'
-#' @param x DESCRIPTION.
+#' @param x string
 #'
-#' @return RETURN_DESCRIPTION
+#' @return cleaned string
 #' @examples
-#' # ADD_EXAMPLES_HERE
+#' proper("GOBP_mmu_mgi_GO:0000183_chromatin_silencing_at_rDNA")
 proper <- function(x) paste0(toupper(substr(x, 1, 1)), substring(x, 2))
 
 
-#' FUNCTION_TITLE
+#' extract_word
 #'
-#' FUNCTION_DESCRIPTION
+#' finds words in list
 #'
-#' @param word_list DESCRIPTION.
+#' @param word_list word list
 #'
-#' @return RETURN_DESCRIPTION
+#' @return extracted words
+#' @export
 #' @examples
 #' # ADD_EXAMPLES_HERE
 extract_word <- function(word_list) {
