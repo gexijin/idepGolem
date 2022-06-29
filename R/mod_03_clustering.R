@@ -204,6 +204,17 @@ mod_03_clustering_ui <- function(id) {
           
           ns = ns
         ),
+        
+        #report button
+        br(),
+        strong("R-Markdown Report"),
+        br(),
+        
+        downloadButton(
+          outputId = ns("report"),
+          label = "Generate Report"
+        ), 
+        
 
         a(
           h5("Questions?", align = "right"),
@@ -798,6 +809,70 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         write.csv(heatmap_data_download(), file)
       }
     )
+    
+    
+    # Markdown report------------
+    output$report <- downloadHandler(
+      
+      # For PDF output, change this to "report.pdf"
+      filename ="clustering_report.html",
+      content = function(file) {
+        #Show Loading popup
+        shinybusy::show_modal_spinner(
+          spin = "orbit",
+          text = "Generating Report",
+          color = "#000000"
+        )
+        # Copy the report file to a temporary directory before processing it, in
+        # case we don't have write permissions to the current working dir (which
+        # can happen when deployed).
+        tempReport <- file.path(tempdir(), "clustering_workflow.Rmd")
+        #tempReport
+        tempReport<-gsub("\\", "/",tempReport,fixed = TRUE)
+        
+        #This should retrieve the project location on your device:
+        #"C:/Users/bdere/Documents/GitHub/idepGolem"
+        wd <- getwd()
+        
+        markdown_location <-paste0(wd, "/vignettes/Reports/clustering_workflow.Rmd")
+        file.copy(from=markdown_location,to = tempReport, overwrite = TRUE)
+        
+        # Set up parameters to pass to Rmd document
+        params <- list(
+          pre_processed_data = pre_process$data(),
+          sample_info = pre_process$sample_info(),
+          n_genes = input$n_genes,
+          k_clusters = input$k_clusters,
+          cluster_meth = input$cluster_meth,
+          select_gene_id = input$select_gene_id,
+          list_factors_heatmap = input$list_factors_heatmap,
+          heatmap_color_select = heatmap_colors[[input$heatmap_color_select]],
+          dist_function = input$dist_function,
+          hclust_function = input$hclust_function,
+          heatmap_cutoff = input$heatmap_cutoff,
+          gene_centering = input$gene_centering,
+          gene_normalize = input$gene_normalize,
+          no_sample_clustering = input$no_sample_clustering,
+          show_row_dend = input$show_row_dend
+            
+          
+        )
+        
+        # Knit the document, passing in the `params` list, and eval it in a
+        # child of the global environment (this isolates the code in the document
+        # from the code in this app).
+        rmarkdown::render(
+          input = tempReport,#markdown_location, 
+          output_file = file,
+          params = params,
+          envir = new.env(parent = globalenv())
+        )
+        shinybusy::remove_modal_spinner()
+        
+      }
+      
+    )
+    
 
   })
 }
