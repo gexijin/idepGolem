@@ -144,53 +144,63 @@ mod_02_pre_process_ui <- function(id) {
         ),
 
         # Select input for missing value ------------
-        selectInput(
-          inputId = ns("missing_value"),
-          label = "Missing values imputation:",
-          choices = list(
-            "Gene median" = "geneMedian",
-            "Treat as zero" = "treatAsZero",
-            "Median within sample groups" = "geneMedianInGroup"
+        fluidRow(
+          column(
+            width = 5,
+            h5("Missing values:")
           ),
-          selected = "geneMedian"
-        ),
-        br(),
+          column(
+            width = 7,
 
-        strong("Download Processed Data"),
+            # Constant to add for a log transform
+            selectInput(
+              inputId = ns("missing_value"),
+              label = NULL,
+              choices = list(
+                "Use gene median" = "geneMedian",
+                "Treat as zero" = "treatAsZero",
+                "Use group median" = "geneMedianInGroup"
+              ),
+              selected = "geneMedian"
+            )
+          )
+        ), 
+        fluidRow(
+          column(
+            width = 6,
+            downloadButton(
+              outputId = ns("download_processed_data"),
+              label = "Processed data"
+            )
+          ),
+          column(
+            width = 6,
+        # Conditional panel for read count data ------------
+            conditionalPanel(
+              condition = "output.data_file_format == 1",
+
+              # Download the counts data with converted IDs
+              downloadButton(
+                outputId = ns("download_converted_counts"),
+                label = "Converted counts"
+              ),
+              ns = ns
+            )
+          )
+        ), 
         br(),
         # Download button for processed data -----------
-        downloadButton(
-          outputId = ns("download_processed_data"),
-          label = "Processed data"
-        ),
 
-        # Conditional panel for read count data ------------
-        conditionalPanel(
-          condition = "output.data_file_format == 1",
 
-          # Download the counts data with converted IDs
-          downloadButton(
-            outputId = ns("download_converted_counts"),
-            label = "Converted counts data"
-          ),
-          ns = ns
-        ),
-        br(),
-        
-        br(),
-        strong("R-Markdown Report"),
-        br(),
         
         downloadButton(
           outputId = ns("report"),
-          label = "Generate Report"
+          label = "Report"
         ), 
-        br(),
-        strong("Data and Selections"),
-        br(),
+
         downloadButton(
           outputId = ns("rds"),
-          label = "Download .RData File"
+          label = ".RData File"
         ),         
         br(),
         br(),
