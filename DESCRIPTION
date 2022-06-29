@@ -9,7 +9,6 @@ Authors@R:
 Description: What the package does (one paragraph).
 License: What license is it under?
 Imports: 
-    remotes,
     biclust,
     circlize,
     config (>= 0.3.1),
@@ -45,13 +44,38 @@ Imports:
     tidyselect,
     tippy,
     utils,
+    DESeq2,
+    edgeR,
     visNetwork,
     WGCNA,
-    loose.rock
+    PCAtools,
+    ComplexHeatmap,
+    fgsea,
+    gage,
+    InteractiveComplexHeatmap,
+    pathview,
+    PREDA,
+    PREDAsampledata,
+    QUBIC,
+    runibic,
+    rmarkdown,
+    knitr,
+    ReactomePA,
+    ottoPlots,
+biocViews: 
+    Biobase,
+    limma,
+    KEGGREST,
+    SummarizedExperiment,
+    GO.db,
+    impute,
+    preprocessCore
+Remotes:
+    github::espors/ottoPlots,
+    url::https://bioconductor.org/packages/3.10/bioc/src/contrib/PGSEA_1.60.0.tar.gz,
+    url::http://www.bioconductor.org/packages//2.11/data/annotation/src/contrib/KEGG.db_2.8.0.tar.gz
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.0
 Suggests: 
-    rmarkdown,
-    knitr
 VignetteBuilder: knitr

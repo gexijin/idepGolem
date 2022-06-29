@@ -735,8 +735,22 @@ extract_under <- function(x) {
     return(gsub("_", " ", x))
   } else {
     words <- words[-c(1:4)]
-    return(loose.rock::proper(paste(words, collapse = " ")))
+    return(loose_rock_proper(paste(words, collapse = " ")))
   }
+}
+
+#' Capitalizes all words in string
+#' 
+#' from: https://github.com/averissimo/loose.rock/blob/master/R/string.R
+#'
+#' @param x String
+#'
+#' @return a capitalized string (all words)
+#'
+#' @examples
+#' proper("i saw a dEaD parrot")
+loose_rock_proper <- function(x) {
+  return(gsub("(?<=\\b)([a-z])", "\\U\\1", tolower(x), perl = TRUE))
 }
 
 #' PATHVIEW FUNCTION

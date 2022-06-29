@@ -15,7 +15,7 @@ read_pathway_sets(
 )
 }
 \arguments{
-\item{all_gene_names_query}{Subsetted rows of the 
+\item{all_gene_names_query}{Subsetted rows of the
 all_gene_names data frame to query the database with}
 
 \item{converted}{Conversion information from the original
@@ -24,7 +24,7 @@ IDs returned from the convert_id() function}
 \item{go}{Section of the database to query for pathway
 analysis}
 
-\item{select_org}{Input for what organism the IDs are 
+\item{select_org}{Input for what organism the IDs are
 pertaining to}
 
 \item{gmt_file}{For NEW species the gmt file to use

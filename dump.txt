@@ -1,0 +1,148 @@
+devtools::install()
+Downloading package from url: https://bioconductor.org/packages/3.10/bioc/src/contrib/PGSEA_1.60.0.tar.gz
+Skipping 1 packages not available: KEGG.db
+✔  checking for file ‘/tmp/RtmpGoxiRf/remotes115cc80e98d5/PGSEA/DESCRIPTION’ ...
+─  preparing ‘PGSEA’:
+✔  checking DESCRIPTION meta-information ...
+✔  checking vignette meta-information
+─  checking for LF line-endings in source and make files and shell scripts
+─  checking for empty or unneeded directories
+─  looking to see if a ‘data/datalist’ file should be added
+─  building ‘PGSEA_1.60.0.tar.gz’
+   
+Installing package into ‘/home/eric/R/x86_64-pc-linux-gnu-library/4.2’
+(as ‘lib’ is unspecified)
+ERROR: dependency ‘KEGG.db’ is not available for package ‘PGSEA’
+* removing ‘/home/eric/R/x86_64-pc-linux-gnu-library/4.2/PGSEA’
+Downloading package from url: http://www.bioconductor.org/packages//2.11/data/annotation/src/contrib/KEGG.db_2.8.0.tar.gz
+✔  checking for file ‘/tmp/RtmpGoxiRf/remotes115cc7687be38/KEGG.db/DESCRIPTION’ ...
+─  preparing ‘KEGG.db’:
+✔  checking DESCRIPTION meta-information ...
+─  checking for LF line-endings in source and make files and shell scripts
+─  checking for empty or unneeded directories
+─  building ‘KEGG.db_2.8.0.tar.gz’
+   
+Installing package into ‘/home/eric/R/x86_64-pc-linux-gnu-library/4.2’
+(as ‘lib’ is unspecified)
+* installing *source* package ‘KEGG.db’ ...
+** using staged installation
+** R
+** inst
+** byte-compile and prepare package for lazy loading
+** help
+*** installing help indices
+** building package indices
+** testing if installed package can be loaded from temporary location
+** testing if installed package can be loaded from final location
+** testing if installed package keeps a record of temporary installation path
+* DONE (KEGG.db)
+Downloading package from url: https://bioconductor.org/packages/3.10/bioc/src/contrib/PGSEA_1.60.0.tar.gz
+Downloading package from url: http://www.bioconductor.org/packages//2.11/data/annotation/src/contrib/KEGG.db_2.8.0.tar.gz
+✔  checking for file ‘/tmp/RtmpGoxiRf/remotes115cc1878a05f/KEGG.db/DESCRIPTION’ ...
+─  preparing ‘KEGG.db’:
+✔  checking DESCRIPTION meta-information ...
+─  checking for LF line-endings in source and make files and shell scripts
+─  checking for empty or unneeded directories
+─  building ‘KEGG.db_2.8.0.tar.gz’
+   
+Installing package into ‘/home/eric/R/x86_64-pc-linux-gnu-library/4.2’
+(as ‘lib’ is unspecified)
+* installing *source* package ‘KEGG.db’ ...
+** using staged installation
+** R
+** inst
+** byte-compile and prepare package for lazy loading
+** help
+*** installing help indices
+** building package indices
+** testing if installed package can be loaded from temporary location
+** testing if installed package can be loaded from final location
+** testing if installed package keeps a record of temporary installation path
+* DONE (KEGG.db)
+✔  checking for file ‘/tmp/RtmpGoxiRf/remotes115cc2395a6c6/PGSEA/DESCRIPTION’ ...
+─  preparing ‘PGSEA’:
+✔  checking DESCRIPTION meta-information ...
+✔  checking vignette meta-information ...
+─  checking for LF line-endings in source and make files and shell scripts
+─  checking for empty or unneeded directories
+─  looking to see if a ‘data/datalist’ file should be added
+─  building ‘PGSEA_1.60.0.tar.gz’
+   
+Installing package into ‘/home/eric/R/x86_64-pc-linux-gnu-library/4.2’
+(as ‘lib’ is unspecified)
+* installing *source* package ‘PGSEA’ ...
+** using staged installation
+** R
+** data
+** inst
+** byte-compile and prepare package for lazy loading
+** help
+*** installing help indices
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded from temporary location
+** testing if installed package can be loaded from final location
+** testing if installed package keeps a record of temporary installation path
+* DONE (PGSEA)
+Downloading package from url: http://www.bioconductor.org/packages//2.11/data/annotation/src/contrib/KEGG.db_2.8.0.tar.gz
+✔  checking for file ‘/tmp/RtmpGoxiRf/remotes115cc2beb812/KEGG.db/DESCRIPTION’ ...
+─  preparing ‘KEGG.db’:
+✔  checking DESCRIPTION meta-information ...
+─  checking for LF line-endings in source and make files and shell scripts
+─  checking for empty or unneeded directories
+─  building ‘KEGG.db_2.8.0.tar.gz’
+   
+Installing package into ‘/home/eric/R/x86_64-pc-linux-gnu-library/4.2’
+(as ‘lib’ is unspecified)
+* installing *source* package ‘KEGG.db’ ...
+** using staged installation
+** R
+** inst
+** byte-compile and prepare package for lazy loading
+** help
+*** installing help indices
+** building package indices
+** testing if installed package can be loaded from temporary location
+** testing if installed package can be loaded from final location
+** testing if installed package keeps a record of temporary installation path
+* DONE (KEGG.db)
+✔  checking for file ‘/home/eric/Documents/code/ge_work/idepGolem/DESCRIPTION’ ...
+─  preparing ‘idepGolem’:
+✔  checking DESCRIPTION meta-information ...
+   Warning: /tmp/RtmpgJNiAl/Rbuild1190863a48cef/idepGolem/man/wrap_strings.Rd:5: unknown macro '\n'
+   Warning: /tmp/RtmpgJNiAl/Rbuild1190863a48cef/idepGolem/man/wrap_strings.Rd:6: unknown macro '\ncheckpoint'
+   Warning: /tmp/RtmpgJNiAl/Rbuild1190863a48cef/idepGolem/man/wrap_strings.Rd:12: unknown macro '\n'
+   Warning: /tmp/RtmpgJNiAl/Rbuild1190863a48cef/idepGolem/man/wrap_strings.Rd:13: unknown macro '\ncheckpoint'
+─  excluding invalid files
+   Subdirectory 'R' contains invalid file names:
+     ‘_disable_autoload.R’
+─  checking for LF line-endings in source and make files and shell scripts
+─  checking for empty or unneeded directories
+   Omitted ‘LazyData’ from DESCRIPTION
+─  building ‘idepGolem_0.0.0.9000.tar.gz’
+   
+Running /usr/lib64/R/bin/R CMD INSTALL /tmp/RtmpGoxiRf/idepGolem_0.0.0.9000.tar.gz \
+  --install-tests 
+* installing to library ‘/home/eric/R/x86_64-pc-linux-gnu-library/4.2’
+* installing *source* package ‘idepGolem’ ...
+** using staged installation
+** R
+** inst
+** byte-compile and prepare package for lazy loading
+Note: possible error in 'deg_limma(processed_data = processed_data, ': unused argument (alist()) 
+Note: possible error in 'get_gene_info(load_data$converted(), ': unused argument (all_gene_info = idep_data$gene_info_files) 
+** help
+Warning: /tmp/RtmpzUuUnz/R.INSTALL11916481009e1/idepGolem/man/wrap_strings.Rd:5: unknown macro '\n'
+Warning: /tmp/RtmpzUuUnz/R.INSTALL11916481009e1/idepGolem/man/wrap_strings.Rd:6: unknown macro '\ncheckpoint'
+Warning: /tmp/RtmpzUuUnz/R.INSTALL11916481009e1/idepGolem/man/wrap_strings.Rd:12: unknown macro '\n'
+Warning: /tmp/RtmpzUuUnz/R.INSTALL11916481009e1/idepGolem/man/wrap_strings.Rd:13: unknown macro '\ncheckpoint'
+*** installing help indices
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded from temporary location
+** testing if installed package can be loaded from final location
+** testing if installed package keeps a record of temporary installation path
+* DONE (idepGolem)
+Warning message:
+In i.p(...) :
+  installation of package ‘/tmp/RtmpGoxiRf/file115cc3a3fb06a/PGSEA_1.60.0.tar.gz’ had non-zero exit status

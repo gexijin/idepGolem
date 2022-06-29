@@ -14,7 +14,7 @@ Large list of the iDEP data.
 1. kegg_species_id:  KEGG species list
 2. gmt_files: list of pathway files
 3. gene_info_files: list of geneInfo files
-4. demo_data_file: demo data file 
+4. demo_data_file: demo data file
 5. demo_metadata_file: experimental design file for demo data
 6. quotes:  quotes
 7. string_species_go_data: List of STRING species
