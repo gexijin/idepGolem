@@ -144,62 +144,68 @@ mod_02_pre_process_ui <- function(id) {
         ),
 
         # Select input for missing value ------------
-        selectInput(
-          inputId = ns("missing_value"),
-          label = "Missing values imputation:",
-          choices = list(
-            "Gene median" = "geneMedian",
-            "Treat as zero" = "treatAsZero",
-            "Median within sample groups" = "geneMedianInGroup"
+        fluidRow(
+          column(
+            width = 5,
+            h5("Missing values:")
           ),
-          selected = "geneMedian"
-        ),
-        br(),
+          column(
+            width = 7,
 
-        strong("Download Processed Data"),
-        br(),
-        # Download button for processed data -----------
-        downloadButton(
-          outputId = ns("download_processed_data"),
-          label = "Processed data"
-        ),
-
-        # Conditional panel for read count data ------------
-        conditionalPanel(
-          condition = "output.data_file_format == 1",
-
-          # Download the counts data with converted IDs
-          downloadButton(
-            outputId = ns("download_converted_counts"),
-            label = "Converted counts data"
-          ),
-          ns = ns
-        ),
-        br(),
-        
-        br(),
-        strong("R-Markdown Report"),
-        br(),
-        
-        downloadButton(
-          outputId = ns("report"),
-          label = "Generate Report"
+            # Constant to add for a log transform
+            selectInput(
+              inputId = ns("missing_value"),
+              label = NULL,
+              choices = list(
+                "Use gene median" = "geneMedian",
+                "Treat as zero" = "treatAsZero",
+                "Use group median" = "geneMedianInGroup"
+              ),
+              selected = "geneMedian"
+            )
+          )
         ), 
-        br(),
-        strong("Data and Selections"),
+        fluidRow(
+          column(
+            width = 6,
+            downloadButton(
+              outputId = ns("download_processed_data"),
+              label = "Processed data"
+            )
+          ),
+          column(
+            width = 6,
+        # Conditional panel for read count data ------------
+            conditionalPanel(
+              condition = "output.data_file_format == 1",
+
+              # Download the counts data with converted IDs
+              downloadButton(
+                outputId = ns("download_converted_counts"),
+                label = "Converted counts"
+              ),
+              ns = ns
+            )
+          )
+        ), 
         br(),
         downloadButton(
           outputId = ns("rds"),
-          label = "Download .RData File"
-        ),         
-        br(),
-        br(),
+          label = ".RData File"
+        ),        
+       downloadButton(
+          outputId = ns("report"),
+          label = "Report"
+        ),
         # Show transform messages
         actionButton(
           inputId = ns("show_messages"),
-          label = "Show Conversion Messages"
+          label = "Messages"
         ),
-
+        h5(
+          "Aspect ratios of figures can be adjusted by changing
+           the width of browser window."
+        ),
         a(
           h5("Questions?", align = "right"),
           href = "https://idepsite.wordpress.com/pre-process/",
@@ -209,12 +215,7 @@ mod_02_pre_process_ui <- function(id) {
       
 
       # Pre-Process Panel Main -----------
-      mainPanel(
-        h5(
-          "Aspect ratios of figures can be adjusted by changing
-           the width of browser window. (To save a plot, right-click)"
-        ),
-       
+      mainPanel(       
         tabsetPanel(
           id = ns("eda_tabs"),
 
@@ -302,7 +303,7 @@ mod_02_pre_process_ui <- function(id) {
 
           # Density plot of transformed data ---------
           tabPanel(
-            title = "SD vs. Mean Plot",
+            title = "Dispersion",
             br(),
             fluidRow(
               column(
@@ -334,14 +335,14 @@ mod_02_pre_process_ui <- function(id) {
 
           # Searchable table of transformed converted data ---------
           tabPanel(
-            title = "Converted Data",
+            title = "Normalized Data",
             br(),
             DT::dataTableOutput(outputId = ns("examine_data"))
           ),
 
           # Plot panel for individual genes ---------
           tabPanel(
-            title = "Individual Genes",
+            title = "Gene plot",
             br(),
             fluidRow(
               column(
@@ -633,7 +634,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       updateSelectInput(
         session = session,
         inputId = "select_gene_id",
-        choices = colnames(load_data$all_gene_names())
+        choices = colnames(load_data$all_gene_names()),
+        selected = "symbol"
       )
     })
 
@@ -651,12 +653,18 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     # Individual genes selection ----------
     observe({
       req(tab() == "Pre-Process")
+      req(!is.null(processed_data()$data))
+
+      # a random gene is ploted by default
+      selected <- NULL
+      all_names <- rownames(individual_data())
+      selected <- sample(all_names, 1)
 
       updateSelectizeInput(
         session,
         inputId = "selected_gene",
-        choices = rownames(individual_data()),
-        selected = NULL,
+        choices = all_names,
+        selected = selected,
         server = TRUE
       )
     })
@@ -676,7 +684,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     gene_plot <- reactive({
       req(!is.null(individual_data()))
       req(!is.null(input$selected_gene))
-      
+
       individual_plots(
         individual_data = individual_data(),
         sample_info = load_data$sample_info(),

@@ -1,0 +1,77 @@
+---
+title: "Clustering Workflow"
+output: html_document
+params:
+  pre_processed_data:
+  sample_info:
+  n_genes:
+  k_clusters:
+  cluster_meth:
+  select_gene_id:
+  list_factors_heatmap:
+  heatmap_color_select:
+  dist_function:
+  hclust_function:
+  heatmap_cutoff:
+  gene_centering:
+  gene_normalize:
+  no_sample_clustering:
+  show_row_dend:
+  printcode:
+    label: "Display Code"
+    value: TRUE
+    input: checkbox
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = params$printcode)
+```
+<!-- This document cannot be knit directly from R studio -->
+
+
+This html document contains what parameters values were selected on the IDEP interface of the "Clustering" tab. It also includes the plots generated from those selections. 
+
+
+<!--# ALL SELECTED PARAMETERS-->
+```{r, include=TRUE}
+for (i in 1:length(params)){
+  # exclude loaded data & sample info
+  if(names(params)[i] != "sample_info" && names(params)[i] != "pre_processed_data")
+    cat(paste0(names(params)[i], ": ", params[[i]], "\n") )
+}
+```
+
+# SD Density
+```{r}
+sd_density(
+  data = params$pre_processed_data,
+  n_genes_max = params$n_genes
+)
+```
+
+
+# Tree
+```{r}
+draw_sample_tree(
+  tree_data = params$pre_processed_data,
+  gene_centering = params$gene_centering,
+  gene_normalize = params$gene_normalize,
+  sample_centering = FALSE,
+  sample_normalize = FALSE,
+  hclust_funs = hcluster_functions(),
+  hclust_function = params$hclust_function,
+  dist_funs = dist_functions(),
+  dist_function = params$dist_function
+)
+```
+
+
+# Correlation Matrix
+```{r}
+cor_plot(
+  data = params$pre_processed_data,
+  label_pcc = TRUE,
+  heat_cols = c("red", "black", "green"),
+  text_col = "white"
+)
+```
+

@@ -299,13 +299,14 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
     
     #PCAtools biplot  ---------------------
     biplot <- reactive({
+      req(!is.null(pre_process$data()))
       shinybusy::show_modal_spinner(
         spin = "orbit",
         text = "Generating Plots",
         color = "#000000"
       )
       
-      req(!is.null(pre_process$data()))
+
       
       p <- PCA_biplot(
         data = pre_process$data(),

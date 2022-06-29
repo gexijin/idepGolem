@@ -19,6 +19,8 @@ NULL
 #' @param sample_info Matrix array with experiment info
 #' @param PCAx PC on x axis
 #' @param PCAy PC on y axis
+#' @param selected_color color
+#' @param selected_shape shape
 #'
 #' @export
 #' @return Formatted PCA plot 
@@ -151,7 +153,9 @@ PCA_plot <- function(
 #'
 #' @param data Data that has been through pre-processing
 #' @param sample_info Matrix array with experiment info
-#'
+#' @param selected_color color
+#' @param selected_shape shape
+#' 
 #' @export
 #' @return Formatted T-sne plot
 #'
@@ -258,15 +262,17 @@ t_SNE_plot <- function(
 #'
 #' @param data Data that has been through pre-processing
 #' @param sample_info Matrix array with experiment info
-#'
+#' @param selected_color color
+#' @param selected_shape shape
+#' 
 #' @export
 #' @return Formatted PCA plot
 #'
 MDS_plot <- function(
   data,
   sample_info,
-  selected_shape = "Sample_Name",
-  selected_color = "Sample_Name"
+  selected_shape,
+  selected_color
 ) {
 
   #no design file
@@ -431,6 +437,17 @@ pc_factor_correlation <- function(
 #'
 #' @param data Data that has been through pre-processing
 #' @param sample_info Matrix array with experiment info
+#' @param select_gene_id gene name option
+#' @param all_gene_names gene names
+#' @param selected_x x axis selection eg "PC1"
+#' @param selected_y y axis selection
+#' @param encircle draw shapes in plot
+#' @param encircleFill fill shapes in plot
+#' @param showLoadings draw gene vectors onto plot
+#' @param pointlabs show column names on points
+#' @param point_size point size
+#' @param ui_color color
+#' @param ui_shape shape
 #'
 #' @export
 #' @return Formatted PCA plot using PCAtools package
@@ -439,7 +456,7 @@ PCA_biplot <- function(
   data,
   sample_info,
   select_gene_id = "symbol",
-  all_gene_names, # = pre_process$all_gene_names(),
+  all_gene_names, 
   selected_x = "PC1",
   selected_y = "PC2",
   encircle = TRUE,
