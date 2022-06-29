@@ -28,7 +28,6 @@ Imports:
     grDevices,
     grid,
     htmltools (>= 0.5.2),
-    igraph,
     magrittr,
     pkgload,
     plotly,
@@ -61,7 +60,7 @@ Imports:
     rmarkdown,
     knitr,
     ReactomePA,
-    ottoPlots,
+    ottoPlots
 biocViews: 
     Biobase,
     limma,
@@ -72,6 +71,7 @@ biocViews:
     preprocessCore
 Remotes:
     github::espors/ottoPlots,
+    github::https://github.com/igraph/rigraph/tree/master,
     url::https://bioconductor.org/packages/3.10/bioc/src/contrib/PGSEA_1.60.0.tar.gz,
     url::http://www.bioconductor.org/packages//2.11/data/annotation/src/contrib/KEGG.db_2.8.0.tar.gz
 Encoding: UTF-8
