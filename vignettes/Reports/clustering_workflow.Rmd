@@ -40,4 +40,38 @@ for (i in 1:length(params)){
 }
 ```
 
+# SD Density
+```{r}
+sd_density(
+  data = params$pre_processed_data,
+  n_genes_max = params$n_genes
+)
+```
+
+
+# Tree
+```{r}
+draw_sample_tree(
+  tree_data = params$pre_processed_data,
+  gene_centering = params$gene_centering,
+  gene_normalize = params$gene_normalize,
+  sample_centering = FALSE,
+  sample_normalize = FALSE,
+  hclust_funs = hcluster_functions(),
+  hclust_function = params$hclust_function,
+  dist_funs = dist_functions(),
+  dist_function = params$dist_function
+)
+```
+
+
+# Correlation Matrix
+```{r}
+cor_plot(
+  data = params$pre_processed_data,
+  label_pcc = TRUE,
+  heat_cols = c("red", "black", "green"),
+  text_col = "white"
+)
+```
 
