@@ -404,7 +404,7 @@ rowname_id_swap <- function(
       by.y = "ensembl_ID",
       all.x = T
     )
-    rownames(new_data) <- new_data$ensembl_ID
+    rownames(new_data) <- new_data$Row.names
     nums <- unlist(lapply(new_data, is.numeric))
     new_data <- new_data[, nums]
     new_data <- new_data[order(new_data$order), ]

@@ -170,61 +170,64 @@ mod_01_load_data_ui <- function(id) {
         # Table output for sample tissue type ----------
         DT::dataTableOutput(ns("sample_info_table")),
         br(),
+        br(),
 
         # Display first 20 rows of the data ----------
         DT::dataTableOutput(ns("sample_20")),
 
-        # conditionalPanel("input.go_button == 0",  # welcome screen   
-        # Instructions and flowchart ------------
-        fluidRow(
-          column(
-            width = 5,
-            h4("Welcome to iDEP!")
+        # hide welcome screen after data is loaded
+        conditionalPanel("input.go_button == 0",  
+          # Instructions and flowchart ------------
+          fluidRow(
+            column(
+              width = 5,
+              h4("Welcome to iDEP!")
+            ),
+            column(
+              width = 6,
+              img(
+                src = "www/idep_logo.png",
+                width = "100",
+                height = "100"
+              )
+            )      
           ),
-          column(
-            width = 6,
-            img(
-              src = "www/idep_logo.png",
-              width = "100",
-              height = "100"
+          div(
+            id = ns("load_message"),
+            h4("Loading R packages, please wait ... ... ...")
+          ),
+          htmlOutput(ns("file_format")),
+          h3(
+            "All new iDEP 2.0 in testing model."
+          ),
+    
+          h4(
+            "We recently hired Jenny Qi for database updates and user support.",
+            a(
+              "Email Jenny for questions.",
+              href = "mailto:gelabinfo@gmail.com?Subject=iDEP"
             )
-          )      
-        ),
-        div(
-          id = ns("load_message"),
-          h4("Loading R packages, please wait ... ... ...")
-        ),
-        htmlOutput(ns("file_format")),
-        h3(
-          "All new iDEP 2.0 in testing model."
-        ),
-  
-        h4(
-          "We recently hired Jenny Qi for database updates and user support.",
-          a(
-            "Email Jenny for questions.",
-            href = "mailto:gelabinfo@gmail.com?Subject=iDEP"
-          )
-        ),
-        h5(
-          "iDEP has not been thoroughly tested. Please let us know if you find
-           any issue/bug."
-        ),
-        br(),
-        img(
-          src = "www/flowchart.png",
-          align = "center",
-          width = "562",
-          height = "383"
-        ),
-        br(),
-        img(
-          src='www/figs.gif', 
-          align = "center",
-          width="640", 
-          height="480"
-        )
-       # )  # conditionalPanel not working
+          ),
+          h5(
+            "iDEP has not been thoroughly tested. Please let us know if you find
+            any issue/bug."
+          ),
+          br(),
+          img(
+            src = "www/flowchart.png",
+            align = "center",
+            width = "562",
+            height = "383"
+          ),
+          br(),
+          img(
+            src='www/figs.gif', 
+            align = "center",
+            width="640", 
+            height="480"
+          ),
+          ns = ns
+       )  # conditionalPanel not working
       )
     )
   )
