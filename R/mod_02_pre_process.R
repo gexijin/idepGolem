@@ -634,7 +634,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       updateSelectInput(
         session = session,
         inputId = "select_gene_id",
-        choices = colnames(load_data$all_gene_names())
+        choices = colnames(load_data$all_gene_names()),
+        selected = "symbol"
       )
     })
 
@@ -652,12 +653,18 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     # Individual genes selection ----------
     observe({
       req(tab() == "Pre-Process")
+      req(!is.null(processed_data()$data))
+
+      # a random gene is ploted by default
+      selected <- NULL
+      all_names <- rownames(individual_data())
+      selected <- sample(all_names, 1)
 
       updateSelectizeInput(
         session,
         inputId = "selected_gene",
-        choices = rownames(individual_data()),
-        selected = NULL,
+        choices = all_names,
+        selected = selected,
         server = TRUE
       )
     })
@@ -677,7 +684,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     gene_plot <- reactive({
       req(!is.null(individual_data()))
       req(!is.null(input$selected_gene))
-      
+
       individual_plots(
         individual_data = individual_data(),
         sample_info = load_data$sample_info(),
