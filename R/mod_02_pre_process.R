@@ -189,27 +189,24 @@ mod_02_pre_process_ui <- function(id) {
           )
         ), 
         br(),
-        # Download button for processed data -----------
-
-
-        
-        downloadButton(
-          outputId = ns("report"),
-          label = "Report"
-        ), 
-
         downloadButton(
           outputId = ns("rds"),
           label = ".RData File"
-        ),         
-        br(),
+        ),        
+       downloadButton(
+          outputId = ns("report"),
+          label = "Report"
+        ),
         br(),
         # Show transform messages
         actionButton(
           inputId = ns("show_messages"),
-          label = "Show Conversion Messages"
+          label = "Messages"
         ),
-
+        h5(
+          "Aspect ratios of figures can be adjusted by changing
+           the width of browser window."
+        ),
         a(
           h5("Questions?", align = "right"),
           href = "https://idepsite.wordpress.com/pre-process/",
@@ -219,12 +216,7 @@ mod_02_pre_process_ui <- function(id) {
       
 
       # Pre-Process Panel Main -----------
-      mainPanel(
-        h5(
-          "Aspect ratios of figures can be adjusted by changing
-           the width of browser window. (To save a plot, right-click)"
-        ),
-       
+      mainPanel(       
         tabsetPanel(
           id = ns("eda_tabs"),
 
