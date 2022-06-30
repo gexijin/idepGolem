@@ -2,20 +2,20 @@
 % Please edit documentation in R/utils_analysis_random.R
 \name{detect_groups}
 \alias{detect_groups}
-\title{FUNCTION_TITLE}
+\title{detect_groups}
 \usage{
 detect_groups(sample_names, sample_info = NULL)
 }
 \arguments{
-\item{sample_names}{DESCRIPTION.}
+\item{sample_names}{column headings from data file or design file}
 
-\item{sample_info}{DESCRIPTION.}
+\item{sample_info}{Experiment design matrix}
 }
 \value{
-RETURN_DESCRIPTION
+char vector
 }
 \description{
-FUNCTION_DESCRIPTION
+Detects groups from column names in sample_info file.
 }
 \examples{
 # ADD_EXAMPLES_HERE

@@ -189,22 +189,18 @@ mod_02_pre_process_ui <- function(id) {
           )
         ), 
         br(),
-        downloadButton(
-          outputId = ns("rds"),
-          label = ".RData File"
-        ),        
-       downloadButton(
-          outputId = ns("report"),
-          label = "Report"
-        ),
         # Show transform messages
         actionButton(
           inputId = ns("show_messages"),
           label = "Messages"
         ),
-        h5(
-          "Aspect ratios of figures can be adjusted by changing
-           the width of browser window."
+        downloadButton(
+          outputId = ns("rds"),
+          label = ".RData File"
+        ),
+       downloadButton(
+          outputId = ns("report"),
+          label = "Report"
         ),
         a(
           h5("Questions?", align = "right"),
@@ -231,6 +227,10 @@ mod_02_pre_process_ui <- function(id) {
             ottoPlots::mod_download_figure_ui(
               id = ns("dl_total_counts"), 
               label = "Download barplot"
+            ),
+            h5(
+             "Figure width can be adjusted by changing
+             the width of browser window."
             )
           ),
 
@@ -268,6 +268,10 @@ mod_02_pre_process_ui <- function(id) {
             ottoPlots::mod_download_figure_ui(
               id = ns("dl_eda_scatter"), 
               label = "Download scatterplot"
+            ),
+            h5(
+             "Figure width can be adjusted by changing
+             the width of browser window."
             )
           ),
 
@@ -298,6 +302,10 @@ mod_02_pre_process_ui <- function(id) {
             ottoPlots::mod_download_figure_ui(
               id = ns("dl_eda_density"), 
               label = "Download density plot"
+            ),
+            h5(
+             "Figure width can be adjusted by changing
+             the width of browser window."
             )
           ),
 
@@ -330,14 +338,11 @@ mod_02_pre_process_ui <- function(id) {
             ottoPlots::mod_download_figure_ui(
               id = ns("dl_dev_transform"), 
               label = "Download transformed plot"
+            ),
+            h5(
+             "Figure width can be adjusted by changing
+             the width of browser window."
             )
-          ),
-
-          # Searchable table of transformed converted data ---------
-          tabPanel(
-            title = "Normalized Data",
-            br(),
-            DT::dataTableOutput(outputId = ns("examine_data"))
           ),
 
           # Plot panel for individual genes ---------
@@ -348,18 +353,18 @@ mod_02_pre_process_ui <- function(id) {
               column(
                 4, 
                 # Gene ID Selection -----------
-                selectInput(
-                  inputId = ns("select_gene_id"),
-                  label = "Select Gene ID Label",
-                  choices = NULL,
-                  selected = NULL
-                ),
                 selectizeInput(
                   inputId = ns("selected_gene"),
-                  label = "Select/Search for Genes",
+                  label = "Select/Search for Gene(s)",
                   choices = "",
                   selected = NULL,
                   multiple = TRUE
+                ),                
+                selectInput(
+                  inputId = ns("select_gene_id"),
+                  label = NULL,
+                  choices = NULL,
+                  selected = NULL
                 )
               ),
               column(
@@ -377,7 +382,7 @@ mod_02_pre_process_ui <- function(id) {
                   inputId = ns("angle_ind_axis_lab"),
                   label = "Angle Axis Labels",
                   choices = c(0, 45, 90),
-                  selected = 0
+                  selected = 45
                 )
               )
             ),
@@ -389,7 +394,18 @@ mod_02_pre_process_ui <- function(id) {
             ottoPlots::mod_download_figure_ui(
               id = ns("dl_gene_plot"), 
               label = "Download gene plot"
+            ),
+            h5(
+             "Figure width can be adjusted by changing
+             the width of browser window."
             )
+          ),
+          # Searchable table of transformed converted data ---------
+          tabPanel(
+            title = "Data",
+            h5("Normalized data with Ensembl ID mappings and gene symbols."),
+            br(),
+            DT::dataTableOutput(outputId = ns("examine_data"))
           )
         )
       )
@@ -655,15 +671,22 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       req(tab() == "Pre-Process")
       req(!is.null(processed_data()$data))
 
-      # a random gene is ploted by default
-      selected <- NULL
-      all_names <- rownames(individual_data())
-      selected <- sample(all_names, 1)
+      # Genes are sorted by SD across samples
+      sorted <- sort(
+        apply( # gene SD
+          individual_data(),
+          1,
+          sd
+        ),
+        decreasing = TRUE
+      )
+      # top 2 most variable genes are plotted by default
+      selected <- names(sorted)[1:2]
 
       updateSelectizeInput(
         session,
-        inputId = "selected_gene",
-        choices = all_names,
+        inputId = "selected_gene", # genes are ranked by SD
+        choices = names(sorted),
         selected = selected,
         server = TRUE
       )
@@ -702,8 +725,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       filename = "gene_plot", 
       figure = reactive({ gene_plot() })
     )
-    
-    
+
 
     # Download buttons ----------
     output$download_processed_data <- downloadHandler(

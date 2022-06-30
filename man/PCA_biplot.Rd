@@ -24,6 +24,28 @@ PCA_biplot(
 \item{data}{Data that has been through pre-processing}
 
 \item{sample_info}{Matrix array with experiment info}
+
+\item{select_gene_id}{gene name option}
+
+\item{all_gene_names}{gene names}
+
+\item{selected_x}{x axis selection eg "PC1"}
+
+\item{selected_y}{y axis selection}
+
+\item{encircle}{draw shapes in plot}
+
+\item{encircleFill}{fill shapes in plot}
+
+\item{showLoadings}{draw gene vectors onto plot}
+
+\item{pointlabs}{show column names on points}
+
+\item{point_size}{point size}
+
+\item{ui_color}{color}
+
+\item{ui_shape}{shape}
 }
 \value{
 Formatted PCA plot using PCAtools package

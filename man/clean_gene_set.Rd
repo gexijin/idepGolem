@@ -2,18 +2,18 @@
 % Please edit documentation in R/utils_analysis_random.R
 \name{clean_gene_set}
 \alias{clean_gene_set}
-\title{FUNCTION_TITLE}
+\title{clean_gene_set}
 \usage{
 clean_gene_set(gene_set)
 }
 \arguments{
-\item{gene_set}{DESCRIPTION.}
+\item{gene_set}{Gene Set}
 }
 \value{
-RETURN_DESCRIPTION
+cleaned gene set
 }
 \description{
-FUNCTION_DESCRIPTION
+Clean up gene sets. Remove spaces and other control characters from gene names
 }
 \examples{
 # ADD_EXAMPLES_HERE
