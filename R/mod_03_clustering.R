@@ -841,6 +841,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         params <- list(
           pre_processed_data = pre_process$data(),
           sample_info = pre_process$sample_info(),
+          all_gene_names = pre_process$all_gene_names(),
           n_genes = input$n_genes,
           k_clusters = input$k_clusters,
           cluster_meth = input$cluster_meth,
