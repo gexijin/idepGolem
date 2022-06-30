@@ -2,18 +2,18 @@
 % Please edit documentation in R/utils_analysis_random.R
 \name{clean_query}
 \alias{clean_query}
-\title{FUNCTION_TITLE}
+\title{clean_query}
 \usage{
 clean_query(query_input)
 }
 \arguments{
-\item{query_input}{DESCRIPTION.}
+\item{query_input}{string with list of genes}
 }
 \value{
-RETURN_DESCRIPTION
+string of cleaned gene list
 }
 \description{
-FUNCTION_DESCRIPTION
+adds tabs and new lines after each gene
 }
 \examples{
 # ADD_EXAMPLES_HERE

@@ -2,18 +2,18 @@
 % Please edit documentation in R/utils_analysis_random.R
 \name{dynamic_range}
 \alias{dynamic_range}
-\title{FUNCTION_TITLE}
+\title{Dynamic Range}
 \usage{
 dynamic_range(num_set)
 }
 \arguments{
-\item{num_set}{DESCRIPTION.}
+\item{num_set}{Vector of values}
 }
 \value{
-RETURN_DESCRIPTION
+distance between 2nd largest and 2nd smallest value
 }
 \description{
-FUNCTION_DESCRIPTION
+Find the difference between 2nd largest and 2nd smallest number in set
 }
 \examples{
 # ADD_EXAMPLES_HERE

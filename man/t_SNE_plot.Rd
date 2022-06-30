@@ -10,6 +10,10 @@ t_SNE_plot(data, sample_info, selected_color, selected_shape)
 \item{data}{Data that has been through pre-processing}
 
 \item{sample_info}{Matrix array with experiment info}
+
+\item{selected_color}{color}
+
+\item{selected_shape}{shape}
 }
 \value{
 Formatted T-sne plot
