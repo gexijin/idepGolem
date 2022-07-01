@@ -671,12 +671,12 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       req(tab() == "Pre-Process")
       req(!is.null(processed_data()$data))
 
-      # Genes are sorted by SD across samples
+      # Genes are sorted by SD
       sorted <- sort(
         apply( # gene SD
           individual_data(),
-          1,
-          sd
+          MARGIN = 1,
+          FUN = sd #function(x) max(x) - min(x)
         ),
         decreasing = TRUE
       )
