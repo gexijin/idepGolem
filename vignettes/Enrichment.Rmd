@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup}
-#library(idepGolem)
+# library(idepGolem)
 devtools::load_all()
 ```
 
@@ -23,10 +23,9 @@ devtools::load_all()
 # Make data for enrichment functions
 idep_data <- get_idep_data()
 
-# YOUR_DATA_PATH <- "E:/idep_9_24/data/data103/data_go/BcellGSE71176_p53.csv"
-# YOUR_EXPERIMENT_PATH <- "E:/idep_9_24/data/data103/data_go/BcellGSE71176_p53_sampleInfo.csv"
-YOUR_DATA_PATH <- "F:/data104b_final/data_go/BcellGSE71176_p53.csv"
-YOUR_EXPERIMENT_PATH <- "F:/data104b_final/data_go/BcellGSE71176_p53_sampleInfo.csv"
+DATABASE <- Sys.getenv("GE_DATABASE")[1]
+YOUR_DATA_PATH <- paste0(DATABASE, "data_go/BcellGSE71176_p53.csv")
+YOUR_EXPERIMENT_PATH <- paste0(DATABASE, "data_go/BcellGSE71176_p53_sampleInfo.csv")
 
 expression_file <- data.frame(
   datapath = YOUR_DATA_PATH
@@ -101,9 +100,8 @@ returned in the gene sets. Creating a query requires a subset of the
 `gene_names` data frame. For this example, we will simply use the first 100 rows of the data. iDEP has many different methods to create interesting subsets, including differential expression analysis. Depending on the structure of the subsetted genes, use the code chunk below to filter `gene_names`.
 
 ```{r eval=FALSE}
-#gene_names_query <- gene_names[gene_names$ensembl_ID == rownames(example_data), ]
+# gene_names_query <- gene_names[gene_names$ensembl_ID == rownames(example_data), ]
 gene_names_query <- gene_names[gene_names$ensembl_ID == rownames(processed_data$data), ]
-
 ```
 
 The `converted` parameter will be the return from the `convert_id` function
@@ -139,7 +137,7 @@ below.
 heatmap_data <- process_heatmap_data(
   data = processed_data$data,
   n_genes_max = 150,
-  #n_genes_min = 0,
+  # n_genes_min = 0,
   gene_centering = TRUE,
   gene_normalize = TRUE,
   sample_centering = FALSE,

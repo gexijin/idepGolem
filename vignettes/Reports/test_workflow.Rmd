@@ -6,7 +6,7 @@ output:
 params:
   YOUR_DATA_PATH:
     label: Data
-    value: F:/data104b_final/data_go/GSE37704_sailfish_genecounts.csv
+    value: {GE_DATABASE}data_go/GSE37704_sailfish_genecounts.csv
     input: file
   YOUR_EXPERIMENT_PATH:
     label: Design
@@ -97,9 +97,10 @@ knitr::opts_chunk$set(echo = params$printcode)
 
 # Print All Selections
 ```{r}
-for (i in 1:length(params)){
-  if( TRUE)
+for (i in 1:length(params)) {
+  if (TRUE) {
     cat(paste0(names(params)[i], ": ", params[[i]], "\n"))
+  }
 }
 ```
 
@@ -118,10 +119,11 @@ idep_data <- idepGolem::get_idep_data()
 expression_file <- data.frame(
   datapath = params$YOUR_DATA_PATH
 )
-if(!is.null(params$YOUR_EXPERIMENT_PATH))
-experiment_file <- data.frame(
-  datapath = params$YOUR_EXPERIMENT_PATH
-) else{
+if (!is.null(params$YOUR_EXPERIMENT_PATH)) {
+  experiment_file <- data.frame(
+    datapath = params$YOUR_EXPERIMENT_PATH
+  )
+} else {
   experiment_file <- NULL
 }
 ```
@@ -157,7 +159,6 @@ gene_names <- get_all_gene_names(
   mapped_ids = converted_data$mapped_ids,
   all_gene_info = all_gene_info
 )
-
 ```
 
 
@@ -197,23 +198,22 @@ processed_data <- pre_process(
 
 fig.height=1.5, fig.width=2.5
 ```{r}
-if(params$data_file_format == 1){
- total_counts_ggplot(
-  counts_data = processed_data$raw_counts,
-  sample_info = load_data$sample_info
-) 
+if (params$data_file_format == 1) {
+  total_counts_ggplot(
+    counts_data = processed_data$raw_counts,
+    sample_info = load_data$sample_info
+  )
 }
-
 ```
 
 
 ```{r fig.height=5.5, fig.width=7.5}
-#colnames(processed_data$data)
+# colnames(processed_data$data)
 
 eda_scatter(
   processed_data = processed_data$data,
-  #plot_xaxis = "p53_IR_1",
-  #plot_yaxis = "p53_mock_1"
+  # plot_xaxis = "p53_IR_1",
+  # plot_yaxis = "p53_mock_1"
   plot_yaxis = colnames(processed_data$data)[1],
   plot_xaxis = colnames(processed_data$data)[2]
 )
