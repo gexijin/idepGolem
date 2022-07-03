@@ -11,10 +11,10 @@ loose_rock_proper(x)
 }
 \value{
 a capitalized string (all words)
+
+#examples
+loose_rock_proper("i saw a dEaD parrot")
 }
 \description{
 from: https://github.com/averissimo/loose.rock/blob/master/R/string.R
-}
-\examples{
-proper("i saw a dEaD parrot")
 }

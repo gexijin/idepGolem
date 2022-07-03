@@ -32,9 +32,6 @@ check <- check_object_state(
   true_message = as.data.frame("This is NULL")
 )
 # will eval to true and display message to console
-if (check$bool) {
-  return(check)
-}
 
 check <- check_object_state(
   check_exp = (length(c(1, 2)) == 0),
@@ -42,7 +39,4 @@ check <- check_object_state(
   false_message = "this doesn't have 0 elements"
 )
 # This will not return check and check$content will be false_message
-if (check$bool) {
-  return(check)
-}
 }

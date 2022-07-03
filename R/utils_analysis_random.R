@@ -310,9 +310,6 @@ extract_word <- function(word_list) {
 #'   true_message = as.data.frame("This is NULL")
 #' )
 #' # will eval to true and display message to console
-#' if (check$bool) {
-#'   return(check)
-#' }
 #'
 #' check <- check_object_state(
 #'   check_exp = (length(c(1, 2)) == 0),
@@ -320,14 +317,9 @@ extract_word <- function(word_list) {
 #'   false_message = "this doesn't have 0 elements"
 #' )
 #' # This will not return check and check$content will be false_message
-#' if (check$bool) {
-#'   return(check)
-#' }
-check_object_state <- function(
-  check_exp,
-  true_message,
-  false_message = ""
-) {
+check_object_state <- function(check_exp,
+                               true_message,
+                               false_message = "") {
   if (check_exp) {
     message(true_message)
     return(list(
@@ -348,7 +340,7 @@ check_object_state <- function(
 #' the ggplot2 package uses for plots.
 #'
 #' @param n Number of colors to return
-#' 
+#'
 #' @return Vector of hex color codes for a plot.
 gg_color_hue <- function(n) {
   hues <- seq(15, 375, length = n + 1)
@@ -370,11 +362,9 @@ gg_color_hue <- function(n) {
 #'
 #' @export
 #' @return Data matrix with changed rownames
-rowname_id_swap <- function(
-  data_matrix,
-  all_gene_names,
-  select_gene_id
-) {
+rowname_id_swap <- function(data_matrix,
+                            all_gene_names,
+                            select_gene_id) {
   if (select_gene_id == "User_ID" && ncol(all_gene_names) == 1) {
     return(data_matrix)
   } else if (select_gene_id == "User_ID") {
@@ -394,7 +384,7 @@ rowname_id_swap <- function(
     new_data <- dplyr::select(new_data, -order)
     new_data <- as.matrix(new_data)
     return(new_data)
-  } else if(select_gene_id == "ensembl_ID") {
+  } else if (select_gene_id == "ensembl_ID") {
     data_matrix <- as.data.frame(data_matrix)
     data_matrix$order <- seq(1, nrow(data_matrix), 1)
     new_data <- merge(
@@ -440,14 +430,12 @@ rowname_id_swap <- function(
 #'
 #' @param all_gene_names All matched gene names from idep data
 #' @param data Data matrix with rownames to merge with gene names
-#' 
+#'
 #' @export
 #' @return Inputted data with all gene name information.
-merge_data <- function(
-  all_gene_names,
-  data,
-  merge_ID
-) {
+merge_data <- function(all_gene_names,
+                       data,
+                       merge_ID) {
   isolate({
     if (dim(all_gene_names)[2] == 1) {
       new_data <- round(data, 2)
@@ -516,17 +504,15 @@ add_legend <- function(...) {
     new = TRUE
   )
   on.exit(par(opar))
-  plot(0, 0, type = 'n', bty = 'n', xaxt = 'n', yaxt = 'n')
+  plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
   legend(...)
 }
 
-#' Wrapping long text by adding \n 
+#' Wrapping long text by adding \n
 #' "Mitotic DNA damage checkpoint"  --> "Mitotic DNA damage\ncheckpoint"
 #' https://stackoverflow.com/questions/7367138/text-wrap-for-plot-titles
-wrap_strings <- function(
-  vector_of_strings,
-  width = 30
-  ) { 
+wrap_strings <- function(vector_of_strings,
+                         width = 30) {
   as.character(
     sapply(vector_of_strings, FUN = function(x) {
       paste(strwrap(x, width = width), collapse = "\n")
@@ -535,28 +521,26 @@ wrap_strings <- function(
 }
 
 #' ENRICHMENT NETWORK FUNCTION
-enrichment_network <- function(
-  go_table,
-  layout_button = 0,
-  edge_cutoff = 5
-){
-	gene_lists <- lapply(go_table$Genes, function(x) unlist(strsplit(as.character(x), " ")))
-	names(gene_lists) <- go_table$Pathways
-	go_table$Direction <- gsub(" .*", "", go_table$Direction)
+enrichment_network <- function(go_table,
+                               layout_button = 0,
+                               edge_cutoff = 5) {
+  gene_lists <- lapply(go_table$Genes, function(x) unlist(strsplit(as.character(x), " ")))
+  names(gene_lists) <- go_table$Pathways
+  go_table$Direction <- gsub(" .*", "", go_table$Direction)
 
-	g <- enrich_net(
+  g <- enrich_net(
     data = go_table,
     gene_set = gene_lists,
     node_id = "Pathways",
-    num_char = 100, 
-	  p_value = "adj.Pval",
+    num_char = 100,
+    p_value = "adj.Pval",
     p_value_cutoff = 1,
     degree_cutoff = 0,
-	  n = 200,
+    n = 200,
     group = go_table$Direction,
-    vertex.label.cex = 1, 
+    vertex.label.cex = 1,
     vertex.label.color = "black",
-    show_legend = FALSE, 
+    show_legend = FALSE,
     layout_button = layout_button,
     edge_cutoff = edge_cutoff
   )
@@ -566,29 +550,31 @@ enrichment_network <- function(
 #' n=200  maximum number of nodes
 #' degree.cutoff = 0    Remove node if less connected
 #' from PPInfer
-enrich_net <-  function(
-  data,
-  gene_set,
-  node_id,
-  node_name = node_id,
-  p_value, 
-  n = 50,
-  num_char = NULL,
-  p_value_cutoff = 0.05,
-  edge_cutoff = 0.05, 
-  degree_cutoff = 0,
-  edge_width = function(x) {5 * x^2},
-  node_size = function(x) {2.5 * log10(x)},
-  group = FALSE,
-  group_color = c("green", "red"),
-  group_shape = c("circle", "square"),
-  legend_parameter = list("topright"),
-  show_legend = TRUE,
-  plotting = TRUE, 
-  layout_button = 0,
-  ...
-) {
-	set.seed(layout_button)
+enrich_net <- function(data,
+                       gene_set,
+                       node_id,
+                       node_name = node_id,
+                       p_value,
+                       n = 50,
+                       num_char = NULL,
+                       p_value_cutoff = 0.05,
+                       edge_cutoff = 0.05,
+                       degree_cutoff = 0,
+                       edge_width = function(x) {
+                         5 * x^2
+                       },
+                       node_size = function(x) {
+                         2.5 * log10(x)
+                       },
+                       group = FALSE,
+                       group_color = c("green", "red"),
+                       group_shape = c("circle", "square"),
+                       legend_parameter = list("topright"),
+                       show_legend = TRUE,
+                       plotting = TRUE,
+                       layout_button = 0,
+                       ...) {
+  set.seed(layout_button)
   data <- data.frame(data, group)
   colnames(data)[length(colnames(data))] <- "Group"
   data <- data[as.numeric(data[, "adj_p_val"]) < p_value_cutoff, ]
@@ -604,17 +590,17 @@ enrich_net <-  function(
     gene_sets_list[[i]] <- gene_set[[index[i]]]
   }
   names(gene_sets_list) <- data[, node_name]
-    
-  if(is.null(num_char)) {
+
+  if (is.null(num_char)) {
     num_char <- max(nchar(as.character(data[, node_name])))
   } else {
-    if(length(unique(substr(data[, node_name], 1, num_char))) < nrow(data)) {
+    if (length(unique(substr(data[, node_name], 1, num_char))) < nrow(data)) {
       num_char <- max(nchar(as.character(data[, node_name])))
       message("Note : numChar is too small.", "\n")
     }
   }
   data[, node_name] <- paste(
-    substr(data[, node_name], 1, num_char), 
+    substr(data[, node_name], 1, num_char),
     ifelse(nchar(as.character(data[, node_name])) > num_char, "...", ""),
     sep = ""
   )
@@ -633,7 +619,7 @@ enrich_net <-  function(
     rep(data[, node_name], n),
     rep(data[, node_name], each = n)
   )
-  list_edges <- list_edges[list_edges[, 2] != list_edges[,3], ]
+  list_edges <- list_edges[list_edges[, 2] != list_edges[, 3], ]
   list_edges <- list_edges[!is.na(list_edges[, 1]), ]
   g <- igraph::graph.data.frame(list_edges[, -1], directed = FALSE)
   igraph::E(g)$width <- edge_width(as.numeric(list_edges[, 1]))
@@ -643,59 +629,57 @@ enrich_net <-  function(
   g <- igraph::delete.vertices(g, igraph::V(g)[!index_deg])
   data <- data[index_deg, ]
   index <- index[index_deg]
-  if(length(igraph::V(g)) == 0) {
+  if (length(igraph::V(g)) == 0) {
     stop("no categories greater than degree_cutoff...")
   }
   n <- min(nrow(data), n)
   data <- data[1:n, ]
   group_level <- sort(unique(group))
   p_values <- log10(as.numeric(data[, "adj_p_val"]))
-    
-  for(i in 1:length(group_level)) {
+
+  for (i in 1:length(group_level)) {
     index <- data[, "Group"] == group_level[i]
     igraph::V(g)$shape[index] <- group_shape[i]
     group_p_values <- p_values[index]
-    
-    if(length(group_p_values) > 0) {
-      if(max(group_p_values) == min(group_p_values)) {
+
+    if (length(group_p_values) > 0) {
+      if (max(group_p_values) == min(group_p_values)) {
         igraph::V(g)$color[index] <- grDevices::adjustcolor(
-          group_color[i], 
+          group_color[i],
           alpha.f = 0.5
         )
       } else {
         igraph::V(g)$color[index] <- sapply(
-          1 - .9 * (group_p_values - min(group_p_values)) / 
-          (max(group_p_values) - min(group_p_values)), 
+          1 - .9 * (group_p_values - min(group_p_values)) /
+            (max(group_p_values) - min(group_p_values)),
           function(x) {
-            grDevices::adjustcolor(group_color[i], alpha.f =  .1 + x)
+            grDevices::adjustcolor(group_color[i], alpha.f = .1 + x)
           }
         )
       }
     }
   }
-	if(plotting) {
+  if (plotting) {
     plot(g, , vertex.label.dist = 1.2, ...)
-    if(show_legend) {
-			legend.parameter$legend <- group.level
-			legend.parameter$text.col <- group.color
-			legend.parameter$bty <- "n"	
-			do.call(legend, legend.parameter)
-		}
+    if (show_legend) {
+      legend.parameter$legend <- group.level
+      legend.parameter$text.col <- group.color
+      legend.parameter$bty <- "n"
+      do.call(legend, legend.parameter)
+    }
   }
-  
+
   return(g)
 }
 
 #' VIS NETWORK FUNCTION
-vis_network_plot <- function(
-  network_data
-) {
+vis_network_plot <- function(network_data) {
   visNetwork::visNetwork(
     nodes = network_data$nodes,
     edges = network_data$edges,
     height = "700px",
     width = "700px"
-  ) |> 
+  ) |>
     visNetwork::visIgraphLayout(layout = "layout_with_fr") |>
     visNetwork::visNodes(
       color = list(
@@ -709,7 +693,8 @@ vis_network_plot <- function(
       borderWidth = 1,
       shadow = list(
         enabled = TRUE,
-        size = 10)
+        size = 10
+      )
     ) |>
     visNetwork::visEdges(
       shadow = FALSE,
@@ -717,21 +702,21 @@ vis_network_plot <- function(
         color = "#A9A9A9",
         highlight = "#FFD700"
       )
-    ) |> 
+    ) |>
     visNetwork::visExport(
-      type = "jpeg", 
-      name = "export-network", 
-      float = "left", 
-      label = "Export as an image (only what's visible on the screen!)", 
-      background = "white", 
+      type = "jpeg",
+      name = "export-network",
+      float = "left",
+      label = "Export as an image (only what's visible on the screen!)",
+      background = "white",
       style = ""
-    ) 
-}	
+    )
+}
 
 #' EXTRAT UNDERSCORE
 extract_under <- function(x) {
   words <- unlist(strsplit(x, "_"))
-  if(length(words) <= 4) {
+  if (length(words) <= 4) {
     return(gsub("_", " ", x))
   } else {
     words <- words[-c(1:4)]
@@ -740,52 +725,57 @@ extract_under <- function(x) {
 }
 
 #' Capitalizes all words in string
-#' 
+#'
 #' from: https://github.com/averissimo/loose.rock/blob/master/R/string.R
 #'
 #' @param x String
 #'
 #' @return a capitalized string (all words)
 #'
-#' @examples
-#' proper("i saw a dEaD parrot")
+#' #examples
+#' loose_rock_proper("i saw a dEaD parrot")
 loose_rock_proper <- function(x) {
   return(gsub("(?<=\\b)([a-z])", "\\U\\1", tolower(x), perl = TRUE))
 }
 
 #' PATHVIEW FUNCTION
 #' https://rdrr.io/bioc/pathview/src/R/colorpanel2.R
-colorpanel2 <- function (
-  n,
-  low,
-  mid,
-  high
-) {
+colorpanel2 <- function(n,
+                        low,
+                        mid,
+                        high) {
   if (missing(mid) || missing(high)) {
     low <- grDevices::col2rgb(low)
-    if (missing(high))
+    if (missing(high)) {
       high <- grDevices::col2rgb(mid)
-    else high <- grDevices::col2rgb(high)
-    red <- seq(low[1, 1], high[1, 1], length = n)/255
-    green <- seq(low[3, 1], high[3, 1], length = n)/255
-    blue <- seq(low[2, 1], high[2, 1], length = n)/255
-  }
-  else {
-    isodd <- n%%2 == 1
+    } else {
+      high <- grDevices::col2rgb(high)
+    }
+    red <- seq(low[1, 1], high[1, 1], length = n) / 255
+    green <- seq(low[3, 1], high[3, 1], length = n) / 255
+    blue <- seq(low[2, 1], high[2, 1], length = n) / 255
+  } else {
+    isodd <- n %% 2 == 1
     if (isodd) {
       n <- n + 1
     }
     low <- grDevices::col2rgb(low)
     mid <- grDevices::col2rgb(mid)
     high <- grDevices::col2rgb(high)
-    lower <- floor(n/2)
+    lower <- floor(n / 2)
     upper <- n - lower
-    red <- c(seq(low[1, 1], mid[1, 1], length = lower),
-             seq(mid[1, 1], high[1, 1], length = upper))/255
-    green <- c(seq(low[3, 1], mid[3, 1], length = lower),
-               seq(mid[3, 1], high[3, 1], length = upper))/255
-    blue <- c(seq(low[2, 1], mid[2, 1], length = lower),
-              seq(mid[2, 1], high[2, 1], length = upper))/255
+    red <- c(
+      seq(low[1, 1], mid[1, 1], length = lower),
+      seq(mid[1, 1], high[1, 1], length = upper)
+    ) / 255
+    green <- c(
+      seq(low[3, 1], mid[3, 1], length = lower),
+      seq(mid[3, 1], high[3, 1], length = upper)
+    ) / 255
+    blue <- c(
+      seq(low[2, 1], mid[2, 1], length = lower),
+      seq(mid[2, 1], high[2, 1], length = upper)
+    ) / 255
     if (isodd) {
       red <- red[-(lower + 1)]
       green <- green[-(lower + 1)]
@@ -797,148 +787,151 @@ colorpanel2 <- function (
 
 #' PATHVIEW SOURCE FUNCTION
 #' https://rdrr.io/bioc/pathview/src/R/render.kegg.node.R
-render.kegg.node <- function(
-  plot.data,
-  cols.ts,
-  img,
-  same.layer = TRUE,
-  type = c("gene","compound")[1],
-  text.col = "black",
-  cex = 0.25
-){
-  width=ncol(img)
-  height=nrow(img)
-  nn=nrow(plot.data)
-  pwids=plot.data$width
-  if(!all(pwids==max(pwids))){
+render.kegg.node <- function(plot.data,
+                             cols.ts,
+                             img,
+                             same.layer = TRUE,
+                             type = c("gene", "compound")[1],
+                             text.col = "black",
+                             cex = 0.25) {
+  width <- ncol(img)
+  height <- nrow(img)
+  nn <- nrow(plot.data)
+  pwids <- plot.data$width
+  if (!all(pwids == max(pwids))) {
     message("Info: ", "some node width is different from others, and hence adjusted!")
-    wc=table(pwids)
-    pwids=plot.data$width=as.numeric(names(wc)[which.max(wc)])
+    wc <- table(pwids)
+    pwids <- plot.data$width <- as.numeric(names(wc)[which.max(wc)])
   }
 
-  if(type=="gene"){
-  if(same.layer!=T){
-    rect.out=sliced.shapes(plot.data$x+0.5, height-plot.data$y, plot.data$width/2-0.5, plot.data$height/2-0.25,  cols=cols.ts, draw.border=F, shape="rectangle")
-    text(plot.data$x+0.5, height-plot.data$y, labels = as.character(plot.data$labels),
-         cex = cex, col = text.col)
-    return(invisible(1))
-  } else{
-    img2=img
-    pidx=cbind(ceiling(plot.data$x-plot.data$width/2)+1,
-      floor(plot.data$x+plot.data$width/2)+1,
-      ceiling(plot.data$y-plot.data$height/2)+1,
-      floor(plot.data$y+plot.data$height/2)+1)
-    cols.ts=cbind(cols.ts)
-    ns=ncol(cols.ts)
-    brk.x= sapply(plot.data$width/2, function(wi) seq(-wi, wi, length = ns+1))
-    for(k in 1:ns){
-      col.rgb=col2rgb(cols.ts[,k])/255
-      pxr=t(apply(pidx[,1:2], 1, function(x) x[1]:x[2]))-plot.data$x-1
-      sel=pxr>=ceiling(brk.x[k,]) & pxr<=floor(brk.x[k+1,])
-      for(i in 1:nn){
-      sel.px=(pidx[i,1]:pidx[i,2])[sel[i,]]
-      node.rgb=img[pidx[i,3]:pidx[i,4],sel.px, 1:3]
-      node.rgb.sum=apply(node.rgb,c(1,2), sum)
-      blk.ind=which(node.rgb.sum==0|node.rgb.sum==1,arr.ind=T)
-      node.rgb=array(col.rgb[,i],dim(node.rgb)[3:1])
-      node.rgb=aperm(node.rgb, 3:1)
-      for(j in 1:3) node.rgb[cbind(blk.ind,j)]=0
-      img2[pidx[i,3]:pidx[i,4],sel.px, 1:3]=node.rgb
-    }
-  }
-    return(img2)
-  }
-} else if(type=="compound"){
-  if(same.layer!=T){
-    nc.cols=ncol(cbind(cols.ts))
-    if(nc.cols>2){#block the background circle
-      na.cols=rep("#FFFFFF", nrow(plot.data))
-      cir.out=sliced.shapes(plot.data$x, height-plot.data$y, plot.data$width[1], plot.data$width[1], cols=na.cols, draw.border=F, shape="ellipse", lwd=0.2)
-    }
-    cir.out=sliced.shapes(plot.data$x, height-plot.data$y, plot.data$width[1], plot.data$width[1], cols=cols.ts, shape="ellipse", blwd=0.2)
-    return(invisible(1))
-  } else{
-#    col.rgb=col2rgb(cols.ts)/255
-    blk=c(0,0,0)
-    img2=img
-    w=ncol(img) #repeat
-    h=nrow(img) #repeat
-    cidx=rep(1:w, each=h)
-    ridx=rep(1:h, w)
-    pidx=lapply(1:nn, function(i){
-      ii=which((cidx-plot.data$x[i])^2+(ridx-plot.data$y[i])^2<(plot.data$width[i])^2)
-      imat=cbind(cbind(ridx, cidx)[rep(ii,each=3),],1:3)
-      imat[,1:2]=imat[,1:2]+1
-      ib=which(abs((cidx-plot.data$x[i])^2+(ridx-plot.data$y[i])^2-(plot.data$width[i])^2)<=8)
-      ibmat=cbind(cbind(ridx, cidx)[rep(ib,each=3),],1:3)
-      ibmat[,1:2]=ibmat[,1:2]+1
-      return(list(fill=imat,border=ibmat))
-    })
-
-    cols.ts=cbind(cols.ts)
-    ns=ncol(cols.ts)
-    brk.x= sapply(plot.data$width, function(wi) seq(-wi, wi, length = ns+1))
-    for(i in 1:nn){
-      pxr=pidx[[i]]$fill[,2]-1-plot.data$x[i]
-      col.rgb=col2rgb(cols.ts[i,])/255
-      for(k in 1:ns){
-        sel=pxr>=brk.x[k,i] & pxr<=brk.x[k+1,i]
-        img2[pidx[[i]]$fill[sel,]]=col.rgb[,k]
+  if (type == "gene") {
+    if (same.layer != T) {
+      rect.out <- sliced.shapes(plot.data$x + 0.5, height - plot.data$y, plot.data$width / 2 - 0.5, plot.data$height / 2 - 0.25, cols = cols.ts, draw.border = F, shape = "rectangle")
+      text(plot.data$x + 0.5, height - plot.data$y,
+        labels = as.character(plot.data$labels),
+        cex = cex, col = text.col
+      )
+      return(invisible(1))
+    } else {
+      img2 <- img
+      pidx <- cbind(
+        ceiling(plot.data$x - plot.data$width / 2) + 1,
+        floor(plot.data$x + plot.data$width / 2) + 1,
+        ceiling(plot.data$y - plot.data$height / 2) + 1,
+        floor(plot.data$y + plot.data$height / 2) + 1
+      )
+      cols.ts <- cbind(cols.ts)
+      ns <- ncol(cols.ts)
+      brk.x <- sapply(plot.data$width / 2, function(wi) seq(-wi, wi, length = ns + 1))
+      for (k in 1:ns) {
+        col.rgb <- col2rgb(cols.ts[, k]) / 255
+        pxr <- t(apply(pidx[, 1:2], 1, function(x) x[1]:x[2])) - plot.data$x - 1
+        sel <- pxr >= ceiling(brk.x[k, ]) & pxr <= floor(brk.x[k + 1, ])
+        for (i in 1:nn) {
+          sel.px <- (pidx[i, 1]:pidx[i, 2])[sel[i, ]]
+          node.rgb <- img[pidx[i, 3]:pidx[i, 4], sel.px, 1:3]
+          node.rgb.sum <- apply(node.rgb, c(1, 2), sum)
+          blk.ind <- which(node.rgb.sum == 0 | node.rgb.sum == 1, arr.ind = T)
+          node.rgb <- array(col.rgb[, i], dim(node.rgb)[3:1])
+          node.rgb <- aperm(node.rgb, 3:1)
+          for (j in 1:3) node.rgb[cbind(blk.ind, j)] <- 0
+          img2[pidx[i, 3]:pidx[i, 4], sel.px, 1:3] <- node.rgb
+        }
       }
-      img2[pidx[[i]]$border]=blk
+      return(img2)
     }
-    return(img2)
+  } else if (type == "compound") {
+    if (same.layer != T) {
+      nc.cols <- ncol(cbind(cols.ts))
+      if (nc.cols > 2) { # block the background circle
+        na.cols <- rep("#FFFFFF", nrow(plot.data))
+        cir.out <- sliced.shapes(plot.data$x, height - plot.data$y, plot.data$width[1], plot.data$width[1], cols = na.cols, draw.border = F, shape = "ellipse", lwd = 0.2)
+      }
+      cir.out <- sliced.shapes(plot.data$x, height - plot.data$y, plot.data$width[1], plot.data$width[1], cols = cols.ts, shape = "ellipse", blwd = 0.2)
+      return(invisible(1))
+    } else {
+      #    col.rgb=col2rgb(cols.ts)/255
+      blk <- c(0, 0, 0)
+      img2 <- img
+      w <- ncol(img) # repeat
+      h <- nrow(img) # repeat
+      cidx <- rep(1:w, each = h)
+      ridx <- rep(1:h, w)
+      pidx <- lapply(1:nn, function(i) {
+        ii <- which((cidx - plot.data$x[i])^2 + (ridx - plot.data$y[i])^2 < (plot.data$width[i])^2)
+        imat <- cbind(cbind(ridx, cidx)[rep(ii, each = 3), ], 1:3)
+        imat[, 1:2] <- imat[, 1:2] + 1
+        ib <- which(abs((cidx - plot.data$x[i])^2 + (ridx - plot.data$y[i])^2 - (plot.data$width[i])^2) <= 8)
+        ibmat <- cbind(cbind(ridx, cidx)[rep(ib, each = 3), ], 1:3)
+        ibmat[, 1:2] <- ibmat[, 1:2] + 1
+        return(list(fill = imat, border = ibmat))
+      })
+
+      cols.ts <- cbind(cols.ts)
+      ns <- ncol(cols.ts)
+      brk.x <- sapply(plot.data$width, function(wi) seq(-wi, wi, length = ns + 1))
+      for (i in 1:nn) {
+        pxr <- pidx[[i]]$fill[, 2] - 1 - plot.data$x[i]
+        col.rgb <- col2rgb(cols.ts[i, ]) / 255
+        for (k in 1:ns) {
+          sel <- pxr >= brk.x[k, i] & pxr <= brk.x[k + 1, i]
+          img2[pidx[[i]]$fill[sel, ]] <- col.rgb[, k]
+        }
+        img2[pidx[[i]]$border] <- blk
+      }
+      return(img2)
+    }
+  } else {
+    stop("unrecognized node type!")
   }
-} else stop("unrecognized node type!")
 }
 
 #' PATHVIEW SOURCE FUNCTION
-#' 
-pathview.stamp <- function(
-  x = NULL,
-  y = NULL,
-  position = "bottomright",
-  graph.sizes,
-  on.kegg = TRUE,
-  cex = 1
-){
-  if(on.kegg)    labels ="Data on KEGG graph\nRendered by Pathview"
-  else labels="-Data with KEGG pathway-\n-Rendered  by  Pathview-"
-  if(is.null(x)| is.null(y)){
-    x=graph.sizes[1]*.80
-    y=graph.sizes[2]/40
-    if(length(grep('left',position))==1)  x=graph.sizes[1]/40
-    if(length(grep('top', position))==1)  y=graph.sizes[2]-y
+#'
+pathview.stamp <- function(x = NULL,
+                           y = NULL,
+                           position = "bottomright",
+                           graph.sizes,
+                           on.kegg = TRUE,
+                           cex = 1) {
+  if (on.kegg) {
+    labels <- "Data on KEGG graph\nRendered by Pathview"
+  } else {
+    labels <- "-Data with KEGG pathway-\n-Rendered  by  Pathview-"
   }
-  text(x=x, y=y, labels=labels, adj=0, cex = cex, font=2)
+  if (is.null(x) | is.null(y)) {
+    x <- graph.sizes[1] * .80
+    y <- graph.sizes[2] / 40
+    if (length(grep("left", position)) == 1) x <- graph.sizes[1] / 40
+    if (length(grep("top", position)) == 1) y <- graph.sizes[2] - y
+  }
+  text(x = x, y = y, labels = labels, adj = 0, cex = cex, font = 2)
 }
 
 #' Heatmap of the data
-#' 
+#'
 #' Create a ComplexHeatmap from a data matrix.
-#' 
+#'
 #' @param data A basic data matrix
 #' @param heatmap_color_select Vector of colors to use for the fill
 #'  in the heatmap
 #' @export
 #' @return A drawn ComplexHeatmap.
-basic_heatmap <- function(
-  data,
-  heatmap_color_select
-) {
+basic_heatmap <- function(data,
+                          heatmap_color_select) {
   # Number of genes to show
-	n_genes <- nrow(data)
+  n_genes <- nrow(data)
 
   data <- as.matrix(data) - apply(data, 1, mean)
-  cutoff <- median(unlist(data)) + 3 * sd(unlist(data)) 
-	data[data > cutoff] <- cutoff
-	cutoff <- median(unlist(data)) - 3 * sd(unlist(data)) 
-	data[data < cutoff] <- cutoff
-	
-	data <- data[which(apply(data, 1, sd) > 0), ]
+  cutoff <- median(unlist(data)) + 3 * sd(unlist(data))
+  data[data > cutoff] <- cutoff
+  cutoff <- median(unlist(data)) - 3 * sd(unlist(data))
+  data[data < cutoff] <- cutoff
+
+  data <- data[which(apply(data, 1, sd) > 0), ]
 
   # Color scale
-  if(min(data) < 0) {
+  if (min(data) < 0) {
     col_fun <- circlize::colorRamp2(
       c(min(data), 0, max(data)),
       heatmap_color_select
@@ -949,11 +942,11 @@ basic_heatmap <- function(
       heatmap_color_select
     )
   }
-  
-	groups <- detect_groups(colnames(data))
-	group_count <- length(unique(groups))
+
+  groups <- detect_groups(colnames(data))
+  group_count <- length(unique(groups))
   groups_colors <- gg_color_hue(group_count)
-  
+
   top_ann <- ComplexHeatmap::HeatmapAnnotation(
     Group = groups,
     col = list(
@@ -972,9 +965,11 @@ basic_heatmap <- function(
     col = col_fun,
     cluster_rows = TRUE,
     clustering_method_rows = "average",
-    clustering_distance_rows = function(x) as.dist(
-      1 - cor(t(x), method = "pearson")
-    ),
+    clustering_distance_rows = function(x) {
+      as.dist(
+        1 - cor(t(x), method = "pearson")
+      )
+    },
     cluster_columns = TRUE,
     show_row_dend = TRUE,
     show_column_dend = FALSE,
@@ -988,7 +983,7 @@ basic_heatmap <- function(
       title_position = "topcenter"
     )
   )
-  
+
   return(
     heatmap = ComplexHeatmap::draw(
       heat,
@@ -998,11 +993,11 @@ basic_heatmap <- function(
 }
 
 #' Heatmap of User brush selection
-#' 
+#'
 #' Create a heatmap from the brush selection of the main heatmap.
 #' Used in iDEP to create an interactive heatmap and enable the
 #' User to zoom in on areas they find interesting.
-#' 
+#'
 #' @param ht_brush Brush information from the User on the main
 #'  heatmap
 #' @param ht Main heatmap to create the sub-heatmap from
@@ -1010,18 +1005,16 @@ basic_heatmap <- function(
 #'  to use for the sub-heatmap
 #' @param heatmap_data Data matrix that is being plotted in the
 #'  main heatmap
-#' 
+#'
 #' @export
 #' @return A ComplexHeatmap object that will be inputted into the
 #'  draw function in the server, the sub-heatmap data matrix, the
 #'  group color mapping for the annotation, and the groups that
 #'  the columns fall into.
-basic_heat_sub <- function(
-  ht_brush,
-  ht,
-  ht_pos_main,
-  heatmap_data
-) {
+basic_heat_sub <- function(ht_brush,
+                           ht,
+                           ht_pos_main,
+                           heatmap_data) {
   lt <- InteractiveComplexHeatmap::getPositionFromBrush(ht_brush)
   pos1 <- lt[[1]]
   pos2 <- lt[[2]]
@@ -1036,28 +1029,28 @@ basic_heat_sub <- function(
   )
 
   # Annotations ----------
-    column_groups <- detect_groups(colnames(heatmap_data))
-    groups_colors <- gg_color_hue(length(unique(column_groups)))
-  
-    top_ann <- ComplexHeatmap::HeatmapAnnotation(
-      Group = column_groups,
-      col = list(
-        Group = setNames(
-          groups_colors,
-          unique(column_groups)
-        )
-      ),
-      annotation_legend_param = list(
-        Group = list(nrow = 1, title = NULL)
-      ),
-      show_annotation_name = list(Group = FALSE),
-      show_legend = TRUE
-    )
-    
-    group_col_return <- setNames(
-      groups_colors,
-      c(unique(column_groups))
-    )
+  column_groups <- detect_groups(colnames(heatmap_data))
+  groups_colors <- gg_color_hue(length(unique(column_groups)))
+
+  top_ann <- ComplexHeatmap::HeatmapAnnotation(
+    Group = column_groups,
+    col = list(
+      Group = setNames(
+        groups_colors,
+        unique(column_groups)
+      )
+    ),
+    annotation_legend_param = list(
+      Group = list(nrow = 1, title = NULL)
+    ),
+    show_annotation_name = list(Group = FALSE),
+    show_legend = TRUE
+  )
+
+  group_col_return <- setNames(
+    groups_colors,
+    c(unique(column_groups))
+  )
   # End annotation ---------
 
   column_index <- unlist(pos[1, "column_index"])
@@ -1095,11 +1088,11 @@ basic_heat_sub <- function(
 
 
 #' HTML code for sub-heatmap selected cell
-#' 
+#'
 #' Create HTML code for a cell of information on the cell of the
 #' sub-heatmap that the User clicks on. The cell contains the
 #' expression value, the sample, the gene, and the group.
-#' 
+#'
 #' @param click Information from the User clicking on a cell of
 #'  the sub-heatmap
 #' @param ht_sub The drawn sub-heatmap
@@ -1110,20 +1103,18 @@ basic_heat_sub <- function(
 #' @param group_colors color of the top annotation that
 #'  is used for each group
 #' @param data Sub data matrix that is plotted in the sub-heatmap
-#' 
+#'
 #' @return HTML code that will be used in the shiny UI to tell
 #'  the user the information of the cell they selected.
-heat_click_info <- function(
-  click,
-  ht_sub,
-  ht_sub_obj,
-  ht_pos_sub,
-  sub_groups,
-  group_colors,
-  data
-) {
+heat_click_info <- function(click,
+                            ht_sub,
+                            ht_sub_obj,
+                            ht_pos_sub,
+                            sub_groups,
+                            group_colors,
+                            data) {
   pos1 <- InteractiveComplexHeatmap::getPositionFromClick(click)
-    
+
   pos <- InteractiveComplexHeatmap::selectPosition(
     ht_sub,
     mark = FALSE,
@@ -1131,7 +1122,7 @@ heat_click_info <- function(
     verbose = FALSE,
     ht_pos = ht_pos_sub
   )
-  
+
   row_index <- pos[1, "row_index"]
   column_index <- pos[1, "column_index"]
 
@@ -1154,10 +1145,9 @@ heat_click_info <- function(
 <pre>
 Value: @{round(value, 2)} <span style='background-color:@{col};width=50px;'>    </span>
 Sample: @{sample}
-Gene: @{gene} 
-Group: @{group_name} <span style='background-color:@{group_col};width=50px;'>    </span>   
-</pre></div>"
-)
+Gene: @{gene}
+Group: @{group_name} <span style='background-color:@{group_col};width=50px;'>    </span>
+</pre></div>")
 
- return(HTML(html))
+  return(HTML(html))
 }

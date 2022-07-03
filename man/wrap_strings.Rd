@@ -2,14 +2,14 @@
 % Please edit documentation in R/utils_analysis_random.R
 \name{wrap_strings}
 \alias{wrap_strings}
-\title{Wrapping long text by adding \n 
+\title{Wrapping long text by adding \n
 "Mitotic DNA damage checkpoint"  --> "Mitotic DNA damage\ncheckpoint"
 https://stackoverflow.com/questions/7367138/text-wrap-for-plot-titles}
 \usage{
 wrap_strings(vector_of_strings, width = 30)
 }
 \description{
-Wrapping long text by adding \n 
+Wrapping long text by adding \n
 "Mitotic DNA damage checkpoint"  --> "Mitotic DNA damage\ncheckpoint"
 https://stackoverflow.com/questions/7367138/text-wrap-for-plot-titles
 }
