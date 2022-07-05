@@ -33,6 +33,7 @@ Imports:
     grDevices,
     grid,
     htmltools (>= 0.5.2),
+    igraph,
     InteractiveComplexHeatmap,
     knitr,
     magrittr,
@@ -72,7 +73,6 @@ biocViews:
     SummarizedExperiment
 Remotes:
     github::espors/ottoPlots,
-    github::igraph/rigraph@master,
     url::https://bioconductor.org/packages/3.10/bioc/src/contrib/PGSEA_1.60.0.tar.gz,
     url::http://www.bioconductor.org/packages//2.11/data/annotation/src/contrib/KEGG.db_2.8.0.tar.gz
 Encoding: UTF-8
