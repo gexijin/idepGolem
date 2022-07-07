@@ -61,7 +61,6 @@ usethis::use_package("QUBIC")
 usethis::use_package("runibic")
 usethis::use_package("grDevices")
 usethis::use_package("PCAtools")
-usethis::use_package("shinyBS")
 usethis::use_package("tippy")
 usethis::use_package("ottoPlots")
 

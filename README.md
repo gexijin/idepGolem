@@ -2,7 +2,7 @@
 
 ## Description
 
-This is the Golem shiny package of [iDEP](<https://github.com/iDEP-SDSU/idep>). 
+This is the Golem shiny package of [iDEP](<https://github.com/iDEP-SDSU/idep>).
 The reason for this repository is to allow for users to locally install a package version of iDEP.
 
 ## Installation
@@ -32,7 +32,7 @@ $ cd idepGolem
 > devtools::install()
 ```
 
-You might get the following output but it still works 
+You might get the following output but it still works
 
 ```{R}
 * DONE (idepGolem)
