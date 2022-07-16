@@ -144,62 +144,64 @@ mod_02_pre_process_ui <- function(id) {
         ),
 
         # Select input for missing value ------------
-        selectInput(
-          inputId = ns("missing_value"),
-          label = "Missing values imputation:",
-          choices = list(
-            "Gene median" = "geneMedian",
-            "Treat as zero" = "treatAsZero",
-            "Median within sample groups" = "geneMedianInGroup"
+        fluidRow(
+          column(
+            width = 5,
+            h5("Missing values:")
           ),
-          selected = "geneMedian"
-        ),
-        br(),
+          column(
+            width = 7,
 
-        strong("Download Processed Data"),
-        br(),
-        # Download button for processed data -----------
-        downloadButton(
-          outputId = ns("download_processed_data"),
-          label = "Processed data"
-        ),
-
-        # Conditional panel for read count data ------------
-        conditionalPanel(
-          condition = "output.data_file_format == 1",
-
-          # Download the counts data with converted IDs
-          downloadButton(
-            outputId = ns("download_converted_counts"),
-            label = "Converted counts data"
-          ),
-          ns = ns
-        ),
-        br(),
-        
-        br(),
-        strong("R-Markdown Report"),
-        br(),
-        
-        downloadButton(
-          outputId = ns("report"),
-          label = "Generate Report"
+            # Constant to add for a log transform
+            selectInput(
+              inputId = ns("missing_value"),
+              label = NULL,
+              choices = list(
+                "Use gene median" = "geneMedian",
+                "Treat as zero" = "treatAsZero",
+                "Use group median" = "geneMedianInGroup"
+              ),
+              selected = "geneMedian"
+            )
+          )
         ), 
-        br(),
-        strong("Data and Selections"),
-        br(),
-        downloadButton(
-          outputId = ns("rds"),
-          label = "Download .RData File"
-        ),         
-        br(),
+        fluidRow(
+          column(
+            width = 6,
+            downloadButton(
+              outputId = ns("download_processed_data"),
+              label = "Processed data"
+            )
+          ),
+          column(
+            width = 6,
+        # Conditional panel for read count data ------------
+            conditionalPanel(
+              condition = "output.data_file_format == 1",
+
+              # Download the counts data with converted IDs
+              downloadButton(
+                outputId = ns("download_converted_counts"),
+                label = "Converted counts"
+              ),
+              ns = ns
+            )
+          )
+        ), 
         br(),
         # Show transform messages
         actionButton(
           inputId = ns("show_messages"),
-          label = "Show Conversion Messages"
+          label = "Messages"
         ),
-
+        downloadButton(
+          outputId = ns("rds"),
+          label = ".RData File"
+        ),
+       downloadButton(
+          outputId = ns("report"),
+          label = "Report"
+        ),
         a(
           h5("Questions?", align = "right"),
           href = "https://idepsite.wordpress.com/pre-process/",
@@ -209,12 +211,7 @@ mod_02_pre_process_ui <- function(id) {
       
 
       # Pre-Process Panel Main -----------
-      mainPanel(
-        h5(
-          "Aspect ratios of figures can be adjusted by changing
-           the width of browser window. (To save a plot, right-click)"
-        ),
-       
+      mainPanel(       
         tabsetPanel(
           id = ns("eda_tabs"),
 
@@ -230,6 +227,10 @@ mod_02_pre_process_ui <- function(id) {
             ottoPlots::mod_download_figure_ui(
               id = ns("dl_total_counts"), 
               label = "Download barplot"
+            ),
+            h5(
+             "Figure width can be adjusted by changing
+             the width of browser window."
             )
           ),
 
@@ -267,6 +268,10 @@ mod_02_pre_process_ui <- function(id) {
             ottoPlots::mod_download_figure_ui(
               id = ns("dl_eda_scatter"), 
               label = "Download scatterplot"
+            ),
+            h5(
+             "Figure width can be adjusted by changing
+             the width of browser window."
             )
           ),
 
@@ -297,12 +302,16 @@ mod_02_pre_process_ui <- function(id) {
             ottoPlots::mod_download_figure_ui(
               id = ns("dl_eda_density"), 
               label = "Download density plot"
+            ),
+            h5(
+             "Figure width can be adjusted by changing
+             the width of browser window."
             )
           ),
 
           # Density plot of transformed data ---------
           tabPanel(
-            title = "SD vs. Mean Plot",
+            title = "Dispersion",
             br(),
             fluidRow(
               column(
@@ -329,36 +338,33 @@ mod_02_pre_process_ui <- function(id) {
             ottoPlots::mod_download_figure_ui(
               id = ns("dl_dev_transform"), 
               label = "Download transformed plot"
+            ),
+            h5(
+             "Figure width can be adjusted by changing
+             the width of browser window."
             )
-          ),
-
-          # Searchable table of transformed converted data ---------
-          tabPanel(
-            title = "Converted Data",
-            br(),
-            DT::dataTableOutput(outputId = ns("examine_data"))
           ),
 
           # Plot panel for individual genes ---------
           tabPanel(
-            title = "Individual Genes",
+            title = "Gene plot",
             br(),
             fluidRow(
               column(
                 4, 
                 # Gene ID Selection -----------
-                selectInput(
-                  inputId = ns("select_gene_id"),
-                  label = "Select Gene ID Label",
-                  choices = NULL,
-                  selected = NULL
-                ),
                 selectizeInput(
                   inputId = ns("selected_gene"),
-                  label = "Select/Search for Genes",
+                  label = "Select/Search for Gene(s)",
                   choices = "",
                   selected = NULL,
                   multiple = TRUE
+                ),                
+                selectInput(
+                  inputId = ns("select_gene_id"),
+                  label = NULL,
+                  choices = NULL,
+                  selected = NULL
                 )
               ),
               column(
@@ -376,7 +382,7 @@ mod_02_pre_process_ui <- function(id) {
                   inputId = ns("angle_ind_axis_lab"),
                   label = "Angle Axis Labels",
                   choices = c(0, 45, 90),
-                  selected = 0
+                  selected = 45
                 )
               )
             ),
@@ -388,7 +394,18 @@ mod_02_pre_process_ui <- function(id) {
             ottoPlots::mod_download_figure_ui(
               id = ns("dl_gene_plot"), 
               label = "Download gene plot"
+            ),
+            h5(
+             "Figure width can be adjusted by changing
+             the width of browser window."
             )
+          ),
+          # Searchable table of transformed converted data ---------
+          tabPanel(
+            title = "Data",
+            h5("Normalized data with Ensembl ID mappings and gene symbols."),
+            br(),
+            DT::dataTableOutput(outputId = ns("examine_data"))
           )
         )
       )
@@ -633,7 +650,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       updateSelectInput(
         session = session,
         inputId = "select_gene_id",
-        choices = colnames(load_data$all_gene_names())
+        choices = colnames(load_data$all_gene_names()),
+        selected = "symbol"
       )
     })
 
@@ -651,12 +669,25 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     # Individual genes selection ----------
     observe({
       req(tab() == "Pre-Process")
+      req(!is.null(processed_data()$data))
+
+      # Genes are sorted by SD
+      sorted <- sort(
+        apply( # gene SD
+          individual_data(),
+          MARGIN = 1,
+          FUN = sd #function(x) max(x) - min(x)
+        ),
+        decreasing = TRUE
+      )
+      # top 2 most variable genes are plotted by default
+      selected <- names(sorted)[1:2]
 
       updateSelectizeInput(
         session,
-        inputId = "selected_gene",
-        choices = rownames(individual_data()),
-        selected = NULL,
+        inputId = "selected_gene", # genes are ranked by SD
+        choices = names(sorted),
+        selected = selected,
         server = TRUE
       )
     })
@@ -676,7 +707,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     gene_plot <- reactive({
       req(!is.null(individual_data()))
       req(!is.null(input$selected_gene))
-      
+
       individual_plots(
         individual_data = individual_data(),
         sample_info = load_data$sample_info(),
@@ -694,8 +725,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       filename = "gene_plot", 
       figure = reactive({ gene_plot() })
     )
-    
-    
+
 
     # Download buttons ----------
     output$download_processed_data <- downloadHandler(

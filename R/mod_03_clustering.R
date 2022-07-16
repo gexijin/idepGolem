@@ -15,8 +15,9 @@ mod_03_clustering_ui <- function(id) {
 
       # Heatmap Panel Sidebar ----------
       sidebarPanel(
+        width = 3,
         conditionalPanel(
-          condition = "input.cluster_panels == 'Heatmap/Enrichment' | 
+          condition = "input.cluster_panels == 'Hierarchical' | 
           input.cluster_panels == 'Gene SD Distribution' ",
           
           numericInput(
@@ -24,14 +25,14 @@ mod_03_clustering_ui <- function(id) {
             label = h4("Top n most variable genes to include:"), 
             min = 10, 
             max = 12000, 
-            value = 100, 
+            value = 1000, 
             step = 10
           ), 
           ns = ns
         ),
         
         conditionalPanel(
-          condition = "(input.cluster_panels == 'Heatmap/Enrichment' | 
+          condition = "(input.cluster_panels == 'Hierarchical' | 
             input.cluster_panels == 'Sample Tree') &&  input.cluster_meth == 2",
           
           # k- means slidebar -----------
@@ -69,7 +70,7 @@ mod_03_clustering_ui <- function(id) {
 
         # Select Clustering Method ----------
         conditionalPanel(
-          condition = "input.cluster_panels == 'Heatmap/Enrichment' | 
+          condition = "input.cluster_panels == 'Hierarchical' | 
             input.cluster_panels == 'Sample Tree'",
           
           selectInput(
@@ -87,7 +88,7 @@ mod_03_clustering_ui <- function(id) {
 
         # Heatmap customizing features ----------
         conditionalPanel(
-          condition = "input.cluster_panels == 'Heatmap/Enrichment' ",
+          condition = "input.cluster_panels == 'Hierarchical' ",
           
           # Gene ID Selection -----------
           selectInput(
@@ -100,7 +101,7 @@ mod_03_clustering_ui <- function(id) {
           # Sample coloring bar -----------
           htmlOutput(ns("list_factors_heatmap")),
 
-          strong("Customize heatmap (Default values work well):"),
+          strong("Customize heatmap:"),
           fluidRow(
             br(),
             column(width = 3, h5("Color")),
@@ -121,7 +122,7 @@ mod_03_clustering_ui <- function(id) {
         # Clustering methods for hierarchical ----------
         conditionalPanel(
           condition = "input.cluster_meth == 1 && 
-            (input.cluster_panels == 'Heatmap/Enrichment' | 
+            (input.cluster_panels == 'Hierarchical' | 
             input.cluster_panels == 'Sample Tree')",
           fluidRow(
             column(width = 4, h5("Distance")),
@@ -157,7 +158,7 @@ mod_03_clustering_ui <- function(id) {
               numericInput(
                 inputId = ns("heatmap_cutoff"),
                 label = NULL,
-                value = 4,
+                value = 3,
                 min = 2,
                 step = 1
               )
@@ -168,7 +169,7 @@ mod_03_clustering_ui <- function(id) {
 
         # Checkbox features ------------
         conditionalPanel(
-          condition = "input.cluster_panels == 'Heatmap/Enrichment' | input.cluster_panels == 'Sample Tree' ",
+          condition = "input.cluster_panels == 'Hierarchical' | input.cluster_panels == 'Sample Tree' ",
           
           checkboxInput(
             inputId = ns("gene_centering"),
@@ -184,12 +185,12 @@ mod_03_clustering_ui <- function(id) {
         ),
         
         conditionalPanel(
-          condition = "input.cluster_panels == 'Heatmap/Enrichment' ",
+          condition = "input.cluster_panels == 'Hierarchical' ",
           
           checkboxInput(
             inputId = ns("no_sample_clustering"),
-            label = "Do not re-order or cluster samples",
-            value = FALSE
+            label = "Do not cluster samples",
+            value = TRUE
           ),
           checkboxInput(
             inputId = ns("show_row_dend"),
@@ -201,9 +202,15 @@ mod_03_clustering_ui <- function(id) {
             outputId = ns("download_heatmap_data"),
             label = "Heatmap data"
           ),
-          
           ns = ns
         ),
+        
+  
+        downloadButton(
+          outputId = ns("report"),
+          label = "Generate Report"
+        ), 
+        
 
         a(
           h5("Questions?", align = "right"),
@@ -211,34 +218,39 @@ mod_03_clustering_ui <- function(id) {
           target = "_blank"
         )
       ),
+
+
+
+
+
+      #########################################################################
+      # Main Panel
+      #########################################################################
+
       mainPanel(
         tabsetPanel(
           id = ns("cluster_panels"),
 
           # Heatmap panel ----------
           tabPanel(
-            title = "Heatmap/Enrichment",
-            h3("Heatmap"), 
-            h5("Brush for sub-heatmap, click for value. (Shown Below)"),
+            title = "Hierarchical",
             br(),
-            
+
             fluidRow(
               column(
-                width = 3,
+                width = 4,
                 plotOutput(
                   outputId = ns("heatmap_main"),
-                  height = "450px",
+                  height = "500px",
                   width = "100%",
                   brush = ns("ht_brush")
                 ),
-                br(),
-                h5("Selected Cell (Submap):"),
                 uiOutput(
                   outputId = ns("ht_click_content")
                 )
               ),
               column(
-                width = 9,
+                width = 8,
                 plotOutput(
                   outputId = ns("sub_heatmap"),
                   height = "650px",
@@ -247,39 +259,47 @@ mod_03_clustering_ui <- function(id) {
                 )
               )
             ),
-            h3("Enrichment"), 
-            h5("Enrichment analysis is  based on selected genes from heatmap."),
-            h6("List of genes included in each pathway can be found 
-               in downloaded data."),
-            fluidRow(
-              column(
-                width = 4,
-                htmlOutput(outputId = ns("select_go_selector"))
-              ),
-              column(
-                width = 8,
-                checkboxInput(
-                  inputId = ns("filtered_background"), 
-                  label = "Use filtered data as background in enrichment (slow)", 
-                  value = TRUE
+            checkboxInput(
+              inputId = ns("cluster_enrichment"), 
+              label = strong("Enrichment analysis on selected genes"), 
+              value = FALSE
+            ),
+            conditionalPanel(
+              condition = "input.cluster_enrichment == 1 ",
+              fluidRow(
+                column(
+                  width = 4,
+                  htmlOutput(outputId = ns("select_go_selector"))
                 ),
-                checkboxInput(
-                  inputId = ns("remove_redudant"),
-                  label = "Remove Redudant Gene Sets",
-                  value = FALSE
+                column(
+                  width = 4,
+                  checkboxInput(
+                    inputId = ns("filtered_background"), 
+                    label = "Use filtered genes as background.", 
+                    value = FALSE
+                  )
+                ),
+                column(
+                  width = 4,
+                  checkboxInput(
+                    inputId = ns("remove_redudant"),
+                    label = "Remove Redudant Gene Sets",
+                    value = FALSE
+                  )
+                ),
+                tags$style(
+                  type='text/css',
+                  "#clustering-min_set_size {width:100%; margin-top:-12px}"
+                ),
+                tags$style(
+                  type='text/css',
+                  "#clustering-max_set_size {width:100%; margin-top:-12px}"
                 )
               ),
-              tags$style(
-                type='text/css',
-                "#clustering-min_set_size {width:100%; margin-top:-12px}"
-              ),
-              tags$style(
-                type='text/css',
-                "#clustering-max_set_size {width:100%; margin-top:-12px}"
-              )
-            ),
-            verbatimTextOutput(ns("test")),
-            uiOutput(outputId = ns("pathway_data"))
+              uiOutput(outputId = ns("pathway_data")),
+              ns = ns
+            )
+
           ),
           
           # Gene Standard Deviation Distribution ----------
@@ -316,6 +336,16 @@ mod_03_clustering_ui <- function(id) {
 }
 
 
+
+
+
+
+
+
+#########################################################################
+# Server function
+#########################################################################
+
 #' 03_heatmap Server Functions
 #'
 #' @noRd
@@ -337,7 +367,6 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       }
       updateNumericInput(
         inputId = "n_genes", 
-        value = 100, 
         max = max_genes
       )
     })
@@ -412,7 +441,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
 
 	    selectInput(
         inputId = ns("select_go"),
-        label = "Select Geneset:",
+        label = NULL,
         choices = pre_process$gmt_choices(),
         selected = "GOBP"
       )
@@ -497,7 +526,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     # Heatmap Click Value ---------
     output$ht_click_content <- renderUI({
       if (is.null(input$ht_click)) { 
-        "Click for Info."
+        "Click on zoomed heatmap"
       } else {
         cluster_heat_click_info(
           click = input$ht_click,
@@ -516,7 +545,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     output$sub_heatmap <- renderPlot({
       if (is.null(input$ht_brush)) {
         grid::grid.newpage()
-        grid::grid.text("No region is selected.", 0.5, 0.5)
+        grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
       } else {
         submap_return <- heat_sub(
           ht_brush = input$ht_brush,
@@ -709,14 +738,12 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
   
       return(lapply(names(pathway_table()), function(x) {
         tagList(
+          DT::dataTableOutput(ns(x)),
           br(),
           downloadButton(
             outputId = ns(paste0("table_", x)),
-            label = paste0("Enrichment: ", gsub("_", " ", x))
-          ),
-          br(),
-          strong(h3(gsub("_", " ", x))),
-          DT::dataTableOutput(ns(x))
+            label = "Enrichment"
+          )
         )
       })
       )
@@ -798,6 +825,71 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         write.csv(heatmap_data_download(), file)
       }
     )
+    
+    
+    # Markdown report------------
+    output$report <- downloadHandler(
+      
+      # For PDF output, change this to "report.pdf"
+      filename ="clustering_report.html",
+      content = function(file) {
+        #Show Loading popup
+        shinybusy::show_modal_spinner(
+          spin = "orbit",
+          text = "Generating Report",
+          color = "#000000"
+        )
+        # Copy the report file to a temporary directory before processing it, in
+        # case we don't have write permissions to the current working dir (which
+        # can happen when deployed).
+        tempReport <- file.path(tempdir(), "clustering_workflow.Rmd")
+        #tempReport
+        tempReport<-gsub("\\", "/",tempReport,fixed = TRUE)
+        
+        #This should retrieve the project location on your device:
+        #"C:/Users/bdere/Documents/GitHub/idepGolem"
+        wd <- getwd()
+        
+        markdown_location <-paste0(wd, "/vignettes/Reports/clustering_workflow.Rmd")
+        file.copy(from=markdown_location,to = tempReport, overwrite = TRUE)
+        
+        # Set up parameters to pass to Rmd document
+        params <- list(
+          pre_processed_data = pre_process$data(),
+          sample_info = pre_process$sample_info(),
+          all_gene_names = pre_process$all_gene_names(),
+          n_genes = input$n_genes,
+          k_clusters = input$k_clusters,
+          cluster_meth = input$cluster_meth,
+          select_gene_id = input$select_gene_id,
+          list_factors_heatmap = input$list_factors_heatmap,
+          heatmap_color_select = heatmap_colors[[input$heatmap_color_select]],
+          dist_function = input$dist_function,
+          hclust_function = input$hclust_function,
+          heatmap_cutoff = input$heatmap_cutoff,
+          gene_centering = input$gene_centering,
+          gene_normalize = input$gene_normalize,
+          no_sample_clustering = input$no_sample_clustering,
+          show_row_dend = input$show_row_dend
+            
+          
+        )
+        
+        # Knit the document, passing in the `params` list, and eval it in a
+        # child of the global environment (this isolates the code in the document
+        # from the code in this app).
+        rmarkdown::render(
+          input = tempReport,#markdown_location, 
+          output_file = file,
+          params = params,
+          envir = new.env(parent = globalenv())
+        )
+        shinybusy::remove_modal_spinner()
+        
+      }
+      
+    )
+    
 
   })
 }

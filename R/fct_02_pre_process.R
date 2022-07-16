@@ -789,7 +789,7 @@ mean_sd_plot <- function(
       table_data,
       ggplot2::aes(x = x_axis, y = y_axis)
   ) +
-  ggplot2::geom_hex() +
+  ggplot2::geom_hex(bins = 75) +
   ggplot2::geom_smooth(
     method = "gam",
     formula = y ~ s(x, bs = "cs")

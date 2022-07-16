@@ -78,6 +78,12 @@ gene_info <- function(
   } else {
     gene_info_csv <- read.csv(as.character(idep_data$gene_info_files[ix]))
     gene_info_csv[, 1] <- toupper(gene_info_csv[, 1])
+    #remove the two spaces in gene symbol
+    gene_info_csv$symbol <- gsub(
+      " ", 
+      "", 
+      gene_info_csv$symbol
+    )
   }
 
   set <- match(gene_info_csv$ensembl_gene_id, query_set)

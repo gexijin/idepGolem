@@ -166,6 +166,8 @@ pc_factor_correlation(
 MDS_plot(
   data = processed_data$data,
   sample_info = load_data$sample_info,
+  selected_color = "Sample_Name",
+  selected_shape = "Sample_Name"
 )
 ```
 # PCAtools plots
@@ -224,6 +226,7 @@ pathway_info <- find_overlap(
   select_org = "BestMatch",
   reduced = .75
 )
+
 #pathway_info
 ```
 
@@ -534,13 +537,13 @@ pathway_info <- find_overlap(
   reduced = FALSE
 )
 
-biclust_table <- get_biclust_table_data(
-  res = biclustering$res,
-  biclust_data = biclust_data,
-  select_go = "GOBP",
-  select_org = "BestMatch",
-  all_gene_info = all_gene_info
-)
+# biclust_table <- get_biclust_table_data(
+#   res = biclustering$res,
+#   biclust_data = biclust_data,
+#   select_go = "GOBP",
+#   select_org = "BestMatch",
+#   all_gene_info = all_gene_info
+# )
 ```
 
 # NETWORK TAB

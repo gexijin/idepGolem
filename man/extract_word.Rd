@@ -2,18 +2,18 @@
 % Please edit documentation in R/utils_analysis_random.R
 \name{extract_word}
 \alias{extract_word}
-\title{FUNCTION_TITLE}
+\title{extract_word}
 \usage{
 extract_word(word_list)
 }
 \arguments{
-\item{word_list}{DESCRIPTION.}
+\item{word_list}{word list}
 }
 \value{
-RETURN_DESCRIPTION
+extracted words
 }
 \description{
-FUNCTION_DESCRIPTION
+finds words in list
 }
 \examples{
 # ADD_EXAMPLES_HERE

@@ -2,19 +2,19 @@
 % Please edit documentation in R/utils_analysis_random.R
 \name{proper}
 \alias{proper}
-\title{FUNCTION_TITLE}
+\title{proper}
 \usage{
 proper(x)
 }
 \arguments{
-\item{x}{DESCRIPTION.}
+\item{x}{string}
 }
 \value{
-RETURN_DESCRIPTION
+cleaned string
 }
 \description{
-FUNCTION_DESCRIPTION
+This function converts gene set names to a more readable format
 }
 \examples{
-# ADD_EXAMPLES_HERE
+proper("GOBP_mmu_mgi_GO:0000183_chromatin_silencing_at_rDNA")
 }

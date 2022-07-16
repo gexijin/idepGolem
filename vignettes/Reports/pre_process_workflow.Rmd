@@ -5,72 +5,21 @@ params:
   loaded_data:
   sample_info:
   data_file_format:
-    label: "Format"
-    value: 2
-    input: radio
-    choices: [1,2,3] 
   no_id_conversion:
-    label: "Do not convert to ensembl"
-    value: FALSE
-    input: checkbox
   min_counts:
-    label: "min PCM"
-    value: .5
-    input: numeric
   n_min_samples_count:
-    label: "n libaries"
-    value: 1
-    input: numeric
   counts_transform:
-    label: "Transform counts data for clustering & PCA."
-    value: 1
-    input: radio
-    choices: [edgeR, vst, rlog]
   counts_log_start:
-    label: "psuedocount"
-    value: 4
-    input: numeric
   log_transform_fpkm:
-    label: "(Normalized Expression) Log transform?"
-    value: FALSE
-    input: checkbox
   log_start_fpkm:
-    label: "(Normalized Expression) Constant c for started log(x+c)"
-    value: 3
-    input: numeric
   low_filter_fpkm:
-    label: "(Normalized Expression) fpkm Minimum level"
-    value: .1
-    input: numeric
   n_min_samples_fpkm:
-    label: "(Normalized Expression) Minimum Samples"
-    value: 1
-    input: numeric
   missing_value:
-    label: "missing value imputation"
-    value: geneMedian
-    input: select
-    choices: ["geneMedian", "treatAsZero", "geneMedianInGroup"]
   scatter_x:
-    label: "X axis"
-    value: ""
-    input: text
   scatter_y:
-    label: "Y axis"
-    value: ""
-    input: text
   sd_color:
-    label: "SD_vs_mean"
-    value: "Red"
-    input: text
   rank:
-    label: "Use mean of Rank values"
-    value: False
-    input: checkbox
   no_fdr:
-    label: "[LFC] No P values"
-    value: FALSE
-    input: checkbox
   date:
     label: "Date: "
     value: !r Sys.Date()
@@ -88,13 +37,13 @@ knitr::opts_chunk$set(echo = params$printcode)
 This html document contains what parameters values were selected on the IDEP interface. It also includes the plots generated from those selections. 
 
 
-<!--# ALL SELECTED PARAMETERS-->
+<!--ALL SELECTED PARAMETERS-->
 ```{r, include=FALSE}
 for (i in 1:length(params)){
   # exclude loaded data & sample info
-  #if(names(params)[i] != "sample_info" && names(params)[i] != "loaded_data")
-   # cat(paste0(names(params)[i], ": ", params[[i]], "\n")
- #   )
+  if(names(params)[i] != "sample_info" && names(params)[i] != "loaded_data")
+    cat(paste0(names(params)[i], ": ", params[[i]], "\n")
+   )
 }
 ```
 

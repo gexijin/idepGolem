@@ -21,6 +21,10 @@ PCA_plot(
 \item{PCAx}{PC on x axis}
 
 \item{PCAy}{PC on y axis}
+
+\item{selected_color}{color}
+
+\item{selected_shape}{shape}
 }
 \value{
 Formatted PCA plot

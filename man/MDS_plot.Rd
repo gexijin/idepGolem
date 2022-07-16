@@ -4,17 +4,16 @@
 \alias{MDS_plot}
 \title{MDS FUNCTION}
 \usage{
-MDS_plot(
-  data,
-  sample_info,
-  selected_shape = "Sample_Name",
-  selected_color = "Sample_Name"
-)
+MDS_plot(data, sample_info, selected_shape, selected_color)
 }
 \arguments{
 \item{data}{Data that has been through pre-processing}
 
 \item{sample_info}{Matrix array with experiment info}
+
+\item{selected_shape}{shape}
+
+\item{selected_color}{color}
 }
 \value{
 Formatted PCA plot
