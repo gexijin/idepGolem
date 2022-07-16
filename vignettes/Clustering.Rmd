@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup}
-#library(idepGolem)
+# library(idepGolem)
 devtools::load_all()
 ```
 
@@ -26,8 +26,9 @@ idep_data <- get_idep_data()
 # YOUR_DATA_PATH <- "E:/idep_9_24/data/data103/data_go/BcellGSE71176_p53.csv"
 # YOUR_EXPERIMENT_PATH <- "E:/idep_9_24/data/data103/data_go/BcellGSE71176_p53_sampleInfo.csv"
 
-YOUR_DATA_PATH <- "F:/data104b_final/data_go/BcellGSE71176_p53.csv"
-YOUR_EXPERIMENT_PATH <- "F:/data104b_final/data_go/BcellGSE71176_p53_sampleInfo.csv"
+DATABASE <- Sys.getenv("GE_DATABASE")[1]
+YOUR_DATA_PATH <- paste0(DATABASE, "data_go/BcellGSE71176_p53.csv")
+YOUR_EXPERIMENT_PATH <- paste0(DATABASE, "data_go/BcellGSE71176_p53_sampleInfo.csv")
 
 
 expression_file <- data.frame(
@@ -132,7 +133,7 @@ this link https://bl.ocks.org/rpgove/0060ff3b656618e9136b.
 heatmap_data <- process_heatmap_data(
   data = processed_data$data,
   n_genes_max = 200,
-  #n_genes_min = 50,
+  # n_genes_min = 50,
   gene_centering = TRUE,
   gene_normalize = TRUE,
   sample_centering = TRUE,

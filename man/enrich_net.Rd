@@ -18,8 +18,12 @@ enrich_net(
   p_value_cutoff = 0.05,
   edge_cutoff = 0.05,
   degree_cutoff = 0,
-  edge_width = function(x) {     5 * x^2 },
-  node_size = function(x) {     2.5 * log10(x) },
+  edge_width = function(x) {
+     5 * x^2
+ },
+  node_size = function(x) {
+     2.5 * log10(x)
+ },
   group = FALSE,
   group_color = c("green", "red"),
   group_shape = c("circle", "square"),

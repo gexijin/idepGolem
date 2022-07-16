@@ -6,9 +6,6 @@
 \usage{
 dist_functions()
 }
-\value{
-
-}
 \description{
-
+dist_functions
 }

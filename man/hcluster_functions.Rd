@@ -6,9 +6,6 @@
 \usage{
 hcluster_functions()
 }
-\value{
-
-}
 \description{
-
+hcluster_functions
 }

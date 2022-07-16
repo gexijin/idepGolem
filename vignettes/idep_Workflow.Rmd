@@ -32,19 +32,13 @@ library(idepGolem)
 idep_data <- get_idep_data()
 
 
-#YOUR_DATA_PATH <- "F:/data104b_final/data_go/BcellGSE71176_p53.csv"
-#YOUR_EXPERIMENT_PATH <- "F:/data104b_final/data_go/BcellGSE71176_p53_sampleInfo.csv"
 
 
 
-#YOUR_DATA_PATH <- "d:/idep_9_24/data/data104/data_go/GSE37704_sailfish_genecounts.csv"
-#YOUR_EXPERIMENT_PATH <- "d:/idep_9_24/data/data104/data_go/GSE37704_sailfish_design.csv"
 
-YOUR_DATA_PATH <- "F:/data104b_final/data_go/BcellGSE71176_p53.csv"
-YOUR_EXPERIMENT_PATH <- "F:/data104b_final/data_go/BcellGSE71176_p53_sampleInfo.csv"
-
-#YOUR_DATA_PATH <- "F:/data104b_final/data_go/GSE71176_FC_Pval.csv"
-#OUR_EXPERIMENT_PATH <- "F:/data104b_final/data_go/BcellGSE71176_p53_sampleInfo.csv"
+DATABASE <- Sys.getenv("GE_DATABASE")[1]
+YOUR_DATA_PATH <- paste0(DATABASE, "data_go/BcellGSE71176_p53.csv")
+YOUR_EXPERIMENT_PATH <- paste0(DATABASE, "data_go/BcellGSE71176_p53_sampleInfo.csv")
 
 
 
