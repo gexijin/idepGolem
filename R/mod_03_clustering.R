@@ -422,7 +422,8 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       updateSelectInput(
         session = session,
         inputId = "select_gene_id",
-        choices = colnames(pre_process$all_gene_names())
+        choices = colnames(pre_process$all_gene_names()),
+        selected = "symbol"
       )
     })
 
