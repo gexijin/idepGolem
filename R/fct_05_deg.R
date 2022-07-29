@@ -548,6 +548,10 @@ deg_deseq2 <- function(
   max_samples <- 100
   max_comparisons <- 20
 
+  # if factors are not selected, ignore the design matrix
+	if(is.null(model_factors)) {
+    sample_info <- NULL
+  }
 	groups <- as.character(detect_groups(colnames(raw_counts), sample_info))
 	unique_groups <- unique(groups)	
 	

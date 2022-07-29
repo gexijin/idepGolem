@@ -12,9 +12,8 @@ NULL
 
 
 
-DATAPATH <- Sys.getenv("GE_DATABASE")[1]
+DATAPATH <- Sys.getenv("IDEP_DATABASE")[1]
 
-#DATAPATH <- "D:/idep_9_24/data/data104/"
 
 #' connect_convert_db connects to the convertIDs.db and returns the
 #' objects.
