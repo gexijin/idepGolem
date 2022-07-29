@@ -549,6 +549,8 @@ deg_deseq2 <- function(
   max_comparisons <- 20
 
   # if factors are not selected, ignore the design matrix
+  # this solve the error cased when design matrix is available but
+  # factors are not selected.
 	if(is.null(model_factors)) {
     sample_info <- NULL
   }
