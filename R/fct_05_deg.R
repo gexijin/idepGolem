@@ -545,9 +545,12 @@ deg_deseq2 <- function(
   block_factor = NULL,
   reference_levels = NULL
 ){
-  max_samples <- 100
+  # Local parameters---------------------------------------------
+  max_samples <- 500
   max_comparisons <- 20
 
+  
+  # Define groups------------------------------------------------
   # if factors are not selected, ignore the design matrix
   # this solve the error cased when design matrix is available but
   # factors are not selected.
@@ -557,6 +560,8 @@ deg_deseq2 <- function(
 	groups <- as.character(detect_groups(colnames(raw_counts), sample_info))
 	unique_groups <- unique(groups)	
 	
+	
+	#sample preprocess-------------------------------------------------
 	# Check for replicates, removes samples without replicates
   # Number of replicates per biological sample
 	reps <- as.matrix(table(groups))
@@ -592,7 +597,9 @@ deg_deseq2 <- function(
 			top_genes = NULL
     ))
 	}	
-		
+	
+
+  #list comparisons----------------------------------------------------
 	# All pair-wise comparisons
 	comparisons <- ""
 	for(i in 1:(length(unique_groups) - 1)) {
@@ -626,16 +633,20 @@ deg_deseq2 <- function(
   }
 
 	comparison_names <- comparisons
+	
+
+	#Run DESeq2 -----------------------------------------------------------
 	# Set up the DESeqDataSet Object and run the DESeq pipeline
 	dds <- DESeq2::DESeqDataSetFromMatrix(
     countData = raw_counts,
     colData = col_data,
     design = ~groups
-  )								
+  )
 
-	if(is.null(model_factors)) {
+   # no factors selected
+	if(is.null(model_factors)) { 
     dds = DESeq2::DESeq(dds)
-  } else {
+  } else { # factors selected
     # Using selected factors and comparisons ----------
 		# Build model
     # Block factor is just added in
@@ -649,7 +660,7 @@ deg_deseq2 <- function(
 		# Interaction terms like strain:treatment
 		interactions <- model_factors[grepl(":", model_factors)]
 		
-		col_data <- sample_info  
+		col_data <- sample_info
     # Factors are encoded as "A", "B", "C"; Avoids illegal letters
 		factors_coded <- toupper(letters)[1: dim(col_data)[2]]
     # For look up; each column of sample_info
@@ -712,10 +723,11 @@ deg_deseq2 <- function(
 
 		eval(parse(text = deseq2_object))
 	
+		
 		dds = DESeq2::DESeq(dds)  # main function		
 
 
-		# Comparisons 
+		# list selected comparisons ------------------------------------------------
 		# "group: control vs. mutant"
 		comparisons <- gsub(".*: ", "", selected_comparisons)
 		comparisons <- gsub(" vs\\. ", "-", comparisons)
@@ -762,8 +774,10 @@ deg_deseq2 <- function(
 			}
 			comparison_names = c(comparison_names,interaction_comparisons)
 		}
-	}
+	} # if factors selected
 	
+	
+	#-------------------------------------------------------------------------
 	# Extract contrasts according to comparisons defined above
 	result_first <- NULL
   all_calls <- NULL
@@ -827,110 +841,8 @@ deg_deseq2 <- function(
 		}
 	}
 
-	interactions <- c()
-	if(!is.null(model_factors)) {
-    interactions <- model_factors[grepl(":", model_factors )]
-  }
-		
-  # Add comprisons for non-reference levels. It adds to the results_first object.	
-	if(length(interactions) > 0) {
-    # Factor whose values are factors and names are factor and level combination
-    # conditionTreated, genotypeWT
-    factor_lookup <- c()
-		level_lookup <- c()
-		
-		for(i in 1:dim(sample_info)[2]) {
-      unique_sample_info <- unique(sample_info)
-			tem <- rep(toupper(letters)[i], dim(unique_sample_info)[1])
-			names(tem) <- paste0(toupper(letters)[i], unique_sample_info[, i])
-			factor_lookup <- c(factor_lookup, tem)  
-			
-			tem <- as.character(unique_sample_info[, i])
-			names(tem) <- paste0(toupper(letters)[i], unique_sample_info[, i])
-			level_lookup <- c(level_lookup, tem)
-		}
-		
-		# None interaction terms 
-		none_inter_terms <- DESeq2::resultsNames(dds)[!grepl(
-      "\\.", DESeq2::resultsNames(dds)
-    )]
-		none_inter_terms <- none_inter_terms[-1]
-		all_interaction_terms <- DESeq2::resultsNames(dds)[grepl(
-      "\\.", DESeq2::resultsNames(dds)
-    )]
+	#-----------------------------------------------------------------------------
 
-    # Each none interaction term
-		for(kk in 1:length(none_inter_terms)) { 
-			# Not just group comparison using sample names
-      if(!is.null(model_factors)) {
-				# Current factor
-				c_factor <- gsub("_.*", "", none_inter_terms[kk])
-
-				for(interaction_term in all_interaction_terms) {
-          # 4 components
-					splits <- split_interaction_terms(
-            interaction_term,
-            factor_lookup = factor_lookup,
-            level_lookup = level_lookup
-          )
-
-					if (c_factor != splits[1] & c_factor != splits[3]) {
-            next
-          }
-
-					selected <- DESeq2::results(
-            dds,
-            list(c(none_inter_terms[kk], interaction_term))
-          ) 
-					comparison_name <- paste0(
-            none_inter_terms[kk],
-            "__",
-            gsub("\\.", "", interaction_term)
-          )
-						
-					if(c_factor == splits[1]) {
-            other_level <- splits[4]
-          } else {
-            other_level <- splits[2]
-          }
-							
-					comparison_name = paste0(
-            gsub(
-              "_vs_",
-              "-",
-              substr(none_inter_terms[kk], 3, nchar(none_inter_terms[kk]))
-            ), 
-						"_for_",
-            other_level
-          )
-					comparison_names <- c(comparison_names, comparison_name)
-					selected$calls <- 0   
-					selected$calls[which(
-            selected$log2FoldChange > log2(min_fc_limma) & selected$padj < max_p_limma
-          )] <- 1
-					selected$calls[which(
-            selected$log2FoldChange <  -log2(min_fc_limma) & selected$padj < max_p_limma
-          )] <- -1
-					colnames(selected) <- paste(comparison_name, "___", colnames(selected), sep = "")
-					selected <- as.data.frame(selected)
-          # First one with significant genes, collect gene list and Pval+ fold
-					if(pp == 0) {
-						result_first <- selected
-            pp = 1 
-						top_genes[[1]] <- selected[, c(2, 6)] 
-						names(top_genes)[1] <- comparison_name
-          } else {
-            result_first = merge(result_first, selected, by = "row.names") 
-						rownames(result_first) <- result_first[, 1] 
-						result_first <- result_first[, -1]
-						pk <- pk + 1 
-						top_genes[[pk]] <- selected[, c(2, 6)]
-            names(top_genes)[pk] <- comparison_name
-					}
-				}			
-			} 
-		}
-	}
 
 	if(!is.null(result_first)) { 
 		# Note that when you only select 1 column from a data frame it automatically 
