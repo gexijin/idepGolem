@@ -107,8 +107,8 @@ get_idep_data <- function(datapath = DATAPATH) {
  #   ""                                  #3
   )
   
-  demo_data_file <- paste0(datapath, "data_go/", demo_data_file)
-  demo_metadata_file <- paste0(datapath, "data_go/", demo_metadata_file)
+ # demo_data_file <- paste0(datapath, "data_go/", demo_data_file)
+ # demo_metadata_file <- paste0(datapath, "/data_go)
 
   #if design file is missing remove folder string.
   ix <- nchar(demo_metadata_file) == nchar(paste0(datapath, "data_go/"))
