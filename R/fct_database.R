@@ -87,11 +87,24 @@ get_idep_data <- function(datapath = DATAPATH) {
     sep = ""
   )
 
-  demo_data_file <- paste0(datapath, "data_go/BcellGSE71176_p53.csv")
-  demo_metadata_file <- paste0(
-    datapath,
-    "data_go/BcellGSE71176_p53_sampleInfo.csv"
+  #holds a list of files and design files
+  demo_data_file <- c(
+    "BcellGSE71176_p53.csv",           #1 2x2 design p53
+    "GSE37704_Hoxa1_normalized.csv",   #2 Hoxa1 vs control
+    "GSE71176_FC_Pval.csv"             #3 FC & FDR
   )
+  demo_metadata_file <- c(
+    "BcellGSE71176_p53_sampleInfo.csv", #1
+    "",                                 #2
+    ""                                  #3
+  )
+  
+  demo_data_file <- paste0(datapath, "data_go/", demo_data_file)
+  demo_metadata_file <- paste0(datapath, "data_go/", demo_metadata_file)
+
+  #if design file is missing remove folder string.
+  ix <- nchar(demo_metadata_file) == nchar(paste0(datapath, "data_go/"))
+  demo_metadata_file[ix] <- ""
 
   conn_db <- connect_convert_db()
 

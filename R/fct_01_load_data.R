@@ -111,6 +111,7 @@ gene_info <- function(
 #' @param demo_data_file Expression demo data path (idep_data$demo_data_file)
 #' @param demo_metadata_file Experiment demo data path 
 #'  (idep_data$demo_metadata_file)
+#' @param data_file_format 1, counts, 2 normalized, 3 FDR and FC
 #'
 #' @export
 #' @return This returns a list that contains the expression data
@@ -122,15 +123,17 @@ input_data <- function(
   experiment_file,
   go_button,
   demo_data_file,
-  demo_metadata_file
+  demo_metadata_file,
+  data_file_format
 ) {
   in_file_data <- expression_file
   in_file_data <- in_file_data$datapath
 
   if (is.null(in_file_data) && go_button == 0) {
     return(NULL)
-  } else if (go_button > 0) {    # use demo data
-    in_file_data <- demo_data_file
+  } else if (go_button > 0) { 
+    # use demo data for corresponding data type
+    in_file_data <- demo_data_file[as.integer(data_file_format)]
   }
 
   isolate({
@@ -164,6 +167,9 @@ input_data <- function(
     # Remove duplicated genes ----------
     data <- data[!duplicated(data[, 1]), ]
 
+    # Remove rows without genes IDs----------
+    data <- data[!is.na(data[, 1]), ]
+ 
     # Set gene ids as rownames and get rid of column ---------
     rownames(data) <- data[, 1]
     data <- as.matrix(data[, c(-1)])
@@ -188,18 +194,23 @@ input_data <- function(
       data = data,
       sample_info = NULL
     ))
-  } else if (go_button > 0) {
-    sample_info_demo <- t(read.csv(
-      demo_metadata_file,
-      row.names = 1,
-      header = T,
-      colClasses = "character"
-    ))
+  } else if (go_button > 0 ) {
+    # design file is not ""
+    if(nchar(demo_metadata_file[as.integer(data_file_format)]) > 2) {
+      sample_info_demo <- t(read.csv(
+        demo_metadata_file[as.integer(data_file_format)],
+        row.names = 1,
+        header = T,
+        colClasses = "character"
+      )) 
+    } else { # empty design file
+      sample_info_demo <- NULL
+    }
     return(list(
       sample_info = sample_info_demo,
       data = data
     ))
-  }
+  } 
 
   isolate({
     # Read experiment file ----------
