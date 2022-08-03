@@ -17,7 +17,6 @@ mod_01_load_data_ui <- function(id) {
       #       Load Data sidebar panel
       ##################################################################
       sidebarPanel(
-
         # Reset Button -----------
         p(htmltools::HTML(
           "<div align=\"right\"><A HREF=\"javascript:history.go(0)\"
@@ -84,7 +83,7 @@ mod_01_load_data_ui <- function(id) {
           condition = "input.data_file_format == 3",
           checkboxInput(
             inputId = ns("no_fdr"),
-            label = "Fold-changes only, no corrected P values",
+            label = "Fold-changes only",
             value = FALSE
           ),
           ns = ns

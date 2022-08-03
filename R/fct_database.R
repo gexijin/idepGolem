@@ -91,7 +91,7 @@ get_idep_data <- function(datapath = DATAPATH) {
   demo_data_file <- c(
     "BcellGSE71176_p53.csv",           #1 2x2 design p53
     "GSE37704_Hoxa1_normalized.csv",   #2 Hoxa1 vs control
-    "GSE71176_FC_Pval.csv"             #3 FC & FDR
+    "GSE71176_p53_LFC_FDR.csv"             #3 FC & FDR
   )
   demo_metadata_file <- c(
     "BcellGSE71176_p53_sampleInfo.csv", #1
