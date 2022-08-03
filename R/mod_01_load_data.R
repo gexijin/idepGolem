@@ -291,14 +291,30 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       htmltools::HTML(paste(i, collapse = "<br/>"))
     })
 
+    #Change demo data based on selected format
+    demo_data_type <- reactive({
+      if (input$data_file_format == 1){
+        return(idep_data$demo_data_file)
+      }
+      if( input$data_file_format == 2){
+        return(idep_data$normalized_demo_data)
+      }
+    })
+    
     # Reactive element to load the data from the user or demo data ---------
-    loaded_data <- reactive(input_data(
+    loaded_data <- reactive(
+
+      input_data(
       expression_file = input$expression_file,
       experiment_file = input$experiment_file,
       go_button = input$go_button,
-      demo_data_file = idep_data$demo_data_file,
-      demo_metadata_file = idep_data$demo_metadata_file,
-      data_file_format = input$data_file_format
+      demo_data_file = demo_data_type(), 
+      demo_metadata_file = idep_data$demo_metadata_file
+
+# 8/3/22 Alternative method for loaded alt demo data formats
+#      demo_data_file = idep_data$demo_data_file,
+#      demo_metadata_file = idep_data$demo_metadata_file,
+#      data_file_format = input$data_file_format
     ))
 
     # Sample information table -----------

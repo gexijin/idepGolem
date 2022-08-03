@@ -895,6 +895,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
 
       counts_bias_message(
         raw_counts = processed_data()$raw_counts,
+        data_file_format = load_data$data_file_format(),
         sample_info = load_data$sample_info()
       )
     })
@@ -934,9 +935,9 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       req(input$show_messages || tab() == "Pre-Process")
       req(processed_data()$data_type_warning != 0)
       
-      message <- switch(processed_data()$data_type_warning,
-             "-1" = "Integers detected. Did you mean to select 'read counts'?",
-             "1" = "Non count values detected. Did you mean select 'Normalized expression values'?"
+      message <- switch(as.character(processed_data()$data_type_warning),
+             "1" = "Integers detected. Did you mean to select 'read counts'?",
+             "-1" = "Non count values detected. Did you mean select 'Normalized Expression Values'?"
   )
   
       
