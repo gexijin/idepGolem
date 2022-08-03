@@ -17,20 +17,6 @@ mod_01_load_data_ui <- function(id) {
       #       Load Data sidebar panel
       ##################################################################
       sidebarPanel(
-
-        # Button to load demo dataset ----------
-        # Manually namespace the goButton in tag with id in module call
-        actionButton(
-          inputId = ns("go_button"),
-          label = "Click here to load demo data"
-        ),
-        tags$head(tags$style(
-          "#load_data-go_button{color: red;
-          font-size: 16px;
-          font-style: italic;}"
-        )),
-        h5(" and just click the tabs for some magic!", style = "color:red"),
-
         # Reset Button -----------
         p(htmltools::HTML(
           "<div align=\"right\"><A HREF=\"javascript:history.go(0)\"
@@ -97,11 +83,23 @@ mod_01_load_data_ui <- function(id) {
           condition = "input.data_file_format == 3",
           checkboxInput(
             inputId = ns("no_fdr"),
-            label = "Fold-changes only, no corrected P values",
+            label = "Fold-changes only",
             value = FALSE
           ),
           ns = ns
         ),
+
+        # Button to load demo dataset ----------
+        # Manually namespace the goButton in tag with id in module call
+        actionButton(
+          inputId = ns("go_button"),
+          label = "Demo data"
+        ),
+        tags$head(tags$style(
+          "#load_data-go_button{color: red;
+          font-size: 16px;
+          font-style: italic;}"
+        )),
 
         # Expression data file input ----------
         fileInput(
@@ -312,6 +310,11 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       go_button = input$go_button,
       demo_data_file = demo_data_type(), 
       demo_metadata_file = idep_data$demo_metadata_file
+
+# 8/3/22 Alternative method for loaded alt demo data formats
+#      demo_data_file = idep_data$demo_data_file,
+#      demo_metadata_file = idep_data$demo_metadata_file,
+#      data_file_format = input$data_file_format
     ))
 
     # Sample information table -----------
@@ -412,13 +415,13 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         isolate({
           tem <- conversion_info()$converted$species_match
           if(nrow(tem) > 50) { # show only 50 
-            tem <- tem[1:50, ]
+            tem <- tem[1:50, , drop = FALSE]
           }
           if (is.null(tem)) {
             as.data.frame("ID not recognized.")
           } else {
             data.frame(
-              "Matched Species (genes)" = tem[1, ],
+              "Matched Species (genes)" = tem[1, 1],
               check.names = FALSE
             )
           }

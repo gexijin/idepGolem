@@ -40,6 +40,10 @@ selected factors}
 \value{
 The return value is the results of the DEG analysis. These
  results are filtered and formatted by the limma_value function.
+  results, a data frame with up or down regulated genes for all comparisons 
+  comparisons, a vectors holding comparison_names,   
+  exp_type, a character holding experimental design or error messages. 
+  top_genes, a list, each elements hold the lfc & FDR for a comparison
 }
 \description{
 Used in the limma_value function to perform DEG analysis using the
