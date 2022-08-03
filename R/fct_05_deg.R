@@ -405,7 +405,9 @@ limma_value <- function(
   counts_log_start,
   p_vals
 ) {
+  #read counts data -----------------------------------------------------------
   if(data_file_format == 1) {
+    # DESeq2----------------------------
     if(counts_deg_method == 3) {
       return(
         deg_deseq2(
@@ -419,6 +421,7 @@ limma_value <- function(
           reference_levels = factor_reference_levels
         )
       )
+    # limma-voom 2 or limma-trend 1 --------------------
 		} else if(counts_deg_method < 3) {
       return(
         deg_limma(
@@ -436,6 +439,8 @@ limma_value <- function(
         )
       )
     }
+
+  # normalized data -----------------------------------------------------------
   } else if(data_file_format == 2) {
 	  return(
       deg_limma(
@@ -452,6 +457,8 @@ limma_value <- function(
 				block_factor = select_block_factors_model,
       )
     )
+
+  # P value, LFC data ---------------------------------------------------------
 	} else {
 		if(!is.null(p_vals)) {
 		  ix <- match(rownames(processed_data), rownames(p_vals))
@@ -535,6 +542,11 @@ limma_value <- function(
 #' @export
 #' @return The return value is the results of the DEG analysis. These
 #'  results are filtered and formatted by the limma_value function.
+#'   results, a data frame with up or down regulated genes for all comparisons 
+#'   comparisons, a vectors holding comparison_names,   
+#'   exp_type, a character holding experimental design or error messages. 
+#'   top_genes, a list, each elements hold the lfc & FDR for a comparison   
+
 deg_deseq2 <- function(
   raw_counts,
   max_p_limma = .05,
@@ -545,16 +557,28 @@ deg_deseq2 <- function(
   block_factor = NULL,
   reference_levels = NULL
 ){
-  max_samples <- 100
-  max_comparisons <- 20
+  # Local parameters---------------------------------------------
+  max_samples <- 500
+  max_comparisons <- 500
 
+   
+  # Define groups------------------------------------------------
   # if factors are not selected, ignore the design matrix
+  # this solve the error cased when design matrix is available but
+  # factors are not selected.
 	if(is.null(model_factors)) {
     sample_info <- NULL
   }
-	groups <- as.character(detect_groups(colnames(raw_counts), sample_info))
+	groups <- as.character(
+    detect_groups(
+      colnames(raw_counts),
+      sample_info
+    )
+  )
 	unique_groups <- unique(groups)	
 	
+	
+	#sample preprocess-------------------------------------------------
 	# Check for replicates, removes samples without replicates
   # Number of replicates per biological sample
 	reps <- as.matrix(table(groups))
@@ -570,27 +594,40 @@ deg_deseq2 <- function(
       top_genes = NULL
     ))
   }
-	# Remove samples without replicates
-	unique_groups <- rownames(reps)[which(reps[, 1] > 1)]
-	ix <- which(groups %in% unique_groups)  
-	groups <- groups[ix]   
-	raw_counts <- raw_counts[, ix] 
-	exp_type <- paste(length(unique_groups)," sample groups detected.")	
+
+	# Remove samples without replicates (Disabled)
+	# unique_groups now only holds groups with replicates
+	# unique_groups <- rownames(reps)[which(reps[, 1] > 1)]
+	# ix <- which(groups %in% unique_groups)  
+	# groups <- groups[ix]   
+	# raw_counts <- raw_counts[, ix] 
+	
+   exp_type <- paste(length(unique_groups)," sample groups detected.")	
 	
 	# Too many samples 
 	if(ncol(raw_counts)  > max_samples) { 
 		return(list(
       results = NULL,
       comparisons = NULL, 
-			exp_type = paste(
-        exp_type,
+			exp_type = 
         "Too many samples for DESeq2. Please choose limma-voom or 
-         limma-trend."
-      ),
+         limma-trend.",
 			top_genes = NULL
     ))
 	}	
-		
+	
+	# If factors are selected, but comparisons are not 
+	if(!is.null(model_factors) & is.null(selected_comparisons)) { 
+	  return(list(
+	    results = NULL,
+	    comparisons = NULL, 
+	    exp_type = 
+	      "Please select comparisons.",
+	    top_genes = NULL
+	  ))
+	}	
+	
+  #list comparisons----------------------------------------------------
 	# All pair-wise comparisons
 	comparisons <- ""
 	for(i in 1:(length(unique_groups) - 1)) {
@@ -601,13 +638,12 @@ deg_deseq2 <- function(
       )
     }
   }
-	comparisons <- comparisons[-1]
+	comparisons <- comparisons[-1] 
 
    # Too many comparisons 
 	if(length(comparisons)  > max_comparisons) { 
 		exp_type = paste(
-      exp_type,
-      " Too many comparisons. Only first",
+      " Too many comparisons. Only the first",
       max_comparisons,
       "of the ",
       length(comparisons), 
@@ -618,22 +654,26 @@ deg_deseq2 <- function(
 	
 	col_data <- cbind(colnames(raw_counts), groups)
 
-	# No sample file, but user selected comparisons using column names
+	# No design file, but user selected comparisons using column names
 	if(is.null(model_factors) & length(selected_comparisons) > 0) {
 		comparisons <- selected_comparisons
   }
 
 	comparison_names <- comparisons
+	
+
+	#Run DESeq2 -----------------------------------------------------------
 	# Set up the DESeqDataSet Object and run the DESeq pipeline
 	dds <- DESeq2::DESeqDataSetFromMatrix(
     countData = raw_counts,
     colData = col_data,
     design = ~groups
-  )								
+  )
 
-	if(is.null(model_factors)) {
+   # no factors selected
+	if(is.null(model_factors)) { 
     dds = DESeq2::DESeq(dds)
-  } else {
+  } else { # factors selected
     # Using selected factors and comparisons ----------
 		# Build model
     # Block factor is just added in
@@ -642,12 +682,12 @@ deg_deseq2 <- function(
     # Selected factors and interactions:
     # c( "strain", "treatment", "strain:treatment")
 		factors <- model_factors  
-    # Non-interaction terms
+    # only non-interaction terms
 		factors <- factors[!grepl(":", factors)]
 		# Interaction terms like strain:treatment
 		interactions <- model_factors[grepl(":", model_factors)]
 		
-		col_data <- sample_info  
+		col_data <- sample_info
     # Factors are encoded as "A", "B", "C"; Avoids illegal letters
 		factors_coded <- toupper(letters)[1: dim(col_data)[2]]
     # For look up; each column of sample_info
@@ -689,7 +729,7 @@ deg_deseq2 <- function(
     )
 
 		
-		# Create model
+		# Create model, add interaction terms if selected
 		if(length(interactions) > 0) {
 			for(interaction_terms in interactions) {
 				# Split strain:mutant as "strain" and "mutant"
@@ -710,10 +750,12 @@ deg_deseq2 <- function(
 
 		eval(parse(text = deseq2_object))
 	
+		
 		dds = DESeq2::DESeq(dds)  # main function		
 
 
-		# Comparisons 
+		#------------------------------------------------------------------
+		# list selected comparisons 
 		# "group: control vs. mutant"
 		comparisons <- gsub(".*: ", "", selected_comparisons)
 		comparisons <- gsub(" vs\\. ", "-", comparisons)
@@ -736,7 +778,7 @@ deg_deseq2 <- function(
 	
 			comparisons <- c(comparisons, interaction_comparisons)
 		
-			# Translate comparisons generated in interaction terms back to factor names
+			# Translate comparisons generated in interaction terms to factor names
 			interaction_comparison_names <- interaction_comparisons
 			for(i in 1:length(interaction_comparison_names)) {
 				tem <- unlist(strsplit(interaction_comparison_names[i], "\\."))
@@ -757,11 +799,13 @@ deg_deseq2 <- function(
           "_",
           substr(tem[2], 2, nchar(tem[2])) 
 			  )				
-			}
+			} # for all interactions
 			comparison_names = c(comparison_names,interaction_comparisons)
-		}
-	}
+		} #if interaction terms
+	} # if factors selected
 	
+	
+	#-------------------------------------------------------------------------
 	# Extract contrasts according to comparisons defined above
 	result_first <- NULL
   all_calls <- NULL
@@ -793,12 +837,16 @@ deg_deseq2 <- function(
 
 		selected$calls <- 0
 
+		# upregulated genes marked as 1
 		selected$calls[which(
-      selected$log2FoldChange > log2(min_fc_limma) & selected$padj < max_p_limma
+      selected$log2FoldChange > log2(min_fc_limma) & 
+        selected$padj < max_p_limma
       )]  <-  1
 		
+		# downregulated genes marked as -1
     selected$calls[which(
-      selected$log2FoldChange < -log2(min_fc_limma) & selected$padj < max_p_limma
+      selected$log2FoldChange < -log2(min_fc_limma) & 
+        selected$padj < max_p_limma
     )] <- -1
 		
     colnames(selected) <- paste(
@@ -808,11 +856,14 @@ deg_deseq2 <- function(
       sep = ""
     )
 		selected <- as.data.frame(selected)
+		
     # First one with significant genes, collect gene list and Pval+ fold
+		# top_genes is a list, whose elements are data frames lfc, FDR
+		# result_first is a large data frame, collecting all results
 		if(pp == 0) {
       result_first <- selected
       pp <- 1
-		  top_genes[[1]] <- selected[, c(2, 6)] 
+		  top_genes[[1]] <- selected[, c(2, 6)] # fold and FDR in columns 2 & 6 
 		  names(top_genes)[1] <- comparison_names[kk]
     } else {
       result_first <- merge(result_first, selected, by = "row.names") 
@@ -825,111 +876,11 @@ deg_deseq2 <- function(
 		}
 	}
 
-	interactions <- c()
-	if(!is.null(model_factors)) {
-    interactions <- model_factors[grepl(":", model_factors )]
-  }
-		
-  # Add comprisons for non-reference levels. It adds to the results_first object.	
-	if(length(interactions) > 0) {
-    # Factor whose values are factors and names are factor and level combination
-    # conditionTreated, genotypeWT
-    factor_lookup <- c()
-		level_lookup <- c()
-		
-		for(i in 1:dim(sample_info)[2]) {
-      unique_sample_info <- unique(sample_info)
-			tem <- rep(toupper(letters)[i], dim(unique_sample_info)[1])
-			names(tem) <- paste0(toupper(letters)[i], unique_sample_info[, i])
-			factor_lookup <- c(factor_lookup, tem)  
-			
-			tem <- as.character(unique_sample_info[, i])
-			names(tem) <- paste0(toupper(letters)[i], unique_sample_info[, i])
-			level_lookup <- c(level_lookup, tem)
-		}
-		
-		# None interaction terms 
-		none_inter_terms <- DESeq2::resultsNames(dds)[!grepl(
-      "\\.", DESeq2::resultsNames(dds)
-    )]
-		none_inter_terms <- none_inter_terms[-1]
-		all_interaction_terms <- DESeq2::resultsNames(dds)[grepl(
-      "\\.", DESeq2::resultsNames(dds)
-    )]
-
-    # Each none interaction term
-		for(kk in 1:length(none_inter_terms)) { 
-			# Not just group comparison using sample names
-      if(!is.null(model_factors)) {
-				# Current factor
-				c_factor <- gsub("_.*", "", none_inter_terms[kk])
-
-				for(interaction_term in all_interaction_terms) {
-          # 4 components
-					splits <- split_interaction_terms(
-            interaction_term,
-            factor_lookup = factor_lookup,
-            level_lookup = level_lookup
-          )
-
-					if (c_factor != splits[1] & c_factor != splits[3]) {
-            next
-          }
-
-					selected <- DESeq2::results(
-            dds,
-            list(c(none_inter_terms[kk], interaction_term))
-          ) 
-					comparison_name <- paste0(
-            none_inter_terms[kk],
-            "__",
-            gsub("\\.", "", interaction_term)
-          )
-						
-					if(c_factor == splits[1]) {
-            other_level <- splits[4]
-          } else {
-            other_level <- splits[2]
-          }
-							
-					comparison_name = paste0(
-            gsub(
-              "_vs_",
-              "-",
-              substr(none_inter_terms[kk], 3, nchar(none_inter_terms[kk]))
-            ), 
-						"_for_",
-            other_level
-          )
-					comparison_names <- c(comparison_names, comparison_name)
-					selected$calls <- 0   
-					selected$calls[which(
-            selected$log2FoldChange > log2(min_fc_limma) & selected$padj < max_p_limma
-          )] <- 1
-					selected$calls[which(
-            selected$log2FoldChange <  -log2(min_fc_limma) & selected$padj < max_p_limma
-          )] <- -1
-					colnames(selected) <- paste(comparison_name, "___", colnames(selected), sep = "")
-					selected <- as.data.frame(selected)
-          # First one with significant genes, collect gene list and Pval+ fold
-					if(pp == 0) {
-						result_first <- selected
-            pp = 1 
-						top_genes[[1]] <- selected[, c(2, 6)] 
-						names(top_genes)[1] <- comparison_name
-          } else {
-            result_first = merge(result_first, selected, by = "row.names") 
-						rownames(result_first) <- result_first[, 1] 
-						result_first <- result_first[, -1]
-						pk <- pk + 1 
-						top_genes[[pk]] <- selected[, c(2, 6)]
-            names(top_genes)[pk] <- comparison_name
-					}
-				}			
-			} 
-		}
-	}
-
+	#-----------------------------------------------------------------------------
+  # add comparisons for non-reference levels, deleted 7/30/2022
+	
+	#-----------------------------------------------------------------------------
+  #collect up or down calls for all comparisons
 	if(!is.null(result_first)) { 
 		# Note that when you only select 1 column from a data frame it automatically 
     # converts to a vector. drop = FALSE prevents that.
@@ -943,34 +894,13 @@ deg_deseq2 <- function(
 	}
 
 	return(list(
-    results= all_calls,
+    results= all_calls, 
     comparisons = comparison_names,
     exp_type = exp_type,
     top_genes = top_genes
   )) 
 }
 
-#' SPLIT INTERACION TERMS
-#' Split  genotypeI.conditionTrt --> c("genotype","I","conditoin","Trt")
-split_interaction_terms <- function(
-  term,
-  factor_lookup,
-  level_lookup
-) {
-	if(!grepl("\\.", term)) {
-    return(NULL)
-  }
-	terms_split <- unlist(strsplit(term, "\\."))
-	# factor1, level1, factor2, level2
-	return(
-    c(
-      factor_lookup[terms_split[1]],
-      level_lookup[terms_split[1]],
-      factor_lookup[terms_split[2]],
-      level_lookup[terms_split[2]]
-    )
-  )
-}
 
 
 #' Differential expression using limma package
@@ -1021,17 +951,28 @@ deg_limma <- function(
 
 	top_genes <- list()
   limma_trend <- FALSE
+
+
+  # Data prep -----------------------------------------------------------------
+  # if normalized data, construct ExpressionSet directly
 	if(data_file_format == 2) {
     eset <- methods::new("ExpressionSet", exprs = as.matrix(processed_data))
-  } else {
-    # Limma-trend method selected for counts data
-		if(counts_deg_method == 1) {
-      # Use transformed data for limma  
+  } else { 
+    # read counts data, use limma-voom or limma-trend
+
+    # "DESeq2" = 3,
+    # "limma-voom" = 2,
+    # "limma-trend" = 1
+
+    # Use transformed data for limma-trend
+		if(counts_deg_method == 1) {    
 			eset <- methods::new("ExpressionSet", exprs = as.matrix(processed_data))
 			limma_trend = TRUE
 		}
 	}
 
+
+  # sample groups -------------------------------------------------------------
 	groups <- colnames(processed_data)
 	groups <-  detect_groups(groups, sample_info) 
 	unique_groups <- unique(groups)  
@@ -1054,13 +995,15 @@ deg_limma <- function(
     )
   }
 	 
-	# Remove samples without replicates
-	unique_groups <- rownames(reps)[which(reps[, 1] > 1)]
-	ix <- which(groups %in% unique_groups)  
-	groups <- groups[ix]   
-	processed_data <- processed_data[, ix]
-  raw_counts <- raw_counts[, ix] 
+	# Remove samples without replicates; disabled 7/31/2022
+	# unique_groups <- rownames(reps)[which(reps[, 1] > 1)]
+	# ix <- which(groups %in% unique_groups)  
+	# groups <- groups[ix]   
+	# processed_data <- processed_data[, ix]
+  # raw_counts <- raw_counts[, ix] 
 	
+
+  #Two groups------------------------------------------------------------------
   # Just two groups
 	if(length(unique_groups) == 2) {  
 		unique_groups <- unique(groups)
@@ -1076,19 +1019,19 @@ deg_limma <- function(
     # The first appearing level is set as reference; otherwise, we get
     # up and down-regulation reversed.
     groups <- factor(groups, levels = unique_groups) 
-
 		design <- model.matrix(~0 + groups)
 		colnames(design) <- unique_groups
 		
-    # Voom
+    # Voom--------------------------
 		if(!is.null(raw_counts) && counts_deg_method == 2) {
 			dge <- edgeR::DGEList(counts = raw_counts)
       # Normalization
 			dge <- edgeR::calcNormFactors(dge, method = "TMM")
 			voom_results <- limma::voom(dge, design)
-      fit <- limma::lmFit(v, design)
+      fit <- limma::lmFit(voom_results, design)
+      
+    # Regular limma ----------------
     } else {
-      # Regular limma
 			fit <- limma::lmFit(eset, design)
     }
 
@@ -1103,8 +1046,10 @@ deg_limma <- function(
       lfc = log2(min_fc_limma)
     )
 
+		#LFC and FDR
 		top_genes_table <- limma::topTable(fit, number = 1e12, sort.by = "M")
-		if(dim(top_genes_table)[1] != 0) {
+    #only keep FC and FDR columns
+		if(dim(top_genes_table)[1] != 0) { # have rows
       top_genes_table <- top_genes_table[, c('logFC', 'adj.P.Val')]
       top_genes[[1]] <- top_genes_table
     }
@@ -1114,6 +1059,8 @@ deg_limma <- function(
 		exp_type = "2 sample groups."
   }
 	
+
+  # 3+ groups -----------------------------------------------------------------
   # More than two sample groups
 	if(length(unique_groups) > 2) {
 	  # Set reference level based on the order in which the levels appear
@@ -1124,15 +1071,21 @@ deg_limma <- function(
 		design <- model.matrix(~ 0 + groups)
 		colnames(design) <- gsub("^groups", "", colnames(design))
 
+    #Voom----------------------------
 		if(!is.null(raw_counts) && counts_deg_method == 2) {
-			limma_voom <- limma::voom(raw_counts, design) 
-			fit <- limma::lmFit(limma_voom, design) 
+			dge <- edgeR::DGEList(counts = raw_counts)
+      # Normalization
+			dge <- edgeR::calcNormFactors(dge, method = "TMM")
+			voom_results <- limma::voom(dge, design)
+      fit <- limma::lmFit(voom_results, design)
+    # regular limma---------------------
 		} else {
       fit <- limma::lmFit(eset, design)
     }
-		
+	
 		fit <- limma::eBayes(fit, trend = limma_trend)
 		
+    # all comparisons ------------------------------
 		comparisons <- ""
 		for(i in 1:(length(unique_groups) - 1)) {
       for (j in (i + 1):length(unique_groups)) {
@@ -1144,7 +1097,8 @@ deg_limma <- function(
     }
 		comparisons <- comparisons[-1]
 
-		# No sample file, but user selected comparisons using column names
+    # No design file-----------------------------------------------------------
+		# No design file, but user selected comparisons using column names
 		if(is.null(model_factors) & length(selected_comparisons) > 0) {
       comparisons <- selected_comparisons
     }
@@ -1160,89 +1114,13 @@ deg_limma <- function(
     }
 		exp_type = paste(length(unique_groups), " sample groups detected.")	 
 		
-		# Factorial design 2x2, 2x3, 3x5 etc.
-		# All samples must be something like WT_control_rep1
-		if(sum(sapply(strsplit(unique_groups, "_"), length) == 2) == length(unique_groups)) {
-			comparisons <- ""
-			for(i in 1:(length(unique_groups) - 1)) {
-        for (j in (i + 1):length(unique_groups)) {
-          # Only compare WT_control vs. WT_treatment
-          if(strsplit(unique_groups[i], "_")[[1]][1] == strsplit(unique_groups[j], "_")[[1]][1] |
-             strsplit(unique_groups[i], "_")[[1]][2] == strsplit(unique_groups[j], "_")[[1]][2]) {
-            comparisons <- c(comparisons, paste(unique_groups[j], "-", unique_groups[i], sep = ""))
-          }
-        }
-      }
-			comparisons <- comparisons[-1]
-
-			# Factors genotype treatment levels
-			extract_treatment <- function(x) {
-        paste(gsub(".*_", "", unlist(strsplit(x, "-"))), collapse = "-")
-      }
-			extract_genotype <- function (x) {
-        gsub("_.*", "", unlist(strsplit(x, "-")))[1]
-      }
-			extract_treatment_counting <- unique(gsub(".*_", "", unlist(strsplit(unique_groups, "-"))))
-			treatments <- sapply(comparisons, extract_treatment)
-			genotypes <- sapply(comparisons, extract_genotype)
-			exp_type <- paste(
-        exp_type,
-        "\nFactorial design:",
-        length(unique(genotypes)),
-        "X",
-        length(extract_treatment_counting),
-        sep = ""
-      )
-
-			# Pairwise contrasts
-			make_contrast <- limma::makeContrasts(
-        contrasts = comparisons[1],
-        levels = design
-      )
-			for(kk in 2:length(comparisons)) {
-        make_contrast <- cbind(
-          make_contrast,
-          limma::makeContrasts(contrasts = comparisons[kk], levels = design)
-        )
-      }
-			contrast_names = colnames(make_contrast)
-
-			# Interaction contrasts
-			for (kk in 1:(length(comparisons) - 1)) {
-        for(kp in (kk + 1):length(comparisons)) {
-          if(treatments[kp] == treatments[kk]) {  
-					  make_contrast <- cbind(
-              make_contrast,
-              make_contrast[, kp] - make_contrast[, kk]
-            )
-					  contrast_names <- c(
-              contrast_names,
-              paste(
-                "I:", 
-                genotypes[kp],
-                "-",
-                genotypes[kk],
-                "(",
-                gsub("-", ".vs.", treatments[kp]),
-                ")",
-                sep = ""
-              )
-            )
-				  }
-        }   
-			}
-
-			colnames(make_contrast) <- contrast_names
-			comparisons <- contrast_names
-		}
-		
-
+    # Design file uploaded ----------------------------------------------------
 		# Sample information is uploaded and user selected factors and comparisons
 		if(!is.null(model_factors) & length(selected_comparisons) > 0) {
 			exp_type <- paste("Model: ~", paste(model_factors, collapse = " + "))
       # Default value to be re-write if needed
 			interaction_term <- FALSE
-			
+
 			# Model factors that does not contain interaction terms
 			# model_factors "genotype", "condition", "genotype:condition"
 			key_model_factors <- model_factors[!grepl(":", model_factors)]
@@ -1260,7 +1138,8 @@ deg_limma <- function(
       # Design matrix ----------
       # Remove factors not used.
 			sample_info_filter <- sample_info[, key_model_factors, drop = F]
-			groups <- apply(sample_info_filter, 1, function(x) paste(x, collapse = "_"))
+			#groups <- apply(sample_info_filter, 1, function(x) paste(x, collapse = "_"))
+			groups <- detect_groups(colnames(processed_data), sample_info_filter)
 			unique_groups <- unique(groups)  
 
       groups <- factor(groups, levels = unique_groups)
@@ -1268,10 +1147,15 @@ deg_limma <- function(
 		  design <- stats::model.matrix(~ 0 + groups)  
 		  colnames(design) <- gsub("^groups", "", colnames(design))
             	
-			if(!is.null(raw_counts) && counts_deg_method == 2) {
-				voom_results <- limma::voom(raw_counts, design) 
-				fit <- limma::lmFit(voom_results, design) 
+			# voom
+		  if(!is.null(raw_counts) && counts_deg_method == 2) {
+				dge <- edgeR::DGEList(counts = raw_counts)
+				# Normalization
+				dge <- edgeR::calcNormFactors(dge, method = "TMM")
+				voom_results <- limma::voom(dge, design)
+				fit <- limma::lmFit(voom_results, design)
 			} else {
+			# limma-trend
         fit <- limma::lmFit(eset, design)
       }
 		
@@ -1369,41 +1253,20 @@ deg_limma <- function(
 					comparison_names = colnames(contrast_compare) 				 
 				}
 
-				# "stage: MN vs. EN"  -->  c("MN_AB-EN_AB", "EN_Nodule-EN_AB") 
-				#  comparisons in all levels of the other factor 
-				transform_comparisons <- function(
-          comparison,
-          key_model_factors
-        ) {
-					tem <- gsub(".*: ", "", comparison)
-          # control  mutant
-					tem <- unlist(strsplit(tem, " vs\\. ")) 							
-					factor <- gsub(":.*", "", comparison)
-          
-          # 1: first factor, 2: 2nd factor
-					ix <- match(factor, key_model_factors)
-          # 3-1 = 2; 3-1=1
-					other_factor <- key_model_factors[3 - ix]
-					other_factor_levels <- unique(sample_info_filter[, other_factor])				
-					comparisons <- c()
-					
-					for(factor_levels in other_factor_levels) {
-						if(ix == 1) {
-							comparisons <- c(
-                comparisons,
-                paste(paste0(tem, "_", factor_levels), collapse = "-")
-              )
-						} else {
-							comparisons <- c(
-                comparisons,
-                paste(paste0(factor_levels, "_", tem), collapse = "-")
-              )
-						}
-					}
-					return(comparisons)		
-				}	
-				
-				comparisons <- unlist(sapply(selected_comparisons, transform_comparisons))
+				#"stage: MN vs. EN"  -->  c("MN_AB-EN_AB", "EN_Nodule-EN_AB") 
+				comparisons <- unlist(
+          sapply(
+            selected_comparisons, 
+            function(x){
+              transform_comparisons(
+                  comparison = x,
+                  key_model_factors = key_model_factors,
+                  sample_info = sample_info_filter
+              ) 
+            }
+            
+          )
+        )
 				comparisons <- as.vector(comparisons)
 			}
 			
@@ -1454,7 +1317,8 @@ deg_limma <- function(
 				fit <- limma::eBayes(fit, trend = limma_trend)	
 			}
 		}
-		
+
+    # Extract contrasts -------------------------------------------------------		
 		fit_contrast <- limma::contrasts.fit(fit, make_contrast)
 		fit_contrast <- limma::eBayes(fit_contrast, trend = limma_trend)
 		results <- limma::decideTests(
@@ -1462,38 +1326,11 @@ deg_limma <- function(
       p.value = max_p_limma,
       lfc = log2(min_fc_limma )
     )
-		# Extract fold change for each comparison
-		# There is issues with direction of foldchange. Sometimes opposite
-		top <- function(
-      comp,
-      fit_contrast,
-      processed_data
-    ) {
-			tem <- limma::topTable(
-        fit_contrast,
-        number = 1e12,
-        coef = comp,
-        sort.by = "M"
-      ) 
-			if(dim(tem)[1] == 0) {
-        return(1) 
-			} else { 			
-				# Compute fold change for the first gene (ranked by absolute value)
-				tem2 <- as.numeric(
-          processed_data[which(rownames(processed_data) == rownames(tem)[1]), ]
-        )
-				names(tem2) <- colnames(processed_data) 
-					
-				return(tem[, c(1,5)]) 
-			}											
-		}
-		
 		
 		top_genes <- lapply(comparisons, function(x) {
-      top(
+		  extract_fcfdr(
         comp = x,
-        fit_contrast = fit_contrast,
-        processed_data = processed_data
+        fit_contrast = fit_contrast
       )
     })
 		top_genes <- setNames(top_genes, comparisons)
@@ -1503,7 +1340,7 @@ deg_limma <- function(
       top_genes <- top_genes[-ix]
     } 
 	}
-    
+
 	return(list(
     results = results,
     comparisons = comparisons,
@@ -1511,6 +1348,76 @@ deg_limma <- function(
     top_genes = top_genes
   )) 
 }
+
+
+#' Extract fold change and FDR for each comparison from limma
+#' 
+#' 
+#' @param comp Comparison
+#' @param fit_contrast fitted contrust from limma
+#'  returned list
+#' 
+#' @export
+#' @return a data frame of LFC and FDR columns
+extract_fcfdr <- function(
+    comp, #comparison
+    fit_contrast #contrast
+) {
+  tem <- limma::topTable(
+    fit_contrast,
+    number = 1e12,
+    coef = comp,
+    sort.by = "M"
+  ) 
+  if(dim(tem)[1] == 0) {
+    return(1) 
+  } else { 			
+    return(tem[, c(1,5)]) 
+  }											
+}
+
+#' comparisons in all levels of the other factor 
+#' "stage: MN vs. EN"  -->  c("MN_AB-EN_AB", "EN_Nodule-EN_AB") 
+#' 
+#' @param comparison Comparison
+#' @param key_model_factors model factors
+#'  returned list
+#' 
+#' @export
+#' @return a list of comparisons
+#  
+transform_comparisons <- function(
+  comparison,
+  key_model_factors,
+  sample_info
+) {
+  tem <- gsub(".*: ", "", comparison)
+  # control  mutant
+  tem <- unlist(strsplit(tem, " vs\\. ")) 							
+  factor <- gsub(":.*", "", comparison)
+  
+  # 1: first factor, 2: 2nd factor
+  ix <- match(factor, key_model_factors)
+  # 3-1 = 2; 3-1=1
+  other_factor <- key_model_factors[3 - ix]
+  other_factor_levels <- unique(sample_info[, other_factor])				
+  comparisons <- c()
+  
+  for(factor_levels in other_factor_levels) {
+    if(ix == 1) {
+      comparisons <- c(
+        comparisons,
+        paste(paste0(tem, "_", factor_levels), collapse = "-")
+      )
+    } else {
+      comparisons <- c(
+        comparisons,
+        paste(paste0(factor_levels, "_", tem), collapse = "-")
+      )
+    }
+  }
+  return(comparisons)		
+}	
 
 #' Significant genes bar plot
 #' 
@@ -1571,7 +1478,9 @@ genes_stat_table <- function(
   limma
 ) {
   results <- limma$results
-  
+  if(is.null(results)) {
+    return(NULL)
+  }
   # If only one comparison
   if(dim(results)[2] == 1) { 
     Up <- sum(results == 1)
