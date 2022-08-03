@@ -895,6 +895,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
 
       counts_bias_message(
         raw_counts = processed_data()$raw_counts,
+        data_file_format = load_data$data_file_format(),
         sample_info = load_data$sample_info()
       )
     })

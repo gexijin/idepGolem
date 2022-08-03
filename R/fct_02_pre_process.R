@@ -703,6 +703,7 @@ conversion_counts_message <- function(
 #' @return Message for the UI
 counts_bias_message <- function(
   raw_counts,
+  data_file_format,
   sample_info
 ) {
   total_counts <- colSums(raw_counts)
@@ -729,12 +730,14 @@ counts_bias_message <- function(
     )
   }
   # ANOVA of total read counts vs factors in experiment design
-  if (!is.null(sample_info)) {
+  if (!is.null(sample_info) && data_file_format == 1) {
     y <- sample_info
     for (j in 1:ncol(y)) {
-      pval <- summary(aov(
+      pval <- summary(
+        aov(
         total_counts ~ as.factor(y[, j])
-      ))[[1]][["Pr(>F)"]][1]
+      )
+      )[[1]][["Pr(>F)"]][1]
 
       if (pval < 0.01) {
         message <- paste(

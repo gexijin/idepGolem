@@ -13,7 +13,7 @@ NULL
 
 
 DATAPATH <- Sys.getenv("IDEP_DATABASE")[1]
-
+#DATAPATH <- "D:/data104b_final/"
 
 #' connect_convert_db connects to the convertIDs.db and returns the
 #' objects.
@@ -86,7 +86,8 @@ get_idep_data <- function(datapath = DATAPATH) {
     "geneInfo/", gene_info_files,
     sep = ""
   )
-
+  
+  demo_data_normalized_counts <- (paste0(datapath, "data_go/normalized_BcellGSE71176_p53.csv"))
   demo_data_file <- paste0(datapath, "data_go/BcellGSE71176_p53.csv")
   demo_metadata_file <- paste0(
     datapath,
@@ -159,6 +160,7 @@ get_idep_data <- function(datapath = DATAPATH) {
     gmt_files = gmt_files,
     gene_info_files = gene_info_files,
     demo_data_file = demo_data_file,
+    normalized_demo_data = demo_data_normalized_counts,
     demo_metadata_file = demo_metadata_file,
     quotes = quotes,
     string_species_go_data = string_species_go_data,
