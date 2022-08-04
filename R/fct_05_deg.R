@@ -1263,8 +1263,7 @@ deg_limma <- function(
                   key_model_factors = key_model_factors,
                   sample_info = sample_info_filter
               ) 
-            }
-            
+            }           
           )
         )
 				comparisons <- as.vector(comparisons)
