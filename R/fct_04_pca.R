@@ -566,6 +566,7 @@ PCA_Scree <- function(
 #' @param data Data that has been through pre-processing
 #' @param sample_info Design Matrix
 #' @return Formatted plot generated with PCAtools package
+#' @export
 PCAtools_eigencorplot <- function(
   processed_data,
   sample_info

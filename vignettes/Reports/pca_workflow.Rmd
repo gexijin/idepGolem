@@ -8,6 +8,16 @@ params:
   pc_y:
   color:
   shape:
+  all_gene_names:
+  select_gene_id:
+  selected_x:
+  selected_y:
+  encircle:
+  showLoadings:
+  pointlabs:
+  point_size:
+  ui_color:
+  ui_shape:
   printcode:
     label: "Display Code"
     value: TRUE
@@ -63,3 +73,30 @@ MDS_plot(
   selected_shape = params$shape
 )
 ```
+
+
+## PCA tools
+```{r}
+PCA_biplot(
+  data = params$pre_processed_data,
+  sample_info = params$sample_info,
+  select_gene_id = params$select_gene_id,
+  all_gene_names = params$all_gene_names,
+  selected_x = params$selected_x,
+  selected_y = params$selected_y,
+  encircle = params$encircle,
+  showLoadings = params$showLoadings,
+  pointlabs = params$pointlabs,
+  point_size = params$point_size,
+  ui_color = params$ui_color,
+  ui_shape = params$ui_shape
+  )
+
+PCA_Scree(processed_data = params$pre_processed_data)
+
+PCAtools_eigencorplot(
+  processed_data = params$pre_processed_data,
+  sample_info =  params$sample_info
+      )
+```
+

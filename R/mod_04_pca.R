@@ -486,7 +486,17 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
           pc_x = input$PCAx,
           pc_y = input$PCAy,
           color = input$selectFactors1,
-          shape = input$selectFactors2
+          shape = input$selectFactors2,
+          all_gene_names = pre_process$all_gene_names(),
+          select_gene_id = input$select_gene_id,
+          selected_x = input$x_axis_pc,
+          selected_y = input$y_axis_pc,
+          encircle = input$encircle,
+          showLoadings = input$showLoadings,
+          pointlabs = input$pointLabs,
+          point_size = input$pointSize,
+          ui_color = input$selectColor,
+          ui_shape = input$selectShape
           
         )
         
