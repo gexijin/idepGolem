@@ -4,7 +4,7 @@
 \alias{counts_bias_message}
 \title{Create message for sequencing depth bias}
 \usage{
-counts_bias_message(raw_counts, sample_info)
+counts_bias_message(raw_counts, data_file_format, sample_info)
 }
 \arguments{
 \item{raw_counts}{Raw counts data from the processing function}
