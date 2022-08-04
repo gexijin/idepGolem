@@ -104,6 +104,11 @@ mod_04_pca_ui <- function(id) {
           ),
           ns=ns
         ),
+        # Download report button
+        downloadButton(
+          outputId = ns("report"),
+          label = "Generate Report"
+        ), 
         a(
           h5("Questions?", align = "right"),
           href = "https://idepsite.wordpress.com/pca/",
@@ -446,9 +451,60 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       )
     })
     
+
     
+    # Markdown report------------
+    output$report <- downloadHandler(
+      
+      # For PDF output, change this to "report.pdf"
+      filename ="pca_report.html",
+      content = function(file) {
+        #Show Loading popup
+        shinybusy::show_modal_spinner(
+          spin = "orbit",
+          text = "Generating Report",
+          color = "#000000"
+        )
+        # Copy the report file to a temporary directory before processing it, in
+        # case we don't have write permissions to the current working dir (which
+        # can happen when deployed).
+        tempReport <- file.path(tempdir(), "pca_workflow.Rmd")
+        #tempReport
+        tempReport<-gsub("\\", "/",tempReport,fixed = TRUE)
+        
+        #This should retrieve the project location on your device:
+        #"C:/Users/bdere/Documents/GitHub/idepGolem"
+        wd <- getwd()
+        
+        markdown_location <-paste0(wd, "/vignettes/Reports/pca_workflow.Rmd")
+        file.copy(from=markdown_location,to = tempReport, overwrite = TRUE)
+        
+        # Set up parameters to pass to Rmd document
+        params <- list(
+          pre_processed_data = pre_process$data(),
+          sample_info = pre_process$sample_info(),
+          pc_x = input$PCAx,
+          pc_y = input$PCAy,
+          color = input$selectFactors1,
+          shape = input$selectFactors2
+          
+        )
+        
+        # Knit the document, passing in the `params` list, and eval it in a
+        # child of the global environment (this isolates the code in the document
+        # from the code in this app).
+        rmarkdown::render(
+          input = tempReport,#markdown_location, 
+          output_file = file,
+          params = params,
+          envir = new.env(parent = globalenv())
+        )
+        shinybusy::remove_modal_spinner()
+        
+      }
+      
+    )
     
-    #Pathway Analysis ------------------
     
   })
 }

@@ -23,16 +23,17 @@ params:
     value: TRUE
     input: checkbox
 ---
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = params$printcode)
 ```
+
 <!-- This document cannot be knit directly from R studio -->
 
-
-This html document contains what parameters values were selected on the IDEP interface of the "Clustering" tab. It also includes the plots generated from those selections. 
-
+This html document contains what parameters values were selected on the IDEP interface of the "Clustering" tab. It also includes the plots generated from those selections.
 
 # ALL SELECTED PARAMETERS
+
 ```{r, include=TRUE}
 for (i in 1:length(params)){
   # exclude loaded data & sample info
@@ -41,8 +42,34 @@ for (i in 1:length(params)){
 }
 ```
 
+# Citation
+
+The following plots were generated using IDEP with the following filters:
+
+Include only the top `r params$n_genes` genes
+
+using `r params$select_gene_id` to label
+
+color scheme: `r params$heatmap_color_select `
+
+distance: `r switch(params$dist_function,
+"1" = "Hierarchical", 
+"2" = "K-Means")`
+
+Linkage: `r params$hclust_function`
+
+Cut off Z-score: `r params$heatmap_cutoff`
+
+Center Genes: `r params$gene_centering`
+
+Gene normalize: `r params$gene_normalize`
+
+Do not cluster samples: `r params$no_sample_clustering`
+
+Show row Dendogram: `r params$show_row_dend` 
 
 # Elbow Plot
+
 ```{r}
 heatmap_data <- process_heatmap_data(
   data = params$pre_processed_data,
@@ -60,6 +87,7 @@ k_means_elbow(heatmap_data = heatmap_data)
 ```
 
 # Heatmap
+
 ```{r}
 ht <- heatmap_main(
   data = heatmap_data,
@@ -79,6 +107,7 @@ ht <- heatmap_main(
 ```
 
 # SD Density
+
 ```{r sd_density}
 sd_density(
   data = params$pre_processed_data,
@@ -86,8 +115,8 @@ sd_density(
 )
 ```
 
-
 # Tree
+
 ```{r}
 draw_sample_tree(
   tree_data = params$pre_processed_data,
@@ -102,8 +131,8 @@ draw_sample_tree(
 )
 ```
 
-
 # Correlation Matrix
+
 ```{r}
 cor_plot(
   data = params$pre_processed_data,
@@ -112,4 +141,3 @@ cor_plot(
   text_col = "white"
 )
 ```
-

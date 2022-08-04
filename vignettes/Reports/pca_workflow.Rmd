@@ -1,0 +1,65 @@
+---
+title: "Principal Component Analysis Workflow"
+output: html_document
+params:
+  pre_processed_data:
+  sample_info:
+  pc_x:
+  pc_y:
+  color:
+  shape:
+  printcode:
+    label: "Display Code"
+    value: TRUE
+    input: checkbox
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = params$printcode)
+```
+
+<!-- This document cannot be knit directly from R studio -->
+
+This html document contains what parameters values were selected on the IDEP interface of the "PCA" tab. It also includes the plots generated from those selections.
+
+# ALL SELECTED PARAMETERS
+
+```{r, include=TRUE}
+for (i in 1:length(params)){
+  # exclude loaded data & sample info
+  if(names(params)[i] != "sample_info" && names(params)[i] != "pre_processed_data" && names(params)[i] != "all_gene_names")
+    cat(paste0(names(params)[i], ": ", params[[i]], "\n") )
+}
+```
+
+# Citation
+
+
+
+## PCA plots
+```{r}
+PCA_plot(
+  data = params$pre_processed_data,
+  sample_info = params$sample_info,
+  PCAx = params$pc_x,
+  PCAy = params$pc_y,
+  selected_color = params$color,
+  selected_shape = params$shape
+)
+t_SNE_plot(
+  data = params$pre_processed_data,
+  sample_info = params$sample_info,
+  selected_color = params$color,
+  selected_shape = params$shape
+  )
+pc_factor_correlation(
+  data =  params$pre_processed_data,
+  sample_info = params$sample_info
+)
+MDS_plot(
+  data = params$pre_processed_data,
+  sample_info = params$sample_info,
+  selected_color = params$color,
+  selected_shape = params$shape
+)
+```
