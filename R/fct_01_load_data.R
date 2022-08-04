@@ -132,7 +132,7 @@ input_data <- function(
   } else if (go_button > 0) {    # use demo data
     in_file_data <- demo_data_file
   }
-  
+
   isolate({
     # Read expression file -----------
     data <- read.csv(in_file_data, quote = "", comment.char = "")
@@ -163,7 +163,10 @@ input_data <- function(
     
     # Remove duplicated genes ----------
     data <- data[!duplicated(data[, 1]), ]
-    
+
+    # Remove rows without genes IDs----------
+    data <- data[!is.na(data[, 1]), ]
+
     # Set gene ids as rownames and get rid of column ---------
     rownames(data) <- data[, 1]
     data <- as.matrix(data[, c(-1)])
@@ -189,12 +192,18 @@ input_data <- function(
       sample_info = NULL
     ))
   } else if (go_button > 0) {
-    sample_info_demo <- t(read.csv(
-      demo_metadata_file,
-      row.names = 1,
-      header = T,
-      colClasses = "character"
-    ))
+    sample_info_demo <- NULL
+    # if design file is not ""
+    if(!is.null(demo_data_file)){
+      if(nchar(demo_metadata_file) > 2) {
+        sample_info_demo <- t(read.csv(
+          demo_metadata_file,
+          row.names = 1,
+          header = T,
+          colClasses = "character"
+        )) 
+      } 
+    }
     return(list(
       sample_info = sample_info_demo,
       data = data

@@ -24,7 +24,7 @@ mod_01_load_data_ui <- function(id) {
         )),
 
         # Species Match Drop Down ------------
-        strong("1. Select or search for your species."),
+        strong("1. Optional: Select or search for species."),
         fluidRow( 
           column(
             width = 9, 
@@ -89,17 +89,32 @@ mod_01_load_data_ui <- function(id) {
           ns = ns
         ),
 
-        # Button to load demo dataset ----------
-        # Manually namespace the goButton in tag with id in module call
-        actionButton(
-          inputId = ns("go_button"),
-          label = "Demo data"
-        ),
-        tags$head(tags$style(
-          "#load_data-go_button{color: red;
-          font-size: 16px;
-          font-style: italic;}"
-        )),
+        fluidRow( 
+          column(
+            width = 4, 
+            # Button to load demo dataset ----------
+            # Manually namespace the goButton in tag with id in module call
+            actionButton(
+              inputId = ns("go_button"),
+              label = "Load demo for"
+            ),
+            tags$head(tags$style(
+              "#load_data-go_button{color: red;
+              font-size: 16px;
+              font-style: italic;}"
+            ))
+          ),
+          column(
+            width = 8, 
+            # List of demo files
+            selectInput(
+              inputId = ns("select_demo"),
+              label = NULL,
+              choices = " ",
+              multiple = FALSE
+            )
+          )  
+        ), 
 
         # Expression data file input ----------
         fileInput(
@@ -124,7 +139,7 @@ mod_01_load_data_ui <- function(id) {
 
         # Link to public RNA-seq datasets ----------
         a(
-          h4("Analyze public RNA-seq datasets for 9 species"),
+          h4("Public RNA-seq datasets"),
           href = "http://bioinformatics.sdstate.edu/reads/"
         ),
 
@@ -291,30 +306,40 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       htmltools::HTML(paste(i, collapse = "<br/>"))
     })
 
-    #Change demo data based on selected format
-    demo_data_type <- reactive({
-      if (input$data_file_format == 1){
-        return(idep_data$demo_data_file)
-      }
-      if( input$data_file_format == 2){
-        return(idep_data$normalized_demo_data)
-      }
+    # Provide list of demo files -----------
+    observe({
+      files <- idep_data$demo_file_info
+      #only keep files of specified format
+      files <- files[files$type == input$data_file_format, ]
+      choices <- setNames(as.list(files$ID), files$name)     
+      updateSelectInput(
+        session = session,
+        inputId = "select_demo",
+        choices = choices,
+        selected = choices[[1]]
+      )
     })
-    
+
+    #Change demo data based on selected format
+    #returns a vector with file names  c(data, design)
+    demo_data_file <- reactive({
+      req(!is.null(input$select_demo))
+      files <- idep_data$demo_file_info
+      ix <- which(files$ID == input$select_demo)
+      return(c(  
+        files$expression[ix], 
+        files$design[ix]
+      ))
+    })
+
     # Reactive element to load the data from the user or demo data ---------
     loaded_data <- reactive(
-
       input_data(
       expression_file = input$expression_file,
       experiment_file = input$experiment_file,
       go_button = input$go_button,
-      demo_data_file = demo_data_type(), 
-      demo_metadata_file = idep_data$demo_metadata_file
-
-# 8/3/22 Alternative method for loaded alt demo data formats
-#      demo_data_file = idep_data$demo_data_file,
-#      demo_metadata_file = idep_data$demo_metadata_file,
-#      data_file_format = input$data_file_format
+      demo_data_file = demo_data_file()[1], 
+      demo_metadata_file = demo_data_file()[2]
     ))
 
     # Sample information table -----------

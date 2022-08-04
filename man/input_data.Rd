@@ -9,8 +9,7 @@ input_data(
   experiment_file,
   go_button,
   demo_data_file,
-  demo_metadata_file,
-  data_file_format
+  demo_metadata_file
 )
 }
 \arguments{
@@ -27,8 +26,6 @@ load the demo data files}
 
 \item{demo_metadata_file}{Experiment demo data path 
 (idep_data$demo_metadata_file)}
-
-\item{data_file_format}{1, counts, 2 normalized, 3 FDR and FC}
 }
 \value{
 This returns a list that contains the expression data

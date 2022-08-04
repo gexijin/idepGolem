@@ -87,32 +87,17 @@ get_idep_data <- function(datapath = DATAPATH) {
     sep = ""
   )
 
-  demo_data_normalized_counts <- (paste0(datapath, "data_go/normalized_BcellGSE71176_p53.csv"))
-  demo_data_file <- paste0(datapath, "data_go/BcellGSE71176_p53.csv")
-  demo_metadata_file <- paste0(
-    datapath,
-    "data_go/BcellGSE71176_p53_sampleInfo.csv"
-#=======
-
-# 8/3/2022 alternative method for different demo formats
-  #holds a list of files and design files
-#  demo_data_file <- c(
-#    "BcellGSE71176_p53.csv",           #1 2x2 design p53
-#    "GSE37704_Hoxa1_normalized.csv",   #2 Hoxa1 vs control
- #   "GSE71176_p53_LFC_FDR.csv"             #3 FC & FDR
-#  )
- # demo_metadata_file <- c(
- #   "BcellGSE71176_p53_sampleInfo.csv", #1
- #   "",                                 #2
- #   ""                                  #3
+  demo_file_info <- read.csv(
+    paste0(datapath, "data_go/demo_data_info.csv")
   )
-  
- # demo_data_file <- paste0(datapath, "data_go/", demo_data_file)
- # demo_metadata_file <- paste0(datapath, "/data_go)
+  # add path for expression matrix
+  demo_file_info$expression <- paste0(datapath, 
+  "data_go/", 
+  demo_file_info$expression)
 
-  #if design file is missing remove folder string.
-  ix <- nchar(demo_metadata_file) == nchar(paste0(datapath, "data_go/"))
-  demo_metadata_file[ix] <- ""
+  # add path for design file if exist
+  ix <- which(nchar(demo_file_info$design) > 2)
+  demo_file_info$design[ix] <- paste0(datapath, "data_go/", demo_file_info$design[ix])
 
   conn_db <- connect_convert_db()
 
@@ -179,9 +164,7 @@ get_idep_data <- function(datapath = DATAPATH) {
     kegg_species_id = kegg_species_id,
     gmt_files = gmt_files,
     gene_info_files = gene_info_files,
-    demo_data_file = demo_data_file,
-    normalized_demo_data = demo_data_normalized_counts,
-    demo_metadata_file = demo_metadata_file,
+    demo_file_info = demo_file_info,
     quotes = quotes,
     string_species_go_data = string_species_go_data,
     org_info = org_info,
