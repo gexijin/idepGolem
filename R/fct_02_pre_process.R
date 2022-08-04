@@ -209,7 +209,18 @@ pre_process <- function(
     raw_counts = raw_counts,
     data_type_warning = data_type_warning,
     data_size = c(data_size_original, data_size),
-    p_vals = pvals
+    p_vals = pvals,
+    missing_value = missing_value,
+    data_file_format = data_file_format,
+    low_filter_fpkm = low_filter_fpkm,
+    n_min_samples_fpkm = n_min_samples_fpkm,
+    log_transform_fpkm = log_transform_fpkm,
+    log_start_fpkm = log_start_fpkm,
+    min_counts = min_counts,
+    n_min_samples_count = n_min_samples_count,
+    counts_transform = counts_transform,
+    counts_log_start = counts_log_start,
+    no_fdr = no_fdr
   )
 
   return(results)
