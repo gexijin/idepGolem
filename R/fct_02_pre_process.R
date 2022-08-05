@@ -202,6 +202,21 @@ pre_process <- function(
     1,
     sd
   )), ]
+  
+  #Generate paragraph of processing selections
+  descr <- generate_descr(
+    missing_value,
+    data_file_format,
+    low_filter_fpkm,
+    n_min_samples_fpkm,
+    log_transform_fpkm,
+    log_start_fpkm,
+    min_counts,
+    n_min_samples_count,
+    counts_transform,
+    counts_log_start,
+    no_fdr
+  )
 
   results <- list(
     data = as.matrix(data),
@@ -209,7 +224,8 @@ pre_process <- function(
     raw_counts = raw_counts,
     data_type_warning = data_type_warning,
     data_size = c(data_size_original, data_size),
-    p_vals = pvals
+    p_vals = pvals,
+    descr = descr
   )
 
   return(results)
@@ -835,4 +851,68 @@ mean_sd_plot <- function(
   }
 
   return(hex_plot)
+}
+
+#' Write paragraph containing process details
+#' 
+#' @param missing_value Method to deal with missing data
+#' @param data_file_format Type of data being examined
+#' @param low_filter_fpkm Low count filter for the fpkm data
+#' @param n_min_samples_fpkm Min samples for fpkm data
+#' @param log_transform_fpkm Type of transformation for fpkm data
+#' @param log_start_fpkm Value added to log transformation for fpkm
+#' @param min_counts Low count filter for count data
+#' @param n_min_samples_count Min sample for count data
+#' @param counts_transform Type of transformation for counts data
+#' @param counts_log_start Value added to log for counts data
+#' @param no_fdr Fold changes only data with no p values
+#' 
+#' @return string with process summary
+#' 
+generate_descr <- function(
+    missing_value,
+    data_file_format,
+    low_filter_fpkm,
+    n_min_samples_fpkm,
+    log_transform_fpkm,
+    log_start_fpkm,
+    min_counts,
+    n_min_samples_count,
+    counts_transform,
+    counts_log_start,
+    no_fdr
+){
+  #read counts case
+  if (data_file_format == 1){
+    part_2 <- switch(counts_transform,
+           "1" = paste0("EdgeR using a pseudocount of ", counts_log_start),
+           "2" = "VST: Variance Stabilizing Transformation", 
+           "3" = "Regularized log")
+    descr <- paste0("Read counts data was uploaded to iDEP v2.0 (citation). ",
+                    "The data was filtered to include genes with more than ", min_counts, 
+                    " counts in ", n_min_samples_count, " libraries. The data was transformed with ", part_2,
+                    ".  Missing values were imputed using ", missing_value, ".")
+  }
+  #normalized expression values
+  if (data_file_format == 2){
+    part_2 <- switch(toString(log_transform_fpkm), "FALSE" = "not log transformed", 
+                     "TRUE" = paste0("log transformed with a psuedocount of ", log_start_fpkm, ""))
+    
+    descr <- paste0("Normalized expression values were uploaded to iDEP v2.0 (citation). ",
+                    "The data was filtered to include genes with above ", low_filter_fpkm, 
+                    " levels in ", n_min_samples_fpkm, ". The data was ", part_2,
+                    ".  Missing values were imputed using ", missing_value, ".")
+  }
+  #LFC and FDR
+  if (data_file_format == 3){
+    part_2 <- switch(toString(no_fdr),
+                     "TRUE" = "",
+                     "FALSE" = " and corrected p-value ")
+    descr <- paste0("Log Fold Change ", part_2, 
+                    "data was uploaded to iDEP v2.0 (citation).",
+                    "Missing values were imputed using ", missing_value, "." )
+  }
+  return(descr)
+  
+
 }
