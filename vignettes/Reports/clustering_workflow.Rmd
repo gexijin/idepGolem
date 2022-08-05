@@ -45,28 +45,22 @@ for (i in 1:length(params)){
 # Citation
 
 The following plots were generated using IDEP with the following filters:
-
 Include only the top `r params$n_genes` genes
-
 using `r params$select_gene_id` to label
-
 color scheme: `r params$heatmap_color_select `
-
 distance: `r switch(params$dist_function,
-"1" = "Hierarchical", 
+"1" = "Hierarchical",
 "2" = "K-Means")`
-
 Linkage: `r params$hclust_function`
-
 Cut off Z-score: `r params$heatmap_cutoff`
-
 Center Genes: `r params$gene_centering`
-
 Gene normalize: `r params$gene_normalize`
-
 Do not cluster samples: `r params$no_sample_clustering`
+Show row Dendogram: `r params$show_row_dend`
 
-Show row Dendogram: `r params$show_row_dend` 
+# Paragraph
+
+The following plots were generated using IDEP, including only the top `r params$n_genes` genes, using `r params$select_gene_id` to label, `r switch(params$dist_function, "1" = "Hierarchical", "2" = "K-Means")` distance,`r params$hclust_function` linkage, Cut off Z-score: `r params$heatmap_cutoff`, Center Genes: `r params$gene_centering`. genes are `r if(!params$gene_normalize) paste0(" not ")` normalized.
 
 # Elbow Plot
 

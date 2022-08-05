@@ -888,17 +888,17 @@ generate_descr <- function(
            "1" = paste0("EdgeR using a pseudocount of ", counts_log_start),
            "2" = "VST: Variance Stabilizing Transformation", 
            "3" = "Regularized log")
-    descr <- paste0("Read counts data was uploaded to IDEP (citation). ",
+    descr <- paste0("Read counts data was uploaded to iDEP v2.0 (citation). ",
                     "The data was filtered to include genes with more than ", min_counts, 
                     " counts in ", n_min_samples_count, " libraries. The data was transformed with ", part_2,
                     ".  Missing values were imputed using ", missing_value, ".")
   }
   #normalized expression values
   if (data_file_format == 2){
-    part_2 <- switch(toString(log_transform_fpkm), "FALSE" = "not log transformed.", 
-                     "TRUE" = paste0(" log transformed with a psuedocount of ", log_start_fpkm, "."))
+    part_2 <- switch(toString(log_transform_fpkm), "FALSE" = "not log transformed", 
+                     "TRUE" = paste0("log transformed with a psuedocount of ", log_start_fpkm, ""))
     
-    descr <- paste0("Normalized expression values were uploaded to IDEP (citation). ",
+    descr <- paste0("Normalized expression values were uploaded to iDEP v2.0 (citation). ",
                     "The data was filtered to include genes with above ", low_filter_fpkm, 
                     " levels in ", n_min_samples_fpkm, ". The data was ", part_2,
                     ".  Missing values were imputed using ", missing_value, ".")
