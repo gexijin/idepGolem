@@ -162,7 +162,7 @@ input_data <- function(
       data[, 2:ncol(data)],
       1,
       sd
-    )), ]    
+    )), ]
 
     # Format gene ids --------
     data[, 1] <- toupper(data[, 1])

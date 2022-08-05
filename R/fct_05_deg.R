@@ -1161,15 +1161,18 @@ deg_limma <- function(
 		
 			fit <- limma::eBayes(fit, trend = limma_trend)	
 			
-			# Making comaprisons-----------
+			# Making comaprisons------------------------------------------------
       # Only one factor, or more than two then use all pairwise comparisons
 			if(length(key_model_factors) != 2 | length(block_factor) > 1)  {
 				comparisons <- gsub(".*: ", "", selected_comparisons)
 				comparisons <- gsub(" vs\\. ", "-", comparisons)
       # Two key factors
 			} else if(length(key_model_factors) == 2){ 
+
+        # if interaction term exists, make contrast
 				if(sum(grepl(":", model_factors) > 0)) { 
 					interaction_term <- TRUE
+
 					# All pairwise comparisons
 					comparisons <- ""
 					for(i in 1:(length(unique_groups) - 1)) {
@@ -1182,7 +1185,7 @@ deg_limma <- function(
             }
           }
 					comparisons <- comparisons[-1]
-					
+			
 					# Pairwise contrasts
 				  make_contrast <- limma::makeContrasts(
             contrasts = comparisons[1],
@@ -1196,22 +1199,21 @@ deg_limma <- function(
               )
             }
           }
-					
-						
+										
 					contrast_names <- colnames(make_contrast)		
 				
-					# All possible interactions
-					# Interaction contrasts
+					# All possible interactions------------------------------------
+					# Interaction contrasts as the the difference between two ordinary contrasts
 					
-					contrast_compare <- NULL
+					contrast_interact <- NULL
 					contrast_names <- ""
 					for (kk in 1:(dim(make_contrast)[2] - 1)) {
 					  for(kp in (kk+1):dim(make_contrast)[2]) {
-              if(is.null(contrast_compare)) {
-                contrast_compare <- make_contrast[, kp] - make_contrast[,kk]
+              if(is.null(contrast_interact)) {
+                contrast_interact <- make_contrast[, kp] - make_contrast[,kk]
               } else {
-                contrast_compare <- cbind(
-                  contrast_compare,
+                contrast_interact <- cbind(
+                  contrast_interact,
                   make_contrast[, kp] - make_contrast[, kk]
                 )
               }
@@ -1226,32 +1228,36 @@ deg_limma <- function(
               )
 						}   
 					}
-					colnames(contrast_compare) <- contrast_names[-1]
-					
+					colnames(contrast_interact) <- contrast_names[-1]
+				
 					# Remove nonsense contrasts from interactions
-					contrast_compare <- contrast_compare[, which(
-            apply(abs(contrast_compare), 2, max) == 1), drop = F
+          # only keep columns with 0, 1, or -1
+					contrast_interact <- contrast_interact[, which(
+            apply(abs(contrast_interact), 2, max) == 1), drop = F
           ]
-					contrast_compare <- contrast_compare[, which(
-            apply(abs(contrast_compare), 2, sum) == 4), drop = F
+          # only keep columns with the sum of absolute values to 4
+					contrast_interact <- contrast_interact[, which(
+            apply(abs(contrast_interact), 2, sum) == 4), drop = F
           ]
           # Remove duplicate columns
-					contrast_compare <- t(unique(t(contrast_compare)))		
+					contrast_interact <- t(unique(t(contrast_interact)))		
 					
 					# Remove unwanted contrasts involving more than three levels in 
           # either factor
 					keep <- c()
-					for(i in 1:dim(contrast_compare)[2]) {
-						tem <- rownames(contrast_compare)[contrast_compare[, i] != 0]
+					for(i in 1:dim(contrast_interact)[2]) {
+						tem <- rownames(contrast_interact)[contrast_interact[, i] != 0]
 						tem1 <- unique(unlist(gsub("_.*", "", tem)))
 						tem2 <- unique(unlist(gsub(".*_", "", tem)))
 						if(length(tem1) == 2 & length(tem2) == 2) {
-              keep <- c(keep, colnames(contrast_compare)[i])
+              keep <- c(keep, colnames(contrast_interact)[i])
             }
 					}
-					contrast_comapre <- contrast_compare[, keep, drop = F]
-					comparison_names = colnames(contrast_compare) 				 
+
+          #contrast_interact stores contrast due to interactions
+					contrast_interact <- contrast_interact[, keep, drop = F]
 				}
+
 
 				#"stage: MN vs. EN"  -->  c("MN_AB-EN_AB", "EN_Nodule-EN_AB") 
 				comparisons <- unlist(
@@ -1279,11 +1285,13 @@ deg_limma <- function(
           )
         }
       }
-				
+
+
+      # add contrast due to interaction term	
 			if(interaction_term) {
-				make_contrast <- cbind(make_contrast, contrast_compare)
-				contrast_names <- c(colnames(make_contrast), colnames(contrast_compare))
-				comparisons <- c(comparisons, comparison_names)
+				make_contrast <- cbind(make_contrast, contrast_interact)
+				contrast_names <- c(colnames(make_contrast), colnames(contrast_interact))
+				comparisons <- c(comparisons, colnames(contrast_interact))
 			}
 			
       # Factor is selected as block
