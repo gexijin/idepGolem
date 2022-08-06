@@ -91,12 +91,12 @@ mod_01_load_data_ui <- function(id) {
 
         fluidRow( 
           column(
-            width = 4, 
+            width = 6, 
             # Button to load demo dataset ----------
             # Manually namespace the goButton in tag with id in module call
             actionButton(
               inputId = ns("go_button"),
-              label = "Load demo: "
+              label = "Load example data for: "
             ),
             tags$head(tags$style(
               "#load_data-go_button{color: red;
@@ -105,7 +105,7 @@ mod_01_load_data_ui <- function(id) {
             ))
           ),
           column(
-            width = 8, 
+            width = 6, 
             # List of demo files
             selectInput(
               inputId = ns("select_demo"),
@@ -130,6 +130,21 @@ mod_01_load_data_ui <- function(id) {
           )
         ),
 
+
+
+        # Experiment design file input ----------
+        fileInput(
+          inputId = ns("experiment_file"),
+          label = ("4. Optional: Upload an experiment design file(CSV or text)"),
+          accept = c(
+            "text/csv",
+            "text/comma-separated-values",
+            "text/tab-separated-values",
+            "text/plain",
+            ".csv",
+            ".tsv"
+          )
+        ),
         # Yes or no to converting IDs -------------
         checkboxInput(
           inputId = ns("no_id_conversion"),
@@ -141,20 +156,6 @@ mod_01_load_data_ui <- function(id) {
         a(
           h4("Public RNA-seq datasets"),
           href = "http://bioinformatics.sdstate.edu/reads/"
-        ),
-
-        # Experiment design file input ----------
-        fileInput(
-          inputId = ns("experiment_file"),
-          label = h5("Optional: Upload an experiment design file(CSV or text)"),
-          accept = c(
-            "text/csv",
-            "text/comma-separated-values",
-            "text/tab-separated-values",
-            "text/plain",
-            ".csv",
-            ".tsv"
-          )
         ),
 
         # Table output for species loading progress -----------
