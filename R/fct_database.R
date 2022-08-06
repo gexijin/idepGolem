@@ -87,17 +87,31 @@ get_idep_data <- function(datapath = DATAPATH) {
     sep = ""
   )
 
+  # demo_data_info.csv file
+  # columns: ID, expression, design, type, name
+  # ID column must be unique 
+  # The type column 1- read counts, 2- normalized , 3 LFC&Pval
+  # The files must be available in the data_go folder of the database. 
+  # Leave blank if design file is missing
+  # Default file have smallest ID, within the same type.
+
   demo_file_info <- read.csv(
     paste0(datapath, "data_go/demo_data_info.csv")
   )
   # add path for expression matrix
-  demo_file_info$expression <- paste0(datapath, 
-  "data_go/", 
-  demo_file_info$expression)
+  demo_file_info$expression <- paste0(
+    datapath, 
+    "data_go/", 
+    demo_file_info$expression
+  )
 
   # add path for design file if exist
   ix <- which(nchar(demo_file_info$design) > 2)
-  demo_file_info$design[ix] <- paste0(datapath, "data_go/", demo_file_info$design[ix])
+  demo_file_info$design[ix] <- paste0(
+    datapath, 
+    "data_go/", 
+    demo_file_info$design[ix]
+  )
 
   conn_db <- connect_convert_db()
 

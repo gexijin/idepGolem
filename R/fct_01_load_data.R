@@ -156,7 +156,14 @@ input_data <- function(
       return(NULL)
     }
     data <- data[, num_col]
-    
+
+    # Order by SD ----------
+    data <- data[order(-apply(
+      data[, 2:ncol(data)],
+      1,
+      sd
+    )), ]
+
     # Format gene ids --------
     data[, 1] <- toupper(data[, 1])
     data[, 1] <- gsub(" |\"|\'", "", data[, 1])
@@ -174,13 +181,7 @@ input_data <- function(
     # Remove "-" or "." from sample names ----------
     colnames(data) <- gsub("-", "", colnames(data))
     colnames(data) <- gsub("\\.", "", colnames(data))
-    
-    # Order by SD ----------
-    data <- data[order(-apply(
-      data[, 1:ncol(data)],
-      1,
-      sd
-    )), ]
+
   })
   
   # Read experiment file ----------

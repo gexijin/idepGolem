@@ -96,7 +96,7 @@ mod_01_load_data_ui <- function(id) {
             # Manually namespace the goButton in tag with id in module call
             actionButton(
               inputId = ns("go_button"),
-              label = "Load demo for"
+              label = "Load demo: "
             ),
             tags$head(tags$style(
               "#load_data-go_button{color: red;
