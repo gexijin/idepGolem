@@ -1146,7 +1146,7 @@ deg_limma <- function(
 
 		  design <- stats::model.matrix(~ 0 + groups)  
 		  colnames(design) <- gsub("^groups", "", colnames(design))
-            	
+        	
 			# voom
 		  if(!is.null(raw_counts) && counts_deg_method == 2) {
 				dge <- edgeR::DGEList(counts = raw_counts)
@@ -1256,25 +1256,40 @@ deg_limma <- function(
 
           #contrast_interact stores contrast due to interactions
 					contrast_interact <- contrast_interact[, keep, drop = F]
-				}
+				} # has interaction
+			} # two factor
 
-
-				#"stage: MN vs. EN"  -->  c("MN_AB-EN_AB", "EN_Nodule-EN_AB") 
-				comparisons <- unlist(
-          sapply(
-            selected_comparisons, 
-            function(x){
-              transform_comparisons(
-                  comparison = x,
-                  key_model_factors = key_model_factors,
-                  sample_info = sample_info_filter
-              ) 
-            }           
-          )
+      # formulate comparison---------------------------
+      #"stage: MN vs. EN"  -->  c("MN_AB-EN_AB", "EN_Nodule-EN_AB") 
+      comparisons <- unlist(
+        sapply(
+          selected_comparisons, 
+          function(x){
+            transform_comparisons(
+                comparison = x,
+                key_model_factors = key_model_factors,
+                sample_info = sample_info_filter
+            ) 
+          }           
         )
-				comparisons <- as.vector(comparisons)
-			}
-			
+      )
+      comparisons <- as.vector(comparisons)
+
+      # some comparisons does not make sense as the combination is not present 
+      # in design matrix
+
+      validate_comparison <- rep(FALSE, length(comparisons))
+      for( i in 1:length(comparisons)) {
+        sample_1 <- gsub("-.*", "", comparisons[i])
+        sample_2 <- gsub(".*-", "", comparisons[i])     
+        if( sum(grepl(sample_1, colnames(design)) > 0) & 
+          sum(grepl(sample_2, colnames(design)) > 0)
+        ){
+          validate_comparison[i] <- TRUE
+        }
+      }
+      comparisons <- comparisons[validate_comparison]
+
 			# make contrasts
 			make_contrast <- limma::makeContrasts(contrasts = comparisons[1], levels = design)
 			if(length(comparisons) > 1) {
@@ -1285,7 +1300,6 @@ deg_limma <- function(
           )
         }
       }
-
 
       # add contrast due to interaction term	
 			if(interaction_term) {
@@ -1383,6 +1397,7 @@ extract_fcfdr <- function(
   }											
 }
 
+
 #' comparisons in all levels of the other factor 
 #' "stage: MN vs. EN"  -->  c("MN_AB-EN_AB", "EN_Nodule-EN_AB") 
 #' 
@@ -1398,31 +1413,48 @@ transform_comparisons <- function(
   key_model_factors,
   sample_info
 ) {
-  tem <- gsub(".*: ", "", comparison)
+  levels <- gsub(".*: ", "", comparison)
   # control  mutant
-  tem <- unlist(strsplit(tem, " vs\\. ")) 							
-  factor <- gsub(":.*", "", comparison)
-  
-  # 1: first factor, 2: 2nd factor
-  ix <- match(factor, key_model_factors)
-  # 3-1 = 2; 3-1=1
-  other_factor <- key_model_factors[3 - ix]
-  other_factor_levels <- unique(sample_info[, other_factor])				
+  levels <- unlist(strsplit(levels, " vs\\. ")) 							
+  current_factor <- gsub(":.*", "", comparison)
+
   comparisons <- c()
-  
-  for(factor_levels in other_factor_levels) {
-    if(ix == 1) {
-      comparisons <- c(
-        comparisons,
-        paste(paste0(tem, "_", factor_levels), collapse = "-")
-      )
-    } else {
-      comparisons <- c(
-        comparisons,
-        paste(paste0(factor_levels, "_", tem), collapse = "-")
-      )
+  for( factor in key_model_factors){
+    if(factor == current_factor) {
+      if(factor == key_model_factors[1]) { # if it is the first factor
+        comparisons <- paste0(
+          comparisons, 
+          paste0(levels, collapse = "-"),
+          "_" 
+        )
+      } else { # if it is not the first: "wt_IR-wt_mock_"
+        comparisons <- paste0(
+          comparisons, 
+          levels[1],  
+          "-", 
+          comparisons,
+          levels[2], 
+          "_" 
+        )
+      }
+    } else { #  not current factor
+      other_factor_levels <- unique(sample_info[, factor])
+      comparison0 = c()
+      for(other_factor_level in other_factor_levels)	{
+        # "wt-null_mock_"
+        comparison1 <- paste0(comparisons, other_factor_level, "_")
+        # "wt_mock-null_mock_"
+        comparison1 <- gsub("-", paste0("_", other_factor_level, "-"), comparison1)
+        #collect for levels
+        comparison0 <- c(comparison0, comparison1)
+      }
+      # update for factor
+      comparisons <- comparison0
     }
   }
+  # remove the last "_"
+  comparisons <- gsub("_$", "", comparisons)
+
   return(comparisons)		
 }	
 
