@@ -10,8 +10,7 @@ transform_comparisons(comparison, key_model_factors, sample_info)
 \arguments{
 \item{comparison}{Comparison}
 
-\item{key_model_factors}{model factors
-returned list}
+\item{key_model_factors}{model factors}
 }
 \value{
 a list of comparisons
