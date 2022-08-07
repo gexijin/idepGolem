@@ -1163,7 +1163,7 @@ deg_limma <- function(
 			
 			# Making comaprisons------------------------------------------------
       # Only one factor, or more than two then use all pairwise comparisons
-			if(length(key_model_factors) != 2 | length(block_factor) > 1)  {
+			if(length(key_model_factors) != 2)  {
 				comparisons <- gsub(".*: ", "", selected_comparisons)
 				comparisons <- gsub(" vs\\. ", "-", comparisons)
       # Two key factors
@@ -1290,7 +1290,7 @@ deg_limma <- function(
       }
       comparisons <- comparisons[validate_comparison]
 
-			# make contrasts
+			# make contrasts -------------------------------------------------
 			make_contrast <- limma::makeContrasts(contrasts = comparisons[1], levels = design)
 			if(length(comparisons) > 1) {
         for(kk in 2:length(comparisons)) {
@@ -1301,24 +1301,30 @@ deg_limma <- function(
         }
       }
 
-      # add contrast due to interaction term	
+      # add contrast due to interaction term ---------------------------	
 			if(interaction_term) {
 				make_contrast <- cbind(make_contrast, contrast_interact)
 				contrast_names <- c(colnames(make_contrast), colnames(contrast_interact))
 				comparisons <- c(comparisons, colnames(contrast_interact))
 			}
 			
-      # Factor is selected as block
+      # Add block factors ---------------------------------------------
 			if(length(block_factor) >= 1) { 
-				if(length(block_factor) >= 1) {
-          # If multiple use the first one
-          block_factor <- block_factor[1] 
-        }
+        # default use the first block
+				block <- sample_info[, block_factor[1]]
 
-				block <- sample_info[, block_factor]
-			
+        # if more than one block factor, paste them together to make one vector
+				if(length(block_factor) > 1) {
+          for( i in 2:length(block_factor)){
+            block <- paste(block, block_factor[i])
+          }
+        }			
+
 				if(!is.null(raw_counts) && counts_deg_method == 2) {
-					voom_results <- limma::voom(raw_counts, design)
+          dge <- edgeR::DGEList(counts = raw_counts)
+				  # Normalization
+				  dge <- edgeR::calcNormFactors(dge, method = "TMM")
+					voom_results <- limma::voom(dge, design)
 					corfit <- limma::duplicateCorrelation(voom_results, design, block = block)			
 					fit <- limma::lmFit(
             voom_results,
@@ -1403,6 +1409,7 @@ extract_fcfdr <- function(
 #' 
 #' @param comparison Comparison
 #' @param key_model_factors model factors
+#' @sample_info a matrix of experimental design
 #'  returned list
 #' 
 #' @export
@@ -1413,8 +1420,9 @@ transform_comparisons <- function(
   key_model_factors,
   sample_info
 ) {
+
   levels <- gsub(".*: ", "", comparison)
-  # control  mutant
+  # two levels of contrast: IR mock
   levels <- unlist(strsplit(levels, " vs\\. ")) 							
   current_factor <- gsub(":.*", "", comparison)
 
@@ -1422,12 +1430,12 @@ transform_comparisons <- function(
   for( factor in key_model_factors){
     if(factor == current_factor) {
       if(factor == key_model_factors[1]) { # if it is the first factor
-        comparisons <- paste0(
-          comparisons, 
+        comparisons <- paste0(   # IR-mock_
+          comparisons,
           paste0(levels, collapse = "-"),
           "_" 
         )
-      } else { # if it is not the first: "wt_IR-wt_mock_"
+      } else { # if it is not the first: wt_  --> "wt_IR-wt_mock_"
         comparisons <- paste0(
           comparisons, 
           levels[1],  
