@@ -155,7 +155,7 @@ list_model_comparisons_ui <- function(
     # all in one group or too many groups
 		factors <- unique(factors)
     if(length(factors) == 1 |
-       length(factors >= nrow(processed_data)) 
+       length(factors) >= nrow(processed_data)
     ) {
       return(list(
         choices = NULL,
@@ -957,8 +957,8 @@ deg_limma <- function(
   # Many different situations:
   # 1. Just use sample names
   # 2. Just one factor
-  # 3. Two factors no interaction
-	# 4. Two factors with interaction
+  # 3. Two factors 2x2 with or without interaction
+	# 4. Two factors 3x2 with or without interaction
   # 5. Block factor 
   # 6. Three factors no interaction
   # 7. Three factors with interaction
@@ -1308,23 +1308,28 @@ deg_limma <- function(
             intersect(group1, group2), # unchanged in comparison 1
             intersect(group3, group4)
           )
-          ix <- which(level_in_first == group1)
-          control_factorc_1 <- colnames(sample_info_filter)[ix]  
+
+          # find the factor (s) that stays in the same in each comparison
+          # but differs between cthe two comparisons
+          ix <- match(level_in_first, group1)
+          control_factors <- colnames(sample_info_filter)[ix]  
 
           # selected interacting factors
           interacting_terms <- model_factors[grepl(":", model_factors)]
           selected <- FALSE
           # if user selects multiple interaction terms
           for(interacting_term in interacting_terms) {
-          interacting_factors <- unlist(strsplit(interacting_term, ":"))
-            if(setequal( 
-                unique(c(control_factorc_1, factor1, factor2)), 
-                interacting_factors 
-              )
-            ){
-              selected <- TRUE
-            } 
+            interacting_factors <- unlist(strsplit(interacting_term, ":"))
+            for(control_factor in control_factors) {
+              if(setequal( 
+                  unique(c(control_factor, factor1, factor2)), 
+                  interacting_factors 
+              )){
+                selected <- TRUE
+              } 
+            }
           }
+     
           if( selected & factor1 == factor2 ) {  # same factor
             keep <- c(keep, colnames(contrast_interact)[i])
           }

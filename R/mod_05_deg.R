@@ -77,7 +77,7 @@ mod_05_deg_1_ui <- function(id) {
         # Button to run DEG analysis for the specified model
         actionButton(
           inputId = ns("submit_model_button"),
-          label = "Submit & Calculate",
+          label = "Submit",
           style = "float:center"
         ),
         tags$head(tags$style(
@@ -644,7 +644,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
       req(!is.null(deg_info()))
       downloadButton(
         outputId = ns("download_lfc"), 
-        "Download DEG Data"
+        "Results & data"
       )
     })
     
