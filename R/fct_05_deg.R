@@ -950,7 +950,7 @@ deg_limma <- function(
   # 5. Block factor 
   # 6. Three factors no interaction
   # 7. Three factors with interaction
-  # 8. Four or more factors.
+  # 8. Four or more factors. (not tested!!!!)
 
 	top_genes <- list()
   limma_trend <- FALSE
@@ -1273,15 +1273,15 @@ deg_limma <- function(
         for(i in 1:dim(contrast_interact)[2]) {
           # I:null_IR_yes-null_mock_yes.vs.wt_IR_no-wt_IR_yes
           tem <- gsub("I:", "", colnames(contrast_interact)[i])
-          
+   
           comparion_1 <- gsub("\\.vs\\..*", "", tem)
           group1 <- gsub("-.*", "", comparion_1)
           group1 <- unlist(strsplit(group1, "_"))
           group2 <- gsub(".*-", "", comparion_1)
           group2 <- unlist(strsplit(group2, "_"))   
           factor1 <- which(!(group1 %in% group2))
-          factor1 <- colnames(sample_info_filter)[factor1]
-
+          factor1 <- colnames(sample_info_filter)[factor1]        
+          # contrast factor in comparison 1
 
           comparion_2 <- gsub(".*\\.vs\\.", "", tem)
           group3 <- gsub("-.*", "", comparion_2)
@@ -1289,8 +1289,31 @@ deg_limma <- function(
           group4 <- gsub(".*-", "", comparion_2)
           group4 <- unlist(strsplit(group4, "_"))   
           factor2 <- which(!(group3 %in% group4))
-          factor2 <- colnames(sample_info_filter)[factor2]        
-          if(factor1 == factor2) {  # same factor
+          factor2 <- colnames(sample_info_filter)[factor2]  
+
+          #Filtering using selected interaction terms
+          level_in_first <- setdiff(
+            intersect(group1, group2), # unchanged in comparison 1
+            intersect(group3, group4)
+          )
+          ix <- which(level_in_first == group1)
+          control_factorc_1 <- colnames(sample_info_filter)[ix]  
+
+          # selected interacting factors
+          interacting_terms <- model_factors[grepl(":", model_factors)]
+          selected <- FALSE
+          # if user selects multiple interaction terms
+          for(interacting_term in interacting_terms) {
+          interacting_factors <- unlist(strsplit(interacting_term, ":"))
+            if(setequal( 
+                unique(c(control_factorc_1, factor1, factor2)), 
+                interacting_factors 
+              )
+            ){
+              selected <- TRUE
+            } 
+          }
+          if( selected & factor1 == factor2 ) {  # same factor
             keep <- c(keep, colnames(contrast_interact)[i])
           }
         }
@@ -1312,6 +1335,7 @@ deg_limma <- function(
           #"wt"  "IR"
           # "wt2" "IR"
           unique_levels <- apply(df, 2, function(x) length(unique(x)))
+
           if(sum(unique_levels <= length(unique_levels)) 
             == length(unique_levels)) {
             keep <- c(keep, colnames(contrast_interact)[i])
