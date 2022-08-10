@@ -423,7 +423,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
             inputId = ns("select_factors_model"), 
             h5(list_factors$title), 
             choices = list_factors$choices,
-            selected = NULL
+            selected = list_factors$choices[1]
           )
         )
       } else {

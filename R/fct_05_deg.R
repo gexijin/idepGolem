@@ -150,7 +150,19 @@ list_model_comparisons_ui <- function(
         colnames(processed_data)
       )
     )
+
+    # group is not appropriate, 
+    # all in one group or too many groups
 		factors <- unique(factors)
+    if(length(factors) == 1 |
+       length(factors >= nrow(processed_data)) 
+    ) {
+      return(list(
+        choices = NULL,
+        title = "No groups!"
+      ))
+    }
+
 		comparisons <- apply(
       t(combn(factors, 2)),
       1,
