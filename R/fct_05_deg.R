@@ -150,7 +150,19 @@ list_model_comparisons_ui <- function(
         colnames(processed_data)
       )
     )
+
+    # group is not appropriate, 
+    # all in one group or too many groups
 		factors <- unique(factors)
+    if(length(factors) == 1 |
+       length(factors) >= nrow(processed_data)
+    ) {
+      return(list(
+        choices = NULL,
+        title = "No groups!"
+      ))
+    }
+
 		comparisons <- apply(
       t(combn(factors, 2)),
       1,
@@ -945,9 +957,12 @@ deg_limma <- function(
   # Many different situations:
   # 1. Just use sample names
   # 2. Just one factor
-  # 3. Two factors no interaction
-	# 4. Two factors with interaction
+  # 3. Two factors 2x2 with or without interaction
+	# 4. Two factors 3x2 with or without interaction
   # 5. Block factor 
+  # 6. Three factors no interaction
+  # 7. Three factors with interaction
+  # 8. Four or more factors. (not tested!!!!)
 
 	top_genes <- list()
   limma_trend <- FALSE
@@ -973,10 +988,23 @@ deg_limma <- function(
 
 
   # sample groups -------------------------------------------------------------
-	groups <- colnames(processed_data)
-	groups <-  detect_groups(groups, sample_info) 
+  sample_info_effective <- sample_info
+  selected_factors <- c(model_factors, block_factor)
+
+  # if factors are selected, only use the selected factors to define groups
+  if(!is.null(selected_factors)) {
+    # remove interaction terms
+    selected_factors <- selected_factors[
+      !grepl(":", selected_factors)
+    ]   
+    sample_info_effective <- sample_info[, selected_factors, drop = FALSE]
+  }
+	groups <-  detect_groups(
+    colnames(processed_data), 
+    sample_info_effective
+  ) 
 	unique_groups <- unique(groups)  
-	
+
 	# Check for replicates, removes samples without replicates
   # Number of replicates per biological sample
 	reps <- as.matrix(table(groups))
@@ -1162,102 +1190,180 @@ deg_limma <- function(
 			fit <- limma::eBayes(fit, trend = limma_trend)	
 			
 			# Making comaprisons------------------------------------------------
-      # Only one factor, or more than two then use all pairwise comparisons
-			if(length(key_model_factors) != 2)  {
-				comparisons <- gsub(".*: ", "", selected_comparisons)
-				comparisons <- gsub(" vs\\. ", "-", comparisons)
-      # Two key factors
-			} else if(length(key_model_factors) == 2){ 
 
-        # if interaction term exists, make contrast
-				if(sum(grepl(":", model_factors) > 0)) { 
-					interaction_term <- TRUE
 
-					# All pairwise comparisons
-					comparisons <- ""
-					for(i in 1:(length(unique_groups) - 1)) {
-            for(j in (i + 1):length(unique_groups)) {
-              # Only compare WT_control vs. WT_treatment
-              if(strsplit(unique_groups[i], "_")[[1]][1] == strsplit(unique_groups[j], "_")[[1]][1] |
-                 strsplit(unique_groups[i], "_")[[1]][2] == strsplit(unique_groups[j], "_")[[1]][2]) {
-                comparisons <- c(comparisons, paste(unique_groups[j], "-", unique_groups[i], sep = ""))
-              }
+      # not well tested for 3 factors and beyond
+      # if interaction term exists, make contrast
+      if(sum(grepl(":", model_factors) > 0)) { 
+        interaction_term <- TRUE
+
+        # All pairwise comparisons
+        comparisons <- ""
+        for(i in 1:(length(unique_groups) - 1)) {
+          for(j in (i + 1):length(unique_groups)) {
+            #number of factors sharing the same level
+            #wt_IR vs p53_mock --> 0
+            #wt_IR vs wt_mock --> 1
+            n_same_levels <- length(
+              intersect( 
+                unlist(strsplit(unique_groups[i], "_")),
+                unlist(strsplit(unique_groups[j], "_"))
+              )
+            )
+            # only one factor has different levels
+            if(n_same_levels == length(key_model_factors) - 1) {
+              comparisons <- c(
+                comparisons, 
+                paste(unique_groups[j], 
+                "-", 
+                unique_groups[i], sep = "")
+              )
             }
           }
-					comparisons <- comparisons[-1]
-			
-					# Pairwise contrasts
-				  make_contrast <- limma::makeContrasts(
-            contrasts = comparisons[1],
-            levels = design
+        }
+        comparisons <- comparisons[-1]
+
+        # Pairwise contrasts
+        make_contrast <- limma::makeContrasts(
+          contrasts = comparisons[1],
+          levels = design
+        )
+        if(length(comparisons) > 1) {
+          for(kk in 2:length(comparisons)) {
+            make_contrast <- cbind(
+              make_contrast,
+              limma::makeContrasts(contrasts = comparisons[kk], levels = design)
+            )
+          }
+        }
+                  
+        contrast_names <- colnames(make_contrast)		
+      
+        # All possible interactions------------------------------------
+        # Interaction contrasts as the the difference between two ordinary contrasts
+        
+        contrast_interact <- NULL
+        contrast_names <- ""
+        for (kk in 1:(dim(make_contrast)[2] - 1)) {
+          for(kp in (kk+1):dim(make_contrast)[2]) {
+            if(is.null(contrast_interact)) {
+              contrast_interact <- make_contrast[, kp] - make_contrast[,kk]
+            } else {
+              contrast_interact <- cbind(
+                contrast_interact,
+                make_contrast[, kp] - make_contrast[, kk]
+              )
+            }
+            contrast_names <- c(
+              contrast_names,
+              paste0(
+                "I:",
+                colnames(make_contrast)[kp],
+                ".vs.",
+                colnames(make_contrast)[kk]
+              )
+            )
+          }   
+        }
+        colnames(contrast_interact) <- contrast_names[-1]
+      
+        # Remove nonsense contrasts from interactions
+        # only keep columns with 0, 1, or -1
+        contrast_interact <- contrast_interact[, which(
+          apply(abs(contrast_interact), 2, max) == 1), drop = F
+        ]
+        # only keep columns with the sum of absolute values to 4
+        contrast_interact <- contrast_interact[, which(
+          apply(abs(contrast_interact), 2, sum) == 4), drop = F
+        ]
+        # Remove duplicate columns
+        contrast_interact <- t(unique(t(contrast_interact)))		
+
+
+        # Remove unwanted contrasts involving different factors
+        keep <- c()
+        for(i in 1:dim(contrast_interact)[2]) {
+          # I:null_IR_yes-null_mock_yes.vs.wt_IR_no-wt_IR_yes
+          tem <- gsub("I:", "", colnames(contrast_interact)[i])
+   
+          comparion_1 <- gsub("\\.vs\\..*", "", tem)
+          group1 <- gsub("-.*", "", comparion_1)
+          group1 <- unlist(strsplit(group1, "_"))
+          group2 <- gsub(".*-", "", comparion_1)
+          group2 <- unlist(strsplit(group2, "_"))   
+          factor1 <- which(!(group1 %in% group2))
+          factor1 <- colnames(sample_info_filter)[factor1]        
+          # contrast factor in comparison 1
+
+          comparion_2 <- gsub(".*\\.vs\\.", "", tem)
+          group3 <- gsub("-.*", "", comparion_2)
+          group3 <- unlist(strsplit(group3, "_"))
+          group4 <- gsub(".*-", "", comparion_2)
+          group4 <- unlist(strsplit(group4, "_"))   
+          factor2 <- which(!(group3 %in% group4))
+          factor2 <- colnames(sample_info_filter)[factor2]  
+
+          #Filtering using selected interaction terms
+          level_in_first <- setdiff(
+            intersect(group1, group2), # unchanged in comparison 1
+            intersect(group3, group4)
           )
-					if(length(comparisons) > 1) {
-            for(kk in 2:length(comparisons)) {
-              make_contrast <- cbind(
-                make_contrast,
-                limma::makeContrasts(contrasts = comparisons[kk], levels = design)
-              )
+
+          # find the factor (s) that stays in the same in each comparison
+          # but differs between cthe two comparisons
+          ix <- match(level_in_first, group1)
+          control_factors <- colnames(sample_info_filter)[ix]  
+
+          # selected interacting factors
+          interacting_terms <- model_factors[grepl(":", model_factors)]
+          selected <- FALSE
+          # if user selects multiple interaction terms
+          for(interacting_term in interacting_terms) {
+            interacting_factors <- unlist(strsplit(interacting_term, ":"))
+            for(control_factor in control_factors) {
+              if(setequal( 
+                  unique(c(control_factor, factor1, factor2)), 
+                  interacting_factors 
+              )){
+                selected <- TRUE
+              } 
             }
           }
-										
-					contrast_names <- colnames(make_contrast)		
-				
-					# All possible interactions------------------------------------
-					# Interaction contrasts as the the difference between two ordinary contrasts
-					
-					contrast_interact <- NULL
-					contrast_names <- ""
-					for (kk in 1:(dim(make_contrast)[2] - 1)) {
-					  for(kp in (kk+1):dim(make_contrast)[2]) {
-              if(is.null(contrast_interact)) {
-                contrast_interact <- make_contrast[, kp] - make_contrast[,kk]
-              } else {
-                contrast_interact <- cbind(
-                  contrast_interact,
-                  make_contrast[, kp] - make_contrast[, kk]
-                )
-              }
-							contrast_names <- c(
-                contrast_names,
-                paste0(
-                  "I:",
-                  colnames(make_contrast)[kp],
-                  ".vs.",
-                  colnames(make_contrast)[kk]
-                )
-              )
-						}   
-					}
-					colnames(contrast_interact) <- contrast_names[-1]
-				
-					# Remove nonsense contrasts from interactions
-          # only keep columns with 0, 1, or -1
-					contrast_interact <- contrast_interact[, which(
-            apply(abs(contrast_interact), 2, max) == 1), drop = F
-          ]
-          # only keep columns with the sum of absolute values to 4
-					contrast_interact <- contrast_interact[, which(
-            apply(abs(contrast_interact), 2, sum) == 4), drop = F
-          ]
-          # Remove duplicate columns
-					contrast_interact <- t(unique(t(contrast_interact)))		
-					
-					# Remove unwanted contrasts involving more than three levels in 
-          # either factor
-					keep <- c()
-					for(i in 1:dim(contrast_interact)[2]) {
-						tem <- rownames(contrast_interact)[contrast_interact[, i] != 0]
-						tem1 <- unique(unlist(gsub("_.*", "", tem)))
-						tem2 <- unique(unlist(gsub(".*_", "", tem)))
-						if(length(tem1) == 2 & length(tem2) == 2) {
-              keep <- c(keep, colnames(contrast_interact)[i])
-            }
-					}
+     
+          if( selected & factor1 == factor2 ) {  # same factor
+            keep <- c(keep, colnames(contrast_interact)[i])
+          }
+        }
+        #drop
+        contrast_interact <- contrast_interact[, keep, drop = F]
 
-          #contrast_interact stores contrast due to interactions
-					contrast_interact <- contrast_interact[, keep, drop = F]
-				} # has interaction
-			} # two factor
+        # Remove unwanted contrasts involving more than three levels in 
+        # 2-factor, or more than 3 levels in 3-factor models.
+        # Not well tested  for more complex models!!!!!!!!!
+        keep <- c()
+        for(i in 1:dim(contrast_interact)[2]) {
+          tem <- rownames(contrast_interact)[contrast_interact[, i] != 0]
+          # split all groups in terms of factor levels
+          list1 <- lapply(tem, function (x) unlist(strsplit(x, "_")))
+          df <- t(as.data.frame(list1))
+          # this data frame look like. Each column a factor
+          #"wt"  "mock"
+          #"wt2" "mock"
+          #"wt"  "IR"
+          # "wt2" "IR"
+          unique_levels <- apply(df, 2, function(x) length(unique(x)))
+
+          if(sum(unique_levels <= length(unique_levels)) 
+            == length(unique_levels)) {
+            keep <- c(keep, colnames(contrast_interact)[i])
+          }
+        }
+
+        #contrast_interact stores contrast due to interactions
+        contrast_interact <- contrast_interact[, keep, drop = F]
+
+      } # has interaction ?
+
 
       # formulate comparison---------------------------
       #"stage: MN vs. EN"  -->  c("MN_AB-EN_AB", "EN_Nodule-EN_AB") 
