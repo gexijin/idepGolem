@@ -393,7 +393,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       converted <- convert_id(
         rownames(loaded_data()$data),
         idep_data = idep_data,
-        select_org = input$select_org
+        select_org = input$select_org,
+        max_sample_ids = 200
       )
 
       all_gene_info <- gene_info(
@@ -435,10 +436,14 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # Species match table ----------
     output$species_match <- renderTable(
       {
+
         if (is.null(input$expression_file) && input$go_button == 0) {
           return(NULL)
         }
         isolate({
+          if (is.null(conversion_info()$converted)) {
+            return( as.data.frame("ID not recognized.") )
+          }
           tem <- conversion_info()$converted$species_match
           if(nrow(tem) > 50) { # show only 50 
             tem <- tem[1:50, , drop = FALSE]
@@ -447,7 +452,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             as.data.frame("ID not recognized.")
           } else {
             data.frame(
-              "Matched Species (genes)" = tem[1, 1],
+              "Species(genes matched)" = tem[, 1],
               check.names = FALSE
             )
           }

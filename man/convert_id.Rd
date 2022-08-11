@@ -4,7 +4,7 @@
 \alias{convert_id}
 \title{convert_id This function takes gene IDs and converts them to ensembl data.}
 \usage{
-convert_id(query, idep_data, select_org = "BestMatch")
+convert_id(query, idep_data, select_org = "BestMatch", max_sample_ids = 100)
 }
 \arguments{
 \item{query}{A character vector of gene IDs}
@@ -14,6 +14,8 @@ convert_id(query, idep_data, select_org = "BestMatch")
 
 \item{select_org}{A character of the species that wants to be looked up,
 default to \code{"BestMatch"}}
+
+\item{max_sample_ids}{The number of gene ids used to determine species}
 }
 \value{
 A large list of the conversion ID information that was gathered
