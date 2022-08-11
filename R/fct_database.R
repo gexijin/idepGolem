@@ -308,6 +308,10 @@ convert_id <- function(query,
       return(NULL)
     }
 
+    # for each species only keep the idType with most genes
+    matched <- matched[order(-matched$freq), ]
+    matched <- matched[!duplicated(matched$species), ]
+
     sorted <- matched$freq 
     names(sorted) <- paste(matched$species, matched$idType)
     sorted <- sort(sorted, decreasing = TRUE)
@@ -315,11 +319,9 @@ convert_id <- function(query,
     # Try to use Ensembl instead of STRING-db genome annotation
     if(length(sorted) > 1) { # if more than 1 species matched
       if(sorted[1] <= sorted[2] *1.1  # if the #1 species and #2 are close
-        && as.numeric(gsub(" .*", "", names(sorted[1]))) > 
-          sum( idep_data$annotated_species_count[1:3])  # 1:3 Ensembl species
-        && as.numeric( gsub(" .*", "", names(sorted[2]))) 
-          < sum(idep_data$annotated_species_count[1:3])
-      ) {
+        && as.numeric(gsub(" .*", "", names(sorted[1]))) < 0 # STRINGdb
+        && as.numeric( gsub(" .*", "", names(sorted[2]))) > 0 # ensembl 
+      ) { #swap 1 and 2
           tem <- sorted[2]
           sorted[2] <- sorted[1]
           names(sorted)[2] <- names(sorted)[1]
