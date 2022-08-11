@@ -246,13 +246,21 @@ find_species_by_id_name <- function(species_id, org_info) {
 #'  (link to documentation)
 #' @param select_org A character of the species that wants to be looked up,
 #'  default to \code{"BestMatch"}
+#' @param max_sample_ids The number of gene ids used to determine species
 #'
 #' @export
 #' @return A large list of the conversion ID information that was gathered
 #'  from querying the database with the original IDs.
 convert_id <- function(query,
                        idep_data,
-                       select_org = "BestMatch") {
+                       select_org = "BestMatch",
+                       max_sample_ids = 100) {
+  # Solves the issue of app shut down when species
+  # is deleted after genes are uploaded.
+  if(is.null(select_org)) {
+    return(NULL)
+  }
+
   query <- gsub(pattern = "\"|\'", "", x = query)
   # remove " in gene ids, mess up SQL query
   # remove ' in gene ids
@@ -264,14 +272,18 @@ convert_id <- function(query,
   # use a small set of genes to guess species and idType; to improve speed
   # use a small set of gene ids, with the max #
   # when the query is small, use the quary
-  max_sample_ids <- 100 # default
-  # use the query by default
-  n_sample_ids <- length(query_set) # acutal number of samples, for calculating % later
+
+  # acutal number of samples, for calculating % later
+  n_sample_ids <- length(query_set) 
   test_query_string <- query_string
   if (length(query_set) > max_sample_ids) {
     n_sample_ids <- max_sample_ids
     test_query_set <- sample(query_set, max_sample_ids)
-    test_query_string <- paste0("('", paste(test_query_set, collapse = "', '"), "')")
+    test_query_string <- paste0(
+      "('", 
+      paste(test_query_set, collapse = "', '"),
+      "')"
+    )
   }
 
   conn_db <- connect_convert_db()
@@ -280,61 +292,81 @@ convert_id <- function(query,
   if (select_org == idep_data$species_choice[[1]]) {
 
     # First send a query to determine the species
+    # nested SQL to determine the number of query 
+    # genes matched to species, idType combinations
     query_species <- paste0(
-      "select species, idType, COUNT(species)
-      as freq from mapping where id IN ",
-      test_query_string, " GROUP by species,idType"
+      "SELECT species, idType, COUNT(species)
+      as freq FROM
+      (SELECT DISTINCT id, species, idType
+        FROM mapping WHERE id IN ",
+        test_query_string,
+      ")  GROUP BY species,idType"
     )
-    species_ranked <- DBI::dbGetQuery(conn_db, query_species)
-    if (dim(species_ranked)[1] == 0) {
+
+    matched <- DBI::dbGetQuery(conn_db, query_species)
+    if (dim(matched)[1] == 0) {
       return(NULL)
     }
 
-    species_ranked <- species_ranked[order(-species_ranked$freq), ]
-    #  species idType freq
-    #     131      1   99
-    #     131     90   87
-    #     -10090    409   86    # negative is STRING species
-    #     -10090    410   86
+    sorted <- matched$freq 
+    names(sorted) <- paste(matched$species, matched$idType)
+    sorted <- sort(sorted, decreasing = TRUE)
 
-    # try to use Ensembl species if it ranked a close 2nd
-    if (nrow(species_ranked) > 1) { # if more than one matched
-      # if 2nd is close to the first,
-      if (species_ranked$freq[1] <= species_ranked$freq[2] * 1.2 &&
-        species_ranked$species[1] < 0 # the first is STRING
-      && species_ranked$species[2] > 0 # the 2nd is Ensembl
+    # Try to use Ensembl instead of STRING-db genome annotation
+    if(length(sorted) > 1) { # if more than 1 species matched
+      if(sorted[1] <= sorted[2] *1.1  # if the #1 species and #2 are close
+        && as.numeric(gsub(" .*", "", names(sorted[1]))) > 
+          sum( idep_data$annotated_species_count[1:3])  # 1:3 Ensembl species
+        && as.numeric( gsub(" .*", "", names(sorted[2]))) 
+          < sum(idep_data$annotated_species_count[1:3])
       ) {
-        # swap 2nd with 1st
-        species_ranked[1:2, ] <- species_ranked[c(2, 1), ]
-      }
+          tem <- sorted[2]
+          sorted[2] <- sorted[1]
+          names(sorted)[2] <- names(sorted)[1]
+          sorted[1] <- tem
+          names(sorted)[1] <- names(tem)
+        }
     }
+    recognized <- names(sorted[1])
+
+    matched <- sorted
+    matched <- as.data.frame(matched)	
+    colnames(matched) <- "Freq"
 
     # add species name "Mouse"
-    species_ranked$name <- sapply(
-      X = species_ranked$species,
+    matched$name <- sapply(
+      X = as.numeric(gsub(" .*","",row.names(matched))),
       FUN = find_species_by_id_name,
       org_info = idep_data$org_info
     )
 
     # Bind species and % matched genes such as "Mouse(93)"
-    species_ranked$name <- paste0(species_ranked$name,
-      " (", round(species_ranked$freq / n_sample_ids * 100, 0), ")",
+    matched$name <- paste0(matched$name,
+      " (", round(matched$Freq / n_sample_ids * 100, 0), "%)",
       sep = ""
     )
+    matched <- matched[, "name", drop = FALSE]
 
-    species_matched <- as.data.frame(species_ranked$name)
+		if(length(sorted) == 1) { # if only  one species matched # nolint
+      matched <- matched[, 1, drop = FALSE]
+    } else {# if more than one species matched
+      # remove duplicated
+      dup_species <- duplicated(gsub(" .*", "", row.names(matched)))
+      matched <- matched[!dup_species, ,drop = FALSE] 
+    }
 
-    # Query for mapping
     query_statement <- paste0(
-      "select distinct id,ens,species,idType from mapping where ",
-      " species = '", species_ranked$species[1], "'",
-      " AND idType = '", species_ranked$idType[1], "'",
+      "select distinct id,ens,species,idType from mapping where ",  
+      " species = '", gsub(" .*","", recognized), "'",
+      " AND idType = '", gsub(".* ","", recognized), "'",
       " AND id IN ", query_string
     )
+
     result <- DBI::dbGetQuery(conn_db, query_statement)
     if (dim(result)[1] == 0) {
       return(NULL)
     }
+
   } else {
     # if species is selected ---------------------------------------------------
     query_statement <- paste0(
@@ -343,12 +375,26 @@ convert_id <- function(query,
       "' AND id IN ",
       query_string
     )
+
     result <- DBI::dbGetQuery(conn_db, query_statement)
 
     if (nrow(result) == 0) {
       return(NULL)
-    } # stop("ID not recognized!")
-    species_matched <- as.data.frame(paste(
+    } 
+
+    # resolve multiple ID types, get the most matched
+    best_id_type <- as.integer(
+      names(
+        sort(
+          table(result$idType),
+          decreasing = TRUE
+        )
+      )[1]
+    )
+    result <- result[result$idType == best_id_type, ]
+
+    matched <- as.data.frame(paste(
+      "Selected:",
       find_species_by_id_name(
         species_id = select_org,
         org_info = idep_data$org_info
@@ -356,11 +402,16 @@ convert_id <- function(query,
     ))
   }
 
+  # Needs review---------------------------------------
+  # one to many, keep one ensembl id, randomly
   # remove duplicates in query gene ids
   result <- result[which(!duplicated(result[, 1])), ]
+
+  # many user id to one ensembl id mapping, keep all
   # remove duplicates in ensembl_gene_id
-  result <- result[which(!duplicated(result[, 2])), ]
-  colnames(species_matched) <- c("Matched Species (%genes)")
+  #result <- result[which(!duplicated(result[, 2])), ]
+
+  colnames(matched) <- c("Matched Species (/%genes)")
   conversion_table <- result[, 1:2]
   colnames(conversion_table) <- c("User_input", "ensembl_gene_id")
   conversion_table$Species <- sapply(
@@ -378,7 +429,7 @@ convert_id <- function(query,
     origninal_ids = query_set,
     ids = unique(result[, 2]),
     species = species,
-    species_matched = species_matched,
+    species_matched = matched,
     conversion_table = conversion_table
   ))
 }

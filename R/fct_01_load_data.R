@@ -357,12 +357,19 @@ get_all_gene_names <- function(
     mapped_ids,
     all_gene_info
 ) {
+
+  # not converted
   if (is.null(dim(mapped_ids))) {
-    return(data.frame("User_ID" = mapped_ids))
-  } else if (!is.null(all_gene_info$bool)) {
+    return(data.frame(
+      "User_ID" = mapped_ids,
+      "ensembl_ID" = mapped_ids, # dummy data
+      "symbol" = mapped_ids      # dummy data
+      ))
+  } else if (!is.null(all_gene_info$bool)) { # ensembl ID only, no symbol
     return(data.frame(
       "User_ID" = mapped_ids[, 1],
-      "ensembl_ID" = mapped_ids[, 2]
+      "ensembl_ID" = mapped_ids[, 2],
+      "symbol" = mapped_ids[, 1]  # dummy data
     ))
   } else {
     mapped_ids <- data.frame(
