@@ -140,6 +140,13 @@ mod_05_deg_1_ui <- function(id) {
             ),
             tableOutput(
               outputId = ns("sig_gene_stats_table")
+            ),
+            downloadButton(
+              outputId = ns("dl_deg_code"), 
+              label = "Code"
+            ),
+            verbatimTextOutput(
+              ns("deg_code")
             )
           ),
           tabPanel(
@@ -678,6 +685,25 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
       width = "auto",
       hover = T
     )
+
+    output$deg_code <- renderText({
+      req(!is.null(deg$limma))
+		  deg$limma$expr
+    })
+
+    output$dl_deg_code <- downloadHandler(
+      filename = function() {
+        "DEG_code.R"
+      },
+      content = function(file) {
+        if(is.null(deg$limma)) {
+          writeLines(" Nothing!", file)
+        } else {
+          writeLines(deg$limma$expr, file)
+        }
+      }
+    )
+    
 
     output$list_comparisons_venn <- renderUI({
       req(!is.null(deg$limma))
