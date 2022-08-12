@@ -527,6 +527,7 @@ limma_value <- function(
       results = all_calls,
       comparisons = colnames(processed_data),
       exp_type = exp_type,
+      expr = NULL,
       top_genes = top_genes
     ))
   }
@@ -664,7 +665,23 @@ deg_deseq2 <- function(
 		comparisons <- comparisons[1:max_comparisons]
 	}	
 	
-	col_data <- cbind(colnames(raw_counts), groups)
+  col_data <- cbind("sample" = colnames(raw_counts), groups)
+
+  # Build DESeq2 commands
+  expr <- paste0("# DESeq2 script\n",
+  "# Please use the \"Converted counts\" button in the PreProcess tab 
+# to download the filtered data file first.\n\n",
+"library(DESeq2)\n",
+"FC <- ", min_fc_limma, " # Fold-change cutoff\n",
+"FDR <- ", max_p_limma, " # FDR cutoff\n",
+  "\n#  Get data \n"
+  )
+  expr <- paste0(expr,
+"raw_counts = read.csv(\"converted_counts_data.csv\")\n",
+"row.names(raw_counts) <- raw_counts$User_ID\n",
+"raw_counts <- raw_counts[, -(1:3)]\n",
+"str(raw_counts)\n\n"
+  )
 
 	# No design file, but user selected comparisons using column names
 	if(is.null(model_factors) & length(selected_comparisons) > 0) {
@@ -684,7 +701,29 @@ deg_deseq2 <- function(
 
    # no factors selected
 	if(is.null(model_factors)) { 
-    dds = DESeq2::DESeq(dds)
+    dds <- DESeq2::DESeq(dds)
+
+    expr <- paste0(expr,
+"col_data <- data.frame(\n  \"sample\" = c(\"",
+    paste0(col_data[, 1], collapse = "\", \""),
+    "\"),\n  \"groups\" = c(\"",
+    paste0(col_data[, 2], collapse = "\", \""),  
+    "\")\n)\n" 
+    )
+
+  expr <- paste0(expr, 
+"\n# Run DESeq2\n"
+  )
+  expr <- paste0(expr,
+  "dds <- DESeq2::DESeqDataSetFromMatrix(
+  countData = raw_counts,
+  colData = col_data,
+  design = ~groups
+)\n"
+  )    
+    expr <- paste0(expr,  
+      "dds <- DESeq2::DESeq(dds)\n"
+    )
   } else { # factors selected
     # Using selected factors and comparisons ----------
 		# Build model
@@ -708,10 +747,32 @@ deg_deseq2 <- function(
 		colnames(col_data) <- factors_coded  
 
 		col_data <- as.data.frame(col_data)
-		
+
+    expr <- paste0(expr, "col_data <- data.frame(\n")
+    for(c1 in 1:ncol(col_data)){
+      expr <- paste0(expr,
+        "  \"", colnames(col_data)[c1], "\" = c(\"",
+        paste0(col_data[, c1], collapse = "\", \""),
+        "\")"
+      )
+      if(c1 != ncol(col_data)) { # not last
+        expr <- paste0(expr, ",\n")      
+      } else { # last one
+        expr <- paste0(expr, "\n)\n")
+      }
+    }
+
+    expr <- paste0(expr,
+      "row.names(col_data) <- colnames(raw_counts)\n",
+      "col_data\n"
+    )
+
 		# Set reference levels for factors
     # c("genotype:wt", "treatment:control")
 		if(! is.null(reference_levels) ) {
+      expr <- paste0(expr, 
+          "\n#Set reference level \n"
+      )
 			# First factor
 			for(refs in reference_levels) {
         if(!is.null(refs)) {
@@ -725,15 +786,25 @@ deg_deseq2 <- function(
             col_data[, ix],
             gsub(".*:", "", refs)
           )
+
+          expr <- paste0(expr,
+          "col_data[, ", ix, "]",
+            " <- as.factor(col_data[, ", ix, "])\n",
+            "col_data[, ", ix, "] <- relevel(col_data[, ", ix, "], \"",
+            gsub(".*:", "", refs),
+            "\")\n"
+          )
 				}
       }
 		}
 				
 		# Base model
     deseq2_object <- paste(
-      "dds <- DESeq2::DESeqDataSetFromMatrix(countData = raw_counts,
-      colData = col_data, design = ~ ", 
-			paste(factors_coded[factors], collapse = "+")
+"dds <- DESeq2::DESeqDataSetFromMatrix(
+  countData = raw_counts,
+  colData = col_data,
+  design = ~ ", 
+			paste(factors_coded[factors], collapse = " + ")
     )	
 		exp_type <- paste(
       "Model: ~",
@@ -758,14 +829,18 @@ deg_deseq2 <- function(
 		}
 
     # End the model
-		deseq2_object <- paste(deseq2_object, ")") 
+		deseq2_object <- paste(deseq2_object, "\n)") 
 
 		eval(parse(text = deseq2_object))
 	
 		
 		dds = DESeq2::DESeq(dds)  # main function		
 
-
+    expr <- paste0(expr, 
+      "\n# Construct model\n",
+      deseq2_object, "\n",
+      "dds = DESeq2::DESeq(dds) \n"
+    )
 		#------------------------------------------------------------------
 		# list selected comparisons 
 		# "group: control vs. mutant"
@@ -826,13 +901,27 @@ deg_deseq2 <- function(
   pk <- 1
   # First results
 	pp <- 0 
+  expr <- paste0(expr, "\n# Extract contrasts\n",
+"# The res$calls column is 1, and -1 for significantly 
+# up- and down-regulated genes.\n"  
+  )
 
 	for(kk in 1:length(comparisons)) {
 		tem = unlist(strsplit(comparisons[kk], "-"))
-		
+
+    expr <- paste0(expr, "\n# Comparison ", kk, 
+      " of ", length(comparisons), ":  ",
+      comparisons[kk], "\n"
+    )
+
     # Group comparison using sample names
 		if(is.null(model_factors)) {
       selected <- DESeq2::results(dds, contrast = c("groups", tem[1], tem[2]) )
+      expr <- paste0(expr, 
+        "res <- DESeq2::results(dds, \n  contrast = c(\"groups\", \"", 
+        tem[1], "\", \"", tem[2], "\"))\n"
+      )
+
     } else {
       # Not interaction term: they contain . interaction term
 			if(!grepl("\\.", comparisons[kk])) {
@@ -840,17 +929,28 @@ deg_deseq2 <- function(
           dds,
           contrast = c(factors_coded[factors_vector[kk]], tem[1], tem[2])
         )
+        expr <- paste0(expr, 
+          "res <- DESeq2::results(dds,\n    contrast = c(\"", 
+          paste(c(factors_coded[factors_vector[kk]], tem[1], tem[2]), 
+          collapse = "\", \""),
+        "\"))\n"
+        )
       # either A, B, C ...
       } else {
         # Interaction term
         selected <- DESeq2::results(dds, name = comparisons[kk])
+        expr <- paste0(expr, 
+        "res <- DESeq2::results(dds, name = \"", 
+        comparisons[kk],
+        "\" )\n"
+      )
       }
 		}
 
 		selected$calls <- 0
 
 		# upregulated genes marked as 1
-		selected$calls[which(
+    selected$calls[which(
       selected$log2FoldChange > log2(min_fc_limma) & 
         selected$padj < max_p_limma
       )]  <-  1
@@ -869,6 +969,33 @@ deg_deseq2 <- function(
     )
 		selected <- as.data.frame(selected)
 		
+    expr <- paste0(expr,
+      "plotMA(res)\n",
+      "plotCounts(dds,  gene = which.min(res$padj), intgroup = colnames(col_data)[1])\n"
+    )
+
+    expr <- paste0(expr,
+"\nres$calls <- 0 \n",
+"res$calls[which(
+  res$log2FoldChange > log2(FC) & 
+  res$padj < FDR
+)]  <-  1 \n"
+    )
+
+    expr <- paste0(expr,
+"res$calls[which(
+  res$log2FoldChange < -log2(FC) & 
+  res$padj < FDR
+)] <- -1  \n"
+    )
+
+    expr <- paste0(expr,
+"table(res$calls) \n"
+    )
+
+
+
+
     # First one with significant genes, collect gene list and Pval+ fold
 		# top_genes is a list, whose elements are data frames lfc, FDR
 		# result_first is a large data frame, collecting all results
@@ -909,6 +1036,7 @@ deg_deseq2 <- function(
     results= all_calls, 
     comparisons = comparison_names,
     exp_type = exp_type,
+    expr = expr,
     top_genes = top_genes
   )) 
 }
@@ -1478,6 +1606,7 @@ deg_limma <- function(
     results = results,
     comparisons = comparisons,
     exp_type = exp_type,
+    expr = "",
     top_genes = top_genes
   )) 
 }

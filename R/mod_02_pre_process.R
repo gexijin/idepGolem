@@ -742,7 +742,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         "converted_counts_data.csv"
       },
       content = function(file) {
-        write.csv(merged_raw_counts_data(), file)
+        write.csv(merged_raw_counts_data(), file, row.names = FALSE)
       }
     )
 
