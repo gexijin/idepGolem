@@ -12,7 +12,8 @@ deg_deseq2(
   sample_info = NULL,
   model_factors = NULL,
   block_factor = NULL,
-  reference_levels = NULL
+  reference_levels = NULL,
+  threshold_wald_test = FALSE
 )
 }
 \arguments{
@@ -36,6 +37,10 @@ from the model design}
 
 \item{reference_levels}{Vector of reference levels to use for the
 selected factors}
+
+\item{threshold_wald_test}{whether to use threshold-based Wald test 
+to test null hypothesis that the absolute value of fold-change is 
+bigger than a value.}
 }
 \value{
 The return value is the results of the DEG analysis. These
