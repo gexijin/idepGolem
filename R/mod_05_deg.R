@@ -57,7 +57,7 @@ mod_05_deg_1_ui <- function(id) {
             # Min fold change to use
             numericInput(
               inputId = ns("limma_fc"),
-              label = h5("Min fold change"),
+              label = h5("Min fold-change"),
               value = 2,
               min = 1,
               max = 100,
@@ -74,6 +74,15 @@ mod_05_deg_1_ui <- function(id) {
             "#deg-limma_fc { width:100%;   margin-top:-12px}"
           )
         ),
+        conditionalPanel(
+          condition = "input.counts_deg_method == 3",
+          checkboxInput(
+            inputId = ns("threshold_wald_test"),
+            label = "Threshold-based Wald tests",
+            value = FALSE
+          ),
+          ns = ns
+       ),
         # Button to run DEG analysis for the specified model
         actionButton(
           inputId = ns("submit_model_button"),
@@ -586,6 +595,12 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
           text = "Running Analysis",
           color = "#000000"
         )
+        
+        # only use with DESeq2
+        threshold_wald_test <- FALSE
+        if(input$counts_deg_method == 3) {
+          threshold_wald_test <- input$threshold_wald_test
+        }
 
         deg$limma <- limma_value(
           data_file_format = pre_process$data_file_format(),
@@ -601,7 +616,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
           factor_reference_levels = factor_reference_levels(),
           processed_data = pre_process$data(),
           counts_log_start = pre_process$counts_log_start(),
-          p_vals = pre_process$p_vals()
+          p_vals = pre_process$p_vals(),
+          threshold_wald_test = threshold_wald_test
         )
         
         updateTabsetPanel(

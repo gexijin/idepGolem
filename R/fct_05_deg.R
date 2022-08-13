@@ -387,6 +387,9 @@ select_reference_levels_ui <- function(
 #'  from pre-processing
 #' @param p_vals The vector of p-vals calculated in pre-process for
 #'  significant expression
+#' @param threshold_wald_test whether to use threshold-based Wald test 
+#' to test null hypothesis that the absolute value of fold-change is 
+#' bigger than a value
 #' 
 #' @export
 #' @return List with the results of the DEG analysis. When the function
@@ -415,7 +418,8 @@ limma_value <- function(
   factor_reference_levels,
   processed_data,
   counts_log_start,
-  p_vals
+  p_vals,
+  threshold_wald_test = FALSE
 ) {
   #read counts data -----------------------------------------------------------
   if(data_file_format == 1) {
@@ -430,7 +434,8 @@ limma_value <- function(
           sample_info = sample_info,
 					model_factors = c(select_factors_model, select_interactions), 
 				  block_factor = select_block_factors_model,
-          reference_levels = factor_reference_levels
+          reference_levels = factor_reference_levels,
+          threshold_wald_test = threshold_wald_test
         )
       )
     # limma-voom 2 or limma-trend 1 --------------------
@@ -551,6 +556,9 @@ limma_value <- function(
 #' @param block_factor The selected factors for batch effect
 #' @param reference_levels Vector of reference levels to use for the
 #'  selected factors
+#' @param threshold_wald_test whether to use threshold-based Wald test 
+#' to test null hypothesis that the absolute value of fold-change is 
+#' bigger than a value.
 #' 
 #' @export
 #' @return The return value is the results of the DEG analysis. These
@@ -568,7 +576,8 @@ deg_deseq2 <- function(
   sample_info = NULL,
   model_factors = NULL,
   block_factor = NULL,
-  reference_levels = NULL
+  reference_levels = NULL,
+  threshold_wald_test = FALSE
 ){
   # Local parameters---------------------------------------------
   max_samples <- 500
@@ -916,34 +925,85 @@ deg_deseq2 <- function(
 
     # Group comparison using sample names
 		if(is.null(model_factors)) {
-      selected <- DESeq2::results(dds, contrast = c("groups", tem[1], tem[2]) )
-      expr <- paste0(expr, 
-        "res <- DESeq2::results(dds, \n  contrast = c(\"groups\", \"", 
-        tem[1], "\", \"", tem[2], "\"))\n"
-      )
 
-    } else {
+      # whether testing the null hypothesis FC = 0, or |FC| > 2
+      if(!threshold_wald_test) {
+        selected <- DESeq2::results(dds, contrast = c("groups", tem[1], tem[2]))
+        expr <- paste0(expr, 
+          "res <- DESeq2::results(dds, \n  contrast = c(\"groups\", \"", 
+          tem[1], "\", \"", tem[2], "\"))\n"
+        )
+      } else {
+        selected <- DESeq2::results(dds, 
+          contrast = c("groups", tem[1], tem[2]),
+          lfcThreshold = log2(min_fc_limma), 
+          altHypothesis = "greaterAbs"
+        )
+        expr <- paste0(expr, 
+          "res <- DESeq2::results(dds, \n  contrast = c(\"groups\", \"", 
+          tem[1], "\", \"", tem[2], "\"),\n",
+          "  lfcThreshold = log2(FC),\n",
+          "  altHypothesis = \"greaterAbs\"\n",
+          ")\n"
+        )
+      }
+
+    } else { # factors selected 
+
       # Not interaction term: they contain . interaction term
 			if(!grepl("\\.", comparisons[kk])) {
-        selected <- DESeq2::results(
-          dds,
-          contrast = c(factors_coded[factors_vector[kk]], tem[1], tem[2])
-        )
-        expr <- paste0(expr, 
-          "res <- DESeq2::results(dds,\n    contrast = c(\"", 
-          paste(c(factors_coded[factors_vector[kk]], tem[1], tem[2]), 
-          collapse = "\", \""),
-        "\"))\n"
-        )
-      # either A, B, C ...
-      } else {
-        # Interaction term
-        selected <- DESeq2::results(dds, name = comparisons[kk])
-        expr <- paste0(expr, 
-        "res <- DESeq2::results(dds, name = \"", 
-        comparisons[kk],
-        "\" )\n"
-      )
+
+        if(threshold_wald_test) {
+          selected <- DESeq2::results(
+            dds,
+            contrast = c(factors_coded[factors_vector[kk]], tem[1], tem[2]),
+            lfcThreshold = log2(min_fc_limma),
+            altHypothesis = "greaterAbs"
+          )
+          expr <- paste0(expr, 
+            "res <- DESeq2::results(dds,\n  contrast = c(\"", 
+            paste(c(factors_coded[factors_vector[kk]], tem[1], tem[2]), 
+            collapse = "\", \""), "\"),\n",
+            "  lfcThreshold = log2(FC),\n",
+            "  altHypothesis = \"greaterAbs\"\n",
+            ")\n"
+          )
+        } else { # do threshold-based wald test
+          selected <- DESeq2::results(
+            dds,
+            contrast = c(factors_coded[factors_vector[kk]], tem[1], tem[2])
+          )
+          expr <- paste0(expr, 
+            "res <- DESeq2::results(dds,\n    contrast = c(\"", 
+            paste(c(factors_coded[factors_vector[kk]], tem[1], tem[2]), 
+            collapse = "\", \""),
+          "\"))\n"
+          )
+        }
+
+      } else { # Interaction term--------
+        if(threshold_wald_test) {  # Wald test? 
+          selected <- DESeq2::results(dds, 
+            name = comparisons[kk],
+            lfcThreshold = log2(min_fc_limma),
+            altHypothesis = "greaterAbs"          
+          )
+          expr <- paste0(expr, 
+            "res <- DESeq2::results(dds, \n  name = \"", 
+            comparisons[kk],
+            "\",\n",
+            "  lfcThreshold = log2(FC),\n",
+            "  altHypothesis = \"greaterAbs\"\n",
+            ")\n"
+          )
+        } else {
+          selected <- DESeq2::results(dds, name = comparisons[kk])
+          expr <- paste0(expr, 
+            "res <- DESeq2::results(dds, name = \"", 
+            comparisons[kk],
+            "\" )\n"
+          )
+        }
       }
 		}
 
@@ -971,7 +1031,7 @@ deg_deseq2 <- function(
 		
     expr <- paste0(expr,
       "plotMA(res)\n",
-      "plotCounts(dds,  gene = which.min(res$padj), intgroup = colnames(col_data)[1])\n"
+      "plotCounts(dds, gene=which.min(res$padj), intgroup=colnames(col_data)[1])\n"
     )
 
     expr <- paste0(expr,
@@ -992,9 +1052,6 @@ deg_deseq2 <- function(
     expr <- paste0(expr,
 "table(res$calls) \n"
     )
-
-
-
 
     # First one with significant genes, collect gene list and Pval+ fold
 		# top_genes is a list, whose elements are data frames lfc, FDR
