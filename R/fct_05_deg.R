@@ -390,6 +390,8 @@ select_reference_levels_ui <- function(
 #' @param threshold_wald_test whether to use threshold-based Wald test 
 #' to test null hypothesis that the absolute value of fold-change is 
 #' bigger than a value
+#' @param independent_filtering whether or not to conduct independent 
+#' filtering in DESeq2 results function.
 #' 
 #' @export
 #' @return List with the results of the DEG analysis. When the function
@@ -419,7 +421,8 @@ limma_value <- function(
   processed_data,
   counts_log_start,
   p_vals,
-  threshold_wald_test = FALSE
+  threshold_wald_test = FALSE,
+  independent_filtering = TRUE
 ) {
   #read counts data -----------------------------------------------------------
   if(data_file_format == 1) {
@@ -435,7 +438,8 @@ limma_value <- function(
 					model_factors = c(select_factors_model, select_interactions), 
 				  block_factor = select_block_factors_model,
           reference_levels = factor_reference_levels,
-          threshold_wald_test = threshold_wald_test
+          threshold_wald_test = threshold_wald_test,
+          independent_filtering = independent_filtering
         )
       )
     # limma-voom 2 or limma-trend 1 --------------------
@@ -559,6 +563,7 @@ limma_value <- function(
 #' @param threshold_wald_test whether to use threshold-based Wald test 
 #' to test null hypothesis that the absolute value of fold-change is 
 #' bigger than a value.
+#' @param independent_filtering If yes(default), conduct independent filtering
 #' 
 #' @export
 #' @return The return value is the results of the DEG analysis. These
@@ -577,13 +582,14 @@ deg_deseq2 <- function(
   model_factors = NULL,
   block_factor = NULL,
   reference_levels = NULL,
-  threshold_wald_test = FALSE
+  threshold_wald_test = FALSE,
+  independent_filtering = TRUE
 ){
   # Local parameters---------------------------------------------
   max_samples <- 500
   max_comparisons <- 500
 
-   
+    
   # Define groups------------------------------------------------
   # if factors are not selected, ignore the design matrix
   # this solve the error cased when design matrix is available but
@@ -676,20 +682,33 @@ deg_deseq2 <- function(
 	
   col_data <- cbind("sample" = colnames(raw_counts), groups)
 
+
   # Build DESeq2 commands
   expr <- paste0("# DESeq2 script\n",
   "# Please use the \"Converted counts\" button in the PreProcess tab 
 # to download the filtered data file first.\n\n",
 "library(DESeq2)\n",
 "FC <- ", min_fc_limma, " # Fold-change cutoff\n",
-"FDR <- ", max_p_limma, " # FDR cutoff\n",
-  "\n#  Get data \n"
+"FDR <- ", max_p_limma, " # FDR cutoff\n"
   )
+
+
+  # if padj cutoff is bigger than the default 0.1
+  # alpha for results function needs to be that.
+  if(max_p_limma <= 0.1) {
+    alpha <- 0.1
+    expr <- paste0(expr, "alpha <- 0.1 # independent filtering\n")
+  } else {
+     alpha <- max_p_limma
+     expr <- paste0(expr, "alpha <- FDR # independent filtering\n")
+  }
+
   expr <- paste0(expr,
-"raw_counts = read.csv(\"converted_counts_data.csv\")\n",
-"row.names(raw_counts) <- raw_counts$User_ID\n",
-"raw_counts <- raw_counts[, -(1:3)]\n",
-"str(raw_counts)\n\n"
+    "\n#  Get data \n",
+    "raw_counts = read.csv(\"converted_counts_data.csv\")\n",
+    "row.names(raw_counts) <- raw_counts$User_ID\n",
+    "raw_counts <- raw_counts[, -(1:3)]\n",
+    "str(raw_counts)\n\n"
   )
 
 	# No design file, but user selected comparisons using column names
@@ -928,22 +947,33 @@ deg_deseq2 <- function(
 
       # whether testing the null hypothesis FC = 0, or |FC| > 2
       if(!threshold_wald_test) {
-        selected <- DESeq2::results(dds, contrast = c("groups", tem[1], tem[2]))
+        selected <- DESeq2::results(dds, 
+          contrast = c("groups", tem[1], tem[2]),
+          independentFiltering = independent_filtering,
+          alpha = alpha
+        )
         expr <- paste0(expr, 
           "res <- DESeq2::results(dds, \n  contrast = c(\"groups\", \"", 
-          tem[1], "\", \"", tem[2], "\"))\n"
+          tem[1], "\", \"", tem[2], "\"),\n",
+          "  independentFiltering = ", independent_filtering, ",\n",
+          "  alpha = alpha\n",
+          ")\n"
         )
       } else {
         selected <- DESeq2::results(dds, 
           contrast = c("groups", tem[1], tem[2]),
           lfcThreshold = log2(min_fc_limma), 
-          altHypothesis = "greaterAbs"
+          altHypothesis = "greaterAbs",
+          independentFiltering = independent_filtering,
+          alpha = alpha
         )
         expr <- paste0(expr, 
           "res <- DESeq2::results(dds, \n  contrast = c(\"groups\", \"", 
           tem[1], "\", \"", tem[2], "\"),\n",
           "  lfcThreshold = log2(FC),\n",
-          "  altHypothesis = \"greaterAbs\"\n",
+          "  altHypothesis = \"greaterAbs\",\n",
+          "  independentFiltering = ", independent_filtering, ",\n",
+          "  alpha = alpha\n",
           ")\n"
         )
       }
@@ -958,26 +988,35 @@ deg_deseq2 <- function(
             dds,
             contrast = c(factors_coded[factors_vector[kk]], tem[1], tem[2]),
             lfcThreshold = log2(min_fc_limma),
-            altHypothesis = "greaterAbs"
+            altHypothesis = "greaterAbs",
+            independentFiltering = independent_filtering,
+            alpha = alpha
           )
           expr <- paste0(expr, 
             "res <- DESeq2::results(dds,\n  contrast = c(\"", 
             paste(c(factors_coded[factors_vector[kk]], tem[1], tem[2]), 
             collapse = "\", \""), "\"),\n",
             "  lfcThreshold = log2(FC),\n",
-            "  altHypothesis = \"greaterAbs\"\n",
+            "  altHypothesis = \"greaterAbs\",\n",
+            "  independentFiltering = ", independent_filtering, ",\n",
+            "  alpha = alpha\n",
             ")\n"
           )
         } else { # do threshold-based wald test
           selected <- DESeq2::results(
             dds,
-            contrast = c(factors_coded[factors_vector[kk]], tem[1], tem[2])
+            contrast = c(factors_coded[factors_vector[kk]], tem[1], tem[2]),
+            independentFiltering = independent_filtering,
+            alpha = alpha
           )
           expr <- paste0(expr, 
-            "res <- DESeq2::results(dds,\n    contrast = c(\"", 
+            "res <- DESeq2::results(dds,\n  contrast = c(\"", 
             paste(c(factors_coded[factors_vector[kk]], tem[1], tem[2]), 
-            collapse = "\", \""),
-          "\"))\n"
+              collapse = "\", \""),
+            "\"),\n",
+            "  independentFiltering = ", independent_filtering, ",\n",
+            "  alpha = alpha\n",
+            ")\n"
           )
         }
 
@@ -986,22 +1025,33 @@ deg_deseq2 <- function(
           selected <- DESeq2::results(dds, 
             name = comparisons[kk],
             lfcThreshold = log2(min_fc_limma),
-            altHypothesis = "greaterAbs"          
+            altHypothesis = "greaterAbs",
+            independentFiltering = independent_filtering,
+            alpha = alpha
           )
           expr <- paste0(expr, 
             "res <- DESeq2::results(dds, \n  name = \"", 
             comparisons[kk],
             "\",\n",
             "  lfcThreshold = log2(FC),\n",
-            "  altHypothesis = \"greaterAbs\"\n",
+            "  altHypothesis = \"greaterAbs\",\n",
+            "  independentFiltering = ", independent_filtering, ",\n",
+            "  alpha = alpha\n",
             ")\n"
           )
         } else {
-          selected <- DESeq2::results(dds, name = comparisons[kk])
+          selected <- DESeq2::results(dds, 
+            name = comparisons[kk],
+            independentFiltering = independent_filtering,
+            alpha = alpha
+          )
           expr <- paste0(expr, 
             "res <- DESeq2::results(dds, name = \"", 
             comparisons[kk],
-            "\" )\n"
+            "\",\n",
+            "  independentFiltering = ", independent_filtering, ",\n",
+           "  alpha = alpha\n",
+            " )\n"
           )
         }
       }
@@ -1030,27 +1080,10 @@ deg_deseq2 <- function(
 		selected <- as.data.frame(selected)
 		
     expr <- paste0(expr,
+      "summary(res)\n",
       "plotMA(res)\n",
-      "plotCounts(dds, gene=which.min(res$padj), intgroup=colnames(col_data)[1])\n"
-    )
-
-    expr <- paste0(expr,
-"\nres$calls <- 0 \n",
-"res$calls[which(
-  res$log2FoldChange > log2(FC) & 
-  res$padj < FDR
-)]  <-  1 \n"
-    )
-
-    expr <- paste0(expr,
-"res$calls[which(
-  res$log2FoldChange < -log2(FC) & 
-  res$padj < FDR
-)] <- -1  \n"
-    )
-
-    expr <- paste0(expr,
-"table(res$calls) \n"
+      "plotCounts(dds, gene = which.min(res$padj), intgroup = colnames(col_data)[1])\n",
+      "res <- subset(res, padj < FDR & abs(log2FoldChange) > FC)"
     )
 
     # First one with significant genes, collect gene list and Pval+ fold
