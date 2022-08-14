@@ -78,9 +78,14 @@ mod_05_deg_1_ui <- function(id) {
           condition = "input.counts_deg_method == 3",
           checkboxInput(
             inputId = ns("threshold_wald_test"),
-            label = "Threshold-based Wald tests",
+            label = "Threshold-based Wald Test",
             value = FALSE
           ),
+          checkboxInput(
+            inputId = ns("independent_filtering"),
+            label = "Independent filtering of lower counts",
+            value = TRUE
+          ),          
           ns = ns
        ),
         # Button to run DEG analysis for the specified model
@@ -602,6 +607,11 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
           threshold_wald_test <- input$threshold_wald_test
         }
 
+        independent_filtering <- TRUE
+        if(input$counts_deg_method == 3) {
+          independent_filtering <- input$independent_filtering
+        }        
+
         deg$limma <- limma_value(
           data_file_format = pre_process$data_file_format(),
           counts_deg_method = input$counts_deg_method,
@@ -617,7 +627,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
           processed_data = pre_process$data(),
           counts_log_start = pre_process$counts_log_start(),
           p_vals = pre_process$p_vals(),
-          threshold_wald_test = threshold_wald_test
+          threshold_wald_test = threshold_wald_test,
+          independent_filtering = independent_filtering
         )
         
         updateTabsetPanel(
