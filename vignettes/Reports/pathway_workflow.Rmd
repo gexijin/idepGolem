@@ -1,0 +1,214 @@
+---
+title: "Pre-Process Workflow"
+output: html_document
+params:
+  pre_processed:
+  deg:
+  idep_data:
+  converted:
+  all_gene_names:
+  go:
+  select_org:
+  my_range:
+  select_contrast:
+  min_set_size:
+  max_set_size:
+  limma:
+  gene_p_val_cutoff:
+  gene_sets:
+  absolute_fold:
+  pathway_p_val_cutoff:
+  n_pathway_show:
+  contrast_samples:
+  date:
+    label: "Date: "
+    value: !r Sys.Date()
+  printcode:
+    label: "Display Code"
+    value: TRUE
+    input: checkbox
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = params$printcode)
+```
+<!-- This document cannot be knit directly from R studio -->
+
+
+This html document contains what parameters values were selected on the IDEP interface. It also includes the plots generated from those selections. 
+
+
+<!--ALL SELECTED PARAMETERS-->
+```{r eval=FALSE, include=TRUE}
+for (i in 1:length(params)){
+  # exclude loaded data & sample info
+  if(names(params)[i] != "sample_info" && names(params)[i] != "loaded_data")
+    cat(paste0(names(params)[i], ": ", params[[i]], "\n")
+   )
+}
+```
+
+
+
+```{r}
+#cat(params)
+# converted <- convert_id(
+#   query = rownames(load_data$data),
+#   idep_data = idep_data,
+#   select_org = "BestMatch"
+# )
+# 
+# all_gene_info <- gene_info(
+#   converted = params$pre_process$converted,
+#   select_org = "BestMatch",
+#   idep_data = params$idep_data
+#)
+# 
+# converted_data <- convert_data(
+#   converted = converted,
+#   no_id_conversion = FALSE,
+#   data = load_data$data
+# )
+# 
+# gene_names <- get_all_gene_names(
+#   mapped_ids = converted_data$mapped_ids,
+#   all_gene_info = all_gene_info
+# )
+
+```
+
+```{r}
+gene_sets <- read_gene_sets(
+  converted = params$converted,
+  all_gene_names = params$all_gene_names,
+  go = params$go,
+  select_org = params$select_org,
+  idep_data = params$idep_data,
+  my_range = params$my_range
+)
+#gene_sets
+# 
+gage <- gage_data(
+  select_go = params$go,
+  select_contrast = params$select_contrast,
+  min_set_size = params$min_set_size,
+  max_set_size = params$max_set_size,
+  limma = params$limma,
+  gene_p_val_cutoff = params$gene_p_val_cutoff,
+  gene_sets = params$gene_sets,
+  absolute_fold = params$absolute_fold,
+  pathway_p_val_cutoff = params$pathway_p_val_cutoff,
+  n_pathway_show = params$n_pathway_show
+)
+gage
+# 
+# contrast_samples_pgsea <- find_contrast_samples(
+#   select_contrast = "I:p53_NULL.Treatment_IR", 
+# 	all_sample_names = colnames(processed_data$data),
+# 	sample_info = load_data$sample_info,
+# 	select_factors_model = c("p53", "Treatment"),
+# 	select_model_comprions = "p53: NULL vs. WT", 
+#   reference_levels = c("p53:WT", "Treatment:MOCK"),
+# 	counts_deg_method = "3",
+# 	data_file_format = "1"
+# )
+# 
+contrast_samples
+plot_pgsea(
+  my_range = params$my_range,
+  processed_data = params$pre_processed,
+  contrast_samples = params$contrast_samples,
+  gene_sets = gene_sets,
+  pathway_p_val_cutoff = params$pathway_p_val_cutoff,
+  n_pathway_show = n_pathway_show
+)
+# 
+# 
+# # fgsea <- fgsea_data(
+# #   select_contrast = "I:p53_NULL.Treatment_IR",
+# #   my_range = c(15, 2000),
+# #   limma = limma,
+# #   gene_p_val_cutoff = 1,
+# #   gene_sets = gene_sets,
+# #   absolute_fold = FALSE,
+# #   pathway_p_val_cutoff = .1,
+# #   n_pathway_show = 30
+# # )
+# 
+# # reactome_data(
+# #   select_contrast = "I:p53_NULL.Treatment_IR",
+# #   my_range = c(15, 2000),
+# #   limma = limma,
+# #   gene_p_val_cutoff = 1,
+# #   converted = converted,
+# #   idep_data = idep_data,
+# #   pathway_p_val_cutoff = .1,
+# #   n_pathway_show = 30,
+# #   absolute_fold = FALSE
+# # )
+# 
+# #pgsea_plot_all(
+#   #go = "GOBP",
+#   #my_range = c(15, 2000),
+#   #data = processed_data$data,
+#   #select_contrast = "I:p53_null.Treatment_IR",
+#   #gene_sets = gene_sets,
+#   #pathway_p_val_cutoff = .1,
+#   #n_pathway_show = 30
+# #)
+# 
+# # pgsea_plot_data <- get_pgsea_plot_data(
+# #   my_range = c(15, 2000),
+# #   data = processed_data$data,
+# #   select_contrast = "I:p53_NULL.Treatment_IR",
+# #   gene_sets = gene_sets,
+# #   sample_info = load_data$sample_info,
+# #   select_factors_model = c("p53", "Treatment"),
+# #   select_model_comprions = "p53: NULL vs. WT",
+# #   pathway_p_val_cutoff = .1,
+# #   n_pathway_show = 30
+# # ) 
+# 
+# gage[, 2]
+# 
+# select_data <- pathway_select_data(
+#   sig_pathways = "RNA processing ",
+#   gene_sets = gene_sets,
+#   contrast_samples = contrast_samples_pgsea,
+#   data = processed_data$data,
+#   select_org = "BestMatch",
+#   all_gene_names = gene_names
+# )
+# 
+# basic_heatmap(
+#   data = select_data,
+#   c("green", "black", "red")
+# )
+# 
+# pathway_list_data <- get_pathway_list_data(
+#   pathway_method = 1,
+#   gage_pathway_data = gage,
+#   fgsea_pathway_data = NULL,
+#   pgsea_plot_data = NULL,
+#   pgsea_plot_all_samples_data = NULL,
+#   go = "GOBP",
+#   select_org = "BestMatch",
+#   gene_info = all_gene_info,
+#   gene_sets = gene_sets
+# )
+# 
+# enrichment_plot(
+#   go_table = pathway_list_data
+# )
+# 
+# # kegg_pathway(
+# #   go = "KEGG",
+# #   gage_pathway_data = gage,
+# #   sig_pathways = "Oocyte meiosis",
+# #   select_contrast = "I:p53_NULL.Treatment_IR",
+# #   limma = limma,
+# #   converted = converted,
+# #   idep_data = idep_data,
+# #   select_org = "BestMatch"
+# # )
+```
+
