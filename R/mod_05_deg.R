@@ -75,7 +75,7 @@ mod_05_deg_1_ui <- function(id) {
           )
         ),
         conditionalPanel(
-          condition = "input.counts_deg_method == 3",
+          condition = "input.counts_deg_method == 3 && output.data_file_format == 1",
           checkboxInput(
             inputId = ns("threshold_wald_test"),
             label = "Threshold-based Wald Test",
