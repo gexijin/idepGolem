@@ -11,8 +11,11 @@ The reason for this repository is to allow for users to locally install a packag
 
 The data can be retrieved from this link:<http://18.235.92.206:8080/>
 
+Once the data is unzipped, delete the data_go subfolder, which should be replaced by the most recent version from 
+[here.](<https://sdsu.box.com/s/y6prfukb8pw796ya00ot2eubm4sb4svq>). This contains more demo data files.
+
 Once all the data is retrieved then unzip the data into a base folder, then set up
-an environment variable name ```GE_DATABASE```
+an environment variable name ```IDEP_DATABASE```
 
 How to make environment variable for each OS:
 
