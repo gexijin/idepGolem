@@ -50,6 +50,7 @@ from the model design}
 \value{
 The return value is the results of the DEG analysis. These
  results are filtered and formatted by the limma_value function.
+        processed_data = processed_data,
 }
 \description{
 Used in the limma_value function to perform DEG analysis using the 
