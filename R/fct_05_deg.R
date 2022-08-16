@@ -1254,7 +1254,7 @@ deg_limma <- function(
     colnames(processed_data), 
     sample_info_effective
   ) 
-  unique_groups <- unique(groups)  
+  unique_groups <- unique(groups)
 
   # Check for replicates, removes samples without replicates
   # Number of replicates per biological sample
@@ -1284,17 +1284,16 @@ deg_limma <- function(
 
 
   #Two groups------------------------------------------------------------------
-  # Just two groups
-  if(length(unique_groups) == 2) {
+  # Just two groups, no design matrix uploaded
+  if(is.null(model_factors) && length(unique_groups) == 2) {
     unique_groups <- unique(groups)
 
     expr <- paste0(expr,
-#      "groups = c(\"", paste0(groups, collapse = "\", \""), ")\n",
        print_vector(groups, "groups"),
       "unique_groups <- unique(groups)\n"
     )
     # No sample file, but user selected comparisons using column names
-    if(is.null(model_factors) && length(selected_comparisons) > 0) {
+    if(length(selected_comparisons) > 0) {
       comparisons <- selected_comparisons[1] # only use one if two selected
       expr <- paste0(expr,
         print_vector(selected_comparisons, "comparisons")
@@ -1303,9 +1302,9 @@ deg_limma <- function(
       # "Mutant-WT"
       comparisons <-  paste(unique_groups[2], "-", unique_groups[1], sep = "")
       expr <- paste0(expr,
-        "comparisons <-  ", 
+        "comparisons <-  \"",
         paste(unique_groups[2], "-", unique_groups[1], sep = ""),
-        "\n"
+        "\"\n"
       )
     }
 
@@ -1332,6 +1331,7 @@ deg_limma <- function(
       fit <- limma::lmFit(voom_results, design)
 
       expr <- paste0(expr,
+        "# Use Limma-voom\n",
         "dge <- edgeR::DGEList(counts = raw_counts)\n",
         "dge <- edgeR::calcNormFactors(dge, method = \"TMM\")\n",
         "voom_results <- limma::voom(dge, design)\n",
@@ -1402,62 +1402,101 @@ deg_limma <- function(
 
 
   # 3+ groups -----------------------------------------------------------------
-  # More than two sample groups
-  if(length(unique_groups) > 2) {
-    # Set reference level based on the order in which the levels appear
-    # The first appearing level is set as reference; otherwise, we get up and 
-    # down-regulation reversed.
-    groups <- factor(groups, levels = unique_groups)
+  # More than two sample groups, or sample design uploaded
+  if(!is.null(model_factors) || length(unique_groups) > 2) {
 
-    design <- model.matrix(~ 0 + groups)
-    colnames(design) <- gsub("^groups", "", colnames(design))
+    # no design file, or no comparisons selected
+    if(is.null(model_factors) || length(selected_comparisons) == 0) {
+      # Set reference level based on the order in which the levels appear
+      # The first appearing level is set as reference; otherwise, we get up and 
+      # down-regulation reversed.
+      groups <- factor(groups, levels = unique_groups)
 
-    #Voom----------------------------
-    if(!is.null(raw_counts) && counts_deg_method == 2) {
-      dge <- edgeR::DGEList(counts = raw_counts)
-      # Normalization
-      dge <- edgeR::calcNormFactors(dge, method = "TMM")
-      voom_results <- limma::voom(dge, design)
-      fit <- limma::lmFit(voom_results, design)
-    # regular limma---------------------
-    } else {
-      fit <- limma::lmFit(eset, design)
-    }
+      design <- model.matrix(~ 0 + groups)
+      colnames(design) <- gsub("^groups", "", colnames(design))
 
-    fit <- limma::eBayes(fit, trend = limma_trend)
+      expr <- paste0(expr,
+        print_vector(groups, "groups"),
+        "unique_groups <- unique(groups)\n",
+        "\n# Build model----------------------------\n",
+        "groups <- factor(groups, levels = unique_groups)\n", 
+        "design <- model.matrix(~0 + groups)\n",
+        "colnames(design) <- gsub(\"^groups\", \"\", colnames(design))\n"
+      )
 
-    # all comparisons ------------------------------
-    comparisons <- ""
-    for(i in 1:(length(unique_groups) - 1)) {
-      for (j in (i + 1):length(unique_groups)) {
-        comparisons <- c(
-          comparisons,
-          paste(unique_groups[j], "-", unique_groups[i], sep = "")
+      #Voom----------------------------
+      if(!is.null(raw_counts) && counts_deg_method == 2) {
+        dge <- edgeR::DGEList(counts = raw_counts)
+        # Normalization
+        dge <- edgeR::calcNormFactors(dge, method = "TMM")
+        voom_results <- limma::voom(dge, design)
+        fit <- limma::lmFit(voom_results, design)
+        expr <- paste0(expr,
+          "# Use Limma-voom\n",
+          "dge <- edgeR::DGEList(counts = raw_counts)\n",
+          "dge <- edgeR::calcNormFactors(dge, method = \"TMM\")\n",
+          "voom_results <- limma::voom(dge, design)\n",
+          "fit <- limma::lmFit(voom_results, design)\n"
+        )
+      # regular limma---------------------
+      } else {
+        fit <- limma::lmFit(eset, design)
+        expr <- paste0(expr, "fit <- limma::lmFit(eset, design)\n")
+      }
+
+      fit <- limma::eBayes(fit, trend = limma_trend)
+      expr <- paste0(expr,
+        "fit <- limma::eBayes(contrasts_fit, trend = limma_trend)\n"
+      )
+      # all comparisons ------------------------------
+      comparisons <- ""
+      for(i in 1:(length(unique_groups) - 1)) {
+        for (j in (i + 1):length(unique_groups)) {
+          comparisons <- c(
+            comparisons,
+            paste(unique_groups[j], "-", unique_groups[i], sep = "")
+          )
+        }
+      }
+      comparisons <- comparisons[-1]
+
+      # No design file-----------------------------------------------------------
+      # No design file, but user selected comparisons using column names
+      if(is.null(model_factors) & length(selected_comparisons) > 0) {
+        comparisons <- selected_comparisons
+      }
+      
+      expr <- paste0(expr, print_vector(comparisons, "comparisons"))
+
+      make_contrast <- limma::makeContrasts(contrasts = comparisons[1], levels = design)
+
+      expr <- paste0(expr,
+        "make_contrast <- limma::makeContrasts(\n",
+        "  contrasts = comparisons[1], \n",
+        "  levels = design\n)\n"     
+      )
+
+      if(length(comparisons) > 1) {
+        for(kk in 2:length(comparisons) ) {
+          make_contrast <- cbind(
+            make_contrast,
+            limma::makeContrasts(contrasts = comparisons[kk], levels = design)
+          )
+        }
+        expr <- paste0(expr,
+          "for(kk in 2:length(comparisons) ) {\n",
+          "  make_contrast <- cbind(\n",
+          "    make_contrast,\n",
+          "    limma::makeContrasts(contrasts = comparisons[kk], levels = design)\n",
+          "  )\n",
+          "}\n"
         )
       }
-    }
-    comparisons <- comparisons[-1]
-
-    # No design file-----------------------------------------------------------
-    # No design file, but user selected comparisons using column names
-    if(is.null(model_factors) & length(selected_comparisons) > 0) {
-      comparisons <- selected_comparisons
-    }
-
-    make_contrast <- limma::makeContrasts(contrasts = comparisons[1], levels = design)
-    if(length(comparisons) > 1) {
-      for(kk in 2:length(comparisons) ) {
-        make_contrast <- cbind(
-          make_contrast,
-          limma::makeContrasts(contrasts = comparisons[kk], levels = design)
-        )
-      }
-    }
-    exp_type = paste(length(unique_groups), " sample groups detected.")   
+      exp_type <- paste(length(unique_groups), " sample groups detected.")
 
     # Design file uploaded ----------------------------------------------------
     # Sample information is uploaded and user selected factors and comparisons
-    if(!is.null(model_factors) & length(selected_comparisons) > 0) {
+    } else {
       exp_type <- paste("Model: ~", paste(model_factors, collapse = " + "))
       # Default value to be re-write if needed
       interaction_term <- FALSE
@@ -1474,19 +1513,32 @@ deg_limma <- function(
       # A factor is selected both in block and main factors, then use it as block factor
       key_model_factors <- key_model_factors[
         is.na(match(key_model_factors, block_factor))
-      ]  
+      ]
 
       # Design matrix ----------
       # Remove factors not used.
       sample_info_filter <- sample_info[, key_model_factors, drop = F]
       #groups <- apply(sample_info_filter, 1, function(x) paste(x, collapse = "_"))
       groups <- detect_groups(colnames(processed_data), sample_info_filter)
-      unique_groups <- unique(groups)  
+      unique_groups <- unique(groups)
 
       groups <- factor(groups, levels = unique_groups)
 
       design <- stats::model.matrix(~ 0 + groups)  
       colnames(design) <- gsub("^groups", "", colnames(design))
+
+      expr <- paste0(expr,
+        print_dataframe(sample_info, "sample_info"),
+        print_vector(model_factors, "model_factors"),
+        print_vector(key_model_factors, "key_model_factors"),
+        "sample_info_filter <- sample_info[, key_model_factors, drop = F]\n",
+        print_vector(groups, "groups"),
+        "unique_groups <- unique(groups)\n",
+        "\n# Build model----------------------------\n",
+        "groups <- factor(groups, levels = unique_groups)\n", 
+        "design <- model.matrix(~0 + groups)\n",
+        "colnames(design) <- gsub(\"^groups\", \"\", colnames(design))\n"
+      )
 
       # voom
       if(!is.null(raw_counts) && counts_deg_method == 2) {
@@ -1495,15 +1547,24 @@ deg_limma <- function(
         dge <- edgeR::calcNormFactors(dge, method = "TMM")
         voom_results <- limma::voom(dge, design)
         fit <- limma::lmFit(voom_results, design)
+        expr <- paste0(expr,
+          "# Use Limma-voom\n",
+          "dge <- edgeR::DGEList(counts = raw_counts)\n",
+          "dge <- edgeR::calcNormFactors(dge, method = \"TMM\")\n",
+          "voom_results <- limma::voom(dge, design)\n",
+          "fit <- limma::lmFit(voom_results, design)\n"
+        )
       } else {
       # limma-trend
         fit <- limma::lmFit(eset, design)
+        expr <- paste0(expr, "fit <- limma::lmFit(eset, design)\n")
       }
 
-      fit <- limma::eBayes(fit, trend = limma_trend)  
-
+      fit <- limma::eBayes(fit, trend = limma_trend)
+      expr <- paste0(expr,
+        "fit <- limma::eBayes(fit, trend = limma_trend)\n"
+      )
       # Making comaprisons------------------------------------------------
-
 
       # not well tested for 3 factors and beyond
       # if interaction term exists, make contrast
@@ -1682,7 +1743,7 @@ deg_limma <- function(
       #"stage: MN vs. EN"  -->  c("MN_AB-EN_AB", "EN_Nodule-EN_AB") 
       comparisons <- unlist(
         sapply(
-          selected_comparisons, 
+          selected_comparisons,
           function(x){
             transform_comparisons(
                 comparison = x,
@@ -1709,8 +1770,17 @@ deg_limma <- function(
       }
       comparisons <- comparisons[validate_comparison]
 
+      expr <- paste0(expr, print_vector(comparisons, "comparisons"))
+
       # make contrasts -------------------------------------------------
       make_contrast <- limma::makeContrasts(contrasts = comparisons[1], levels = design)
+
+      expr <- paste0(expr,
+        "make_contrast <- limma::makeContrasts(\n",
+        "  contrasts = comparisons[1], \n",
+        "  levels = design\n)\n"     
+      )
+
       if(length(comparisons) > 1) {
         for(kk in 2:length(comparisons)) {
           make_contrast <- cbind(
@@ -1718,9 +1788,17 @@ deg_limma <- function(
             limma::makeContrasts(contrasts = comparisons[kk], levels = design)
           )
         }
+        expr <- paste0(expr,
+          "for(kk in 2:length(comparisons) ) {\n",
+          "  make_contrast <- cbind(\n",
+          "    make_contrast,\n",
+          "    limma::makeContrasts(contrasts = comparisons[kk], levels = design)\n",
+          "  )\n",
+          "}\n"
+        )
       }
-
-      # add contrast due to interaction term ---------------------------  
+browser()
+      # add contrast due to interaction term ---------------------------
       if(interaction_term) {
         make_contrast <- cbind(make_contrast, contrast_interact)
         contrast_names <- c(colnames(make_contrast), colnames(contrast_interact))
@@ -1767,10 +1845,28 @@ deg_limma <- function(
     # Extract contrasts -------------------------------------------------------    
     fit_contrast <- limma::contrasts.fit(fit, make_contrast)
     fit_contrast <- limma::eBayes(fit_contrast, trend = limma_trend)
+
+
+    expr <- paste0(expr,
+      "fit_contrast <- limma::contrasts.fit(fit, make_contrast)\n",
+      "fit_contrast <- limma::eBayes(fit_contrast, trend = limma_trend)\n"
+    )
+
+
     results <- limma::decideTests(
       fit_contrast,
       p.value = max_p_limma,
       lfc = log2(min_fc_limma )
+    )
+    expr <- paste0(expr,
+      "\n# Examine results ----------------------------\n",
+      "results <- limma::decideTests(\n",
+      "  fit_contrast,\n",
+      "  p.value = FDR,\n",
+      "  lfc = log2(FC)\n",
+      ")\n",
+      "summary(results)\n",
+      "head(results)\n"
     )
 
     top_genes <- lapply(comparisons, function(x) {
@@ -1779,6 +1875,17 @@ deg_limma <- function(
         fit_contrast = fit_contrast
       )
     })
+
+    expr <- paste0(expr,
+      "# Comparison: ", comparisons[1], "\n",
+      "comp <- comparisons[1]\n",
+      "top <- limma::topTable(fit_contrast, coef = comp, number = Inf, sort.by = \"logFC\")\n",
+      "head(top)\n",
+      "plotMDS(eset) # MDS plot of original data\n", #eset only for limma trend????
+      "plotMD(fit, coef = comp, status = results)\n",
+      "volcanoplot(fit, coef = comp, names = row.names(eset), highlight = 10)\n"
+    )
+
     top_genes <- setNames(top_genes, comparisons)
 
     ix <- which(unlist(lapply(top_genes, class)) == "numeric")
@@ -1812,7 +1919,7 @@ extract_fcfdr <- function(
 ) {
   tem <- limma::topTable(
     fit_contrast,
-    number = 1e12,
+    number = Inf,
     coef = comp,
     sort.by = "M"
   ) 
