@@ -438,7 +438,7 @@ merge_data <- function(all_gene_names,
                        merge_ID) {
   isolate({
     if (dim(all_gene_names)[2] == 1) {
-      new_data <- round(data, 2)
+      new_data <- data
       new_data <- as.data.frame(new_data)
       new_data$User_id <- rownames(new_data)
       new_data <- dplyr::select(
@@ -454,7 +454,7 @@ merge_data <- function(all_gene_names,
     } else if (dim(all_gene_names)[2] == 2) {
       new_data <- merge(
         all_gene_names,
-        round(data, 2),
+        data,
         by.x = merge_ID,
         by.y = "row.names",
         all.y = T
@@ -473,7 +473,7 @@ merge_data <- function(all_gene_names,
     } else {
       new_data <- merge(
         all_gene_names,
-        round(data, 2),
+        data,
         by.x = merge_ID,
         by.y = "row.names",
         all.y = T

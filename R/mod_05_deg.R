@@ -75,7 +75,7 @@ mod_05_deg_1_ui <- function(id) {
           )
         ),
         conditionalPanel(
-          condition = "input.counts_deg_method == 3",
+          condition = "input.counts_deg_method == 3 && output.data_file_format == 1",
           checkboxInput(
             inputId = ns("threshold_wald_test"),
             label = "Threshold-based Wald Test",
@@ -593,7 +593,9 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
     deg <- reactiveValues(limma = NULL)
     observeEvent(
       input$submit_model_button, {
-        req(!is.null(pre_process$raw_counts()))
+        req(!is.null(pre_process$raw_counts()) |
+          !is.null(pre_process$data())
+        )
       
         shinybusy::show_modal_spinner(
           spin = "orbit",
@@ -610,7 +612,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
         independent_filtering <- TRUE
         if(input$counts_deg_method == 3) {
           independent_filtering <- input$independent_filtering
-        }        
+        }
 
         deg$limma <- limma_value(
           data_file_format = pre_process$data_file_format(),
