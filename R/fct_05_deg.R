@@ -75,7 +75,7 @@ list_factors_ui <- function(
   } else {
     factors <- colnames(sample_info)
     choices <- setNames(factors, factors)
-    title <- "1. Select 1 or 2 main factors. Or leave it blank and just choose pairs
+    title <- "1. Select main factors (3+ factors are not well tested). Or leave it blank and just choose pairs
               of sample groups below."  
     if (data_file_format == 1 & counts_deg_method==3) {
       title <- "1. Select 6 or less main factors. Or skip this step and just choose 
@@ -1223,19 +1223,34 @@ deg_limma <- function(
 
       expr <- paste0(expr,
         "# Using limma-trend\n",
-        "limma_trend <- TRUE\n"      
+        "limma_trend <- TRUE\n"
       )
     }
-
-  } else {  # read counts data, use limma-voom
+          # read counts data, use limma-voom
+  } else if(!is.null(raw_counts) &&
+       counts_deg_method == 2) {
+    eset <- edgeR::DGEList(counts = raw_counts)
+    # Normalization
+    eset <- edgeR::calcNormFactors(eset, method = "TMM")
     expr <- paste0(expr,
-      "# Use the \"Converted counts\" button in the Pre-Process tab\n", 
+      "# Use the \"Converted counts\" button in the Pre-Process tab\n",
       "# to download the filtered counts file with gene IDs converted to Ensembl.\n",
       "raw_counts = read.csv(\"converted_counts_data.csv\")\n",
       "row.names(raw_counts) <- raw_counts$User_ID\n",
       "raw_counts <- raw_counts[, -(1:3)] # delete 3 columns of IDs\n",
-      "str(raw_counts)\n\n"
+      "str(raw_counts)\n",
+      "# Use Limma-voom\n",
+      "eset <- edgeR::DGEList(counts = raw_counts)\n",
+      "eset <- edgeR::calcNormFactors(eset, method = \"TMM\")\n\n"
     )
+  } else { # exceptions
+    return(list(
+      results = NULL,
+      comparisons = NULL,
+      exp_type = NULL,
+      expr = NULL,
+      top_genes = NULL
+    ))
   }
 
 
@@ -1325,16 +1340,10 @@ deg_limma <- function(
 
     # Voom--------------------------
     if(!is.null(raw_counts) && counts_deg_method == 2) {
-      eset <- edgeR::DGEList(counts = raw_counts)
-      # Normalization
-      eset <- edgeR::calcNormFactors(eset, method = "TMM")
       eset <- limma::voom(eset, design)
       fit <- limma::lmFit(eset, design)
 
       expr <- paste0(expr,
-        "# Use Limma-voom\n",
-        "eset <- edgeR::DGEList(counts = raw_counts)\n",
-        "eset <- edgeR::calcNormFactors(eset, method = \"TMM\")\n",
         "eset <- limma::voom(eset, design)\n",
         "fit <- limma::lmFit(eset, design)\n"
       )
@@ -1383,8 +1392,9 @@ deg_limma <- function(
     top_genes_table <- limma::topTable(fit, number = Inf, sort.by = "M")
 
     expr <- paste0(expr,
-      "top <- limma::topTable(fit, number = Inf, sort.by = \"logFC\")\n",
-      "head(top)\n",
+      "stats <- limma::topTable(fit, number = Inf, sort.by = \"logFC\")\n",
+      "head(stats)\n",
+      "table(sign(subset(stats, adj.P.Val < FDR & abs(logFC) > log2(FC))$logFC))\n",
       "plotMDS(eset) # MDS plot of original data\n",
       "plotMD(fit, status = results)\n",
       "volcanoplot(fit, names = row.names(eset), highlight = 10)\n"
@@ -1407,7 +1417,11 @@ deg_limma <- function(
   if(!is.null(model_factors) || length(unique_groups) > 2) {
 
     # no design file, or no comparisons selected
-    if(is.null(model_factors) || length(selected_comparisons) == 0) {
+    if(is.null(model_factors) || # no design
+      length(selected_comparisons) == 0 || # no comparison selected
+       # has design, but no factors selected, selected comparisons
+      !is.null(model_factors) && length(selected_comparisons) > 0 
+    ) {
       # Set reference level based on the order in which the levels appear
       # The first appearing level is set as reference; otherwise, we get up and 
       # down-regulation reversed.
@@ -1424,18 +1438,12 @@ deg_limma <- function(
         "design <- model.matrix(~0 + groups)\n",
         "colnames(design) <- gsub(\"^groups\", \"\", colnames(design))\n"
       )
-
+browser()
       #Voom----------------------------
       if(!is.null(raw_counts) && counts_deg_method == 2) {
-        eset <- edgeR::DGEList(counts = raw_counts)
-        # Normalization
-        eset <- edgeR::calcNormFactors(eset, method = "TMM")
         eset <- limma::voom(eset, design)
         fit <- limma::lmFit(eset, design)
         expr <- paste0(expr,
-          "# Use Limma-voom\n",
-          "eset <- edgeR::DGEList(counts = raw_counts)\n",
-          "eset <- edgeR::calcNormFactors(eset, method = \"TMM\")\n",
           "eset <- limma::voom(eset, design)\n",
           "fit <- limma::lmFit(eset, design)\n"
         )
@@ -1798,15 +1806,9 @@ deg_limma <- function(
       if(length(block_factor) == 0) {
           # voom
           if(!is.null(raw_counts) && counts_deg_method == 2) {
-            eset <- edgeR::DGEList(counts = raw_counts)
-            # Normalization
-            eset <- edgeR::calcNormFactors(eset, method = "TMM")
             eset <- limma::voom(eset, design)
             fit <- limma::lmFit(eset, design)
             expr <- paste0(expr,
-              "# Use Limma-voom\n",
-              "eset <- edgeR::DGEList(counts = raw_counts)\n",
-              "eset <- edgeR::calcNormFactors(eset, method = \"TMM\")\n",
               "eset <- limma::voom(eset, design)\n",
               "fit <- limma::lmFit(eset, design)\n"
             )
@@ -1831,16 +1833,13 @@ deg_limma <- function(
             block <- paste(block, block_factor[i])
           }
         }
-        
+
         expr <- paste0(expr, 
           "\n# Add block factor(s)\n",
           print_vector(block, "block")
         )
 
         if(!is.null(raw_counts) && counts_deg_method == 2) {
-          eset <- edgeR::DGEList(counts = raw_counts)
-          # Normalization
-          eset <- edgeR::calcNormFactors(eset, method = "TMM")
           eset <- limma::voom(eset, design)
           corfit <- limma::duplicateCorrelation(eset, design, block = block)
           fit <- limma::lmFit(
@@ -1850,9 +1849,6 @@ deg_limma <- function(
             correlation = corfit$consensus
           )
           expr <- paste0(expr,
-            "# Use Limma-voom\n",
-            "eset <- edgeR::DGEList(counts = raw_counts)\n",
-            "eset <- edgeR::calcNormFactors(eset, method = \"TMM\")\n",
             "eset <- limma::voom(eset, design)\n",
             "corfit <- limma::duplicateCorrelation(eset, design, block = block)\n",
             "fit <- limma::lmFit(\n",
@@ -1891,12 +1887,10 @@ deg_limma <- function(
     fit_contrast <- limma::contrasts.fit(fit, make_contrast)
     fit_contrast <- limma::eBayes(fit_contrast, trend = limma_trend)
 
-
     expr <- paste0(expr,
       "fit_contrast <- limma::contrasts.fit(fit, make_contrast)\n",
       "fit_contrast <- limma::eBayes(fit_contrast, trend = limma_trend)\n"
     )
-
 
     results <- limma::decideTests(
       fit_contrast,
@@ -1946,7 +1940,7 @@ deg_limma <- function(
     exp_type = exp_type,
     expr = expr,
     top_genes = top_genes
-  )) 
+  ))
 }
 
 
