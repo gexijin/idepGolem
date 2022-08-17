@@ -602,7 +602,7 @@ deg_deseq2 <- function(
       sample_info
     )
   )
-  unique_groups <- unique(groups)  
+  unique_groups <- unique(groups)
 
 
   #sample preprocess-------------------------------------------------
@@ -629,10 +629,10 @@ deg_deseq2 <- function(
   # groups <- groups[ix]   
   # raw_counts <- raw_counts[, ix] 
 
-   exp_type <- paste(length(unique_groups)," sample groups detected.")  
+   exp_type <- paste(length(unique_groups)," sample groups detected.")
 
   # Too many samples 
-  if(ncol(raw_counts)  > max_samples) { 
+  if(ncol(raw_counts)  > max_samples) {
     return(list(
       results = NULL,
       comparisons = NULL, 
@@ -644,7 +644,7 @@ deg_deseq2 <- function(
   }
 
   # If factors are selected, but comparisons are not 
-  if(!is.null(model_factors) & is.null(selected_comparisons)) { 
+  if(!is.null(model_factors) & is.null(selected_comparisons)) {
     return(list(
       results = NULL,
       comparisons = NULL, 
@@ -652,7 +652,7 @@ deg_deseq2 <- function(
         "Please select comparisons.",
      top_genes = NULL
     ))
-  }  
+  }
 
   #list comparisons----------------------------------------------------
   # All pair-wise comparisons
@@ -829,7 +829,7 @@ deg_deseq2 <- function(
       "dds <- DESeq2::DESeqDataSetFromMatrix(\n",
       "  countData = raw_counts,\n",
       "  colData = col_data,\n",
-      "  design = ~ ", 
+      "  design = ~ ",
       paste(factors_coded[factors], collapse = " + ")
     )  
     exp_type <- paste(
@@ -837,7 +837,6 @@ deg_deseq2 <- function(
       paste(model_factors, collapse = " + ")
     )
 
-    
     # Create model, add interaction terms if selected
     if(length(interactions) > 0) {
       for(interaction_terms in interactions) {
@@ -849,17 +848,16 @@ deg_deseq2 <- function(
         tem <- paste(
           factors_coded[interacting_factors],
           collapse = ":"
-        )   
+        )
         deseq2_object <- paste(deseq2_object, " + ", tem)
-      }      
+      }
     }
 
     # End the model
     deseq2_object <- paste(deseq2_object, "\n)") 
 
     eval(parse(text = deseq2_object))
-  
-    
+
     dds = DESeq2::DESeq(dds)  # main function    
 
     expr <- paste0(expr, 
@@ -1006,7 +1004,7 @@ deg_deseq2 <- function(
           )
           expr <- paste0(expr, 
             "res <- DESeq2::results(dds,\n  contrast = c(\"", 
-            paste(c(factors_coded[factors_vector[kk]], tem[1], tem[2]), 
+            paste(c(factors_coded[factors_vector[kk]], tem[1], tem[2]),
               collapse = "\", \""),
             "\"),\n",
             "  independentFiltering = ", independent_filtering, ",\n",
@@ -1080,7 +1078,7 @@ deg_deseq2 <- function(
       "summary(res)\n",
       "plotMA(res)\n",
       "plotCounts(dds, gene = which.min(res$padj), intgroup = colnames(col_data)[1])\n",
-      "res <- subset(res, padj < FDR & abs(log2FoldChange) > FC) # Select\n",
+      "res <- subset(res, padj < FDR & abs(log2FoldChange) > log2(FC)) # Select\n",
       "table(sign(res$log2FoldChange)) # N. of genes Down, Up\n",
       "res <- res[order(-res$log2FoldChange), ] #sort\n",
       "head(res) #top upregulated\n",
@@ -1255,7 +1253,7 @@ deg_limma <- function(
 
 
   # sample groups -------------------------------------------------------------
-  sample_info_effective <- sample_info
+  sample_info_effective <- NULL
   selected_factors <- c(model_factors, block_factor)
 
   # if factors are selected, only use the selected factors to define groups
@@ -1267,9 +1265,9 @@ deg_limma <- function(
     sample_info_effective <- sample_info[, selected_factors, drop = FALSE]
   }
   groups <-  detect_groups(
-    colnames(processed_data), 
+    colnames(processed_data),
     sample_info_effective
-  ) 
+  )
   unique_groups <- unique(groups)
 
   # Check for replicates, removes samples without replicates
@@ -1409,18 +1407,14 @@ deg_limma <- function(
     # Log fold change is actually substract of means. So if the data is natral log
     # transformed, it should be natral log.
     exp_type = "2 sample groups."
-  }
-
-
+  } else {
   # 3+ groups -----------------------------------------------------------------
   # More than two sample groups, or sample design uploaded
-  if(!is.null(model_factors) || length(unique_groups) > 2) {
+#  if(!is.null(model_factors) || length(unique_groups) > 2) {
 
     # no design file, or no comparisons selected
-    if(is.null(model_factors) || # no design
-      length(selected_comparisons) == 0 || # no comparison selected
-       # has design, but no factors selected, selected comparisons
-      !is.null(model_factors) && length(selected_comparisons) > 0 
+    if(is.null(model_factors) # no factors selected
+      #|| length(selected_comparisons) == 0
     ) {
       # Set reference level based on the order in which the levels appear
       # The first appearing level is set as reference; otherwise, we get up and 
@@ -1438,7 +1432,7 @@ deg_limma <- function(
         "design <- model.matrix(~0 + groups)\n",
         "colnames(design) <- gsub(\"^groups\", \"\", colnames(design))\n"
       )
-browser()
+
       #Voom----------------------------
       if(!is.null(raw_counts) && counts_deg_method == 2) {
         eset <- limma::voom(eset, design)
@@ -1471,9 +1465,10 @@ browser()
 
       # No design file-----------------------------------------------------------
       # No design file, but user selected comparisons using column names
-      if(is.null(model_factors) & length(selected_comparisons) > 0) {
+      if(is.null(model_factors) && length(selected_comparisons) > 0) {
         comparisons <- selected_comparisons
       }
+
       
       expr <- paste0(expr, print_vector(comparisons, "comparisons"))
 
@@ -1883,7 +1878,7 @@ browser()
       }
     }
 
-    # Extract contrasts -------------------------------------------------------    
+    # Extract contrasts ---------------------------------------------------
     fit_contrast <- limma::contrasts.fit(fit, make_contrast)
     fit_contrast <- limma::eBayes(fit_contrast, trend = limma_trend)
 
@@ -1918,7 +1913,7 @@ browser()
     
     for(i in 1:length(comparisons)) {
       expr <- paste0(expr,
-        "\n# Comparison: ", i, " of ", length(comparisons), ":", comparisons[1], "\n",
+        "\n# Comparison: ", i, " of ", length(comparisons), ":", comparisons[i], "\n",
         "stats <- limma::topTable(fit_contrast, coef = ", i, ", number = Inf, sort.by = \"logFC\")\n",
         "table(sign(subset(stats, adj.P.Val < FDR & abs(logFC) > log2(FC))$logFC))\n",
         "plotMD(fit_contrast, coef = ", i, ", status = results)\n",
