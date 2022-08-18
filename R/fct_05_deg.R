@@ -2135,7 +2135,7 @@ sig_genes_plot <- function(
          
   gg <- reshape2::melt(stats)
 
-  colnames(gg) <- c("Regulation","Comparisons","Genes")
+  colnames(gg) <- c("Regulation", "Comparisons", "Genes")
      
   plot_bar <- ggplot2::ggplot(
     gg,
