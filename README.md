@@ -9,10 +9,7 @@ The reason for this repository is to allow for users to locally install a packag
 
 ### Get the database
 
-The data can be retrieved from this link:<http://18.235.92.206:8080/>
-
-Once the data is unzipped, delete the data_go subfolder, which should be replaced by the most recent version from 
-[here](<https://sdsu.box.com/shared/static/y6prfukb8pw796ya00ot2eubm4sb4svq.zip>). This contains more demo data files.
+The data can be retrieved from this [here](http://bioinformatics.sdstate.edu/data/).
 
 Once all the data is retrieved then unzip the data into a base folder, then set up
 an environment variable name ```IDEP_DATABASE```
