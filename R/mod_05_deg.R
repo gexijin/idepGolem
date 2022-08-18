@@ -24,13 +24,12 @@ mod_05_deg_1_ui <- function(id) {
               "limma-voom" = 2,
               "limma-trend" = 1
             ),
-            selected = 3 
-            
+            selected = 3
           ),
           tags$style(
             type = 'text/css',
             "#deg-counts_deg_method {width:100%;   margin-top:-12px}"
-          ), 
+          ),
           ns = ns
         ),
         # Label when the limma method is selected
@@ -100,7 +99,7 @@ mod_05_deg_1_ui <- function(id) {
         tags$br(),
         tags$br(),
         uiOutput(ns("download_lfc_button")),
-        uiOutput(ns("note")),
+        uiOutput(ns("note_download_lfc_button")),
         a(
           h5("Questions?", align = "right"),
           href = "https://idepsite.wordpress.com/degs/",
@@ -645,7 +644,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
     deg_info <- reactive({
       req(!is.null(deg$limma$results))
       
-      deg_information(
+    deg_information(
         limma_value = deg$limma, 
         gene_names = pre_process$all_gene_names(),
         processed_data = pre_process$data(), 
@@ -658,7 +657,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
       "limma_voom", 
       "DESeq2"
     )
-    
+
     name <- reactive({
       paste0(
         "deg_values_", 
@@ -684,7 +683,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
       )
     })
     
-    output$note <- renderUI({
+    output$note_download_lfc_button <- renderUI({
       req(!is.null(deg_info()))
       tippy::tippy_this(
         elementId = ns("download_lfc"),
