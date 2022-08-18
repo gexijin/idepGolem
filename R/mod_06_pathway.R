@@ -829,9 +829,10 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         markdown_location <-paste0(wd, "/vignettes/Reports/pathway_workflow.Rmd")
         file.copy(from=markdown_location,to = tempReport, overwrite = TRUE)
         
+       # browser()
         # Set up parameters to pass to Rmd document
         params <- list(
-          pre_processed = pre_process,
+          pre_processed = pre_process$data(),
           deg = deg,
           idep_data = idep_data,
           converted = pre_process$converted(),
@@ -848,7 +849,18 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           absolute_fold = input$absolute_fold,
           pathway_p_val_cutoff = input$pathway_p_val_cutoff,
           n_pathway_show = input$n_pathway_show,
-          contrast_samples = contrast_samples()
+          contrast_samples = contrast_samples(),
+          sig_pathways = input$sig_pathways,
+          heatmap_color_select = heatmap_colors[[input$heatmap_color_select]],
+          pathway_method = input$pathway_method,
+          gage_pathway_data = gage_pathway_data(),
+          selected_pathway_data = selected_pathway_data(),
+          pathway_list_data = pathway_list_data()
+          
+          #fgsea_pathway_data = fgsea_pathway_data()
+          # pgsea_plot_data = pgsea_plot_data(),
+          # pgsea_plot_all_samples_data = pgsea_plot_all_samples_data(),
+          # gene_info = pre_process$all_gene_info()
           
         )
         

@@ -1,5 +1,5 @@
 ---
-title: "Pre-Process Workflow"
+title: "Pathway Workflow"
 output: html_document
 params:
   pre_processed:
@@ -20,6 +20,16 @@ params:
   pathway_p_val_cutoff:
   n_pathway_show:
   contrast_samples:
+  sig_pathways:
+  heatmap_color_select:
+  pathway_method:
+  gage_pathway_data:
+  selected_pathway_data:
+  pathway_list_data:
+  #fgsea_pathway_data:
+  # pgsea_plot_data:
+  # pgsea_plot_all_samples_data:
+  # gene_info:
   date:
     label: "Date: "
     value: !r Sys.Date()
@@ -35,10 +45,14 @@ knitr::opts_chunk$set(echo = params$printcode)
 
 
 This html document contains what parameters values were selected on the IDEP interface. It also includes the plots generated from those selections. 
+```{r}
+params$contrast_samples
+params$sig_pathways
+```
 
 
 <!--ALL SELECTED PARAMETERS-->
-```{r eval=FALSE, include=TRUE}
+```{r eval=FALSE, include=FALSE}
 for (i in 1:length(params)){
   # exclude loaded data & sample info
   if(names(params)[i] != "sample_info" && names(params)[i] != "loaded_data")
@@ -86,7 +100,7 @@ gene_sets <- read_gene_sets(
   my_range = params$my_range
 )
 #gene_sets
-# 
+#
 gage <- gage_data(
   select_go = params$go,
   select_contrast = params$select_contrast,
@@ -100,6 +114,16 @@ gage <- gage_data(
   n_pathway_show = params$n_pathway_show
 )
 gage
+
+
+
+
+
+
+
+
+
+
 # 
 # contrast_samples_pgsea <- find_contrast_samples(
 #   select_contrast = "I:p53_NULL.Treatment_IR", 
@@ -112,15 +136,21 @@ gage
 # 	data_file_format = "1"
 # )
 # 
-contrast_samples
-plot_pgsea(
-  my_range = params$my_range,
-  processed_data = params$pre_processed,
-  contrast_samples = params$contrast_samples,
-  gene_sets = gene_sets,
-  pathway_p_val_cutoff = params$pathway_p_val_cutoff,
-  n_pathway_show = n_pathway_show
-)
+
+
+#___________
+# contrast_samples
+# plot_pgsea(
+#   my_range = params$my_range,
+#   processed_data = params$pre_processed,
+#   contrast_samples = params$contrast_samples,
+#   gene_sets = gene_sets,
+#   pathway_p_val_cutoff = params$pathway_p_val_cutoff,
+#   n_pathway_show = params$n_pathway_show
+# )
+
+
+
 # 
 # 
 # # fgsea <- fgsea_data(
@@ -169,37 +199,50 @@ plot_pgsea(
 # # ) 
 # 
 # gage[, 2]
-# 
+# --------------
 # select_data <- pathway_select_data(
-#   sig_pathways = "RNA processing ",
-#   gene_sets = gene_sets,
-#   contrast_samples = contrast_samples_pgsea,
-#   data = processed_data$data,
-#   select_org = "BestMatch",
-#   all_gene_names = gene_names
+#   sig_pathways = params$sig_pathways,
+#   gene_sets = params$gene_sets,
+#   contrast_samples = params$contrast_samples, #contrast_samples_pgsea,
+#   data = params$pre_processed,
+#   select_org = params$select_org,
+#   all_gene_names = params$all_gene_names
 # )
 # 
 # basic_heatmap(
 #   data = select_data,
 #   c("green", "black", "red")
 # )
-# 
+# basic_heatmap(
+#   data = select_data,
+#   params$heatmap_color_select
+# )
+
+basic_heatmap(
+  data = params$selected_pathway_data,
+  c("green", "black", "red")
+)
+
+enrichment_plot(
+  go_table = params$pathway_list_data,
+  45
+)
+
 # pathway_list_data <- get_pathway_list_data(
-#   pathway_method = 1,
-#   gage_pathway_data = gage,
-#   fgsea_pathway_data = NULL,
-#   pgsea_plot_data = NULL,
-#   pgsea_plot_all_samples_data = NULL,
-#   go = "GOBP",
-#   select_org = "BestMatch",
-#   gene_info = all_gene_info,
-#   gene_sets = gene_sets
+#   pathway_method = params$pathway_method,
+#   gage_pathway_data = params$gage_pathway_data,
+#   fgsea_pathway_data = params$fgsea_pathway_data,
+#   pgsea_plot_data = params$pgsea_plot_data,
+#   pgsea_plot_all_samples_data = params$pgsea_plot_all_samples_data,
+#   go = params$go,
+#   select_org = params$select_org,
+#   gene_info = params$gene_info,
+#   gene_sets = params$gene_sets
 # )
 # 
 # enrichment_plot(
 #   go_table = pathway_list_data
 # )
-# 
 # # kegg_pathway(
 # #   go = "KEGG",
 # #   gage_pathway_data = gage,
