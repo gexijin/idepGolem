@@ -25,6 +25,7 @@ app_ui <- function(request) {
       mod_09_network_ui(id = "network"),
       mod_10_doc_ui(id = "doc")
     )
+    ,tags$head(includeHTML(("google_analytics_golem.html")))
   )
 }
 
