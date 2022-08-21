@@ -238,12 +238,15 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab){
     # GMT choices for enrichment ----------
     output$select_go_selector <- renderUI({
 	    req(!is.null(pre_process$gmt_choices()))
-
+      selected <- "GOBP"
+      if("KEGG" %in% pre_process$gmt_choices()) {
+        selected <- "KEGG"
+      }
 	    selectInput(
         inputId = ns("select_go"),
         label = "Select Geneset:",
         choices = pre_process$gmt_choices(),
-        selected = "GOBP"
+        selected = selected
       )
     })
 
