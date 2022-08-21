@@ -102,6 +102,53 @@ mod_07_genome_ui <- function(id){
       mainPanel(    
         tabsetPanel(
           tabPanel(
+            "Chromosome Plot",
+            plotly::plotlyOutput(
+              outputId = ns("genome_plotly"),
+              height = "900px"
+            )
+          ),
+          tabPanel(
+            "PREDA (5 Mins)",
+            fluidRow( 
+              column(
+                width = 3,
+                numericInput(
+                  inputId = ns("regions_p_val_cutoff"), 
+                  label = h5("Min. FDR"), 
+                  value = 0.01,
+                  min = 1e-20,
+                  max = 1,
+                  step = .05
+                )
+              ),
+              column(
+                width = 3,
+                numericInput(
+                  inputId = ns("statistic_cutoff"),
+                  label = h5("Min. Statistic"),
+                  min = .2, 
+                  max = 1.5, 
+                  value = .5,
+                  step = .1
+                )
+              )
+            ),
+            plotOutput(
+              outputId = ns("genome_plot"),
+              height = "700px",
+              width = "100%"
+            )
+          ),
+          tabPanel(
+            "(PREDA) Significant Loci",
+            DT::dataTableOutput(outputId = ns("chr_regions"))
+          ),
+          tabPanel(
+            "(PREDA) Genes",
+            DT::dataTableOutput(outputId = ns("genes_chr_regions"))
+          ),
+                    tabPanel(
             "Info",
             h3(
               "Where are your differentially expressed genes (DEGs)
@@ -160,53 +207,6 @@ mod_07_genome_ui <- function(id){
               cancer or other diseases that might involve chromosomal
               gain or loss."
             ) 
-          ),
-          tabPanel(
-            "Chromosome Plot",
-            plotly::plotlyOutput(
-              outputId = ns("genome_plotly"),
-              height = "900px"
-            )
-          ),
-          tabPanel(
-            "PREDA (5 Mins)",
-            fluidRow( 
-              column(
-                width = 3,
-                numericInput(
-                  inputId = ns("regions_p_val_cutoff"), 
-                  label = h5("Min. FDR"), 
-                  value = 0.01,
-                  min = 1e-20,
-                  max = 1,
-                  step = .05
-                )
-              ),
-              column(
-                width = 3,
-                numericInput(
-                  inputId = ns("statistic_cutoff"),
-                  label = h5("Min. Statistic"),
-                  min = .2, 
-                  max = 1.5, 
-                  value = .5,
-                  step = .1
-                )
-              )
-            ),
-            plotOutput(
-              outputId = ns("genome_plot"),
-              height = "700px",
-              width = "100%"
-            )
-          ),
-          tabPanel(
-            "(PREDA) Significant Loci",
-            DT::dataTableOutput(outputId = ns("chr_regions"))
-          ),
-          tabPanel(
-            "(PREDA) Genes",
-            DT::dataTableOutput(outputId = ns("genes_chr_regions"))
           )
         )
       )
@@ -261,12 +261,18 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data){
     # Pre-calculating PREDA, so that changing FDR cutoffs does not trigger entire calculation
     genome_plot_data_pre <- reactive({
       req(!is.null(deg$limma()))
-
-      get_genome_plot_data_pre(
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Running PREDA. This may take up to 5 minutes...",
+        color = "#000000"
+      )
+      res <- get_genome_plot_data_pre(
         select_contrast = input$select_contrast,
         limma = deg$limma(),
         all_gene_info = pre_process$all_gene_info()
-      ) 
+      )
+      shinybusy::remove_modal_spinner()
+      return(res)
     })
 
     # Results from PREDA
@@ -281,6 +287,7 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data){
         regions_p_val_cutoff = input$regions_p_val_cutoff,
         statistic_cutoff = input$statistic_cutoff
       )
+
     })
 
     # Using PREDA to identify significant genomic regions 

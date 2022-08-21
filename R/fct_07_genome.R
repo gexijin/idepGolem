@@ -644,8 +644,8 @@ get_genome_plot_data_pre <- function(
     by.x = "row.names",
     by.y = "ensembl_gene_id"
   )
-	
-	
+
+
 	# PREDA
 	info_file <- system.file(
     "sampledata",
@@ -658,10 +658,9 @@ get_genome_plot_data_pre <- function(
     sep = "\t",
     header = TRUE
   )
-	head(sample_info)
 
 	data("ExpressionSetRCC", package = "PREDAsampledata")
-
+  library(PREDA) # otherwise samplenames functions is not available
 	ge_statistics_for_preda <- PREDA::statisticsForPREDAfromEset(
     ExpressionSetRCC,
     statisticType = "tstatistic",
@@ -749,7 +748,6 @@ get_genome_plot_data_pre <- function(
 	my_data@optionalAnnotations <- as.matrix(x[, 1:2, drop = FALSE])
 	my_data@optionalAnnotationsHeaders <- c("a", "b")
 
-	set.seed(2)
 	ge_analysis_results <- PREDA::PREDA_main(
     my_data,
     nperms = 1000
