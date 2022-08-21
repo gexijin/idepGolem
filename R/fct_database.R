@@ -926,8 +926,7 @@ convert_ensembl_to_entrez <- function(query,
     return(NULL)
   }
 
-  colnames(result) <- c("entrezgene_id", "ensembl_gene_id" )
-  return(result)
+  return(unique(result$id))
 }
 
 #' Find pathway IDs for a KEGG description
