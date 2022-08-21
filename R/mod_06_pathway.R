@@ -251,7 +251,11 @@ mod_06_pathway_ui <- function(id) {
             plotOutput(
               outputId = ns("enrichment_tree"),
               width = "100%"
-            )
+            ),
+            br(),
+            p("Adjusting the width of the browser 
+            window can render figure differently and  
+            resolve the \"Figure margin too wide\" error. ")
           ),
           tabPanel(
             "Network",
@@ -331,12 +335,16 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     # GMT choices for enrichment ----------
     output$select_go_selector <- renderUI({
 	    req(!is.null(pre_process$gmt_choices()))
-
+      # if there is KEGG, use KEGG as default
+      selected <- "GOBP"
+      if("KEGG" %in% pre_process$gmt_choices()) {
+        selected <- "KEGG"
+      }
 	    selectInput(
         inputId = ns("select_go"),
         label = "Select Geneset:",
         choices = pre_process$gmt_choices(),
-        selected = "GOBP"
+        selected = selected
       )
     })
 
@@ -421,7 +429,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
 
       shinybusy::show_modal_spinner(
         spin = "orbit",
-        text = "Finding Gene Sets",
+        text = "Reading pathway database...",
         color = "#000000"
       )
 
@@ -450,7 +458,12 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       req(!is.null(deg$limma()))
       req(!is.null(gene_sets()))
 
-      gage_data(
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Running GAGE...",
+        color = "#000000"
+      )
+      res <- gage_data(
         select_go = input$select_go,
         select_contrast = input$select_contrast,
         min_set_size = input$min_set_size,
@@ -462,6 +475,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         pathway_p_val_cutoff = input$pathway_p_val_cutoff,
         n_pathway_show = input$n_pathway_show
       )
+      shinybusy::remove_modal_spinner()
+      return(res)
     })
 
     output$gage_pathway_table <- DT::renderDataTable({
@@ -495,8 +510,12 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
 
     output$pgsea_plot <- renderPlot({
       req(input$pathway_method == 2)
-
-      plot_pgsea(
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Running PGSEA...",
+        color = "#000000"
+      )
+      res <- plot_pgsea(
         my_range = c(input$min_set_size, input$max_set_size),
         processed_data = pre_process$data(),
         contrast_samples = contrast_samples(),
@@ -504,7 +523,9 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         pathway_p_val_cutoff = input$pathway_p_val_cutoff,
         n_pathway_show = input$n_pathway_show
       )
-    }, 
+      shinybusy::remove_modal_spinner()
+      return(res)
+    },
       height = 800,
       width = 800
     )
@@ -512,7 +533,12 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     pgsea_plot_data <- reactive({
       req(!is.null(gene_sets()))
 
-      get_pgsea_plot_data(
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Running PGSEA...",
+        color = "#000000"
+      )
+      res <- get_pgsea_plot_data(
         my_range = c(input$min_set_size, input$max_set_size),
         data = pre_process$data(),
         select_contrast = input$select_contrast,
@@ -523,14 +549,20 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         pathway_p_val_cutoff = input$pathway_p_val_cutoff,
         n_pathway_show = input$n_pathway_show
       )
+      shinybusy::remove_modal_spinner()
+      return(res)
     })
 
     fgsea_pathway_data <- reactive({
       req(input$pathway_method == 3)
       req(!is.null(deg$limma()))
       req(!is.null(gene_sets()))
-
-      fgsea_data(
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Permutations in fgsea may take several minutes ...",
+        color = "#000000"
+      )
+      res <- fgsea_data(
         select_contrast = input$select_contrast,
         my_range = c(input$min_set_size, input$max_set_size),
         limma = deg$limma(),
@@ -540,11 +572,13 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         pathway_p_val_cutoff = input$pathway_p_val_cutoff,
         n_pathway_show = input$n_pathway_show
       )
+      shinybusy::remove_modal_spinner()
+      return(res)
     })
 
     output$fgsea_pathway <- DT::renderDataTable({
       req(!is.null(fgsea_pathway_data()))
-      
+
       DT::datatable(
         fgsea_pathway_data(),
         options = list(
@@ -557,8 +591,12 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
 
     reactome_pa_pathway_data <- reactive({
       req(!is.null(deg$limma()))
-
-      reactome_data(
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Running ReactomePA. This may take 5 minutes ...",
+        color = "#000000"
+      )
+      res <- reactome_data(
         select_contrast = input$select_contrast,
         my_range = c(input$min_set_size, input$max_set_size),
         limma = deg$limma(),
@@ -569,12 +607,18 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         n_pathway_show = input$n_pathway_show,
         absolute_fold = input$absolute_fold
       )
+      shinybusy::remove_modal_spinner()
+      return(res)
     })
 
     output$pgsea_plot_all_samples <- renderPlot({
       req(input$pathway_method == 4)
-
-      pgsea_plot_all(
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Running PGSEA on all samples ...",
+        color = "#000000"
+      )
+      res <- pgsea_plot_all(
         go = input$select_go,
         my_range = c(input$min_set_size, input$max_set_size),
         data = pre_process$data(),
@@ -583,12 +627,18 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         pathway_p_val_cutoff = input$pathway_p_val_cutoff,
         n_pathway_show = input$n_pathway_show
       )
+      shinybusy::remove_modal_spinner()
+      return(res)
     }, height = 800, width = 800)
 
     pgsea_plot_all_samples_data <- reactive({
       req(!is.null(gene_sets()))
-
-      get_pgsea_plot_all_samples_data(
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Running PGSEA on all samples ...",
+        color = "#000000"
+      )
+      res <- get_pgsea_plot_all_samples_data(
         data = pre_process$data(),
         select_contrast = input$select_contrast,
         gene_sets = gene_sets(),
@@ -596,6 +646,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         pathway_p_val_cutoff = input$pathway_p_val_cutoff,
         n_pathway_show = input$n_pathway_show
       )
+      shinybusy::remove_modal_spinner()
+      return(res)
     })
 
     output$reactome_pa_pathway <- DT::renderDataTable({
