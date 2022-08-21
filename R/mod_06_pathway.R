@@ -801,7 +801,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         converted = pre_process$converted(),
         idep_data = idep_data,
         select_org = pre_process$select_org(), 
-        low_color = kegg_colors[[input$kegg_color_select]][1], 
+        low_color = kegg_colors[[input$kegg_color_select]][1],
         high_color = kegg_colors[[input$kegg_color_select]][2]
       )
       shinybusy::remove_modal_spinner()

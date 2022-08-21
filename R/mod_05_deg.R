@@ -13,6 +13,17 @@ mod_05_deg_1_ui <- function(id) {
     title = "DEG1",
     sidebarLayout(
       sidebarPanel(
+        # Button to run DEG analysis for the specified model
+        actionButton(
+          inputId = ns("submit_model_button"),
+          label = "Submit",
+          style = "float:right"
+        ),
+        tags$head(tags$style(
+          "#deg-submit_model_button{font-size: 20px;color: red}"
+        )),
+        br(),
+        br(),
         # DEG analysis methods for read counts data
         conditionalPanel(
           condition = "output.data_file_format == 1",
@@ -87,15 +98,6 @@ mod_05_deg_1_ui <- function(id) {
           ),          
           ns = ns
        ),
-        # Button to run DEG analysis for the specified model
-        actionButton(
-          inputId = ns("submit_model_button"),
-          label = "Submit",
-          style = "float:center"
-        ),
-        tags$head(tags$style(
-          "#deg-submit_model_button{font-size: 20px;}"
-        )),
         tags$br(),
         tags$br(),
         uiOutput(ns("download_lfc_button")),
