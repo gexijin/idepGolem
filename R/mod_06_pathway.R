@@ -127,7 +127,7 @@ mod_06_pathway_ui <- function(id) {
       mainPanel(
         tabsetPanel(
           tabPanel(
-            "Results",
+            "Significant pathways",
             br(),
             conditionalPanel(
               condition = "input.pathway_method == 1",
@@ -161,6 +161,76 @@ mod_06_pathway_ui <- function(id) {
               condition = "input.pathway_method == 5",
               DT::dataTableOutput(outputId = ns("reactome_pa_pathway")),
               ns = ns
+            )
+          ),
+          tabPanel(
+            "Tree",
+            plotOutput(
+              outputId = ns("enrichment_tree"),
+              width = "100%"
+            ),
+            br(),
+            p("Adjusting the width of the browser 
+            window can render figure differently and  
+            resolve the \"Figure margin too wide\" error. ")
+          ),
+          tabPanel(
+            "Network",
+            h5("Connected gene sets share more genes. Color of node correspond to adjuested Pvalues."),
+            fluidRow(
+              column(
+                width = 2,
+                actionButton(
+                  inputId = ns("layout_vis_deg"),
+                  label = "Change layout"
+                )
+              ),
+              column(
+                width = 1,
+                h5("Cutoff:"),
+                align="right"
+              ),
+              column(
+                width = 2,
+                numericInput(
+                  inputId = ns("edge_cutoff_deg"),
+                  label = NULL,
+                  value = 0.30,
+                  min = 0,
+                  max = 1,
+                  step = .1
+                ),
+                align="left"
+              ),
+              column(
+                width = 2,
+                checkboxInput(
+                  inputId = ns("wrap_text_network_deg"),
+                  label = "Wrap text",
+                  value = TRUE
+                )
+              )
+            ),
+            selectInput(
+              inputId = ns("up_down_reg_deg"),
+              NULL,
+              choices = c(
+                "Both Up & Down" = "Both",
+                "Up regulated" = "Up",
+                "Down regulated" = "Down"
+              )
+            ),
+            h6(
+              "Two pathways (nodes) are connected if they share 30% (default, adjustable) or more genes.
+              Green and red represents down- and up-regulated pathways. You can move the nodes by 
+              dragging them, zoom in and out by scrolling, and shift the entire network by click on an 
+              empty point and drag. Darker nodes are more significantly enriched gene sets. Bigger nodes
+              represent larger gene sets. Thicker edges represent more overlapped genes."
+            ),
+            visNetwork::visNetworkOutput(
+              outputId = ns("vis_network_path"),
+              height = "800px",
+              width = "100%"
             )
           ),
           tabPanel(
@@ -235,16 +305,31 @@ mod_06_pathway_ui <- function(id) {
           ),
           tabPanel(
             "KEGG",
-            checkboxInput(
-              inputId = ns("kegg_sig_only"),
-              label = "Include pathways that are not signficant",
-              value = FALSE
+            conditionalPanel(
+              condition = "(input.pathway_method == 1 | input.pathway_method == 2 | 
+                            input.pathway_method == 3 | input.pathway_method == 4) &
+                            input.select_go != 'KEGG'",
+              h5("Please select KEGG database, if available, from left and perform pathway analysis first."),
+              ns = ns
             ),
-            htmlOutput(outputId = ns("list_sig_pathways_kegg")),
             conditionalPanel(
               condition = "(input.pathway_method == 1 | input.pathway_method == 2 | 
                             input.pathway_method == 3 | input.pathway_method == 4) &
                             input.select_go == 'KEGG'",
+              fluidRow(
+                column(
+                  width = 6,
+                  htmlOutput(outputId = ns("list_sig_pathways_kegg"))
+                ),
+                column(
+                  width = 6,
+                  checkboxInput(
+                    inputId = ns("kegg_sig_only"),
+                    label = "Show all KEGG pathways, including these that are not signficant.",
+                    value = FALSE
+                  )
+                )
+              ),
               h5("Red and green represent up- and down-regulated genes, respectively."),
               imageOutput(
                 outputId = ns("kegg_image"),
@@ -252,77 +337,6 @@ mod_06_pathway_ui <- function(id) {
                 height = "100%"
               ),
               ns = ns
-            ),
-            p("KEGG ")
-          ),
-          tabPanel(
-            "Tree",
-            plotOutput(
-              outputId = ns("enrichment_tree"),
-              width = "100%"
-            ),
-            br(),
-            p("Adjusting the width of the browser 
-            window can render figure differently and  
-            resolve the \"Figure margin too wide\" error. ")
-          ),
-          tabPanel(
-            "Network",
-            h5("Connected gene sets share more genes. Color of node correspond to adjuested Pvalues."),
-            fluidRow(
-              column(
-                width = 2,
-                actionButton(
-                  inputId = ns("layout_vis_deg"),
-                  label = "Change layout"
-                )
-              ),
-              column(
-                width = 1,
-                h5("Cutoff:"),
-                align="right"
-              ),
-              column(
-                width = 2,
-                numericInput(
-                  inputId = ns("edge_cutoff_deg"),
-                  label = NULL,
-                  value = 0.30,
-                  min = 0,
-                  max = 1,
-                  step = .1
-                ),
-                align="left"
-              ),
-              column(
-                width = 2,
-                checkboxInput(
-                  inputId = ns("wrap_text_network_deg"),
-                  label = "Wrap text",
-                  value = TRUE
-                )
-              )
-            ),
-            selectInput(
-              inputId = ns("up_down_reg_deg"),
-              NULL,
-              choices = c(
-                "Both Up & Down" = "Both",
-                "Up regulated" = "Up",
-                "Down regulated" = "Down"
-              )
-            ),
-            h6(
-              "Two pathways (nodes) are connected if they share 30% (default, adjustable) or more genes.
-              Green and red represents down- and up-regulated pathways. You can move the nodes by 
-              dragging them, zoom in and out by scrolling, and shift the entire network by click on an 
-              empty point and drag. Darker nodes are more significantly enriched gene sets. Bigger nodes
-              represent larger gene sets. Thicker edges represent more overlapped genes."
-            ),
-            visNetwork::visNetworkOutput(
-              outputId = ns("vis_network_path"),
-              height = "800px",
-              width = "100%"
             )
           )
         )
@@ -425,7 +439,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         selectInput(
           inputId = ns("sig_pathways"),
           label = 
-            "Select or search for a pathway:",
+            "Select a significant pathway:",
           choices = choices
         )
 	    } 
@@ -439,7 +453,15 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           choices = list("All" = "All"),
           selected = "All"
         )
-      }	else {
+        # all kegg pathways
+      }	else if(input$kegg_sig_only && !is.null(gene_sets())){
+        selectInput(
+          inputId = ns("sig_pathways_kegg"),
+          label = 
+            "Select or search from all KEGG pathways:",
+          choices = names(gene_sets())
+        )
+      } else {
         req(!is.null(input$pathway_method))
         # Default, sometimes these methods returns "No significant pathway found"
 		    choices <- "All"  
@@ -480,7 +502,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         selectInput(
           inputId = ns("sig_pathways_kegg"),
           label = 
-            "Select or search for a pathway:",
+            "Select a significant pathway:",
           choices = choices
         )
 	    } 
