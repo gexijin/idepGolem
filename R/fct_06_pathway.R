@@ -998,7 +998,7 @@ kegg_pathway <- function(
     contentType = 'image/png',
     width = 400,
     height = 300,
-    alt = " "
+    alt = "Not downloaded."
   )	
   
 
@@ -1009,6 +1009,18 @@ kegg_pathway <- function(
     return(blank)
   }
 	if(is.null(sig_pathways)) {
+    return(blank)
+  }
+
+	if (is.null(select_contrast)) {
+    return(blank)
+  }
+	
+	if(sig_pathways == "All") {
+    return(blank)
+  }
+	
+	if(length(limma$top_genes) == 0) {
     return(blank)
   }
 
@@ -1621,17 +1633,7 @@ kegg_pathway <- function(
   attributes(my.keggview.native) <- attributes(tmpfun)  
 
 
-	if (is.null(select_contrast)) {
-    return(blank)
-  }
-	
-	if(sig_pathways == "All") {
-    return(blank)
-  }
-	
-	if(length(limma$top_genes) == 0) {
-    return(blank)
-  }
+
 
 	# Get fold change
 	if(length(limma$comparisons)  == 1) {
@@ -1669,7 +1671,7 @@ kegg_pathway <- function(
     return(blank)
   }
 
-	 
+
 	path_id <- kegg_pathway_id(
     sig_pathways,
     Species,

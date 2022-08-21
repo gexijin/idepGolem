@@ -12,7 +12,7 @@ NULL
 
 
 
-# if environmental variable is not set, use absolute path
+# if environmental variable is not set, use relative path
 DATAPATH <- Sys.getenv("IDEP_DATABASE")[1]
 if(nchar(DATAPATH) == 0) {
    DATAPATH = "../../data/data104b/"

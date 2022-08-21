@@ -10,7 +10,7 @@
 mod_06_pathway_ui <- function(id) {
   ns <- NS(id)
   tabPanel(
-    "Pathway",
+    "Pathway",  
     sidebarLayout(
       sidebarPanel(
         htmlOutput(
@@ -787,8 +787,12 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     })
 
     output$kegg_image <- renderImage({
-
-      kegg_pathway(
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Downloading KEGG pathway ...",
+        color = "#000000"
+      )
+      res <- kegg_pathway(
         go = input$select_go,
         gage_pathway_data = gage_pathway_data(),
         sig_pathways = input$sig_pathways,
@@ -800,6 +804,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         low_color = kegg_colors[[input$kegg_color_select]][1], 
         high_color = kegg_colors[[input$kegg_color_select]][2]
       )
+      shinybusy::remove_modal_spinner()
+      return(res)
     }, deleteFile = TRUE)
     
     # List of pathways with details
