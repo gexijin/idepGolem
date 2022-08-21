@@ -8,6 +8,7 @@ app_server <- function(input, output, session) {
   # file size is 5MB by default. This changes it to 30MB
   #options(shiny.maxRequestSize = 30*1024^2)
   options(warn = -1) # turn off warning
+  pdf(file = NULL)
   # load static data files such as list of species, gmt files, etc
   # This could be moved to run_app as global variable, as in global.R
   # see https://github.com/ThinkR-open/golem/issues/6
