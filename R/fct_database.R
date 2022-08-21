@@ -12,9 +12,11 @@ NULL
 
 
 
-
+# if environmental variable is not set, use absolute path
 DATAPATH <- Sys.getenv("IDEP_DATABASE")[1]
-#DATAPATH = "../../data/data104b/" 
+if(nchar(DATAPATH) == 0) {
+   DATAPATH = "../../data/data104b/"
+}
 
 
 #' connect_convert_db connects to the convertIDs.db and returns the
