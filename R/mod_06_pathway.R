@@ -202,8 +202,7 @@ mod_06_pathway_ui <- function(id) {
             ),
             conditionalPanel(
               condition = "(input.pathway_method == 1 | input.pathway_method == 2 |
-                            input.pathway_method == 3 | input.pathway_method == 4) &
-                            input.select_go != 'KEGG'",
+                            input.pathway_method == 3 | input.pathway_method == 4)",
               h5("Brush for sub-heatmap, click for value. (Shown Below)"),
               br(),
               fluidRow(
@@ -233,6 +232,15 @@ mod_06_pathway_ui <- function(id) {
               ),
               ns = ns
             ),
+          ),
+          tabPanel(
+            "KEGG",
+            checkboxInput(
+              inputId = ns("kegg_sig_only"),
+              label = "Include pathways that are not signficant",
+              value = FALSE
+            ),
+            htmlOutput(outputId = ns("list_sig_pathways_kegg")),
             conditionalPanel(
               condition = "(input.pathway_method == 1 | input.pathway_method == 2 | 
                             input.pathway_method == 3 | input.pathway_method == 4) &
@@ -244,7 +252,8 @@ mod_06_pathway_ui <- function(id) {
                 height = "100%"
               ),
               ns = ns
-            )
+            ),
+            p("KEGG ")
           ),
           tabPanel(
             "Tree",
@@ -416,8 +425,62 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         selectInput(
           inputId = ns("sig_pathways"),
           label = 
-            "Select a pathway to show expression pattern of related genes on a heatmap or a
-             KEGG pathway diagram:",
+            "Select or search for a pathway:",
+          choices = choices
+        )
+	    } 
+	  })
+
+    output$list_sig_pathways_kegg <- renderUI({
+	    if(tab() != "Pathway") {
+        selectInput(
+          inputId = ns("sig_pathways"),
+          label = NULL, 
+          choices = list("All" = "All"),
+          selected = "All"
+        )
+      }	else {
+        req(!is.null(input$pathway_method))
+        # Default, sometimes these methods returns "No significant pathway found"
+		    choices <- "All"  
+		    if(input$pathway_method == 1) { 
+			    if(!is.null(gage_pathway_data())) {
+            if(dim(gage_pathway_data())[2] > 1) {
+              choices <- gage_pathway_data()[, 2]
+            } 
+          }
+		    } else if(input$pathway_method == 2) {
+          if(!is.null(pgsea_plot_data())) {
+            if(dim(pgsea_plot_data())[2] > 1) {
+					 	  pathways <- as.data.frame(pgsea_plot_data())
+						  choices <- substr(rownames(pathways), 10, nchar(rownames(pathways)))
+					  }
+          }
+				} else if(input$pathway_method == 3) {
+          if(!is.null(fgsea_pathway_data())) {
+            if(dim(fgsea_pathway_data())[2] > 1) {
+              choices <- fgsea_pathway_data()[, 2]
+            }
+          }
+        } else if(input$pathway_method == 4) {
+          if(!is.null(pgsea_plot_all_samples_data())) {
+            if(dim(pgsea_plot_all_samples_data())[2] > 1) {
+					    pathways <- as.data.frame(pgsea_plot_all_samples_data())
+					    choices <- substr(rownames(pathways), 10, nchar(rownames(pathways)))
+				    }
+          }
+        } else if(input$pathway_method == 5) {
+			    if(!is.null(reactome_pa_pathway_data())) {
+            if(dim(reactome_pa_pathway_data())[2] > 1) {
+              choices <- reactome_pa_pathway_data()[, 2]
+            }  
+          }
+        }
+        
+        selectInput(
+          inputId = ns("sig_pathways_kegg"),
+          label = 
+            "Select or search for a pathway:",
           choices = choices
         )
 	    } 
@@ -795,7 +858,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       res <- kegg_pathway(
         go = input$select_go,
         gage_pathway_data = gage_pathway_data(),
-        sig_pathways = input$sig_pathways,
+        sig_pathways = input$sig_pathways_kegg,
         select_contrast = input$select_contrast,
         limma = deg$limma(),
         converted = pre_process$converted(),
