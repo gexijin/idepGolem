@@ -1418,6 +1418,7 @@ kegg_pathway <- function(
     else names(out.list) = pathway.name
     return(invisible(out.list))
   }# <environment: namespace:pathview>
+
   my.keggview.native <- function (
     plot.data.gene = NULL,
     plot.data.cpd = NULL,
@@ -1633,8 +1634,6 @@ kegg_pathway <- function(
   attributes(my.keggview.native) <- attributes(tmpfun)  
 
 
-
-
 	# Get fold change
 	if(length(limma$comparisons)  == 1) {
     top_1 <- limma$top_genes[[1]]  
@@ -1700,7 +1699,7 @@ kegg_pathway <- function(
     ".png",
     sep = ""
   )
-	
+
 	pv.out <- mypathview(
     gene.data = fold,
     pathway.id = path_id,
