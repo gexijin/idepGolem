@@ -925,8 +925,11 @@ convert_ensembl_to_entrez <- function(query,
   if (dim(result)[1] == 0) {
     return(NULL)
   }
+	ix = match(result$ens, names(query))
 
-  return(unique(result$id))
+	tem <- query[ix]
+  names(tem) = result$id
+	return(tem)
 }
 
 #' Find pathway IDs for a KEGG description
