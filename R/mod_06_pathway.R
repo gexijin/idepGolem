@@ -8,9 +8,9 @@
 #'
 #' @importFrom shiny NS tagList
 mod_06_pathway_ui <- function(id) {
-  ns <- NS(id)
+  ns <- shiny::NS(id)
   tabPanel(
-    "Pathway",  
+    "Pathway",
     sidebarLayout(
       sidebarPanel(
         htmlOutput(
@@ -122,7 +122,7 @@ mod_06_pathway_ui <- function(id) {
           h5("Questions?", align = "right"),
           href = "https://idepsite.wordpress.com/pathways/",
           target = "_blank"
-        )    
+        )
       ),
       mainPanel(
         tabsetPanel(
@@ -438,8 +438,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         
         selectInput(
           inputId = ns("sig_pathways"),
-          label = 
-            "Select a significant pathway:",
+          label = "Select a significant pathway:",
           choices = choices
         )
 	    } 
