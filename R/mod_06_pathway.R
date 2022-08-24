@@ -8,9 +8,9 @@
 #'
 #' @importFrom shiny NS tagList
 mod_06_pathway_ui <- function(id) {
-  ns <- NS(id)
+  ns <- shiny::NS(id)
   tabPanel(
-    "Pathway",  
+    "Pathway",
     sidebarLayout(
       sidebarPanel(
         htmlOutput(
@@ -122,7 +122,7 @@ mod_06_pathway_ui <- function(id) {
           h5("Questions?", align = "right"),
           href = "https://idepsite.wordpress.com/pathways/",
           target = "_blank"
-        )    
+        )
       ),
       mainPanel(
         tabsetPanel(
@@ -130,12 +130,12 @@ mod_06_pathway_ui <- function(id) {
             "Significant pathways",
             br(),
             conditionalPanel(
-              condition = "input.pathway_method == 1",
+              condition = "input.pathway_method == '1'",
               DT::dataTableOutput(outputId = ns("gage_pathway_table")),
               ns = ns
             ),
             conditionalPanel(
-              condition = "input.pathway_method == 2",
+              condition = "input.pathway_method == '2'",
               h5("Red and blue indicates activated and suppressed pathways, respectively."),
               plotOutput(
                 outputId = ns("pgsea_plot"),
@@ -144,12 +144,12 @@ mod_06_pathway_ui <- function(id) {
               ns = ns
             ),
             conditionalPanel(
-              condition = "input.pathway_method == 3",
+              condition = "input.pathway_method == '3'",
               DT::dataTableOutput(outputId = ns("fgsea_pathway")),
               ns = ns
             ),
             conditionalPanel(
-              condition = "input.pathway_method == 4",
+              condition = "input.pathway_method == '4'",
               h5("Red and blue indicates activated and suppressed pathways, respectively."),
               plotOutput(
                 outputId = ns("pgsea_plot_all_samples"),
@@ -158,7 +158,7 @@ mod_06_pathway_ui <- function(id) {
               ns = ns
             ),
             conditionalPanel(
-              condition = "input.pathway_method == 5",
+              condition = "input.pathway_method == '5'",
               DT::dataTableOutput(outputId = ns("reactome_pa_pathway")),
               ns = ns
             )
@@ -255,16 +255,6 @@ mod_06_pathway_ui <- function(id) {
                       width = "100%"
                     ), 
                     ns = ns
-                  ), 
-                  conditionalPanel(
-                    condition = "input.select_go == 'KEGG'", 
-                    selectInput(
-                      inputId = ns("kegg_color_select"), 
-                      label = "Select colors (low-high)", 
-                      choices = "green-red", 
-                      width = "100%"
-                    ), 
-                    ns = ns
                   )
                 )
               ),
@@ -301,7 +291,7 @@ mod_06_pathway_ui <- function(id) {
                 )
               ),
               ns = ns
-            ),
+            )
           ),
           tabPanel(
             "KEGG",
@@ -329,6 +319,12 @@ mod_06_pathway_ui <- function(id) {
                     value = FALSE
                   )
                 )
+              ),
+              selectInput(
+                inputId = ns("kegg_color_select"), 
+                label = "Select colors (low-high)", 
+                choices = "green-red", 
+                width = "100%"
               ),
               h5("Red and green represent up- and down-regulated genes, respectively."),
               imageOutput(
@@ -438,8 +434,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         
         selectInput(
           inputId = ns("sig_pathways"),
-          label = 
-            "Select a significant pathway:",
+          label = "Select a significant pathway:",
           choices = choices
         )
 	    } 
@@ -448,20 +443,13 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     output$list_sig_pathways_kegg <- renderUI({
 	    if(tab() != "Pathway") {
         selectInput(
-          inputId = ns("sig_pathways"),
+          inputId = ns("sig_pathways_kegg"),
           label = NULL, 
           choices = list("All" = "All"),
           selected = "All"
         )
         # all kegg pathways
-      }	else if(input$kegg_sig_only && !is.null(gene_sets())){
-        selectInput(
-          inputId = ns("sig_pathways_kegg"),
-          label = 
-            "Select or search from all KEGG pathways:",
-          choices = names(gene_sets())
-        )
-      } else {
+      }	else {
         req(!is.null(input$pathway_method))
         # Default, sometimes these methods returns "No significant pathway found"
 		    choices <- "All"  
@@ -498,14 +486,18 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
             }  
           }
         }
-        
+
+        # show all pathways if selected
+        if(input$kegg_sig_only && !is.null(gene_sets())) {
+          choices <- names(gene_sets())
+        }
         selectInput(
           inputId = ns("sig_pathways_kegg"),
           label = 
             "Select a significant pathway:",
           choices = choices
         )
-	    } 
+	    }
 	  })
 
     gene_sets <- reactive({
@@ -566,7 +558,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
 
     output$gage_pathway_table <- DT::renderDataTable({
       req(!is.null(gage_pathway_data()))
-      
+
       DT::datatable(
         gage_pathway_data(),
         options = list(
@@ -616,6 +608,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     )
 
     pgsea_plot_data <- reactive({
+      req(input$pathway_method == 2)
       req(!is.null(gene_sets()))
 
       shinybusy::show_modal_spinner(
@@ -662,6 +655,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     })
 
     output$fgsea_pathway <- DT::renderDataTable({
+      req(input$pathway_method == 3)
       req(!is.null(fgsea_pathway_data()))
 
       DT::datatable(
@@ -675,6 +669,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
 	  })
 
     reactome_pa_pathway_data <- reactive({
+      req(input$pathway_method == 5)
       req(!is.null(deg$limma()))
       shinybusy::show_modal_spinner(
         spin = "orbit",
@@ -717,6 +712,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     }, height = 800, width = 800)
 
     pgsea_plot_all_samples_data <- reactive({
+      req(input$pathway_method == 4)
       req(!is.null(gene_sets()))
       shinybusy::show_modal_spinner(
         spin = "orbit",
@@ -736,6 +732,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     })
 
     output$reactome_pa_pathway <- DT::renderDataTable({
+      req(input$pathway_method == 5)
       req(!is.null(reactome_pa_pathway_data()))
 	    
       DT::datatable(
@@ -797,7 +794,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     observe({
       updateSelectInput(
         session = session, 
-        inputId = "kegg_color_select", 
+        inputId = "kegg_color_select",
         choices = kegg_choices
       )
     })
@@ -872,25 +869,21 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     })
 
     output$kegg_image <- renderImage({
-      shinybusy::show_modal_spinner(
-        spin = "orbit",
-        text = "Downloading KEGG pathway ...",
-        color = "#000000"
-      )
-      res <- kegg_pathway(
-        go = input$select_go,
-        gage_pathway_data = gage_pathway_data(),
-        sig_pathways = input$sig_pathways_kegg,
-        select_contrast = input$select_contrast,
-        limma = deg$limma(),
-        converted = pre_process$converted(),
-        idep_data = idep_data,
-        select_org = pre_process$select_org(), 
-        low_color = kegg_colors[[input$kegg_color_select]][1],
-        high_color = kegg_colors[[input$kegg_color_select]][2]
-      )
-      shinybusy::remove_modal_spinner()
-      return(res)
+      withProgress(message = "KEGG", {
+        incProgress(0.2)
+        kegg_pathway(
+          go = input$select_go,
+          gage_pathway_data = gage_pathway_data(),
+          sig_pathways = input$sig_pathways_kegg,
+          select_contrast = input$select_contrast,
+          limma = deg$limma(),
+          converted = pre_process$converted(),
+          idep_data = idep_data,
+          select_org = pre_process$select_org(), 
+          low_color = kegg_colors[[input$kegg_color_select]][1],
+          high_color = kegg_colors[[input$kegg_color_select]][2]
+        )
+      })
     }, deleteFile = TRUE)
     
     # List of pathways with details
