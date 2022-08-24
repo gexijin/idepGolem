@@ -66,16 +66,20 @@ mod_01_load_data_ui <- function(id) {
         ),
 
         # Buttons for data file format ----------
-        radioButtons(
-          inputId = ns("data_file_format"),
-          label = "2. Choose data type",
-          choices = list(
-            "Read counts data (recommended)" = 1,
-            "Normalized expression values (RNA-seq FPKM, microarray, etc.)" = 2,
-            "Fold-changes and corrected P values from CuffDiff or any other
+        conditionalPanel(
+          condition = "input.go_button == 0", 
+          radioButtons(
+            inputId = ns("data_file_format"),
+            label = "2. Choose data type",
+            choices = list(
+              "Read counts data (recommended)" = 1,
+              "Normalized expression values (RNA-seq FPKM, microarray, etc.)" = 2,
+              "Fold-changes and corrected P values from CuffDiff or any other
              program" = 3
-          ),
-          selected = 1
+            ),
+            selected = 1
+          ), 
+          ns = ns
         ),
 
         # Conditional panel for fold changes data file ----------
@@ -336,12 +340,18 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # Reactive element to load the data from the user or demo data ---------
     loaded_data <- reactive(
       input_data(
-      expression_file = input$expression_file,
-      experiment_file = input$experiment_file,
-      go_button = input$go_button,
-      demo_data_file = demo_data_file()[1], 
-      demo_metadata_file = demo_data_file()[2]
-    ))
+        expression_file = input$expression_file,
+        experiment_file = input$experiment_file,
+        go_button = input$go_button,
+        demo_data_file = demo_data_file()[1], 
+        demo_metadata_file = demo_data_file()[2]
+      )
+    )
+    
+    # observeEvent(input$data_file_format, {
+    #   req(loaded_data())
+    #   loaded_data() <- NULL
+    # })
 
     # Sample information table -----------
     output$sample_info_table <- DT::renderDataTable({
@@ -379,10 +389,26 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       )
     })
 
+    observeEvent(input$reset_app, {
+      session$reload()
+    })
+    
     # Get converted IDs ----------
     conversion_info <- reactive({
       
       req(!is.null(loaded_data()$data))
+      
+      if(min(loaded_data()$data, na.rm = TRUE) < 0 & (input$data_file_format == 1 | input$data_file_format == 2)) {
+       
+        showModal(modalDialog(
+          title = "Somthing seems incorrect...", 
+          "Negative values were detected in this dataset which is not correct for the data type you have selected. Please double check data type or the data.",
+          size = "m", 
+          footer = actionButton(ns("reset_app"), "Reset")
+        ))
+         #session$reload()
+      } else {
+      
 
       shinybusy::show_modal_spinner(
         spin = "orbit",
@@ -431,6 +457,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         all_gene_names = all_gene_names,
         gmt_choices = gmt_choices
       ))
+      }
     })
 
     # Species match table ----------
