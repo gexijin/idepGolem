@@ -301,7 +301,7 @@ mod_06_pathway_ui <- function(id) {
                 )
               ),
               ns = ns
-            ),
+            )
           ),
           tabPanel(
             "KEGG",
@@ -447,7 +447,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     output$list_sig_pathways_kegg <- renderUI({
 	    if(tab() != "Pathway") {
         selectInput(
-          inputId = ns("sig_pathways"),
+          inputId = ns("sig_pathways_kegg"),
           label = NULL, 
           choices = list("All" = "All"),
           selected = "All"
