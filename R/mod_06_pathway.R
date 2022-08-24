@@ -565,7 +565,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
 
     output$gage_pathway_table <- DT::renderDataTable({
       req(!is.null(gage_pathway_data()))
-      
+
       DT::datatable(
         gage_pathway_data(),
         options = list(
@@ -615,6 +615,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     )
 
     pgsea_plot_data <- reactive({
+      req(input$pathway_method == 2)
       req(!is.null(gene_sets()))
 
       shinybusy::show_modal_spinner(
@@ -661,6 +662,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     })
 
     output$fgsea_pathway <- DT::renderDataTable({
+      req(input$pathway_method == 3)
       req(!is.null(fgsea_pathway_data()))
 
       DT::datatable(
@@ -674,6 +676,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
 	  })
 
     reactome_pa_pathway_data <- reactive({
+      req(input$pathway_method == 5)
       req(!is.null(deg$limma()))
       shinybusy::show_modal_spinner(
         spin = "orbit",
@@ -716,6 +719,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     }, height = 800, width = 800)
 
     pgsea_plot_all_samples_data <- reactive({
+      req(input$pathway_method == 4)
       req(!is.null(gene_sets()))
       shinybusy::show_modal_spinner(
         spin = "orbit",
@@ -735,6 +739,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     })
 
     output$reactome_pa_pathway <- DT::renderDataTable({
+      req(input$pathway_method == 5)
       req(!is.null(reactome_pa_pathway_data()))
 	    
       DT::datatable(
