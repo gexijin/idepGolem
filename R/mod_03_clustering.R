@@ -33,7 +33,7 @@ mod_03_clustering_ui <- function(id) {
         
         conditionalPanel(
           condition = "(input.cluster_panels == 'Hierarchical' | 
-            input.cluster_panels == 'Sample Tree') &&  input.cluster_meth == 2",
+            input.cluster_panels == 'sample_tab') &&  input.cluster_meth == 2",
           
           # k- means slidebar -----------
             
@@ -71,7 +71,7 @@ mod_03_clustering_ui <- function(id) {
         # Select Clustering Method ----------
         conditionalPanel(
           condition = "input.cluster_panels == 'Hierarchical' | 
-            input.cluster_panels == 'Sample Tree'",
+            input.cluster_panels == 'sample_tab'",
           
           selectInput(
             inputId = ns("cluster_meth"),
@@ -123,7 +123,7 @@ mod_03_clustering_ui <- function(id) {
         conditionalPanel(
           condition = "input.cluster_meth == 1 && 
             (input.cluster_panels == 'Hierarchical' | 
-            input.cluster_panels == 'Sample Tree')",
+            input.cluster_panels == 'sample_tab)",
           fluidRow(
             column(width = 4, h5("Distance")),
             column(
@@ -169,7 +169,8 @@ mod_03_clustering_ui <- function(id) {
 
         # Checkbox features ------------
         conditionalPanel(
-          condition = "input.cluster_panels == 'Hierarchical' | input.cluster_panels == 'Sample Tree' ",
+          condition = "input.cluster_panels == 'Hierarchical' | 
+            input.cluster_panels == 'sample_tab' ",
           
           checkboxInput(
             inputId = ns("gene_centering"),
@@ -313,10 +314,10 @@ mod_03_clustering_ui <- function(id) {
             ),
             ottoPlots::mod_download_figure_ui(ns("dl_gene_dist"))
           ),
-
-          # Sample Tree Plot ---------
+          # Sample Tree -----------------
           tabPanel(
             title = "Sample Tree",
+            value = "sample_tab", 
             h5(
               "Using genes with maximum expression level at the top 75%.
                Data is transformed and clustered as specified in the sidebar."
@@ -756,7 +757,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
   
     # Sample Tree ----------
     sample_tree <- reactive({
-      req(!is.null(pre_process$data()))
+      req(!is.null(pre_process$data()), input$cluster_meth == 1)
       
       draw_sample_tree(
         tree_data = pre_process$data(),
@@ -782,6 +783,24 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       filename = "sample_tree", 
       figure = reactive({ sample_tree() })
     )
+    
+    observeEvent(input$cluster_meth, {
+      if (input$cluster_meth == 1){
+        showTab(
+          inputId = "cluster_panels", 
+          target = "sample_tab"
+        ) 
+      }
+    })
+    
+    observeEvent(input$cluster_meth, {
+      if(input$cluster_meth == 2){
+        hideTab(
+          inputId = "cluster_panels",
+          target = "sample_tab"
+        )
+      }
+    })
     
     # k-Cluster elbow plot ----------
     output$k_clusters <- renderPlot({
