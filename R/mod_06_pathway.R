@@ -130,12 +130,12 @@ mod_06_pathway_ui <- function(id) {
             "Significant pathways",
             br(),
             conditionalPanel(
-              condition = "input.pathway_method == '1'",
+              condition = "input.pathway_method == 1",
               DT::dataTableOutput(outputId = ns("gage_pathway_table")),
               ns = ns
             ),
             conditionalPanel(
-              condition = "input.pathway_method == '2'",
+              condition = "input.pathway_method == 2",
               h5("Red and blue indicates activated and suppressed pathways, respectively."),
               plotOutput(
                 outputId = ns("pgsea_plot"),
@@ -144,12 +144,12 @@ mod_06_pathway_ui <- function(id) {
               ns = ns
             ),
             conditionalPanel(
-              condition = "input.pathway_method == '3'",
+              condition = "input.pathway_method == 3",
               DT::dataTableOutput(outputId = ns("fgsea_pathway")),
               ns = ns
             ),
             conditionalPanel(
-              condition = "input.pathway_method == '4'",
+              condition = "input.pathway_method == 4",
               h5("Red and blue indicates activated and suppressed pathways, respectively."),
               plotOutput(
                 outputId = ns("pgsea_plot_all_samples"),
@@ -158,7 +158,7 @@ mod_06_pathway_ui <- function(id) {
               ns = ns
             ),
             conditionalPanel(
-              condition = "input.pathway_method == '5'",
+              condition = "input.pathway_method == 5",
               DT::dataTableOutput(outputId = ns("reactome_pa_pathway")),
               ns = ns
             )
@@ -245,24 +245,15 @@ mod_06_pathway_ui <- function(id) {
                   htmlOutput(outputId = ns("list_sig_pathways")),
                 ),
                 column(
-                  width = 4, 
-                  conditionalPanel(
-                    condition =  "input.select_go != 'KEGG'", 
-                    selectInput(
-                      inputId = ns("heatmap_color_select"),
-                      label = "Select Heatmap Color: ",
-                      choices = "green-black-red",
-                      width = "100%"
-                    ), 
-                    ns = ns
+                  width = 4,
+                  selectInput(
+                    inputId = ns("heatmap_color_select"),
+                    label = "Select Heatmap Color: ",
+                    choices = "green-black-red",
+                    width = "100%"
                   )
                 )
               ),
-              ns = ns
-            ),
-            conditionalPanel(
-              condition = "(input.pathway_method == 1 | input.pathway_method == 2 |
-                            input.pathway_method == 3 | input.pathway_method == 4)",
               h5("Brush for sub-heatmap, click for value. (Shown Below)"),
               br(),
               fluidRow(
@@ -387,14 +378,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
 	  })
 
     output$list_sig_pathways <- renderUI({
-	    if(tab() != "Pathway") {
-        selectInput(
-          inputId = ns("sig_pathways"),
-          label = NULL, 
-          choices = list("All" = "All"),
-          selected = "All"
-        )
-      }	else {
+
         req(!is.null(input$pathway_method))
         # Default, sometimes these methods returns "No significant pathway found"
 		    choices <- "All"  
@@ -437,19 +421,11 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           label = "Select a significant pathway:",
           choices = choices
         )
-	    } 
+	     
 	  })
 
     output$list_sig_pathways_kegg <- renderUI({
-	    if(tab() != "Pathway") {
-        selectInput(
-          inputId = ns("sig_pathways_kegg"),
-          label = NULL, 
-          choices = list("All" = "All"),
-          selected = "All"
-        )
-        # all kegg pathways
-      }	else {
+
         req(!is.null(input$pathway_method))
         # Default, sometimes these methods returns "No significant pathway found"
 		    choices <- "All"  
@@ -497,11 +473,11 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
             "Select a significant pathway:",
           choices = choices
         )
-	    }
+	    
 	  })
 
     gene_sets <- reactive({
-      req(tab() == "Pathway")
+#      req(tab() == "Pathway")
       req(!is.null(input$select_go))
 
       shinybusy::show_modal_spinner(
@@ -869,7 +845,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     })
 
     output$kegg_image <- renderImage({
-      withProgress(message = "KEGG", {
+      withProgress(message = "Downloading KEGG pathway", {
         incProgress(0.2)
         kegg_pathway(
           go = input$select_go,
