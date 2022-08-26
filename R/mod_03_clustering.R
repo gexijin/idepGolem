@@ -123,7 +123,7 @@ mod_03_clustering_ui <- function(id) {
         conditionalPanel(
           condition = "input.cluster_meth == 1 && 
             (input.cluster_panels == 'Hierarchical' | 
-            input.cluster_panels == 'sample_tab)",
+            input.cluster_panels == 'sample_tab')",
           fluidRow(
             column(width = 4, h5("Distance")),
             column(

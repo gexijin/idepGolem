@@ -136,7 +136,9 @@ mod_06_pathway_ui <- function(id) {
             ),
             conditionalPanel(
               condition = "input.pathway_method == 2",
-              h5("Red and blue indicates activated and suppressed pathways, respectively."),
+              h5("Red and blue indicates relatively activated
+               and suppressed pathways, respectively. 
+              GS just indicates a color scale."),
               plotOutput(
                 outputId = ns("pgsea_plot"),
                 inline = TRUE
