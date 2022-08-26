@@ -474,7 +474,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
 	  })
 
     output$list_model_comparisons <- renderUI({
-      req(pre_process$data())
+      req(pre_process$data() & pre_process$data_file_format() != 3)
 		  model_comparisons <- list_model_comparisons_ui(
         sample_info = pre_process$sample_info(),
         select_factors_model = input$select_factors_model,

@@ -426,6 +426,7 @@ limma_value <- function(
 ) {
   #read counts data -----------------------------------------------------------
   if(data_file_format == 1) {
+    
     # DESeq2----------------------------
     if(counts_deg_method == 3) {
       return(
@@ -463,6 +464,7 @@ limma_value <- function(
 
   # normalized data -----------------------------------------------------------
   } else if(data_file_format == 2) {
+    
     return(
       deg_limma(
         processed_data = processed_data,
@@ -481,15 +483,20 @@ limma_value <- function(
 
   # P value, LFC data ---------------------------------------------------------
   } else {
+    
     if(!is.null(p_vals)) {
       ix <- match(rownames(processed_data), rownames(p_vals))
       p_vals <- p_vals[ix, ]
     }
 
-    # Looks like ratio data, take log2
-    if(sum(
-      round(apply(processed_data, 2, median) + .2) == 1
-    ) == dim(x)[2] & min(x) > 0) {
+    #Looks like ratio data, take log2
+    if(
+      sum(
+        round(
+          apply(processed_data, 2, median) + .2
+        ) == 1
+      ) == dim(processed_data)[2] & min(processed_data) > 0
+    ) {
       processed_data <- log2(processed_data)
     }
     
