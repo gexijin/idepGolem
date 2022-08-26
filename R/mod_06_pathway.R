@@ -343,6 +343,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     # GMT choices for enrichment ----------
     output$select_go_selector <- renderUI({
 	    req(!is.null(pre_process$gmt_choices()))
+      req(input$pathway_method != 5)
       # if there is KEGG, use KEGG as default
       selected <- "GOBP"
       if("KEGG" %in% pre_process$gmt_choices()) {
