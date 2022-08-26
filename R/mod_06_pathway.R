@@ -126,8 +126,9 @@ mod_06_pathway_ui <- function(id) {
       ),
       mainPanel(
         tabsetPanel(
+          id = ns("pathway_tabs"),
           tabPanel(
-            "Significant pathways",
+            title = "Significant pathways",
             br(),
             conditionalPanel(
               condition = "input.pathway_method == 1",
@@ -166,7 +167,7 @@ mod_06_pathway_ui <- function(id) {
             )
           ),
           tabPanel(
-            "Tree",
+            title = "Tree",
             plotOutput(
               outputId = ns("enrichment_tree"),
               width = "100%"
@@ -177,7 +178,7 @@ mod_06_pathway_ui <- function(id) {
             resolve the \"Figure margin too wide\" error. ")
           ),
           tabPanel(
-            "Network",
+            title = "Network",
             h5("Connected gene sets share more genes. Color of node correspond to adjuested Pvalues."),
             fluidRow(
               column(
@@ -236,53 +237,53 @@ mod_06_pathway_ui <- function(id) {
             )
           ),
           tabPanel(
-            "Heatmap",
-              fluidRow(
-                br(),
-                column(
-                  width = 5,
-                  htmlOutput(outputId = ns("list_sig_pathways")),
+            title = "Heatmap",
+            fluidRow(
+              br(),
+              column(
+                width = 5,
+                htmlOutput(outputId = ns("list_sig_pathways")),
+              ),
+              column(
+                width = 4,
+                selectInput(
+                  inputId = ns("heatmap_color_select"),
+                  label = "Select Heatmap Color: ",
+                  choices = "green-black-red",
+                  width = "100%"
+                )
+              )
+            ),
+            h5("Brush for sub-heatmap, click for value. (Shown Below)"),
+            br(),
+            fluidRow(
+              column(
+                width = 3,
+                plotOutput(
+                  outputId = ns("path_main_heatmap"),
+                  height = "450px",
+                  width = "100%",
+                  brush = ns("ht_brush")
                 ),
-                column(
-                  width = 4,
-                  selectInput(
-                    inputId = ns("heatmap_color_select"),
-                    label = "Select Heatmap Color: ",
-                    choices = "green-black-red",
-                    width = "100%"
-                  )
+                br(),
+                h5("Selected Cell (Submap):"),
+                uiOutput(
+                  outputId = ns("ht_click_content")
                 )
               ),
-              h5("Brush for sub-heatmap, click for value. (Shown Below)"),
-              br(),
-              fluidRow(
-                column(
-                  width = 3,
-                  plotOutput(
-                    outputId = ns("path_main_heatmap"),
-                    height = "450px",
-                    width = "100%",
-                    brush = ns("ht_brush")
-                  ),
-                  br(),
-                  h5("Selected Cell (Submap):"),
-                  uiOutput(
-                    outputId = ns("ht_click_content")
-                  )
-                ),
-                column(
-                  width = 9,
-                  plotOutput(
-                    outputId = ns("path_sub_heatmap"),
-                    height = "650px",
-                    width = "100%",
-                    click = ns("ht_click")
-                  )
+              column(
+                width = 9,
+                plotOutput(
+                  outputId = ns("path_sub_heatmap"),
+                  height = "650px",
+                  width = "100%",
+                  click = ns("ht_click")
                 )
+              )
             )
           ),
           tabPanel(
-            "KEGG",
+            title = "KEGG",
             conditionalPanel(
               condition = "(input.pathway_method == 1 | input.pathway_method == 2 | 
                             input.pathway_method == 3 | input.pathway_method == 4) &
@@ -342,6 +343,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     # GMT choices for enrichment ----------
     output$select_go_selector <- renderUI({
 	    req(!is.null(pre_process$gmt_choices()))
+      req(input$pathway_method != 5)
       # if there is KEGG, use KEGG as default
       selected <- "GOBP"
       if("KEGG" %in% pre_process$gmt_choices()) {
@@ -353,6 +355,21 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         choices = pre_process$gmt_choices(),
         selected = selected
       )
+    })
+
+    # Dynamic Barplot Tab ----------
+    observe({
+      if (input$pathway_method == 5) {
+        hideTab(inputId = "pathway_tabs", target = "Tree")
+        hideTab(inputId = "pathway_tabs", target = "Network")
+        hideTab(inputId = "pathway_tabs", target = "Heatmap")
+        hideTab(inputId = "pathway_tabs", target = "KEGG")
+      } else {
+        showTab(inputId = "pathway_tabs", target = "Tree")
+        showTab(inputId = "pathway_tabs", target = "Network")
+        showTab(inputId = "pathway_tabs", target = "Heatmap")
+        showTab(inputId = "pathway_tabs", target = "KEGG")
+      }
     })
 
     output$list_comparisons_pathway <- renderUI({
