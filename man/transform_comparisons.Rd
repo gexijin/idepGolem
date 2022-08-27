@@ -11,6 +11,9 @@ transform_comparisons(comparison, key_model_factors, sample_info)
 \item{comparison}{Comparison}
 
 \item{key_model_factors}{model factors}
+
+\item{sample_info}{a matrix of experimental design
+returned list}
 }
 \value{
 a list of comparisons

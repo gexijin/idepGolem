@@ -1983,7 +1983,7 @@ extract_fcfdr <- function(
 #' 
 #' @param comparison Comparison
 #' @param key_model_factors model factors
-#' @sample_info a matrix of experimental design
+#' @param sample_info a matrix of experimental design
 #'  returned list
 #' 
 #' @export

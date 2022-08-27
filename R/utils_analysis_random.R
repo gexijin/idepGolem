@@ -13,10 +13,10 @@ NULL
 #' hcluster_functions
 #'
 #'
-#' @description
+#' @description This is list of functions for hierarchical clustering
 #'
 #' @export
-#' @return
+#' @return  one of the functions
 #'
 #'
 hcluster_functions <- function() {
@@ -59,10 +59,10 @@ hcluster_functions <- function() {
 #' dist_functions
 #'
 #'
-#' @description
+#' @description Distance functions for clustering
 #'
 #' @export
-#' @return
+#' @return a distance function
 #'
 #'
 dist_functions <- function() {
