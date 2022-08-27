@@ -419,6 +419,11 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab){
       )
     })
 
+    # Remove messages if the tab changes --------
+    observe({
+      req(tab() != "Network")
+      removeNotification("network_summary")
+    })
     # Heatmap Colors ----------
     heatmap_colors <- list(
       "Green-Black-Red" = c("green", "black", "red"),
