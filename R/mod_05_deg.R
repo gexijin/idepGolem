@@ -175,7 +175,7 @@ mod_05_deg_1_ui <- function(id) {
             plotOutput(outputId = ns("venn_plot")), 
             ottoPlots::mod_download_figure_ui(
               id = ns("dl_venn"), 
-              label = "Dowload venn diagram"
+              label = "Download venn diagram"
             )
           )
         )
@@ -353,7 +353,7 @@ mod_05_deg_2_ui <- function(id) {
           tabPanel(
             title = "Pathway Network",
             h5("Connected gene sets share more genes. 
-               Color of node correspond to adjuested Pvalues."),
+               Color of node correspond to adjusted Pvalues."),
             fluidRow(
               column(
                 width = 2,

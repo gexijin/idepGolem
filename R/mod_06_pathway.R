@@ -327,7 +327,7 @@ mod_06_pathway_ui <- function(id) {
               ns = ns
             )
           )
-#          ,tabPanel(
+#         ,tabPanel(
 #            title = "Info",
 #            includeHTML("www/pathway.html")
 #          )

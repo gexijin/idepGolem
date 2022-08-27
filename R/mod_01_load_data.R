@@ -234,13 +234,13 @@ mod_01_load_data_ui <- function(id) {
           ),
           br(),
           img(
-            src='www/figs.gif', 
+            src='www/figs.gif',
             align = "center",
             width="640", 
             height="480"
           ),
           ns = ns
-       )  
+       )
       )
     )
   )
