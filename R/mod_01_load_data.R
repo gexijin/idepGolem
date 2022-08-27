@@ -216,7 +216,6 @@ mod_01_load_data_ui <- function(id) {
           ),
     
           h4(
-            "We recently hired Jenny Qi for database updates and user support.",
             a(
               "Email Jenny for questions.",
               href = "mailto:gelabinfo@gmail.com?Subject=iDEP"
@@ -241,7 +240,7 @@ mod_01_load_data_ui <- function(id) {
             height="480"
           ),
           ns = ns
-       )  # conditionalPanel not working
+       )  
       )
     )
   )

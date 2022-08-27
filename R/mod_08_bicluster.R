@@ -258,7 +258,7 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
     output$biclust_sub_heatmap <- renderPlot({
       if (is.null(input$ht_brush)) {
         grid::grid.newpage()
-        grid::grid.text("No region is selected.", 0.5, 0.5)
+        grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
       } else {
         biclust_heat_return <- basic_heat_sub(
           ht_brush = input$ht_brush,

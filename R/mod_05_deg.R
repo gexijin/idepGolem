@@ -914,7 +914,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
     output$deg_sub_heatmap <- renderPlot({
       if (is.null(input$ht_brush)) {
         grid::grid.newpage()
-        grid::grid.text("No region is selected.", 0.5, 0.5)
+        grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
       } else {
         deg_heat_return <- deg_heat_sub(
           ht_brush = input$ht_brush,
