@@ -248,13 +248,12 @@ mod_06_pathway_ui <- function(id) {
                 width = 4,
                 selectInput(
                   inputId = ns("heatmap_color_select"),
-                  label = "Select Heatmap Color: ",
+                  label = "Color (low-high): ",
                   choices = "green-black-red",
                   width = "100%"
                 )
               )
             ),
-            h5("Brush for sub-heatmap, click for value. (Shown Below)"),
             br(),
             fluidRow(
               column(
@@ -301,26 +300,30 @@ mod_06_pathway_ui <- function(id) {
                   htmlOutput(outputId = ns("list_sig_pathways_kegg"))
                 ),
                 column(
-                  width = 6,
+                  width = 3,
                   checkboxInput(
                     inputId = ns("kegg_sig_only"),
-                    label = "Show all KEGG pathways, including these that are not signficant.",
+                    label = "Include nonsignficant pathways",
                     value = FALSE
                   )
+                ),
+                column(
+                  width = 3,
+                  selectInput(
+                    inputId = ns("kegg_color_select"),
+                    label = "Colors (low-high)",
+                    choices = "green-red",
+                    width = "100%"
+                  )
                 )
+
               ),
-              selectInput(
-                inputId = ns("kegg_color_select"), 
-                label = "Select colors (low-high)", 
-                choices = "green-red", 
-                width = "100%"
-              ),
-              h5("Red and green represent up- and down-regulated genes, respectively."),
               imageOutput(
                 outputId = ns("kegg_image"),
                 width = "100%",
                 height = "100%"
               ),
+              h5("Red and green represent up- and down-regulated genes, respectively."),
               ns = ns
             )
           )
@@ -483,8 +486,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         }
         selectInput(
           inputId = ns("sig_pathways_kegg"),
-          label = 
-            "Select a significant pathway:",
+          label = "Select a KEGG pathway:",
           choices = choices
         )
 	    
@@ -815,7 +817,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     output$path_sub_heatmap <- renderPlot({
       if (is.null(input$ht_brush)) {
         grid::grid.newpage()
-        grid::grid.text("No region is selected.", 0.5, 0.5)
+        grid::grid.text("Select a region on the heatmap to zoom in. ", 0.5, 0.5)
       } else {
         path_heat_return <- basic_heat_sub(
           ht_brush = input$ht_brush,
@@ -859,11 +861,12 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     })
 
     output$kegg_image <- renderImage({
+      req(!is.null(input$sig_pathways_kegg))
       withProgress(message = "Downloading KEGG pathway", {
         incProgress(0.2)
         kegg_pathway(
           go = input$select_go,
-          gage_pathway_data = gage_pathway_data(),
+          gage_pathway_data = pathway_list_data()[, 1:5],
           sig_pathways = input$sig_pathways_kegg,
           select_contrast = input$select_contrast,
           limma = deg$limma(),

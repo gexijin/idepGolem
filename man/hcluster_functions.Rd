@@ -6,6 +6,9 @@
 \usage{
 hcluster_functions()
 }
+\value{
+one of the functions
+}
 \description{
-hcluster_functions
+This is list of functions for hierarchical clustering
 }

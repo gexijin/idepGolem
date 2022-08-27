@@ -6,6 +6,9 @@
 \usage{
 dist_functions()
 }
+\value{
+a distance function
+}
 \description{
-dist_functions
+Distance functions for clustering
 }
