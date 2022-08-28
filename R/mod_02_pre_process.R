@@ -940,8 +940,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
              "1" = "Integers detected. Did you mean to select 'read counts'?",
              "-1" = "Non count values detected. Did you mean select 'Normalized Expression Values'?"
   )
-  
-      
+
       showNotification(
         ui = message,
         id = "data_type_warning",

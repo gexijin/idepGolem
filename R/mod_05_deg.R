@@ -419,7 +419,7 @@ mod_05_deg_2_ui <- function(id) {
 #' 05_deg1 Server Functions
 #'
 #' @noRd
-mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
+mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -1251,6 +1251,32 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
       )
     })
 
+      # Show messages when on the Network tab or button is clicked
+    observe({
+      req(input$submit_model_button == 0 && (
+        tab() == "DEG1" || tab() == "DEG2" ||
+        tab() == "Pathway" || tab() == "Genome"
+      ))
+
+      showNotification(
+        ui = paste("Differentially expressed genes need to 
+        be identified first. Please select factors and comparisons and 
+        click Submit on the DEG1 tab."),
+        id = "click_submit_DEG1",
+        duration = NULL,
+        type = "error"
+      )
+    })
+
+    # Remove messages if the tab changes --------
+    observe({
+      req(input$submit_model_button != 0 || (
+        tab() != "DEG1" && tab() != "DEG2" &&
+        tab() != "Pathway" && tab() != "Genome"
+      ))
+      removeNotification("click_submit_DEG1")
+    })
+
     list(
       limma = reactive(deg$limma),
       select_factors_model = reactive(input$select_factors_model),
@@ -1259,6 +1285,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
       counts_deg_method = reactive(input$counts_deg_method)
     )
   })
+
 }
 
 ## To be copied in the UI

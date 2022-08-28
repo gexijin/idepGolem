@@ -211,19 +211,24 @@ mod_01_load_data_ui <- function(id) {
             h4("Loading R packages, please wait ... ... ...")
           ),
           htmlOutput(ns("file_format")),
-          h3(
-            "All new iDEP 2.0 in testing model."
+          h4(
+            "All new iDEP 1.0 in testing model."
           ),
     
           h4(
+            "We welcome any suggestions or questions. Please",
             a(
-              "Email Jenny for questions.",
+              "Email Jenny",
               href = "mailto:gelabinfo@gmail.com?Subject=iDEP"
+            ),
+            "or report issues on our ",
+            a(
+              "GitHub page.",
+              href = "https://github.com/espors/idepGolem/issues"
             )
           ),
           h5(
-            "iDEP has not been thoroughly tested. Please let us know if you find
-            any issue/bug."
+            "iDEP has not been thoroughly tested."
           ),
           br(),
           img(
