@@ -62,8 +62,7 @@ mod_03_clustering_ui <- function(id) {
               '<hr style="height:1px;border:none;
            color:#333;background-color:#333;" />'
             ),
-          
-          ns = ns 
+          ns = ns
         ),
 
       
@@ -171,7 +170,7 @@ mod_03_clustering_ui <- function(id) {
         conditionalPanel(
           condition = "input.cluster_panels == 'Hierarchical' | 
             input.cluster_panels == 'sample_tab' ",
-          
+
           checkboxInput(
             inputId = ns("gene_centering"),
             label = "Center genes (substract mean)",
@@ -184,10 +183,10 @@ mod_03_clustering_ui <- function(id) {
           ),
           ns = ns
         ),
-        
+
         conditionalPanel(
           condition = "input.cluster_panels == 'Hierarchical' ",
-          
+
           checkboxInput(
             inputId = ns("no_sample_clustering"),
             label = "Do not cluster samples",
@@ -205,8 +204,7 @@ mod_03_clustering_ui <- function(id) {
           ),
           ns = ns
         ),
-        
-  
+
         downloadButton(
           outputId = ns("report"),
           label = "Generate Report"
@@ -263,7 +261,7 @@ mod_03_clustering_ui <- function(id) {
             checkboxInput(
               inputId = ns("cluster_enrichment"), 
               label = strong("Enrichment analysis on selected genes"), 
-              value = FALSE
+              value = TRUE
             ),
             conditionalPanel(
               condition = "input.cluster_enrichment == 1 ",
@@ -297,12 +295,13 @@ mod_03_clustering_ui <- function(id) {
                   "#clustering-max_set_size {width:100%; margin-top:-12px}"
                 )
               ),
+              mod_11_enrichment_ui(ns("enrichment_table_cluster")),
               uiOutput(outputId = ns("pathway_data")),
               ns = ns
             )
 
           ),
-          
+
           # Gene Standard Deviation Distribution ----------
           tabPanel(
             title = "Gene SD Distribution",
@@ -585,7 +584,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     # Gene sets reactive
     pathway_table <- reactive({
       req(!is.null(input$select_gene_id))
-      req(!is.null(input$ht_brush))
+      req(!is.null(input$ht_brush) || input$cluster_meth == 2)
 
       shinybusy::show_modal_spinner(
         spin = "orbit",
@@ -650,8 +649,10 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         }
         clusts$id <- rownames(heatmap_data()[clusts$row_order, ]) 
 
-        for (i in 1:length(shiny_env$click_data)) {
-          cluster_data <- shiny_env$click_data[[i]]
+        # disregard user selection use clusters for enrichment
+        for (i in 1:input$k_clusters) {
+          cluster_data <- subset(clusts, cluster == i)
+          row.names(cluster_data) <- cluster_data$id
 
           gene_names <- merge_data(
             all_gene_names = pre_process$all_gene_names(),
@@ -688,27 +689,19 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
             use_filtered_background = TRUE,
             reduced = FALSE
           )
-
-          # Get cluster by matching gene ID from query to cluster number
-          clust_num <- clusts$cluster[clusts$id == gene_names_query[1, 2]]
-
-          pathway_info[[paste0("Cluster_", clust_num)]] <- pathway_sub_info
+          pathway_info[[paste0("Cluster ", i)]] <- pathway_sub_info
         }
       }
 
       shinybusy::remove_modal_spinner()
-      
-
 
       return(pathway_info)
     })
-    
-    
+
 
     # Pathway Data Table ----------
     output$pathway_data <- renderUI({
       req(!is.null(pathway_table()))
-      
       
       #exclude gene list column from displayed table, but keep for download
       lapply(names(pathway_table()), function(x) {
@@ -754,7 +747,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       )
     })
 
-  
+   
     # Sample Tree ----------
     sample_tree <- reactive({
       req(!is.null(pre_process$data()), input$cluster_meth == 1)
@@ -848,7 +841,11 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         write.csv(heatmap_data_download(), file)
       }
     )
-    
+
+  enrichment_table_cluster <- mod_11_enrichment_server(
+    id = "enrichment_table_cluster",
+    results = reactive({ pathway_table() }) # does not update?
+  )
     
     # Markdown report------------
     output$report <- downloadHandler(
