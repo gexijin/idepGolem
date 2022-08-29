@@ -10,11 +10,28 @@
 mod_11_enrichment_ui <- function(id){
   ns <- NS(id)
   tagList(
-    tableOutput(ns("enrichment_table")),
-    downloadButton(
-      outputId = ns("download_enrichment"),
-      label = "Enrichment"
-    )
+    fluidRow(
+      column(
+        width = 3, 
+        selectInput(
+          inputId = ns("sort_by"),
+          label = NULL,
+          choices = list(
+            "Sort by FDR" = "FDR",
+            "Sort by fold enriched" = "Fold"
+          ),
+          selected = "FDR"
+        )
+      ),
+      column(
+        width = 2,
+        downloadButton(
+          outputId = ns("download_enrichment"),
+          label = "Enrichment"
+        )
+      )
+    ),
+    tableOutput(ns("enrichment_table"))
   )
 }
     
@@ -63,7 +80,10 @@ mod_11_enrichment_server <- function(id, results){
       } 
 
       res <- full_table()
-
+      colnames(res) <- gsub("\\.", " ", colnames(res))
+      if(input$sort_by == "Fold") {
+        res <- res[order(res$group, -res$'Fold enriched'), ]
+      }
       # if only one group remove group column
       if(length(unique(res$group)) == 1) {
         res <- res[, -1]
@@ -71,7 +91,7 @@ mod_11_enrichment_server <- function(id, results){
         # if multiple groups clean up 
         res$group[duplicated(res$group)] <- ""
       }
-      colnames(res) <- gsub("\\.", " ", colnames(res))
+
       res$'nGenes' <- as.character(res$'nGenes')
       res$'Fold enriched' <- as.character(round(res$'Fold enriched', 1))
       res$'Pathway size' <- as.character(
