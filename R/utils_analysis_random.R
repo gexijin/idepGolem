@@ -1151,3 +1151,50 @@ Group: @{group_name} <span style='background-color:@{group_col};width=50px;'>   
 
   return(HTML(html))
 }
+
+#' Convert regular text to hypertext with links
+#'
+#'
+#' @param click Information from the User clicking on a cell of
+#'  the sub-heatmap
+#' @param textVector A vector of characters
+#' @param urlVector a set of URLs
+#'  
+#' @export
+#' @return HTML format hyper text
+hyperText <- function (textVector, urlVector){
+  # for generating pathway lists that can be clicked.
+  # Function that takes a vector of strings and a vector of URLs
+  # and generate hyper text 
+  # add URL to Description 
+  # see https://stackoverflow.com/questions/30901027/convert-a-column-of-text-urls-into-active-hyperlinks-in-shiny
+  # see https://stackoverflow.com/questions/21909826/r-shiny-open-the-urls-from-rendertable-in-a-new-tab
+  if( sum(is.null(urlVector) ) == length(urlVector) )
+     return(textVector)
+ 
+  if(length(textVector) != length(urlVector))
+    return(textVector)
+
+  #------------------URL correction
+  # URL changed from http://amigo.geneontology.org/cgi-bin/amigo/term_details?term=GO:0000077 
+  #                  http://amigo.geneontology.org/amigo/term/GO:0000077
+  urlVector <- gsub(
+    "cgi-bin/amigo/term_details\\?term=", 
+    "amigo/term/", 
+    urlVector 
+  )
+  urlVector <- gsub(" ", "", urlVector )
+
+
+  # first see if URL is contained in memo
+  ix <- grepl("http:", urlVector, ignore.case = TRUE)  
+  if(sum(ix) > 0) { # at least one has http?
+    tem <- paste0("<a href='", 
+      urlVector, "' target='_blank'>",
+      textVector, 
+      "</a>" )
+    # only change the ones with URL
+    textVector[ix] <- tem[ix]
+  }
+  return(textVector)
+}

@@ -569,7 +569,7 @@ read_pathway_sets <- function(all_gene_names_query,
     pathway_info <- DBI::dbGetQuery(
       pathway,
       paste(
-        "select distinct id, n, Description from pathwayInfo where id IN ('",
+        "select distinct id, n, Description, memo from pathwayInfo where id IN ('",
         paste(pathway_ids[, 1], collapse = "', '"), "') ",
         sep = ""
       )
