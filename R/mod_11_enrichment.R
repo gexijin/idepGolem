@@ -72,13 +72,14 @@ mod_11_enrichment_server <- function(id, results){
         res$group[duplicated(res$group)] <- ""
       }
       colnames(res) <- gsub("\\.", " ", colnames(res))
-      res$'Genes in query' <- as.character(res$'Genes in query')
-      res$'Total genes in category' <- as.character(
-        res$'Total genes in category'
+      res$'nGenes' <- as.character(res$'nGenes')
+      res$'Fold enriched' <- as.character(round(res$'Fold enriched', 1))
+      res$'Pathway size' <- as.character(
+        res$'Pathway size'
       )
 
-      res$'Functional Category' <- hyperText(
-        res$'Functional Category', 
+      res$'Pathway' <- hyperText(
+        res$'Pathway',
         res$URL
       )
       res <- subset(res, select = -Genes)

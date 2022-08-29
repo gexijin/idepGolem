@@ -631,9 +631,10 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
           use_filtered_background = input$filtered_background,
           reduced = input$remove_redudant
         )
-
+         # k-means-----------------------------------------------------
       } else if (input$cluster_meth == 2) {
-        # Get the cluster number and Gene IDs
+        # Get the cluster number and Gene 
+
         row_ord <- ComplexHeatmap::row_order(shiny_env$ht)
         for (i in 1:length(row_ord)) {
           if (i == 1) {
@@ -688,8 +689,8 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
             idep_data = idep_data,
             select_org = pre_process$select_org(),
             sub_pathway_files = gene_sets$pathway_files,
-            use_filtered_background = TRUE,
-            reduced = FALSE
+          use_filtered_background = input$filtered_background,
+          reduced = input$remove_redudant
           )
 
           pathway_info[[paste0("Cluster ", i)]] <- pathway_sub_info
