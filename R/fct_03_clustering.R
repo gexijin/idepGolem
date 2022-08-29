@@ -654,6 +654,7 @@ heat_sub <- function(
   select_factors_heatmap,
   cluster_meth
 ) {
+  max_gene_ids <- 60
   lt <- InteractiveComplexHeatmap::getPositionFromBrush(ht_brush)
   pos1 <- lt[[1]]
   pos2 <- lt[[2]]
@@ -683,7 +684,7 @@ heat_sub <- function(
   if (cluster_meth == 1) {
     row_index <- unlist(pos[1, "row_index"])
     m <- ht@ht_list[[1]]@matrix
-    if (length(row_index) > 50) {
+    if (length(row_index) > max_gene_ids) {
       show_rows <- FALSE
     } else {
       show_rows <- TRUE
@@ -710,7 +711,7 @@ heat_sub <- function(
       all_rows <- c(all_rows, unlist(pos[i, "row_index"]))
     }
 
-    if (length(all_rows) > 50) {
+    if (length(all_rows) > max_gene_ids) {
         show_rows <- FALSE
       } else {
         show_rows <- TRUE

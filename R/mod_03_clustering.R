@@ -92,7 +92,7 @@ mod_03_clustering_ui <- function(id) {
           # Gene ID Selection -----------
           selectInput(
             inputId = ns("select_gene_id"),
-            label = "Select Gene ID Label (<= 50 genes):",
+            label = "Gene ID type on Zoomed heatmap:",
             choices = NULL,
             selected = NULL
           ),
@@ -260,7 +260,8 @@ mod_03_clustering_ui <- function(id) {
             ),
             checkboxInput(
               inputId = ns("cluster_enrichment"), 
-              label = strong("Enrichment analysis on selected genes or k-means clusters"), 
+              label = strong("Enrichment analysis on 
+                selected genes or k-means clusters"),
               value = TRUE
             ),
             conditionalPanel(
@@ -273,8 +274,8 @@ mod_03_clustering_ui <- function(id) {
                 column(
                   width = 4,
                   checkboxInput(
-                    inputId = ns("filtered_background"), 
-                    label = "Use filtered genes as background.", 
+                    inputId = ns("filtered_background"),
+                    label = "Use filtered genes as background.",
                     value = FALSE
                   )
                 ),
@@ -287,11 +288,11 @@ mod_03_clustering_ui <- function(id) {
                   )
                 ),
                 tags$style(
-                  type='text/css',
+                  type = 'text/css',
                   "#clustering-min_set_size {width:100%; margin-top:-12px}"
                 ),
                 tags$style(
-                  type='text/css',
+                  type ='text/css',
                   "#clustering-max_set_size {width:100%; margin-top:-12px}"
                 )
               ),
@@ -548,7 +549,8 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     output$sub_heatmap <- renderPlot({
       if (is.null(input$ht_brush)) {
         grid::grid.newpage()
-        grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
+        grid::grid.text("Select a region on the heatmap to zoom in. 
+        Gene IDs shows up when less than 60 genes are selected.", 0.5, 0.5)
       } else {
         submap_return <- heat_sub(
           ht_brush = input$ht_brush,
@@ -629,9 +631,10 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
           use_filtered_background = input$filtered_background,
           reduced = input$remove_redudant
         )
-
+         # k-means-----------------------------------------------------
       } else if (input$cluster_meth == 2) {
-        # Get the cluster number and Gene IDs
+        # Get the cluster number and Gene 
+
         row_ord <- ComplexHeatmap::row_order(shiny_env$ht)
         for (i in 1:length(row_ord)) {
           if (i == 1) {
@@ -686,8 +689,8 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
             idep_data = idep_data,
             select_org = pre_process$select_org(),
             sub_pathway_files = gene_sets$pathway_files,
-            use_filtered_background = TRUE,
-            reduced = FALSE
+          use_filtered_background = input$filtered_background,
+          reduced = input$remove_redudant
           )
 
           pathway_info[[paste0("Cluster ", i)]] <- pathway_sub_info

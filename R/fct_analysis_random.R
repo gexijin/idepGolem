@@ -174,6 +174,11 @@ find_overlap <- function(
 		as.numeric(pathway_table$n), 
 		lower.tail=FALSE
   )
+
+  pathway_table$fold <- pathway_table$overlap / length(query_set) / (
+    as.numeric(pathway_table$n) / total_genes
+    )
+
   pathway_table <- subset(pathway_table, pathway_table$pval < max_pval_filter)
 
   # Background genes -----------
@@ -196,10 +201,14 @@ find_overlap <- function(
       pathway_table$pval <- phyper(
         pathway_table_bg$overlap - 1,
         length(query_set),
-        length(rownames(processed_data)) - length(query_set),   
+        length(rownames(processed_data)) - length(query_set),
         as.numeric(pathway_table_bg$overlap_bg),
         lower.tail=FALSE
-      ) 
+      )
+      pathway_table$fold <- pathway_table_bg$overlap / length(query_set) / (
+        as.numeric(pathway_table_bg$overlap_bg) / length(rownames(processed_data)) 
+      )
+
     }
   }
 
@@ -215,12 +224,12 @@ find_overlap <- function(
   } else {
     pathway_table <- pathway_table[which(pathway_table$fdr < min_fdr), ]
 
-    pathway_table <- subset(pathway_table, select = c(fdr, overlap, n, description, memo, gene_sets))
+    pathway_table <- subset(pathway_table, select = c(fdr, overlap, n, fold, description, memo, gene_sets))
     pathway_table$n <- as.numeric(pathway_table$n)
     pathway_table$fdr <-  formatC(pathway_table$fdr, format = "e", digits = 2)
     colnames(pathway_table) <- c(
-      "Corrected P value (FDR)", "Genes in query", "Total genes in category",
-      "Functional Category", "URL", "Genes"
+      "FDR", "nGenes", "Pathway size", "Fold enriched",
+      "Pathway", "URL", "Genes"
     )
 
     # Remove redudant gene sets; only do it when there are more than 5. Error when there is only 1 or 2.
