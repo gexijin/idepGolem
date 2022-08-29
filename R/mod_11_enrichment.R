@@ -71,11 +71,15 @@ mod_11_enrichment_server <- function(id, results){
         res$'Total genes in category'
       )
 
-      res$'Functional Category' <- hyperText(res$'Functional Category', res$URL)
+      res$'Functional Category' <- hyperText(
+        res$'Functional Category', 
+        res$URL
+      )
       res <- subset(res, select = -Genes)
       res <- subset(res, select = -URL)
       colnames(res)[ncol(res)] <- "Pathway (Click for more info)"
-      
+      return(res)
+
     },
     digits = -1,
     spacing = "s",
