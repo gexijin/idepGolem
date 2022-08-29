@@ -260,7 +260,7 @@ mod_03_clustering_ui <- function(id) {
             ),
             checkboxInput(
               inputId = ns("cluster_enrichment"), 
-              label = strong("Enrichment analysis on selected genes"), 
+              label = strong("Enrichment analysis on selected genes or k-means clusters"), 
               value = TRUE
             ),
             conditionalPanel(
