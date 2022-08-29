@@ -64,7 +64,7 @@ mod_01_load_data_ui <- function(id) {
           ),
           ns = ns
         ),
-
+        
         # Buttons for data file format ----------
         radioButtons(
           inputId = ns("data_file_format"),
@@ -77,7 +77,7 @@ mod_01_load_data_ui <- function(id) {
           ),
           selected = 1
         ),
-
+        
         # Conditional panel for fold changes data file ----------
         conditionalPanel(
           condition = "input.data_file_format == 3",
@@ -340,12 +340,18 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # Reactive element to load the data from the user or demo data ---------
     loaded_data <- reactive(
       input_data(
-      expression_file = input$expression_file,
-      experiment_file = input$experiment_file,
-      go_button = input$go_button,
-      demo_data_file = demo_data_file()[1], 
-      demo_metadata_file = demo_data_file()[2]
-    ))
+        expression_file = input$expression_file,
+        experiment_file = input$experiment_file,
+        go_button = input$go_button,
+        demo_data_file = demo_data_file()[1], 
+        demo_metadata_file = demo_data_file()[2]
+      )
+    )
+    
+    # observeEvent(input$data_file_format, {
+    #   req(loaded_data())
+    #   loaded_data() <- NULL
+    # })
 
     # Sample information table -----------
     output$sample_info_table <- DT::renderDataTable({
@@ -383,10 +389,33 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       )
     })
 
+    observeEvent(input$reset_app, {
+      session$reload()
+    })
+    
     # Get converted IDs ----------
     conversion_info <- reactive({
       
       req(!is.null(loaded_data()$data))
+      
+      # test data for correct format 
+      if (
+        min(loaded_data()$data, na.rm = TRUE) < 0 & input$data_file_format == 1
+      ) {
+        showModal(modalDialog(
+          title = "Somthing seems incorrect...", 
+          tags$p("Negative values were detected in this dataset. This is not 
+                 correct for the selected data type (Read Counts). 
+                 Please double check data type or the data. 
+                 You will not be able to continue until one of these 
+                 are resolved."),
+          tags$br(), 
+          tags$p("Upon clicking okay, the application will reset."),
+          size = "m", 
+          footer = actionButton(ns("reset_app"), "Okay, I will check my inputs!")
+        ))
+      } else {
+      
 
       shinybusy::show_modal_spinner(
         spin = "orbit",
@@ -435,6 +464,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         all_gene_names = all_gene_names,
         gmt_choices = gmt_choices
       ))
+      }
     })
 
     # Species match table ----------
