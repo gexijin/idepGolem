@@ -10,7 +10,11 @@
 mod_11_enrichment_ui <- function(id){
   ns <- NS(id)
   tagList(
-    tableOutput(ns("enrichment_table"))
+    tableOutput(ns("enrichment_table")),
+    downloadButton(
+      outputId = ns("download_enrichment"),
+      label = "Enrichment"
+    )
   )
 }
     
@@ -54,7 +58,9 @@ mod_11_enrichment_server <- function(id, results){
     })
 
     output$enrichment_table <- renderTable({
-      req(!is.null(full_table()))
+      if(is.null(full_table())) {
+        return(as.data.frame("No significant enrichment found."))
+      } 
 
       res <- full_table()
 
@@ -88,6 +94,15 @@ mod_11_enrichment_server <- function(id, results){
     width = "auto",
     hover = TRUE,
     sanitize.text.function = function(x) x
+    )
+
+    output$download_enrichment <- downloadHandler(
+      filename = function() {
+        "enrichment.csv"
+      },
+      content = function(file) {
+        write.csv(full_table(), file)
+      }
     )
 
 

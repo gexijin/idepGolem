@@ -92,7 +92,7 @@ mod_03_clustering_ui <- function(id) {
           # Gene ID Selection -----------
           selectInput(
             inputId = ns("select_gene_id"),
-            label = "Select Gene ID Label (<= 50 genes):",
+            label = "Gene ID type on Zoomed heatmap:",
             choices = NULL,
             selected = NULL
           ),
@@ -260,7 +260,8 @@ mod_03_clustering_ui <- function(id) {
             ),
             checkboxInput(
               inputId = ns("cluster_enrichment"), 
-              label = strong("Enrichment analysis on selected genes or k-means clusters"), 
+              label = strong("Enrichment analysis on 
+                selected genes or k-means clusters"),
               value = TRUE
             ),
             conditionalPanel(
@@ -273,8 +274,8 @@ mod_03_clustering_ui <- function(id) {
                 column(
                   width = 4,
                   checkboxInput(
-                    inputId = ns("filtered_background"), 
-                    label = "Use filtered genes as background.", 
+                    inputId = ns("filtered_background"),
+                    label = "Use filtered genes as background.",
                     value = FALSE
                   )
                 ),
@@ -287,11 +288,11 @@ mod_03_clustering_ui <- function(id) {
                   )
                 ),
                 tags$style(
-                  type='text/css',
+                  type = 'text/css',
                   "#clustering-min_set_size {width:100%; margin-top:-12px}"
                 ),
                 tags$style(
-                  type='text/css',
+                  type ='text/css',
                   "#clustering-max_set_size {width:100%; margin-top:-12px}"
                 )
               ),
@@ -548,7 +549,8 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     output$sub_heatmap <- renderPlot({
       if (is.null(input$ht_brush)) {
         grid::grid.newpage()
-        grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
+        grid::grid.text("Select a region on the heatmap to zoom in. 
+        Gene IDs shows up when less than 60 genes are selected.", 0.5, 0.5)
       } else {
         submap_return <- heat_sub(
           ht_brush = input$ht_brush,
