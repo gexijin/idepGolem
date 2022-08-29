@@ -296,7 +296,6 @@ mod_03_clustering_ui <- function(id) {
                 )
               ),
               mod_11_enrichment_ui(ns("enrichment_table_cluster")),
-              uiOutput(outputId = ns("pathway_data")),
               ns = ns
             )
 
@@ -630,6 +629,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
           use_filtered_background = input$filtered_background,
           reduced = input$remove_redudant
         )
+
       } else if (input$cluster_meth == 2) {
         # Get the cluster number and Gene IDs
         row_ord <- ComplexHeatmap::row_order(shiny_env$ht)
@@ -689,6 +689,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
             use_filtered_background = TRUE,
             reduced = FALSE
           )
+
           pathway_info[[paste0("Cluster ", i)]] <- pathway_sub_info
         }
       }
@@ -698,56 +699,6 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       return(pathway_info)
     })
 
-
-    # Pathway Data Table ----------
-    output$pathway_data <- renderUI({
-      req(!is.null(pathway_table()))
-      
-      #exclude gene list column from displayed table, but keep for download
-      lapply(names(pathway_table()), function(x) {
-        output[[x]] = DT::renderDataTable({
-          DT::datatable(
-            if (ncol(pathway_table()[[x]]) < 5){
-              data = pathway_table()[[x]]
-            } else {
-              data = pathway_table()[[x]][,1:4]
-            },
-            options = list(
-              pageLength = 20,
-              scrollX = "400px",
-              dom = 'ft'
-            ),
-            rownames = FALSE,
-            selection = 'single'
-          )
-        })
-
-        down_data <- data_frame_with_list(pathway_table()[[x]])
-
-        output[[paste0("table_", x)]] = downloadHandler(
-          filename = function() {
-            paste0(x, ".csv")
-          },
-          content = function(file) {
-            write.csv(down_data, file)
-          }
-        )
-      })
-  
-      return(lapply(names(pathway_table()), function(x) {
-        tagList(
-          DT::dataTableOutput(ns(x)),
-          br(),
-          downloadButton(
-            outputId = ns(paste0("table_", x)),
-            label = "Enrichment"
-          )
-        )
-      })
-      )
-    })
-
-   
     # Sample Tree ----------
     sample_tree <- reactive({
       req(!is.null(pre_process$data()), input$cluster_meth == 1)

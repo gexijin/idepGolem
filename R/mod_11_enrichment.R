@@ -16,7 +16,9 @@ mod_11_enrichment_ui <- function(id){
     
 #' 11_enrichment Server Functions
 #' @param id module Id
-#' @param results a list containing results from pathway analysis
+#' @param results a list containing results from pathway analysis.
+#'  Each element is a data frame. But the last column is a list,
+#' hosting genes.
 #' @noRd 
 mod_11_enrichment_server <- function(id, results){
   moduleServer(id, function(input, output, session){
@@ -64,7 +66,15 @@ mod_11_enrichment_server <- function(id, results){
         res$group[duplicated(res$group)] <- ""
       }
       colnames(res) <- gsub("\\.", " ", colnames(res))
+      res$'Genes in query' <- as.character(res$'Genes in query')
+      res$'Total genes in category' <- as.character(
+        res$'Total genes in category'
+      )
+
+      res$'Functional Category' <- hyperText(res$'Functional Category', res$URL)
       res <- subset(res, select = -Genes)
+      res <- subset(res, select = -URL)
+      colnames(res)[ncol(res)] <- "Pathway (Click for more info)"
       
     },
     digits = -1,

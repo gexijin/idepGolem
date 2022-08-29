@@ -215,12 +215,12 @@ find_overlap <- function(
   } else {
     pathway_table <- pathway_table[which(pathway_table$fdr < min_fdr), ]
 
-    pathway_table <- subset(pathway_table, select = c(fdr, overlap, n, description, gene_sets))
+    pathway_table <- subset(pathway_table, select = c(fdr, overlap, n, description, memo, gene_sets))
     pathway_table$n <- as.numeric(pathway_table$n)
     pathway_table$fdr <-  formatC(pathway_table$fdr, format = "e", digits = 2)
     colnames(pathway_table) <- c(
       "Corrected P value (FDR)", "Genes in query", "Total genes in category",
-      "Functional Category", "Genes"
+      "Functional Category", "URL", "Genes"
     )
 
     # Remove redudant gene sets; only do it when there are more than 5. Error when there is only 1 or 2.
