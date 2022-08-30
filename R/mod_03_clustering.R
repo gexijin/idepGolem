@@ -798,7 +798,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
 
   enrichment_table_cluster <- mod_11_enrichment_server(
     id = "enrichment_table_cluster",
-    results = reactive({ pathway_table() }) # does not update?
+    results = reactive({ pathway_table() }) # make it update
   )
     
     # Markdown report------------

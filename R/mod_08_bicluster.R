@@ -121,7 +121,7 @@ mod_08_bicluster_ui <- function(id){
                 )
               )
             ),
-            tableOutput(ns("pathway_data_biclust"))
+            mod_11_enrichment_ui(ns("enrichment_table_cluster"))
 
           ),
           tabPanel(
@@ -313,7 +313,7 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
       )	
 	  }) 
 
-    pathway_table_biclust <- reactive({
+    enrichment_table <- reactive({
       req(!is.null(biclust_data()))
 
       shinybusy::show_modal_spinner(
@@ -341,8 +341,8 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
         idep_data = idep_data,
         gene_info = pre_process$all_gene_info()
       )
-
-      pathway_info <- find_overlap(
+      pathway_info <- list()
+      pathway_info[["Cluster"]] <- find_overlap(
         pathway_table = gene_sets$pathway_table,
         query_set = gene_sets$query_set,
         total_genes = gene_sets$total_genes,
@@ -361,23 +361,11 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
       return(pathway_info)
     })
 
-    # Enrichment Data Table ----------
-    output$pathway_data_biclust <- renderTable({
-      req(!is.null(pathway_table_biclust()))
+  enrichment_table_cluster <- mod_11_enrichment_server(
+    id = "enrichment_table_cluster",
+    results = reactive({ enrichment_table() }) 
+  )
 
-      if(ncol(pathway_table_biclust()) > 1) {
-        pathway_table <- pathway_table_biclust()[, 1:4]
-      } else {
-        pathway_table <- pathway_table_biclust()
-      }
-      pathway_table
-    }, digits = -1, 
-     spacing="s", 
-     striped=TRUE,
-     bordered = TRUE, 
-     width = "auto",
-     hover=TRUE, 
-     sanitize.text.function = function(x) x )
 
     # list of genes and symbols in the currently selected cluster
     genes_in_selected_cluster <- reactive({
