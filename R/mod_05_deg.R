@@ -244,18 +244,6 @@ mod_05_deg_2_ui <- function(id) {
           inputId = ns("remove_redudant"),
           label = "Remove Redudant Gene Sets",
           value = FALSE
-        ), 
-        conditionalPanel(
-          condition = "input.step_2 == 'Enrich Table'", 
-          downloadButton(
-            outputId = ns("dl_enrich_up"), 
-            label = "Up Enrichment"
-          ),
-          downloadButton(
-            outputId = ns("dl_enrich_down"), 
-            label = "Down Enrichment"
-          ),
-          ns = ns
         )
       ),
       mainPanel(
@@ -322,22 +310,8 @@ mod_05_deg_2_ui <- function(id) {
             )
           ),
           tabPanel(
-            title = "Enrich Table",
-            br(),
-            tags$p("To see the list of genes that were differently expressed in
-                    each category, download the data in the left-hand panel."),
-            br(),
-            strong(h3("Up Regulated Genes")),
-            br(),
-            DT::dataTableOutput(
-              outputId = ns("pathway_data_up")
-            ),
-            br(),
-            strong(h3("Down Regulated Genes")),
-            br(),
-            DT::dataTableOutput(
-              outputId = ns("pathway_data_down")
-            )
+            title = "Enrichment",
+            mod_11_enrichment_ui(ns("enrichment_table_cluster")),
           ),
           tabPanel(
             title = "Enrich Tree",
@@ -1109,31 +1083,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       return(pathway_info)
     })
 
-    # Subheatmap Data Table ----------
-    output$pathway_data_up <- DT::renderDataTable({
-      req(!is.null(pathway_table_up()))
-      
-      DT::datatable(
-        if (ncol(pathway_table_up()) < 5){
-          data = pathway_table_up()
-        } else {
-          data = pathway_table_up()[ ,1:4]
-        },
-        options = list(
-          pageLength = 20,
-          scrollX = "400px"
-        ),
-        rownames = TRUE
-      )
-    })
-    output$dl_enrich_up <- downloadHandler(
-      filename = function() {
-        "deg_up_enrichment.csv"
-      }, 
-      content = function(file) {
-        write.csv(data_frame_with_list(pathway_table_up()), file)
-      }
-    )
+
+
 
     # Enrichment Analysis Down Data -----------
     pathway_table_down <- reactive({
@@ -1184,31 +1135,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       return(pathway_info)
     })
 
-    # Subheatmap Data Table ----------
-    output$pathway_data_down <- DT::renderDataTable({
-      req(!is.null(pathway_table_down()))
 
-      DT::datatable(
-        if (ncol(pathway_table_down()) < 5){
-          data = pathway_table_down()
-        } else {
-          data = pathway_table_down()[ ,1:4]
-        },
-        options = list(
-          pageLength = 20,
-          scrollX = "400px"
-        ),
-        rownames = TRUE
-      )
-    })
-    output$dl_enrich_down <- downloadHandler(
-      filename = function() {
-        "deg_down_enrichment.csv"
-      }, 
-      content = function(file) {
-        write.csv(data_frame_with_list(pathway_table_down()), file)
-      }
-    )
 
     go_table <- reactive({
       req(!is.null(pathway_table_up()) || !is.null(pathway_data_down()))
@@ -1218,6 +1145,70 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         down_enrich_data = pathway_table_down()
       )
     })
+
+    # enrichment analysis results for both up and down regulated gene
+    pathway_deg <- reactive({
+      req(!is.null(up_reg_data()))
+
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Running Analysis",
+        color = "#000000"
+      )
+
+      deg_lists <- list()
+      lists <- c("Upregulated", "Downregulated")
+
+      for(direction in lists) {
+
+        if(direction == lists[1]) {
+          data <- up_reg_data()
+        } else {
+          data <- down_reg_data()
+        }
+
+        gene_names <- merge_data(
+          all_gene_names = pre_process$all_gene_names(),
+          data = data,
+          merge_ID = "ensembl_ID"
+        )
+        # Only keep the gene names and scrap the data
+        gene_names_query <- dplyr::select_if(gene_names, is.character)
+
+        req(!is.null(input$select_go))
+
+        gene_sets <- read_pathway_sets(
+          all_gene_names_query = gene_names_query,
+          converted = pre_process$converted(),
+          go = input$select_go,
+          select_org = pre_process$select_org(),
+          gmt_file = pre_process$gmt_file(),
+          idep_data = idep_data,
+          gene_info = pre_process$all_gene_info()
+        )
+
+        deg_lists[[direction]] <- find_overlap(
+          pathway_table = gene_sets$pathway_table,
+          query_set = gene_sets$query_set,
+          total_genes = gene_sets$total_genes,
+          processed_data = pre_process$data(),
+          gene_info = pre_process$all_gene_info(),
+          go = input$select_go,
+          idep_data = idep_data,
+          select_org = pre_process$select_org(),
+          sub_pathway_files = gene_sets$pathway_files,
+          use_filtered_background = input$filtered_background,
+          reduced = input$remove_redudant
+        )
+      }
+      shinybusy::remove_modal_spinner()
+      return(deg_lists)
+    })
+
+  enrichment_table_cluster <- mod_11_enrichment_server(
+    id = "enrichment_table_cluster",
+    results = reactive({ pathway_deg() }) # does not update?
+  )
 
     # Enrichment Tree -----------
     output$enrichment_tree <- renderPlot({

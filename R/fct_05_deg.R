@@ -3181,7 +3181,7 @@ go_table_data <- function(
   if(nrow(up_enrich_data) >= 2 || is.null(up_enrich_data)) {
     up_data <- as.data.frame(up_enrich_data)
     up_data$direction <- rep("Up", nrow(up_enrich_data))
-    up_data <- up_data[, c(6, 1, 2, 4, 5)]
+    up_data <- up_data[, c(8, 1, 2, 5, 7)]
     colnames(up_data) <- c("Direction", "adj_p_val", "n_genes", "Pathways", "Genes")
   } else {
     up_data <- NULL
@@ -3189,7 +3189,7 @@ go_table_data <- function(
   if(nrow(down_enrich_data) >= 2 || is.null(down_enrich_data)) {
     down_data <- as.data.frame(down_enrich_data)
     down_data$direction <- rep("Down", nrow(down_enrich_data))
-    down_data <- down_data[, c(6, 1, 2, 4, 5)]
+    down_data <- down_data[, c(8, 1, 2, 5, 7)]
     colnames(down_data) <- c("Direction", "adj_p_val", "n_genes", "Pathways", "Genes")
   } else {
     down_data <- NULL
