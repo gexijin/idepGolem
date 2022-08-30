@@ -529,7 +529,8 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
 
     # Heatmap Click Value ---------
     output$ht_click_content <- renderUI({
-      if (is.null(input$ht_click)) { 
+      
+      if (is.null(input$ht_click) | is.null(shiny_env$ht_sub)) { 
         "Click on zoomed heatmap"
       } else {
         cluster_heat_click_info(
