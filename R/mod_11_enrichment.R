@@ -54,8 +54,7 @@ mod_11_enrichment_ui <- function(id){
         )
       )
     ),
-    tableOutput(ns("enrichment_table")),
-    tableOutput(ns("enrichment_table2"))
+    tableOutput(ns("enrichment_table"))
   )
 }
     
@@ -98,77 +97,7 @@ mod_11_enrichment_server <- function(
       )
     })
 
-    full_table <- reactive({
-      req(!is.null(results()))
 
-      results_all <- do.call(rbind,
-        #combine multiple data frames that are elements of a list
-        lapply(
-          names(results()),
-          function(x) {
-            if(ncol(results()[[x]]) == 1) {
-              return(NULL)
-            }
-            df1 <- data_frame_with_list(results()[[x]])
-            df1$group <- x
-            return(df1)
-          }
-        )
-      )
-
-      if(!is.null(results_all)){
-        if(ncol(results_all) > 1) {
-          results_all <- results_all[,
-            c("group",
-              colnames(results_all)[1:(ncol(results_all) - 1)]
-            )
-          ]
-        }
-      }
-    })
-
-    output$enrichment_table <- renderTable({
-      if(is.null(full_table())) {
-        return(as.data.frame("No significant enrichment found."))
-      } 
-
-      res <- full_table()
-      colnames(res) <- gsub("\\.", " ", colnames(res))
-      if(input$sort_by == "Fold") {
-        res <- res[order(res$group, -res$'Fold enriched'), ]
-      }
-      # if only one group remove group column
-      if(length(unique(res$group)) == 1) {
-        res <- res[, -1]
-      } else {
-        # if multiple groups clean up 
-        res$group[duplicated(res$group)] <- ""
-      }
-
-      res$'nGenes' <- as.character(res$'nGenes')
-      res$'Fold enriched' <- as.character(round(res$'Fold enriched', 1))
-      res$'Pathway size' <- as.character(
-        res$'Pathway size'
-      )
-
-      res$'Pathway' <- hyperText(
-        res$'Pathway',
-        res$URL
-      )
-      res <- subset(res, select = -Genes)
-      res <- subset(res, select = -URL)
-      colnames(res)[ncol(res)] <- "Pathway (Click for more info)"
-      return(res)
-
-    },
-    digits = -1,
-    spacing = "s",
-    striped = TRUE,
-    bordered = TRUE,
-    width = "auto",
-    hover = TRUE,
-    sanitize.text.function = function(x) x
-    )
 
     output$download_enrichment <- downloadHandler(
       filename = function() {
@@ -189,7 +118,7 @@ mod_11_enrichment_server <- function(
         text = "Running Analysis",
         color = "#000000"
       )
-     
+
       pathway_info <- list()
 
         # disregard user selection use clusters for enrichment
@@ -219,7 +148,7 @@ mod_11_enrichment_server <- function(
       return(pathway_info)
     })
 
-    full_table2 <- reactive({
+    full_table <- reactive({
       req(!is.null(pathway_table()))
 
       results_all <- do.call(rbind,
@@ -248,12 +177,12 @@ mod_11_enrichment_server <- function(
       }
     })
 
-    output$enrichment_table2 <- renderTable({
-      if(is.null(full_table2())) {
+    output$enrichment_table <- renderTable({
+      if(is.null(full_table())) {
         return(as.data.frame("No significant enrichment found."))
       } 
 
-      res <- full_table2()
+      res <- full_table()
       colnames(res) <- gsub("\\.", " ", colnames(res))
       if(input$sort_by == "Fold") {
         res <- res[order(res$group, -res$'Fold enriched'), ]
