@@ -1173,43 +1173,24 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
           merge_ID = "ensembl_ID"
         )
         # Only keep the gene names and scrap the data
-        gene_names_query <- dplyr::select_if(gene_names, is.character)
-
-        req(!is.null(input$select_go))
-
-        gene_sets <- read_pathway_sets(
-          all_gene_names_query = gene_names_query,
-          converted = pre_process$converted(),
-          go = input$select_go,
-          select_org = pre_process$select_org(),
-          gmt_file = pre_process$gmt_file(),
-          idep_data = idep_data,
-          gene_info = pre_process$all_gene_info()
-        )
-
-        deg_lists[[direction]] <- find_overlap(
-          pathway_table = gene_sets$pathway_table,
-          query_set = gene_sets$query_set,
-          total_genes = gene_sets$total_genes,
-          processed_data = pre_process$data(),
-          gene_info = pre_process$all_gene_info(),
-          go = input$select_go,
-          idep_data = idep_data,
-          select_org = pre_process$select_org(),
-          sub_pathway_files = gene_sets$pathway_files,
-          use_filtered_background = input$filtered_background,
-          reduced = input$remove_redudant
-        )
+         deg_lists[[direction]] <- dplyr::select_if(gene_names, is.character)
       }
       shinybusy::remove_modal_spinner()
       return(deg_lists)
     })
 
+
   enrichment_table_cluster <- mod_11_enrichment_server(
     id = "enrichment_table_cluster",
-    results = reactive({ pathway_deg() }) # does not update?
+    gmt_choices = reactive({ pre_process$gmt_choices() }),
+    gene_lists = reactive({ pathway_deg()  }),
+    processed_data = reactive({ pre_process$data()}),
+    gene_info = reactive({ pre_process$all_gene_info()}),
+    idep_data = idep_data,
+    select_org = reactive({ pre_process$select_org()}),
+    converted = reactive({ pre_process$converted() }),
+    gmt_file = reactive({ pre_process$gmt_file() })
   )
-
     # Enrichment Tree -----------
     output$enrichment_tree <- renderPlot({
       req(!is.null(go_table()))

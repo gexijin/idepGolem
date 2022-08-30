@@ -127,7 +127,7 @@ mod_11_enrichment_server <- function(
       for (i in 1:length(gene_lists())) {
 
         gene_names_query <- gene_lists()[[i]]
-
+        req(!is.null(input$select_go))
         gene_sets <- read_pathway_sets(
           all_gene_names_query = gene_names_query,
           converted = converted(), #n
