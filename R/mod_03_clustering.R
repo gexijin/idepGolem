@@ -265,28 +265,6 @@ mod_03_clustering_ui <- function(id) {
             ),
             conditionalPanel(
               condition = "input.cluster_enrichment == 1 ",
-              fluidRow(
-                column(
-                  width = 4,
-                  htmlOutput(outputId = ns("select_go_selector"))
-                ),
-                column(
-                  width = 4,
-                  checkboxInput(
-                    inputId = ns("filtered_background"),
-                    label = "Use filtered genes as background.",
-                    value = FALSE
-                  )
-                ),
-                column(
-                  width = 4,
-                  checkboxInput(
-                    inputId = ns("remove_redudant"),
-                    label = "Remove Redudant Gene Sets",
-                    value = FALSE
-                  )
-                )
-              ),
               mod_11_enrichment_ui(ns("enrichment_table_cluster")),
               ns = ns
             )
@@ -424,21 +402,6 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         inputId = ns("select_factors_heatmap"),
         label = "Sample Color Bar:",
         choices = c("Sample_Name", colnames(pre_process$sample_info()))
-      )
-    })
-
-    # GMT choices for enrichment ----------
-    output$select_go_selector <- renderUI({
-	    req(!is.null(pre_process$gmt_choices()))
-      selected <- "GOBP"
-      if("KEGG" %in% pre_process$gmt_choices()) {
-        selected <- "KEGG"
-      }
-	    selectInput(
-        inputId = ns("select_go"),
-        label = NULL,
-        choices = pre_process$gmt_choices(),
-        selected = selected
       )
     })
 
@@ -590,21 +553,6 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         # Only keep the gene names and scrap the data
         gene_lists[["Selection"]] <- dplyr::select_if(gene_names, is.character)
 
-        if(0){
-          req(!is.null(pre_process$all_gene_names()))
-          req(!is.null(input$select_go))
-
-          gene_lists[["Selection"]] <- read_pathway_sets(
-            all_gene_names_query = gene_names_query,
-            converted = pre_process$converted(),
-            go = input$select_go,
-            select_org = pre_process$select_org(),
-            gmt_file = pre_process$gmt_file(),
-            idep_data = idep_data,
-            gene_info = pre_process$all_gene_info()
-          )
-        }
-
          # k-means-----------------------------------------------------
       } else if (input$cluster_meth == 2) {
         # Get the cluster number and Gene 
@@ -638,22 +586,9 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
           )
       
           # Only keep the gene names and scrap the data
-         gene_lists[["Selection"]] <- dplyr::select_if(gene_names, is.character)
+         gene_lists[[paste0("Cluster ", i)]] <-
+          dplyr::select_if(gene_names, is.character)
 
-if(0){
-          req(!is.null(pre_process$all_gene_names()))
-          req(!is.null(input$select_go))
-
-          gene_lists[[paste0("Cluster ", i)]] <- read_pathway_sets(
-            all_gene_names_query = gene_names_query,
-            converted = pre_process$converted(),
-            go = input$select_go,
-            select_org = pre_process$select_org(),
-            gmt_file = pre_process$gmt_file(),
-            idep_data = idep_data,
-            gene_info = pre_process$all_gene_info()
-          )
-}
         }
       }
 
