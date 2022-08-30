@@ -72,7 +72,9 @@ mod_11_enrichment_server <- function(
   processed_data,
   gene_info,
   idep_data,
-  select_org
+  select_org,
+  converted,
+  gmt_file
   ){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
@@ -124,7 +126,17 @@ mod_11_enrichment_server <- function(
         # disregard user selection use clusters for enrichment
       for (i in 1:length(gene_lists())) {
 
-        gene_sets <- gene_lists()[[i]]
+        gene_names_query <- gene_lists()[[i]]
+
+        gene_sets <- read_pathway_sets(
+          all_gene_names_query = gene_names_query,
+          converted = converted(), #n
+          go = input$select_go,
+          select_org = select_org(),
+          gmt_file = gmt_file(), #n
+          idep_data = idep_data,
+          gene_info = gene_info()
+        )
 
         pathway_info[[names(gene_lists())[i]]] <- find_overlap(
           pathway_table = gene_sets$pathway_table,

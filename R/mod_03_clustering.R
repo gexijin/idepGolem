@@ -588,20 +588,22 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         )
       
         # Only keep the gene names and scrap the data
-        gene_names_query <- dplyr::select_if(gene_names, is.character)
+        gene_lists[["Selection"]] <- dplyr::select_if(gene_names, is.character)
 
-        req(!is.null(pre_process$all_gene_names()))
-        req(!is.null(input$select_go))
+        if(0){
+          req(!is.null(pre_process$all_gene_names()))
+          req(!is.null(input$select_go))
 
-        gene_lists[["Selection"]] <- read_pathway_sets(
-          all_gene_names_query = gene_names_query,
-          converted = pre_process$converted(),
-          go = input$select_go,
-          select_org = pre_process$select_org(),
-          gmt_file = pre_process$gmt_file(),
-          idep_data = idep_data,
-          gene_info = pre_process$all_gene_info()
-        )
+          gene_lists[["Selection"]] <- read_pathway_sets(
+            all_gene_names_query = gene_names_query,
+            converted = pre_process$converted(),
+            go = input$select_go,
+            select_org = pre_process$select_org(),
+            gmt_file = pre_process$gmt_file(),
+            idep_data = idep_data,
+            gene_info = pre_process$all_gene_info()
+          )
+        }
 
          # k-means-----------------------------------------------------
       } else if (input$cluster_meth == 2) {
@@ -636,8 +638,9 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
           )
       
           # Only keep the gene names and scrap the data
-          gene_names_query <- dplyr::select_if(gene_names, is.character)
+         gene_lists[["Selection"]] <- dplyr::select_if(gene_names, is.character)
 
+if(0){
           req(!is.null(pre_process$all_gene_names()))
           req(!is.null(input$select_go))
 
@@ -650,6 +653,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
             idep_data = idep_data,
             gene_info = pre_process$all_gene_info()
           )
+}
         }
       }
 
@@ -757,7 +761,9 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     processed_data = reactive({ pre_process$data()}),
     gene_info = reactive({ pre_process$all_gene_info()}),
     idep_data = idep_data,
-    select_org = reactive({ pre_process$select_org()})
+    select_org = reactive({ pre_process$select_org()}),
+    converted = reactive({ pre_process$converted() }),
+    gmt_file = reactive({ pre_process$gmt_file() })
   )
     
     # Markdown report------------
