@@ -176,9 +176,7 @@ mod_09_network_ui <- function(id){
                 )
               )
             ),
-            DT::dataTableOutput(
-              outputId = ns("pathway_data_network")
-            )
+            mod_11_enrichment_ui(ns("enrichment_table_cluster"))
           ),
           tabPanel(
             "Heatmap",
@@ -314,7 +312,7 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab){
       )
     })
 
-    pathway_table_network <- reactive({
+    enrichment_network <- reactive({
       req(!is.null(network_query()))
 
       shinybusy::show_modal_spinner(
@@ -340,7 +338,8 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab){
         gene_info = pre_process$all_gene_info()
       )
 
-      pathway_info <- find_overlap(
+      pathway_info <- list()
+      pathway_info[["Cluster"]] <- find_overlap(
         pathway_table = gene_sets$pathway_table,
         query_set = gene_sets$query_set,
         total_genes = gene_sets$total_genes,
@@ -359,25 +358,10 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab){
       return(pathway_info)
     })
 
-    # Pathway Data Table ----------
-    output$pathway_data_network <- DT::renderDataTable({
-      req(!is.null(pathway_table_network()))
-
-      if(ncol(pathway_table_network()) > 1) {
-        pathway_table <- pathway_table_network()[, 1:4]
-      } else {
-        pathway_table <- pathway_table_network()
-      }
-
-      DT::datatable(
-        pathway_table,
-        options = list(
-          pageLength = 20,
-          scrollX = "400px"
-        ),
-        rownames = FALSE
-      )
-    })
+  enrichment_table_cluster <- mod_11_enrichment_server(
+    id = "enrichment_table_cluster",
+    results = reactive({ enrichment_network() }) 
+  )
 
     output$scale_independence_plot <- renderPlot({
       req(!is.null(wgcna()))
