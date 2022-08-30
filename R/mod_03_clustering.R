@@ -681,8 +681,8 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
             idep_data = idep_data,
             select_org = pre_process$select_org(),
             sub_pathway_files = gene_sets$pathway_files,
-          use_filtered_background = input$filtered_background,
-          reduced = input$remove_redudant
+            use_filtered_background = input$filtered_background,
+            reduced = input$remove_redudant
           )
 
           pathway_info[[paste0("Cluster ", i)]] <- pathway_sub_info
@@ -692,6 +692,89 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       shinybusy::remove_modal_spinner()
 
       return(pathway_info)
+    })
+
+    # gene lists for enrichment analysis
+    gene_lists <- reactive({
+      req(!is.null(input$select_gene_id))
+      req(!is.null(input$ht_brush) || input$cluster_meth == 2)
+      
+      gene_lists <- list()
+      
+      if (input$cluster_meth == 1) {
+        gene_names <- merge_data(
+          all_gene_names = pre_process$all_gene_names(),
+          data = shiny_env$submap_data,
+          merge_ID = input$select_gene_id
+        )
+      
+        # Only keep the gene names and scrap the data
+        gene_names_query <- dplyr::select_if(gene_names, is.character)
+
+        req(!is.null(pre_process$all_gene_names()))
+        req(!is.null(input$select_go))
+
+        gene_lists[["Selection"]] <- read_pathway_sets(
+          all_gene_names_query = gene_names_query,
+          converted = pre_process$converted(),
+          go = input$select_go,
+          select_org = pre_process$select_org(),
+          gmt_file = pre_process$gmt_file(),
+          idep_data = idep_data,
+          gene_info = pre_process$all_gene_info()
+        )
+
+         # k-means-----------------------------------------------------
+      } else if (input$cluster_meth == 2) {
+        # Get the cluster number and Gene 
+
+        row_ord <- ComplexHeatmap::row_order(shiny_env$ht)
+        for (i in 1:length(row_ord)) {
+          if (i == 1) {
+          clusts <- data.frame(
+            "cluster" = rep(names(row_ord[i]), length(row_ord[[i]])),
+            "row_order" = row_ord[[i]]
+          )
+          } else {
+          tem <- data.frame(
+            "cluster" = rep(names(row_ord[i]), length(row_ord[[i]])),
+            "row_order" = row_ord[[i]]
+          )
+          clusts <- rbind(clusts, tem)
+          }
+        }
+        clusts$id <- rownames(heatmap_data()[clusts$row_order, ]) 
+
+        # disregard user selection use clusters for enrichment
+        for (i in 1:input$k_clusters) {
+          cluster_data <- subset(clusts, cluster == i)
+          row.names(cluster_data) <- cluster_data$id
+
+          gene_names <- merge_data(
+            all_gene_names = pre_process$all_gene_names(),
+            data = cluster_data,
+            merge_ID = input$select_gene_id
+          )
+      
+          # Only keep the gene names and scrap the data
+          gene_names_query <- dplyr::select_if(gene_names, is.character)
+
+          req(!is.null(pre_process$all_gene_names()))
+          req(!is.null(input$select_go))
+
+          gene_lists[[paste0("Cluster ", i)]] <- read_pathway_sets(
+            all_gene_names_query = gene_names_query,
+            converted = pre_process$converted(),
+            go = input$select_go,
+            select_org = pre_process$select_org(),
+            gmt_file = pre_process$gmt_file(),
+            idep_data = idep_data,
+            gene_info = pre_process$all_gene_info()
+          )
+        }
+      }
+
+      return(gene_lists)
     })
 
     # Sample Tree ----------
@@ -791,7 +874,12 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
   enrichment_table_cluster <- mod_11_enrichment_server(
     id = "enrichment_table_cluster",
     results = reactive({ pathway_table() }), # make it update
-    gmt_choices = reactive({ pre_process$gmt_choices() })
+    gmt_choices = reactive({ pre_process$gmt_choices() }),
+    gene_lists = reactive({ gene_lists() }),
+    processed_data = reactive({ pre_process$data()}),
+    gene_info = reactive({ pre_process$all_gene_info()}),
+    idep_data = idep_data,
+    select_org = reactive({ pre_process$select_org()})
   )
     
     # Markdown report------------
