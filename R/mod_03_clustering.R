@@ -208,8 +208,7 @@ mod_03_clustering_ui <- function(id) {
         downloadButton(
           outputId = ns("report"),
           label = "Generate Report"
-        ), 
-        
+        ),
 
         a(
           h5("Questions?", align = "right"),
@@ -286,14 +285,6 @@ mod_03_clustering_ui <- function(id) {
                     label = "Remove Redudant Gene Sets",
                     value = FALSE
                   )
-                ),
-                tags$style(
-                  type = 'text/css',
-                  "#clustering-min_set_size {width:100%; margin-top:-12px}"
-                ),
-                tags$style(
-                  type ='text/css',
-                  "#clustering-max_set_size {width:100%; margin-top:-12px}"
                 )
               ),
               mod_11_enrichment_ui(ns("enrichment_table_cluster")),
@@ -799,7 +790,8 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
 
   enrichment_table_cluster <- mod_11_enrichment_server(
     id = "enrichment_table_cluster",
-    results = reactive({ pathway_table() }) # make it update
+    results = reactive({ pathway_table() }), # make it update
+    gmt_choices = reactive({ pre_process$gmt_choices() })
   )
     
     # Markdown report------------

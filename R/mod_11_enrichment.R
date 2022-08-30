@@ -10,6 +10,29 @@
 mod_11_enrichment_ui <- function(id){
   ns <- NS(id)
   tagList(
+
+    fluidRow(
+      column(
+        width = 4,
+        htmlOutput(outputId = ns("select_go_selector"))
+      ),
+      column(
+        width = 4,
+        checkboxInput(
+          inputId = ns("filtered_background"),
+          label = "Use filtered genes as background.",
+          value = FALSE
+        )
+      ),
+      column(
+        width = 4,
+        checkboxInput(
+          inputId = ns("remove_redudant"),
+          label = "Remove Redudant Gene Sets",
+          value = FALSE
+        )
+      )
+    ),
     fluidRow(
       column(
         width = 3, 
@@ -41,9 +64,29 @@ mod_11_enrichment_ui <- function(id){
 #'  Each element is a data frame. But the last column is a list,
 #' hosting genes.
 #' @noRd 
-mod_11_enrichment_server <- function(id, results){
+mod_11_enrichment_server <- function(id, results, gmt_choices){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
+
+        # GMT choices for enrichment ----------
+    output$select_go_selector <- renderUI({
+
+	    req(!is.null(gmt_choices()))
+
+      selected = gmt_choices()[1] # default, overwrite by below
+      if("GOBP" %in% gmt_choices()) {
+        selected <- "GOBP"
+      }
+      if("KEGG" %in% gmt_choices()) {
+        selected <- "KEGG"
+      }
+	    selectInput(
+        inputId = ns("select_go"),
+        label = NULL,
+        choices = gmt_choices(),
+        selected = selected
+      )
+    })
 
     full_table <- reactive({
       req(!is.null(results()))
