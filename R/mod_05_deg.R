@@ -1194,7 +1194,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     # Enrichment Tree -----------
     output$enrichment_tree <- renderPlot({
       req(!is.null(go_table()))
-	    
+
       enrichment_plot(
         go_table = go_table(),
         45

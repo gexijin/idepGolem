@@ -54,7 +54,8 @@ mod_11_enrichment_ui <- function(id){
         )
       )
     ),
-    tableOutput(ns("enrichment_table"))
+    tableOutput(ns("show_enrichment")),
+    plotOutput(ns("enrichment_tree"))
   )
 }
     
@@ -106,13 +107,13 @@ mod_11_enrichment_server <- function(
         "enrichment.csv"
       },
       content = function(file) {
-        write.csv(full_table(), file)
+        write.csv(enrichment_dataframe(), file)
       }
     )
 
 
     # Enrichment Analysis ----------
-    # Gene sets reactive
+    # returns a list object
     pathway_table <- reactive({
       req(!is.null(gene_lists()))
       shinybusy::show_modal_spinner(
@@ -125,7 +126,6 @@ mod_11_enrichment_server <- function(
 
         # disregard user selection use clusters for enrichment
       for (i in 1:length(gene_lists())) {
-
         gene_names_query <- gene_lists()[[i]]
         req(!is.null(input$select_go))
         gene_sets <- read_pathway_sets(
@@ -160,7 +160,8 @@ mod_11_enrichment_server <- function(
       return(pathway_info)
     })
 
-    full_table <- reactive({
+    # returns a data frame
+    enrichment_dataframe <- reactive({
       req(!is.null(pathway_table()))
 
       results_all <- do.call(rbind,
@@ -187,14 +188,65 @@ mod_11_enrichment_server <- function(
           ]
         }
       }
+      return(results_all)
     })
 
-    output$enrichment_table <- renderTable({
-      if(is.null(full_table())) {
+    # returns a data frame
+    enrichment_dataframe2 <- reactive({
+      req(!is.null(pathway_table()))
+
+      results_all <- do.call(rbind,
+        #combine multiple data frames that are elements of a list
+        lapply(
+          names(pathway_table()),
+          function(x) {
+            if(ncol(pathway_table()[[x]]) == 1) {
+              return(NULL)
+            }
+            df1 <- pathway_table()[[x]]
+            df1$group <- x
+            return(df1)
+          }
+        )
+      )
+
+      if(!is.null(results_all)){
+        if(ncol(results_all) > 1) {
+          results_all <- results_all[,
+            c("group",
+              colnames(results_all)[1:(ncol(results_all) - 1)]
+            )
+          ]
+        }
+      }
+      return(results_all)
+    })
+
+    # Enrichment Tree -----------
+    output$enrichment_tree <- renderPlot({
+      req(!is.null(enrichment_dataframe()))
+
+      df <- subset(
+        enrichment_dataframe2(),
+        select = c(group, FDR, nGenes, Pathway, Genes)
+      )
+      df$FDR <- as.numeric(df$FDR)
+      colnames(df) <- c(
+        "Direction", "adj_p_val", "Pathway.size", "Pathways",  "Genes"
+      )
+
+      enrichment_plot(
+        go_table = df,
+        45
+      )
+    })
+
+    output$show_enrichment <- renderTable({
+      if(is.null(enrichment_dataframe())) {
         return(as.data.frame("No significant enrichment found."))
       } 
 
-      res <- full_table()
+      res <- enrichment_dataframe()
       colnames(res) <- gsub("\\.", " ", colnames(res))
       if(input$sort_by == "Fold") {
         res <- res[order(res$group, -res$'Fold enriched'), ]

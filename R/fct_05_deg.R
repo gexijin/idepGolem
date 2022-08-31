@@ -3092,10 +3092,11 @@ enrichment_plot <- function(
   if(nrow(data) <=1 || is.null(data)) {
     return(NULL)
   }
-  
+
+  # this is unneccessary, but works
   gene_lists <- lapply(
     data$Genes,
-    function(x) unlist(strsplit(as.character(x), " "))
+    function(x) unlist(strsplit(as.character(x), ", "))
   )
   names(gene_lists) <- data$Pathways
 
