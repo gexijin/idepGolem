@@ -10,6 +10,29 @@
 mod_11_enrichment_ui <- function(id){
   ns <- NS(id)
   tagList(
+
+    fluidRow(
+      column(
+        width = 4,
+        htmlOutput(outputId = ns("select_go_selector"))
+      ),
+      column(
+        width = 4,
+        checkboxInput(
+          inputId = ns("filtered_background"),
+          label = "Use filtered genes as background.",
+          value = TRUE
+        )
+      ),
+      column(
+        width = 4,
+        checkboxInput(
+          inputId = ns("remove_redudant"),
+          label = "Remove Redudant Gene Sets",
+          value = FALSE
+        )
+      )
+    ),
     fluidRow(
       column(
         width = 3, 
@@ -41,22 +64,114 @@ mod_11_enrichment_ui <- function(id){
 #'  Each element is a data frame. But the last column is a list,
 #' hosting genes.
 #' @noRd 
-mod_11_enrichment_server <- function(id, results){
+mod_11_enrichment_server <- function(
+  id,
+  results, # pathway table with fdr, fold, etc
+  gmt_choices, # list of pathway categories "GOBP"
+  gene_lists, # list of genes, each element is a list
+  processed_data,
+  gene_info,
+  idep_data,
+  select_org,
+  converted,
+  gmt_file
+  ){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 
+        # GMT choices for enrichment ----------
+    output$select_go_selector <- renderUI({
+
+	    req(!is.null(gmt_choices()))
+
+      selected = gmt_choices()[1] # default, overwrite by below
+      if("GOBP" %in% gmt_choices()) {
+        selected <- "GOBP"
+      }
+      if("KEGG" %in% gmt_choices()) {
+        selected <- "KEGG"
+      }
+	    selectInput(
+        inputId = ns("select_go"),
+        label = NULL,
+        choices = gmt_choices(),
+        selected = selected
+      )
+    })
+
+
+
+    output$download_enrichment <- downloadHandler(
+      filename = function() {
+        "enrichment.csv"
+      },
+      content = function(file) {
+        write.csv(full_table(), file)
+      }
+    )
+
+
+    # Enrichment Analysis ----------
+    # Gene sets reactive
+    pathway_table <- reactive({
+      req(!is.null(gene_lists()))
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Running Analysis",
+        color = "#000000"
+      )
+
+      pathway_info <- list()
+
+        # disregard user selection use clusters for enrichment
+      for (i in 1:length(gene_lists())) {
+
+        gene_names_query <- gene_lists()[[i]]
+        req(!is.null(input$select_go))
+        gene_sets <- read_pathway_sets(
+          all_gene_names_query = gene_names_query,
+          converted = converted(), #n
+          go = input$select_go,
+          select_org = select_org(),
+          gmt_file = gmt_file(), #n
+          idep_data = idep_data,
+          gene_info = gene_info()
+        )
+
+        pathway_info[[names(gene_lists())[i]]] <- find_overlap(
+          pathway_table = gene_sets$pathway_table,
+          query_set = gene_sets$query_set,
+          total_genes = gene_sets$total_genes,
+          processed_data = processed_data(),
+          gene_info = gene_info(),
+          go = input$select_go,
+          idep_data = idep_data,
+          select_org = select_org(),
+          sub_pathway_files = gene_sets$pathway_files,
+          use_filtered_background = input$filtered_background,
+          reduced = input$remove_redudant
+        )
+
+      }
+      
+
+      shinybusy::remove_modal_spinner()
+
+      return(pathway_info)
+    })
+
     full_table <- reactive({
-      req(!is.null(results()))
+      req(!is.null(pathway_table()))
 
       results_all <- do.call(rbind,
         #combine multiple data frames that are elements of a list
         lapply(
-          names(results()),
+          names(pathway_table()),
           function(x) {
-            if(ncol(results()[[x]]) == 1) {
+            if(ncol(pathway_table()[[x]]) == 1) {
               return(NULL)
             }
-            df1 <- data_frame_with_list(results()[[x]])
+            df1 <- data_frame_with_list(pathway_table()[[x]])
             df1$group <- x
             return(df1)
           }
@@ -116,16 +231,6 @@ mod_11_enrichment_server <- function(id, results){
     hover = TRUE,
     sanitize.text.function = function(x) x
     )
-
-    output$download_enrichment <- downloadHandler(
-      filename = function() {
-        "enrichment.csv"
-      },
-      content = function(file) {
-        write.csv(full_table(), file)
-      }
-    )
-
 
   })
 

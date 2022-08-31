@@ -97,9 +97,6 @@ mod_09_network_ui <- function(id){
           "#network-top_genes_network{ width:100%;   margin-top:-12px}"
         ),
         br(),
-        htmlOutput(
-          outputId = ns("select_go_selector")
-        ),
         h5("The network file can be imported to", 
           a("VisANT", href = "http://visant.bu.edu/", target = "_blank"),
           " or ", 
@@ -158,24 +155,6 @@ mod_09_network_ui <- function(id){
           tabPanel(
             "Enrichment Table",
             h3("Enriched gene sets in selected module"),
-            fluidRow(
-              column(
-                width = 4,
-                checkboxInput(
-                  inputId = ns("filtered_background"), 
-                  label = "Use filtered data as background in enrichment (slow)", 
-                  value = TRUE
-                )
-              ),
-              column(
-                width = 4,
-                checkboxInput(
-                  inputId = ns("remove_redudant"),
-                  label = "Remove Redudant Gene Sets",
-                  value = FALSE
-                )
-              )
-            ),
             mod_11_enrichment_ui(ns("enrichment_table_cluster"))
           ),
           tabPanel(
@@ -233,20 +212,7 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab){
 			)
 	  })
 
-    # GMT choices for enrichment ----------
-    output$select_go_selector <- renderUI({
-	    req(!is.null(pre_process$gmt_choices()))
-      selected <- "GOBP"
-      if("KEGG" %in% pre_process$gmt_choices()) {
-        selected <- "KEGG"
-      }
-	    selectInput(
-        inputId = ns("select_go"),
-        label = "Select Geneset:",
-        choices = pre_process$gmt_choices(),
-        selected = selected
-      )
-    })
+
 
     wgcna <- reactive({
       req(!is.null(pre_process$data()))
@@ -275,7 +241,6 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab){
         select_wgcna_module = input$select_wgcna_module,
         wgcna = wgcna(),
         top_genes_network = input$top_genes_network,
-        select_go = input$select_go,
         select_org = pre_process$select_org(),
         all_gene_info = pre_process$all_gene_info(),
         edge_threshold = input$edge_threshold
@@ -291,7 +256,6 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab){
           select_wgcna_module = input$select_wgcna_module,
           wgcna = wgcna(),
           top_genes_network = input$top_genes_network,
-          select_go = input$select_go,
           select_org = pre_process$select_org(),
           all_gene_info = pre_process$all_gene_info(),
           edge_threshold = input$edge_threshold
@@ -312,7 +276,7 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab){
       )
     })
 
-    enrichment_network <- reactive({
+    gene_lists <- reactive({
       req(!is.null(network_query()))
 
       shinybusy::show_modal_spinner(
@@ -320,47 +284,32 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab){
         text = "Running Analysis",
         color = "#000000"
       )
-
-      gene_names_query <- dplyr::filter(
+      gene_lists <- list()
+      gene_lists[["Cluster"]] <- dplyr::filter(
         pre_process$all_gene_names(),
         ensembl_ID %in% network_query()
       )
 
-      req(!is.null(input$select_go))
-
-      gene_sets <- read_pathway_sets(
-        all_gene_names_query = gene_names_query,
-        converted = pre_process$converted(),
-        go = input$select_go,
-        select_org = pre_process$select_org(),
-        gmt_file = pre_process$gmt_file(),
-        idep_data = idep_data,
-        gene_info = pre_process$all_gene_info()
-      )
-
-      pathway_info <- list()
-      pathway_info[["Cluster"]] <- find_overlap(
-        pathway_table = gene_sets$pathway_table,
-        query_set = gene_sets$query_set,
-        total_genes = gene_sets$total_genes,
-        processed_data = pre_process$data(),
-        gene_info = pre_process$all_gene_info(),
-        go = input$select_go,
-        idep_data = idep_data,
-        select_org = pre_process$select_org(),
-        sub_pathway_files = gene_sets$pathway_files,
-        use_filtered_background = input$filtered_background,
-        reduced = input$remove_redudant
-      )
-
       shinybusy::remove_modal_spinner()
 
-      return(pathway_info)
+      return(gene_lists)
     })
 
   enrichment_table_cluster <- mod_11_enrichment_server(
     id = "enrichment_table_cluster",
     results = reactive({ enrichment_network() }) 
+  )
+
+    enrichment_table_cluster <- mod_11_enrichment_server(
+    id = "enrichment_table_cluster",
+    gmt_choices = reactive({ pre_process$gmt_choices() }),
+    gene_lists = reactive({ gene_lists() }),
+    processed_data = reactive({ pre_process$data()}),
+    gene_info = reactive({ pre_process$all_gene_info()}),
+    idep_data = idep_data,
+    select_org = reactive({ pre_process$select_org()}),
+    converted = reactive({ pre_process$converted() }),
+    gmt_file = reactive({ pre_process$gmt_file() })
   )
 
     output$scale_independence_plot <- renderPlot({

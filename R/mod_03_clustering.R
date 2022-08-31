@@ -208,8 +208,7 @@ mod_03_clustering_ui <- function(id) {
         downloadButton(
           outputId = ns("report"),
           label = "Generate Report"
-        ), 
-        
+        ),
 
         a(
           h5("Questions?", align = "right"),
@@ -266,36 +265,6 @@ mod_03_clustering_ui <- function(id) {
             ),
             conditionalPanel(
               condition = "input.cluster_enrichment == 1 ",
-              fluidRow(
-                column(
-                  width = 4,
-                  htmlOutput(outputId = ns("select_go_selector"))
-                ),
-                column(
-                  width = 4,
-                  checkboxInput(
-                    inputId = ns("filtered_background"),
-                    label = "Use filtered genes as background.",
-                    value = FALSE
-                  )
-                ),
-                column(
-                  width = 4,
-                  checkboxInput(
-                    inputId = ns("remove_redudant"),
-                    label = "Remove Redudant Gene Sets",
-                    value = FALSE
-                  )
-                ),
-                tags$style(
-                  type = 'text/css',
-                  "#clustering-min_set_size {width:100%; margin-top:-12px}"
-                ),
-                tags$style(
-                  type ='text/css',
-                  "#clustering-max_set_size {width:100%; margin-top:-12px}"
-                )
-              ),
               mod_11_enrichment_ui(ns("enrichment_table_cluster")),
               ns = ns
             )
@@ -436,21 +405,6 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       )
     })
 
-    # GMT choices for enrichment ----------
-    output$select_go_selector <- renderUI({
-	    req(!is.null(pre_process$gmt_choices()))
-      selected <- "GOBP"
-      if("KEGG" %in% pre_process$gmt_choices()) {
-        selected <- "KEGG"
-      }
-	    selectInput(
-        inputId = ns("select_go"),
-        label = NULL,
-        choices = pre_process$gmt_choices(),
-        selected = selected
-      )
-    })
-
     # Standard Deviation Density Plot ----------
     sd_density_plot <- reactive({
       req(!is.null(pre_process$data()))
@@ -582,19 +536,12 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       }
     })
 
-    # Enrichment Analysis ----------
-    # Gene sets reactive
-    pathway_table <- reactive({
+    # gene lists for enrichment analysis
+    gene_lists <- reactive({
       req(!is.null(input$select_gene_id))
       req(!is.null(input$ht_brush) || input$cluster_meth == 2)
-
-      shinybusy::show_modal_spinner(
-        spin = "orbit",
-        text = "Running Analysis",
-        color = "#000000"
-      )
       
-      pathway_info <- list()
+      gene_lists <- list()
       
       if (input$cluster_meth == 1) {
         gene_names <- merge_data(
@@ -604,34 +551,8 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         )
       
         # Only keep the gene names and scrap the data
-        gene_names_query <- dplyr::select_if(gene_names, is.character)
+        gene_lists[["Selection"]] <- dplyr::select_if(gene_names, is.character)
 
-        req(!is.null(pre_process$all_gene_names()))
-        req(!is.null(input$select_go))
-
-        gene_sets <- read_pathway_sets(
-          all_gene_names_query = gene_names_query,
-          converted = pre_process$converted(),
-          go = input$select_go,
-          select_org = pre_process$select_org(),
-          gmt_file = pre_process$gmt_file(),
-          idep_data = idep_data,
-          gene_info = pre_process$all_gene_info()
-        )
-
-        pathway_info[["Hierarchical_Selection"]] <- find_overlap(
-          pathway_table = gene_sets$pathway_table,
-          query_set = gene_sets$query_set,
-          total_genes = gene_sets$total_genes,
-          processed_data = pre_process$data(),
-          gene_info = pre_process$all_gene_info(),
-          go = input$select_go,
-          idep_data = idep_data,
-          select_org = pre_process$select_org(),
-          sub_pathway_files = gene_sets$pathway_files,
-          use_filtered_background = input$filtered_background,
-          reduced = input$remove_redudant
-        )
          # k-means-----------------------------------------------------
       } else if (input$cluster_meth == 2) {
         # Get the cluster number and Gene 
@@ -665,42 +586,13 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
           )
       
           # Only keep the gene names and scrap the data
-          gene_names_query <- dplyr::select_if(gene_names, is.character)
+         gene_lists[[paste0("Cluster ", i)]] <-
+          dplyr::select_if(gene_names, is.character)
 
-          req(!is.null(pre_process$all_gene_names()))
-          req(!is.null(input$select_go))
-
-          gene_sets <- read_pathway_sets(
-            all_gene_names_query = gene_names_query,
-            converted = pre_process$converted(),
-            go = input$select_go,
-            select_org = pre_process$select_org(),
-            gmt_file = pre_process$gmt_file(),
-            idep_data = idep_data,
-            gene_info = pre_process$all_gene_info()
-          )
-
-          pathway_sub_info <- find_overlap(
-            pathway_table = gene_sets$pathway_table,
-            query_set = gene_sets$query_set,
-            total_genes = gene_sets$total_genes,
-            processed_data = pre_process$data(),
-            gene_info = pre_process$all_gene_info(),
-            go = input$select_go,
-            idep_data = idep_data,
-            select_org = pre_process$select_org(),
-            sub_pathway_files = gene_sets$pathway_files,
-          use_filtered_background = input$filtered_background,
-          reduced = input$remove_redudant
-          )
-
-          pathway_info[[paste0("Cluster ", i)]] <- pathway_sub_info
         }
       }
 
-      shinybusy::remove_modal_spinner()
-
-      return(pathway_info)
+      return(gene_lists)
     })
 
     # Sample Tree ----------
@@ -799,7 +691,14 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
 
   enrichment_table_cluster <- mod_11_enrichment_server(
     id = "enrichment_table_cluster",
-    results = reactive({ pathway_table() }) # make it update
+    gmt_choices = reactive({ pre_process$gmt_choices() }),
+    gene_lists = reactive({ gene_lists() }),
+    processed_data = reactive({ pre_process$data()}),
+    gene_info = reactive({ pre_process$all_gene_info()}),
+    idep_data = idep_data,
+    select_org = reactive({ pre_process$select_org()}),
+    converted = reactive({ pre_process$converted() }),
+    gmt_file = reactive({ pre_process$gmt_file() })
   )
     
     # Markdown report------------
