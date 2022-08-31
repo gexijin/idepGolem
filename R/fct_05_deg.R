@@ -3075,6 +3075,7 @@ plot_deg_scatter <- function(
 #'  that are enriched share genes.
 enrichment_tree_plot <- function(
   go_table,
+  group,
   right_margin = 10
 ) {
   # a program for ploting enrichment results by highlighting the similarities among terms
@@ -3093,6 +3094,10 @@ enrichment_tree_plot <- function(
     return(NULL)
   }
 
+  # only use selected group
+  if(group != "All Groups") {
+    data <- data[data$Direction == group, ]
+  }
   # this is unneccessary, but works
   gene_lists <- lapply(
     data$Genes,

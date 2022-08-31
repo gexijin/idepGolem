@@ -4,7 +4,7 @@
 \alias{enrichment_tree_plot}
 \title{Dendogram of enriched pathways}
 \usage{
-enrichment_tree_plot(go_table, right_margin = 10)
+enrichment_tree_plot(go_table, group, right_margin = 10)
 }
 \arguments{
 \item{go_table}{Enrichment table from the pathway analysis

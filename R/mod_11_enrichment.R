@@ -77,6 +77,7 @@ mod_11_enrichment_ui <- function(id){
       ),
       tabPanel(
         title = "Tree",
+        htmlOutput(outputId = ns("select_cluster_tree")), 
         plotOutput(ns("enrichment_tree"))
       ),
       tabPanel(
@@ -85,7 +86,7 @@ mod_11_enrichment_ui <- function(id){
         fluidRow(
           column(
             width = 3,
-            htmlOutput(outputId = ns("select_cluster_selector"))
+            htmlOutput(outputId = ns("select_cluster_network"))
           ),
           column(
             width = 1,
@@ -180,25 +181,43 @@ mod_11_enrichment_server <- function(
     })
 
 
-    output$select_cluster_selector <- renderUI({
+    output$select_cluster_network <- renderUI({
 	    req(!is.null(enrichment_dataframe()))
       choices <- sort(unique(enrichment_dataframe()$group))
       selected <- choices[1]
       if(length(choices) > 1) {
         choices <- c("All Groups", choices)
         # if two groups, defaults to both
-        if(length(choices) == 2) {
+        if(length(choices) == 3) {
           selected <- choices[1]
         }
       }
 	    selectInput(
-        inputId = ns("select_cluster"),
+        inputId = ns("select_cluster_network"),
         label = NULL,
         choices = choices,
         selected = selected
       )
     })
 
+    output$select_cluster_tree <- renderUI({
+	    req(!is.null(enrichment_dataframe()))
+      choices <- sort(unique(enrichment_dataframe()$group))
+      selected <- choices[1]
+      if(length(choices) > 1) {
+        choices <- c("All Groups", choices)
+        # if two groups, defaults to both
+        if(length(choices) == 3) {
+          selected <- choices[1]
+        }
+      }
+	    selectInput(
+        inputId = ns("select_cluster_tree"),
+        label = NULL,
+        choices = choices,
+        selected = selected
+      )
+    })
 
     output$download_enrichment <- downloadHandler(
       filename = function() {
@@ -334,19 +353,22 @@ mod_11_enrichment_server <- function(
     # Enrichment Tree -----------
     output$enrichment_tree <- renderPlot({
       req(!is.null(enrichment_dataframe_for_tree()))
+       req(!is.null(input$select_cluster_tree))
       enrichment_tree_plot(
         go_table = enrichment_dataframe_for_tree(),
-        45
+        group = input$select_cluster_tree,
+        right_margin = 45
       )
     })
+
     # Define a Network
     network_data_deg <- reactive({
       req(!is.null(enrichment_dataframe_for_tree()))
-      req(!is.null(input$select_cluster))
+      req(!is.null(input$select_cluster_network))
 
       network_data(
         network = enrichment_dataframe_for_tree(),
-        up_down_reg_deg = input$select_cluster,
+        up_down_reg_deg = input$select_cluster_network,
         wrap_text_network_deg = input$wrap_text_network_deg,
         layout_vis_deg = input$layout_vis_deg,
         edge_cutoff_deg = input$edge_cutoff_deg
