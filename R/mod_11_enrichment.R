@@ -55,7 +55,65 @@ mod_11_enrichment_ui <- function(id){
       )
     ),
     tableOutput(ns("show_enrichment")),
-    plotOutput(ns("enrichment_tree"))
+    plotOutput(ns("enrichment_tree")),
+
+    h5("Connected gene sets share more genes. 
+        Color of node correspond to adjusted Pvalues."),
+    fluidRow(
+      column(
+        width = 2,
+        actionButton(
+          inputId = ns("layout_vis_deg"),
+          label = "Change layout"
+        )
+      ),
+      column(
+        width = 1,
+        h5("Cutoff:"),
+        align="right"
+      ),
+      column(
+        width = 2,
+        numericInput(
+          inputId = ns("edge_cutoff_deg"),
+          label = NULL,
+          value = 0.30,
+          min = 0,
+          max = 1,
+          step = .1
+        ),
+        align="left"
+      ),
+      column(
+        width = 2,
+        checkboxInput(
+          inputId = ns("wrap_text_network_deg"),
+          label = "Wrap text",
+          value = TRUE
+        )
+      )
+    ),
+    selectInput(
+      inputId = ns("up_down_reg_deg"),
+      NULL,
+      choices = c(
+        "Both Up & Down" = "Both",
+        "Up regulated" = "Up",
+        "Down regulated" = "Down"
+      )
+    ),
+    h6(
+      "Two pathways (nodes) are connected if they share 30% (default, adjustable) or more genes.
+      Green and red represents down- and up-regulated pathways. You can move the nodes by 
+      dragging them, zoom in and out by scrolling, and shift the entire network by click on an 
+      empty point and drag. Darker nodes are more significantly enriched gene sets. Bigger nodes
+      represent larger gene sets. Thicker edges represent more overlapped genes."
+    ),
+    visNetwork::visNetworkOutput(
+      outputId = ns("vis_network_deg"),
+      height = "800px",
+      width = "100%"
+    )
   )
 }
     
@@ -191,8 +249,9 @@ mod_11_enrichment_server <- function(
       return(results_all)
     })
 
-    # returns a data frame
-    enrichment_dataframe2 <- reactive({
+    # returns a data frame, but last column stores genes as lists
+    # this is for tree and network plots
+    enrichment_dataframe_for_tree <- reactive({
       req(!is.null(pathway_table()))
 
       results_all <- do.call(rbind,
@@ -219,25 +278,46 @@ mod_11_enrichment_server <- function(
           ]
         }
       }
+
+      results_all <- subset(
+        results_all,
+        select = c(group, FDR, nGenes, Pathway, Genes)
+      )
+      results_all$FDR <- as.numeric(results_all$FDR)
+      colnames(results_all) <- c(
+        "Direction", "adj_p_val", "Pathway.size", "Pathways",  "Genes"
+      )
+
       return(results_all)
     })
 
     # Enrichment Tree -----------
     output$enrichment_tree <- renderPlot({
-      req(!is.null(enrichment_dataframe()))
-
-      df <- subset(
-        enrichment_dataframe2(),
-        select = c(group, FDR, nGenes, Pathway, Genes)
-      )
-      df$FDR <- as.numeric(df$FDR)
-      colnames(df) <- c(
-        "Direction", "adj_p_val", "Pathway.size", "Pathways",  "Genes"
-      )
-
+      req(!is.null(enrichment_dataframe_for_tree()))
       enrichment_plot(
-        go_table = df,
+        go_table = enrichment_dataframe_for_tree(),
         45
+      )
+    })
+    # Define a Network
+    network_data_deg <- reactive({
+      req(!is.null(enrichment_dataframe_for_tree()))
+
+      network_data(
+        network = enrichment_dataframe_for_tree(),
+        up_down_reg_deg = input$up_down_reg_deg,
+        wrap_text_network_deg= input$wrap_text_network_deg,
+        layout_vis_deg = input$layout_vis_deg,
+        edge_cutoff_deg = input$edge_cutoff_deg
+      )
+    })
+
+    # Interactive vis network plot
+    output$vis_network_deg <- visNetwork::renderVisNetwork({
+      req(!is.null(network_data_deg()))
+      
+      vis_network_plot(
+        network_data = network_data_deg()
       )
     })
 
