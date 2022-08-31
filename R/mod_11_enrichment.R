@@ -270,7 +270,6 @@ mod_11_enrichment_server <- function(
         )
 
       }
-      
 
       shinybusy::remove_modal_spinner()
 
@@ -378,7 +377,7 @@ mod_11_enrichment_server <- function(
     # Interactive vis network plot
     output$vis_network_deg <- visNetwork::renderVisNetwork({
       req(!is.null(network_data_deg()))
-      
+
       vis_network_plot(
         network_data = network_data_deg()
       )
@@ -416,7 +415,6 @@ mod_11_enrichment_server <- function(
       res <- subset(res, select = -URL)
       colnames(res)[ncol(res)] <- "Pathway (Click for more info)"
       return(res)
-
     },
     digits = -1,
     spacing = "s",
