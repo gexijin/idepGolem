@@ -19,53 +19,55 @@ mod_11_enrichment_ui <- function(id){
       ),
       column(
         width = 4,
-        actionButton(ns("customize_button"), "Customize")
+        htmlOutput(outputId = ns("select_cluster"))
       ),
       column(
         width = 4,
-        shinyBS::bsModal(
-          id = ns("modalExample"),
-          title = "Options for enrichment analysis",
-          trigger = ns("customize_button"),
-          size = "small",
-          fluidRow(
-            column(
-              width = 6,
-              selectInput(
-                inputId = ns("sort_by"),
-                label = NULL,
-                choices = list(
-                  "Sort by FDR" = "FDR",
-                  "Sort by fold enriched" = "Fold"
-                ),
-                selected = "FDR"
-              )
+        actionButton(ns("customize_button"), "Customize")
+      )
+
+    ),
+    shinyBS::bsModal(
+      id = ns("modalExample"),
+      title = "Options for enrichment analysis",
+      trigger = ns("customize_button"),
+      size = "small",
+      fluidRow(
+        column(
+          width = 6,
+          selectInput(
+            inputId = ns("sort_by"),
+            label = NULL,
+            choices = list(
+              "Sort by FDR" = "FDR",
+              "Sort by fold enriched" = "Fold"
             ),
-            column(
-              width = 6,
-              downloadButton(
-                outputId = ns("download_enrichment"),
-                label = "Enrichment"
-              )
-            )
-          ),
-          fluidRow(
-            column(
-              width = 6,
-              checkboxInput(
-                inputId = ns("filtered_background"),
-                label = "Use filtered genes as background.",
-                value = TRUE
-              )
-            ),
-            column(
-              width = 6,
-              checkboxInput(
-                inputId = ns("remove_redudant"),
-                label = "Remove Redudant Gene Sets",
-                value = FALSE
-              )
-            )
+            selected = "FDR"
+          )
+        ),
+        column(
+          width = 6,
+          downloadButton(
+            outputId = ns("download_enrichment"),
+            label = "Enrichment"
+          )
+        )
+      ),
+      fluidRow(
+        column(
+          width = 6,
+          checkboxInput(
+            inputId = ns("filtered_background"),
+            label = "Use filtered genes as background.",
+            value = TRUE
+          )
+        ),
+        column(
+          width = 6,
+          checkboxInput(
+            inputId = ns("remove_redudant"),
+            label = "Remove Redudant Gene Sets",
+            value = FALSE
           )
         )
       )
@@ -77,17 +79,12 @@ mod_11_enrichment_ui <- function(id){
       ),
       tabPanel(
         title = "Tree",
-        htmlOutput(outputId = ns("select_cluster_tree")), 
         plotOutput(ns("enrichment_tree"))
       ),
       tabPanel(
         title = "Network",
         br(),
         fluidRow(
-          column(
-            width = 3,
-            htmlOutput(outputId = ns("select_cluster_network"))
-          ),
           column(
             width = 1,
             h5("Cutoff:"),
@@ -181,7 +178,7 @@ mod_11_enrichment_server <- function(
     })
 
 
-    output$select_cluster_network <- renderUI({
+    output$select_cluster <- renderUI({
 	    req(!is.null(enrichment_dataframe()))
       choices <- sort(unique(enrichment_dataframe()$group))
       selected <- choices[1]
@@ -193,31 +190,13 @@ mod_11_enrichment_server <- function(
         }
       }
 	    selectInput(
-        inputId = ns("select_cluster_network"),
+        inputId = ns("select_cluster"),
         label = NULL,
         choices = choices,
         selected = selected
       )
     })
 
-    output$select_cluster_tree <- renderUI({
-	    req(!is.null(enrichment_dataframe()))
-      choices <- sort(unique(enrichment_dataframe()$group))
-      selected <- choices[1]
-      if(length(choices) > 1) {
-        choices <- c("All Groups", choices)
-        # if two groups, defaults to both
-        if(length(choices) == 3) {
-          selected <- choices[1]
-        }
-      }
-	    selectInput(
-        inputId = ns("select_cluster_tree"),
-        label = NULL,
-        choices = choices,
-        selected = selected
-      )
-    })
 
     output$download_enrichment <- downloadHandler(
       filename = function() {
@@ -352,10 +331,10 @@ mod_11_enrichment_server <- function(
     # Enrichment Tree -----------
     output$enrichment_tree <- renderPlot({
       req(!is.null(enrichment_dataframe_for_tree()))
-       req(!is.null(input$select_cluster_tree))
+       req(!is.null(input$select_cluster))
       enrichment_tree_plot(
         go_table = enrichment_dataframe_for_tree(),
-        group = input$select_cluster_tree,
+        group = input$select_cluster,
         right_margin = 45
       )
     })
@@ -363,11 +342,11 @@ mod_11_enrichment_server <- function(
     # Define a Network
     network_data_deg <- reactive({
       req(!is.null(enrichment_dataframe_for_tree()))
-      req(!is.null(input$select_cluster_network))
+      req(!is.null(input$select_cluster))
 
       network_data(
         network = enrichment_dataframe_for_tree(),
-        up_down_reg_deg = input$select_cluster_network,
+        up_down_reg_deg = input$select_cluster,
         wrap_text_network_deg = input$wrap_text_network_deg,
         layout_vis_deg = input$layout_vis_deg,
         edge_cutoff_deg = input$edge_cutoff_deg
