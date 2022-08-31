@@ -390,8 +390,13 @@ mod_11_enrichment_server <- function(
         res$'Pathway',
         res$URL
       )
-      res <- subset(res, select = -Genes)
-      res <- subset(res, select = -URL)
+      res <- subset(res, select = - Genes)
+      res <- subset(res, select = - URL)
+
+      #remove pathway size
+      colnames(res) <- gsub("Pathway size", "PathwaySize", colnames(res))
+      res <- subset(res, select = - PathwaySize)
+
       colnames(res)[ncol(res)] <- "Pathway (Click for more info)"
       return(res)
     },
