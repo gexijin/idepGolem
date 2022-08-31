@@ -195,34 +195,22 @@ mod_05_deg_2_ui <- function(id) {
         # Heatmap customizing features ----------
         conditionalPanel(
           condition = "input.step_2 == 'Heatmap'",
-          fluidRow(
-            column(width = 3, h5("Color:")),
-            column(
-              width = 9,
-              selectInput(
-                inputId = ns("heatmap_color_select"),
-                label = NULL,
-                choices = "green-black-red",
-                width = "100%"
-              )
-            )
+          selectInput(
+            inputId = ns("heatmap_color_select"),
+            label = "Color Scale:",
+            choices = "green-black-red",
+            width = "100%"
           ),
           ns = ns
         ),
         conditionalPanel(
           condition = "input.step_2 == 'Volcano Plot' | 
             input.step_2 == 'MA Plot'", 
-          fluidRow(
-            column(width = 3, h5("Plot colors:")), 
-            column(
-              width = 9, 
-              selectInput(
-                inputId = ns("plot_color_select"), 
-                label = NULL, 
-                choices = "Red-Green"
-              )
-            )
-          ), 
+          selectInput(
+            inputId = ns("plot_color_select"), 
+            label = NULL, 
+            choices = "Red-Green"
+          ),
           ns = ns
         ),
         width = 2
