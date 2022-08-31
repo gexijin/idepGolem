@@ -36,9 +36,9 @@ mod_03_clustering_ui <- function(id) {
           input.cluster_panels == 'Gene SD Distribution' ",
 
           fluidRow(
-            column(width = 8, h5("Top variable genes to include")),
+            column(width = 6, h5("Genes to include")),
             column(
-              width = 4,
+              width = 6,
               numericInput(
                 inputId = ns("n_genes"), 
                 label = NULL, 
@@ -90,48 +90,7 @@ mod_03_clustering_ui <- function(id) {
 
 
 
-        # Heatmap customizing features ----------
-        conditionalPanel(
-          condition = "input.cluster_panels == 'Hierarchical' ",
-          
-          # Gene ID Selection -----------
-          fluidRow(
-            column(width = 7, h5("ID type when zoom in")),
-            column(
-              width = 5,
-              selectInput(
-                inputId = ns("select_gene_id"),
-                label = NULL,
-                choices = NULL,
-                selected = NULL
-              )
-            )
-          ),
-          
-          # Sample coloring bar -----------
 
-          fluidRow(
-            column(width = 6, h5("Samples category")),
-            column(
-              width = 6,
-              htmlOutput(ns("list_factors_heatmap"))
-            )
-          ),
-          fluidRow(
-            column(width = 5, h5("Heatmap color")),
-            column(
-              width = 7,
-              selectInput(
-                inputId = ns("heatmap_color_select"),
-                label = NULL,
-                choices = "green-black-red",
-                width = "100%"
-              )
-            )
-          ),
-
-          ns = ns
-        ),
 
         # Clustering methods for hierarchical ----------
         conditionalPanel(
@@ -212,6 +171,47 @@ mod_03_clustering_ui <- function(id) {
             label = "Show Row Dendogram",
             value = TRUE
           ),
+          ns = ns
+        ),
+        # Heatmap customizing features ----------
+        conditionalPanel(
+          condition = "input.cluster_panels == 'Hierarchical' ",
+          
+          # Gene ID Selection -----------
+          fluidRow(
+            column(width = 7, h5("ID type")),
+            column(
+              width = 5,
+              selectInput(
+                inputId = ns("select_gene_id"),
+                label = NULL,
+                choices = NULL,
+                selected = NULL
+              )
+            )
+          ),
+          
+          # Sample coloring bar -----------
+
+          fluidRow(
+            column(width = 6, h5("Samples category")),
+            column(
+              width = 6,
+              htmlOutput(ns("list_factors_heatmap"))
+            )
+          ),
+          fluidRow(
+            column(width = 5, h5("Heatmap color")),
+            column(
+              width = 7,
+              selectInput(
+                inputId = ns("heatmap_color_select"),
+                label = NULL,
+                choices = "green-black-red",
+                width = "100%"
+              )
+            )
+          ),
           br(),
           downloadButton(
             outputId = ns("download_heatmap_data"),
@@ -219,7 +219,6 @@ mod_03_clustering_ui <- function(id) {
           ),
           ns = ns
         ),
-
         downloadButton(
           outputId = ns("report"),
           label = "Generate Report"
