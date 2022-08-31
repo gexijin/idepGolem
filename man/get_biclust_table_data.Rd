@@ -4,7 +4,7 @@
 \alias{get_biclust_table_data}
 \title{Table of biclustering data}
 \usage{
-get_biclust_table_data(res, biclust_data, select_go, select_org, all_gene_info)
+get_biclust_table_data(res, biclust_data, select_org, all_gene_info)
 }
 \description{
 Table of biclustering data

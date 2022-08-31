@@ -103,7 +103,6 @@ bicluster_summary_message <- function(
 get_biclust_table_data <- function(
   res,
   biclust_data,
-  select_go,
   select_org,
   all_gene_info
 ) {
@@ -111,8 +110,7 @@ get_biclust_table_data <- function(
     return(as.data.frame("No clusters found!")) 
   }
 		 
-	if(select_go == "ID not recognized!" | 
-		 select_org == "NEW" | 
+	if(select_org == "NEW" | 
 		 dim(all_gene_info)[1] == 1) {
 		biclust_genes <- as.data.frame(rownames(biclust_data))
 		colnames(biclust_genes) <- "Genes"

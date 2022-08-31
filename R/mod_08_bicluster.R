@@ -133,21 +133,6 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
     # Interactive heatmap environment
     biclust_env <- new.env()
 
-    # GMT choices for enrichment ----------
-    output$select_go_selector <- renderUI({
-	    req(!is.null(pre_process$gmt_choices()))
-      selected <- "GOBP"
-      if("KEGG" %in% pre_process$gmt_choices()) {
-        selected <- "KEGG"
-      }
-	    selectInput(
-        inputId = ns("select_go"),
-        label = NULL,
-        choices = pre_process$gmt_choices(),
-        selected = selected
-      )
-    })
-
     # all clusters
     biclustering <- reactive({
       req(!is.null(pre_process$data()))
@@ -329,12 +314,11 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
     # list of genes and symbols in the currently selected cluster
     genes_in_selected_cluster <- reactive({
       req(!is.null(biclust_data()))
-      req(!is.null(biclustering()) && !is.null(input$select_bicluster) && !is.null(input$select_go))
+      req(!is.null(biclustering()) && !is.null(input$select_bicluster))
 
       get_biclust_table_data(
         res = biclustering()$res,
         biclust_data = biclust_data(),
-        select_go = input$select_go,
         select_org = pre_process$select_org(),
         all_gene_info = pre_process$all_gene_info()
       )
@@ -343,7 +327,7 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
 
     output$gene_list_bicluster <- DT::renderDataTable({
       req(!is.null(biclust_data()) && !is.null(genes_in_selected_cluster()))
-      req(!is.null(biclustering()) && !is.null(input$select_bicluster) && !is.null(input$select_go))
+      req(!is.null(biclustering()) && !is.null(input$select_bicluster))
 
       DT::datatable(
         genes_in_selected_cluster(),
@@ -366,7 +350,7 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
     
     output$download_biclust_button <- renderUI({
       req(!is.null(biclust_data()) && !is.null(genes_in_selected_cluster()))
-      req(!is.null(biclustering()) && !is.null(input$select_bicluster) && !is.null(input$select_go))
+      req(!is.null(biclustering()) && !is.null(input$select_bicluster))
       downloadButton(
         outputId = ns("download_biclust"), 
         "All genes"
