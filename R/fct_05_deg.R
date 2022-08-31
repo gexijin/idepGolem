@@ -3086,6 +3086,9 @@ enrichment_tree_plot <- function(
   #Down regulated  2.55E-57  135  NcRNA metabolic process  23  Nsun5 Nhp2 Rrp15 Emg1 Ddx56 Rsl1d1
   # Up or down regulation is color-coded
   # gene set size if represented by the size of marker
+
+  req(!is.null(go_table))
+  req(!is.null(group))
   data <- go_table
   if(class(data) != "data.frame") {
     return(NULL)
