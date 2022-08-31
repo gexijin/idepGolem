@@ -526,7 +526,7 @@ enrichment_network <- function(go_table,
                                edge_cutoff = 5) {
   gene_lists <- lapply(go_table$Genes, function(x) unlist(strsplit(as.character(x), " ")))
   names(gene_lists) <- go_table$Pathways
-  go_table$Direction <- gsub(" .*", "", go_table$Direction)
+#  go_table$Direction <- gsub(" .*", "", go_table$Direction)
 
   g <- enrich_net(
     data = go_table,
@@ -538,6 +538,7 @@ enrichment_network <- function(go_table,
     degree_cutoff = 0,
     n = 200,
     group = go_table$Direction,
+    group_color = gg_color_hue(2 + length(unique(go_table$Direction))),
     vertex.label.cex = 1,
     vertex.label.color = "black",
     show_legend = FALSE,
@@ -639,7 +640,7 @@ enrich_net <- function(data,
 
   for (i in 1:length(group_level)) {
     index <- data[, "Group"] == group_level[i]
-    igraph::V(g)$shape[index] <- group_shape[i]
+    igraph::V(g)$shape[index] <- group_shape[1] #group_shape[i]
     group_p_values <- p_values[index]
 
     if (length(group_p_values) > 0) {

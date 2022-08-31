@@ -557,7 +557,15 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       } else if (input$cluster_meth == 2) {
         # Get the cluster number and Gene 
 
+        req(heatmap_data())
+        req(input$k_clusters)
+        req(input$select_gene_id)
+        req(shiny_env$ht)
+        
         row_ord <- ComplexHeatmap::row_order(shiny_env$ht)
+
+        req(!is.null(names(row_ord)))
+
         for (i in 1:length(row_ord)) {
           if (i == 1) {
           clusts <- data.frame(
