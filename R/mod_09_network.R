@@ -153,8 +153,8 @@ mod_09_network_ui <- function(id){
             )
           ),
           tabPanel(
-            "Enrichment Table",
-            h3("Enriched gene sets in selected module"),
+            "Enrichment",
+            h4("Enriched pathways in the selected module"),
             mod_11_enrichment_ui(ns("enrichment_table_cluster"))
           ),
           tabPanel(

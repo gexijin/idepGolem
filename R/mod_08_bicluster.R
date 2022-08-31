@@ -98,6 +98,7 @@ mod_08_bicluster_ui <- function(id){
           ),
           tabPanel(
             "Enrichment",
+            h4("Enriched pathways in the selected cluster:"),
             mod_11_enrichment_ui(ns("enrichment_table_cluster"))
 
           ),

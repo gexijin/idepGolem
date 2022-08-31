@@ -3066,15 +3066,17 @@ plot_deg_scatter <- function(
 #' Create a dendogram plot of the enriched pathways to illustrate
 #' which paths contain similar genes.
 #' 
-#' @param go_table Enrichment table from the pathway analysis
-#'  functions
+#' @param go_table Enrichment table from the pathway analysis, the last column Genes
+#' contains lists
+#' @param group  Selected group int the Direction column 
 #' @param right_margin Control the size of the dendogram labels
 #' 
 #' @export
 #' @return A dendogram plot that shows the users what pathways are
 #'  that are enriched share genes.
-enrichment_plot <- function(
+enrichment_tree_plot <- function(
   go_table,
+  group,
   right_margin = 10
 ) {
   # a program for ploting enrichment results by highlighting the similarities among terms
@@ -3092,10 +3094,15 @@ enrichment_plot <- function(
   if(nrow(data) <=1 || is.null(data)) {
     return(NULL)
   }
-  
+
+  # only use selected group
+  if(group != "All Groups") {
+    data <- data[data$Direction == group, ]
+  }
+  # this is unneccessary, but works
   gene_lists <- lapply(
     data$Genes,
-    function(x) unlist(strsplit(as.character(x), " "))
+    function(x) unlist(strsplit(as.character(x), ", "))
   )
   names(gene_lists) <- data$Pathways
 
@@ -3162,43 +3169,6 @@ enrichment_plot <- function(
   )
 }
 
-#' Create a single table from up and down enrichments
-#' 
-#' Use the enrichment table from the down genes analysis and
-#' the up genes analysis to creeate a single table.
-#' 
-#' @param up_enrich_data Enrichment table from the up-regulated
-#'  genes pathway analysis
-#' @param down_enrich_data Enrichment table from the down-regulated
-#'  genes pathway analysis.
-#' 
-#' @export
-#' @return A combined enrichment analysis table.
-go_table_data <- function(
- up_enrich_data,
- down_enrich_data 
-) {
-  if(nrow(up_enrich_data) >= 2 || is.null(up_enrich_data)) {
-    up_data <- as.data.frame(up_enrich_data)
-    up_data$direction <- rep("Up", nrow(up_enrich_data))
-    up_data <- up_data[, c(8, 1, 2, 5, 7)]
-    colnames(up_data) <- c("Direction", "adj_p_val", "n_genes", "Pathways", "Genes")
-  } else {
-    up_data <- NULL
-  }
-  if(nrow(down_enrich_data) >= 2 || is.null(down_enrich_data)) {
-    down_data <- as.data.frame(down_enrich_data)
-    down_data$direction <- rep("Down", nrow(down_enrich_data))
-    down_data <- down_data[, c(8, 1, 2, 5, 7)]
-    colnames(down_data) <- c("Direction", "adj_p_val", "n_genes", "Pathways", "Genes")
-  } else {
-    down_data <- NULL
-  }
-  data <- rbind(up_data, down_data)
-
-  return(data)
-}
-
 #' VisNetwork data
 #' 
 #' Create VisNetwork data that can be inputted in the vis_network_plot
@@ -3220,7 +3190,7 @@ network_data <- function(
   layout_vis_deg,
   edge_cutoff_deg
 ) {
-  if(up_down_reg_deg != "Both") {
+  if(up_down_reg_deg != "All Groups") {
     network <- network[network$Direction == up_down_reg_deg, ]
   }
   if(dim(network)[1] == 0) {
