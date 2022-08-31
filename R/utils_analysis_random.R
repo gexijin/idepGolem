@@ -524,6 +524,7 @@ wrap_strings <- function(vector_of_strings,
 enrichment_network <- function(go_table,
                                layout_button = 0,
                                edge_cutoff = 5) {
+  req(!is.null(go_table))
   gene_lists <- lapply(go_table$Genes, function(x) unlist(strsplit(as.character(x), " ")))
   names(gene_lists) <- go_table$Pathways
 #  go_table$Direction <- gsub(" .*", "", go_table$Direction)

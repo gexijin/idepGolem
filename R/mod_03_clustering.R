@@ -15,19 +15,40 @@ mod_03_clustering_ui <- function(id) {
 
       # Heatmap Panel Sidebar ----------
       sidebarPanel(
-        width = 3,
+        width = 4,
+        # Select Clustering Method ----------
+        conditionalPanel(
+          condition = "input.cluster_panels == 'Hierarchical' | 
+            input.cluster_panels == 'sample_tab'",
+          selectInput(
+            inputId = ns("cluster_meth"),
+            label = NULL,
+            choices = list(
+              "Hierarchical Clustering" = 1,
+              "k-Means Clustering" = 2
+            ),
+            selected = 1
+          ),
+          ns = ns
+        ),
         conditionalPanel(
           condition = "input.cluster_panels == 'Hierarchical' | 
           input.cluster_panels == 'Gene SD Distribution' ",
-          
-          numericInput(
-            inputId = ns("n_genes"), 
-            label = h4("Top n most variable genes to include:"), 
-            min = 10, 
-            max = 12000, 
-            value = 1000, 
-            step = 10
-          ), 
+
+          fluidRow(
+            column(width = 8, h5("Top variable genes to include")),
+            column(
+              width = 4,
+              numericInput(
+                inputId = ns("n_genes"), 
+                label = NULL, 
+                min = 10,
+                max = 12000,
+                value = 1000,
+                step = 10
+              )
+            )
+          ),
           ns = ns
         ),
         
@@ -67,45 +88,39 @@ mod_03_clustering_ui <- function(id) {
 
       
 
-        # Select Clustering Method ----------
-        conditionalPanel(
-          condition = "input.cluster_panels == 'Hierarchical' | 
-            input.cluster_panels == 'sample_tab'",
-          
-          selectInput(
-            inputId = ns("cluster_meth"),
-            label = "Select Clustering Method:",
-            choices = list(
-              "Hierarchical" = 1,
-              "k-Means" = 2
-            ),
-            selected = 1
-          ),
 
-          ns = ns
-        ),
 
         # Heatmap customizing features ----------
         conditionalPanel(
           condition = "input.cluster_panels == 'Hierarchical' ",
           
           # Gene ID Selection -----------
-          selectInput(
-            inputId = ns("select_gene_id"),
-            label = "Gene ID type on Zoomed heatmap:",
-            choices = NULL,
-            selected = NULL
+          fluidRow(
+            column(width = 7, h5("ID type when zoom in")),
+            column(
+              width = 5,
+              selectInput(
+                inputId = ns("select_gene_id"),
+                label = NULL,
+                choices = NULL,
+                selected = NULL
+              )
+            )
           ),
           
           # Sample coloring bar -----------
-          htmlOutput(ns("list_factors_heatmap")),
 
-          strong("Customize heatmap:"),
           fluidRow(
-            br(),
-            column(width = 3, h5("Color")),
+            column(width = 6, h5("Samples category")),
             column(
-              width = 9,
+              width = 6,
+              htmlOutput(ns("list_factors_heatmap"))
+            )
+          ),
+          fluidRow(
+            column(width = 5, h5("Heatmap color")),
+            column(
+              width = 7,
               selectInput(
                 inputId = ns("heatmap_color_select"),
                 label = NULL,
@@ -400,7 +415,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     output$list_factors_heatmap <- renderUI({
       selectInput(
         inputId = ns("select_factors_heatmap"),
-        label = "Sample Color Bar:",
+        label = NULL,
         choices = c("Sample_Name", colnames(pre_process$sample_info()))
       )
     })
