@@ -8,7 +8,6 @@ get_network_plot(
   select_wgcna_module,
   wgcna,
   top_genes_network,
-  select_go,
   select_org,
   all_gene_info,
   edge_threshold
@@ -21,8 +20,6 @@ options can be found with the \code{get_wgcna_modules} function}
 \item{wgcna}{List returned from the \code{get_wgcna}}
 
 \item{top_genes_network}{Number of genes to include in the network plot}
-
-\item{select_go}{Portion of the database to use in enrichment querying}
 
 \item{select_org}{Organism the expression data is for}
 
