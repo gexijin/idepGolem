@@ -7,8 +7,10 @@
 enrichment_tree_plot(go_table, group, right_margin = 10)
 }
 \arguments{
-\item{go_table}{Enrichment table from the pathway analysis
-functions}
+\item{go_table}{Enrichment table from the pathway analysis, the last column Genes
+contains lists}
+
+\item{group}{Selected group int the Direction column}
 
 \item{right_margin}{Control the size of the dendogram labels}
 }
