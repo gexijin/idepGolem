@@ -3073,7 +3073,7 @@ plot_deg_scatter <- function(
 #' @export
 #' @return A dendogram plot that shows the users what pathways are
 #'  that are enriched share genes.
-enrichment_plot <- function(
+enrichment_tree_plot <- function(
   go_table,
   right_margin = 10
 ) {
@@ -3221,7 +3221,7 @@ network_data <- function(
   layout_vis_deg,
   edge_cutoff_deg
 ) {
-  if(up_down_reg_deg != "Both") {
+  if(up_down_reg_deg != "All Groups") {
     network <- network[network$Direction == up_down_reg_deg, ]
   }
   if(dim(network)[1] == 0) {
