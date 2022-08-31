@@ -15,7 +15,7 @@ mod_03_clustering_ui <- function(id) {
 
       # Heatmap Panel Sidebar ----------
       sidebarPanel(
-        width = 4,
+        width = 3,
         # Select Clustering Method ----------
         conditionalPanel(
           condition = "input.cluster_panels == 'Hierarchical' | 
@@ -36,9 +36,9 @@ mod_03_clustering_ui <- function(id) {
           input.cluster_panels == 'Gene SD Distribution' ",
 
           fluidRow(
-            column(width = 6, h5("Genes to include")),
+            column(width = 7, h5("Genes to include")),
             column(
-              width = 6,
+              width = 5,
               numericInput(
                 inputId = ns("n_genes"), 
                 label = NULL, 
@@ -86,12 +86,6 @@ mod_03_clustering_ui <- function(id) {
           ns = ns
         ),
 
-      
-
-
-
-
-
         # Clustering methods for hierarchical ----------
         conditionalPanel(
           condition = "input.cluster_meth == 1 && 
@@ -125,9 +119,9 @@ mod_03_clustering_ui <- function(id) {
             )
           ),
           fluidRow(
-            column(width = 8, h5("Cut-off Z score")),
+            column(width = 7, h5("Max Z score")),
             column(
-              width = 4,
+              width = 5,
               numericInput(
                 inputId = ns("heatmap_cutoff"),
                 label = NULL,
@@ -160,7 +154,6 @@ mod_03_clustering_ui <- function(id) {
 
         conditionalPanel(
           condition = "input.cluster_panels == 'Hierarchical' ",
-
           checkboxInput(
             inputId = ns("no_sample_clustering"),
             label = "Do not cluster samples",
@@ -171,17 +164,12 @@ mod_03_clustering_ui <- function(id) {
             label = "Show Row Dendogram",
             value = TRUE
           ),
-          ns = ns
-        ),
-        # Heatmap customizing features ----------
-        conditionalPanel(
-          condition = "input.cluster_panels == 'Hierarchical' ",
-          
+
           # Gene ID Selection -----------
           fluidRow(
-            column(width = 7, h5("ID type")),
+            column(width = 4, h5("ID type")),
             column(
-              width = 5,
+              width = 8,
               selectInput(
                 inputId = ns("select_gene_id"),
                 label = NULL,
@@ -194,16 +182,16 @@ mod_03_clustering_ui <- function(id) {
           # Sample coloring bar -----------
 
           fluidRow(
-            column(width = 6, h5("Samples category")),
+            column(width = 5, h5("Samples category")),
             column(
-              width = 6,
+              width = 7,
               htmlOutput(ns("list_factors_heatmap"))
             )
           ),
           fluidRow(
-            column(width = 5, h5("Heatmap color")),
+            column(width = 3, h5("Color")),
             column(
-              width = 7,
+              width = 9,
               selectInput(
                 inputId = ns("heatmap_color_select"),
                 label = NULL,
@@ -217,6 +205,7 @@ mod_03_clustering_ui <- function(id) {
             outputId = ns("download_heatmap_data"),
             label = "Heatmap data"
           ),
+          
           ns = ns
         ),
         downloadButton(
@@ -279,6 +268,11 @@ mod_03_clustering_ui <- function(id) {
             ),
             conditionalPanel(
               condition = "input.cluster_enrichment == 1 ",
+              # Line break ---------
+              HTML(
+                '<hr style="height:1px;border:none;
+            color:#333;background-color:#333;" />'
+              ),
               mod_11_enrichment_ui(ns("enrichment_table_cluster")),
               ns = ns
             )
@@ -299,7 +293,7 @@ mod_03_clustering_ui <- function(id) {
           # Sample Tree -----------------
           tabPanel(
             title = "Sample Tree",
-            value = "sample_tab", 
+            value = "sample_tab",
             h5(
               "Using genes with maximum expression level at the top 75%.
                Data is transformed and clustered as specified in the sidebar."
