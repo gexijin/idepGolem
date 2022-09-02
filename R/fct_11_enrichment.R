@@ -56,8 +56,8 @@ enrich_barplot <- function(
     "text",
     x = 2,
     y = 2,
-    label = "Please select a gene list first!",
-    size = 15
+    label = "Select a group of genes from above",
+    size = 13
     ) +
     ggplot2::theme(
     axis.title.x = ggplot2::element_blank(),

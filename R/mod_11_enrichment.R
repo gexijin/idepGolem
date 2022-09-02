@@ -84,7 +84,7 @@ mod_11_enrichment_ui <- function(id){
     ),
     tabsetPanel(
       tabPanel(
-        title = "Results",
+        title = "Pathways",
         tableOutput(ns("show_enrichment"))
       ),
       tabPanel(
@@ -252,6 +252,27 @@ mod_11_enrichment_ui <- function(id){
           )
                 #          ,column(3, style = "margin-top: 25px;", mod_download_images_ui("download_barplot"))
         ) # 3rd row 
+      ),
+      tabPanel(
+        title = "Genes",
+        fluidRow(
+          column(
+            width = 7,
+            textOutput(ns("gene_counts"))
+          ),
+          column(
+            width = 2,
+            downloadButton(ns("download_gene_info"), "Download")
+          ),
+          column(
+            width = 3,
+            checkboxInput(
+              ns("show_detail"),
+              "Detailed Desc.",
+              value = FALSE)
+            )
+        ),
+        tableOutput(ns("gene_info_table"))
       )
     )
 
@@ -377,6 +398,139 @@ mod_11_enrichment_server <- function(
       return(pathway_info)
     })
 
+    cluster_gene_info <- reactive({
+      req(!is.null(gene_lists()))
+      req(gene_info())
+      req(!is.null(input$select_cluster))
+
+      df <- do.call(rbind,
+        #combine multiple data frames that are elements of a list
+        lapply(
+          names(gene_lists()),
+          function(x) {
+            if(input$select_cluster != "All Groups" && 
+              input$select_cluster != x
+            ) {
+              return(NULL)
+            }
+            ix <- which(gene_info()$ensembl_gene_id %in%
+              gene_lists()[[x]]$ensembl_ID)
+            df1 <- gene_info()[ix, ]
+            df1$group <- x
+            return(df1)
+          }
+        )
+      )
+      if(!is.null(df)) {
+        df <- subset(
+          df,
+          select = c(
+            group,
+            ensembl_gene_id,
+            symbol,
+            entrezgene_id,
+            chromosome_name,
+            #start_position,
+            gene_biotype,
+            description
+          )
+        )
+        #show detailed gene info for string species
+        if(!input$show_detail) {
+          df$description <- gsub(";.*|\\[.*", "", df$description)
+        }
+
+
+        #df$start_position <- round(df$start_position / 1e6, 2)
+        # protein_coding --> coding; processed_pseduogene --> pseduogene
+        df$gene_biotype <- gsub(".*_", "", df$gene_biotype)
+        df$gene_biotype <- gsub("pseudogene", "pseudo", df$gene_biotype)
+        # coding is not shown
+        df$gene_biotype <- gsub("coding", "", df$gene_biotype)
+        # GL456211.1 ---> ""
+        df$chromosome_name[nchar(df$chromosome_name) > 5] <- ""
+
+        colnames(df) <- c(
+            "Group",
+            "Ensembl id",
+            "Symbol",
+            "Entrezgene id",
+            "Chr",
+            #"Position (Mbp)",
+            "Type",
+            "Description"
+        )
+        # Remove columns with all missing values;
+        df <- df[, which(!apply(is.na(df), 2, sum) == nrow(df))]
+      }
+
+      return(df)
+
+    })
+
+    output$gene_info_table <- renderTable({
+      req(!is.null(cluster_gene_info()))
+      df <- cluster_gene_info()
+      if(length(unique(cluster_gene_info()$Group)) == 1) {
+        df <- subset(df, select = - Group)
+      } else {
+        df$Group[duplicated(df$Group)] <- ""
+      }
+      # add link to Ensembl
+      ix <- grepl("ENS", df$'Ensembl id')
+      if(sum(ix) > 0) { # at least one has http?
+        tem <- paste0("<a href='http://www.ensembl.org/id/",
+                      df$'Ensembl id',
+                      "' target='_blank'>",
+                      df$'Ensembl id',
+                      "</a>")
+        # only change the ones with URL
+        df$'Ensembl id'[ix] <- tem[ix]
+      }
+
+      # first see if it is Entrez gene ID-----------------------
+      ix <- !is.na(as.numeric(df$'Entrezgene id'))
+      if(sum(ix) > 0) { # at least one has http?
+        tem <- paste0("<a href='https://www.ncbi.nlm.nih.gov/gene/", 
+                      df$'Entrezgene id',
+                      "' target='_blank'>",
+                      df$'Entrezgene id',
+                      "</a>")
+        # only change the ones with URL
+        df$'Entrezgene id'[ix] <- tem[ix]
+      }
+
+
+
+      return(df)
+    },
+    digits = 2,
+    spacing = "s",
+    striped = TRUE,
+    bordered = TRUE,
+    width = "auto",
+    hover = TRUE,
+    sanitize.text.function = function(x) x
+    )
+
+  output$download_gene_info <- downloadHandler(
+    filename = function() {
+      paste(input$select_cluster, "_geneInfo.csv")
+    },
+    content = function(file) {
+      write.csv(
+        cluster_gene_info(), 
+        file,
+        row.names=FALSE
+      )
+    }
+  )
+
+  output$gene_counts <- renderText({
+    req(!is.null(cluster_gene_info()))
+    counts <- table(cluster_gene_info()$Group)
+    txt <- paste0(names(counts), ":", counts, collapse = " genes; ")
+  })
     # returns a data frame
     enrichment_dataframe <- reactive({
       req(!is.null(pathway_table()))
@@ -453,7 +607,7 @@ mod_11_enrichment_server <- function(
     # Enrichment Tree -----------
     output$enrichment_tree <- renderPlot({
       req(!is.null(enrichment_dataframe_for_tree()))
-       req(!is.null(input$select_cluster))
+      req(!is.null(input$select_cluster))
       enrichment_tree_plot(
         go_table = enrichment_dataframe_for_tree(),
         group = input$select_cluster,
