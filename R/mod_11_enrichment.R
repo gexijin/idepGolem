@@ -33,7 +33,7 @@ mod_11_enrichment_ui <- function(id){
       ),
       column(
         width = 4,
-        actionButton(ns("customize_button"), "Customize")
+        actionButton(ns("customize_button"), "More options")
       )
 
     ),
@@ -42,50 +42,35 @@ mod_11_enrichment_ui <- function(id){
       title = "Options for enrichment analysis",
       trigger = ns("customize_button"),
       size = "small",
-      fluidRow(
-        column(
-          width = 6,
-          selectInput(
-            inputId = ns("sort_by"),
-            label = NULL,
-            choices = list(
-              "Sort by FDR" = "FDR",
-              "Sort by fold enriched" = "Fold"
-            ),
-            selected = "FDR"
-          )
+
+      selectInput(
+        inputId = ns("sort_by"),
+        label = NULL,
+        choices = list(
+          "Sort by FDR" = "FDR",
+          "Sort by fold enriched" = "Fold"
         ),
-        column(
-          width = 6,
-          downloadButton(
-            outputId = ns("download_enrichment"),
-            label = "Enrichment"
-          )
-        )
+        selected = "FDR"
       ),
-      fluidRow(
-        column(
-          width = 6,
-          checkboxInput(
-            inputId = ns("filtered_background"),
-            label = "Use filtered genes as background.",
-            value = TRUE
-          )
-        ),
-        column(
-          width = 6,
-          checkboxInput(
-            inputId = ns("remove_redudant"),
-            label = "Remove Redudant Gene Sets",
-            value = FALSE
-          )
-        )
+      checkboxInput(
+        inputId = ns("filtered_background"),
+        label = "Use filtered genes as background.",
+        value = TRUE
+      ),
+      checkboxInput(
+        inputId = ns("remove_redudant"),
+        label = "Remove Redudant Gene Sets",
+        value = FALSE
       )
     ),
     tabsetPanel(
       tabPanel(
         title = "Pathways",
-        tableOutput(ns("show_enrichment"))
+        tableOutput(ns("show_enrichment")),
+        downloadButton(
+          outputId = ns("download_enrichment"),
+          label = "Download"
+        )
       ),
       tabPanel(
         title = "Tree",
@@ -602,17 +587,16 @@ mod_11_enrichment_server <- function(
             )
           ]
         }
+
+        results_all <- subset(
+          results_all,
+          select = c(group, FDR, nGenes, Pathway, Genes)
+        )
+        results_all$FDR <- as.numeric(results_all$FDR)
+        colnames(results_all) <- c(
+          "Direction", "adj_p_val", "Pathway.size", "Pathways",  "Genes"
+        )
       }
-
-      results_all <- subset(
-        results_all,
-        select = c(group, FDR, nGenes, Pathway, Genes)
-      )
-      results_all$FDR <- as.numeric(results_all$FDR)
-      colnames(results_all) <- c(
-        "Direction", "adj_p_val", "Pathway.size", "Pathways",  "Genes"
-      )
-
       return(results_all)
     })
 

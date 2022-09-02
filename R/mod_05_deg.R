@@ -280,6 +280,7 @@ mod_05_deg_2_ui <- function(id) {
           ),
           tabPanel(
             title = "Enrichment",
+            br(),
             mod_11_enrichment_ui(ns("enrichment_table_cluster")),
           )
         )
