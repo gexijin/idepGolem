@@ -1,3 +1,115 @@
+#' Dendogram of enriched pathways
+#' 
+#' Create a dendogram plot of the enriched pathways to illustrate
+#' which paths contain similar genes.
+#' 
+#' @param go_table Enrichment table from the pathway analysis, the last column Genes
+#' contains lists
+#' @param group  Selected group int the Direction column 
+#' @param right_margin Control the size of the dendogram labels
+#' 
+#' @export
+#' @return A dendogram plot that shows the users what pathways are
+#'  that are enriched share genes.
+enrichment_tree_plot <- function(
+  go_table,
+  group,
+  right_margin = 10
+) {
+  # a program for ploting enrichment results by highlighting the similarities among terms
+  # must have columns: Direction, adj.Pval   Pathways Genes
+  #  Direction  adj.Pval  nGenes  Pathways    Genes
+  #Down regulated  3.58E-59  131  Ribonucleoprotein complex biogenesis  36  Nsun5 Nhp2 Rrp15 
+  #Down regulated  2.55E-57  135  NcRNA metabolic process  23  Nsun5 Nhp2 Rrp15 Emg1 Ddx56 Rsl1d1
+  # Up or down regulation is color-coded
+  # gene set size if represented by the size of marker
+
+  req(!is.null(go_table))
+  req(!is.null(group))
+  data <- go_table
+  if(class(data) != "data.frame") {
+    return(NULL)
+  }
+  # only one term or less
+  if(nrow(data) <=1 || is.null(data)) {
+    return(NULL)
+  }
+
+  # only use selected group
+  if(group != "All Groups") {
+    data <- data[data$Direction == group, ]
+  }
+  # this is unneccessary, but works
+  gene_lists <- lapply(
+    data$Genes,
+    function(x) unlist(strsplit(as.character(x), ", "))
+  )
+  names(gene_lists) <- data$Pathways
+
+  # Compute overlaps percentage--------------------
+  n <- length(gene_lists)
+  w <- matrix(NA, nrow = n, ncol = n)
+  
+  # Compute overlaps among all gene lists
+  for(i in 1:n) {
+    for (j in i:n) {
+      u <- unlist(gene_lists[i])
+      v <- unlist(gene_lists[j])
+      w[i, j] <- length(intersect(u, v)) / length(unique(c(u, v)))
+    }
+  }
+  # The lower half of the matrix filled in based on symmetry
+  for(i in 1:n) {
+    for(j in 1:(i-1)) {
+      w[i, j] <- w[j, i]
+    } 
+  }
+
+  Terms <- paste(
+    sprintf("%-1.0e",
+    as.numeric(data$adj_p_val)), 
+    names(gene_lists)
+  )
+  rownames(w) <- Terms
+  colnames(w) <- Terms
+
+  # A large margin for showing 
+  par(mar = c(0, 0, 1, right_margin))
+
+  dend <- stats::as.dist(1 - w) |>
+    stats::hclust(method = "average")
+  # Permutated order of leaves 
+  ix <- dend$order 
+
+  leaf_type <- as.factor(data$Direction[ix])
+  leaf_colors <- gg_color_hue(length(unique(data$Direction)))
+  # Leaf size represent P values
+  leaf_size <- -log10(as.numeric(data$adj_p_val[ix]))
+  leaf_size <- 1.5 * leaf_size / max(leaf_size) + .2
+  
+  dend |> 
+    stats::as.dendrogram(hang = -1) |>
+    # Type of marker
+    dendextend::set("leaves_pch", 19) |>
+    # Size
+    dendextend::set("leaves_cex", leaf_size) |>
+    # up or down genes
+    dendextend::set("leaves_col", leaf_colors[leaf_type]) |>
+    plot(horiz = TRUE)
+  
+  # Add legend using a second layer
+  par(lend = 1)
+  add_legend(
+    "top",
+    pch = 19,
+    col = leaf_colors,
+    legend = levels(leaf_type),
+    bty = "n",
+    horiz = T 
+  )
+
+  return(recordPlot())
+}
 
 #' Generate barplot for enrichment results
 #' 
