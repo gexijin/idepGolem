@@ -579,7 +579,6 @@ limma_value <- function(
 #'   comparisons, a vectors holding comparison_names,   
 #'   exp_type, a character holding experimental design or error messages. 
 #'   top_genes, a list, each elements hold the lfc & FDR for a comparison   
-
 deg_deseq2 <- function(
   raw_counts,
   max_p_limma = .05,

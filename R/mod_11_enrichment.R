@@ -1,3 +1,12 @@
+# Global variable: list of column names in the pathway enrichment 
+# results data frame, and their display name on the plot.
+column_selection <- list(
+  "-log10(FDR)" = "EnrichmentFDR", 
+  "Fold Enrichment" = "FoldEnrichment", 
+  "Genes" =  "nGenes",
+  "Category Name" = "Pathway"
+)
+
 #' Shows results from enrichment analysis of one or more lists of genes
 #'
 #' @description The input is a list of genes
@@ -10,10 +19,7 @@
 mod_11_enrichment_ui <- function(id){
   ns <- NS(id)
   library(shinyBS)
-  columnSelection <- list("-log10(FDR)" = "EnrichmentFDR", 
-                        "Fold Enrichment" = "FoldEnrichment", 
-                        "Genes" =  "nGenes",
-                        "Category Name" = "Pathway")
+
   tagList(
 
     fluidRow(
@@ -128,74 +134,125 @@ mod_11_enrichment_ui <- function(id){
           width = "100%"
         ),
         h6(
-          "Two pathways (nodes) are connected if they share 30% (default, adjustable) or more genes.
-          Green and red represents down- and up-regulated pathways. You can move the nodes by 
-          dragging them, zoom in and out by scrolling, and shift the entire network by click on an 
-          empty point and drag. Darker nodes are more significantly enriched gene sets. Bigger nodes
-          represent larger gene sets. Thicker edges represent more overlapped genes."
+          "Two pathways (nodes) are connected if they 
+          share 30% (default, adjustable) or more genes.
+          Green and red represents down- and up-regulated
+           pathways. You can move the nodes by 
+          dragging them, zoom in and out by scrolling, and 
+          shift the entire network by click on an 
+          empty point and drag. Darker nodes are more 
+          significantly enriched gene sets. Bigger nodes
+          represent larger gene sets. Thicker edges 
+          represent more overlapped genes."
         )
       ),
       tabPanel(
         title = "Plot",
         plotOutput(ns("enrich_barchart"), width = "100%", height = "100%"),
         fluidRow(
-          column(3, selectInput(inputId = ns("SortPathwaysPlot"),
-                                label = h5("Sort Pathway by"),
-                                choices = columnSelection,
-                                selected = columnSelection[1] ) )
-          ,column(3, selectInput(inputId = ns("SortPathwaysPlotX"),
-                                  label = h5("x-axis"),
-                                  choices = columnSelection[1:3],
-                                  selected = columnSelection[1] )  )
-            ,column(3, selectInput(inputId = ns("SortPathwaysPlotColor"),
-                                  label = h5("Color"),
-                                  choices = columnSelection[1:3],
-                                  selected = columnSelection[2] )  )
-            ,column(3, selectInput(inputId = ns("SortPathwaysPlotSize"),
-                                  label = h5("Size"),
-                                  choices = columnSelection[1:3],
-                                  selected = columnSelection[3] )  )
-        ) # first row
+          column(
+            width = 3, 
+            selectInput(
+              inputId = ns("pathway_order"),
+              label = h5("Sort Pathway by"),
+              choices = column_selection,
+              selected = column_selection[1]
+            ) 
+          ),
+          column(
+            width = 3,
+            selectInput(
+              inputId = ns("order_x"),
+              label = h5("x-axis"),
+              choices = column_selection[1:3],
+              selected = column_selection[1]
+            )
+          ),
+          column(
+            width = 3,
+            selectInput(
+              inputId = ns("plot_color"),
+              label = h5("Color"),
+              choices = column_selection[1:3],
+              selected = column_selection[2] 
+            )
+          ),
+          column(
+            width = 3, 
+            selectInput(
+              inputId = ns("plot_size"),
+              label = h5("Size"),
+              choices = column_selection[1:3],
+              selected = column_selection[3] 
+            )
+          )
+        ),
 
-        ,fluidRow(
-          column(3, numericInput(inputId = ns("SortPathwaysPlotFontSize"),
-                                  label = h5("Font Size"),
-                                  value = 12,
-                                  min = 3,
-                                  max = 18,
-                                  step = 1 ) )
-          ,column(3, numericInput(inputId = ns("SortPathwaysPlotMarkerSize"),
-                                  label = h5("Circle Size"),
-                                  value = 4,
-                                  min = 0,
-                                  max = 10,
-                                  step = 1 ))
-          ,column(3, selectInput(inputId = ns("SortPathwaysPlotHighColor"),
-                                  label = h5("Color:High"),
-                                  choices = c("red", "orange", "yellow", "green", "blue", "purple"),
-                                  selected = "red"
-                                  ))
-          ,column(3, selectInput(inputId = ns("SortPathwaysPlotLowColor"),
-                                  label = h5("Color:Low"),
-                                  choices = c("red", "orange", "yellow", "green", "blue", "purple"),
-                                  selected = "blue"
-                                  ))
-        ) # 2nd row
+        fluidRow(
+          column(
+            width = 3,
+            numericInput(
+              inputId = ns("font_size"),
+                label = h5("Font Size"),
+                value = 12,
+                min = 3,
+                max = 18,
+                step = 1
+              )
+            ),
+          column(
+            width = 3, 
+            numericInput(
+              inputId = ns("marker_size"),
+                label = h5("Circle Size"),
+                value = 4,
+                min = 0,
+                max = 10,
+                step = 1
+              )
+            ),
+          column(
+            width = 3,
+            selectInput(
+              inputId = ns("high_color"),
+              label = h5("Color:High"),
+              choices = c("red", "orange", "yellow", "green", "blue", "purple"),
+              selected = "red"
+            )
+          ),
+          column(
+            width = 3,
+            selectInput(
+              inputId = ns("log_color"),
+              label = h5("Color:Low"),
+              choices = c("red", "orange", "yellow", "green", "blue", "purple"),
+              selected = "blue"
+            )
+          )
+        ),
 
-        ,fluidRow(
-          column(width = 3, selectInput(inputId = ns("enrichChartType"),
-                                  label = h5("Chart type"),
-                                  choices = c("lollipop", "dotplot", "barplot"),
-                                  selected = "lollipop"
-                                  ))
-          ,column(3, selectInput(inputId = ns("enrichChartAspectRatio"),
-                                  label = h5("Aspect Ratio"),
-                                  choices = .1* (5:30),
-                                  selected = 2
-                                  ))
+        fluidRow(
+          column(
+            width = 3, 
+            selectInput(
+              inputId = ns("chart_type"),
+                label = h5("Chart type"),
+                choices = c("lollipop", "dotplot", "barplot"),
+                selected = "lollipop"
+              )
+            ),
+          column(
+            width = 3,
+            selectInput(
+              inputId = ns("aspect_ratio"),
+              label = h5("Aspect Ratio"),
+              choices = .1* (5:30),
+              selected = 2
+            )
+          )
                 #          ,column(3, style = "margin-top: 25px;", mod_download_images_ui("download_barplot"))
         ) # 3rd row 
-      ),
+      )
     )
 
   )
@@ -221,10 +278,7 @@ mod_11_enrichment_server <- function(
   ){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
-  columnSelection <- list("-log10(FDR)" = "EnrichmentFDR", 
-                        "Fold Enrichment" = "FoldEnrichment", 
-                        "Genes" =  "nGenes",
-                        "Category Name" = "Pathway")
+
         # GMT choices for enrichment ----------
     output$select_go_selector <- renderUI({
 
@@ -484,157 +538,33 @@ mod_11_enrichment_server <- function(
     if(is.null(enrichment_dataframe())) {
       return(NULL)
     }
-    req(input$SortPathwaysPlot)
-    req(input$SortPathwaysPlotX)
-    req(input$SortPathwaysPlotSize)
-    req(input$SortPathwaysPlotColor)
-    req(input$SortPathwaysPlotFontSize)
-    req(input$SortPathwaysPlotMarkerSize)
-    req(input$SortPathwaysPlotHighColor)
-    req(input$SortPathwaysPlotLowColor)
-    req(input$enrichChartType)
-    req(input$enrichChartAspectRatio)
-
+    req(input$pathway_order)
+    req(input$order_x)
+    req(input$plot_size)
+    req(input$plot_color)
+    req(input$font_size)
+    req(input$marker_size)
+    req(input$high_color)
+    req(input$log_color)
+    req(input$chart_type)
+    req(input$aspect_ratio)
     req(input$select_cluster)
-      #    req(input$abbreviatePathway)
 
-    fake = data.frame(a=1:3,b=1:3)
-    blank <- ggplot2::ggplot(fake, ggplot2::aes(x = a, y = b)) +
-      ggplot2::geom_blank() + 
-      ggplot2::annotate(
-        "text",
-        x = 2,
-        y = 2,
-        label = "Please select a gene list first!",
-        size = 15
-      ) +
-      ggplot2::theme(
-        axis.title.x = ggplot2::element_blank(),
-        axis.title.y = ggplot2::element_blank()
-      )
+   enrich_barplot(
+    enrichment_dataframe = enrichment_dataframe(),
+    pathway_order = input$pathway_order,
+    order_x = input$order_x,
+    plot_size = input$plot_size,
+    plot_color = input$plot_color,
+    plot_font_size = input$font_size,
+    plot_marker_size = input$marker_size,
+    plot_high_color = input$high_color,
+    plot_low_color = input$log_color,
+    chart_type = input$chart_type,
+    aspect_ratio = input$aspect_ratio,
+    select_cluster = input$select_cluster
+   )
 
-    df <- enrichment_dataframe()
-
-    # filter by group
-    if(input$select_cluster != "All Groups") {
-      df <- subset(df, group == input$select_cluster)
-    }
-
-    # if "All Groups"
-    if(length(unique(df$group)) > 1) {
-      return(blank)
-    } 
-
-    # Remove spaces in col names
-    colnames(df) <- gsub(" ", "", colnames(df))
-
-    df <- subset(df, select = -group)
-    colnames(df)[1:5] <- c(
-      "EnrichmentFDR", "nGenes",
-      "PathwayGenes", "FoldEnrichment", "Pathway"
-    )
-
-    # why some pathways appear twice?
-    df <- df[!duplicated(df$Pathway), ]
-
-
-    df$EnrichmentFDR <- as.numeric(df$EnrichmentFDR)
-    df$nGenes <- as.numeric(df$nGenes)
-    df$PathwayGenes <- as.numeric(df$PathwayGenes)
-    df$FoldEnrichment <- as.numeric(df$FoldEnrichment)
-
-    x       = input$SortPathwaysPlotX  
-    size    = input$SortPathwaysPlotSize
-    colorBy = input$SortPathwaysPlotColor
-    fontSize = input$SortPathwaysPlotFontSize
-    markerSize = input$SortPathwaysPlotMarkerSize
-    # validate values; users can input any numeric value outside the range
-    if(fontSize < 1 | fontSize >= 20 ) 
-        fontSize <- 12
-      if(markerSize < 0 | markerSize > 20 ) 
-        markerSize <- 4
-    
-    # convert to vector so that we can look up the readable names of columns 
-    columns <- unlist(columnSelection)
-    
-    df$EnrichmentFDR <- -log10(df$EnrichmentFDR)
-    ix <- which(colnames(df) == input$SortPathwaysPlot)
-
-    # sort the pathways
-    if(ix >0 && ix < dim(df)[2]) {
-        df <- df[order(df[, ix], decreasing = TRUE), ]
-    }
-    
-    # convert to factor so that the levels are not reordered by ggplot2
-    df$Pathway <- factor(df$Pathway, levels = rev(df$Pathway))
-
-    p <- ggplot2::ggplot(df, 
-      ggplot2::aes_string(
-        x = x,
-        y = "Pathway", 
-        size = size, 
-        color = colorBy)
-      ) +
-      ggplot2::geom_point() +
-      ggplot2::scale_color_continuous(
-        low = input$SortPathwaysPlotLowColor, 
-        high = input$SortPathwaysPlotHighColor,
-        name = names(columns)[columns == colorBy],
-        guide = ggplot2::guide_colorbar(reverse = TRUE)
-      ) +
-      ggplot2::scale_size(range = c(1, markerSize)) +
-      ggplot2::xlab(names(columns)[columns == x]  ) +
-      ggplot2::ylab(NULL) +
-      ggplot2::guides(
-        size  = ggplot2::guide_legend(
-          order = 2, 
-          title = names(columns)[columns == size]
-        ), 
-        color = ggplot2::guide_colorbar(order = 1)
-      ) +
-      ggplot2::theme(
-        axis.text = ggplot2::element_text(size = fontSize),
-        axis.title = ggplot2::element_text(size = 12)
-      ) +
-      ggplot2::theme(
-        legend.title = ggplot2::element_text(size = 12), # decrease legend font
-        legend.text = ggplot2::element_text(size = 12)
-      ) +
-      ggplot2::guides(
-        shape = ggplot2::guide_legend(override.aes = list(size = 5))
-      ) +
-      ggplot2::guides(
-        color = ggplot2::guide_legend(override.aes = list(size = 5))
-      )
-
-    if(input$enrichChartType == "dotplot") {
-      p <- p 
-    } else if(input$enrichChartType == "lollipop") {
-      p <- p + 
-        ggplot2::geom_segment(
-          ggplot2::aes_string(
-            x = 0, 
-            xend = x, 
-            y = "Pathway", 
-            yend = "Pathway"
-          ),
-          size=1
-        )
-    } else if(input$enrichChartType == "barplot") {
-      p <- ggplot2::ggplot(df, 
-        ggplot2::aes_string(x = x, y = "Pathway", fill = colorBy)) +
-        ggplot2::geom_col(width = 0.8, position = ggplot2::position_dodge(0.7)) +
-        ggplot2::scale_fill_continuous(
-          low = input$SortPathwaysPlotLowColor,
-          high=input$SortPathwaysPlotHighColor,
-          name = names(columns)[columns == colorBy],
-          guide = ggplot2::guide_colorbar(reverse = TRUE)
-        ) +
-        ggplot2::xlab(names(columns)[columns == x]) +
-        ggplot2::ylab(NULL) +
-        ggplot2::theme(axis.text = ggplot2::element_text(size = fontSize))
-    }
-  return(p)
  })
 
   # Enrichment plot for display on the screen
@@ -647,7 +577,7 @@ mod_11_enrichment_server <- function(
      round(max(350, min(2500, round(18 * as.numeric(20))))) # 20 is maxTerms
    },
    width = function(){
-     round( max(350, min(2500, round(18 * as.numeric(20)))) * as.numeric(input$enrichChartAspectRatio) )
+     round( max(350, min(2500, round(18 * as.numeric(20)))) * as.numeric(input$aspect_ratio) )
    }
   )
 
