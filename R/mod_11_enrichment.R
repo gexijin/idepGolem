@@ -446,7 +446,7 @@ mod_11_enrichment_server <- function(
         df$gene_biotype <- gsub(".*_", "", df$gene_biotype)
         df$gene_biotype <- gsub("pseudogene", "pseudo", df$gene_biotype)
         # coding is not shown
-        df$gene_biotype <- gsub("coding", "", df$gene_biotype)
+        df$gene_biotype <- gsub("coding", "C", df$gene_biotype)
         # GL456211.1 ---> ""
         df$chromosome_name[nchar(df$chromosome_name) > 5] <- ""
 
