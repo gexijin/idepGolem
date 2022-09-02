@@ -89,7 +89,11 @@ mod_11_enrichment_ui <- function(id){
       ),
       tabPanel(
         title = "Tree",
-        plotOutput(ns("enrichment_tree"))
+        plotOutput(ns("enrichment_tree")),
+        ottoPlots::mod_download_figure_ui(
+          id = ns("dl_treeplot"),
+          label = "Download"
+        )
       ),
       tabPanel(
         title = "Network",
@@ -249,8 +253,15 @@ mod_11_enrichment_ui <- function(id){
               choices = .1* (5:30),
               selected = 2
             )
+          ),
+          column(
+            width = 3,
+            style = "margin-top: 25px;", 
+            ottoPlots::mod_download_figure_ui(
+              id = ns("dl_barplot"),
+              label = "Download"
+            )
           )
-                #          ,column(3, style = "margin-top: 25px;", mod_download_images_ui("download_barplot"))
         ) # 3rd row 
       ),
       tabPanel(
@@ -398,6 +409,7 @@ mod_11_enrichment_server <- function(
       return(pathway_info)
     })
 
+    # a dataframe with information on the genes for enrichment analysis
     cluster_gene_info <- reactive({
       req(!is.null(gene_lists()))
       req(gene_info())
@@ -605,7 +617,7 @@ mod_11_enrichment_server <- function(
     })
 
     # Enrichment Tree -----------
-    output$enrichment_tree <- renderPlot({
+    enrichment_tree_object <- reactive({
       req(!is.null(enrichment_dataframe_for_tree()))
       req(!is.null(input$select_cluster))
       enrichment_tree_plot(
@@ -614,6 +626,20 @@ mod_11_enrichment_server <- function(
         right_margin = 45
       )
     })
+
+    # Enrichment Tree -----------
+    output$enrichment_tree <- renderPlot({
+      req(!is.null(enrichment_tree_object()))
+      enrichment_tree_object()
+    })
+
+  dl_treeplot <- ottoPlots::mod_download_figure_server(
+    id = "dl_treeplot",
+    filename = "enrichment_tree",
+    figure = reactive({ enrichment_tree_object() }),
+    width = 12,
+    height = 6
+  )
 
     # Define a Network
     network_data_deg <- reactive({
@@ -704,7 +730,7 @@ mod_11_enrichment_server <- function(
     req(input$aspect_ratio)
     req(input$select_cluster)
 
-   enrich_barplot(
+  enrich_barplot(
     enrichment_dataframe = enrichment_dataframe(),
     pathway_order = input$pathway_order,
     order_x = input$order_x,
@@ -717,9 +743,9 @@ mod_11_enrichment_server <- function(
     chart_type = input$chart_type,
     aspect_ratio = input$aspect_ratio,
     select_cluster = input$select_cluster
-   )
+  )
 
- })
+  })
 
   # Enrichment plot for display on the screen
   #https://stackoverflow.com/questions/34792998/shiny-variable-height-of-renderplot
@@ -733,6 +759,12 @@ mod_11_enrichment_server <- function(
    width = function(){
      round( max(350, min(2500, round(18 * as.numeric(20)))) * as.numeric(input$aspect_ratio) )
    }
+  )
+
+  dl_barplot <- ottoPlots::mod_download_figure_server(
+    id = "dl_barplot", 
+    filename = "enrichment_barplot",
+    figure = reactive({ enrich_barplot_object() })
   )
 
   })
