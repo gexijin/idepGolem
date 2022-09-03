@@ -136,9 +136,10 @@ find_overlap <- function(
 ) {
   max_pval_filter <- 0.3
   max_genes_background <- 30000
-  min_genes_background <- 2000
+  min_genes_background <- 1000
   max_terms <- 15
   min_fdr <- .05
+  min_word_overlap <- 0.5 #% of overlapping words for reduandant pathway
   if(reduced) {
     reduced <- .9
   }
@@ -155,31 +156,33 @@ find_overlap <- function(
       max_size = 10000
     )
   }
-  
+
   # pathway_table <- pathway_table[pathway_table$overlap > 1, ]
 
   if(dim(pathway_table)[1] == 0 || is.null(pathway_table)) {
     return(error_msg)
   }
 
-  pathway_table <- pathway_table[which(
-    pathway_table$overlap / length(query_set) /
-    (as.numeric(pathway_table$n) / total_genes) > 1
-  ), ]
+  # only keep pathways that are overrepresented
+#  pathway_table <- pathway_table[which(
+#    pathway_table$overlap / length(query_set) /
+#    (as.numeric(pathway_table$n) / total_genes) > 1
+#  ), ]
 
   pathway_table$pval <- stats::phyper(
     pathway_table$overlap - 1,
-		length(query_set),
-		total_genes - length(query_set),   
-		as.numeric(pathway_table$n), 
-		lower.tail=FALSE
+    length(query_set),
+    total_genes - length(query_set),
+    as.numeric(pathway_table$n),
+    lower.tail = FALSE
   )
 
   pathway_table$fold <- pathway_table$overlap / length(query_set) / (
     as.numeric(pathway_table$n) / total_genes
-    )
+  )
 
-  pathway_table <- subset(pathway_table, pathway_table$pval < max_pval_filter)
+  # remove some with p > 0.3
+#  pathway_table <- subset(pathway_table, pathway_table$pval < max_pval_filter)
 
   # Background genes -----------
   if(!is.null(use_filtered_background)) {
@@ -198,33 +201,49 @@ find_overlap <- function(
         sub_pathway_files = sub_pathway_files
       )
 
+      # note that both the query size and the background size 
+      # uses effective size: # of genes with at least one pathway in pathwayDB
       pathway_table$pval <- phyper(
         pathway_table_bg$overlap - 1,
         length(query_set),
-        length(rownames(processed_data)) - length(query_set),
+        pathway_table_bg$total_genes_bg[1] - length(query_set),
         as.numeric(pathway_table_bg$overlap_bg),
-        lower.tail=FALSE
+        lower.tail = FALSE
       )
-      pathway_table$fold <- pathway_table_bg$overlap / length(query_set) / (
-        as.numeric(pathway_table_bg$overlap_bg) / length(rownames(processed_data)) 
+      pathway_table$fold <- (pathway_table$overlap / length(query_set)) / (
+        as.numeric(pathway_table_bg$overlap_bg) / pathway_table_bg$total_genes_bg[1]
       )
 
+
+  write.csv(subset(pathway_table_bg, select = -gene_sets), "pathway_table_bg.csv", row.names = F)      
     }
   }
 
   pathway_table$fdr <- stats::p.adjust(pathway_table$pval, method = "fdr")
+
   pathway_table <- pathway_table[order(pathway_table$fdr), ]
 
   if(dim(pathway_table)[1] > max_terms) {
     pathway_table <- pathway_table[1:max_terms, ]
   }
-  
+
   if(min(pathway_table$fdr) > min_fdr) {
     pathway_table <- error_msg
   } else {
     pathway_table <- pathway_table[which(pathway_table$fdr < min_fdr), ]
 
-    pathway_table <- subset(pathway_table, select = c(fdr, overlap, n, fold, description, memo, gene_sets))
+    pathway_table <- subset(
+      pathway_table,
+      select = c(
+        fdr,
+        overlap,
+        n,
+        fold,
+        description,
+        memo,
+        gene_sets
+      )
+    )
     pathway_table$n <- as.numeric(pathway_table$n)
     pathway_table$fdr <-  formatC(pathway_table$fdr, format = "e", digits = 2)
     colnames(pathway_table) <- c(
@@ -232,24 +251,39 @@ find_overlap <- function(
       "Pathway", "URL", "Genes"
     )
 
-    # Remove redudant gene sets; only do it when there are more than 5. Error when there is only 1 or 2.
-		if(reduced != FALSE && dim(pathway_table)[1] > 5){
-			n <- nrow(pathway_table)
-			tem <- rep(TRUE, n)
-			gene_lists = pathway_table$Genes
-			for(i in 2:n) {
-        for(j in 1:(i-1)) { 
-				  if(tem[j]) {
-					  common_genes = length(intersect(gene_lists[[i]], gene_lists[[j]]))
-					  if(common_genes/ length(gene_lists[[j]]) > reduced) {
-              tem[j] = FALSE
-            }	
-				  }			
-				}				
-      }
-								
-			pathway_table <- pathway_table[which(tem), ]		
-		}
+    # Remove redudant gene sets; only do it when there are more than 5. 
+    # Error when there is only 1 or 2.
+    if(reduced != FALSE && dim(pathway_table)[1] > 5){
+      n <-  nrow(pathway_table)
+      flag1 <- rep(TRUE, n)
+
+      # note that it has to be two space characters for splitting
+      gene_lists <- pathway_table$Genes
+
+      # pathway name
+      pathways <- lapply(
+        pathway_table$Pathway,
+        function(y) unlist(strsplit(as.character(y), " |  |   "))
+      )
+      for(i in 2:n)
+        for(j in 1:(i - 1)) {
+          if(flag1[j]) { # skip if this one is already removed
+            ratio1 <- length(intersect(gene_lists[[i]], gene_lists[[j]])) /
+              length(union(gene_lists[[i]], gene_lists[[j]]))
+
+            # if sufficient genes overlap
+            if(ratio1  > reduced) {
+              # are pathway names similar
+                ratio2 <- length(intersect(pathways[[i]], pathways[[j]])) /
+                  length(union(pathways[[i]], pathways[[j]]))
+                # if 50% of the words in the pathway name shared
+                if(ratio2 > min_word_overlap)
+                  flag1[i] <- FALSE
+            }
+          }
+        }
+      pathway_table <- pathway_table[which(flag1), ]
+    }
   }
 
   return(pathway_table)
@@ -294,7 +328,7 @@ find_contrast_samples <- function(
 	iz <- which(!is.na(iz))
 	
 	# Has design file, but didn't select factors
-	if(!is.null(sample_info) & is.null(select_factors_model) &
+	if(!is.null(sample_info) && is.null(select_factors_model) &
      length(select_model_comprions) == 0) {
 	  
     find_samples <- function(
