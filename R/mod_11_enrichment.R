@@ -39,7 +39,7 @@ mod_11_enrichment_ui <- function(id){
     ),
     shinyBS::bsModal(
       id = ns("modalExample"),
-      title = "Options for enrichment analysis",
+      title = "More options",
       trigger = ns("customize_button"),
       size = "small",
 
@@ -268,7 +268,9 @@ mod_11_enrichment_ui <- function(id){
               value = FALSE)
             )
         ),
-        tableOutput(ns("gene_info_table"))
+        tableOutput(ns("gene_info_table")),
+        p("Note: In the gene type column, \"C\" indicates 
+        protein-coding genes, and \"pseduo\" means pseduogenes.")
       )
     )
 
@@ -510,24 +512,24 @@ mod_11_enrichment_server <- function(
     sanitize.text.function = function(x) x
     )
 
-  output$download_gene_info <- downloadHandler(
-    filename = function() {
-      paste(input$select_cluster, "_geneInfo.csv")
-    },
-    content = function(file) {
-      write.csv(
-        cluster_gene_info(), 
-        file,
-        row.names=FALSE
-      )
-    }
-  )
+    output$download_gene_info <- downloadHandler(
+      filename = function() {
+        paste(input$select_cluster, "_geneInfo.csv")
+      },
+      content = function(file) {
+        write.csv(
+          cluster_gene_info(), 
+          file,
+          row.names=FALSE
+        )
+      }
+    )
 
-  output$gene_counts <- renderText({
-    req(!is.null(cluster_gene_info()))
-    counts <- table(cluster_gene_info()$Group)
-    txt <- paste0(names(counts), ":", counts, collapse = " genes; ")
-  })
+    output$gene_counts <- renderText({
+      req(!is.null(cluster_gene_info()))
+      counts <- table(cluster_gene_info()$Group)
+      txt <- paste0(names(counts), ":", counts, collapse = " genes; ")
+    })
     # returns a data frame
     enrichment_dataframe <- reactive({
       req(!is.null(pathway_table()))
@@ -617,13 +619,13 @@ mod_11_enrichment_server <- function(
       enrichment_tree_object()
     })
 
-  dl_treeplot <- ottoPlots::mod_download_figure_server(
-    id = "dl_treeplot",
-    filename = "enrichment_tree",
-    figure = reactive({ enrichment_tree_object() }),
-    width = 12,
-    height = 6
-  )
+    dl_treeplot <- ottoPlots::mod_download_figure_server(
+      id = "dl_treeplot",
+      filename = "enrichment_tree",
+      figure = reactive({ enrichment_tree_object() }),
+      width = 12,
+      height = 6
+    )
 
     # Define a Network
     network_data_deg <- reactive({
@@ -695,61 +697,61 @@ mod_11_enrichment_server <- function(
     sanitize.text.function = function(x) x
     )
 
-  # ggplot2 object for the enrichment chart;
-  # used both for display and download
-  enrich_barplot_object <- reactive({
+    # ggplot2 object for the enrichment chart;
+    # used both for display and download
+    enrich_barplot_object <- reactive({
 
-    if(is.null(enrichment_dataframe())) {
-      return(NULL)
+      if(is.null(enrichment_dataframe())) {
+        return(NULL)
+      }
+      req(input$pathway_order)
+      req(input$order_x)
+      req(input$plot_size)
+      req(input$plot_color)
+      req(input$font_size)
+      req(input$marker_size)
+      req(input$high_color)
+      req(input$log_color)
+      req(input$chart_type)
+      req(input$aspect_ratio)
+      req(input$select_cluster)
+
+    enrich_barplot(
+      enrichment_dataframe = enrichment_dataframe(),
+      pathway_order = input$pathway_order,
+      order_x = input$order_x,
+      plot_size = input$plot_size,
+      plot_color = input$plot_color,
+      plot_font_size = input$font_size,
+      plot_marker_size = input$marker_size,
+      plot_high_color = input$high_color,
+      plot_low_color = input$log_color,
+      chart_type = input$chart_type,
+      aspect_ratio = input$aspect_ratio,
+      select_cluster = input$select_cluster
+    )
+
+    })
+
+    # Enrichment plot for display on the screen
+    #https://stackoverflow.com/questions/34792998/shiny-variable-height-of-renderplot
+    output$enrich_barchart <- renderPlot({
+      enrich_barplot_object()
+    }, 
+    # height increases as the number of terms increase. max at 1200, min 350
+    height = function(){ 
+      round(max(350, min(2500, round(18 * as.numeric(20))))) # 20 is maxTerms
+    },
+    width = function(){
+      round( max(350, min(2500, round(18 * as.numeric(20)))) * as.numeric(input$aspect_ratio) )
     }
-    req(input$pathway_order)
-    req(input$order_x)
-    req(input$plot_size)
-    req(input$plot_color)
-    req(input$font_size)
-    req(input$marker_size)
-    req(input$high_color)
-    req(input$log_color)
-    req(input$chart_type)
-    req(input$aspect_ratio)
-    req(input$select_cluster)
+    )
 
-  enrich_barplot(
-    enrichment_dataframe = enrichment_dataframe(),
-    pathway_order = input$pathway_order,
-    order_x = input$order_x,
-    plot_size = input$plot_size,
-    plot_color = input$plot_color,
-    plot_font_size = input$font_size,
-    plot_marker_size = input$marker_size,
-    plot_high_color = input$high_color,
-    plot_low_color = input$log_color,
-    chart_type = input$chart_type,
-    aspect_ratio = input$aspect_ratio,
-    select_cluster = input$select_cluster
-  )
-
-  })
-
-  # Enrichment plot for display on the screen
-  #https://stackoverflow.com/questions/34792998/shiny-variable-height-of-renderplot
-  output$enrich_barchart <- renderPlot({
-    enrich_barplot_object()
-   }, 
-   # height increases as the number of terms increase. max at 1200, min 350
-   height = function(){ 
-     round(max(350, min(2500, round(18 * as.numeric(20))))) # 20 is maxTerms
-   },
-   width = function(){
-     round( max(350, min(2500, round(18 * as.numeric(20)))) * as.numeric(input$aspect_ratio) )
-   }
-  )
-
-  dl_barplot <- ottoPlots::mod_download_figure_server(
-    id = "dl_barplot", 
-    filename = "enrichment_barplot",
-    figure = reactive({ enrich_barplot_object() })
-  )
+    dl_barplot <- ottoPlots::mod_download_figure_server(
+      id = "dl_barplot",
+      filename = "enrichment_barplot",
+      figure = reactive({ enrich_barplot_object() })
+    )
 
   })
 

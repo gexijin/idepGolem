@@ -493,14 +493,14 @@ read_pathway_sets <- function(all_gene_names_query,
 
   query_set <- all_gene_names_query[, 2]
 
-  if (!is.null(gene_info)) {
-    if (dim(gene_info)[1] > 1) {
-      gene_info <- gene_info[which(
-        gene_info$gene_biotype == "protein_coding"
-      ), ]
-      query_set <- intersect(query_set, gene_info[, 1])
-    }
-  }
+#  if (!is.null(gene_info)) {
+#    if (dim(gene_info)[1] > 1) {
+#      gene_info <- gene_info[which(
+#        gene_info$gene_biotype == "protein_coding"
+#      ), ]
+#      query_set <- intersect(query_set, gene_info[, 1])
+#    }
+#  }
 
   if (length(query_set) == 0) {
     return(id_not_recognized)
@@ -536,13 +536,16 @@ read_pathway_sets <- function(all_gene_names_query,
   }
 
   sql_query <- paste(
-    "select distinct gene, pathwayID from pathway where gene IN ('",
+    "SELECT DISTINCT gene, pathwayID FROM pathway WHERE gene IN ('",
     paste(query_set, collapse = "', '"), "')",
     sep = ""
   )
 
   if (go != "All") {
-    sql_query <- paste0(sql_query, " AND category ='", go, "'")
+    sql_query <- paste(
+      "SELECT DISTINCT gene,pathwayID FROM pathway WHERE category='", go, "'",
+      " AND gene IN ('", paste(query_set, collapse = "', '"), "')",
+      sep = "")
   }
   result <- DBI::dbGetQuery(pathway, sql_query)
 
@@ -569,7 +572,7 @@ read_pathway_sets <- function(all_gene_names_query,
     pathway_info <- DBI::dbGetQuery(
       pathway,
       paste(
-        "select distinct id, n, Description, memo from pathwayInfo where id IN ('",
+        "SELECT DISTINCT id,n,Description,memo FROM pathwayInfo WHERE id IN ('",
         paste(pathway_ids[, 1], collapse = "', '"), "') ",
         sep = ""
       )
@@ -582,9 +585,29 @@ read_pathway_sets <- function(all_gene_names_query,
       by.y = "id"
     )
     names(gene_sets) <- pathway_info[ix, 1]
-
     pathway_merge$gene_sets <- gene_sets
   }
+
+    # list of query genes that have at least one pathway in db
+    query_set_db <- unique(result$gene)
+    query_set <- query_set_db # only use genes included in DB
+
+    # total number of genes in pathway db
+    sql_query <- "SELECT COUNT ( DISTINCT gene ) FROM pathway"
+
+    if (go != "All") {
+      sql_query <- paste(
+        sql_query,
+        " WHERE category='", go, "'",
+        sep = "")
+    }
+    total_genes_db <- DBI::dbGetQuery(
+      pathway,
+      sql_query
+    )
+    total_genes_db <- as.integer(total_genes_db)
+
+    total_genes <- total_genes_db
 
   DBI::dbDisconnect(pathway)
 
@@ -629,14 +652,14 @@ background_pathway_sets <- function(processed_data,
                                     sub_pathway_files) {
   query_set <- rownames(processed_data)
 
-  if (!is.null(gene_info)) {
-    if (dim(gene_info)[1] > 1) {
-      query_set <- intersect(
-        query_set,
-        gene_info[which(gene_info$gene_biotype == "protein_coding"), 1]
-      )
-    }
-  }
+#  if (!is.null(gene_info)) {
+#    if (dim(gene_info)[1] > 1) {
+#      query_set <- intersect(
+#        query_set,
+#        gene_info[which(gene_info$gene_biotype == "protein_coding"), 1]
+#      )
+#    }
+#  }
 
   pathway <- DBI::dbConnect(
     drv = RSQLite::dbDriver("SQLite"),
@@ -656,20 +679,24 @@ background_pathway_sets <- function(processed_data,
   # Make sure the background set includes the query set
   query_set <- unique(c(query_set, sub_query))
 
-  sql_query <- paste(
-    "select distinct gene,pathwayID from pathway where gene IN ('",
-    paste(query_set, collapse = "', '"), "')",
-    sep = ""
-  )
-  # Restrict to pathways with genes matching sub_query (Improves speed)
+  
+  sql_query <- "SELECT DISTINCT gene,pathwayID FROM pathway "
+  if (go != "All") {
+    sql_query <- paste0(sql_query, " WHERE category ='", go, "'")
+  }
+
   sql_query <- paste0(
     sql_query, " AND pathwayID IN ('",
     paste(pathway_table$pathway_id, collapse = "', '"), "')"
   )
 
-  if (go != "All") {
-    sql_query <- paste0(sql_query, " AND category ='", go, "'")
-  }
+  sql_query <- paste(
+    sql_query,
+    " AND gene IN ('",
+    paste(query_set, collapse = "', '"), "')",
+    sep = ""
+  ) 
+
 
   results <- DBI::dbGetQuery(pathway, sql_query)
 
@@ -688,6 +715,9 @@ background_pathway_sets <- function(processed_data,
     by = "pathway_id",
     all.x = TRUE
   )
+
+  # list of background genes that have at least one pathway in db
+  pathway_table_bg$total_genes_bg <- length(unique(results$gene))
 
   DBI::dbDisconnect(pathway)
 

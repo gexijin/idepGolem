@@ -3144,7 +3144,7 @@ deg_information <- function(
       dplyr::relocate(User_ID)
     
   } else {
-    
+
     # get the first comparison level 
     degs_data <- limma_value$top_genes[[1]]
     colnames(degs_data) <- c(
@@ -3169,7 +3169,7 @@ deg_information <- function(
     # connect to gene symbols and original user id 
     processed_data <- as.data.frame(processed_data)
     processed_data$ensembl_ID <- rownames(processed_data)
-    
+    degs_data$'Processed data:' <- "" # add a empty column
     degs_data <- dplyr::full_join(degs_data, gene_names, by = "ensembl_ID")
     degs_data <- dplyr::full_join(degs_data, processed_data, by = "ensembl_ID")
     
