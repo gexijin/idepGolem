@@ -1,0 +1,124 @@
+"pathway_id","overlap","n","description","memo","pval","fold","overlap_bg","total_genes_bg"
+18089,1,"66","Glycolysis / Gluconeogenesis","http://www.genome.jp/kegg-bin/show_pathway?mmu00010 ",0.265388308392346,3.2620103473762,28,1821
+18099,1,"20","Steroid biosynthesis","http://www.genome.jp/kegg-bin/show_pathway?mmu00100 ",0.0890012959916365,10.7646341463415,13,1821
+18102,1,"91","Steroid hormone biosynthesis","http://www.genome.jp/kegg-bin/show_pathway?mmu00140 ",0.346782370661081,2.36585365853659,14,1821
+18110,1,"52","Cysteine and methionine metabolism","http://www.genome.jp/kegg-bin/show_pathway?mmu00270 ",0.215570124535295,4.14024390243902,18,1821
+18116,1,"39","Tyrosine metabolism","http://www.genome.jp/kegg-bin/show_pathway?mmu00350 ",0.166368352812338,5.52032520325203,7,1821
+18125,1,"72","Glutathione metabolism","http://www.genome.jp/kegg-bin/show_pathway?mmu00480 ",0.285781383718366,2.99017615176152,29,1821
+18151,1,"44","Pyruvate metabolism","http://www.genome.jp/kegg-bin/show_pathway?mmu00620 ",0.185638436382782,4.8930155210643,19,1821
+18153,1,"31","Propanoate metabolism","http://www.genome.jp/kegg-bin/show_pathway?mmu00640 ",0.13460728797573,6.94492525570417,9,1821
+18164,1,"97","Retinol metabolism","http://www.genome.jp/kegg-bin/show_pathway?mmu00830 ",0.364967217897254,2.21951219512195,13,1821
+18173,1,"34","Biosynthesis of unsaturated fatty acids","http://www.genome.jp/kegg-bin/show_pathway?mmu01040 ",0.1466536625741,6.33213773314204,11,1821
+18174,7,"1597","Metabolic pathways","http://www.genome.jp/kegg-bin/show_pathway?mmu01100 ",0.630898598135858,0.943674878201506,538,1821
+18177,1,"62","Fatty acid metabolism","http://www.genome.jp/kegg-bin/show_pathway?mmu01212 ",0.251478485461045,3.47246262785209,25,1821
+18179,1,"154","Biosynthesis of cofactors","http://www.genome.jp/kegg-bin/show_pathway?mmu01240 ",0.51483839382852,1.3980044345898,57,1821
+18187,1,"130","Ribosome","http://www.genome.jp/kegg-bin/show_pathway?mmu03010 ",0.456492976912332,1.65609756097561,29,1821
+18194,1,"131","Spliceosome","http://www.genome.jp/kegg-bin/show_pathway?mmu03040 ",0.459055215379229,1.64345559486129,39,1821
+18197,2,"89","PPAR signaling pathway","http://www.genome.jp/kegg-bin/show_pathway?mmu03320 ",0.0639795937856969,4.83803781858043,26,1821
+18204,5,"294","MAPK signaling pathway","http://www.genome.jp/kegg-bin/show_pathway?mmu04010 ",0.0111208133413632,3.66144018583043,113,1821
+18206,3,"231","Ras signaling pathway","http://www.genome.jp/kegg-bin/show_pathway?mmu04014 ",0.0913161331095017,2.7960088691796,82,1821
+18207,3,"214","Rap1 signaling pathway","http://www.genome.jp/kegg-bin/show_pathway?mmu04015 ",0.0764870182023506,3.01812172327331,87,1821
+18208,5,"240","Calcium signaling pathway","http://www.genome.jp/kegg-bin/show_pathway?mmu04020 ",0.00480482591591093,4.48526422764228,86,1821
+18209,1,"171","CGMP-PKG signaling pathway","http://www.genome.jp/kegg-bin/show_pathway?mmu04022 ",0.552421220800437,1.2590215375838,62,1821
+18211,1,"289","Cytokine-cytokine receptor interaction","http://www.genome.jp/kegg-bin/show_pathway?mmu04060 ",0.74537906638087,0.744957380369651,94,1821
+18213,1,"189","Chemokine signaling pathway","http://www.genome.jp/kegg-bin/show_pathway?mmu04062 ",0.589117620451789,1.13911472448058,69,1821
+18215,1,"113","HIF-1 signaling pathway","http://www.genome.jp/kegg-bin/show_pathway?mmu04066 ",0.411079327253374,1.90524498165336,43,1821
+18216,1,"131","FoxO signaling pathway","http://www.genome.jp/kegg-bin/show_pathway?mmu04068 ",0.459055215379229,1.64345559486129,53,1821
+18220,6,"372","Neuroactive ligand-receptor interaction","http://www.genome.jp/kegg-bin/show_pathway?mmu04080 ",0.00693334162540827,3.47246262785208,73,1821
+18221,1,"125","Cell cycle","http://www.genome.jp/kegg-bin/show_pathway?mmu04110 ",0.443503130677646,1.72234146341463,52,1821
+18224,1,"145","Ubiquitin mediated proteolysis","http://www.genome.jp/kegg-bin/show_pathway?mmu04120 ",0.493712782620483,1.48477712363331,31,1821
+18230,1,"170","Protein processing in endoplasmic reticulum","http://www.genome.jp/kegg-bin/show_pathway?mmu04141 ",0.550291377491804,1.26642754662841,53,1821
+18232,1,"264","Endocytosis","http://www.genome.jp/kegg-bin/show_pathway?mmu04144 ",0.712870508207161,0.81550258684405,76,1821
+18236,5,"357","PI3K-Akt signaling pathway","http://www.genome.jp/kegg-bin/show_pathway?mmu04151 ",0.0238621849074499,3.01530368244859,134,1821
+18237,2,"124","AMPK signaling pathway","http://www.genome.jp/kegg-bin/show_pathway?mmu04152 ",0.112735413389622,3.47246262785209,36,1821
+18239,1,"90","Longevity regulating pathway","http://www.genome.jp/kegg-bin/show_pathway?mmu04211 ",0.343702572730665,2.39214092140921,31,1821
+18240,1,"62","Longevity regulating pathway","http://www.genome.jp/kegg-bin/show_pathway?mmu04213 ",0.251478485461045,3.47246262785209,22,1821
+18244,1,"174","Cellular senescence","http://www.genome.jp/kegg-bin/show_pathway?mmu04218 ",0.55875187497247,1.23731426969442,60,1821
+18251,2,"95","TGF-beta signaling pathway","http://www.genome.jp/kegg-bin/show_pathway?mmu04350 ",0.071703209859194,4.53247753530167,28,1821
+18254,1,"136","Apelin signaling pathway","http://www.genome.jp/kegg-bin/show_pathway?mmu04371 ",0.471690674138875,1.58303443328551,56,1821
+18255,1,"123","Osteoclast differentiation","http://www.genome.jp/kegg-bin/show_pathway?mmu04380 ",0.438222815024607,1.75034701566528,54,1821
+18256,2,"156","Hippo signaling pathway","http://www.genome.jp/kegg-bin/show_pathway?mmu04390 ",0.163277345760457,2.76016260162602,49,1821
+18258,1,"200","Focal adhesion","http://www.genome.jp/kegg-bin/show_pathway?mmu04510 ",0.61008017581554,1.07646341463415,84,1821
+18259,1,"88","ECM-receptor interaction","http://www.genome.jp/kegg-bin/show_pathway?mmu04512 ",0.337500418732745,2.44650776053215,41,1821
+18264,1,"140","Signaling pathways regulating pluripotency of stem cells","http://www.genome.jp/kegg-bin/show_pathway?mmu04550 ",0.481591294765215,1.53780487804878,36,1821
+18265,3,"91","Complement and coagulation cascades","http://www.genome.jp/kegg-bin/show_pathway?mmu04610 ",0.00851559617823883,7.09756097560976,35,1821
+18267,1,"80","Antigen processing and presentation","http://www.genome.jp/kegg-bin/show_pathway?mmu04612 ",0.31211495367033,2.69115853658537,34,1821
+18268,1,"198","Neutrophil extracellular trap formation","http://www.genome.jp/kegg-bin/show_pathway?mmu04613 ",0.606348035803259,1.08733678245873,88,1821
+18289,1,"98","Circadian entrainment","http://www.genome.jp/kegg-bin/show_pathway?mmu04713 ",0.367949616988459,2.19686411149826,38,1821
+18292,1,"77","Synaptic vesicle cycle","http://www.genome.jp/kegg-bin/show_pathway?mmu04721 ",0.302352797437844,2.7960088691796,18,1821
+18294,3,"146","Retrograde endocannabinoid signaling","http://www.genome.jp/kegg-bin/show_pathway?mmu04723 ",0.0298946286116853,4.42382225192115,50,1821
+18295,1,"113","Glutamatergic synapse","http://www.genome.jp/kegg-bin/show_pathway?mmu04724 ",0.411079327253374,1.90524498165336,39,1821
+18296,2,"112","Cholinergic synapse","http://www.genome.jp/kegg-bin/show_pathway?mmu04725 ",0.0950845173545707,3.84451219512195,37,1821
+18297,3,"131","Serotonergic synapse","http://www.genome.jp/kegg-bin/show_pathway?mmu04726 ",0.0225935643151075,4.93036678458388,39,1821
+18298,3,"89","GABAergic synapse","http://www.genome.jp/kegg-bin/show_pathway?mmu04727 ",0.00801142866260845,7.25705672787065,34,1821
+18299,1,"132","Dopaminergic synapse","http://www.genome.jp/kegg-bin/show_pathway?mmu04728 ",0.46160566802061,1.6310051736881,43,1821
+18301,4,"1143","Olfactory transduction","http://www.genome.jp/kegg-bin/show_pathway?mmu04740 ",0.795872538140342,0.753430211467469,28,1821
+18303,1,"27","Phototransduction","http://www.genome.jp/kegg-bin/show_pathway?mmu04744 ",0.118287083234035,7.97380307136405,5,1821
+18304,2,"126","Inflammatory mediator regulation of TRP channels","http://www.genome.jp/kegg-bin/show_pathway?mmu04750 ",0.115757042964814,3.41734417344173,31,1821
+18305,3,"219","Regulation of actin cytoskeleton","http://www.genome.jp/kegg-bin/show_pathway?mmu04810 ",0.0807274351523402,2.9492148346141,79,1821
+18307,1,"86","Insulin secretion","http://www.genome.jp/kegg-bin/show_pathway?mmu04911 ",0.331241095748212,2.50340328984685,30,1821
+18311,1,"134","Estrogen signaling pathway","http://www.genome.jp/kegg-bin/show_pathway?mmu04915 ",0.46667142704934,1.60666181288679,38,1821
+18312,1,"100","Melanogenesis","http://www.genome.jp/kegg-bin/show_pathway?mmu04916 ",0.373873476365559,2.15292682926829,30,1821
+18316,1,"71","Adipocytokine signaling pathway","http://www.genome.jp/kegg-bin/show_pathway?mmu04920 ",0.282421319086405,3.03229130882858,21,1821
+18317,2,"152","Oxytocin signaling pathway","http://www.genome.jp/kegg-bin/show_pathway?mmu04921 ",0.15673797939649,2.83279845956354,57,1821
+18318,1,"104","Glucagon signaling pathway","http://www.genome.jp/kegg-bin/show_pathway?mmu04922 ",0.385559140509308,2.07012195121951,31,1821
+18321,2,"102","Aldosterone synthesis and secretion","http://www.genome.jp/kegg-bin/show_pathway?mmu04925 ",0.0810771668562305,4.22142515542803,35,1821
+18322,2,"129","Relaxin signaling pathway","http://www.genome.jp/kegg-bin/show_pathway?mmu04926 ",0.12032881631647,3.33787105312914,49,1821
+18323,1,"72","Cortisol synthesis and secretion","http://www.genome.jp/kegg-bin/show_pathway?mmu04927 ",0.285781383718366,2.99017615176152,25,1821
+18324,1,"108","Parathyroid hormone synthesis, secretion and action","http://www.genome.jp/kegg-bin/show_pathway?mmu04928 ",0.397031932492958,1.99345076784101,37,1821
+18326,1,"48","Type II diabetes mellitus","http://www.genome.jp/kegg-bin/show_pathway?mmu04930 ",0.200740966790186,4.48526422764228,20,1821
+18328,1,"154","Non-alcoholic fatty liver disease","http://www.genome.jp/kegg-bin/show_pathway?mmu04932 ",0.51483839382852,1.3980044345898,59,1821
+18329,1,"101","AGE-RAGE signaling pathway in diabetic complications","http://www.genome.jp/kegg-bin/show_pathway?mmu04933 ",0.376815058520825,2.13161072204781,41,1821
+18330,1,"162","Cushing syndrome","http://www.genome.jp/kegg-bin/show_pathway?mmu04934 ",0.532892926422067,1.32896717856067,58,1821
+18332,3,"139","Alcoholic liver disease","http://www.genome.jp/kegg-bin/show_pathway?mmu04936 ",0.026349009100443,4.64660466748552,44,1821
+18342,1,"112","Pancreatic secretion","http://www.genome.jp/kegg-bin/show_pathway?mmu04972 ",0.408295634887382,1.92225609756098,30,1821
+18344,1,"108","Protein digestion and absorption","http://www.genome.jp/kegg-bin/show_pathway?mmu04974 ",0.397031932492958,1.99345076784101,39,1821
+18345,1,"42","Fat digestion and absorption","http://www.genome.jp/kegg-bin/show_pathway?mmu04975 ",0.177983124982042,5.1260162601626,16,1821
+18352,4,"365","Amyotrophic lateral sclerosis","http://www.genome.jp/kegg-bin/show_pathway?mmu05014 ",0.087882706545892,2.35937186769128,143,1821
+18353,4,"300","Huntington disease","http://www.genome.jp/kegg-bin/show_pathway?mmu05016 ",0.0494578478858329,2.87056910569106,119,1821
+18355,2,"266","Prion disease","http://www.genome.jp/kegg-bin/show_pathway?mmu05020 ",0.351628517674189,1.61874197689345,113,1821
+18356,4,"469","Pathways of neurodegeneration","http://www.genome.jp/kegg-bin/show_pathway?mmu05022 ",0.171530974547887,1.83618492901347,173,1821
+18359,3,"91","Morphine addiction","http://www.genome.jp/kegg-bin/show_pathway?mmu05032 ",0.00851559617823883,7.09756097560976,31,1821
+18360,2,"40","Nicotine addiction","http://www.genome.jp/kegg-bin/show_pathway?mmu05033 ",0.0146868548773055,10.7646341463415,9,1821
+18361,1,"198","Alcoholism","http://www.genome.jp/kegg-bin/show_pathway?mmu05034 ",0.606348035803259,1.08733678245873,83,1821
+18364,1,"76","Pertussis","http://www.genome.jp/kegg-bin/show_pathway?mmu05133 ",0.299068809457931,2.83279845956354,30,1821
+18365,1,"60","Legionellosis","http://www.genome.jp/kegg-bin/show_pathway?mmu05134 ",0.244427546277551,3.58821138211382,27,1821
+18367,1,"69","Leishmaniasis","http://www.genome.jp/kegg-bin/show_pathway?mmu05140 ",0.275654860190173,3.12018381053376,32,1821
+18368,1,"103","Chagas disease","http://www.genome.jp/kegg-bin/show_pathway?mmu05142 ",0.382657830450675,2.09022022259058,33,1821
+18370,1,"55","Malaria","http://www.genome.jp/kegg-bin/show_pathway?mmu05144 ",0.22651549881062,3.91441241685144,31,1821
+18371,2,"109","Toxoplasmosis","http://www.genome.jp/kegg-bin/show_pathway?mmu05145 ",0.0908107370667416,3.95032445737301,51,1821
+18372,1,"105","Amoebiasis","http://www.genome.jp/kegg-bin/show_pathway?mmu05146 ",0.388447146383333,2.05040650406504,42,1821
+18373,2,"115","Staphylococcus aureus infection","http://www.genome.jp/kegg-bin/show_pathway?mmu05150 ",0.0994161809075105,3.74422057264051,35,1821
+18374,2,"178","Tuberculosis","http://www.genome.jp/kegg-bin/show_pathway?mmu05152 ",0.200043665163722,2.41901890929022,64,1821
+18376,1,"163","Hepatitis B","http://www.genome.jp/kegg-bin/show_pathway?mmu05161 ",0.535103127231842,1.32081400568607,55,1821
+18377,1,"143","Measles","http://www.genome.jp/kegg-bin/show_pathway?mmu05162 ",0.488897737575033,1.50554323725055,54,1821
+18378,1,"247","Human cytomegalovirus infection","http://www.genome.jp/kegg-bin/show_pathway?mmu05163 ",0.688487440663973,0.871630295250321,76,1821
+18379,1,"169","Influenza A","http://www.genome.jp/kegg-bin/show_pathway?mmu05164 ",0.54815164747871,1.27392120075047,64,1821
+18380,1,"349","Human papillomavirus infection","http://www.genome.jp/kegg-bin/show_pathway?mmu05165 ",0.809442647801391,0.61688447830037,116,1821
+18381,1,"240","Human T-cell leukemia virus 1 infection","http://www.genome.jp/kegg-bin/show_pathway?mmu05166 ",0.677870365464598,0.897052845528455,82,1821
+18382,1,"215","Kaposi sarcoma-associated herpesvirus infection","http://www.genome.jp/kegg-bin/show_pathway?mmu05167 ",0.636991881273845,1.00136131593874,66,1821
+18383,1,"439","Herpes simplex virus 1 infection","http://www.genome.jp/kegg-bin/show_pathway?mmu05168 ",0.877103659214268,0.49041613422968,95,1821
+18385,1,"231","Human immunodeficiency virus 1 infection","http://www.genome.jp/kegg-bin/show_pathway?mmu05170 ",0.663699944596156,0.9320029563932,60,1821
+18386,2,"231","Coronavirus disease","http://www.genome.jp/kegg-bin/show_pathway?mmu05171 ",0.29143512169646,1.8640059127864,61,1821
+18387,6,"542","Pathways in cancer","http://www.genome.jp/kegg-bin/show_pathway?mmu05200 ",0.0375403663095032,2.38331383313833,197,1821
+18391,1,"201","Proteoglycans in cancer","http://www.genome.jp/kegg-bin/show_pathway?mmu05205 ",0.611933278028542,1.07110787525786,75,1821
+18392,2,"162","MicroRNAs in cancer","http://www.genome.jp/kegg-bin/show_pathway?mmu05206 ",0.173179861760661,2.65793435712135,69,1821
+18393,1,"209","Chemical carcinogenesis","http://www.genome.jp/kegg-bin/show_pathway?mmu05207 ",0.626451986503186,1.03010853075038,67,1821
+18395,1,"88","Colorectal cancer","http://www.genome.jp/kegg-bin/show_pathway?mmu05210 ",0.337500418732745,2.44650776053215,29,1821
+18396,1,"68","Renal cell carcinoma","http://www.genome.jp/kegg-bin/show_pathway?mmu05211 ",0.272248327644612,3.16606886657102,21,1821
+18397,1,"76","Pancreatic cancer","http://www.genome.jp/kegg-bin/show_pathway?mmu05212 ",0.299068809457931,2.83279845956354,26,1821
+18399,1,"74","Glioma","http://www.genome.jp/kegg-bin/show_pathway?mmu05214 ",0.292455526805472,2.90936058009229,26,1821
+18403,2,"72","Melanoma","http://www.genome.jp/kegg-bin/show_pathway?mmu05218 ",0.0438567302171171,5.98035230352304,30,1821
+18405,1,"76","Chronic myeloid leukemia","http://www.genome.jp/kegg-bin/show_pathway?mmu05220 ",0.299068809457931,2.83279845956354,29,1821
+18409,2,"147","Breast cancer","http://www.genome.jp/kegg-bin/show_pathway?mmu05224 ",0.148641018635681,2.92915214866434,48,1821
+18410,1,"173","Hepatocellular carcinoma","http://www.genome.jp/kegg-bin/show_pathway?mmu05225 ",0.556651425288721,1.24446637529959,61,1821
+18411,3,"149","Gastric cancer","http://www.genome.jp/kegg-bin/show_pathway?mmu05226 ",0.0314881447463477,4.33475200523817,55,1821
+18412,1,"69","Central carbon metabolism in cancer","http://www.genome.jp/kegg-bin/show_pathway?mmu05230 ",0.275654860190173,3.12018381053376,26,1821
+18417,1,"61","Inflammatory bowel disease","http://www.genome.jp/kegg-bin/show_pathway?mmu05321 ",0.247961077770949,3.52938824470212,21,1821
+18418,1,"140","Systemic lupus erythematosus","http://www.genome.jp/kegg-bin/show_pathway?mmu05322 ",0.481591294765215,1.53780487804878,79,1821
+18419,1,"86","Rheumatoid arthritis","http://www.genome.jp/kegg-bin/show_pathway?mmu05323 ",0.331241095748212,2.50340328984685,39,1821
+18423,1,"91","Hypertrophic cardiomyopathy","http://www.genome.jp/kegg-bin/show_pathway?mmu05410 ",0.346782370661081,2.36585365853659,40,1821
+18425,1,"94","Dilated cardiomyopathy","http://www.genome.jp/kegg-bin/show_pathway?mmu05414 ",0.355937406188952,2.29034769071095,43,1821
+18426,1,"204","Diabetic cardiomyopathy","http://www.genome.jp/kegg-bin/show_pathway?mmu05415 ",0.617441181313869,1.05535628885701,77,1821
+18427,1,"78","Viral myocarditis","http://www.genome.jp/kegg-bin/show_pathway?mmu05416 ",0.305621772901279,2.76016260162602,37,1821
+18428,1,"216","Lipid and atherosclerosis","http://www.genome.jp/kegg-bin/show_pathway?mmu05417 ",0.638720089920823,0.996725383920506,76,1821

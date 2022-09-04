@@ -77,9 +77,9 @@ dist_functions <- function() {
   }
 
   return(list(
-    euclidean = dist,
-    pearson_correlation = dist_pcc,
-    absolute_pcc = dist_abs_pcc
+    Pearson = dist_pcc,
+    Euclidean = dist,
+    Absolute_Pearson = dist_abs_pcc
   ))
 }
 

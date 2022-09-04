@@ -224,7 +224,7 @@ process_heatmap_data <- function(
 #' @param dist_funs List of distance functions to use in heatmap
 #' @param dist_function The selected distance function to use
 #' @param hclust_function Type of clustering to perform
-#' @param no_sample_clustering TRUE/FALSE Specify whehter to cluster columns
+#' @param sample_clustering TRUE/FALSE Specify whehter to cluster columns
 #' @param heatmap_color_select Vector of colors for heatmap scale
 #' @param row_dend TRUE/FALSE Hide row dendogram,
 #' @param k_clusters Number of clusters to use for k-means
@@ -241,7 +241,7 @@ heatmap_main <- function(
   dist_funs,
   dist_function,
   hclust_function,
-  no_sample_clustering,
+  sample_clustering,
   heatmap_color_select,
   row_dend,
   k_clusters,
@@ -311,7 +311,7 @@ heatmap_main <- function(
         dist_funs[[as.numeric(dist_function)]](x)
       },
       cluster_rows = TRUE,
-      cluster_columns = !(no_sample_clustering),
+      cluster_columns = sample_clustering,
       show_column_dend = TRUE,
       show_row_dend = row_dend,
       row_dend_side = "left",
@@ -340,7 +340,7 @@ heatmap_main <- function(
       col = col_fun,
       row_km = k_clusters,
       cluster_rows = TRUE,
-      cluster_columns = !(no_sample_clustering),
+      cluster_columns = sample_clustering,
       show_column_dend = TRUE,
       show_row_dend = row_dend,
       row_dend_side = "left",

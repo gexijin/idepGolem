@@ -51,7 +51,7 @@ mod_03_clustering_ui <- function(id) {
           ),
           ns = ns
         ),
-        
+
         conditionalPanel(
           condition = "(input.cluster_panels == 'Hierarchical' | 
             input.cluster_panels == 'sample_tab') &&  input.cluster_meth == 2",
@@ -154,65 +154,53 @@ mod_03_clustering_ui <- function(id) {
 
         conditionalPanel(
           condition = "input.cluster_panels == 'Hierarchical' ",
-          checkboxInput(
-            inputId = ns("no_sample_clustering"),
-            label = "Do not cluster samples",
-            value = TRUE
-          ),
-          checkboxInput(
-            inputId = ns("show_row_dend"),
-            label = "Show Row Dendogram",
-            value = TRUE
-          ),
-
-          # Gene ID Selection -----------
           fluidRow(
-            column(width = 4, h5("ID type")),
+            column(width = 4, h5("Samples color")),
             column(
               width = 8,
-              selectInput(
-                inputId = ns("select_gene_id"),
-                label = NULL,
-                choices = NULL,
-                selected = NULL
-              )
-            )
-          ),
-          
-          # Sample coloring bar -----------
-
-          fluidRow(
-            column(width = 5, h5("Samples category")),
-            column(
-              width = 7,
               htmlOutput(ns("list_factors_heatmap"))
             )
           ),
-          fluidRow(
-            column(width = 3, h5("Color")),
-            column(
-              width = 9,
-              selectInput(
-                inputId = ns("heatmap_color_select"),
-                label = NULL,
-                choices = "green-black-red",
-                width = "100%"
-              )
+          actionButton(ns("customize_button"), "More options"),
+          shinyBS::bsModal(
+            id = ns("modalExample"),
+            title = "More options",
+            trigger = ns("customize_button"),
+            size = "small",
+            checkboxInput(
+              inputId = ns("sample_clustering"),
+              label = "Cluster samples",
+              value = FALSE
+            ),
+            checkboxInput(
+              inputId = ns("show_row_dend"),
+              label = "Show Row Dendogram",
+              value = TRUE
+            ),
+            selectInput(
+              inputId = ns("heatmap_color_select"),
+              label = "Heatmap Color scheme:",
+              choices = "green-black-red",
+              width = "100%"
+            ),
+            selectInput(
+              inputId = ns("select_gene_id"),
+              label = "Gene ID for sub-heatmap with < 60 genes:",
+              choices = NULL,
+              selected = NULL
+            ),
+            downloadButton(
+              outputId = ns("download_heatmap_data"),
+              label = "Heatmap data"
             )
           ),
-          br(),
-          downloadButton(
-            outputId = ns("download_heatmap_data"),
-            label = "Heatmap data"
-          ),
-          
           ns = ns
         ),
+        br(),
         downloadButton(
           outputId = ns("report"),
           label = "Generate Report"
         ),
-
         a(
           h5("Questions?", align = "right"),
           href = "https://idepsite.wordpress.com/heatmap/",
@@ -474,7 +462,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         dist_funs = dist_funs,
         dist_function = input$dist_function,
         hclust_function = input$hclust_function,
-        no_sample_clustering = input$no_sample_clustering,
+        sample_clustering = input$sample_clustering,
         heatmap_color_select = heatmap_colors[[input$heatmap_color_select]],
         row_dend = input$show_row_dend,
         k_clusters = input$k_clusters,
@@ -759,7 +747,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
           heatmap_cutoff = input$heatmap_cutoff,
           gene_centering = input$gene_centering,
           gene_normalize = input$gene_normalize,
-          no_sample_clustering = input$no_sample_clustering,
+          sample_clustering = input$sample_clustering,
           show_row_dend = input$show_row_dend
             
           
