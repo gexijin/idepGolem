@@ -674,7 +674,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
 
     heatmap_module <- mod_12_heatmap_server(
       id = "12_heatmap_1",
-      data = reactive({ heat_data() }),
+      data = reactive({ heat_data()$genes }),
       bar = heat_data()$bar,
       all_gene_names = reactive({ pre_process$all_gene_names() })
     )

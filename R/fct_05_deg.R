@@ -2543,6 +2543,7 @@ deg_heat_sub <- function(
   ht,
   ht_pos_main,
   heatmap_data,
+  bar,
   all_gene_names
 ) {
   lt <- InteractiveComplexHeatmap::getPositionFromBrush(ht_brush)
@@ -2559,7 +2560,7 @@ deg_heat_sub <- function(
   )
 
   # Annotations ----------
-    column_groups <- detect_groups(colnames(heatmap_data$genes))
+    column_groups <- detect_groups(colnames(heatmap_data))
     group_count <- length(unique(column_groups))
     groups_colors <- gg_color_hue(2 + group_count)
   
@@ -2578,7 +2579,6 @@ deg_heat_sub <- function(
       show_legend = TRUE
     )
     
-    bar <- heatmap_data$bar
     bar[bar == -1] <- "Down"
     bar[bar == 1]  <- "Up"
     row_groups <- bar

@@ -99,7 +99,7 @@ mod_12_heatmap_server <- function(
 
       # Assign heatmap to be used in multiple components
       shiny_env$ht <- deg_heatmap(
-        data = data()$genes,
+        data = data(),
         bar = bar,
         heatmap_color_select = heatmap_colors[[input$heatmap_color_select]]
       )
@@ -117,21 +117,21 @@ mod_12_heatmap_server <- function(
         grid::grid.newpage()
         grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
       } else {
-#        browser()
-        deg_heat_return <- deg_heat_sub(
+        heat_return <- deg_heat_sub(
           ht_brush = input$ht_brush,
           ht = shiny_env$ht,
           ht_pos_main = shiny_env$ht_pos_main,
           heatmap_data = data(),
+          bar = bar,
           all_gene_names = all_gene_names()
         )
 
-        shiny_env$ht_select <- deg_heat_return$ht_select
-        shiny_env$submap_data <- deg_heat_return$submap_data
-        shiny_env$group_colors <- deg_heat_return$group_colors
-        shiny_env$column_groups <- deg_heat_return$column_groups
-        shiny_env$bar <- deg_heat_return$bar
-        
+        shiny_env$ht_select <- heat_return$ht_select
+        shiny_env$submap_data <- heat_return$submap_data
+        shiny_env$group_colors <- heat_return$group_colors
+        shiny_env$column_groups <- heat_return$column_groups
+        shiny_env$bar <- heat_return$bar
+
         shiny_env$ht_sub <- ComplexHeatmap::draw(
           shiny_env$ht_select,
           annotation_legend_side = "top",

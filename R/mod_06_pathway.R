@@ -236,6 +236,10 @@ mod_06_pathway_ui <- function(id) {
               width = "100%"
             )
           ),
+ #         tabPanel(
+ #           title = "Heatmap2",
+ #           mod_12_heatmap_ui(ns("12_heatmap_1"))
+ #         ),
           tabPanel(
             title = "Heatmap",
             fluidRow(
