@@ -201,12 +201,12 @@ process_heatmap_data <- function(
   )
 
   if (gene_centering) {
-    return(round(data, 3))
+    return(data)
   } else {
     data <- data[1:n_genes_max, ]
   }
 
-  return(round(data, 3))
+  return(data)
 }
 
 #' Draw a heatmap of processed data
