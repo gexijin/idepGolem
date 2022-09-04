@@ -219,10 +219,6 @@ mod_03_clustering_ui <- function(id) {
       mainPanel(
         tabsetPanel(
           id = ns("cluster_panels"),
-          tabPanel(
-            title = "Test heatmap module",
-            mod_12_heatmap_ui(ns("12_heatmap_1"))
-          ),
           # Heatmap panel ----------
           tabPanel(
             title = "Hierarchical",
@@ -442,22 +438,6 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       )
     })
 
-    heatmap_module <- mod_12_heatmap_server(
-      id = "12_heatmap_1",
-      heatmap_data = reactive({ heatmap_data() }),
-      cluster_meth = input$cluster_meth,
-      heatmap_cutoff = input$heatmap_cutoff,
-      sample_info = reactive({ pre_process$sample_info() }),
-      select_factors_heatmap = input$select_factors_heatmap,
-      dist_funs = dist_funs,
-      dist_function = input$dist_function,
-      hclust_function = input$hclust_function,
-      sample_clustering = input$sample_clustering,
-      heatmap_color_select = heatmap_colors[[input$heatmap_color_select]],
-      row_dend = input$show_row_dend,
-      k_clusters = input$k_clusters,
-      re_run = input$k_means_re_run
-    )
     # HEATMAP -----------
     # Information on interactivity
     # https://jokergoo.github.io/2020/05/15/interactive-complexheatmap/

@@ -212,10 +212,7 @@ find_overlap <- function(
       )
       pathway_table$fold <- (pathway_table$overlap / length(query_set)) / (
         as.numeric(pathway_table_bg$overlap_bg) / pathway_table_bg$total_genes_bg[1]
-      )
-
-
-  write.csv(subset(pathway_table_bg, select = -gene_sets), "pathway_table_bg.csv", row.names = F)      
+      )     
     }
   }
 

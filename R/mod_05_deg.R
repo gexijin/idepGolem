@@ -219,6 +219,10 @@ mod_05_deg_2_ui <- function(id) {
         tabsetPanel(
           id = ns("step_2"),
           tabPanel(
+            title = "Test heatmap module",
+            mod_12_heatmap_ui(ns("12_heatmap_1"))
+          ),
+          tabPanel(
             title = "Heatmap",
             h5("Brush for sub-heatmap, click for value. (Shown Below)"),
             br(),
@@ -298,6 +302,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
 
     # Interactive heatmap environment
     deg_env <- new.env()
+
     
     # DEG STEP 1 ----------
     output$data_file_format <- reactive({
@@ -707,7 +712,14 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         contrast_samples = contrast_samples()
       )
     })
-    
+
+    heatmap_module <- mod_12_heatmap_server(
+      id = "12_heatmap_1",
+      data = reactive({ heat_data() }),
+      bar = heat_data()$bar,
+      all_gene_names = reactive({ pre_process$all_gene_names() })
+    )
+
     # Plot colors ------- 
     plot_colors <- list(
       "Green-Red" = c("green", "grey45", "red"), 

@@ -10,14 +10,38 @@
 mod_12_heatmap_ui <- function(id){
   ns <- NS(id)
   tagList(
-         plotOutput(
-          outputId = ns("heatmap_main"),
-          height = "500px",
+
+    fluidRow(
+      column(
+        width = 3,
+        selectInput(
+          inputId = ns("heatmap_color_select"),
+          label = NULL,
+          choices = "green-black-red",
+          width = "100%"
+        ),
+        plotOutput(
+          outputId = ns("main_heatmap"),
+          height = "450px",
           width = "100%",
           brush = ns("ht_brush")
         ),
-        tableOutput(ns("heat_data"))
- 
+        br(),
+        h5("Selected Cell (Submap):"),
+        uiOutput(
+          outputId = ns("ht_click_content")
+        )
+      ),
+      column(
+        width = 9,
+        plotOutput(
+          outputId = ns("sub_heatmap"),
+          height = "650px",
+          width = "100%",
+          click = ns("ht_click")
+        )
+      )
+    )
   )
 }
     
@@ -26,37 +50,46 @@ mod_12_heatmap_ui <- function(id){
 #' @noRd 
 mod_12_heatmap_server <- function(
   id,
-  heatmap_data,
-  cluster_meth,
-  heatmap_cutoff,
-  sample_info,
-  select_factors_heatmap,
-  dist_funs,
-  dist_function,
-  hclust_function,
-  sample_clustering,
-  heatmap_color_select,
-  row_dend,
-  k_clusters,
-  re_run
+  data,
+  bar,
+  all_gene_names
 ){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
     # Interactive heatmap environment
     shiny_env <- new.env()
 
-    output$heat_data <- renderTable({
-      req(!is.null(heatmap_data()))
-      head(heatmap_data())
+    # Heatmap Colors ----------
+    heatmap_colors <- list(
+      "Green-Black-Red" = c("green", "black", "red"),
+      "Red-Black-Green" = c("red", "black", "red"), 
+      "Blue-White-Red" = c("blue", "white", "red"),
+      "Green-Black-Magenta" = c("green", "black", "magenta"),
+      "Blue-Yellow-Red" = c("blue", "yellow", "red"),
+      "Blue-White-Brown" = c("blue", "white", "brown"), 
+      "Orange-White-Blue" = c("orange", "white", "blue")
+    )
+
+    heatmap_choices <- c(
+      "Green-Black-Red",
+      "Red-Black-Green", 
+      "Blue-White-Red",
+      "Green-Black-Magenta",
+      "Blue-Yellow-Red",
+      "Blue-White-Brown", 
+      "Orange-White-Blue"
+    )
+
+    observe({
+      updateSelectInput(
+        session = session,
+        inputId = "heatmap_color_select",
+        choices = heatmap_choices
+      )
     })
 
-    # HEATMAP -----------
-    # Information on interactivity
-    # https://jokergoo.github.io/2020/05/15/interactive-complexheatmap/
-    output$heatmap_main <- renderPlot({
-
-      req(!is.null(heatmap_data()))
-#      req(!is.null(select_factors_heatmap))
+    output$main_heatmap <- renderPlot({
+      req(!is.null(data()))
 
       shinybusy::show_modal_spinner(
         spin = "orbit",
@@ -65,20 +98,10 @@ mod_12_heatmap_server <- function(
       )
 
       # Assign heatmap to be used in multiple components
-      shiny_env$ht <- heatmap_main(
-        data = heatmap_data(),
-        cluster_meth = cluster_meth,
-        heatmap_cutoff = heatmap_cutoff,
-        sample_info = sample_info(),
-        select_factors_heatmap = select_factors_heatmap,
-        dist_funs = dist_funs,
-        dist_function = dist_function,
-        hclust_function = hclust_function,
-        sample_clustering = sample_clustering,
-        heatmap_color_select = heatmap_color_select,
-        row_dend = row_dend,
-        k_clusters = k_clusters,
-        re_run = re_run
+      shiny_env$ht <- deg_heatmap(
+        data = data()$genes,
+        bar = bar,
+        heatmap_color_select = heatmap_colors[[input$heatmap_color_select]]
       )
 
       # Use heatmap position in multiple components
@@ -89,53 +112,30 @@ mod_12_heatmap_server <- function(
       return(shiny_env$ht)
     })
 
-    # Heatmap Click Value ---------
-    output$ht_click_content <- renderUI({
-      
-      if (is.null(input$ht_click) | is.null(shiny_env$ht_sub)) { 
-        "Click on zoomed heatmap"
-      } else {
-        cluster_heat_click_info(
-          click = input$ht_click,
-          ht_sub = shiny_env$ht_sub,
-          ht_sub_obj = shiny_env$ht_sub_obj,
-          ht_pos_sub = shiny_env$ht_pos_sub,
-          sub_groups = shiny_env$sub_groups,
-          group_colors = shiny_env$group_colors,
-          cluster_meth = input$cluster_meth,
-          click_data = shiny_env$click_data
-        )
-      }
-    })
-
-    # Subheatmap creation ---------
     output$sub_heatmap <- renderPlot({
       if (is.null(input$ht_brush)) {
         grid::grid.newpage()
-        grid::grid.text("Select a region on the heatmap to zoom in. 
-        Gene IDs shows up when less than 60 genes are selected.", 0.5, 0.5)
+        grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
       } else {
-        submap_return <- heat_sub(
+#        browser()
+        deg_heat_return <- deg_heat_sub(
           ht_brush = input$ht_brush,
           ht = shiny_env$ht,
           ht_pos_main = shiny_env$ht_pos_main,
-          heatmap_data = heatmap_data(),
-          sample_info = pre_process$sample_info(),
-          select_factors_heatmap = input$select_factors_heatmap,
-          cluster_meth = input$cluster_meth
+          heatmap_data = data(),
+          all_gene_names = all_gene_names()
         )
 
-        # Objects used in other components ----------
-        shiny_env$ht_sub_obj <- submap_return$ht_select
-        shiny_env$submap_data <- submap_return$submap_data
-        shiny_env$sub_groups <- submap_return$sub_groups
-        shiny_env$group_colors <- submap_return$group_colors
-        shiny_env$click_data <- submap_return$click_data
+        shiny_env$ht_select <- deg_heat_return$ht_select
+        shiny_env$submap_data <- deg_heat_return$submap_data
+        shiny_env$group_colors <- deg_heat_return$group_colors
+        shiny_env$column_groups <- deg_heat_return$column_groups
+        shiny_env$bar <- deg_heat_return$bar
         
         shiny_env$ht_sub <- ComplexHeatmap::draw(
-          shiny_env$ht_sub_obj,
-          annotation_legend_list = submap_return$lgd,
-          annotation_legend_side = "top"
+          shiny_env$ht_select,
+          annotation_legend_side = "top",
+          heatmap_legend_side = "top"
         )
 
         shiny_env$ht_pos_sub <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht_sub)
@@ -143,6 +143,25 @@ mod_12_heatmap_server <- function(
         return(shiny_env$ht_sub)
       }
     })
+
+    # Sub Heatmap Click Value ---------
+    output$ht_click_content <- renderUI({
+      if (is.null(input$ht_click)) { 
+        "Click for Info."
+      } else {
+        deg_click_info(
+          click = input$ht_click,
+          ht_sub = shiny_env$ht_sub,
+          ht_sub_obj = shiny_env$ht_select,
+          ht_pos_sub = shiny_env$ht_pos_sub,
+          sub_groups = shiny_env$column_groups,
+          group_colors = shiny_env$group_colors,
+          bar = shiny_env$bar,
+          data = shiny_env$submap_data
+        )
+      }
+    })
+
 
 
   })
