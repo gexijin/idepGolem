@@ -219,7 +219,6 @@ mod_03_clustering_ui <- function(id) {
       mainPanel(
         tabsetPanel(
           id = ns("cluster_panels"),
-
           # Heatmap panel ----------
           tabPanel(
             title = "Hierarchical",

@@ -190,25 +190,16 @@ mod_05_deg_2_ui <- function(id) {
     title = "DEG2",
     sidebarLayout(
       sidebarPanel(
-        h5("Examine the results of DEGs for each comparison"),
         htmlOutput(outputId = ns("list_comparisons")),
-        # Heatmap customizing features ----------
-        conditionalPanel(
-          condition = "input.step_2 == 'Heatmap'",
-          selectInput(
-            inputId = ns("heatmap_color_select"),
-            label = "Color Scale:",
-            choices = "green-black-red",
-            width = "100%"
-          ),
-          ns = ns
-        ),
+        h6("Select a comparison to examine. 
+          \"A-B\" means A vs. B (See heatmap).
+            Interaction terms start with \"I:\""),
         conditionalPanel(
           condition = "input.step_2 == 'Volcano Plot' | 
             input.step_2 == 'MA Plot'", 
           selectInput(
             inputId = ns("plot_color_select"), 
-            label = NULL, 
+            label = "Color scale",
             choices = "Red-Green"
           ),
           ns = ns
@@ -220,33 +211,7 @@ mod_05_deg_2_ui <- function(id) {
           id = ns("step_2"),
           tabPanel(
             title = "Heatmap",
-            h5("Brush for sub-heatmap, click for value. (Shown Below)"),
-            br(),
-            fluidRow(
-              column(
-                width = 3,
-                plotOutput(
-                  outputId = ns("deg_main_heatmap"),
-                  height = "450px",
-                  width = "100%",
-                  brush = ns("ht_brush")
-                ),
-                br(),
-                h5("Selected Cell (Submap):"),
-                uiOutput(
-                  outputId = ns("ht_click_content")
-                )
-              ),
-              column(
-                width = 9,
-                plotOutput(
-                  outputId = ns("deg_sub_heatmap"),
-                  height = "650px",
-                  width = "100%",
-                  click = ns("ht_click")
-                )
-              )
-            )
+            mod_12_heatmap_ui(ns("12_heatmap_1"))
           ),
           tabPanel(
             title = "Volcano Plot",
@@ -298,6 +263,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
 
     # Interactive heatmap environment
     deg_env <- new.env()
+
     
     # DEG STEP 1 ----------
     output$data_file_format <- reactive({
@@ -673,9 +639,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
 			}	else {
         selectInput(
           inputId = ns("select_contrast"),
-          label = 
-            "Select a comparison to examine. \"A-B\" means A vs. B (See heatmap).
-            Interaction terms start with \"I:\"",
+          label = NULL,
           choices = deg$limma$comparisons
 	     )
       } 
@@ -707,7 +671,15 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         contrast_samples = contrast_samples()
       )
     })
-    
+
+    heatmap_module <- mod_12_heatmap_server(
+      id = "12_heatmap_1",
+      data = reactive({ heat_data()$genes }),
+      bar = heat_data()$bar,
+      all_gene_names = reactive({ pre_process$all_gene_names() }),
+      cluster_rows = FALSE
+    )
+
     # Plot colors ------- 
     plot_colors <- list(
       "Green-Red" = c("green", "grey45", "red"), 
@@ -733,105 +705,6 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       )
     })
 
-    # Heatmap Colors ----------
-    heatmap_colors <- list(
-      "Green-Black-Red" = c("green", "black", "red"),
-      "Red-Black-Green" = c("red", "black", "red"), 
-      "Blue-White-Red" = c("blue", "white", "red"),
-      "Green-Black-Magenta" = c("green", "black", "magenta"),
-      "Blue-Yellow-Red" = c("blue", "yellow", "red"),
-      "Blue-White-Brown" = c("blue", "white", "brown"), 
-      "Orange-White-Blue" = c("orange", "white", "blue")
-    )
-    heatmap_choices <- c(
-      "Green-Black-Red",
-      "Red-Black-Green", 
-      "Blue-White-Red",
-      "Green-Black-Magenta",
-      "Blue-Yellow-Red",
-      "Blue-White-Brown", 
-      "Orange-White-Blue"
-    )
-    observe({
-      updateSelectInput(
-        session = session,
-        inputId = "heatmap_color_select",
-        choices = heatmap_choices
-      )
-    })
-
-    output$deg_main_heatmap <- renderPlot({
-      req(!is.null(heat_data()$genes))
-
-      shinybusy::show_modal_spinner(
-        spin = "orbit",
-        text = "Creating Heatmap",
-        color = "#000000"
-      )
-
-      # Assign heatmap to be used in multiple components
-      deg_env$ht <- deg_heatmap(
-        data = heat_data()$genes,
-        bar = heat_data()$bar,
-        heatmap_color_select = heatmap_colors[[input$heatmap_color_select]]
-      )
-
-      # Use heatmap position in multiple components
-      deg_env$ht_pos_main <- InteractiveComplexHeatmap::htPositionsOnDevice(deg_env$ht)
-
-      shinybusy::remove_modal_spinner()
-
-      return(deg_env$ht)
-    })
-
-    output$deg_sub_heatmap <- renderPlot({
-      if (is.null(input$ht_brush)) {
-        grid::grid.newpage()
-        grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
-      } else {
-        deg_heat_return <- deg_heat_sub(
-          ht_brush = input$ht_brush,
-          ht = deg_env$ht,
-          ht_pos_main = deg_env$ht_pos_main,
-          heatmap_data = heat_data(),
-          all_gene_names = pre_process$all_gene_names()
-        )
-
-        deg_env$ht_select <- deg_heat_return$ht_select
-        deg_env$submap_data <- deg_heat_return$submap_data
-        deg_env$group_colors <- deg_heat_return$group_colors
-        deg_env$column_groups <- deg_heat_return$column_groups
-        deg_env$bar <- deg_heat_return$bar
-        
-        deg_env$ht_sub <- ComplexHeatmap::draw(
-          deg_env$ht_select,
-          annotation_legend_side = "top",
-          heatmap_legend_side = "top"
-        )
-
-        deg_env$ht_pos_sub <- InteractiveComplexHeatmap::htPositionsOnDevice(deg_env$ht_sub)
-
-        return(deg_env$ht_sub)
-      }
-    })
-
-    # Sub Heatmap Click Value ---------
-    output$ht_click_content <- renderUI({
-      if (is.null(input$ht_click)) { 
-        "Click for Info."
-      } else {
-        deg_click_info(
-          click = input$ht_click,
-          ht_sub = deg_env$ht_sub,
-          ht_sub_obj = deg_env$ht_select,
-          ht_pos_sub = deg_env$ht_pos_sub,
-          sub_groups = deg_env$column_groups,
-          group_colors = deg_env$group_colors,
-          bar = deg_env$bar,
-          data = deg_env$submap_data
-        )
-      }
-    })
     
     # volcano plot -----
     vol_plot <- reactive({
@@ -846,8 +719,6 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         plot_colors = plot_colors[[input$plot_color_select]]
       )
     })
-    
-    
 
     output$volcano_plot <- renderPlot({
       print(vol_plot())

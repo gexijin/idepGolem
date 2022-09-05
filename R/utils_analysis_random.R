@@ -409,7 +409,7 @@ rowname_id_swap <- function(data_matrix,
       all_gene_names,
       by.x = "row.names",
       by.y = "ensembl_ID",
-      all.x = T
+      all.x = TRUE
     )
     rownames(new_data) <- new_data$symbol
     nums <- unlist(lapply(new_data, is.numeric))

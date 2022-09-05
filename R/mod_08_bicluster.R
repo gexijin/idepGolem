@@ -49,12 +49,6 @@ mod_08_bicluster_ui <- function(id){
           ),
           selected = "BCCC()"
         ),
-        selectInput(
-          inputId = ns("heatmap_color_select"),
-          label = "Select Heatmap Color: ",
-          choices = "green-black-red",
-          width = "100%"
-        ),
         htmlOutput(outputId = ns("list_biclusters")),
         textOutput(ns("bicluster_info")),
         a(
@@ -69,32 +63,8 @@ mod_08_bicluster_ui <- function(id){
       mainPanel(
         tabsetPanel(
           tabPanel(
-            "Heatmap",
-            fluidRow(
-              column(
-                width = 3,
-                plotOutput(
-                  outputId = ns("biclust_main_heatmap"),
-                  height = "450px",
-                  width = "100%",
-                  brush = ns("ht_brush")
-                ),
-                br(),
-                h5("Selected Cell (Submap):"),
-                uiOutput(
-                  outputId = ns("ht_click_content")
-                )
-              ),
-              column(
-                width = 9,
-                plotOutput(
-                  outputId = ns("biclust_sub_heatmap"),
-                  height = "650px",
-                  width = "100%",
-                  click = ns("ht_click")
-                )
-              )
-            )
+            title = "Heatmap",
+            mod_12_heatmap_ui(ns("12_heatmap_1"))
           ),
           tabPanel(
             "Enrichment",
@@ -158,29 +128,6 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
 			)		
 	  })
 
-    # Heatmap Colors ----------
-    heatmap_colors <- list(
-      "Green-Black-Red" = c("green", "black", "red"),
-      "Blue-White-Red" = c("blue", "white", "red"),
-      "Green-Black-Magenta" = c("green", "black", "magenta"),
-      "Blue-Yellow-Red" = c("blue", "yellow", "red"),
-      "Blue-White-Brown" = c("blue", "white", "brown")
-    )
-    heatmap_choices <- c(
-      "Green-Black-Red",
-      "Blue-White-Red",
-      "Green-Black-Magenta",
-      "Blue-Yellow-Red",
-      "Blue-White-Brown"
-    )
-    observe({
-      updateSelectInput(
-        session = session,
-        inputId = "heatmap_color_select",
-        choices = heatmap_choices
-      )
-    })
-
     # information for a specific cluster
     biclust_data <- reactive({
       req(!is.null(biclustering()) && !is.null(input$select_bicluster))
@@ -195,76 +142,13 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
       )
     })
 
-    output$biclust_main_heatmap <- renderPlot({
-      req(!is.null(biclust_data()))
-
-      shinybusy::show_modal_spinner(
-        spin = "orbit",
-        text = "Creating Heatmap",
-        color = "#000000"
-      )
-
-      # Assign heatmap to be used in multiple components
-      biclust_env$ht <- basic_heatmap(
-        data = biclust_data(),
-        heatmap_color_select = heatmap_colors[[input$heatmap_color_select]]
-      )
-
-      # Use heatmap position in multiple components
-      biclust_env$ht_pos_main <- InteractiveComplexHeatmap::htPositionsOnDevice(biclust_env$ht)
-
-      shinybusy::remove_modal_spinner()
-
-      return(biclust_env$ht)
-    })
-
-    output$biclust_sub_heatmap <- renderPlot({
-      if (is.null(input$ht_brush)) {
-        grid::grid.newpage()
-        grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
-      } else {
-        biclust_heat_return <- basic_heat_sub(
-          ht_brush = input$ht_brush,
-          ht = biclust_env$ht,
-          ht_pos_main = biclust_env$ht_pos_main,
-          heatmap_data = biclust_data()
-        )
-
-        biclust_env$ht_select <- biclust_heat_return$ht_select
-        biclust_env$submap_data <- biclust_heat_return$submap_data
-        biclust_env$group_colors <- biclust_heat_return$group_colors
-        biclust_env$column_groups <- biclust_heat_return$column_groups
-        
-        biclust_env$ht_sub <- ComplexHeatmap::draw(
-          biclust_env$ht_select,
-          annotation_legend_side = "top",
-          heatmap_legend_side = "top"
-        )
-
-        biclust_env$ht_pos_sub <- InteractiveComplexHeatmap::htPositionsOnDevice(
-          biclust_env$ht_sub
-        )
-
-        return(biclust_env$ht_sub)
-      }
-    })
-
-    # Sub Heatmap Click Value ---------
-    output$ht_click_content <- renderUI({
-      if (is.null(input$ht_click)) { 
-        "Click for Info."
-      } else {
-        heat_click_info(
-          click = input$ht_click,
-          ht_sub = biclust_env$ht_sub,
-          ht_sub_obj = biclust_env$ht_select,
-          ht_pos_sub = biclust_env$ht_pos_sub,
-          sub_groups = biclust_env$column_groups,
-          group_colors = biclust_env$group_colors,
-          data = biclust_env$submap_data
-        )
-      }
-    })
+    heatmap_module <- mod_12_heatmap_server(
+      id = "12_heatmap_1",
+      data = reactive({ biclust_data() }),
+      bar = NULL,
+      all_gene_names = reactive({ pre_process$all_gene_names() }),
+      cluster_rows = TRUE
+    )
 
     # Biclustering summary message -----------
     output$bicluster_info <- renderText({		

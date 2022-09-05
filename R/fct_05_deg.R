@@ -2435,7 +2435,8 @@ deg_heat_data <- function(
 deg_heatmap <- function(
   data,
   bar,
-  heatmap_color_select
+  heatmap_color_select,
+  cluster_rows
 ) {
   # Number of genes to show
   n_genes <- as.character(table(bar))
@@ -2475,29 +2476,38 @@ deg_heatmap <- function(
     show_legend = FALSE
   )
   
-  bar[bar == -1] <- "Negative"
-  bar[bar == 1]  <- "Positive"
-  groups <- bar
+  row_ann <- NULL
+  if(!is.null(bar)) {
+    bar[bar == -1] <- "Negative"
+    bar[bar == 1]  <- "Positive"
+    groups <- bar
 
-  row_ann <- ComplexHeatmap::rowAnnotation(
-    Change = groups,
-    col = list(
-      Change = setNames(
-        groups_colors[(group_count + 1):length(groups_colors)], unique(groups)
-      )
-    ),
-    annotation_legend_param = list(
-      Change = list(nrow = 1, title = NULL)
-    ),
-    show_annotation_name = list(Change = FALSE),
-    show_legend = FALSE
-  )
+    row_ann <- ComplexHeatmap::rowAnnotation(
+      Change = groups,
+      col = list(
+        Change = setNames(
+          groups_colors[(group_count + 1):length(groups_colors)], unique(groups)
+        )
+      ),
+      annotation_legend_param = list(
+        Change = list(nrow = 1, title = NULL)
+      ),
+      show_annotation_name = list(Change = FALSE),
+      show_legend = FALSE
+    )
+  }
 
   heat <- ComplexHeatmap::Heatmap(
     data,
     name = "Expression",
     col = col_fun,
-    cluster_rows = FALSE,
+    cluster_rows = cluster_rows,
+    clustering_method_rows = "average",
+    clustering_distance_rows = function(x) {
+      as.dist(
+        1 - cor(t(x), method = "pearson")
+      )
+    },
     cluster_columns = TRUE,
     show_row_dend = FALSE,
     show_column_dend = FALSE,
@@ -2543,8 +2553,10 @@ deg_heat_sub <- function(
   ht,
   ht_pos_main,
   heatmap_data,
+  bar,
   all_gene_names
 ) {
+  max_genes <- 60
   lt <- InteractiveComplexHeatmap::getPositionFromBrush(ht_brush)
   pos1 <- lt[[1]]
   pos2 <- lt[[2]]
@@ -2559,7 +2571,7 @@ deg_heat_sub <- function(
   )
 
   # Annotations ----------
-    column_groups <- detect_groups(colnames(heatmap_data$genes))
+    column_groups <- detect_groups(colnames(heatmap_data))
     group_count <- length(unique(column_groups))
     groups_colors <- gg_color_hue(2 + group_count)
   
@@ -2577,47 +2589,60 @@ deg_heat_sub <- function(
       show_annotation_name = list(Group = FALSE),
       show_legend = TRUE
     )
-    
-    bar <- heatmap_data$bar
-    bar[bar == -1] <- "Down"
-    bar[bar == 1]  <- "Up"
-    row_groups <- bar
 
-    row_ann <- ComplexHeatmap::rowAnnotation(
-      Change = row_groups,
-      col = list(
-        Change = setNames(
-          groups_colors[(group_count + 1):length(groups_colors)],
-          unique(row_groups)
-        )
-      ),
-      annotation_legend_param = list(
-        Change = list(nrow = 1, title = NULL)
-      ),
-      show_annotation_name = list(Change = FALSE),
-      show_legend = TRUE
-    )
+    row_ann <- NULL
+    if(!is.null(bar)) {    
+      bar[bar == -1] <- "Down"
+      bar[bar == 1]  <- "Up"
+      row_groups <- bar
+
+      row_ann <- ComplexHeatmap::rowAnnotation(
+        Change = row_groups,
+        col = list(
+          Change = setNames(
+            groups_colors[(group_count + 1):length(groups_colors)],
+            unique(row_groups)
+          )
+        ),
+        annotation_legend_param = list(
+          Change = list(nrow = 1, title = NULL)
+        ),
+        show_annotation_name = list(Change = FALSE),
+        show_legend = TRUE
+      )
+      group_col_return <- setNames(
+        groups_colors,
+        c(unique(column_groups), unique(row_groups))
+      )       
+    }  else {
+      group_col_return <- setNames(
+        groups_colors,
+        c(unique(column_groups))
+      )      
+    } 
     
-    group_col_return <- setNames(
-      groups_colors,
-      c(unique(column_groups), unique(row_groups))
-    )
+
+
   # End annotation ---------
 
   column_index <- unlist(pos[1, "column_index"])
   row_index <- unlist(pos[1, "row_index"])
   top_ann <- top_ann[column_index]
-  row_ann <- row_ann[row_index]
+  if(!is.null(bar)) {
+    row_ann <- row_ann[row_index]
+  }
   column_groups <- column_groups[column_index]
   m <- ht@ht_list[[1]]@matrix
 
   bar_return <- bar[row_index]
 
-  if (length(row_index) > 50) {
+  if (length(row_index) > max_genes) {
     show_rows <- FALSE
   } else {
     show_rows <- TRUE
   }
+
+
   if(ncol(all_gene_names) == 3) {
     genes <- rowname_id_swap(
       data_matrix = m[row_index, column_index, drop = FALSE],
@@ -2705,24 +2730,31 @@ deg_click_info <- function(
   col <- ComplexHeatmap::map_to_colors(ht_sub_obj@matrix_color_mapping, value)
   sample <- colnames(data)[column_index]
   gene <- rownames(data)[row_index]
-  up_down <- bar[row_index]
-  up_down_col <- group_colors[[up_down]]
+
   group_name <- sub_groups[column_index]
   group_col <- group_colors[[group_name]]
 
   # HTML for info table
   # Pulled from https://github.com/jokergoo/InteractiveComplexHeatmap/blob/master/R/shiny-server.R
   # Lines 1669:1678
-  html <- GetoptLong::qq("
+  p <- "
 <div>
 <pre>
 Value: @{round(value, 2)} <span style='background-color:@{col};width=50px;'>    </span>
 Sample: @{sample}
 Gene: @{gene} 
 Group: @{group_name} <span style='background-color:@{group_col};width=50px;'>    </span>
-Regulation: @{up_down} <span style='background-color:@{up_down_col};width=50px;'>    </span>   
-</pre></div>"
-)
+"
+
+if(!is.null(bar)){
+  up_down <- bar[row_index]
+  up_down_col <- group_colors[[up_down]]
+  p <- paste0(p, 
+    "Regulation: @{up_down} <span style='background-color:@{up_down_col};width=50px;'>    </span>"  
+  )
+}
+p <- paste0(p, "</pre></div>")
+html <- GetoptLong::qq(p)
 
  return(HTML(html))
 }

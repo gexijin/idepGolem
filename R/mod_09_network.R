@@ -113,6 +113,9 @@ mod_09_network_ui <- function(id){
           target = "_blank"
         )
       ),
+
+
+
       mainPanel(
         tabsetPanel(
           id = ns("network_tabs"),
@@ -158,32 +161,8 @@ mod_09_network_ui <- function(id){
             mod_11_enrichment_ui(ns("enrichment_table_cluster"))
           ),
           tabPanel(
-            "Heatmap",
-            fluidRow(
-              column(
-                width = 3,
-                plotOutput(
-                  outputId = ns("network_main_heatmap"),
-                  height = "450px",
-                  width = "100%",
-                  brush = ns("ht_brush")
-                ),
-                br(),
-                h5("Selected Cell (Submap):"),
-                uiOutput(
-                  outputId = ns("ht_click_content")
-                )
-              ),
-              column(
-                width = 9,
-                plotOutput(
-                  outputId = ns("network_sub_heatmap"),
-                  height = "650px",
-                  width = "100%",
-                  click = ns("ht_click")
-                )
-              )
-            )
+            title = "Heatmap",
+            mod_12_heatmap_ui(ns("12_heatmap_1"))
           )
         )
       )
@@ -357,116 +336,24 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab){
       req(tab() != "Network")
       removeNotification("network_summary")
     })
-    # Heatmap Colors ----------
-    heatmap_colors <- list(
-      "Green-Black-Red" = c("green", "black", "red"),
-      "Blue-White-Red" = c("blue", "white", "red"),
-      "Green-Black-Magenta" = c("green", "black", "magenta"),
-      "Blue-Yellow-Red" = c("blue", "yellow", "red"),
-      "Blue-White-Brown" = c("blue", "white", "brown")
-    )
-    heatmap_choices <- c(
-      "Green-Black-Red",
-      "Blue-White-Red",
-      "Green-Black-Magenta",
-      "Blue-Yellow-Red",
-      "Blue-White-Brown"
-    )
-    output$heatmap_color_ui <- renderUI({
-      req(!is.null(input$network_tabs == "Heatmap"))
-
-      selectInput(
-        inputId = ns("heatmap_color_select"),
-        label = "Select Heatmap Color: ",
-        choices = heatmap_choices,
-        width = "100%"
-      )
-    })
 
     network_data <- reactive({
       req(!is.null(network_query()))
 
       data <- pre_process$data()[rownames(pre_process$data()) %in% network_query(), ]
 
-      if(ncol(pre_process$all_gene_names()) > 2) {
-        data <- rowname_id_swap(
-          data_matrix = data,
-          all_gene_names = pre_process$all_gene_names(),
-          select_gene_id = "symbol"
-        )
-      }
     })
 
-    output$network_main_heatmap <- renderPlot({
-      req(!is.null(network_data()))
+    heatmap_module <- mod_12_heatmap_server(
+      id = "12_heatmap_1",
+      data = reactive({ network_data() }),
+      bar = NULL,
+      all_gene_names = reactive({ pre_process$all_gene_names() }),
+      cluster_rows = TRUE
+    )
 
-      shinybusy::show_modal_spinner(
-        spin = "orbit",
-        text = "Creating Heatmap",
-        color = "#000000"
-      )
 
-      # Assign heatmap to be used in multiple components
-      network_env$ht <- basic_heatmap(
-        data = network_data(),
-        heatmap_color_select = heatmap_colors[[input$heatmap_color_select]]
-      )
 
-      # Use heatmap position in multiple components
-      network_env$ht_pos_main <- InteractiveComplexHeatmap::htPositionsOnDevice(network_env$ht)
-
-      shinybusy::remove_modal_spinner()
-
-      return(network_env$ht)
-    })
-
-    output$network_sub_heatmap <- renderPlot({
-      if (is.null(input$ht_brush)) {
-        grid::grid.newpage()
-        grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
-      } else {
-        network_heat_return <- basic_heat_sub(
-          ht_brush = input$ht_brush,
-          ht = network_env$ht,
-          ht_pos_main = network_env$ht_pos_main,
-          heatmap_data = network_data()
-        )
-
-        network_env$ht_select <- network_heat_return$ht_select
-        network_env$submap_data <- network_heat_return$submap_data
-        network_env$group_colors <- network_heat_return$group_colors
-        network_env$column_groups <- network_heat_return$column_groups
-        
-        network_env$ht_sub <- ComplexHeatmap::draw(
-          network_env$ht_select,
-          annotation_legend_side = "top",
-          heatmap_legend_side = "top"
-        )
-
-        network_env$ht_pos_sub <- InteractiveComplexHeatmap::htPositionsOnDevice(
-          network_env$ht_sub
-        )
-
-        return(network_env$ht_sub)
-      }
-    })
-
-    # Sub Heatmap Click Value ---------
-    output$ht_click_content <- renderUI({
-      if (is.null(input$ht_click)) { 
-        "Click for Info."
-      } else {
-        heat_click_info(
-          click = input$ht_click,
-          ht_sub = network_env$ht_sub,
-          ht_sub_obj = network_env$ht_select,
-          ht_pos_sub = network_env$ht_pos_sub,
-          sub_groups = network_env$column_groups,
-          group_colors = network_env$group_colors,
-          data = network_env$submap_data
-        )
-      }
-    })
 
   })
 }

@@ -803,14 +803,6 @@ pathway_select_data <- function(
 	# Find related samples	
 	iz <-contrast_samples
 	x <- data[which(rownames(data) %in% genes), iz]
-	if(ncol(all_gene_names) == 3) {
-    x <- rowname_id_swap(
-      data_matrix = x,
-      all_gene_names = all_gene_names,
-      select_gene_id = "symbol"
-    )
-  }
-	
 	return(x)
 }
 
