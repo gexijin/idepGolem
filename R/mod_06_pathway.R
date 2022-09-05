@@ -212,17 +212,21 @@ mod_06_pathway_ui <- function(id) {
                   label = "Wrap text",
                   value = TRUE
                 )
+              ),
+              column(
+                width = 3,
+                selectInput(
+                  inputId = ns("up_down_reg_deg"),
+                  label = NULL,
+                  choices = c(
+                    "Both Up & Down" = "All Groups",
+                    "Up regulated" = "Up",
+                    "Down regulated" = "Down"
+                  )
+                )
               )
             ),
-            selectInput(
-              inputId = ns("up_down_reg_deg"),
-              NULL,
-              choices = c(
-                "Both Up & Down" = "Both",
-                "Up regulated" = "Up",
-                "Down regulated" = "Down"
-              )
-            ),
+
             h6(
               "Two pathways (nodes) are connected if they share 30% (default, adjustable) or more genes.
               Green and red represents down- and up-regulated pathways. You can move the nodes by 
@@ -782,16 +786,17 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     output$enrichment_tree <- renderPlot({
       req(!is.null(pathway_list_data()))
 
-      enrichment_plot(
+      enrichment_tree_plot(
         go_table = pathway_list_data(),
-        45
+        group = "All Groups",
+        right_margin = 45
       )
     })
 
     # Define a Network
     network_data_path <- reactive({
       req(!is.null(pathway_list_data()))
-
+      req(input$up_down_reg_deg)
       network_data(
         network = pathway_list_data(),
         up_down_reg_deg = input$up_down_reg_deg,
