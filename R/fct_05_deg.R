@@ -2435,7 +2435,8 @@ deg_heat_data <- function(
 deg_heatmap <- function(
   data,
   bar,
-  heatmap_color_select
+  heatmap_color_select,
+  cluster_rows
 ) {
   # Number of genes to show
   n_genes <- as.character(table(bar))
@@ -2500,7 +2501,13 @@ deg_heatmap <- function(
     data,
     name = "Expression",
     col = col_fun,
-    cluster_rows = FALSE,
+    cluster_rows = cluster_rows,
+    clustering_method_rows = "average",
+    clustering_distance_rows = function(x) {
+      as.dist(
+        1 - cor(t(x), method = "pearson")
+      )
+    },
     cluster_columns = TRUE,
     show_row_dend = FALSE,
     show_column_dend = FALSE,

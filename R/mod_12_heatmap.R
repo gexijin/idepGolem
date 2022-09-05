@@ -52,7 +52,8 @@ mod_12_heatmap_server <- function(
   id,
   data,
   bar,
-  all_gene_names
+  all_gene_names,
+  cluster_rows = FALSE
 ){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
@@ -101,7 +102,8 @@ mod_12_heatmap_server <- function(
       shiny_env$ht <- deg_heatmap(
         data = data(),
         bar = bar,
-        heatmap_color_select = heatmap_colors[[input$heatmap_color_select]]
+        heatmap_color_select = heatmap_colors[[input$heatmap_color_select]],
+        cluster_rows = cluster_rows
       )
 
       # Use heatmap position in multiple components

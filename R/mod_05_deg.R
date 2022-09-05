@@ -676,7 +676,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       id = "12_heatmap_1",
       data = reactive({ heat_data()$genes }),
       bar = heat_data()$bar,
-      all_gene_names = reactive({ pre_process$all_gene_names() })
+      all_gene_names = reactive({ pre_process$all_gene_names() }),
+      cluster_rows = FALSE
     )
 
     # Plot colors ------- 

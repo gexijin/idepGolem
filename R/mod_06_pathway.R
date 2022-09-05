@@ -738,7 +738,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       id = "12_heatmap_1",
       data = reactive({ selected_pathway_data() }),
       bar = NULL,
-      all_gene_names = reactive({ pre_process$all_gene_names() })
+      all_gene_names = reactive({ pre_process$all_gene_names() }),
+      cluster_rows = TRUE
     )
 
  
