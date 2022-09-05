@@ -218,7 +218,7 @@ mod_06_pathway_ui <- function(id) {
               inputId = ns("up_down_reg_deg"),
               NULL,
               choices = c(
-                "Both Up & Down" = "Both",
+                "Both Up & Down" = "All Groups",
                 "Up regulated" = "Up",
                 "Down regulated" = "Down"
               )
@@ -795,7 +795,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
 
       network_data(
         network = pathway_list_data(),
-        up_down_reg_deg = input$up_down_reg_deg,
+        up_down_reg_deg = "All Groups", #input$up_down_reg_deg,
         wrap_text_network_deg= input$wrap_text_network_deg,
         layout_vis_deg = input$layout_vis_deg,
         edge_cutoff_deg = input$edge_cutoff_deg
