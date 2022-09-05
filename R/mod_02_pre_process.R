@@ -359,7 +359,7 @@ mod_02_pre_process_ui <- function(id) {
                   choices = "",
                   selected = NULL,
                   multiple = TRUE
-                ),                
+                ),
                 selectInput(
                   inputId = ns("select_gene_id"),
                   label = NULL,
