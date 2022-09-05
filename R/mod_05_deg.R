@@ -13,6 +13,17 @@ mod_05_deg_1_ui <- function(id) {
     title = "DEG1",
     sidebarLayout(
       sidebarPanel(
+        # Button to run DEG analysis for the specified model
+        actionButton(
+          inputId = ns("submit_model_button"),
+          label = "Submit",
+          style = "float:right"
+        ),
+        tags$head(tags$style(
+          "#deg-submit_model_button{font-size: 20px;color: red}"
+        )),
+        br(),
+        br(),
         # DEG analysis methods for read counts data
         conditionalPanel(
           condition = "output.data_file_format == 1",
@@ -24,13 +35,12 @@ mod_05_deg_1_ui <- function(id) {
               "limma-voom" = 2,
               "limma-trend" = 1
             ),
-            selected = 3 
-            
+            selected = 3
           ),
           tags$style(
             type = 'text/css',
             "#deg-counts_deg_method {width:100%;   margin-top:-12px}"
-          ), 
+          ),
           ns = ns
         ),
         # Label when the limma method is selected
@@ -57,7 +67,7 @@ mod_05_deg_1_ui <- function(id) {
             # Min fold change to use
             numericInput(
               inputId = ns("limma_fc"),
-              label = h5("Min fold change"),
+              label = h5("Min fold-change"),
               value = 2,
               min = 1,
               max = 100,
@@ -74,25 +84,34 @@ mod_05_deg_1_ui <- function(id) {
             "#deg-limma_fc { width:100%;   margin-top:-12px}"
           )
         ),
-        # Button to run DEG analysis for the specified model
-        actionButton(
-          inputId = ns("submit_model_button"),
-          label = "Submit & Calculate",
-          style = "float:center"
-        ),
-        tags$head(tags$style(
-          "#deg-submit_model_button{font-size: 20px;}"
-        )),
+        conditionalPanel(
+          condition = "input.counts_deg_method == 3 && output.data_file_format == 1",
+          checkboxInput(
+            inputId = ns("threshold_wald_test"),
+            label = "Threshold-based Wald Test",
+            value = FALSE
+          ),
+          checkboxInput(
+            inputId = ns("independent_filtering"),
+            label = "Independent filtering of lower counts",
+            value = TRUE
+          ),          
+          ns = ns
+       ),
         tags$br(),
         tags$br(),
         uiOutput(ns("download_lfc_button")),
-        uiOutput(ns("note")),
+        uiOutput(ns("note_download_lfc_button")),
         a(
           h5("Questions?", align = "right"),
           href = "https://idepsite.wordpress.com/degs/",
           target = "_blank"
         )
       ),
+
+
+
+
       mainPanel(
         tabsetPanel(
           id = ns("step_1"),
@@ -153,7 +172,17 @@ mod_05_deg_1_ui <- function(id) {
             plotOutput(outputId = ns("venn_plot")), 
             ottoPlots::mod_download_figure_ui(
               id = ns("dl_venn"), 
-              label = "Dowload venn diagram"
+              label = "Download venn diagram"
+            )
+          ),
+          tabPanel(
+            title = "R Code",
+            downloadButton(
+              outputId = ns("dl_deg_code"), 
+              label = "Code"
+            ),
+            verbatimTextOutput(
+              ns("deg_code")
             )
           )
         )
@@ -168,106 +197,28 @@ mod_05_deg_2_ui <- function(id) {
     title = "DEG2",
     sidebarLayout(
       sidebarPanel(
-        h5("Examine the results of DEGs for each comparison"),
         htmlOutput(outputId = ns("list_comparisons")),
-        # Heatmap customizing features ----------
-        conditionalPanel(
-          condition = "input.step_2 == 'Heatmap'",
-          fluidRow(
-            column(width = 3, h5("Color:")),
-            column(
-              width = 9,
-              selectInput(
-                inputId = ns("heatmap_color_select"),
-                label = NULL,
-                choices = "green-black-red",
-                width = "100%"
-              )
-            )
-          ),
-          ns = ns
-        ),
+        h6("Select a comparison to examine. 
+          \"A-B\" means A vs. B (See heatmap).
+            Interaction terms start with \"I:\""),
         conditionalPanel(
           condition = "input.step_2 == 'Volcano Plot' | 
             input.step_2 == 'MA Plot'", 
-          fluidRow(
-            column(width = 3, h5("Plot colors:")), 
-            column(
-              width = 9, 
-              selectInput(
-                inputId = ns("plot_color_select"), 
-                label = NULL, 
-                choices = "Red-Green"
-              )
-            )
-          ), 
-          ns = ns
-        ),
-        HTML(
-          "<hr style='height:1px;border:none;color:
-          #333;background-color:#333;' />"
-        ),
-        h5("Enrichment analysis for DEGs:"),
-        htmlOutput(outputId = ns("select_go_selector")),
-        tags$style(
-          type = "text/css",
-          "#deg-select_go { width:100%; margin-top:-9px}"
-        ),
-        checkboxInput(
-          inputId = ns("filtered_background"), 
-          label = "Use filtered data as background in enrichment (slow)", 
-          value = TRUE
-        ),
-        checkboxInput(
-          inputId = ns("remove_redudant"),
-          label = "Remove Redudant Gene Sets",
-          value = FALSE
-        ), 
-        conditionalPanel(
-          condition = "input.step_2 == 'Enrich Table'", 
-          downloadButton(
-            outputId = ns("dl_enrich_up"), 
-            label = "Up Enrichment"
-          ),
-          downloadButton(
-            outputId = ns("dl_enrich_down"), 
-            label = "Down Enrichment"
+          selectInput(
+            inputId = ns("plot_color_select"), 
+            label = "Color scale",
+            choices = "Red-Green"
           ),
           ns = ns
-        )
+        ),
+        width = 2
       ),
       mainPanel(
         tabsetPanel(
           id = ns("step_2"),
           tabPanel(
             title = "Heatmap",
-            h5("Brush for sub-heatmap, click for value. (Shown Below)"),
-            br(),
-            fluidRow(
-              column(
-                width = 3,
-                plotOutput(
-                  outputId = ns("deg_main_heatmap"),
-                  height = "450px",
-                  width = "100%",
-                  brush = ns("ht_brush")
-                ),
-                br(),
-                h5("Selected Cell (Submap):"),
-                uiOutput(
-                  outputId = ns("ht_click_content")
-                )
-              ),
-              column(
-                width = 9,
-                plotOutput(
-                  outputId = ns("deg_sub_heatmap"),
-                  height = "650px",
-                  width = "100%",
-                  click = ns("ht_click")
-                )
-              )
-            )
+            mod_12_heatmap_ui(ns("12_heatmap_1"))
           ),
           tabPanel(
             title = "Volcano Plot",
@@ -300,92 +251,12 @@ mod_05_deg_2_ui <- function(id) {
             )
           ),
           tabPanel(
-            title = "Enrich Table",
+            title = "Enrichment",
             br(),
-            tags$p("To see the list of genes that were differently expressed in
-                    each category, download the data in the left-hand panel."),
-            br(),
-            strong(h3("Up Regulated Genes")),
-            br(),
-            DT::dataTableOutput(
-              outputId = ns("pathway_data_up")
-            ),
-            br(),
-            strong(h3("Down Regulated Genes")),
-            br(),
-            DT::dataTableOutput(
-              outputId = ns("pathway_data_down")
-            )
-          ),
-          tabPanel(
-            title = "Enrich Tree",
-            plotOutput(
-              outputId = ns("enrichment_tree"),
-              width = "100%"
-            )
-          ),
-          tabPanel(
-            title = "Pathway Network",
-            h5("Connected gene sets share more genes. 
-               Color of node correspond to adjuested Pvalues."),
-            fluidRow(
-              column(
-                width = 2,
-                actionButton(
-                  inputId = ns("layout_vis_deg"),
-                  label = "Change layout"
-                )
-              ),
-              column(
-                width = 1,
-                h5("Cutoff:"),
-                align="right"
-              ),
-              column(
-                width = 2,
-                numericInput(
-                  inputId = ns("edge_cutoff_deg"),
-                  label = NULL,
-                  value = 0.30,
-                  min = 0,
-                  max = 1,
-                  step = .1
-                ),
-                align="left"
-              ),
-              column(
-                width = 2,
-                checkboxInput(
-                  inputId = ns("wrap_text_network_deg"),
-                  label = "Wrap text",
-                  value = TRUE
-                )
-              )
-            ),
-            selectInput(
-              inputId = ns("up_down_reg_deg"),
-              NULL,
-              choices = c(
-                "Both Up & Down" = "Both",
-                "Up regulated" = "Up",
-                "Down regulated" = "Down"
-              )
-            ),
-            h6(
-              "Two pathways (nodes) are connected if they share 30% (default, adjustable) or more genes.
-              Green and red represents down- and up-regulated pathways. You can move the nodes by 
-              dragging them, zoom in and out by scrolling, and shift the entire network by click on an 
-              empty point and drag. Darker nodes are more significantly enriched gene sets. Bigger nodes
-              represent larger gene sets. Thicker edges represent more overlapped genes."
-            ),
-            visNetwork::visNetworkOutput(
-              outputId = ns("vis_network_deg"),
-              height = "800px",
-              width = "100%"
-            )
+            mod_11_enrichment_ui(ns("enrichment_table_cluster")),
           )
         )
-      )        
+      )
     )
   )
 }
@@ -393,12 +264,13 @@ mod_05_deg_2_ui <- function(id) {
 #' 05_deg1 Server Functions
 #'
 #' @noRd
-mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
+mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     # Interactive heatmap environment
     deg_env <- new.env()
+
     
     # DEG STEP 1 ----------
     output$data_file_format <- reactive({
@@ -423,7 +295,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
             inputId = ns("select_factors_model"), 
             h5(list_factors$title), 
             choices = list_factors$choices,
-            selected = NULL
+            selected = list_factors$choices[1]
           )
         )
       } else {
@@ -448,7 +320,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
 	  })
 
     output$list_model_comparisons <- renderUI({
-      req(pre_process$data())
+      req(pre_process$data() & pre_process$data_file_format() != 3)
 		  model_comparisons <- list_model_comparisons_ui(
         sample_info = pre_process$sample_info(),
         select_factors_model = input$select_factors_model,
@@ -572,13 +444,26 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
     deg <- reactiveValues(limma = NULL)
     observeEvent(
       input$submit_model_button, {
-        req(!is.null(pre_process$raw_counts()))
+        req(!is.null(pre_process$raw_counts()) |
+          !is.null(pre_process$data())
+        )
       
         shinybusy::show_modal_spinner(
           spin = "orbit",
           text = "Running Analysis",
           color = "#000000"
         )
+        
+        # only use with DESeq2
+        threshold_wald_test <- FALSE
+        if(input$counts_deg_method == 3) {
+          threshold_wald_test <- input$threshold_wald_test
+        }
+
+        independent_filtering <- TRUE
+        if(input$counts_deg_method == 3) {
+          independent_filtering <- input$independent_filtering
+        }
 
         deg$limma <- limma_value(
           data_file_format = pre_process$data_file_format(),
@@ -594,7 +479,9 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
           factor_reference_levels = factor_reference_levels(),
           processed_data = pre_process$data(),
           counts_log_start = pre_process$counts_log_start(),
-          p_vals = pre_process$p_vals()
+          p_vals = pre_process$p_vals(),
+          threshold_wald_test = threshold_wald_test,
+          independent_filtering = independent_filtering
         )
         
         updateTabsetPanel(
@@ -609,7 +496,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
     deg_info <- reactive({
       req(!is.null(deg$limma$results))
       
-      deg_information(
+    deg_information(
         limma_value = deg$limma, 
         gene_names = pre_process$all_gene_names(),
         processed_data = pre_process$data(), 
@@ -622,7 +509,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
       "limma_voom", 
       "DESeq2"
     )
-    
+
     name <- reactive({
       paste0(
         "deg_values_", 
@@ -644,11 +531,11 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
       req(!is.null(deg_info()))
       downloadButton(
         outputId = ns("download_lfc"), 
-        "Download DEG Data"
+        "Results & data"
       )
     })
     
-    output$note <- renderUI({
+    output$note_download_lfc_button <- renderUI({
       req(!is.null(deg_info()))
       tippy::tippy_this(
         elementId = ns("download_lfc"),
@@ -678,6 +565,25 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
       width = "auto",
       hover = T
     )
+
+    output$deg_code <- renderText({
+      req(!is.null(deg$limma))
+		  deg$limma$expr
+    })
+
+    output$dl_deg_code <- downloadHandler(
+      filename = function() {
+        "DEG_code.R"
+      },
+      content = function(file) {
+        if(is.null(deg$limma)) {
+          writeLines(" Nothing!", file)
+        } else {
+          writeLines(deg$limma$expr, file)
+        }
+      }
+    )
+    
 
     output$list_comparisons_venn <- renderUI({
       req(!is.null(deg$limma))
@@ -740,9 +646,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
 			}	else {
         selectInput(
           inputId = ns("select_contrast"),
-          label = 
-            "Select a comparison to examine. \"A-B\" means A vs. B (See heatmap).
-            Interaction terms start with \"I:\"",
+          label = NULL,
           choices = deg$limma$comparisons
 	     )
       } 
@@ -774,7 +678,15 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
         contrast_samples = contrast_samples()
       )
     })
-    
+
+    heatmap_module <- mod_12_heatmap_server(
+      id = "12_heatmap_1",
+      data = reactive({ heat_data()$genes }),
+      bar = heat_data()$bar,
+      all_gene_names = reactive({ pre_process$all_gene_names() }),
+      cluster_rows = FALSE
+    )
+
     # Plot colors ------- 
     plot_colors <- list(
       "Green-Red" = c("green", "grey45", "red"), 
@@ -800,105 +712,6 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
       )
     })
 
-    # Heatmap Colors ----------
-    heatmap_colors <- list(
-      "Green-Black-Red" = c("green", "black", "red"),
-      "Red-Black-Green" = c("red", "black", "red"), 
-      "Blue-White-Red" = c("blue", "white", "red"),
-      "Green-Black-Magenta" = c("green", "black", "magenta"),
-      "Blue-Yellow-Red" = c("blue", "yellow", "red"),
-      "Blue-White-Brown" = c("blue", "white", "brown"), 
-      "Orange-White-Blue" = c("orange", "white", "blue")
-    )
-    heatmap_choices <- c(
-      "Green-Black-Red",
-      "Red-Black-Green", 
-      "Blue-White-Red",
-      "Green-Black-Magenta",
-      "Blue-Yellow-Red",
-      "Blue-White-Brown", 
-      "Orange-White-Blue"
-    )
-    observe({
-      updateSelectInput(
-        session = session,
-        inputId = "heatmap_color_select",
-        choices = heatmap_choices
-      )
-    })
-
-    output$deg_main_heatmap <- renderPlot({
-      req(!is.null(heat_data()$genes))
-
-      shinybusy::show_modal_spinner(
-        spin = "orbit",
-        text = "Creating Heatmap",
-        color = "#000000"
-      )
-
-      # Assign heatmap to be used in multiple components
-      deg_env$ht <- deg_heatmap(
-        data = heat_data()$genes,
-        bar = heat_data()$bar,
-        heatmap_color_select = heatmap_colors[[input$heatmap_color_select]]
-      )
-
-      # Use heatmap position in multiple components
-      deg_env$ht_pos_main <- InteractiveComplexHeatmap::htPositionsOnDevice(deg_env$ht)
-
-      shinybusy::remove_modal_spinner()
-
-      return(deg_env$ht)
-    })
-
-    output$deg_sub_heatmap <- renderPlot({
-      if (is.null(input$ht_brush)) {
-        grid::grid.newpage()
-        grid::grid.text("No region is selected.", 0.5, 0.5)
-      } else {
-        deg_heat_return <- deg_heat_sub(
-          ht_brush = input$ht_brush,
-          ht = deg_env$ht,
-          ht_pos_main = deg_env$ht_pos_main,
-          heatmap_data = heat_data(),
-          all_gene_names = pre_process$all_gene_names()
-        )
-
-        deg_env$ht_select <- deg_heat_return$ht_select
-        deg_env$submap_data <- deg_heat_return$submap_data
-        deg_env$group_colors <- deg_heat_return$group_colors
-        deg_env$column_groups <- deg_heat_return$column_groups
-        deg_env$bar <- deg_heat_return$bar
-        
-        deg_env$ht_sub <- ComplexHeatmap::draw(
-          deg_env$ht_select,
-          annotation_legend_side = "top",
-          heatmap_legend_side = "top"
-        )
-
-        deg_env$ht_pos_sub <- InteractiveComplexHeatmap::htPositionsOnDevice(deg_env$ht_sub)
-
-        return(deg_env$ht_sub)
-      }
-    })
-
-    # Sub Heatmap Click Value ---------
-    output$ht_click_content <- renderUI({
-      if (is.null(input$ht_click)) { 
-        "Click for Info."
-      } else {
-        deg_click_info(
-          click = input$ht_click,
-          ht_sub = deg_env$ht_sub,
-          ht_sub_obj = deg_env$ht_select,
-          ht_pos_sub = deg_env$ht_pos_sub,
-          sub_groups = deg_env$column_groups,
-          group_colors = deg_env$group_colors,
-          bar = deg_env$bar,
-          data = deg_env$submap_data
-        )
-      }
-    })
     
     # volcano plot -----
     vol_plot <- reactive({
@@ -913,8 +726,6 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
         plot_colors = plot_colors[[input$plot_color_select]]
       )
     })
-    
-    
 
     output$volcano_plot <- renderPlot({
       print(vol_plot())
@@ -983,20 +794,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
       )
     })
 
-    # GMT choices for enrichment ----------
-    output$select_go_selector <- renderUI({
-	    req(!is.null(pre_process$gmt_choices()))
-
-	    selectInput(
-        inputId = ns("select_go"),
-        label = "Select Geneset:",
-        choices = pre_process$gmt_choices(),
-        selected = "GOBP"
-      )
-    })
-
-    # Enrichment Analysis Up Data -----------
-    pathway_table_up <- reactive({
+    # enrichment analysis results for both up and down regulated gene
+    pathway_deg <- reactive({
       req(!is.null(up_reg_data()))
 
       shinybusy::show_modal_spinner(
@@ -1005,187 +804,67 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
         color = "#000000"
       )
 
-      gene_names <- merge_data(
-        all_gene_names = pre_process$all_gene_names(),
-        data = up_reg_data(),
-        merge_ID = "ensembl_ID"
-      )
-      # Only keep the gene names and scrap the data
-      gene_names_query <- dplyr::select_if(gene_names, is.character)
+      deg_lists <- list()
+      lists <- c("Upregulated", "Downregulated")
 
-      req(!is.null(input$select_go))
+      for(direction in lists) {
 
-      gene_sets <- read_pathway_sets(
-        all_gene_names_query = gene_names_query,
-        converted = pre_process$converted(),
-        go = input$select_go,
-        select_org = pre_process$select_org(),
-        gmt_file = pre_process$gmt_file(),
-        idep_data = idep_data,
-        gene_info = pre_process$all_gene_info()
-      )
-
-      pathway_info <- find_overlap(
-        pathway_table = gene_sets$pathway_table,
-        query_set = gene_sets$query_set,
-        total_genes = gene_sets$total_genes,
-        processed_data = pre_process$data(),
-        gene_info = pre_process$all_gene_info(),
-        go = input$select_go,
-        idep_data = idep_data,
-        select_org = pre_process$select_org(),
-        sub_pathway_files = gene_sets$pathway_files,
-        use_filtered_background = input$filtered_background,
-        reduced = input$remove_redudant
-      )
-
-      shinybusy::remove_modal_spinner()
-      
-    
-
-      return(pathway_info)
-    })
-
-    # Subheatmap Data Table ----------
-    output$pathway_data_up <- DT::renderDataTable({
-      req(!is.null(pathway_table_up()))
-      
-      DT::datatable(
-        if (ncol(pathway_table_up()) < 5){
-          data = pathway_table_up()
+        if(direction == lists[1]) {
+          data <- up_reg_data()
         } else {
-          data = pathway_table_up()[ ,1:4]
-        },
-        options = list(
-          pageLength = 20,
-          scrollX = "400px"
-        ),
-        rownames = TRUE
-      )
-    })
-    output$dl_enrich_up <- downloadHandler(
-      filename = function() {
-        "deg_up_enrichment.csv"
-      }, 
-      content = function(file) {
-        write.csv(data_frame_with_list(pathway_table_up()), file)
+          data <- down_reg_data()
+        }
+
+        gene_names <- merge_data(
+          all_gene_names = pre_process$all_gene_names(),
+          data = data,
+          merge_ID = "ensembl_ID"
+        )
+        # Only keep the gene names and scrap the data
+         deg_lists[[direction]] <- dplyr::select_if(gene_names, is.character)
       }
-    )
-
-    # Enrichment Analysis Down Data -----------
-    pathway_table_down <- reactive({
-      req(!is.null(down_reg_data()))
-
-      shinybusy::show_modal_spinner(
-        spin = "orbit",
-        text = "Running Analysis",
-        color = "#000000"
-      )
-
-      gene_names <- merge_data(
-        all_gene_names = pre_process$all_gene_names(),
-        data = down_reg_data(),
-        merge_ID = "ensembl_ID"
-      )
-      # Only keep the gene names and scrap the data
-      gene_names_query <- dplyr::select_if(gene_names, is.character)
-
-      req(!is.null(input$select_go))
-
-      gene_sets <- read_pathway_sets(
-        all_gene_names_query = gene_names_query,
-        converted = pre_process$converted(),
-        go = input$select_go,
-        select_org = pre_process$select_org(),
-        gmt_file = pre_process$gmt_file(),
-        idep_data = idep_data,
-        gene_info = pre_process$all_gene_info()
-      )
-
-      pathway_info <- find_overlap(
-        pathway_table = gene_sets$pathway_table,
-        query_set = gene_sets$query_set,
-        total_genes = gene_sets$total_genes,
-        processed_data = pre_process$data(),
-        gene_info = pre_process$all_gene_info(),
-        go = input$select_go,
-        idep_data = idep_data,
-        select_org = pre_process$select_org(),
-        sub_pathway_files = gene_sets$pathway_files,
-        use_filtered_background = input$filtered_background,
-        reduced = input$remove_redudant
-      )
-
       shinybusy::remove_modal_spinner()
-
-      return(pathway_info)
+      return(deg_lists)
     })
 
-    # Subheatmap Data Table ----------
-    output$pathway_data_down <- DT::renderDataTable({
-      req(!is.null(pathway_table_down()))
 
-      DT::datatable(
-        if (ncol(pathway_table_down()) < 5){
-          data = pathway_table_down()
-        } else {
-          data = pathway_table_down()[ ,1:4]
-        },
-        options = list(
-          pageLength = 20,
-          scrollX = "400px"
-        ),
-        rownames = TRUE
-      )
-    })
-    output$dl_enrich_down <- downloadHandler(
-      filename = function() {
-        "deg_down_enrichment.csv"
-      }, 
-      content = function(file) {
-        write.csv(data_frame_with_list(pathway_table_down()), file)
-      }
-    )
+  enrichment_table_cluster <- mod_11_enrichment_server(
+    id = "enrichment_table_cluster",
+    gmt_choices = reactive({ pre_process$gmt_choices() }),
+    gene_lists = reactive({ pathway_deg()  }),
+    processed_data = reactive({ pre_process$data()}),
+    gene_info = reactive({ pre_process$all_gene_info()}),
+    idep_data = idep_data,
+    select_org = reactive({ pre_process$select_org()}),
+    converted = reactive({ pre_process$converted() }),
+    gmt_file = reactive({ pre_process$gmt_file() })
+  )
+ 
 
-    go_table <- reactive({
-      req(!is.null(pathway_table_up()) || !is.null(pathway_data_down()))
+      # Show messages when on the Network tab or button is clicked
+    observe({
+      req(input$submit_model_button == 0 && (
+        tab() == "DEG1" || tab() == "DEG2" ||
+        tab() == "Pathway" || tab() == "Genome"
+      ))
 
-      go_table_data(
-        up_enrich_data = pathway_table_up(),
-        down_enrich_data = pathway_table_down()
+      showNotification(
+        ui = paste("Differentially expressed genes need to 
+        be identified first. Please select factors and comparisons and 
+        click Submit on the DEG1 tab."),
+        id = "click_submit_DEG1",
+        duration = NULL,
+        type = "error"
       )
     })
 
-    # Enrichment Tree -----------
-    output$enrichment_tree <- renderPlot({
-      req(!is.null(go_table()))
-	    
-      enrichment_plot(
-        go_table = go_table(),
-        45
-      )
-    })
-
-    # Define a Network
-    network_data_deg <- reactive({
-      req(!is.null(go_table()))
-
-      network_data(
-        network = go_table(),
-        up_down_reg_deg = input$up_down_reg_deg,
-        wrap_text_network_deg= input$wrap_text_network_deg,
-        layout_vis_deg = input$layout_vis_deg,
-        edge_cutoff_deg = input$edge_cutoff_deg
-      )
-    })
-
-    # Interactive vis network plot
-    output$vis_network_deg <- visNetwork::renderVisNetwork({
-      req(!is.null(network_data_deg()))
-      
-      vis_network_plot(
-        network_data = network_data_deg()
-      )
+    # Remove messages if the tab changes --------
+    observe({
+      req(input$submit_model_button != 0 || (
+        tab() != "DEG1" && tab() != "DEG2" &&
+        tab() != "Pathway" && tab() != "Genome"
+      ))
+      removeNotification("click_submit_DEG1")
     })
 
     list(
@@ -1196,6 +875,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data) {
       counts_deg_method = reactive(input$counts_deg_method)
     )
   })
+
 }
 
 ## To be copied in the UI

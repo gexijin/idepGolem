@@ -13,7 +13,7 @@ heatmap_main(
   dist_funs,
   dist_function,
   hclust_function,
-  no_sample_clustering,
+  sample_clustering,
   heatmap_color_select,
   row_dend,
   k_clusters,
@@ -37,7 +37,7 @@ heatmap_main(
 
 \item{hclust_function}{Type of clustering to perform}
 
-\item{no_sample_clustering}{TRUE/FALSE Specify whehter to cluster columns}
+\item{sample_clustering}{TRUE/FALSE Specify whehter to cluster columns}
 
 \item{heatmap_color_select}{Vector of colors for heatmap scale}
 

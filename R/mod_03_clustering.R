@@ -16,24 +16,45 @@ mod_03_clustering_ui <- function(id) {
       # Heatmap Panel Sidebar ----------
       sidebarPanel(
         width = 3,
+        # Select Clustering Method ----------
+        conditionalPanel(
+          condition = "input.cluster_panels == 'Hierarchical' | 
+            input.cluster_panels == 'sample_tab'",
+          selectInput(
+            inputId = ns("cluster_meth"),
+            label = NULL,
+            choices = list(
+              "Hierarchical Clustering" = 1,
+              "k-Means Clustering" = 2
+            ),
+            selected = 1
+          ),
+          ns = ns
+        ),
         conditionalPanel(
           condition = "input.cluster_panels == 'Hierarchical' | 
           input.cluster_panels == 'Gene SD Distribution' ",
-          
-          numericInput(
-            inputId = ns("n_genes"), 
-            label = h4("Top n most variable genes to include:"), 
-            min = 10, 
-            max = 12000, 
-            value = 1000, 
-            step = 10
-          ), 
+
+          fluidRow(
+            column(width = 7, h5("Genes to include")),
+            column(
+              width = 5,
+              numericInput(
+                inputId = ns("n_genes"), 
+                label = NULL, 
+                min = 10,
+                max = 12000,
+                value = 1000,
+                step = 10
+              )
+            )
+          ),
           ns = ns
         ),
-        
+
         conditionalPanel(
           condition = "(input.cluster_panels == 'Hierarchical' | 
-            input.cluster_panels == 'Sample Tree') &&  input.cluster_meth == 2",
+            input.cluster_panels == 'sample_tab') &&  input.cluster_meth == 2",
           
           # k- means slidebar -----------
             
@@ -62,60 +83,6 @@ mod_03_clustering_ui <- function(id) {
               '<hr style="height:1px;border:none;
            color:#333;background-color:#333;" />'
             ),
-          
-          ns = ns 
-        ),
-
-      
-
-        # Select Clustering Method ----------
-        conditionalPanel(
-          condition = "input.cluster_panels == 'Hierarchical' | 
-            input.cluster_panels == 'Sample Tree'",
-          
-          selectInput(
-            inputId = ns("cluster_meth"),
-            label = "Select Clustering Method:",
-            choices = list(
-              "Hierarchical" = 1,
-              "k-Means" = 2
-            ),
-            selected = 1
-          ),
-
-          ns = ns
-        ),
-
-        # Heatmap customizing features ----------
-        conditionalPanel(
-          condition = "input.cluster_panels == 'Hierarchical' ",
-          
-          # Gene ID Selection -----------
-          selectInput(
-            inputId = ns("select_gene_id"),
-            label = "Select Gene ID Label (<= 50 genes):",
-            choices = NULL,
-            selected = NULL
-          ),
-          
-          # Sample coloring bar -----------
-          htmlOutput(ns("list_factors_heatmap")),
-
-          strong("Customize heatmap:"),
-          fluidRow(
-            br(),
-            column(width = 3, h5("Color")),
-            column(
-              width = 9,
-              selectInput(
-                inputId = ns("heatmap_color_select"),
-                label = NULL,
-                choices = "green-black-red",
-                width = "100%"
-              )
-            )
-          ),
-
           ns = ns
         ),
 
@@ -123,7 +90,7 @@ mod_03_clustering_ui <- function(id) {
         conditionalPanel(
           condition = "input.cluster_meth == 1 && 
             (input.cluster_panels == 'Hierarchical' | 
-            input.cluster_panels == 'Sample Tree')",
+            input.cluster_panels == 'sample_tab')",
           fluidRow(
             column(width = 4, h5("Distance")),
             column(
@@ -152,9 +119,9 @@ mod_03_clustering_ui <- function(id) {
             )
           ),
           fluidRow(
-            column(width = 8, h5("Cut-off Z score")),
+            column(width = 7, h5("Max Z score")),
             column(
-              width = 4,
+              width = 5,
               numericInput(
                 inputId = ns("heatmap_cutoff"),
                 label = NULL,
@@ -169,8 +136,9 @@ mod_03_clustering_ui <- function(id) {
 
         # Checkbox features ------------
         conditionalPanel(
-          condition = "input.cluster_panels == 'Hierarchical' | input.cluster_panels == 'Sample Tree' ",
-          
+          condition = "input.cluster_panels == 'Hierarchical' | 
+            input.cluster_panels == 'sample_tab' ",
+
           checkboxInput(
             inputId = ns("gene_centering"),
             label = "Center genes (substract mean)",
@@ -183,35 +151,56 @@ mod_03_clustering_ui <- function(id) {
           ),
           ns = ns
         ),
-        
+
         conditionalPanel(
           condition = "input.cluster_panels == 'Hierarchical' ",
-          
-          checkboxInput(
-            inputId = ns("no_sample_clustering"),
-            label = "Do not cluster samples",
-            value = TRUE
+          fluidRow(
+            column(width = 4, h5("Samples color")),
+            column(
+              width = 8,
+              htmlOutput(ns("list_factors_heatmap"))
+            )
           ),
-          checkboxInput(
-            inputId = ns("show_row_dend"),
-            label = "Show Row Dendogram",
-            value = TRUE
-          ),
-          br(),
-          downloadButton(
-            outputId = ns("download_heatmap_data"),
-            label = "Heatmap data"
+          actionButton(ns("customize_button"), "More options"),
+          shinyBS::bsModal(
+            id = ns("modalExample"),
+            title = "More options",
+            trigger = ns("customize_button"),
+            size = "small",
+            checkboxInput(
+              inputId = ns("sample_clustering"),
+              label = "Cluster samples",
+              value = FALSE
+            ),
+            checkboxInput(
+              inputId = ns("show_row_dend"),
+              label = "Show Row Dendogram",
+              value = TRUE
+            ),
+            selectInput(
+              inputId = ns("heatmap_color_select"),
+              label = "Heatmap Color scheme:",
+              choices = "green-black-red",
+              width = "100%"
+            ),
+            selectInput(
+              inputId = ns("select_gene_id"),
+              label = "Gene ID for sub-heatmap with < 60 genes:",
+              choices = NULL,
+              selected = NULL
+            ),
+            downloadButton(
+              outputId = ns("download_heatmap_data"),
+              label = "Heatmap data"
+            )
           ),
           ns = ns
         ),
-        
-  
+        br(),
         downloadButton(
           outputId = ns("report"),
           label = "Generate Report"
-        ), 
-        
-
+        ),
         a(
           h5("Questions?", align = "right"),
           href = "https://idepsite.wordpress.com/heatmap/",
@@ -230,7 +219,6 @@ mod_03_clustering_ui <- function(id) {
       mainPanel(
         tabsetPanel(
           id = ns("cluster_panels"),
-
           # Heatmap panel ----------
           tabPanel(
             title = "Hierarchical",
@@ -261,47 +249,23 @@ mod_03_clustering_ui <- function(id) {
             ),
             checkboxInput(
               inputId = ns("cluster_enrichment"), 
-              label = strong("Enrichment analysis on selected genes"), 
-              value = FALSE
+              label = strong("Enrichment analysis on 
+                selected genes or k-means clusters"),
+              value = TRUE
             ),
             conditionalPanel(
               condition = "input.cluster_enrichment == 1 ",
-              fluidRow(
-                column(
-                  width = 4,
-                  htmlOutput(outputId = ns("select_go_selector"))
-                ),
-                column(
-                  width = 4,
-                  checkboxInput(
-                    inputId = ns("filtered_background"), 
-                    label = "Use filtered genes as background.", 
-                    value = FALSE
-                  )
-                ),
-                column(
-                  width = 4,
-                  checkboxInput(
-                    inputId = ns("remove_redudant"),
-                    label = "Remove Redudant Gene Sets",
-                    value = FALSE
-                  )
-                ),
-                tags$style(
-                  type='text/css',
-                  "#clustering-min_set_size {width:100%; margin-top:-12px}"
-                ),
-                tags$style(
-                  type='text/css',
-                  "#clustering-max_set_size {width:100%; margin-top:-12px}"
-                )
+              # Line break ---------
+              HTML(
+                '<hr style="height:1px;border:none;
+            color:#333;background-color:#333;" />'
               ),
-              uiOutput(outputId = ns("pathway_data")),
+              mod_11_enrichment_ui(ns("enrichment_table_cluster")),
               ns = ns
             )
 
           ),
-          
+
           # Gene Standard Deviation Distribution ----------
           tabPanel(
             title = "Gene SD Distribution",
@@ -313,10 +277,10 @@ mod_03_clustering_ui <- function(id) {
             ),
             ottoPlots::mod_download_figure_ui(ns("dl_gene_dist"))
           ),
-
-          # Sample Tree Plot ---------
+          # Sample Tree -----------------
           tabPanel(
             title = "Sample Tree",
+            value = "sample_tab",
             h5(
               "Using genes with maximum expression level at the top 75%.
                Data is transformed and clustered as specified in the sidebar."
@@ -431,20 +395,8 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     output$list_factors_heatmap <- renderUI({
       selectInput(
         inputId = ns("select_factors_heatmap"),
-        label = "Sample Color Bar:",
-        choices = c("Sample_Name", colnames(pre_process$sample_info()))
-      )
-    })
-
-    # GMT choices for enrichment ----------
-    output$select_go_selector <- renderUI({
-	    req(!is.null(pre_process$gmt_choices()))
-
-	    selectInput(
-        inputId = ns("select_go"),
         label = NULL,
-        choices = pre_process$gmt_choices(),
-        selected = "GOBP"
+        choices = c("Sample_Name", colnames(pre_process$sample_info()))
       )
     })
 
@@ -509,7 +461,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         dist_funs = dist_funs,
         dist_function = input$dist_function,
         hclust_function = input$hclust_function,
-        no_sample_clustering = input$no_sample_clustering,
+        sample_clustering = input$sample_clustering,
         heatmap_color_select = heatmap_colors[[input$heatmap_color_select]],
         row_dend = input$show_row_dend,
         k_clusters = input$k_clusters,
@@ -526,7 +478,8 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
 
     # Heatmap Click Value ---------
     output$ht_click_content <- renderUI({
-      if (is.null(input$ht_click)) { 
+      
+      if (is.null(input$ht_click) | is.null(shiny_env$ht_sub)) { 
         "Click on zoomed heatmap"
       } else {
         cluster_heat_click_info(
@@ -546,7 +499,8 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     output$sub_heatmap <- renderPlot({
       if (is.null(input$ht_brush)) {
         grid::grid.newpage()
-        grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
+        grid::grid.text("Select a region on the heatmap to zoom in. 
+        Gene IDs shows up when less than 60 genes are selected.", 0.5, 0.5)
       } else {
         submap_return <- heat_sub(
           ht_brush = input$ht_brush,
@@ -577,19 +531,12 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       }
     })
 
-    # Enrichment Analysis ----------
-    # Gene sets reactive
-    pathway_table <- reactive({
+    # gene lists for enrichment analysis
+    gene_lists <- reactive({
       req(!is.null(input$select_gene_id))
-      req(!is.null(input$ht_brush))
-
-      shinybusy::show_modal_spinner(
-        spin = "orbit",
-        text = "Running Analysis",
-        color = "#000000"
-      )
+      req(!is.null(input$ht_brush) || input$cluster_meth == 2)
       
-      pathway_info <- list()
+      gene_lists <- list()
       
       if (input$cluster_meth == 1) {
         gene_names <- merge_data(
@@ -599,37 +546,21 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         )
       
         # Only keep the gene names and scrap the data
-        gene_names_query <- dplyr::select_if(gene_names, is.character)
+        gene_lists[["Selection"]] <- dplyr::select_if(gene_names, is.character)
 
-        req(!is.null(pre_process$all_gene_names()))
-        req(!is.null(input$select_go))
-
-        gene_sets <- read_pathway_sets(
-          all_gene_names_query = gene_names_query,
-          converted = pre_process$converted(),
-          go = input$select_go,
-          select_org = pre_process$select_org(),
-          gmt_file = pre_process$gmt_file(),
-          idep_data = idep_data,
-          gene_info = pre_process$all_gene_info()
-        )
-
-        pathway_info[["Hierarchical_Selection"]] <- find_overlap(
-          pathway_table = gene_sets$pathway_table,
-          query_set = gene_sets$query_set,
-          total_genes = gene_sets$total_genes,
-          processed_data = pre_process$data(),
-          gene_info = pre_process$all_gene_info(),
-          go = input$select_go,
-          idep_data = idep_data,
-          select_org = pre_process$select_org(),
-          sub_pathway_files = gene_sets$pathway_files,
-          use_filtered_background = input$filtered_background,
-          reduced = input$remove_redudant
-        )
+         # k-means-----------------------------------------------------
       } else if (input$cluster_meth == 2) {
-        # Get the cluster number and Gene IDs
+        # Get the cluster number and Gene 
+
+        req(heatmap_data())
+        req(input$k_clusters)
+        req(input$select_gene_id)
+        req(shiny_env$ht)
+        
         row_ord <- ComplexHeatmap::row_order(shiny_env$ht)
+
+        req(!is.null(names(row_ord)))
+
         for (i in 1:length(row_ord)) {
           if (i == 1) {
           clusts <- data.frame(
@@ -646,8 +577,10 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         }
         clusts$id <- rownames(heatmap_data()[clusts$row_order, ]) 
 
-        for (i in 1:length(shiny_env$click_data)) {
-          cluster_data <- shiny_env$click_data[[i]]
+        # disregard user selection use clusters for enrichment
+        for (i in 1:input$k_clusters) {
+          cluster_data <- subset(clusts, cluster == i)
+          row.names(cluster_data) <- cluster_data$id
 
           gene_names <- merge_data(
             all_gene_names = pre_process$all_gene_names(),
@@ -656,104 +589,18 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
           )
       
           # Only keep the gene names and scrap the data
-          gene_names_query <- dplyr::select_if(gene_names, is.character)
+         gene_lists[[paste0("Cluster ", i)]] <-
+          dplyr::select_if(gene_names, is.character)
 
-          req(!is.null(pre_process$all_gene_names()))
-          req(!is.null(input$select_go))
-
-          gene_sets <- read_pathway_sets(
-            all_gene_names_query = gene_names_query,
-            converted = pre_process$converted(),
-            go = input$select_go,
-            select_org = pre_process$select_org(),
-            gmt_file = pre_process$gmt_file(),
-            idep_data = idep_data,
-            gene_info = pre_process$all_gene_info()
-          )
-
-          pathway_sub_info <- find_overlap(
-            pathway_table = gene_sets$pathway_table,
-            query_set = gene_sets$query_set,
-            total_genes = gene_sets$total_genes,
-            processed_data = pre_process$data(),
-            gene_info = pre_process$all_gene_info(),
-            go = input$select_go,
-            idep_data = idep_data,
-            select_org = pre_process$select_org(),
-            sub_pathway_files = gene_sets$pathway_files,
-            use_filtered_background = TRUE,
-            reduced = FALSE
-          )
-
-          # Get cluster by matching gene ID from query to cluster number
-          clust_num <- clusts$cluster[clusts$id == gene_names_query[1, 2]]
-
-          pathway_info[[paste0("Cluster_", clust_num)]] <- pathway_sub_info
         }
       }
 
-      shinybusy::remove_modal_spinner()
-      
-
-
-      return(pathway_info)
-    })
-    
-    
-
-    # Pathway Data Table ----------
-    output$pathway_data <- renderUI({
-      req(!is.null(pathway_table()))
-      
-      
-      #exclude gene list column from displayed table, but keep for download
-      lapply(names(pathway_table()), function(x) {
-        output[[x]] = DT::renderDataTable({
-          DT::datatable(
-            if (ncol(pathway_table()[[x]]) < 5){
-              data = pathway_table()[[x]]
-            } else {
-              data = pathway_table()[[x]][,1:4]
-            },
-            options = list(
-              pageLength = 20,
-              scrollX = "400px",
-              dom = 'ft'
-            ),
-            rownames = FALSE,
-            selection = 'single'
-          )
-        })
-
-        down_data <- data_frame_with_list(pathway_table()[[x]])
-
-        output[[paste0("table_", x)]] = downloadHandler(
-          filename = function() {
-            paste0(x, ".csv")
-          },
-          content = function(file) {
-            write.csv(down_data, file)
-          }
-        )
-      })
-  
-      return(lapply(names(pathway_table()), function(x) {
-        tagList(
-          DT::dataTableOutput(ns(x)),
-          br(),
-          downloadButton(
-            outputId = ns(paste0("table_", x)),
-            label = "Enrichment"
-          )
-        )
-      })
-      )
+      return(gene_lists)
     })
 
-  
     # Sample Tree ----------
     sample_tree <- reactive({
-      req(!is.null(pre_process$data()))
+      req(!is.null(pre_process$data()), input$cluster_meth == 1)
       
       draw_sample_tree(
         tree_data = pre_process$data(),
@@ -779,6 +626,24 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       filename = "sample_tree", 
       figure = reactive({ sample_tree() })
     )
+    
+    observeEvent(input$cluster_meth, {
+      if (input$cluster_meth == 1){
+        showTab(
+          inputId = "cluster_panels", 
+          target = "sample_tab"
+        ) 
+      }
+    })
+    
+    observeEvent(input$cluster_meth, {
+      if(input$cluster_meth == 2){
+        hideTab(
+          inputId = "cluster_panels",
+          target = "sample_tab"
+        )
+      }
+    })
     
     # k-Cluster elbow plot ----------
     output$k_clusters <- renderPlot({
@@ -826,7 +691,18 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         write.csv(heatmap_data_download(), file)
       }
     )
-    
+
+  enrichment_table_cluster <- mod_11_enrichment_server(
+    id = "enrichment_table_cluster",
+    gmt_choices = reactive({ pre_process$gmt_choices() }),
+    gene_lists = reactive({ gene_lists() }),
+    processed_data = reactive({ pre_process$data()}),
+    gene_info = reactive({ pre_process$all_gene_info()}),
+    idep_data = idep_data,
+    select_org = reactive({ pre_process$select_org()}),
+    converted = reactive({ pre_process$converted() }),
+    gmt_file = reactive({ pre_process$gmt_file() })
+  )
     
     # Markdown report------------
     output$report <- downloadHandler(
@@ -870,7 +746,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
           heatmap_cutoff = input$heatmap_cutoff,
           gene_centering = input$gene_centering,
           gene_normalize = input$gene_normalize,
-          no_sample_clustering = input$no_sample_clustering,
+          sample_clustering = input$sample_clustering,
           show_row_dend = input$show_row_dend
             
           

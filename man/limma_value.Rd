@@ -18,7 +18,9 @@ limma_value(
   factor_reference_levels,
   processed_data,
   counts_log_start,
-  p_vals
+  p_vals,
+  threshold_wald_test = FALSE,
+  independent_filtering = TRUE
 )
 }
 \arguments{
@@ -60,6 +62,13 @@ from pre-processing}
 
 \item{p_vals}{The vector of p-vals calculated in pre-process for
 significant expression}
+
+\item{threshold_wald_test}{whether to use threshold-based Wald test 
+to test null hypothesis that the absolute value of fold-change is 
+bigger than a value}
+
+\item{independent_filtering}{whether or not to conduct independent 
+filtering in DESeq2 results function.}
 }
 \value{
 List with the results of the DEG analysis. When the function

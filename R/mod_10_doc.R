@@ -44,6 +44,13 @@ mod_10_doc_ui <- function(id){
            href="https://doi.org/10.1093/nar/gkaa970",
            target="_blank"
         )
+      ),
+      h4(
+        "Source code on ",
+        a(
+          "GitHub.",
+          href = "https://github.com/espors/idepGolem/"
+        )
       )
     )
   )

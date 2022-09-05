@@ -670,6 +670,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     observe({
       req(tab() == "Pre-Process")
       req(!is.null(processed_data()$data))
+      req(!is.null(individual_data()))
 
       # Genes are sorted by SD
       sorted <- sort(
@@ -705,8 +706,12 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
 
     # Individual gene plot ---------
     gene_plot <- reactive({
-      req(!is.null(individual_data()))
-      req(!is.null(input$selected_gene))
+      
+      req(individual_data())
+      req(input$selected_gene)
+      req(!is.null(input$gene_plot_box))
+      req(!is.null(input$use_sd))
+      req(input$angle_ind_axis_lab)
 
       individual_plots(
         individual_data = individual_data(),
@@ -717,9 +722,12 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         lab_rotate = input$angle_ind_axis_lab
       )
     })
+    
     output$gene_plot <- renderPlot({
+      req(gene_plot())
       print(gene_plot())
     })
+    
     dl_gene_plot <- ottoPlots::mod_download_figure_server(
       id = "dl_gene_plot", 
       filename = "gene_plot", 
@@ -733,7 +741,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         "processed_data.csv"
       },
       content = function(file) {
-        write.csv(merged_processed_data(), file)
+        write.csv(merged_processed_data(), file, row.names = FALSE)
       }
     )
     output$download_converted_counts <- downloadHandler(
@@ -741,7 +749,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         "converted_counts_data.csv"
       },
       content = function(file) {
-        write.csv(merged_raw_counts_data(), file)
+        write.csv(merged_raw_counts_data(), file, row.names = FALSE)
       }
     )
 
@@ -939,8 +947,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
              "1" = "Integers detected. Did you mean to select 'read counts'?",
              "-1" = "Non count values detected. Did you mean select 'Normalized Expression Values'?"
   )
-  
-      
+
       showNotification(
         ui = message,
         id = "data_type_warning",

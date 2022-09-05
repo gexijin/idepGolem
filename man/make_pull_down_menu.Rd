@@ -9,6 +9,9 @@ make_pull_down_menu(funs)
 \arguments{
 \item{funs}{}
 }
+\value{
+names of a set
+}
 \description{
-make_pull_down_menu makes it easy to make pull down menu
+This makes pull down menu
 }

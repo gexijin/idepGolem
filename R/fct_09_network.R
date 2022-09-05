@@ -162,7 +162,6 @@ get_module_plot <- function(
 #'  options can be found with the \code{get_wgcna_modules} function
 #' @param wgcna List returned from the \code{get_wgcna}
 #' @param top_genes_network Number of genes to include in the network plot
-#' @param select_go Portion of the database to use in enrichment querying
 #' @param select_org Organism the expression data is for
 #' @param all_gene_info Gene info that was found from querying the database
 #' @param edge_threshold Wavlue from 1-.1 (.4 recommended)
@@ -175,7 +174,6 @@ get_network_plot <- function(
   select_wgcna_module,
   wgcna,
   top_genes_network,
-  select_go,
   select_org,
   all_gene_info,
   edge_threshold
@@ -203,8 +201,7 @@ get_network_plot <- function(
 
   # Adding symbols 
   probe_to_gene <- NULL
-  if(select_go != "ID not recognized!" &
-     select_org != "NEW" &
+  if(select_org != "NEW" &
      dim(all_gene_info)[1] > 1) {
     # If more than 50% genes has symbol
     if(sum(is.na(all_gene_info$symbol)) / dim(all_gene_info)[1] < .5) {

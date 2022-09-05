@@ -97,9 +97,6 @@ mod_09_network_ui <- function(id){
           "#network-top_genes_network{ width:100%;   margin-top:-12px}"
         ),
         br(),
-        htmlOutput(
-          outputId = ns("select_go_selector")
-        ),
         h5("The network file can be imported to", 
           a("VisANT", href = "http://visant.bu.edu/", target = "_blank"),
           " or ", 
@@ -116,6 +113,9 @@ mod_09_network_ui <- function(id){
           target = "_blank"
         )
       ),
+
+
+
       mainPanel(
         tabsetPanel(
           id = ns("network_tabs"),
@@ -156,57 +156,13 @@ mod_09_network_ui <- function(id){
             )
           ),
           tabPanel(
-            "Enrichment Table",
-            h3("Enriched gene sets in selected module"),
-            fluidRow(
-              column(
-                width = 4,
-                checkboxInput(
-                  inputId = ns("filtered_background"), 
-                  label = "Use filtered data as background in enrichment (slow)", 
-                  value = TRUE
-                )
-              ),
-              column(
-                width = 4,
-                checkboxInput(
-                  inputId = ns("remove_redudant"),
-                  label = "Remove Redudant Gene Sets",
-                  value = FALSE
-                )
-              )
-            ),
-            DT::dataTableOutput(
-              outputId = ns("pathway_data_network")
-            )
+            "Enrichment",
+            h4("Enriched pathways in the selected module"),
+            mod_11_enrichment_ui(ns("enrichment_table_cluster"))
           ),
           tabPanel(
-            "Heatmap",
-            fluidRow(
-              column(
-                width = 3,
-                plotOutput(
-                  outputId = ns("network_main_heatmap"),
-                  height = "450px",
-                  width = "100%",
-                  brush = ns("ht_brush")
-                ),
-                br(),
-                h5("Selected Cell (Submap):"),
-                uiOutput(
-                  outputId = ns("ht_click_content")
-                )
-              ),
-              column(
-                width = 9,
-                plotOutput(
-                  outputId = ns("network_sub_heatmap"),
-                  height = "650px",
-                  width = "100%",
-                  click = ns("ht_click")
-                )
-              )
-            )
+            title = "Heatmap",
+            mod_12_heatmap_ui(ns("12_heatmap_1"))
           )
         )
       )
@@ -235,17 +191,7 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab){
 			)
 	  })
 
-    # GMT choices for enrichment ----------
-    output$select_go_selector <- renderUI({
-	    req(!is.null(pre_process$gmt_choices()))
 
-	    selectInput(
-        inputId = ns("select_go"),
-        label = "Select Geneset:",
-        choices = pre_process$gmt_choices(),
-        selected = "GOBP"
-      )
-    })
 
     wgcna <- reactive({
       req(!is.null(pre_process$data()))
@@ -274,7 +220,6 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab){
         select_wgcna_module = input$select_wgcna_module,
         wgcna = wgcna(),
         top_genes_network = input$top_genes_network,
-        select_go = input$select_go,
         select_org = pre_process$select_org(),
         all_gene_info = pre_process$all_gene_info(),
         edge_threshold = input$edge_threshold
@@ -290,7 +235,6 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab){
           select_wgcna_module = input$select_wgcna_module,
           wgcna = wgcna(),
           top_genes_network = input$top_genes_network,
-          select_go = input$select_go,
           select_org = pre_process$select_org(),
           all_gene_info = pre_process$all_gene_info(),
           edge_threshold = input$edge_threshold
@@ -311,7 +255,7 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab){
       )
     })
 
-    pathway_table_network <- reactive({
+    gene_lists <- reactive({
       req(!is.null(network_query()))
 
       shinybusy::show_modal_spinner(
@@ -319,62 +263,33 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab){
         text = "Running Analysis",
         color = "#000000"
       )
-
-      gene_names_query <- dplyr::filter(
+      gene_lists <- list()
+      gene_lists[["Cluster"]] <- dplyr::filter(
         pre_process$all_gene_names(),
         ensembl_ID %in% network_query()
       )
 
-      req(!is.null(input$select_go))
-
-      gene_sets <- read_pathway_sets(
-        all_gene_names_query = gene_names_query,
-        converted = pre_process$converted(),
-        go = input$select_go,
-        select_org = pre_process$select_org(),
-        gmt_file = pre_process$gmt_file(),
-        idep_data = idep_data,
-        gene_info = pre_process$all_gene_info()
-      )
-
-      pathway_info <- find_overlap(
-        pathway_table = gene_sets$pathway_table,
-        query_set = gene_sets$query_set,
-        total_genes = gene_sets$total_genes,
-        processed_data = pre_process$data(),
-        gene_info = pre_process$all_gene_info(),
-        go = input$select_go,
-        idep_data = idep_data,
-        select_org = pre_process$select_org(),
-        sub_pathway_files = gene_sets$pathway_files,
-        use_filtered_background = input$filtered_background,
-        reduced = input$remove_redudant
-      )
-
       shinybusy::remove_modal_spinner()
 
-      return(pathway_info)
+      return(gene_lists)
     })
 
-    # Pathway Data Table ----------
-    output$pathway_data_network <- DT::renderDataTable({
-      req(!is.null(pathway_table_network()))
+  enrichment_table_cluster <- mod_11_enrichment_server(
+    id = "enrichment_table_cluster",
+    results = reactive({ enrichment_network() }) 
+  )
 
-      if(ncol(pathway_table_network()) > 1) {
-        pathway_table <- pathway_table_network()[, 1:4]
-      } else {
-        pathway_table <- pathway_table_network()
-      }
-
-      DT::datatable(
-        pathway_table,
-        options = list(
-          pageLength = 20,
-          scrollX = "400px"
-        ),
-        rownames = FALSE
-      )
-    })
+    enrichment_table_cluster <- mod_11_enrichment_server(
+    id = "enrichment_table_cluster",
+    gmt_choices = reactive({ pre_process$gmt_choices() }),
+    gene_lists = reactive({ gene_lists() }),
+    processed_data = reactive({ pre_process$data()}),
+    gene_info = reactive({ pre_process$all_gene_info()}),
+    idep_data = idep_data,
+    select_org = reactive({ pre_process$select_org()}),
+    converted = reactive({ pre_process$converted() }),
+    gmt_file = reactive({ pre_process$gmt_file() })
+  )
 
     output$scale_independence_plot <- renderPlot({
       req(!is.null(wgcna()))
@@ -416,30 +331,10 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab){
       )
     })
 
-    # Heatmap Colors ----------
-    heatmap_colors <- list(
-      "Green-Black-Red" = c("green", "black", "red"),
-      "Blue-White-Red" = c("blue", "white", "red"),
-      "Green-Black-Magenta" = c("green", "black", "magenta"),
-      "Blue-Yellow-Red" = c("blue", "yellow", "red"),
-      "Blue-White-Brown" = c("blue", "white", "brown")
-    )
-    heatmap_choices <- c(
-      "Green-Black-Red",
-      "Blue-White-Red",
-      "Green-Black-Magenta",
-      "Blue-Yellow-Red",
-      "Blue-White-Brown"
-    )
-    output$heatmap_color_ui <- renderUI({
-      req(!is.null(input$network_tabs == "Heatmap"))
-
-      selectInput(
-        inputId = ns("heatmap_color_select"),
-        label = "Select Heatmap Color: ",
-        choices = heatmap_choices,
-        width = "100%"
-      )
+    # Remove messages if the tab changes --------
+    observe({
+      req(tab() != "Network")
+      removeNotification("network_summary")
     })
 
     network_data <- reactive({
@@ -447,85 +342,18 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab){
 
       data <- pre_process$data()[rownames(pre_process$data()) %in% network_query(), ]
 
-      if(ncol(pre_process$all_gene_names()) > 2) {
-        data <- rowname_id_swap(
-          data_matrix = data,
-          all_gene_names = pre_process$all_gene_names(),
-          select_gene_id = "symbol"
-        )
-      }
     })
 
-    output$network_main_heatmap <- renderPlot({
-      req(!is.null(network_data()))
+    heatmap_module <- mod_12_heatmap_server(
+      id = "12_heatmap_1",
+      data = reactive({ network_data() }),
+      bar = NULL,
+      all_gene_names = reactive({ pre_process$all_gene_names() }),
+      cluster_rows = TRUE
+    )
 
-      shinybusy::show_modal_spinner(
-        spin = "orbit",
-        text = "Creating Heatmap",
-        color = "#000000"
-      )
 
-      # Assign heatmap to be used in multiple components
-      network_env$ht <- basic_heatmap(
-        data = network_data(),
-        heatmap_color_select = heatmap_colors[[input$heatmap_color_select]]
-      )
 
-      # Use heatmap position in multiple components
-      network_env$ht_pos_main <- InteractiveComplexHeatmap::htPositionsOnDevice(network_env$ht)
-
-      shinybusy::remove_modal_spinner()
-
-      return(network_env$ht)
-    })
-
-    output$network_sub_heatmap <- renderPlot({
-      if (is.null(input$ht_brush)) {
-        grid::grid.newpage()
-        grid::grid.text("No region is selected.", 0.5, 0.5)
-      } else {
-        network_heat_return <- basic_heat_sub(
-          ht_brush = input$ht_brush,
-          ht = network_env$ht,
-          ht_pos_main = network_env$ht_pos_main,
-          heatmap_data = network_data()
-        )
-
-        network_env$ht_select <- network_heat_return$ht_select
-        network_env$submap_data <- network_heat_return$submap_data
-        network_env$group_colors <- network_heat_return$group_colors
-        network_env$column_groups <- network_heat_return$column_groups
-        
-        network_env$ht_sub <- ComplexHeatmap::draw(
-          network_env$ht_select,
-          annotation_legend_side = "top",
-          heatmap_legend_side = "top"
-        )
-
-        network_env$ht_pos_sub <- InteractiveComplexHeatmap::htPositionsOnDevice(
-          network_env$ht_sub
-        )
-
-        return(network_env$ht_sub)
-      }
-    })
-
-    # Sub Heatmap Click Value ---------
-    output$ht_click_content <- renderUI({
-      if (is.null(input$ht_click)) { 
-        "Click for Info."
-      } else {
-        heat_click_info(
-          click = input$ht_click,
-          ht_sub = network_env$ht_sub,
-          ht_sub_obj = network_env$ht_select,
-          ht_pos_sub = network_env$ht_pos_sub,
-          sub_groups = network_env$column_groups,
-          group_colors = network_env$group_colors,
-          data = network_env$submap_data
-        )
-      }
-    })
 
   })
 }

@@ -156,7 +156,14 @@ input_data <- function(
       return(NULL)
     }
     data <- data[, num_col]
-    
+
+    # Order by SD ----------
+    data <- data[order(-apply(
+      data[, 2:ncol(data)],
+      1,
+      sd
+    )), ]
+
     # Format gene ids --------
     data[, 1] <- toupper(data[, 1])
     data[, 1] <- gsub(" |\"|\'", "", data[, 1])
@@ -174,13 +181,7 @@ input_data <- function(
     # Remove "-" or "." from sample names ----------
     colnames(data) <- gsub("-", "", colnames(data))
     colnames(data) <- gsub("\\.", "", colnames(data))
-    
-    # Order by SD ----------
-    data <- data[order(-apply(
-      data[, 1:ncol(data)],
-      1,
-      sd
-    )), ]
+
   })
   
   # Read experiment file ----------
@@ -356,12 +357,19 @@ get_all_gene_names <- function(
     mapped_ids,
     all_gene_info
 ) {
+
+  # not converted
   if (is.null(dim(mapped_ids))) {
-    return(data.frame("User_ID" = mapped_ids))
-  } else if (!is.null(all_gene_info$bool)) {
+    return(data.frame(
+      "User_ID" = mapped_ids,
+      "ensembl_ID" = mapped_ids, # dummy data
+      "symbol" = mapped_ids      # dummy data
+      ))
+  } else if (!is.null(all_gene_info$bool)) { # ensembl ID only, no symbol
     return(data.frame(
       "User_ID" = mapped_ids[, 1],
-      "ensembl_ID" = mapped_ids[, 2]
+      "ensembl_ID" = mapped_ids[, 2],
+      "symbol" = mapped_ids[, 1]  # dummy data
     ))
   } else {
     mapped_ids <- data.frame(

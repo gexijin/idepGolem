@@ -328,6 +328,8 @@ fgsea_data <- function(
   pathway_p_val_cutoff,
   n_pathway_show
 ) {
+  nPerm <- 50000 # number of permutations
+  
 	no_sig <- as.data.frame("No significant pathway found.")
 	if(length(limma$top_genes) == 0) {
     return(no_sig)
@@ -368,8 +370,8 @@ fgsea_data <- function(
     stats = fold,
     minSize = my_range[1],
     maxSize = my_range[2],
-    nPerm = 100000                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ,
-		nproc = 6
+    nPerm = nPerm,
+    nproc = 6
   )
 	
   if(dim(paths)[1] < 1) {
@@ -801,14 +803,6 @@ pathway_select_data <- function(
 	# Find related samples	
 	iz <-contrast_samples
 	x <- data[which(rownames(data) %in% genes), iz]
-	if(ncol(all_gene_names) == 3) {
-    x <- rowname_id_swap(
-      data_matrix = x,
-      all_gene_names = all_gene_names,
-      select_gene_id = "symbol"
-    )
-  }
-	
 	return(x)
 }
 
@@ -996,7 +990,7 @@ kegg_pathway <- function(
     contentType = 'image/png',
     width = 400,
     height = 300,
-    alt = " "
+    alt = "Not downloaded."
   )	
   
 
@@ -1007,6 +1001,18 @@ kegg_pathway <- function(
     return(blank)
   }
 	if(is.null(sig_pathways)) {
+    return(blank)
+  }
+
+	if (is.null(select_contrast)) {
+    return(blank)
+  }
+	
+	if(sig_pathways == "All") {
+    return(blank)
+  }
+	
+	if(length(limma$top_genes) == 0) {
     return(blank)
   }
 
@@ -1404,6 +1410,7 @@ kegg_pathway <- function(
     else names(out.list) = pathway.name
     return(invisible(out.list))
   }# <environment: namespace:pathview>
+
   my.keggview.native <- function (
     plot.data.gene = NULL,
     plot.data.cpd = NULL,
@@ -1619,18 +1626,6 @@ kegg_pathway <- function(
   attributes(my.keggview.native) <- attributes(tmpfun)  
 
 
-	if (is.null(select_contrast)) {
-    return(blank)
-  }
-	
-	if(sig_pathways == "All") {
-    return(blank)
-  }
-	
-	if(length(limma$top_genes) == 0) {
-    return(blank)
-  }
-
 	# Get fold change
 	if(length(limma$comparisons)  == 1) {
     top_1 <- limma$top_genes[[1]]  
@@ -1667,7 +1662,7 @@ kegg_pathway <- function(
     return(blank)
   }
 
-	 
+
 	path_id <- kegg_pathway_id(
     sig_pathways,
     Species,
@@ -1696,7 +1691,7 @@ kegg_pathway <- function(
     ".png",
     sep = ""
   )
-	
+
 	pv.out <- mypathview(
     gene.data = fold,
     pathway.id = path_id,

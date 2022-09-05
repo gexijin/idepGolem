@@ -6,7 +6,7 @@ output:
 params:
   YOUR_DATA_PATH:
     label: Data
-    value: {GE_DATABASE}data_go/GSE37704_sailfish_genecounts.csv
+    value: {IDEP_DATABASE}data_go/GSE37704_sailfish_genecounts.csv
     input: file
   YOUR_EXPERIMENT_PATH:
     label: Design

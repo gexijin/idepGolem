@@ -13,10 +13,10 @@ NULL
 #' hcluster_functions
 #'
 #'
-#' @description
+#' @description This is list of functions for hierarchical clustering
 #'
 #' @export
-#' @return
+#' @return  one of the functions
 #'
 #'
 hcluster_functions <- function() {
@@ -59,10 +59,10 @@ hcluster_functions <- function() {
 #' dist_functions
 #'
 #'
-#' @description
+#' @description Distance functions for clustering
 #'
 #' @export
-#' @return
+#' @return a distance function
 #'
 #'
 dist_functions <- function() {
@@ -77,9 +77,9 @@ dist_functions <- function() {
   }
 
   return(list(
-    euclidean = dist,
-    pearson_correlation = dist_pcc,
-    absolute_pcc = dist_abs_pcc
+    Pearson = dist_pcc,
+    Euclidean = dist,
+    Absolute_Pearson = dist_abs_pcc
   ))
 }
 
@@ -409,7 +409,7 @@ rowname_id_swap <- function(data_matrix,
       all_gene_names,
       by.x = "row.names",
       by.y = "ensembl_ID",
-      all.x = T
+      all.x = TRUE
     )
     rownames(new_data) <- new_data$symbol
     nums <- unlist(lapply(new_data, is.numeric))
@@ -438,7 +438,7 @@ merge_data <- function(all_gene_names,
                        merge_ID) {
   isolate({
     if (dim(all_gene_names)[2] == 1) {
-      new_data <- round(data, 2)
+      new_data <- data
       new_data <- as.data.frame(new_data)
       new_data$User_id <- rownames(new_data)
       new_data <- dplyr::select(
@@ -454,7 +454,7 @@ merge_data <- function(all_gene_names,
     } else if (dim(all_gene_names)[2] == 2) {
       new_data <- merge(
         all_gene_names,
-        round(data, 2),
+        data,
         by.x = merge_ID,
         by.y = "row.names",
         all.y = T
@@ -473,7 +473,7 @@ merge_data <- function(all_gene_names,
     } else {
       new_data <- merge(
         all_gene_names,
-        round(data, 2),
+        data,
         by.x = merge_ID,
         by.y = "row.names",
         all.y = T
@@ -524,9 +524,10 @@ wrap_strings <- function(vector_of_strings,
 enrichment_network <- function(go_table,
                                layout_button = 0,
                                edge_cutoff = 5) {
+  req(!is.null(go_table))
   gene_lists <- lapply(go_table$Genes, function(x) unlist(strsplit(as.character(x), " ")))
   names(gene_lists) <- go_table$Pathways
-  go_table$Direction <- gsub(" .*", "", go_table$Direction)
+#  go_table$Direction <- gsub(" .*", "", go_table$Direction)
 
   g <- enrich_net(
     data = go_table,
@@ -538,6 +539,7 @@ enrichment_network <- function(go_table,
     degree_cutoff = 0,
     n = 200,
     group = go_table$Direction,
+    group_color = gg_color_hue(2 + length(unique(go_table$Direction))),
     vertex.label.cex = 1,
     vertex.label.color = "black",
     show_legend = FALSE,
@@ -639,7 +641,7 @@ enrich_net <- function(data,
 
   for (i in 1:length(group_level)) {
     index <- data[, "Group"] == group_level[i]
-    igraph::V(g)$shape[index] <- group_shape[i]
+    igraph::V(g)$shape[index] <- group_shape[1] #group_shape[i]
     group_p_values <- p_values[index]
 
     if (length(group_p_values) > 0) {
@@ -1150,4 +1152,51 @@ Group: @{group_name} <span style='background-color:@{group_col};width=50px;'>   
 </pre></div>")
 
   return(HTML(html))
+}
+
+#' Convert regular text to hypertext with links
+#'
+#'
+#' @param click Information from the User clicking on a cell of
+#'  the sub-heatmap
+#' @param textVector A vector of characters
+#' @param urlVector a set of URLs
+#'  
+#' @export
+#' @return HTML format hyper text
+hyperText <- function (textVector, urlVector){
+  # for generating pathway lists that can be clicked.
+  # Function that takes a vector of strings and a vector of URLs
+  # and generate hyper text 
+  # add URL to Description 
+  # see https://stackoverflow.com/questions/30901027/convert-a-column-of-text-urls-into-active-hyperlinks-in-shiny
+  # see https://stackoverflow.com/questions/21909826/r-shiny-open-the-urls-from-rendertable-in-a-new-tab
+  if( sum(is.null(urlVector) ) == length(urlVector) )
+     return(textVector)
+ 
+  if(length(textVector) != length(urlVector))
+    return(textVector)
+
+  #------------------URL correction
+  # URL changed from http://amigo.geneontology.org/cgi-bin/amigo/term_details?term=GO:0000077 
+  #                  http://amigo.geneontology.org/amigo/term/GO:0000077
+  urlVector <- gsub(
+    "cgi-bin/amigo/term_details\\?term=", 
+    "amigo/term/", 
+    urlVector 
+  )
+  urlVector <- gsub(" ", "", urlVector )
+
+
+  # first see if URL is contained in memo
+  ix <- grepl("http:", urlVector, ignore.case = TRUE)  
+  if(sum(ix) > 0) { # at least one has http?
+    tem <- paste0("<a href='", 
+      urlVector, "' target='_blank'>",
+      textVector, 
+      "</a>" )
+    # only change the ones with URL
+    textVector[ix] <- tem[ix]
+  }
+  return(textVector)
 }

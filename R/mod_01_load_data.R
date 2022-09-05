@@ -64,7 +64,7 @@ mod_01_load_data_ui <- function(id) {
           ),
           ns = ns
         ),
-
+        
         # Buttons for data file format ----------
         radioButtons(
           inputId = ns("data_file_format"),
@@ -77,7 +77,7 @@ mod_01_load_data_ui <- function(id) {
           ),
           selected = 1
         ),
-
+        
         # Conditional panel for fold changes data file ----------
         conditionalPanel(
           condition = "input.data_file_format == 3",
@@ -91,12 +91,12 @@ mod_01_load_data_ui <- function(id) {
 
         fluidRow( 
           column(
-            width = 4, 
+            width = 6, 
             # Button to load demo dataset ----------
             # Manually namespace the goButton in tag with id in module call
             actionButton(
               inputId = ns("go_button"),
-              label = "Load demo for"
+              label = "Load demo for: "
             ),
             tags$head(tags$style(
               "#load_data-go_button{color: red;
@@ -105,7 +105,7 @@ mod_01_load_data_ui <- function(id) {
             ))
           ),
           column(
-            width = 8, 
+            width = 6, 
             # List of demo files
             selectInput(
               inputId = ns("select_demo"),
@@ -130,6 +130,21 @@ mod_01_load_data_ui <- function(id) {
           )
         ),
 
+
+
+        # Experiment design file input ----------
+        fileInput(
+          inputId = ns("experiment_file"),
+          label = ("4. Optional: Upload an experiment design file(CSV or text)"),
+          accept = c(
+            "text/csv",
+            "text/comma-separated-values",
+            "text/tab-separated-values",
+            "text/plain",
+            ".csv",
+            ".tsv"
+          )
+        ),
         # Yes or no to converting IDs -------------
         checkboxInput(
           inputId = ns("no_id_conversion"),
@@ -141,20 +156,6 @@ mod_01_load_data_ui <- function(id) {
         a(
           h4("Public RNA-seq datasets"),
           href = "http://bioinformatics.sdstate.edu/reads/"
-        ),
-
-        # Experiment design file input ----------
-        fileInput(
-          inputId = ns("experiment_file"),
-          label = h5("Optional: Upload an experiment design file(CSV or text)"),
-          accept = c(
-            "text/csv",
-            "text/comma-separated-values",
-            "text/tab-separated-values",
-            "text/plain",
-            ".csv",
-            ".tsv"
-          )
         ),
 
         # Table output for species loading progress -----------
@@ -210,20 +211,24 @@ mod_01_load_data_ui <- function(id) {
             h4("Loading R packages, please wait ... ... ...")
           ),
           htmlOutput(ns("file_format")),
-          h3(
-            "All new iDEP 2.0 in testing model."
+          h4(
+            "All new iDEP 1.0 in testing model."
           ),
     
           h4(
-            "We recently hired Jenny Qi for database updates and user support.",
+            "We welcome any suggestions or questions. Please",
             a(
-              "Email Jenny for questions.",
+              "Email Jenny",
               href = "mailto:gelabinfo@gmail.com?Subject=iDEP"
+            ),
+            "or report issues on our ",
+            a(
+              "GitHub page.",
+              href = "https://github.com/espors/idepGolem/issues"
             )
           ),
           h5(
-            "iDEP has not been thoroughly tested. Please let us know if you find
-            any issue/bug."
+            "iDEP has not been thoroughly tested."
           ),
           br(),
           img(
@@ -234,13 +239,13 @@ mod_01_load_data_ui <- function(id) {
           ),
           br(),
           img(
-            src='www/figs.gif', 
+            src='www/figs.gif',
             align = "center",
             width="640", 
             height="480"
           ),
           ns = ns
-       )  # conditionalPanel not working
+       )
       )
     )
   )
@@ -335,12 +340,18 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # Reactive element to load the data from the user or demo data ---------
     loaded_data <- reactive(
       input_data(
-      expression_file = input$expression_file,
-      experiment_file = input$experiment_file,
-      go_button = input$go_button,
-      demo_data_file = demo_data_file()[1], 
-      demo_metadata_file = demo_data_file()[2]
-    ))
+        expression_file = input$expression_file,
+        experiment_file = input$experiment_file,
+        go_button = input$go_button,
+        demo_data_file = demo_data_file()[1], 
+        demo_metadata_file = demo_data_file()[2]
+      )
+    )
+    
+    # observeEvent(input$data_file_format, {
+    #   req(loaded_data())
+    #   loaded_data() <- NULL
+    # })
 
     # Sample information table -----------
     output$sample_info_table <- DT::renderDataTable({
@@ -378,10 +389,33 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       )
     })
 
+    observeEvent(input$reset_app, {
+      session$reload()
+    })
+    
     # Get converted IDs ----------
     conversion_info <- reactive({
       
       req(!is.null(loaded_data()$data))
+      
+      # test data for correct format 
+      if (
+        min(loaded_data()$data, na.rm = TRUE) < 0 & input$data_file_format == 1
+      ) {
+        showModal(modalDialog(
+          title = "Somthing seems incorrect...", 
+          tags$p("Negative values were detected in this dataset. This is not 
+                 correct for the selected data type (Read Counts). 
+                 Please double check data type or the data. 
+                 You will not be able to continue until one of these 
+                 are resolved."),
+          tags$br(), 
+          tags$p("Upon clicking okay, the application will reset."),
+          size = "m", 
+          footer = actionButton(ns("reset_app"), "Okay, I will check my inputs!")
+        ))
+      } else {
+      
 
       shinybusy::show_modal_spinner(
         spin = "orbit",
@@ -392,7 +426,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       converted <- convert_id(
         rownames(loaded_data()$data),
         idep_data = idep_data,
-        select_org = input$select_org
+        select_org = input$select_org,
+        max_sample_ids = 200
       )
 
       all_gene_info <- gene_info(
@@ -429,15 +464,20 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         all_gene_names = all_gene_names,
         gmt_choices = gmt_choices
       ))
+      }
     })
 
     # Species match table ----------
     output$species_match <- renderTable(
       {
+
         if (is.null(input$expression_file) && input$go_button == 0) {
           return(NULL)
         }
         isolate({
+          if (is.null(conversion_info()$converted)) {
+            return( as.data.frame("ID not recognized.") )
+          }
           tem <- conversion_info()$converted$species_match
           if(nrow(tem) > 50) { # show only 50 
             tem <- tem[1:50, , drop = FALSE]
@@ -446,7 +486,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             as.data.frame("ID not recognized.")
           } else {
             data.frame(
-              "Matched Species (genes)" = tem[1, 1],
+              "Species(genes matched)" = tem[, 1],
               check.names = FALSE
             )
           }

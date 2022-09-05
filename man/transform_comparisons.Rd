@@ -10,7 +10,9 @@ transform_comparisons(comparison, key_model_factors, sample_info)
 \arguments{
 \item{comparison}{Comparison}
 
-\item{key_model_factors}{model factors
+\item{key_model_factors}{model factors}
+
+\item{sample_info}{a matrix of experimental design
 returned list}
 }
 \value{

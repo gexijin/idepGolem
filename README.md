@@ -9,10 +9,10 @@ The reason for this repository is to allow for users to locally install a packag
 
 ### Get the database
 
-The data can be retrieved from this link:<http://18.235.92.206:8080/>
+The data can be retrieved from this [here](http://bioinformatics.sdstate.edu/data/).
 
 Once all the data is retrieved then unzip the data into a base folder, then set up
-an environment variable name ```GE_DATABASE```
+an environment variable name ```IDEP_DATABASE```
 
 How to make environment variable for each OS:
 

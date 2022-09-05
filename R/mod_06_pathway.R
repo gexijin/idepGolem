@@ -8,7 +8,7 @@
 #'
 #' @importFrom shiny NS tagList
 mod_06_pathway_ui <- function(id) {
-  ns <- NS(id)
+  ns <- shiny::NS(id)
   tabPanel(
     "Pathway",
     sidebarLayout(
@@ -127,12 +127,13 @@ mod_06_pathway_ui <- function(id) {
           h5("Questions?", align = "right"),
           href = "https://idepsite.wordpress.com/pathways/",
           target = "_blank"
-        )    
+        )
       ),
       mainPanel(
         tabsetPanel(
+          id = ns("pathway_tabs"),
           tabPanel(
-            "Results",
+            title = "Significant pathways",
             br(),
             conditionalPanel(
               condition = "input.pathway_method == 1",
@@ -141,7 +142,9 @@ mod_06_pathway_ui <- function(id) {
             ),
             conditionalPanel(
               condition = "input.pathway_method == 2",
-              h5("Red and blue indicates activated and suppressed pathways, respectively."),
+              h5("Red and blue indicates relatively activated
+               and suppressed pathways, respectively. 
+              GS just indicates a color scale."),
               plotOutput(
                 outputId = ns("pgsea_plot"),
                 inline = TRUE
@@ -169,97 +172,18 @@ mod_06_pathway_ui <- function(id) {
             )
           ),
           tabPanel(
-            "Heatmap",
-            conditionalPanel(
-              condition = "input.pathway_method == 1 | input.pathway_method == 2 |
-                           input.pathway_method == 3 | input.pathway_method == 4",
-              fluidRow(
-                br(),
-                column(
-                  width = 5,
-                  htmlOutput(outputId = ns("list_sig_pathways")),
-                ),
-                column(
-                  width = 4, 
-                  conditionalPanel(
-                    condition =  "input.select_go != 'KEGG'", 
-                    selectInput(
-                      inputId = ns("heatmap_color_select"),
-                      label = "Select Heatmap Color: ",
-                      choices = "green-black-red",
-                      width = "100%"
-                    ), 
-                    ns = ns
-                  ), 
-                  conditionalPanel(
-                    condition = "input.select_go == 'KEGG'", 
-                    selectInput(
-                      inputId = ns("kegg_color_select"), 
-                      label = "Select colors (low-high)", 
-                      choices = "green-red", 
-                      width = "100%"
-                    ), 
-                    ns = ns
-                  )
-                )
-              ),
-              ns = ns
-            ),
-            conditionalPanel(
-              condition = "(input.pathway_method == 1 | input.pathway_method == 2 |
-                            input.pathway_method == 3 | input.pathway_method == 4) &
-                            input.select_go != 'KEGG'",
-              h5("Brush for sub-heatmap, click for value. (Shown Below)"),
-              br(),
-              fluidRow(
-                column(
-                  width = 3,
-                  plotOutput(
-                    outputId = ns("path_main_heatmap"),
-                    height = "450px",
-                    width = "100%",
-                    brush = ns("ht_brush")
-                  ),
-                  br(),
-                  h5("Selected Cell (Submap):"),
-                  uiOutput(
-                    outputId = ns("ht_click_content")
-                  )
-                ),
-                column(
-                  width = 9,
-                  plotOutput(
-                    outputId = ns("path_sub_heatmap"),
-                    height = "650px",
-                    width = "100%",
-                    click = ns("ht_click")
-                  )
-                )
-              ),
-              ns = ns
-            ),
-            conditionalPanel(
-              condition = "(input.pathway_method == 1 | input.pathway_method == 2 | 
-                            input.pathway_method == 3 | input.pathway_method == 4) &
-                            input.select_go == 'KEGG'",
-              h5("Red and green represent up- and down-regulated genes, respectively."),
-              imageOutput(
-                outputId = ns("kegg_image"),
-                width = "100%",
-                height = "100%"
-              ),
-              ns = ns
-            )
-          ),
-          tabPanel(
-            "Tree",
+            title = "Tree",
             plotOutput(
               outputId = ns("enrichment_tree"),
               width = "100%"
-            )
+            ),
+            br(),
+            p("Adjusting the width of the browser 
+            window can render figure differently and  
+            resolve the \"Figure margin too wide\" error. ")
           ),
           tabPanel(
-            "Network",
+            title = "Network",
             h5("Connected gene sets share more genes. Color of node correspond to adjuested Pvalues."),
             fluidRow(
               column(
@@ -293,17 +217,21 @@ mod_06_pathway_ui <- function(id) {
                   label = "Wrap text",
                   value = TRUE
                 )
+              ),
+              column(
+                width = 3,
+                selectInput(
+                  inputId = ns("up_down_reg_deg"),
+                  label = NULL,
+                  choices = c(
+                    "Both Up & Down" = "All Groups",
+                    "Up regulated" = "Up",
+                    "Down regulated" = "Down"
+                  )
+                )
               )
             ),
-            selectInput(
-              inputId = ns("up_down_reg_deg"),
-              NULL,
-              choices = c(
-                "Both Up & Down" = "Both",
-                "Up regulated" = "Up",
-                "Down regulated" = "Down"
-              )
-            ),
+
             h6(
               "Two pathways (nodes) are connected if they share 30% (default, adjustable) or more genes.
               Green and red represents down- and up-regulated pathways. You can move the nodes by 
@@ -316,7 +244,62 @@ mod_06_pathway_ui <- function(id) {
               height = "800px",
               width = "100%"
             )
+          ),
+          tabPanel(
+            title = "Heatmap",
+            htmlOutput(outputId = ns("list_sig_pathways")),
+            mod_12_heatmap_ui(ns("12_heatmap_1"))
+          ),
+          tabPanel(
+            title = "KEGG",
+            conditionalPanel(
+              condition = "(input.pathway_method == 1 | input.pathway_method == 2 | 
+                            input.pathway_method == 3 | input.pathway_method == 4) &
+                            input.select_go != 'KEGG'",
+              h5("Please select KEGG database, if available, from left and perform pathway analysis first."),
+              ns = ns
+            ),
+            conditionalPanel(
+              condition = "(input.pathway_method == 1 | input.pathway_method == 2 | 
+                            input.pathway_method == 3 | input.pathway_method == 4) &
+                            input.select_go == 'KEGG'",
+              fluidRow(
+                column(
+                  width = 6,
+                  htmlOutput(outputId = ns("list_sig_pathways_kegg"))
+                ),
+                column(
+                  width = 3,
+                  checkboxInput(
+                    inputId = ns("kegg_sig_only"),
+                    label = "Include nonsignficant pathways",
+                    value = FALSE
+                  )
+                ),
+                column(
+                  width = 3,
+                  selectInput(
+                    inputId = ns("kegg_color_select"),
+                    label = "Colors (low-high)",
+                    choices = "green-red",
+                    width = "100%"
+                  )
+                )
+
+              ),
+              imageOutput(
+                outputId = ns("kegg_image"),
+                width = "100%",
+                height = "100%"
+              ),
+              h5("Red and green represent up- and down-regulated genes, respectively."),
+              ns = ns
+            )
           )
+#         ,tabPanel(
+#            title = "Info",
+#            includeHTML("www/pathway.html")
+#          )
         )
       )
     )
@@ -336,13 +319,33 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     # GMT choices for enrichment ----------
     output$select_go_selector <- renderUI({
 	    req(!is.null(pre_process$gmt_choices()))
-
+      req(input$pathway_method != 5)
+      # if there is KEGG, use KEGG as default
+      selected <- "GOBP"
+      if("KEGG" %in% pre_process$gmt_choices()) {
+        selected <- "KEGG"
+      }
 	    selectInput(
         inputId = ns("select_go"),
         label = "Select Geneset:",
         choices = pre_process$gmt_choices(),
-        selected = "GOBP"
+        selected = selected
       )
+    })
+
+    # Dynamic Barplot Tab ----------
+    observe({
+      if (input$pathway_method == 5) {
+        hideTab(inputId = "pathway_tabs", target = "Tree")
+        hideTab(inputId = "pathway_tabs", target = "Network")
+        hideTab(inputId = "pathway_tabs", target = "Heatmap")
+        hideTab(inputId = "pathway_tabs", target = "KEGG")
+      } else {
+        showTab(inputId = "pathway_tabs", target = "Tree")
+        showTab(inputId = "pathway_tabs", target = "Network")
+        showTab(inputId = "pathway_tabs", target = "Heatmap")
+        showTab(inputId = "pathway_tabs", target = "KEGG")
+      }
     })
 
     output$list_comparisons_pathway <- renderUI({
@@ -365,14 +368,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
 	  })
 
     output$list_sig_pathways <- renderUI({
-	    if(tab() != "Pathway") {
-        selectInput(
-          inputId = ns("sig_pathways"),
-          label = NULL, 
-          choices = list("All" = "All"),
-          selected = "All"
-        )
-      }	else {
+
         req(!is.null(input$pathway_method))
         # Default, sometimes these methods returns "No significant pathway found"
 		    choices <- "All"  
@@ -412,21 +408,70 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         
         selectInput(
           inputId = ns("sig_pathways"),
-          label = 
-            "Select a pathway to show expression pattern of related genes on a heatmap or a
-             KEGG pathway diagram:",
+          label = "Select a significant pathway:",
           choices = choices
         )
-	    } 
+	     
+	  })
+
+    output$list_sig_pathways_kegg <- renderUI({
+
+        req(!is.null(input$pathway_method))
+        # Default, sometimes these methods returns "No significant pathway found"
+		    choices <- "All"  
+		    if(input$pathway_method == 1) { 
+			    if(!is.null(gage_pathway_data())) {
+            if(dim(gage_pathway_data())[2] > 1) {
+              choices <- gage_pathway_data()[, 2]
+            } 
+          }
+		    } else if(input$pathway_method == 2) {
+          if(!is.null(pgsea_plot_data())) {
+            if(dim(pgsea_plot_data())[2] > 1) {
+					 	  pathways <- as.data.frame(pgsea_plot_data())
+						  choices <- substr(rownames(pathways), 10, nchar(rownames(pathways)))
+					  }
+          }
+				} else if(input$pathway_method == 3) {
+          if(!is.null(fgsea_pathway_data())) {
+            if(dim(fgsea_pathway_data())[2] > 1) {
+              choices <- fgsea_pathway_data()[, 2]
+            }
+          }
+        } else if(input$pathway_method == 4) {
+          if(!is.null(pgsea_plot_all_samples_data())) {
+            if(dim(pgsea_plot_all_samples_data())[2] > 1) {
+					    pathways <- as.data.frame(pgsea_plot_all_samples_data())
+					    choices <- substr(rownames(pathways), 10, nchar(rownames(pathways)))
+				    }
+          }
+        } else if(input$pathway_method == 5) {
+			    if(!is.null(reactome_pa_pathway_data())) {
+            if(dim(reactome_pa_pathway_data())[2] > 1) {
+              choices <- reactome_pa_pathway_data()[, 2]
+            }  
+          }
+        }
+
+        # show all pathways if selected
+        if(input$kegg_sig_only && !is.null(gene_sets())) {
+          choices <- names(gene_sets())
+        }
+        selectInput(
+          inputId = ns("sig_pathways_kegg"),
+          label = "Select a KEGG pathway:",
+          choices = choices
+        )
+	    
 	  })
 
     gene_sets <- reactive({
-      req(tab() == "Pathway")
+#      req(tab() == "Pathway")
       req(!is.null(input$select_go))
 
       shinybusy::show_modal_spinner(
         spin = "orbit",
-        text = "Finding Gene Sets",
+        text = "Reading pathway database...",
         color = "#000000"
       )
 
@@ -455,7 +500,12 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       req(!is.null(deg$limma()))
       req(!is.null(gene_sets()))
 
-      gage_data(
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Running GAGE...",
+        color = "#000000"
+      )
+      res <- gage_data(
         select_go = input$select_go,
         select_contrast = input$select_contrast,
         min_set_size = input$min_set_size,
@@ -467,11 +517,13 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         pathway_p_val_cutoff = input$pathway_p_val_cutoff,
         n_pathway_show = input$n_pathway_show
       )
+      shinybusy::remove_modal_spinner()
+      return(res)
     })
 
     output$gage_pathway_table <- DT::renderDataTable({
       req(!is.null(gage_pathway_data()))
-      
+
       DT::datatable(
         gage_pathway_data(),
         options = list(
@@ -500,8 +552,12 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
 
     output$pgsea_plot <- renderPlot({
       req(input$pathway_method == 2)
-
-      plot_pgsea(
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Running PGSEA...",
+        color = "#000000"
+      )
+      res <- plot_pgsea(
         my_range = c(input$min_set_size, input$max_set_size),
         processed_data = pre_process$data(),
         contrast_samples = contrast_samples(),
@@ -509,15 +565,23 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         pathway_p_val_cutoff = input$pathway_p_val_cutoff,
         n_pathway_show = input$n_pathway_show
       )
-    }, 
+      shinybusy::remove_modal_spinner()
+      return(res)
+    },
       height = 800,
       width = 800
     )
 
     pgsea_plot_data <- reactive({
+      req(input$pathway_method == 2)
       req(!is.null(gene_sets()))
 
-      get_pgsea_plot_data(
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Running PGSEA...",
+        color = "#000000"
+      )
+      res <- get_pgsea_plot_data(
         my_range = c(input$min_set_size, input$max_set_size),
         data = pre_process$data(),
         select_contrast = input$select_contrast,
@@ -528,14 +592,20 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         pathway_p_val_cutoff = input$pathway_p_val_cutoff,
         n_pathway_show = input$n_pathway_show
       )
+      shinybusy::remove_modal_spinner()
+      return(res)
     })
 
     fgsea_pathway_data <- reactive({
       req(input$pathway_method == 3)
       req(!is.null(deg$limma()))
       req(!is.null(gene_sets()))
-
-      fgsea_data(
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Permutations in fgsea may take several minutes ...",
+        color = "#000000"
+      )
+      res <- fgsea_data(
         select_contrast = input$select_contrast,
         my_range = c(input$min_set_size, input$max_set_size),
         limma = deg$limma(),
@@ -545,11 +615,14 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         pathway_p_val_cutoff = input$pathway_p_val_cutoff,
         n_pathway_show = input$n_pathway_show
       )
+      shinybusy::remove_modal_spinner()
+      return(res)
     })
 
     output$fgsea_pathway <- DT::renderDataTable({
+      req(input$pathway_method == 3)
       req(!is.null(fgsea_pathway_data()))
-      
+
       DT::datatable(
         fgsea_pathway_data(),
         options = list(
@@ -561,9 +634,14 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
 	  })
 
     reactome_pa_pathway_data <- reactive({
+      req(input$pathway_method == 5)
       req(!is.null(deg$limma()))
-
-      reactome_data(
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Running ReactomePA. This may take 5 minutes ...",
+        color = "#000000"
+      )
+      res <- reactome_data(
         select_contrast = input$select_contrast,
         my_range = c(input$min_set_size, input$max_set_size),
         limma = deg$limma(),
@@ -574,12 +652,18 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         n_pathway_show = input$n_pathway_show,
         absolute_fold = input$absolute_fold
       )
+      shinybusy::remove_modal_spinner()
+      return(res)
     })
 
     output$pgsea_plot_all_samples <- renderPlot({
       req(input$pathway_method == 4)
-
-      pgsea_plot_all(
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Running PGSEA on all samples ...",
+        color = "#000000"
+      )
+      res <- pgsea_plot_all(
         go = input$select_go,
         my_range = c(input$min_set_size, input$max_set_size),
         data = pre_process$data(),
@@ -588,12 +672,19 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         pathway_p_val_cutoff = input$pathway_p_val_cutoff,
         n_pathway_show = input$n_pathway_show
       )
+      shinybusy::remove_modal_spinner()
+      return(res)
     }, height = 800, width = 800)
 
     pgsea_plot_all_samples_data <- reactive({
+      req(input$pathway_method == 4)
       req(!is.null(gene_sets()))
-
-      get_pgsea_plot_all_samples_data(
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Running PGSEA on all samples ...",
+        color = "#000000"
+      )
+      res <- get_pgsea_plot_all_samples_data(
         data = pre_process$data(),
         select_contrast = input$select_contrast,
         gene_sets = gene_sets(),
@@ -601,9 +692,12 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         pathway_p_val_cutoff = input$pathway_p_val_cutoff,
         n_pathway_show = input$n_pathway_show
       )
+      shinybusy::remove_modal_spinner()
+      return(res)
     })
 
     output$reactome_pa_pathway <- DT::renderDataTable({
+      req(input$pathway_method == 5)
       req(!is.null(reactome_pa_pathway_data()))
 	    
       DT::datatable(
@@ -629,29 +723,6 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         all_gene_names = pre_process$all_gene_names()
       )
     })
-
-    # Heatmap Colors ----------
-    heatmap_colors <- list(
-      "Green-Black-Red" = c("green", "black", "red"),
-      "Blue-White-Red" = c("blue", "white", "red"),
-      "Green-Black-Magenta" = c("green", "black", "magenta"),
-      "Blue-Yellow-Red" = c("blue", "yellow", "red"),
-      "Blue-White-Brown" = c("blue", "white", "brown")
-    )
-    heatmap_choices <- c(
-      "Green-Black-Red",
-      "Blue-White-Red",
-      "Green-Black-Magenta",
-      "Blue-Yellow-Red",
-      "Blue-White-Brown"
-    )
-    observe({
-      updateSelectInput(
-        session = session,
-        inputId = "heatmap_color_select",
-        choices = heatmap_choices
-      )
-    })
     
     # Kegg Colors --------
     kegg_colors <- list(
@@ -665,94 +736,40 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     observe({
       updateSelectInput(
         session = session, 
-        inputId = "kegg_color_select", 
+        inputId = "kegg_color_select",
         choices = kegg_choices
       )
     })
 
-    output$path_main_heatmap <- renderPlot({
-      req(!is.null(selected_pathway_data()))
 
-      shinybusy::show_modal_spinner(
-        spin = "orbit",
-        text = "Creating Heatmap",
-        color = "#000000"
-      )
 
-      # Assign heatmap to be used in multiple components
-      path_env$ht <- basic_heatmap(
-        data = selected_pathway_data(),
-        heatmap_color_select = heatmap_colors[[input$heatmap_color_select]]
-      )
+    heatmap_module <- mod_12_heatmap_server(
+      id = "12_heatmap_1",
+      data = reactive({ selected_pathway_data() }),
+      bar = NULL,
+      all_gene_names = reactive({ pre_process$all_gene_names() }),
+      cluster_rows = TRUE
+    )
 
-      # Use heatmap position in multiple components
-      path_env$ht_pos_main <- InteractiveComplexHeatmap::htPositionsOnDevice(path_env$ht)
-
-      shinybusy::remove_modal_spinner()
-
-      return(path_env$ht)
-    })
-
-    output$path_sub_heatmap <- renderPlot({
-      if (is.null(input$ht_brush)) {
-        grid::grid.newpage()
-        grid::grid.text("No region is selected.", 0.5, 0.5)
-      } else {
-        path_heat_return <- basic_heat_sub(
-          ht_brush = input$ht_brush,
-          ht = path_env$ht,
-          ht_pos_main = path_env$ht_pos_main,
-          heatmap_data = selected_pathway_data()
-        )
-
-        path_env$ht_select <- path_heat_return$ht_select
-        path_env$submap_data <- path_heat_return$submap_data
-        path_env$group_colors <- path_heat_return$group_colors
-        path_env$column_groups <- path_heat_return$column_groups
-        
-        path_env$ht_sub <- ComplexHeatmap::draw(
-          path_env$ht_select,
-          annotation_legend_side = "top",
-          heatmap_legend_side = "top"
-        )
-
-        path_env$ht_pos_sub <- InteractiveComplexHeatmap::htPositionsOnDevice(path_env$ht_sub)
-
-        return(path_env$ht_sub)
-      }
-    })
-
-    # Sub Heatmap Click Value ---------
-    output$ht_click_content <- renderUI({
-      if (is.null(input$ht_click)) { 
-        "Click for Info."
-      } else {
-        heat_click_info(
-          click = input$ht_click,
-          ht_sub = path_env$ht_sub,
-          ht_sub_obj = path_env$ht_select,
-          ht_pos_sub = path_env$ht_pos_sub,
-          sub_groups = path_env$column_groups,
-          group_colors = path_env$group_colors,
-          data = path_env$submap_data
-        )
-      }
-    })
+ 
 
     output$kegg_image <- renderImage({
-
-      kegg_pathway(
-        go = input$select_go,
-        gage_pathway_data = gage_pathway_data(),
-        sig_pathways = input$sig_pathways,
-        select_contrast = input$select_contrast,
-        limma = deg$limma(),
-        converted = pre_process$converted(),
-        idep_data = idep_data,
-        select_org = pre_process$select_org(), 
-        low_color = kegg_colors[[input$kegg_color_select]][1], 
-        high_color = kegg_colors[[input$kegg_color_select]][2]
-      )
+      req(!is.null(input$sig_pathways_kegg))
+      withProgress(message = "Downloading KEGG pathway", {
+        incProgress(0.2)
+        kegg_pathway(
+          go = input$select_go,
+          gage_pathway_data = pathway_list_data()[, 1:5],
+          sig_pathways = input$sig_pathways_kegg,
+          select_contrast = input$select_contrast,
+          limma = deg$limma(),
+          converted = pre_process$converted(),
+          idep_data = idep_data,
+          select_org = pre_process$select_org(), 
+          low_color = kegg_colors[[input$kegg_color_select]][1],
+          high_color = kegg_colors[[input$kegg_color_select]][2]
+        )
+      })
     }, deleteFile = TRUE)
     
     # List of pathways with details
@@ -774,16 +791,17 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     output$enrichment_tree <- renderPlot({
       req(!is.null(pathway_list_data()))
 
-      enrichment_plot(
+      enrichment_tree_plot(
         go_table = pathway_list_data(),
-        45
+        group = "All Groups",
+        right_margin = 45
       )
     })
 
     # Define a Network
     network_data_path <- reactive({
       req(!is.null(pathway_list_data()))
-
+      req(input$up_down_reg_deg)
       network_data(
         network = pathway_list_data(),
         up_down_reg_deg = input$up_down_reg_deg,
