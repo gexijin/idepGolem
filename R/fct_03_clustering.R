@@ -619,9 +619,9 @@ cluster_heat_click_info <- function(
   html <- GetoptLong::qq("
 <div>
 <pre>
+@{gene} 
 Value: @{round(value, 2)} <span style='background-color:@{col};width=50px;'>    </span>
 Sample: @{sample}
-Gene: @{gene} 
 Group: @{group_name} <span style='background-color:@{group_col};width=50px;'>    </span>
 </pre></div>"
 )
