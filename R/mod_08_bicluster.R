@@ -150,10 +150,6 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
       cluster_rows = TRUE
     )
 
-
-
-
-
     # Biclustering summary message -----------
     output$bicluster_info <- renderText({		
       req(!is.null(biclustering()) && !is.null(input$select_bicluster))
