@@ -111,7 +111,7 @@ mod_05_deg_1_ui <- function(id) {
 
 
 
-      
+
       mainPanel(
         tabsetPanel(
           id = ns("step_1"),
@@ -159,13 +159,6 @@ mod_05_deg_1_ui <- function(id) {
             ),
             tableOutput(
               outputId = ns("sig_gene_stats_table")
-            ),
-            downloadButton(
-              outputId = ns("dl_deg_code"), 
-              label = "Code"
-            ),
-            verbatimTextOutput(
-              ns("deg_code")
             )
           ),
           tabPanel(
@@ -180,6 +173,16 @@ mod_05_deg_1_ui <- function(id) {
             ottoPlots::mod_download_figure_ui(
               id = ns("dl_venn"), 
               label = "Download venn diagram"
+            )
+          ),
+          tabPanel(
+            title = "R Code",
+            downloadButton(
+              outputId = ns("dl_deg_code"), 
+              label = "Code"
+            ),
+            verbatimTextOutput(
+              ns("deg_code")
             )
           )
         )
