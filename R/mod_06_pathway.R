@@ -782,9 +782,10 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     output$enrichment_tree <- renderPlot({
       req(!is.null(pathway_list_data()))
 
-      enrichment_plot(
+      enrichment_tree_plot(
         go_table = pathway_list_data(),
-        45
+        group = "All Groups",
+        right_margin = 45
       )
     })
 
