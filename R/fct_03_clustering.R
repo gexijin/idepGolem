@@ -245,7 +245,8 @@ heatmap_main <- function(
   heatmap_color_select,
   row_dend,
   k_clusters,
-  re_run
+  re_run,
+  selected_genes
 ) {
   # Filter with max z-score
   cutoff <- median(unlist(data)) + heatmap_cutoff * sd(unlist(data))
@@ -357,6 +358,19 @@ heatmap_main <- function(
       row_title_gp = grid::gpar(fontsize = row_title)
     )
   }
+
+  # mark selected genes on heatmap
+  if(!is.null(selected_genes)) {
+    ids <- row.names(heat@matrix)[heat@row_order] 
+    ix <- which(ids %in% selected_genes)
+    req(length(ix) > 0)
+    heat <- heat + ComplexHeatmap::rowAnnotation(
+      mark = ComplexHeatmap::anno_mark(
+        at = ix,
+        labels = ids[ix]
+      )
+    )
+  }	
 
   return(
     ComplexHeatmap::draw(
@@ -619,9 +633,9 @@ cluster_heat_click_info <- function(
   html <- GetoptLong::qq("
 <div>
 <pre>
+@{gene} 
 Value: @{round(value, 2)} <span style='background-color:@{col};width=50px;'>    </span>
 Sample: @{sample}
-Gene: @{gene} 
 Group: @{group_name} <span style='background-color:@{group_col};width=50px;'>    </span>
 </pre></div>"
 )
@@ -654,7 +668,7 @@ heat_sub <- function(
   select_factors_heatmap,
   cluster_meth
 ) {
-  max_gene_ids <- 60
+  max_gene_ids <- 2000
   lt <- InteractiveComplexHeatmap::getPositionFromBrush(ht_brush)
   pos1 <- lt[[1]]
   pos2 <- lt[[2]]

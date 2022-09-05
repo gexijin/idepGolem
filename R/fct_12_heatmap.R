@@ -105,7 +105,6 @@ deg_heatmap <- function(
       title_position = "topcenter"
     )
   )
-  
   return(
     heatmap = ComplexHeatmap::draw(
       heat,
@@ -140,7 +139,7 @@ deg_heat_sub <- function(
   bar,
   all_gene_names
 ) {
-  max_genes <- 60
+  max_genes <- 2000
   lt <- InteractiveComplexHeatmap::getPositionFromBrush(ht_brush)
   pos1 <- lt[[1]]
   pos2 <- lt[[2]]
@@ -175,7 +174,7 @@ deg_heat_sub <- function(
     )
 
     row_ann <- NULL
-    if(!is.null(bar)) {    
+    if(!is.null(bar)) {
       bar[bar == -1] <- "Down"
       bar[bar == 1]  <- "Up"
       row_groups <- bar
@@ -249,6 +248,24 @@ deg_heat_sub <- function(
     left_annotation = row_ann,
     name = "heat_1"
   )
+
+# Show a subset of gene names when more than 50 is selected.
+# causes problem with returned click info.
+#  if (length(row_index) > max_genes) {
+#    loci <- seq(
+#      from = 1,
+#      to = nrow(genes),
+#      by = round(nrow(m) / 30, 0)
+#    )
+#    anno <- ComplexHeatmap::anno_mark(
+#      at = loci,
+#      labels = row.names(m)[loci],
+#      which = "row",
+#      labels_gp = grid::gpar(fontsize = 10),
+#      padding = ggtree::unit(.5, "mm")
+#    )
+#    ht_select <- ht_select + ComplexHeatmap::rowAnnotation(mark = anno)
+#  }
 
   return(list(
     ht_select = ht_select,
@@ -324,9 +341,9 @@ deg_click_info <- function(
   p <- "
 <div>
 <pre>
+@{gene} 
 Value: @{round(value, 2)} <span style='background-color:@{col};width=50px;'>    </span>
 Sample: @{sample}
-Gene: @{gene} 
 Group: @{group_name} <span style='background-color:@{group_col};width=50px;'>    </span>
 "
 

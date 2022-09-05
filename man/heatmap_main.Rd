@@ -17,7 +17,8 @@ heatmap_main(
   heatmap_color_select,
   row_dend,
   k_clusters,
-  re_run
+  re_run,
+  selected_genes
 )
 }
 \arguments{

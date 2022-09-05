@@ -161,6 +161,19 @@ mod_03_clustering_ui <- function(id) {
               htmlOutput(ns("list_factors_heatmap"))
             )
           ),
+          fluidRow(
+            column(width = 4, h5("Highlight:")),
+            column(
+              width = 8,
+              selectizeInput(
+                inputId = ns("selected_genes"),
+                label = NULL,
+                choices = c("Spag17", "Ypel4"),
+                selected = "Spag17",
+                multiple = TRUE
+              ),
+            )
+          ),
           actionButton(ns("customize_button"), "More options"),
           shinyBS::bsModal(
             id = ns("modalExample"),
@@ -425,6 +438,13 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     # Heatmap Data -----------
     heatmap_data <- reactive({
       req(!is.null(pre_process$data()))
+#      req(
+#        input$n_genes,
+ #       input$gene_centering,
+ #       input$gene_normalize,
+ #       input$select_gene_id
+ #     )
+ #     req(!is.null(pre_process$all_gene_names()))
 
       process_heatmap_data(
         data = pre_process$data(),
@@ -438,12 +458,37 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       )
     })
 
+    observe({
+      req(input$selected_genes)
+      req(!is.null(pre_process$all_gene_names()))
+      req(!is.null(pre_process$data()))
+#      req(!is.null(heatmap_data()))
+
+#      
+#
+
+#      df <- rowname_id_swap(
+#        data_matrix = heatmap_data(),
+#        all_gene_names = pre_process$all_gene_names(),
+#        select_gene_id = "symbol"
+#      )
+
+ #     updateSelectizeInput(
+ #       session,
+ #       inputId = "selected_genes", # genes are ranked by SD
+ #       choices = c("Spag17", "Ypel4"), #row.names(df),
+ #       selected = NULL,
+ #       server = TRUE
+ #     )
+    })
+
     # HEATMAP -----------
     # Information on interactivity
     # https://jokergoo.github.io/2020/05/15/interactive-complexheatmap/
     output$heatmap_main <- renderPlot({
       req(!is.null(heatmap_data()))
-      req(!is.null(input$select_factors_heatmap))
+      req(input$select_factors_heatmap)
+      req(input$selected_genes)
 
       shinybusy::show_modal_spinner(
         spin = "orbit",
@@ -465,7 +510,8 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         heatmap_color_select = heatmap_colors[[input$heatmap_color_select]],
         row_dend = input$show_row_dend,
         k_clusters = input$k_clusters,
-        re_run = input$k_means_re_run
+        re_run = input$k_means_re_run,
+        selected_genes = input$selected_genes
       )
 
       # Use heatmap position in multiple components
@@ -475,6 +521,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
 
       return(shiny_env$ht)
     })
+
 
     # Heatmap Click Value ---------
     output$ht_click_content <- renderUI({
