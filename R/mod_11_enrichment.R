@@ -64,8 +64,10 @@ mod_11_enrichment_ui <- function(id){
       )
     ),
     tabsetPanel(
+      id = ns("subtab"),
       tabPanel(
         title = "Pathways",
+        value = "Pathways",
         tableOutput(ns("show_enrichment")),
         downloadButton(
           outputId = ns("download_enrichment"),
@@ -82,6 +84,7 @@ mod_11_enrichment_ui <- function(id){
       ),
       tabPanel(
         title = "Network",
+        value = "Network",
         br(),
         fluidRow(
           column(
@@ -137,6 +140,7 @@ mod_11_enrichment_ui <- function(id){
       ),
       tabPanel(
         title = "Plot",
+        value = "Plot",
         plotOutput(ns("enrich_barchart"), width = "100%", height = "100%"),
         fluidRow(
           column(
@@ -251,6 +255,7 @@ mod_11_enrichment_ui <- function(id){
       ),
       tabPanel(
         title = "Genes",
+        value = "Genes",
         fluidRow(
           column(
             width = 7,
@@ -318,6 +323,16 @@ mod_11_enrichment_server <- function(
       )
     })
 
+    observe({
+      req(input$subtab == "Plot")
+      choices <- sort(unique(enrichment_dataframe()$group))
+      selected <- choices[1]
+      updateSelectInput(
+        session = session,
+        inputId = "select_cluster",
+        selected = selected
+      )
+    })
 
     output$select_cluster <- renderUI({
 	    req(!is.null(enrichment_dataframe()))
@@ -644,8 +659,8 @@ mod_11_enrichment_server <- function(
     # Interactive vis network plot
     output$vis_network_deg <- visNetwork::renderVisNetwork({
       req(!is.null(network_data_deg()))
-      req(nrow(network_data_deg()$edges) > 0)
-      req(nrow(network_data_deg()$nodes) > 0)
+      req(nrow(network_data_deg()$edges) > 1)
+      req(nrow(network_data_deg()$nodes) > 1)
       vis_network_plot(
         network_data = network_data_deg()
       )

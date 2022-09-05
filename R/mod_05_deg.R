@@ -108,6 +108,10 @@ mod_05_deg_1_ui <- function(id) {
           target = "_blank"
         )
       ),
+
+
+
+      
       mainPanel(
         tabsetPanel(
           id = ns("step_1"),
