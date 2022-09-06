@@ -177,10 +177,12 @@ mod_06_pathway_ui <- function(id) {
               outputId = ns("enrichment_tree"),
               width = "100%"
             ),
+
             br(),
             p("Adjusting the width of the browser 
             window can render figure differently and  
             resolve the \"Figure margin too wide\" error. ")
+
           ),
           tabPanel(
             title = "Network",
@@ -788,15 +790,28 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     })
 
     # Enrichment Tree -----------
-    output$enrichment_tree <- renderPlot({
+    enrichment_tree <- reactive({
       req(!is.null(pathway_list_data()))
+
 
       enrichment_tree_plot(
         go_table = pathway_list_data(),
         group = "All Groups",
         right_margin = 45
       )
+      p <- recordPlot()
+      return(p)
     })
+    output$enrichment_tree <- renderPlot({
+      print(enrichment_tree())
+    })
+    
+    # Download Button
+    download_tree <- ottoPlots::mod_download_figure_server(
+      id = "download_tree", 
+      filename = "enrichment_tree", 
+      figure = reactive({ enrichment_tree() }) # stays as a reactive variable
+    )
 
     # Define a Network
     network_data_path <- reactive({
@@ -869,11 +884,12 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           n_pathway_show = input$n_pathway_show,
           contrast_samples = contrast_samples(),
           sig_pathways = input$sig_pathways,
-          heatmap_color_select = heatmap_colors[[input$heatmap_color_select]],
+          #heatmap_color_select = heatmap_colors[[input$heatmap_color_select]],
           pathway_method = input$pathway_method,
           gage_pathway_data = gage_pathway_data(),
           selected_pathway_data = selected_pathway_data(),
-          pathway_list_data = pathway_list_data()
+          pathway_list_data = pathway_list_data(),
+          network_data = network_data_path()
           
           #fgsea_pathway_data = fgsea_pathway_data()
           # pgsea_plot_data = pgsea_plot_data(),
