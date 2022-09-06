@@ -165,13 +165,7 @@ mod_03_clustering_ui <- function(id) {
             column(width = 4, h5("Highlight:")),
             column(
               width = 8,
-              selectizeInput(
-                inputId = ns("selected_genes"),
-                label = NULL,
-                choices = c("Spag17", "Ypel4"),
-                selected = "Spag17",
-                multiple = TRUE
-              ),
+              htmlOutput(ns("selected_genes_ui"))
             )
           ),
           actionButton(ns("customize_button"), "More options"),
@@ -458,28 +452,20 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       )
     })
 
-    observe({
-      req(input$selected_genes)
+
+    # Heatmap Click Value ---------
+    output$selected_genes_ui <- renderUI({
       req(!is.null(pre_process$all_gene_names()))
       req(!is.null(pre_process$data()))
-#      req(!is.null(heatmap_data()))
+      req(!is.null(heatmap_data()))
 
-#      
-#
-
-#      df <- rowname_id_swap(
-#        data_matrix = heatmap_data(),
-#        all_gene_names = pre_process$all_gene_names(),
-#        select_gene_id = "symbol"
-#      )
-
- #     updateSelectizeInput(
- #       session,
- #       inputId = "selected_genes", # genes are ranked by SD
- #       choices = c("Spag17", "Ypel4"), #row.names(df),
- #       selected = NULL,
- #       server = TRUE
- #     )
+      selectizeInput(
+        inputId = ns("selected_genes"),
+        label = NULL,
+        choices = row.names(heatmap_data()),
+        selected = sample(row.names(heatmap_data()), 1),
+        multiple = TRUE
+      )
     })
 
     # HEATMAP -----------
