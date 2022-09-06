@@ -432,13 +432,6 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     # Heatmap Data -----------
     heatmap_data <- reactive({
       req(!is.null(pre_process$data()))
-#      req(
-#        input$n_genes,
- #       input$gene_centering,
- #       input$gene_normalize,
- #       input$select_gene_id
- #     )
- #     req(!is.null(pre_process$all_gene_names()))
 
       process_heatmap_data(
         data = pre_process$data(),
