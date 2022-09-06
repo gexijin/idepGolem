@@ -46,14 +46,7 @@ knitr::opts_chunk$set(echo = params$printcode)
 
 <!-- This document cannot be knit directly from R studio -->
 
-This html document contains what parameters values were selected on the IDEP interface. It also includes the plots generated from those selections. Genes with FDR Greater than **`r params$gene_p_val_cutoff`** were removed. **`r n_pathway_show`** pathways with between **`r params$min_set_size`** and **`r params$max_set_size`** were included. Absolute fold values were `r `ifelse(params$absolute_fold`, "not", "")` used. Pathways were found using **switch(as.character(params$pathway_method),
-"1" = "GAGE",
-"2" = "PGSEA",
-"3" = "GSEA (Pre-Ranked)",
-"4" = "PGSEA with all samples",
-"5" = "ReactomePA",
-
-)**.
+This html document contains what parameters values were selected on the IDEP interface. It also includes the plots generated from those selections. Genes with FDR Greater than **`r params$gene_p_val_cutoff`** were removed. **`r params$n_pathway_show`** pathways with between **`r params$min_set_size`** and **`r params$max_set_size`** genes were included. Absolute fold values were **`r ifelse(params$absolute_fold, 'not', '')`**  used. Pathways were found using the **`r switch(as.character(params$pathway_method), "1" = "GAGE", "2" = "PGSEA", "3" = "GSEA (Pre-Ranked)", "4" = "PGSEA with all samples", "5" = "ReactomePA" )`** method. Pathway p values cutoff is set to **`r params$pathway_p_val_cutoff`**.
 
 ```{r}
 #params$gage_pathway_data
@@ -63,10 +56,10 @@ This html document contains what parameters values were selected on the IDEP int
 
 <!--ALL SELECTED PARAMETERS-->
 
-```{r echo=TRUE}
+```{r echo=FALSE}
 for (i in 1:length(params)){
   # exclude loaded data & sample info
-  if(names(params)[i] != "sample_info" && names(params)[i] != "loaded_data" && names(params)[i] != "pre_processed" && names(params)[i] != "deg" && names(params)[i] != "idep_data" && names(params)[i] != "converted" && names(params)[i] != "limma" && names(params)[i] != "gene_sets" && names(params)[i] != "selected_pathway_data" && names(params)[i] != "pathway_list_data" && names(params)[i] != "all_gene_names" )
+  if(names(params)[i] != "sample_info" && names(params)[i] != "loaded_data" && names(params)[i] != "pre_processed" && names(params)[i] != "deg" && names(params)[i] != "idep_data" && names(params)[i] != "converted" && names(params)[i] != "limma" && names(params)[i] != "gene_sets" && names(params)[i] != "selected_pathway_data" && names(params)[i] != "pathway_list_data" && names(params)[i] != "all_gene_names")
     cat(paste0(names(params)[i], ": ", params[[i]], "\n")
    )
 }
@@ -76,7 +69,7 @@ for (i in 1:length(params)){
 
 ```
 
-```{r echo=TRUE}
+```{r echo=FALSE}
 
 # GAGE Method
 if (params$pathway_method == 1){
@@ -107,20 +100,10 @@ basic_heatmap(
   c("green", "black", "red")
 )
 
-# enrichment_plot(
-#   go_table = params$pathway_list_data#,
-#   #45
-# )
-
 vis_network_plot(
     network_data = params$network_data
 )
 
-
-basic_heatmap(
-  data = params$selected_pathway_data,
-  c("green", "black", "red")
-)
 
 enrichment_tree_plot(
   go_table = params$pathway_list_data,
