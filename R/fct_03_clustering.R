@@ -267,35 +267,36 @@ heatmap_main <- function(
     )
   }
 
-  # Annotation for groups
   groups <- detect_groups(colnames(data))
-
-  if (!is.null(sample_info) && !is.null(select_factors_heatmap)) {
-    if (select_factors_heatmap == "Sample_Name") {
-      groups <- detect_groups(colnames(data))
-    } else {
-      ix <- match(select_factors_heatmap, colnames(sample_info))
-      groups <- sample_info[, ix]
+  heat_ann <- NULL
+  if(!is.null(select_factors_heatmap)) {
+    if(select_factors_heatmap != "All factors") { # one factor-------
+      # Annotation for groups
+      if (!is.null(sample_info) && !is.null(select_factors_heatmap)) {
+        if (select_factors_heatmap == "Names") {
+          groups <- detect_groups(colnames(data))
+        } else {
+          ix <- match(select_factors_heatmap, colnames(sample_info))
+          groups <- sample_info[, ix]
+        }
+      }
+      groups_colors <- gg_color_hue(length(unique(groups)))
+      heat_ann <- ComplexHeatmap::HeatmapAnnotation(
+        Group = groups,
+        col = list(Group = setNames(groups_colors, unique(groups))),
+        annotation_legend_param = list(
+          Group = list(nrow = 1, title = NULL)
+        ),
+        show_annotation_name = list(Group = FALSE),
+        show_legend = FALSE
+      )
+    } else { # more factors------------------------
+      heat_ann <- ComplexHeatmap::HeatmapAnnotation(
+        df = sample_info,
+        show_legend = TRUE
+      )
     }
   }
-
-  groups_colors <- gg_color_hue(length(unique(groups)))
-
-  if (length(groups) < 30) {
-    show_group_leg <- TRUE
-  } else {
-    show_group_leg <- FALSE
-  }
-  
-  heat_ann <- ComplexHeatmap::HeatmapAnnotation(
-    Group = groups,
-    col = list(Group = setNames(groups_colors, unique(groups))),
-    annotation_legend_param = list(
-      Group = list(nrow = 1, title = NULL)
-    ),
-    show_annotation_name = list(Group = FALSE),
-    show_legend = FALSE
-  )
 
   # Different heatmaps for hierarchical and k-means
   if (cluster_meth == 1) {
@@ -370,7 +371,7 @@ heatmap_main <- function(
         labels = ids[ix]
       )
     )
-  }	
+  }
 
   return(
     ComplexHeatmap::draw(
@@ -520,10 +521,14 @@ sub_heat_ann <- function(
   sample_info,
   select_factors_heatmap
 ) {
+  if(select_factors_heatmap == "All factors") {
+    select_factors_heatmap <- colnames(sample_info)[1]
+  }
+
   groups <- detect_groups(colnames(data))
 
   if (!is.null(sample_info) && !is.null(select_factors_heatmap)) {
-    if (select_factors_heatmap == "Sample_Name") {
+    if (select_factors_heatmap == "Names") {
       groups <- detect_groups(colnames(data))
     } else {
       ix <- match(select_factors_heatmap, colnames(sample_info))
@@ -543,7 +548,7 @@ sub_heat_ann <- function(
   } else {
     lgd <- NULL
   }
-  
+
   heat_sub_ann <- ComplexHeatmap::HeatmapAnnotation(
     Group = groups,
     col = list(Group = setNames(groups_colors, unique(groups))),
@@ -623,7 +628,6 @@ cluster_heat_click_info <- function(
     gene <- rownames(sub_click_data)[row_index]
 
   }
-  
   group_name <- sub_groups[column_index]
   group_col <- group_colors[[group_name]]
 
