@@ -283,7 +283,7 @@ total_counts_ggplot <- function(
       sample = as.factor(colnames(counts)),
       counts = colSums(counts) / 1e6,
       group = groups,
-      grouping = NULL
+      grouping = grouping
     )
     
     plot <- ggplot2::ggplot(
