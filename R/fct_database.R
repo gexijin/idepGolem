@@ -18,8 +18,6 @@ if(nchar(DATAPATH) == 0) {
    DATAPATH = "../../data/data104b/"
 }
 
-DATAPATH <- "F:/IDEP_DATABASE/"
-
 #' connect_convert_db connects to the convertIDs.db and returns the
 #' objects.
 #'
