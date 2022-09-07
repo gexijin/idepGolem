@@ -36,12 +36,12 @@ mod_03_clustering_ui <- function(id) {
           input.cluster_panels == 'Gene SD Distribution' ",
 
           fluidRow(
-            column(width = 7, h5("Genes to include")),
+            column(width = 6, h5("Top Genes:")),
             column(
-              width = 5,
+              width = 6,
               numericInput(
-                inputId = ns("n_genes"), 
-                label = NULL, 
+                inputId = ns("n_genes"),
+                label = NULL,
                 min = 10,
                 max = 12000,
                 value = 1000,
@@ -242,6 +242,14 @@ mod_03_clustering_ui <- function(id) {
                 ),
                 uiOutput(
                   outputId = ns("ht_click_content")
+                ),
+                ottoPlots::mod_download_figure_ui(
+                  ns("dl_heatmap_main"),
+                  label = "Above"
+                ),
+                ottoPlots::mod_download_figure_ui(
+                  ns("dl_heatmap_sub"),
+                  label = "Right"
                 )
               ),
               column(
@@ -513,11 +521,55 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       return(shiny_env$ht)
     })
 
+    heatmap_main_object <- reactive({
+      req(!is.null(heatmap_data()))
+      req(input$select_factors_heatmap)
+
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Creating Heatmap",
+        color = "#000000"
+      )
+
+      # Assign heatmap to be used in multiple components
+      obj <- heatmap_main(
+        data = heatmap_data(),
+        cluster_meth = input$cluster_meth,
+        heatmap_cutoff = input$heatmap_cutoff,
+        sample_info = pre_process$sample_info(),
+        select_factors_heatmap = input$select_factors_heatmap,
+        dist_funs = dist_funs,
+        dist_function = input$dist_function,
+        hclust_function = input$hclust_function,
+        sample_clustering = input$sample_clustering,
+        heatmap_color_select = heatmap_colors[[input$heatmap_color_select]],
+        row_dend = input$show_row_dend,
+        k_clusters = input$k_clusters,
+        re_run = input$k_means_re_run,
+        selected_genes = input$selected_genes
+      )
+
+      shinybusy::remove_modal_spinner()
+
+      return(obj)
+    })
+
+
+    dl_heatmap_main <- ottoPlots::mod_download_figure_server(
+      id = "dl_heatmap_main",
+      filename = "heatmap_main",
+      figure = reactive({ heatmap_main_object() }),
+      width = 6,
+      height = 16
+    )
 
     # Heatmap Click Value ---------
     output$ht_click_content <- renderUI({
-      
-      if (is.null(input$ht_click) | is.null(shiny_env$ht_sub)) {
+
+      if (is.null(input$ht_click) ||
+          is.null(shiny_env$ht_sub) ||
+          is.null(input$ht_brush)
+      ) {
         "Click on zoomed heatmap"
       } else {
         cluster_heat_click_info(
@@ -539,6 +591,11 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         grid::grid.newpage()
         grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
       } else {
+        shinybusy::show_modal_spinner(
+          spin = "orbit",
+          text = "Creating sub-heatmap",
+          color = "#000000"
+        )
         submap_return <- heat_sub(
           ht_brush = input$ht_brush,
           ht = shiny_env$ht,
@@ -563,10 +620,54 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         )
 
         shiny_env$ht_pos_sub <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht_sub)
-
+        shinybusy::remove_modal_spinner()
         return(shiny_env$ht_sub)
       }
     })
+
+    # Subheatmap creation ---------
+    heatmap_sub_object <- reactive({
+      if (is.null(input$ht_brush)) {
+        grid::grid.newpage()
+        grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
+      } else {
+        shinybusy::show_modal_spinner(
+          spin = "orbit",
+          text = "Creating sub-heatmap",
+          color = "#000000"
+        )
+        submap_return <- heat_sub(
+          ht_brush = input$ht_brush,
+          ht = shiny_env$ht,
+          ht_pos_main = shiny_env$ht_pos_main,
+          heatmap_data = heatmap_data(),
+          sample_info = pre_process$sample_info(),
+          select_factors_heatmap = input$select_factors_heatmap,
+          cluster_meth = input$cluster_meth
+        )
+        # Objects used in other components ----------
+        shiny_env$ht_sub_obj <- submap_return$ht_select
+        shiny_env$submap_data <- submap_return$submap_data
+        shiny_env$sub_groups <- submap_return$sub_groups
+        shiny_env$group_colors <- submap_return$group_colors
+        shiny_env$click_data <- submap_return$click_data
+
+        shinybusy::remove_modal_spinner()
+        return(ComplexHeatmap::draw(
+          shiny_env$ht_sub_obj,
+          annotation_legend_list = submap_return$lgd,
+          annotation_legend_side = "top"
+        ))
+      }
+    })
+
+    dl_heatmap_sub <- ottoPlots::mod_download_figure_server(
+      id = "dl_heatmap_sub",
+      filename = "heatmap_zoom",
+      figure = reactive({ heatmap_sub_object() }),
+      width = 8,
+      height = 12
+    )
 
     # gene lists for enrichment analysis
     gene_lists <- reactive({

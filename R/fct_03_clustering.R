@@ -628,7 +628,8 @@ cluster_heat_click_info <- function(
     gene <- rownames(sub_click_data)[row_index]
 
   }
-  
+  group_name <- sub_groups[column_index]
+  group_col <- group_colors[[group_name]]
 
   # HTML for info table
   # Pulled from https://github.com/jokergoo/InteractiveComplexHeatmap/blob/master/R/shiny-server.R
@@ -639,6 +640,7 @@ cluster_heat_click_info <- function(
 @{gene} 
 Value: @{round(value, 2)} <span style='background-color:@{col};width=50px;'>    </span>
 Sample: @{sample}
+Group: @{group_name} <span style='background-color:@{group_col};width=50px;'>    </span>
 </pre></div>"
 )
   HTML(html)
