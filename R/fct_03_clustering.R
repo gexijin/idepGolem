@@ -267,14 +267,13 @@ heatmap_main <- function(
     )
   }
 
-
   groups <- detect_groups(colnames(data))
   heat_ann <- NULL
   if(!is.null(select_factors_heatmap)) {
-    if(length(select_factors_heatmap) == 1) { # one factor-------
+    if(select_factors_heatmap != "All factors") { # one factor-------
       # Annotation for groups
       if (!is.null(sample_info) && !is.null(select_factors_heatmap)) {
-        if (select_factors_heatmap == "Name") {
+        if (select_factors_heatmap == "Names") {
           groups <- detect_groups(colnames(data))
         } else {
           ix <- match(select_factors_heatmap, colnames(sample_info))
@@ -292,11 +291,9 @@ heatmap_main <- function(
         show_legend = FALSE
       )
     } else { # more factors------------------------
-      anno_df <- cbind("Names" = groups, sample_info)
-      anno_df <- anno_df[, select_factors_heatmap]
       heat_ann <- ComplexHeatmap::HeatmapAnnotation(
-        df = anno_df,
-        show_legend = FALSE
+        df = sample_info,
+        show_legend = TRUE
       )
     }
   }
@@ -524,11 +521,14 @@ sub_heat_ann <- function(
   sample_info,
   select_factors_heatmap
 ) {
-  select_factors_heatmap <- select_factors_heatmap[1]
+  if(select_factors_heatmap == "All factors") {
+    select_factors_heatmap <- colnames(sample_info)[1]
+  }
+
   groups <- detect_groups(colnames(data))
 
   if (!is.null(sample_info) && !is.null(select_factors_heatmap)) {
-    if (select_factors_heatmap == "Name") {
+    if (select_factors_heatmap == "Names") {
       groups <- detect_groups(colnames(data))
     } else {
       ix <- match(select_factors_heatmap, colnames(sample_info))

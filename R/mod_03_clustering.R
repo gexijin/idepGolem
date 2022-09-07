@@ -406,21 +406,16 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         factors <- colnames(pre_process$sample_info())
         choices <- c(
           choices,
-          factors
+          factors,
+          "All factors"
         )
-        # use at most three factors
-        if(length(factors) < 4) {
-          selected <- factors
-        } else  {
-          selected <- factors[1:3]
-        }
+      selected <- choices[length(choices)]
       }
       selectInput(
         inputId = ns("select_factors_heatmap"),
         label = NULL,
         choices = choices,
-        selected = selected,
-        multiple = TRUE
+        selected = selected
       )
     })
 
