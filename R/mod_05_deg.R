@@ -14,11 +14,7 @@ mod_05_deg_1_ui <- function(id) {
     sidebarLayout(
       sidebarPanel(
         # Button to run DEG analysis for the specified model
-        actionButton(
-          inputId = ns("submit_model_button"),
-          label = "Submit",
-          style = "float:right"
-        ),
+        uiOutput(ns("submit_ui")),
         tags$head(tags$style(
           "#deg-submit_model_button{font-size: 20px;color: red}"
         )),
@@ -271,6 +267,14 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     # Interactive heatmap environment
     deg_env <- new.env()
 
+    output$submit_ui <- renderUI({
+      req(model_comparisons())
+      actionButton(
+        inputId = ns("submit_model_button"),
+        label = "Submit",
+        style = "float:right"
+      )
+    })
     
     # DEG STEP 1 ----------
     output$data_file_format <- reactive({
@@ -281,14 +285,15 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       name = "data_file_format",
       suspendWhenHidden = FALSE
     )
-
+    
     # Experiment Design UI Elements ------------
     output$list_factors_deg <- renderUI({
-      list_factors <- list_factors_ui(
+      list_factors <-  list_factors_ui(
         sample_info = pre_process$sample_info(),
         data_file_format = pre_process$data_file_format(),
         counts_deg_method = input$counts_deg_method
       )
+      
       if(class(list_factors)[1] == "list") {
         return(
           checkboxGroupInput(
@@ -318,20 +323,24 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         )
       )
 	  })
-
-    output$list_model_comparisons <- renderUI({
+    
+    model_comparisons <- reactive({
       req(pre_process$data() & pre_process$data_file_format() != 3)
-		  model_comparisons <- list_model_comparisons_ui(
+      
+      list_model_comparisons_ui(
         sample_info = pre_process$sample_info(),
         select_factors_model = input$select_factors_model,
         processed_data = pre_process$data()
       )
-      req(!is.null(model_comparisons))
+    })
+
+    output$list_model_comparisons <- renderUI({
+      req(model_comparisons())
       checkboxGroupInput(
         inputId = ns("select_model_comprions"), 
-			  label = h5(model_comparisons$title),
-        choices = model_comparisons$choices,
-        selected = model_comparisons$choices[[1]]
+			  label = h5(model_comparisons()$title),
+        choices = model_comparisons()$choices,
+        selected = model_comparisons()$choices[[1]]
       )
 	  })
 
