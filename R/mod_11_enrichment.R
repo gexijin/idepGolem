@@ -659,8 +659,8 @@ mod_11_enrichment_server <- function(
     # Interactive vis network plot
     output$vis_network_deg <- visNetwork::renderVisNetwork({
       req(!is.null(network_data_deg()))
-      req(nrow(network_data_deg()$edges) > 1)
-      req(nrow(network_data_deg()$nodes) > 1)
+      req(nrow(network_data_deg()$edges) > 2)
+      req(nrow(network_data_deg()$nodes) > 2)
       vis_network_plot(
         network_data = network_data_deg()
       )
