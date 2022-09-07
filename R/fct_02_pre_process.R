@@ -483,7 +483,7 @@ eda_density <- function(
     memo <- paste(" (only showing 40 samples)")
   }
   groups <- as.factor(
-    detect_groups(colnames(processed_data), sample_info)
+    detect_groups(colnames(counts), sample_info)
   )
 
   if (nlevels(groups) <= 1 | nlevels(groups) > 20) {
