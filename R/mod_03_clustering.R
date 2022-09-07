@@ -162,7 +162,7 @@ mod_03_clustering_ui <- function(id) {
             )
           ),
           fluidRow(
-            column(width = 4, h5("Highlight:")),
+            column(width = 4, h5("Mark Genes:")),
             column(
               width = 8,
               htmlOutput(ns("selected_genes_ui"))
@@ -400,10 +400,27 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
 
     # Sample color bar selector ----------
     output$list_factors_heatmap <- renderUI({
+      choices <- "Names"
+      selected <- choices
+      if(!is.null(colnames(pre_process$sample_info()))) {
+        factors <- colnames(pre_process$sample_info())
+        choices <- c(
+          choices,
+          factors
+        )
+        # use at most three factors
+        if(length(factors) < 4) {
+          selected <- factors
+        } else  {
+          selected <- factors[1:3]
+        }
+      }
       selectInput(
         inputId = ns("select_factors_heatmap"),
         label = NULL,
-        choices = c("Sample_Name", colnames(pre_process$sample_info()))
+        choices = choices,
+        selected = selected,
+        multiple = TRUE
       )
     })
 
@@ -456,7 +473,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         inputId = ns("selected_genes"),
         label = NULL,
         choices = row.names(heatmap_data()),
-        selected = sample(row.names(heatmap_data()), 1),
+        selected = NULL,
         multiple = TRUE
       )
     })
@@ -467,7 +484,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     output$heatmap_main <- renderPlot({
       req(!is.null(heatmap_data()))
       req(input$select_factors_heatmap)
-      req(input$selected_genes)
+#      req(input$selected_genes)
 
       shinybusy::show_modal_spinner(
         spin = "orbit",
@@ -505,7 +522,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     # Heatmap Click Value ---------
     output$ht_click_content <- renderUI({
       
-      if (is.null(input$ht_click) | is.null(shiny_env$ht_sub)) { 
+      if (is.null(input$ht_click) | is.null(shiny_env$ht_sub)) {
         "Click on zoomed heatmap"
       } else {
         cluster_heat_click_info(
@@ -525,8 +542,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     output$sub_heatmap <- renderPlot({
       if (is.null(input$ht_brush)) {
         grid::grid.newpage()
-        grid::grid.text("Select a region on the heatmap to zoom in. 
-        Gene IDs shows up when less than 60 genes are selected.", 0.5, 0.5)
+        grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
       } else {
         submap_return <- heat_sub(
           ht_brush = input$ht_brush,
