@@ -240,9 +240,6 @@ mod_03_clustering_ui <- function(id) {
                   width = "100%",
                   brush = ns("ht_brush")
                 ),
-                uiOutput(
-                  outputId = ns("ht_click_content")
-                ),
                 ottoPlots::mod_download_figure_ui(
                   ns("dl_heatmap_main"),
                   label = "Above"
@@ -250,6 +247,15 @@ mod_03_clustering_ui <- function(id) {
                 ottoPlots::mod_download_figure_ui(
                   ns("dl_heatmap_sub"),
                   label = "Right"
+                ),
+                uiOutput(
+                  outputId = ns("ht_click_content")
+                ),
+                checkboxInput(
+                  inputId = ns("cluster_enrichment"), 
+                  label = h5("Enrichment in
+                    selected genes or k-means clusters(below)"),
+                  value = TRUE
                 )
               ),
               column(
@@ -261,12 +267,6 @@ mod_03_clustering_ui <- function(id) {
                   click = ns("ht_click")
                 )
               )
-            ),
-            checkboxInput(
-              inputId = ns("cluster_enrichment"), 
-              label = strong("Enrichment analysis on 
-                selected genes or k-means clusters"),
-              value = TRUE
             ),
             conditionalPanel(
               condition = "input.cluster_enrichment == 1 ",
@@ -570,7 +570,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
           is.null(shiny_env$ht_sub) ||
           is.null(input$ht_brush)
       ) {
-        "Click on zoomed heatmap"
+        return(NULL)
       } else {
         cluster_heat_click_info(
           click = input$ht_click,
@@ -589,7 +589,8 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     output$sub_heatmap <- renderPlot({
       if (is.null(input$ht_brush)) {
         grid::grid.newpage()
-        grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
+        grid::grid.text("Select a region on the heatmap to zoom in. 
+        \nClick on the zoomed heatmap for details.", 0.5, 0.5)
       } else {
         shinybusy::show_modal_spinner(
           spin = "orbit",

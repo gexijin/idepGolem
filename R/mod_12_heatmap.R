@@ -26,9 +26,6 @@ mod_12_heatmap_ui <- function(id){
           width = "100%",
           brush = ns("ht_brush")
         ),
-        uiOutput(
-          outputId = ns("ht_click_content")
-        ),
         ottoPlots::mod_download_figure_ui(
           ns("dl_heatmap_main"),
           label = "Above"
@@ -36,6 +33,9 @@ mod_12_heatmap_ui <- function(id){
         ottoPlots::mod_download_figure_ui(
           ns("dl_heatmap_sub"),
           label = "Right"
+        ),
+        uiOutput(
+          outputId = ns("ht_click_content")
         )
       ),
       column(
@@ -153,7 +153,8 @@ mod_12_heatmap_server <- function(
     output$sub_heatmap <- renderPlot({
       if (is.null(input$ht_brush)) {
         grid::grid.newpage()
-        grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
+        grid::grid.text("Select a region on the heatmap to zoom in. 
+        \nClick on the zoomed heatmap for details.", 0.5, 0.5)
       } else {
         shinybusy::show_modal_spinner(
           spin = "orbit",
@@ -190,7 +191,8 @@ mod_12_heatmap_server <- function(
     sub_heatmap_object <- reactive({
       if (is.null(input$ht_brush)) {
         grid::grid.newpage()
-        grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
+        grid::grid.text("Select a region on the heatmap to zoom in. 
+        \nClick on the zoomed heatmap for details.", 0.5, 0.5)
       } else {
         shinybusy::show_modal_spinner(
           spin = "orbit",
@@ -238,7 +240,7 @@ mod_12_heatmap_server <- function(
           is.null(shiny_env$ht_sub) ||
           is.null(input$ht_brush)
       ) {
-        "Click on zoomed heatmap."
+        return(NULL)
       } else {
         deg_click_info(
           click = input$ht_click,
