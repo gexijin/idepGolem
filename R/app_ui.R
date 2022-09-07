@@ -11,6 +11,11 @@ app_ui <- function(request) {
     # Your application UI logic
 
     navbarPage(
+      theme = bslib::bs_theme(
+        version = 5,
+        bootswatch = "simplex", 
+        primary = "#546A7B"
+      ),
       "iDEP",
       id = "navbar",
       mod_01_load_data_ui(id = "load_data"),
