@@ -400,7 +400,7 @@ eda_boxplot <- function(
     memo <- paste(" (only showing 40 samples)")
   }
   groups <- as.factor(
-    detect_groups(colnames(processed_data), sample_info)
+    detect_groups(colnames(counts), sample_info)
   )
 
   if (nlevels(groups) <= 1 | nlevels(groups) > 20) {
@@ -420,6 +420,7 @@ eda_boxplot <- function(
     names_to = "sample",
     values_to = "expression"
   )
+  
   longer_data$groups <- rep(groups, nrow(counts))
   longer_data$grouping <- rep(grouping, nrow(counts))
 
