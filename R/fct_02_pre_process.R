@@ -256,31 +256,43 @@ total_counts_ggplot <- function(
     memo <- paste("(only showing 100 samples)")
   }
   groups <- as.factor(
-    detect_groups(colnames(counts_data), sample_info)
+    detect_groups(colnames(counts), sample_info)
   )
-
-  if (nlevels(groups) <= 1 || nlevels(groups) > 20) {
-    grouping <- NULL
-  } else {
-    grouping <- groups
-  }
-
+  
   if (ncol(counts) < 31) {
     x_axis_labels <- 16
   } else {
     x_axis_labels <- 12
   }
-  plot_data <- data.frame(
-    sample = as.factor(colnames(counts)),
-    counts = colSums(counts) / 1e6,
-    group = groups,
-    grouping = grouping
-  )
 
-  plot <- ggplot2::ggplot(
-    data = plot_data,
-    ggplot2::aes(x = sample, y = counts, fill = grouping)
-  ) +
+  if (nlevels(groups) <= 1 || nlevels(groups) > 20) {
+    plot_data <- data.frame(
+      sample = as.factor(colnames(counts)),
+      counts = colSums(counts) / 1e6,
+      group = groups
+    )
+    
+    plot <- ggplot2::ggplot(
+      data = plot_data,
+      ggplot2::aes(x = sample, y = counts)
+    )
+  } else {
+    grouping <- groups
+    
+    plot_data <- data.frame(
+      sample = as.factor(colnames(counts)),
+      counts = colSums(counts) / 1e6,
+      group = groups,
+      grouping = NULL
+    )
+    
+    plot <- ggplot2::ggplot(
+      data = plot_data,
+      ggplot2::aes(x = sample, y = counts, fill = grouping)
+    )
+  }
+
+  plot <- plot +
     ggplot2::geom_bar(stat = "identity") +
     ggplot2::theme_light() +
     ggplot2::theme(
