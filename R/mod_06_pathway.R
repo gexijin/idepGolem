@@ -838,10 +838,39 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     
     # Markdown report------------
     output$report <- downloadHandler(
-      
       # For PDF output, change this to "report.pdf"
       filename ="pathway_report.html",
       content = function(file) {
+        # Set up parameters to pass to Rmd document
+        params <- list(
+          pre_processed = pre_process$data(),
+          sample_info = pre_process$sample_info(),
+          all_gene_info = pre_process$all_gene_info(),
+          deg = deg,
+          idep_data = idep_data,
+          converted = pre_process$converted(),
+          all_gene_names = pre_process$all_gene_names(),
+          go = input$select_go,
+          select_org = pre_process$select_org(),
+          my_range = c(input$min_set_size, input$max_set_size),
+          select_contrast = input$select_contrast,
+          min_set_size = input$min_set_size,
+          max_set_size = input$max_set_size,
+          limma = deg$limma(),
+          gene_p_val_cutoff = input$gene_p_val_cutoff,
+          gene_sets = gene_sets(),
+          absolute_fold = input$absolute_fold,
+          pathway_p_val_cutoff = input$pathway_p_val_cutoff,
+          n_pathway_show = input$n_pathway_show,
+          contrast_samples = contrast_samples(),
+          sig_pathways = input$sig_pathways,
+          pathway_method = input$pathway_method,
+          pathway_list_data = pathway_list_data(),
+          date = Sys.Date()
+        )
+        
+        req(params)
+        
         #Show Loading popup
         shinybusy::show_modal_spinner(
           spin = "orbit",
@@ -863,40 +892,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         file.copy(from=markdown_location,to = tempReport, overwrite = TRUE)
         
        # browser()
-        # Set up parameters to pass to Rmd document
-        params <- list(
-          pre_processed = pre_process$data(),
-          deg = deg,
-          idep_data = idep_data,
-          converted = pre_process$converted(),
-          all_gene_names = pre_process$all_gene_names(),
-          go = input$select_go,
-          select_org = pre_process$select_org(),
-          my_range = c(input$min_set_size, input$max_set_size),
-          select_contrast = input$select_contrast,
-          min_set_size = input$min_set_size,
-          max_set_size = input$max_set_size,
-          limma = deg$limma(),
-          gene_p_val_cutoff = input$gene_p_val_cutoff,
-          gene_sets = gene_sets(),
-          absolute_fold = input$absolute_fold,
-          pathway_p_val_cutoff = input$pathway_p_val_cutoff,
-          n_pathway_show = input$n_pathway_show,
-          contrast_samples = contrast_samples(),
-          sig_pathways = input$sig_pathways,
-          #heatmap_color_select = heatmap_colors[[input$heatmap_color_select]],
-          pathway_method = input$pathway_method,
-          gage_pathway_data = gage_pathway_data(),
-          selected_pathway_data = selected_pathway_data(),
-          pathway_list_data = pathway_list_data(),
-          network_data = network_data_path()
-          
-          #fgsea_pathway_data = fgsea_pathway_data()
-          # pgsea_plot_data = pgsea_plot_data(),
-          # pgsea_plot_all_samples_data = pgsea_plot_all_samples_data(),
-          # gene_info = pre_process$all_gene_info()
-          
-        )
+
         
         # Knit the document, passing in the `params` list, and eval it in a
         # child of the global environment (this isolates the code in the document

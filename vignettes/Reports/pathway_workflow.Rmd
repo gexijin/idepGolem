@@ -3,6 +3,8 @@ title: "Pathway Workflow"
 output: html_document
 params:
   pre_processed:
+  sample_info:
+  all_gene_info:
   deg:
   idep_data:
   converted:
@@ -23,10 +25,11 @@ params:
   sig_pathways:
   #heatmap_color_select:
   pathway_method:
-  gage_pathway_data:
-  selected_pathway_data:
+  #gage_pathway_data:
+  #selected_pathway_data:
   pathway_list_data:
-  network_data:
+  #network_data:
+  #pgsea_plot_data:
   # fgsea_pathway_data:
   # pgsea_plot_data:
   # pgsea_plot_all_samples_data:
@@ -41,83 +44,122 @@ params:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = params$printcode)
+knitr::opts_chunk$set(echo = params$printcode) # , include = FALSE, eval = FALSE)
 ```
 
 <!-- This document cannot be knit directly from R studio -->
 
-This html document contains what parameters values were selected on the IDEP interface. It also includes the plots generated from those selections. Genes with FDR Greater than **`r params$gene_p_val_cutoff`** were removed. **`r params$n_pathway_show`** pathways with between **`r params$min_set_size`** and **`r params$max_set_size`** genes were included. Absolute fold values were **`r ifelse(params$absolute_fold, 'not', '')`**  used. Pathways were found using the **`r switch(as.character(params$pathway_method), "1" = "GAGE", "2" = "PGSEA", "3" = "GSEA (Pre-Ranked)", "4" = "PGSEA with all samples", "5" = "ReactomePA" )`** method. Pathway p values cutoff is set to **`r params$pathway_p_val_cutoff`**.
+This html document contains what parameters values were selected on the IDEP interface. It also includes the plots generated from those selections. Genes with FDR Greater than **`r params$gene_p_val_cutoff`** were removed.
 
-```{r}
-#params$gage_pathway_data
-```
 
 # Summary
 
-<!--ALL SELECTED PARAMETERS-->
+The comparison selected was **`r params$select_contrast`** using **`r params$go`** genesets. **`r params$n_pathway_show`** pathways with between **`r params$min_set_size`** and **`r params$max_set_size`** genes were included. Absolute fold values were `r ifelse(params$absolute_fold, 'not', '')`  used. Pathways were found using the **`r switch(as.character(params$pathway_method), "1" = "GAGE", "2" = "PGSEA", "3" = "GSEA (Pre-Ranked)", "4" = "PGSEA with all samples", "5" = "ReactomePA" )`** method. Pathway p values cutoff is set to **`r params$pathway_p_val_cutoff`**.
 
+
+
+<!--ALL SELECTED PARAMETERS-->
+# Selections
 ```{r echo=FALSE}
-for (i in 1:length(params)){
-  # exclude loaded data & sample info
-  if(names(params)[i] != "sample_info" && names(params)[i] != "loaded_data" && names(params)[i] != "pre_processed" && names(params)[i] != "deg" && names(params)[i] != "idep_data" && names(params)[i] != "converted" && names(params)[i] != "limma" && names(params)[i] != "gene_sets" && names(params)[i] != "selected_pathway_data" && names(params)[i] != "pathway_list_data" && names(params)[i] != "all_gene_names")
-    cat(paste0(names(params)[i], ": ", params[[i]], "\n")
-   )
+
+# exclude long parameter we won't print
+excluded_params <- c(
+  "sample_info", "loaded_data", "pre_processed", "deg",
+  "idep_data", "converted", "limma", "gene_sets",
+  "pathway_list_data", "all_gene_names", "all_gene_info"
+)
+
+for (i in 1:length(params)) {
+  if (!(names(params)[i] %in% excluded_params)) {
+    cat(paste0(names(params)[i], ": ", params[[i]], "\n"))
+  }
 }
 ```
 
-```{r}
-
-```
-
+# Tree
 ```{r echo=FALSE}
-
-# GAGE Method
-if (params$pathway_method == 1){
-gene_sets <- read_gene_sets(
-  converted = params$converted,
-  all_gene_names = params$all_gene_names,
-  go = params$go,
-  select_org = params$select_org,
-  idep_data = params$idep_data,
-  my_range = params$my_range
-)
-
-gage <- gage_data(
-  select_go = params$go,
-  select_contrast = params$select_contrast,
-  min_set_size = params$min_set_size,
-  max_set_size = params$max_set_size,
-  limma = params$limma,
-  gene_p_val_cutoff = params$gene_p_val_cutoff,
-  gene_sets = params$gene_sets,
-  absolute_fold = params$absolute_fold,
-  pathway_p_val_cutoff = params$pathway_p_val_cutoff,
-  n_pathway_show = params$n_pathway_show
-)
-
-basic_heatmap(
-  data = params$selected_pathway_data,
-  c("green", "black", "red")
-)
-
-vis_network_plot(
-    network_data = params$network_data
-)
-
-
 enrichment_tree_plot(
   go_table = params$pathway_list_data,
-  group = "All Groups"
-  #45
+  group = "All Groups",
+  right_margin = 10
 )
-}
-
-
 ```
 
-```{r}
-# PGSEA
+```{r eval=FALSE, include=FALSE}
+
+# GAGE Method
+if (params$pathway_method == 1) {
+  gene_sets <- read_gene_sets(
+    converted = params$converted,
+    all_gene_names = params$all_gene_names,
+    go = params$go,
+    select_org = params$select_org,
+    idep_data = params$idep_data,
+    my_range = params$my_range
+  )
+
+  gage <- gage_data(
+    select_go = params$go,
+    select_contrast = params$select_contrast,
+    min_set_size = params$min_set_size,
+    max_set_size = params$max_set_size,
+    limma = params$limma,
+    gene_p_val_cutoff = params$gene_p_val_cutoff,
+    gene_sets = params$gene_sets,
+    absolute_fold = params$absolute_fold,
+    pathway_p_val_cutoff = params$pathway_p_val_cutoff,
+    n_pathway_show = params$n_pathway_show
+  )
+
+  # basic_heatmap(
+  #   data = params$selected_pathway_data,
+  #   c("green", "black", "red")
+  # )
+
+  # vis_network_plot(
+  #     network_data = params$network_data
+  # )
+
+
+  # enrichment_tree_plot(
+  #   go_table = params$pathway_list_data,
+  #   group = "All Groups"
+  #   #45
+  # )
+}
+```
+
+```{r eval=FALSE, include=FALSE}
+# PGSEA -- Not tested
 if (params$pathway_method == 2) {
-  return("Plot to be added")
+  res <- get_pgsea_plot_data(
+    my_range = c(params$min_set_size, params$max_set_size),
+    data = params$pre_process$data,
+    select_contrast = params$select_contrast,
+    gene_sets = params$gene_sets,
+    sample_info = params$sample_info,
+    select_factors_model = deg$select_factors_model,
+    select_model_comprions = deg$select_model_comprions,
+    pathway_p_val_cutoff = params$pathway_p_val_cutoff,
+    n_pathway_show = params$n_pathway_show
+  )
+
+  pathway_list_data <- get_pathway_list_data(
+    pathway_method = params$pathway_method,
+    gage_pathway_data = NULL, # gage_pathway_data(),
+    fgsea_pathway_data = NULL, # fgsea_pathway_data(),
+    pgsea_plot_data = res,
+    pgsea_plot_all_samples_data = NULL, # pgsea_plot_all_samples_data(),
+    go = params$go,
+    select_org = params$select_org,
+    gene_info = params$all_gene_info,
+    gene_sets = params$gene_sets
+  )
+
+  enrichment_tree_plot(
+    go_table = pathway_list_data,
+    group = "All Groups" # ,
+    # right_margin = 45
+  )
 }
 ```
