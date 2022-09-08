@@ -2752,56 +2752,16 @@ plot_deg_scatter <- function(
 }
 
 
-
-#' VisNetwork data
+#' returns results from DEG analysis
+#'
 #' 
-#' Create VisNetwork data that can be inputted in the vis_network_plot
-#' function to create an interactive network of enriched pathways.
-#' 
-#' @param network GO table from the pathway analysis
-#' @param up_down_reg_deg Plot just up/down or both
-#' @param wrap_text_network_deg Wrap the text from the pathway description
-#' @param layout_vis_deg BUtton to reset the layout of the network
-#' @param edge_cutoff_deg P-value to cutoff enriched pathways
+#' @param limma_value Results from DESeq2 or limma
+#' @param gene_names Gene IDs
+#' @param processed_data  Processed data
+#' @param no_id_conversion If true, gene ids will not be mapped to Ensembl
 #' 
 #' @export
-#' @return Data that can be inputted in the vis_network_plot function
-#'  to create an interactive network.
-network_data <- function(
-  network,
-  up_down_reg_deg,
-  wrap_text_network_deg,
-  layout_vis_deg,
-  edge_cutoff_deg
-) {
-  if(up_down_reg_deg != "All Groups") {
-    network <- network[network$Direction == up_down_reg_deg, ]
-  }
-  if(dim(network)[1] == 0) {
-    return(NULL)
-  }
-  
-  if(wrap_text_network_deg) {
-    # Wrap long pathway names using default width of 30
-    network$Pathways <- wrap_strings(network$Pathways)
-  }
-
-  g <- enrichment_network(
-    network,
-    layout_button = layout_vis_deg,
-    edge_cutoff = edge_cutoff_deg
-  )
-
-  vis_net <- visNetwork::toVisNetworkData(g)
-    
-  # Color codes: https://www.rapidtables.com/web/color/RGB_Color.html
-  vis_net$nodes$shape <- "dot"
-    
-  vis_net$nodes$size <- 5 + vis_net$nodes$size^2 
-    
-  return(vis_net)
-}
-
+#' @return A list. deg_data and limma$results
 deg_information <- function(
     limma_value, 
     gene_names, 
@@ -2872,3 +2832,4 @@ deg_information <- function(
   }
   return(list(degs_data, limma_value$Results))
 }
+
