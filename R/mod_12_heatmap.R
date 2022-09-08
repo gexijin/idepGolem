@@ -107,7 +107,7 @@ mod_12_heatmap_server <- function(
       # Assign heatmap to be used in multiple components
       shiny_env$ht <- deg_heatmap(
         data = data(),
-        bar = bar,
+        bar = bar(),
         heatmap_color_select = heatmap_colors[[input$heatmap_color_select]],
         cluster_rows = cluster_rows
       )
@@ -132,7 +132,7 @@ mod_12_heatmap_server <- function(
       # Assign heatmap to be used in multiple components
       obj <- deg_heatmap(
         data = data(),
-        bar = bar,
+        bar = bar(),
         heatmap_color_select = heatmap_colors[[input$heatmap_color_select]],
         cluster_rows = cluster_rows
       )
@@ -153,20 +153,20 @@ mod_12_heatmap_server <- function(
     output$sub_heatmap <- renderPlot({
       if (is.null(input$ht_brush)) {
         grid::grid.newpage()
-        grid::grid.text("Select a region on the heatmap to zoom in. 
-        \nClick on the zoomed heatmap for details.", 0.5, 0.5)
+        grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
       } else {
         shinybusy::show_modal_spinner(
           spin = "orbit",
           text = "Creating sub-heatmap",
           color = "#000000"
         )
+
         heat_return <- deg_heat_sub(
           ht_brush = input$ht_brush,
           ht = shiny_env$ht,
           ht_pos_main = shiny_env$ht_pos_main,
           heatmap_data = data(),
-          bar = bar,
+          bar = bar(),
           all_gene_names = all_gene_names()
         )
 
@@ -191,8 +191,7 @@ mod_12_heatmap_server <- function(
     sub_heatmap_object <- reactive({
       if (is.null(input$ht_brush)) {
         grid::grid.newpage()
-        grid::grid.text("Select a region on the heatmap to zoom in. 
-        \nClick on the zoomed heatmap for details.", 0.5, 0.5)
+        grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
       } else {
         shinybusy::show_modal_spinner(
           spin = "orbit",
@@ -204,7 +203,7 @@ mod_12_heatmap_server <- function(
           ht = shiny_env$ht,
           ht_pos_main = shiny_env$ht_pos_main,
           heatmap_data = data(),
-          bar = bar,
+          bar = bar(),
           all_gene_names = all_gene_names()
         )
 
@@ -236,23 +235,34 @@ mod_12_heatmap_server <- function(
     )
     # Sub Heatmap Click Value ---------
     output$ht_click_content <- renderUI({
+      # zoomed in, but not clicked
+      if (is.null(input$ht_click) &&
+          !is.null(shiny_env$ht_sub) &&
+          !is.null(input$ht_brush)
+      ) {
+p <- '<br><p style="color:red;text-align:right;">Click on the sub-heatmap &#10230;</p>'
+          html <- GetoptLong::qq(p)
+          return(HTML(html))
+      }
+
       if (is.null(input$ht_click) ||
           is.null(shiny_env$ht_sub) ||
           is.null(input$ht_brush)
       ) {
         return(NULL)
-      } else {
-        deg_click_info(
-          click = input$ht_click,
-          ht_sub = shiny_env$ht_sub,
-          ht_sub_obj = shiny_env$ht_select,
-          ht_pos_sub = shiny_env$ht_pos_sub,
-          sub_groups = shiny_env$column_groups,
-          group_colors = shiny_env$group_colors,
-          bar = shiny_env$bar,
-          data = shiny_env$submap_data
-        )
       }
+
+      deg_click_info(
+        click = input$ht_click,
+        ht_sub = shiny_env$ht_sub,
+        ht_sub_obj = shiny_env$ht_select,
+        ht_pos_sub = shiny_env$ht_pos_sub,
+        sub_groups = shiny_env$column_groups,
+        group_colors = shiny_env$group_colors,
+        bar = shiny_env$bar,
+        data = shiny_env$submap_data
+      )
+      
     })
 
 

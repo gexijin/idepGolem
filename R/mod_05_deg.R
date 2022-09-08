@@ -688,10 +688,17 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       )
     })
 
+    # bar to make the heatmap module reactive
+    # otherwise, error when switching heatmap
+    heatmap_bar <- reactive({
+      req(!is.null(heat_data()))
+      heat_data()$bar
+
+    })
     heatmap_module <- mod_12_heatmap_server(
       id = "12_heatmap_1",
       data = reactive({ heat_data()$genes }),
-      bar = heat_data()$bar,
+      bar = reactive({ heatmap_bar() }),
       all_gene_names = reactive({ pre_process$all_gene_names() }),
       cluster_rows = FALSE
     )

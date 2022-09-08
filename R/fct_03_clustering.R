@@ -378,7 +378,7 @@ heatmap_main <- function(
       heat,
       heatmap_legend_side = "bottom"
     )
-  )  
+  )
 }
 
 #' Draw a dendogram of data samples
