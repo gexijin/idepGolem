@@ -145,7 +145,7 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
     heatmap_module <- mod_12_heatmap_server(
       id = "12_heatmap_1",
       data = reactive({ biclust_data() }),
-      bar = NULL,
+      bar = function() { return(NULL) },
       all_gene_names = reactive({ pre_process$all_gene_names() }),
       cluster_rows = TRUE
     )

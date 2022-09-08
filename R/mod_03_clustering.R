@@ -566,31 +566,41 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     # Heatmap Click Value ---------
     output$ht_click_content <- renderUI({
 
+      # zoomed in, but not clicked
+      if (is.null(input$ht_click) &&
+          !is.null(shiny_env$ht_sub) &&
+          !is.null(input$ht_brush)
+      ) {
+p <- '<br><p style="color:red;text-align:right;">Click on the sub-heatmap &#10230;</p>'
+          html <- GetoptLong::qq(p)
+          return(HTML(html))
+      }
+      # if not zoomed in, show nothing
       if (is.null(input$ht_click) ||
           is.null(shiny_env$ht_sub) ||
           is.null(input$ht_brush)
       ) {
         return(NULL)
-      } else {
-        cluster_heat_click_info(
-          click = input$ht_click,
-          ht_sub = shiny_env$ht_sub,
-          ht_sub_obj = shiny_env$ht_sub_obj,
-          ht_pos_sub = shiny_env$ht_pos_sub,
-          sub_groups = shiny_env$sub_groups,
-          group_colors = shiny_env$group_colors,
-          cluster_meth = input$cluster_meth,
-          click_data = shiny_env$click_data
-        )
       }
+
+      cluster_heat_click_info(
+        click = input$ht_click,
+        ht_sub = shiny_env$ht_sub,
+        ht_sub_obj = shiny_env$ht_sub_obj,
+        ht_pos_sub = shiny_env$ht_pos_sub,
+        sub_groups = shiny_env$sub_groups,
+        group_colors = shiny_env$group_colors,
+        cluster_meth = input$cluster_meth,
+        click_data = shiny_env$click_data
+      )
+      
     })
 
     # Subheatmap creation ---------
     output$sub_heatmap <- renderPlot({
       if (is.null(input$ht_brush)) {
         grid::grid.newpage()
-        grid::grid.text("Select a region on the heatmap to zoom in. 
-        \nClick on the zoomed heatmap for details.", 0.5, 0.5)
+        grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
       } else {
         shinybusy::show_modal_spinner(
           spin = "orbit",

@@ -741,11 +741,10 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     heatmap_module <- mod_12_heatmap_server(
       id = "12_heatmap_1",
       data = reactive({ selected_pathway_data() }),
-      bar = NULL,
+      bar = function() { return(NULL) },
       all_gene_names = reactive({ pre_process$all_gene_names() }),
       cluster_rows = TRUE
     )
-
  
 
     output$kegg_image <- renderImage({
