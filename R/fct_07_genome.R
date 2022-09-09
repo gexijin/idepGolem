@@ -53,12 +53,12 @@ chromosome_plotly <- function(
   if(length(limma$comparisons) == 1) {
     top_1 <- limma$top_genes[[1]]  
   } else {
-	top <- limma$top_genes
-	ix <- match(select_contrast, names(top))
-	if(is.na(ix)) {
+    top <- limma$top_genes
+    ix <- match(select_contrast, names(top))
+    if(is.na(ix)) {
       return(plotly::ggplotly(p))
     }
-	top_1 <- top[[ix]] 
+    top_1 <- top[[ix]]
   }
   if(dim(top_1)[1] == 0) {
     return(plotly::ggplotly(p))

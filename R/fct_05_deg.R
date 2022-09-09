@@ -2550,10 +2550,7 @@ plot_ma <- function(
   processed_data, 
   plot_colors
 ) {
-  if(grepl("I:", select_contrast)) {
-      grid::grid.newpage()
-      return(grid::grid.text("Not available for interaction terms.", 0.5, 0.5))
-  }
+
   if(length(comparisons) == 1) {
     top_1 <- top_genes[[1]]  
   } else {
