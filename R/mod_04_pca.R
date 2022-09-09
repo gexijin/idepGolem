@@ -210,14 +210,15 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
     
     # Store client info in a convenience variable
     cdata <- session$clientData
-    
     #get pca image dimensions
     output$image_dimensions <- renderText({
+      a_ratio <- cdata[['output_pca-pca_plot_obj_width']] / cdata[['output_pca-pca_plot_obj_height']]
       paste("Plot size (pixels): ",
             cdata[['output_pca-pca_plot_obj_width']],
             " x ",
             cdata[['output_pca-pca_plot_obj_height']],
-            "\nAspect Ratio: ", cdata[['output_pca-pca_plot_obj_width']] / cdata[['output_pca-pca_plot_obj_height']])
+            "\nAspect Ratio: ", cdata[['output_pca-pca_plot_obj_width']] / cdata[['output_pca-pca_plot_obj_height']],
+            "\nPlot size (inches): ", "6.5 x ", round(6.5/a_ratio, 3) )
     })
     
     # PCA plot ------------

@@ -20,7 +20,7 @@ params:
   ui_shape:
   printcode:
     label: "Display Code"
-    value: TRUE
+    value: FALSE
     input: checkbox
 ---
 
@@ -91,9 +91,13 @@ PCA_biplot(
   ui_color = params$ui_color,
   ui_shape = params$ui_shape
   )
+```
 
+```{r}
 PCA_Scree(processed_data = params$pre_processed_data)
+```
 
+```{r}
 PCAtools_eigencorplot(
   processed_data = params$pre_processed_data,
   sample_info =  params$sample_info

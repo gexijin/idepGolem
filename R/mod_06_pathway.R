@@ -790,29 +790,16 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     })
 
     # Enrichment Tree -----------
-    enrichment_tree <- reactive({
+    output$enrichment_tree <- renderPlot({
       req(!is.null(pathway_list_data()))
-
-
+      
       enrichment_tree_plot(
         go_table = pathway_list_data(),
         group = "All Groups",
         right_margin = 45
       )
-      p <- recordPlot()
-      return(p)
-    })
-    output$enrichment_tree <- renderPlot({
-      print(enrichment_tree())
     })
     
-    # Download Button
-    download_tree <- ottoPlots::mod_download_figure_server(
-      id = "download_tree", 
-      filename = "enrichment_tree", 
-      figure = reactive({ enrichment_tree() }) # stays as a reactive variable
-    )
-
     # Define a Network
     network_data_path <- reactive({
       req(!is.null(pathway_list_data()))
