@@ -456,50 +456,46 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         req(!is.null(pre_process$raw_counts()) |
           !is.null(pre_process$data())
         )
-      
-        shinybusy::show_modal_spinner(
-          spin = "orbit",
-          text = "Running Analysis",
-          color = "#000000"
-        )
-        
-        # only use with DESeq2
-        threshold_wald_test <- FALSE
-        if(input$counts_deg_method == 3) {
-          threshold_wald_test <- input$threshold_wald_test
-        }
+        withProgress(message = "DEG analysis...", {
+          incProgress(0.4)
+          
+          # only use with DESeq2
+          threshold_wald_test <- FALSE
+          if(input$counts_deg_method == 3) {
+            threshold_wald_test <- input$threshold_wald_test
+          }
 
-        independent_filtering <- TRUE
-        if(input$counts_deg_method == 3) {
-          independent_filtering <- input$independent_filtering
-        }
+          independent_filtering <- TRUE
+          if(input$counts_deg_method == 3) {
+            independent_filtering <- input$independent_filtering
+          }
 
-        deg$limma <- limma_value(
-          data_file_format = pre_process$data_file_format(),
-          counts_deg_method = input$counts_deg_method,
-          raw_counts = pre_process$raw_counts(),
-          limma_p_val = input$limma_p_val,
-          limma_fc = input$limma_fc,
-          select_model_comprions = input$select_model_comprions,
-          sample_info = pre_process$sample_info(),
-          select_factors_model = input$select_factors_model,
-          select_interactions = input$select_interactions,
-          select_block_factors_model = input$select_block_factors_model,
-          factor_reference_levels = factor_reference_levels(),
-          processed_data = pre_process$data(),
-          counts_log_start = pre_process$counts_log_start(),
-          p_vals = pre_process$p_vals(),
-          threshold_wald_test = threshold_wald_test,
-          independent_filtering = independent_filtering
-        )
-        
-        updateTabsetPanel(
-          session = session, 
-          inputId = "step_1", 
-          selected = "results_tab"
-        )
-        shinybusy::remove_modal_spinner()
-      }  
+          deg$limma <- limma_value(
+            data_file_format = pre_process$data_file_format(),
+            counts_deg_method = input$counts_deg_method,
+            raw_counts = pre_process$raw_counts(),
+            limma_p_val = input$limma_p_val,
+            limma_fc = input$limma_fc,
+            select_model_comprions = input$select_model_comprions,
+            sample_info = pre_process$sample_info(),
+            select_factors_model = input$select_factors_model,
+            select_interactions = input$select_interactions,
+            select_block_factors_model = input$select_block_factors_model,
+            factor_reference_levels = factor_reference_levels(),
+            processed_data = pre_process$data(),
+            counts_log_start = pre_process$counts_log_start(),
+            p_vals = pre_process$p_vals(),
+            threshold_wald_test = threshold_wald_test,
+            independent_filtering = independent_filtering
+          )
+
+          updateTabsetPanel(
+            session = session, 
+            inputId = "step_1", 
+            selected = "results_tab"
+          )
+        })
+      }
     )
     
     deg_info <- reactive({
@@ -813,33 +809,29 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     # enrichment analysis results for both up and down regulated gene
     pathway_deg <- reactive({
       req(!is.null(up_reg_data()))
+      withProgress(message = "Enrichment analysis for DEGs.", {
+        incProgress(0.1)
+        deg_lists <- list()
+        lists <- c("Upregulated", "Downregulated")
 
-      shinybusy::show_modal_spinner(
-        spin = "orbit",
-        text = "Running Analysis",
-        color = "#000000"
-      )
+        for(direction in lists) {
+          
+          if(direction == lists[1]) {
+            data <- up_reg_data()
+          } else {
+            data <- down_reg_data()
+          }
 
-      deg_lists <- list()
-      lists <- c("Upregulated", "Downregulated")
-
-      for(direction in lists) {
-
-        if(direction == lists[1]) {
-          data <- up_reg_data()
-        } else {
-          data <- down_reg_data()
+          gene_names <- merge_data(
+            all_gene_names = pre_process$all_gene_names(),
+            data = data,
+            merge_ID = "ensembl_ID"
+          )
+          # Only keep the gene names and scrap the data
+          deg_lists[[direction]] <- dplyr::select_if(gene_names, is.character)
+          incProgress(0.5)
         }
-
-        gene_names <- merge_data(
-          all_gene_names = pre_process$all_gene_names(),
-          data = data,
-          merge_ID = "ensembl_ID"
-        )
-        # Only keep the gene names and scrap the data
-         deg_lists[[direction]] <- dplyr::select_if(gene_names, is.character)
-      }
-      shinybusy::remove_modal_spinner()
+      })
       return(deg_lists)
     })
 

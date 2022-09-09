@@ -261,18 +261,14 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data){
     # Pre-calculating PREDA, so that changing FDR cutoffs does not trigger entire calculation
     genome_plot_data_pre <- reactive({
       req(!is.null(deg$limma()))
-      shinybusy::show_modal_spinner(
-        spin = "orbit",
-        text = "Running PREDA. This may take up to 5 minutes...",
-        color = "#000000"
-      )
-      res <- get_genome_plot_data_pre(
-        select_contrast = input$select_contrast,
-        limma = deg$limma(),
-        all_gene_info = pre_process$all_gene_info()
-      )
-      shinybusy::remove_modal_spinner()
-      return(res)
+      withProgress(message = "PREDA may take 5 minutes...", {
+        incProgress(0.2)
+        get_genome_plot_data_pre(
+          select_contrast = input$select_contrast,
+          limma = deg$limma(),
+          all_gene_info = pre_process$all_gene_info()
+        )
+      })
     })
 
     # Results from PREDA
