@@ -118,6 +118,11 @@ mod_06_pathway_ui <- function(id) {
           "#pathway-gene_p_val_cutoff { width:100%;   margin-top:-12px}"
         ),
         h5("* Warning! The many combinations can lead to false positives in pathway analyses."),
+        # Download report button
+        downloadButton(
+          outputId = ns("report"),
+          label = "Generate Report"
+        ), 
         a(
           h5("Questions?", align = "right"),
           href = "https://idepsite.wordpress.com/pathways/",
@@ -172,10 +177,12 @@ mod_06_pathway_ui <- function(id) {
               outputId = ns("enrichment_tree"),
               width = "100%"
             ),
+
             br(),
             p("Adjusting the width of the browser 
             window can render figure differently and  
             resolve the \"Figure margin too wide\" error. ")
+
           ),
           tabPanel(
             title = "Network",
@@ -784,14 +791,14 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     # Enrichment Tree -----------
     output$enrichment_tree <- renderPlot({
       req(!is.null(pathway_list_data()))
-
+      
       enrichment_tree_plot(
         go_table = pathway_list_data(),
         group = "All Groups",
         right_margin = 45
       )
     })
-
+    
     # Define a Network
     network_data_path <- reactive({
       req(!is.null(pathway_list_data()))
@@ -813,6 +820,80 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         network_data = network_data_path()
       )
     })
+    
+    
+    # Markdown report------------
+    output$report <- downloadHandler(
+      # For PDF output, change this to "report.pdf"
+      filename ="pathway_report.html",
+      content = function(file) {
+        # Set up parameters to pass to Rmd document
+        params <- list(
+          pre_processed = pre_process$data(),
+          sample_info = pre_process$sample_info(),
+          all_gene_info = pre_process$all_gene_info(),
+          deg = deg,
+          idep_data = idep_data,
+          converted = pre_process$converted(),
+          all_gene_names = pre_process$all_gene_names(),
+          go = input$select_go,
+          select_org = pre_process$select_org(),
+          my_range = c(input$min_set_size, input$max_set_size),
+          select_contrast = input$select_contrast,
+          min_set_size = input$min_set_size,
+          max_set_size = input$max_set_size,
+          limma = deg$limma(),
+          gene_p_val_cutoff = input$gene_p_val_cutoff,
+          gene_sets = gene_sets(),
+          absolute_fold = input$absolute_fold,
+          pathway_p_val_cutoff = input$pathway_p_val_cutoff,
+          n_pathway_show = input$n_pathway_show,
+          contrast_samples = contrast_samples(),
+          sig_pathways = input$sig_pathways,
+          pathway_method = input$pathway_method,
+          pathway_list_data = pathway_list_data(),
+          date = Sys.Date()
+        )
+        
+        req(params)
+        
+        #Show Loading popup
+        shinybusy::show_modal_spinner(
+          spin = "orbit",
+          text = "Generating Report",
+          color = "#000000"
+        )
+        # Copy the report file to a temporary directory before processing it, in
+        # case we don't have write permissions to the current working dir (which
+        # can happen when deployed).
+        tempReport <- file.path(tempdir(), "pathway_workflow.Rmd")
+        #tempReport
+        tempReport<-gsub("\\", "/",tempReport,fixed = TRUE)
+        
+        #This should retrieve the project location on your device:
+        #"C:/Users/bdere/Documents/GitHub/idepGolem"
+        wd <- getwd()
+        
+        markdown_location <-paste0(wd, "/vignettes/Reports/pathway_workflow.Rmd")
+        file.copy(from=markdown_location,to = tempReport, overwrite = TRUE)
+        
+       # browser()
+
+        
+        # Knit the document, passing in the `params` list, and eval it in a
+        # child of the global environment (this isolates the code in the document
+        # from the code in this app).
+        rmarkdown::render(
+          input = tempReport,#markdown_location, 
+          output_file = file,
+          params = params,
+          envir = new.env(parent = globalenv())
+        )
+        shinybusy::remove_modal_spinner()
+        
+      }
+      
+    )
   })
 }
 
