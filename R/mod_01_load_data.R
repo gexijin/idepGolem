@@ -316,7 +316,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       files <- idep_data$demo_file_info
       #only keep files of specified format
       files <- files[files$type == input$data_file_format, ]
-      choices <- setNames(as.list(files$ID), files$name)     
+      choices <- setNames(as.list(files$ID), files$name)
       updateSelectInput(
         session = session,
         inputId = "select_demo",

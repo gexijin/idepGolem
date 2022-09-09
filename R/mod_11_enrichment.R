@@ -275,7 +275,7 @@ mod_11_enrichment_ui <- function(id){
         ),
         tableOutput(ns("gene_info_table")),
         p("Note: In the gene type column, \"C\" indicates 
-        protein-coding genes, and \"pseduo\" means pseduogenes.")
+        protein-coding genes, and \"P\" means pseduogenes.")
       )
     )
 
@@ -457,10 +457,13 @@ mod_11_enrichment_server <- function(
 
         #df$start_position <- round(df$start_position / 1e6, 2)
         # protein_coding --> coding; processed_pseduogene --> pseduogene
-        df$gene_biotype <- gsub(".*_", "", df$gene_biotype)
-        df$gene_biotype <- gsub("pseudogene", "pseudo", df$gene_biotype)
+
+        df$gene_biotype <- gsub(".*pseudogene", "P", df$gene_biotype)
         # coding is not shown
-        df$gene_biotype <- gsub("coding", "C", df$gene_biotype)
+        df$gene_biotype <- gsub("coding|protein_coding", "C", df$gene_biotype)
+        # TR_J_gene  --> TR_J
+        df$gene_biotype <- gsub("_gene", "", df$gene_biotype)
+
         # GL456211.1 ---> ""
         df$chromosome_name[nchar(df$chromosome_name) > 5] <- ""
 
@@ -533,9 +536,9 @@ mod_11_enrichment_server <- function(
       },
       content = function(file) {
         write.csv(
-          cluster_gene_info(), 
+          cluster_gene_info(),
           file,
-          row.names=FALSE
+          row.names = FALSE
         )
       }
     )
