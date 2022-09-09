@@ -545,15 +545,13 @@ PCA_Scree <- function(
         vjust = .5,
         hjust = .5,
         size = 8)
-      ) +
-    ggplot2::geom_label(
-      ggplot2::aes(x = elbow + .1,
+    )),
+   p <- p + geom_label(aes(x = elbow + .1,
                    y = 70,
                    label = 'Elbow',
                    vjust = .5,
                    hjust = .5,
                    size = 8))
-  )
 
   )
   return(p)
@@ -596,3 +594,27 @@ PCAtools_eigencorplot <- function(
     return(p)
   }
   }
+
+
+
+#' Gets plot dimensions from session$clientdata
+#'
+#' @param data Data that has been through pre-processing
+#' @param sample_info Design Matrix
+#' @return Formatted plot generated with PCAtools package
+#' @export
+get_dimensions <- function(
+    client_data,
+    plot_name,
+    tab
+){
+  return(1)
+}
+
+
+
+
+
+
+
+

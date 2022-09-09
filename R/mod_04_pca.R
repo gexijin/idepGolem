@@ -218,7 +218,7 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
             " x ",
             cdata[['output_pca-pca_plot_obj_height']],
             "\nAspect Ratio: ", cdata[['output_pca-pca_plot_obj_width']] / cdata[['output_pca-pca_plot_obj_height']],
-            "\nPlot size (inches): ", "6.5 x ", round(6.5/a_ratio, 3) )
+            "\nPlot size (inches): ", "6.5 x ", round(6.5/a_ratio, 3))
     })
     
     # PCA plot ------------
