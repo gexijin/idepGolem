@@ -3,6 +3,7 @@ title: "Principal Component Analysis Workflow"
 output: html_document
 params:
   pre_processed_data:
+  pre_processed_descr:
   sample_info:
   pc_x:
   pc_y:
@@ -25,7 +26,13 @@ params:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = params$printcode)
+knitr::opts_chunk$set(echo = params$printcode,  warning=FALSE, message=FALSE)
+```
+
+
+```{r include=FALSE}
+# load package
+library(idepGolem)
 ```
 
 <!-- This document cannot be knit directly from R studio -->
@@ -33,6 +40,12 @@ knitr::opts_chunk$set(echo = params$printcode)
 This html document contains what parameters values were selected on the IDEP interface of the "PCA" tab. It also includes the plots generated from those selections.
 
 # ALL SELECTED PARAMETERS
+`r params$pre_processed_descr`
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+params$pre_processed_descr
+```
 
 ```{r, include=TRUE}
 for (i in 1:length(params)){
@@ -42,11 +55,10 @@ for (i in 1:length(params)){
 }
 ```
 
-# Citation
-
-
 
 ## PCA plots
+
+#Principal Component Analysis
 ```{r}
 PCA_plot(
   data = params$pre_processed_data,
@@ -56,16 +68,24 @@ PCA_plot(
   selected_color = params$color,
   selected_shape = params$shape
 )
+pc_factor_correlation(
+  data =  params$pre_processed_data,
+  sample_info = params$sample_info
+)
+```
+
+# T-SNE
+```{r}
 t_SNE_plot(
   data = params$pre_processed_data,
   sample_info = params$sample_info,
   selected_color = params$color,
   selected_shape = params$shape
   )
-pc_factor_correlation(
-  data =  params$pre_processed_data,
-  sample_info = params$sample_info
-)
+```
+
+# Multi-Dimensional Scaling
+```{r}
 MDS_plot(
   data = params$pre_processed_data,
   sample_info = params$sample_info,
@@ -76,6 +96,8 @@ MDS_plot(
 
 
 ## PCA tools
+
+#Biplot
 ```{r}
 PCA_biplot(
   data = params$pre_processed_data,
@@ -93,14 +115,16 @@ PCA_biplot(
   )
 ```
 
+# Scree Plot
 ```{r}
 PCA_Scree(processed_data = params$pre_processed_data)
 ```
 
+# Eigenvalue Correlation
 ```{r}
-PCAtools_eigencorplot(
-  processed_data = params$pre_processed_data,
-  sample_info =  params$sample_info
-      )
+# PCAtools_eigencorplot(
+#   processed_data = params$pre_processed_data,
+#   sample_info =  params$sample_info
+#       )
 ```
 

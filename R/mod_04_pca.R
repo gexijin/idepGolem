@@ -460,12 +460,6 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       # For PDF output, change this to "report.pdf"
       filename ="pca_report.html",
       content = function(file) {
-        #Show Loading popup
-        shinybusy::show_modal_spinner(
-          spin = "orbit",
-          text = "Generating Report",
-          color = "#000000"
-        )
         # Copy the report file to a temporary directory before processing it, in
         # case we don't have write permissions to the current working dir (which
         # can happen when deployed).
@@ -483,6 +477,7 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
         # Set up parameters to pass to Rmd document
         params <- list(
           pre_processed_data = pre_process$data(),
+          pre_processed_descr = pre_process$descr(),
           sample_info = pre_process$sample_info(),
           pc_x = input$PCAx,
           pc_y = input$PCAy,
@@ -500,10 +495,18 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
           ui_shape = input$selectShape
           
         )
+        # stops report generation if params are missing
+        req(params) 
         
         # Knit the document, passing in the `params` list, and eval it in a
         # child of the global environment (this isolates the code in the document
         # from the code in this app).
+        #Show Loading popup
+        shinybusy::show_modal_spinner(
+          spin = "orbit",
+          text = "Generating Report",
+          color = "#000000"
+        )
         rmarkdown::render(
           input = tempReport,#markdown_location, 
           output_file = file,
