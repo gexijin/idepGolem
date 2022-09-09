@@ -11,7 +11,7 @@
 mod_04_pca_ui <- function(id) {
   ns <- NS(id)
   tabPanel(
-    "PCA",
+    title = "PCA",
     sidebarLayout(
       sidebarPanel(
         #width of shaded part of screen

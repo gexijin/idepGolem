@@ -10,7 +10,7 @@
 mod_03_clustering_ui <- function(id) {
   ns <- NS(id)
   tabPanel(
-    "Clustering",
+    title = "Clustering",
     sidebarLayout(
 
       # Heatmap Panel Sidebar ----------

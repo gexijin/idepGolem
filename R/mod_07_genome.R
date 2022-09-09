@@ -10,8 +10,8 @@
 mod_07_genome_ui <- function(id){
   ns <- NS(id)
   tabPanel(
-    "Genome",
-    sidebarLayout(  
+    title = "Genome",
+    sidebarLayout(
       sidebarPanel( 
         htmlOutput(outputId = ns("list_comparisons_genome")),
         tags$style(

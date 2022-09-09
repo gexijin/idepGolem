@@ -10,7 +10,7 @@
 mod_10_doc_ui <- function(id){
   ns <- NS(id)
   tabPanel(
-    "About",
+    title = "About",
     fluidPage(
       h3("Citation:"),
       p("Ge, Son & Yao, iDEP: an integrated web application for differential 

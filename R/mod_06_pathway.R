@@ -10,7 +10,7 @@
 mod_06_pathway_ui <- function(id) {
   ns <- shiny::NS(id)
   tabPanel(
-    "Pathway",
+    title = "Pathway",
     sidebarLayout(
       sidebarPanel(
         htmlOutput(
@@ -348,6 +348,32 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         showTab(inputId = "pathway_tabs", target = "Heatmap")
         showTab(inputId = "pathway_tabs", target = "KEGG")
       }
+    })
+
+    # If data is uploaded, but DEG1 is not run
+    observe({
+      req(!is.null(pre_process$data()) && is.null(deg$limma()) && (
+        tab() == "DEG1" || tab() == "DEG2" ||
+        tab() == "Pathway" || tab() == "Genome"
+      ))
+
+      showNotification(
+        ui = paste("Differentially expressed genes need to 
+        be identified first. Please select factors and comparisons and 
+        click Submit on the DEG1 tab."),
+        id = "click_submit_DEG1",
+        duration = NULL,
+        type = "error"
+      )
+    })
+
+    # Remove messages if the tab changes --------
+    observe({
+      req(input$submit_model_button != 0 || (
+        tab() != "DEG1" && tab() != "DEG2" &&
+        tab() != "Pathway" && tab() != "Genome"
+      ))
+      removeNotification("click_submit_DEG1")
     })
 
     output$list_comparisons_pathway <- renderUI({
