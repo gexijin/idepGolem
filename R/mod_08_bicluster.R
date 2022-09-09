@@ -10,7 +10,7 @@
 mod_08_bicluster_ui <- function(id){
   ns <- NS(id)
   tabPanel(
-    "Bicluster",
+    title = "Bicluster",
     sidebarLayout(
       sidebarPanel(
         h5(
@@ -132,14 +132,16 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
     biclust_data <- reactive({
       req(!is.null(biclustering()) && !is.null(input$select_bicluster))
       req(biclustering()$res@Number != 0)
-
-      return(
-        biclust::bicluster(
-          biclustering()$data,
-          biclustering()$res,
-          as.numeric(input$select_bicluster)
-        )[[1]]
-      )
+      withProgress(message = "Runing biclustering", {
+        incProgress(0.2)
+        return(
+          biclust::bicluster(
+            biclustering()$data,
+            biclustering()$res,
+            as.numeric(input$select_bicluster)
+          )[[1]]
+        )
+      })
     })
 
     heatmap_module <- mod_12_heatmap_server(

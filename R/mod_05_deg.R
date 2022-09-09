@@ -91,7 +91,7 @@ mod_05_deg_1_ui <- function(id) {
             inputId = ns("independent_filtering"),
             label = "Independent filtering of lower counts",
             value = TRUE
-          ),          
+          ),
           ns = ns
        ),
         tags$br(),
@@ -194,14 +194,14 @@ mod_05_deg_2_ui <- function(id) {
     sidebarLayout(
       sidebarPanel(
         htmlOutput(outputId = ns("list_comparisons")),
-        h6("Select a comparison to examine. 
+        h6("Select a comparison to examine the associated DEGs. 
           \"A-B\" means A vs. B (See heatmap).
             Interaction terms start with \"I:\""),
         conditionalPanel(
           condition = "input.step_2 == 'Volcano Plot' | 
             input.step_2 == 'MA Plot'", 
           selectInput(
-            inputId = ns("plot_color_select"), 
+            inputId = ns("plot_color_select"),
             label = "Color scale",
             choices = "Red-Green"
           ),
@@ -847,33 +847,6 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     converted = reactive({ pre_process$converted() }),
     gmt_file = reactive({ pre_process$gmt_file() })
   )
- 
-
-      # Show messages when on the Network tab or button is clicked
-    observe({
-      req(input$submit_model_button == 0 && (
-        tab() == "DEG1" || tab() == "DEG2" ||
-        tab() == "Pathway" || tab() == "Genome"
-      ))
-
-      showNotification(
-        ui = paste("Differentially expressed genes need to 
-        be identified first. Please select factors and comparisons and 
-        click Submit on the DEG1 tab."),
-        id = "click_submit_DEG1",
-        duration = NULL,
-        type = "error"
-      )
-    })
-
-    # Remove messages if the tab changes --------
-    observe({
-      req(input$submit_model_button != 0 || (
-        tab() != "DEG1" && tab() != "DEG2" &&
-        tab() != "Pathway" && tab() != "Genome"
-      ))
-      removeNotification("click_submit_DEG1")
-    })
 
     list(
       limma = reactive(deg$limma),

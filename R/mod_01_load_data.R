@@ -10,7 +10,7 @@
 mod_01_load_data_ui <- function(id) {
   ns <- shiny::NS(id)
   tabPanel(
-    "Load Data",
+    title = "Load Data",
     sidebarLayout(
 
       ##################################################################
@@ -113,7 +113,7 @@ mod_01_load_data_ui <- function(id) {
               choices = " ",
               multiple = FALSE
             )
-          )  
+          )
         ), 
 
         # Expression data file input ----------
@@ -302,6 +302,28 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         selected = idep_data$species_choice[1],
         server = TRUE
       )
+    })
+
+      # Show messages when on the Network tab or button is clicked
+    observe({
+      req(is.null(loaded_data()$data) && (
+        tab() != "Load Data" || tab() != "About"
+      ))
+
+      showNotification(
+        ui = paste("Pleaes load a demo file or your own data first."),
+        id = "load_data_first",
+        duration = NULL,
+        type = "error"
+      )
+    })
+
+    # Remove messages if the tab changes --------
+    observe({
+      req(!is.null(loaded_data()$data) || 
+        tab() == "Load Data" || tab() == "About"
+      )
+      removeNotification("load_data_first")
     })
 
     # Message for the status of the app ---------

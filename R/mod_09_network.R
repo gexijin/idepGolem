@@ -10,7 +10,7 @@
 mod_09_network_ui <- function(id){
   ns <- NS(id)
   tabPanel(
-    "Network",
+    title = "Network",
     sidebarLayout(
       sidebarPanel(
         h5(
@@ -191,11 +191,9 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab){
 			)
 	  })
 
-
-
     wgcna <- reactive({
       req(!is.null(pre_process$data()))
-      withProgress(message = "Runing WCNA ...", {
+      withProgress(message = "Runing WGCNA ...", {
         incProgress(0.2)
         get_wgcna(
           data = pre_process$data(),
