@@ -368,46 +368,38 @@ mod_11_enrichment_server <- function(
     # returns a list object
     pathway_table <- reactive({
       req(!is.null(gene_lists()))
-      shinybusy::show_modal_spinner(
-        spin = "orbit",
-        text = "Running Analysis",
-        color = "#000000"
-      )
+      withProgress(message = "Enrichment Analysis", {
+        pathway_info <- list()
+          # disregard user selection use clusters for enrichment
+        for (i in 1:length(gene_lists())) {
+          incProgress(1 / length(gene_lists()))
+          gene_names_query <- gene_lists()[[i]]
+          req(!is.null(input$select_go))
+          gene_sets <- read_pathway_sets(
+            all_gene_names_query = gene_names_query,
+            converted = converted(), #n
+            go = input$select_go,
+            select_org = select_org(),
+            gmt_file = gmt_file(), #n
+            idep_data = idep_data,
+            gene_info = gene_info()
+          )
 
-      pathway_info <- list()
-
-        # disregard user selection use clusters for enrichment
-      for (i in 1:length(gene_lists())) {
-        gene_names_query <- gene_lists()[[i]]
-        req(!is.null(input$select_go))
-        gene_sets <- read_pathway_sets(
-          all_gene_names_query = gene_names_query,
-          converted = converted(), #n
-          go = input$select_go,
-          select_org = select_org(),
-          gmt_file = gmt_file(), #n
-          idep_data = idep_data,
-          gene_info = gene_info()
-        )
-
-        pathway_info[[names(gene_lists())[i]]] <- find_overlap(
-          pathway_table = gene_sets$pathway_table,
-          query_set = gene_sets$query_set,
-          total_genes = gene_sets$total_genes,
-          processed_data = processed_data(),
-          gene_info = gene_info(),
-          go = input$select_go,
-          idep_data = idep_data,
-          select_org = select_org(),
-          sub_pathway_files = gene_sets$pathway_files,
-          use_filtered_background = input$filtered_background,
-          reduced = input$remove_redudant
-        )
-
-      }
-
-      shinybusy::remove_modal_spinner()
-
+          pathway_info[[names(gene_lists())[i]]] <- find_overlap(
+            pathway_table = gene_sets$pathway_table,
+            query_set = gene_sets$query_set,
+            total_genes = gene_sets$total_genes,
+            processed_data = processed_data(),
+            gene_info = gene_info(),
+            go = input$select_go,
+            idep_data = idep_data,
+            select_org = select_org(),
+            sub_pathway_files = gene_sets$pathway_files,
+            use_filtered_background = input$filtered_background,
+            reduced = input$remove_redudant
+          )
+        }
+      })
       return(pathway_info)
     })
 
