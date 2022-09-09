@@ -274,7 +274,7 @@ mod_06_pathway_ui <- function(id) {
                   width = 3,
                   checkboxInput(
                     inputId = ns("kegg_sig_only"),
-                    label = "Include nonsignficant pathways",
+                    label = "All KEGG pathways",
                     value = FALSE
                   )
                 ),

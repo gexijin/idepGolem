@@ -240,9 +240,10 @@ input_data <- function(
     validate(need(
       length(unique(matches)) == ncol(data) &&
         nrow(expr) >= 1 && nrow(expr) < 500,
-      "Error!!! Sample information file not recognized. Sample names
+      "Error!!! Sample information file not recognized. Column names
        must be exactly the same. Each row is a factor. Each column
-       represent a sample.  Please see documentation on format."
+       represent a sample.  Please see documentation on format. 
+       Please click on the Reset button and try again."
     ))
     
     # Check factor levels, change if needed ----------
