@@ -298,10 +298,10 @@ mod_06_pathway_ui <- function(id) {
               ns = ns
             )
           )
-#         ,tabPanel(
-#            title = "Info",
-#            includeHTML("www/pathway.html")
-#          )
+         , tabPanel(
+            title = "Info",
+            includeHTML("inst/app/www/pathway.html")
+          )
         )
       )
     )

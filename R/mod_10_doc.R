@@ -12,6 +12,29 @@ mod_10_doc_ui <- function(id){
   tabPanel(
     title = "About",
     fluidPage(
+      h3("Letters of support always welcome"),
+      p("iDEP is developed and maintained by a small team. 
+      If you find iDEP helpful, please send us a brief  ",
+        a(
+          "email.",
+          href = "mailto:gelabinfo@gmail.com?Subject=iDEP"
+        ),
+        " These emails will help us secure the next round 
+        of funding to sustain and improve this tool. 
+        Currently, we are supported by a grant from 
+        NIH/NHGRI (R01HG010805)."
+      ),
+      p("Our small team consists 
+      of Xijin Ge (PI), Jianli Qi(research staff), and several 
+      graduate students. 
+      Graduate students who are currently working on iDEP include
+       Emma Spors and Ben Derenge.
+      Past students include Eun Wo Son, Runan Yao,
+      Gavin Doering, Roberto Villegas-Diaz, and Eric Tulowetzke. 
+      Eric still helps us fix bugs after leaving the lab. 
+      Much of the new version of iDEP is rewritten by Gavin Doering. 
+      The iDEP logo was designed by Emma Spors.
+      "),
       h3("Citation:"),
       p("Ge, Son & Yao, iDEP: an integrated web application for differential 
         expression and pathway analysis of RNA-Seq data, ", 

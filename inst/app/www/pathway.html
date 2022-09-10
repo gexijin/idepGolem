@@ -1,9 +1,6 @@
-<p>
-    Pathway analysis
-</p>
-<h1>
+<h3>
     Introduction
-</h1>
+</h3>
 <p>
     Pathway analyses are done using fold-change values of all genes calculated
     by <em>limma</em> or <em>DESeq2</em>. This is different from the enrichment
@@ -19,9 +16,9 @@
     sophisticated analyses like permutation tests. For confirmation, please use
     the stand-alone GSEA.
 </p>
-<h1>
+<h3>
     Methods
-</h1>
+</h3>
 <p>
     Pathway analysis can be performed using several methods. GSEA (Gene Set
     Enrichment Analysis) (Subramanian et al., 2005) is conducted in the
@@ -58,9 +55,9 @@
     like 0.6. If this is done, genes with FDR &gt; 0.6 is removed from pathway
     analysis.
 </p>
-<h1>
+<h3>
     Interpretation
-</h1>
+</h3>
 <p>
     iDEP makes it easy for users to choose different pathway analysis methods
     and databases. The drawback is that it is easy to rationalize any a priori
@@ -72,9 +69,9 @@
     the pathway of interest but often reflect downstream effects of changes in
     the activities of transcription factors.
 </p>
-<h1>
+<h3>
     Pathway Database
-</h1>
+</h3>
 <p>
     Very small genesets can cause problems. By default, genesets with less than
     15 genes are disregarded. Sometimes this needs to be reduced to 10, or even
@@ -86,9 +83,9 @@
     and many other sources. There might be errors in our conversion of these
     diverse databases.
 </p>
-<h1>
+<h3>
     R Code
-</h1>
+</h3>
 <p>
     R code used for GAGE using the gage package:
 </p>
@@ -138,9 +135,9 @@
 <p>
     pAdjustMethod=”BH”, verbose=FALSE)
 </p>
-<h1>
+<h3>
     References
-</h1>
+</h3>
 <p>
     Fabregat, A., Sidiropoulos, K., Garapati, P., Gillespie, M., Hausmann, K.,
     Haw, R., Jassal, B., Jupe, S., Korninger, F., McKay, S., et al. (2016). The
