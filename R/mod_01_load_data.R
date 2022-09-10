@@ -25,9 +25,9 @@ mod_01_load_data_ui <- function(id) {
 
         # Species Match Drop Down ------------
         strong("1. Optional: Select or search for species."),
-        fluidRow( 
+        fluidRow(
           column(
-            width = 9, 
+            width = 9,
             selectInput(
               inputId = ns("select_org"),
               label = NULL,
@@ -37,14 +37,14 @@ mod_01_load_data_ui <- function(id) {
             )
           ),
           column(
-            width = 3, 
+            width = 3,
             # Species list and genome assemblies ----------
             actionButton(
               inputId = ns("genome_assembl_button"),
               label = "Info"
             )
-          )  
-        ), 
+          )
+        ),
 
         # Conditional .GMT file input bar ----------
         conditionalPanel(
@@ -64,20 +64,32 @@ mod_01_load_data_ui <- function(id) {
           ),
           ns = ns
         ),
-        
+
         # Buttons for data file format ----------
-        radioButtons(
-          inputId = ns("data_file_format"),
-          label = "2. Choose data type",
-          choices = list(
-            "Read counts data (recommended)" = 1,
-            "Normalized expression values (RNA-seq FPKM, microarray, etc.)" = 2,
-            "Fold-changes and corrected P values from CuffDiff or any other
-             program" = 3
+        strong("2. Choose data type."),
+        fluidRow(
+          column(
+            width = 9,
+            selectInput(
+              inputId = ns("data_file_format"),
+              label = NULL,
+              choices = list(
+                "Read counts data (recommended)" = 1,
+                "Normalized expression values (RNA-seq FPKM, microarray, etc.)" = 2,
+                "Fold-changes and corrected P values from CuffDiff or any other
+                program" = 3
+              ),
+              selected = 1
+            )
           ),
-          selected = 1
+          column(
+            width = 3,
+            actionButton(
+              inputId = ns("data_format_help"),
+              label = "Info"
+            )
+          )
         ),
-        
         # Conditional panel for fold changes data file ----------
         conditionalPanel(
           condition = "input.data_file_format == 3",
@@ -190,7 +202,7 @@ mod_01_load_data_ui <- function(id) {
         DT::dataTableOutput(ns("sample_20")),
 
         # hide welcome screen after data is loaded
-        conditionalPanel("input.go_button == 0",  
+        conditionalPanel("input.go_button == 0 & input.data_format_help == 0",
           # Instructions and flowchart ------------
           fluidRow(
             column(
@@ -201,10 +213,10 @@ mod_01_load_data_ui <- function(id) {
               width = 6,
               img(
                 src = "www/idep_logo.png",
-                width = "100",
-                height = "100"
+                width = "43",
+                height = "50"
               )
-            )      
+            )
           ),
           div(
             id = ns("load_message"),
@@ -239,13 +251,18 @@ mod_01_load_data_ui <- function(id) {
           ),
           br(),
           img(
-            src='www/figs.gif',
+            src = 'www/figs.gif',
             align = "center",
-            width="640", 
-            height="480"
+            width = "640", 
+            height = "480"
           ),
           ns = ns
-       )
+       ),
+        # show help information for data format
+        conditionalPanel("input.go_button == 0 & input.data_format_help != 0",
+          includeHTML("inst/app/www/format.html"),
+          ns = ns
+        ),
       )
     )
   )
