@@ -17,14 +17,24 @@ mod_01_load_data_ui <- function(id) {
       #       Load Data sidebar panel
       ##################################################################
       sidebarPanel(
-        # Reset Button -----------
-        p(htmltools::HTML(
-          "<div align=\"right\"><A HREF=\"javascript:history.go(0)\"
-           >Reset</A></div>"
-        )),
+        fluidRow(
+          column(
+            width = 9,
+            p("Select a demo file below; load it to see the magic!")
+          ),
+          column(
+            width = 3,
+            # Reset Button -----------
+            p(htmltools::HTML(
+              "<div align=\"right\"><A HREF=\"javascript:history.go(0)\"
+              >Reset</A></div>"
+            )),
+          )
+        ),
+
 
         # Species Match Drop Down ------------
-        strong("1. Optional: Select or search for species."),
+        strong("1. Optional: Select or search for species"),
         fluidRow(
           column(
             width = 9,
@@ -66,7 +76,7 @@ mod_01_load_data_ui <- function(id) {
         ),
 
         # Buttons for data file format ----------
-        strong("2. Choose data type."),
+        strong("2. Choose data type"),
         fluidRow(
           column(
             width = 9,
@@ -108,7 +118,7 @@ mod_01_load_data_ui <- function(id) {
             # Manually namespace the goButton in tag with id in module call
             actionButton(
               inputId = ns("go_button"),
-              label = "Load demo for: "
+              label = "Load demo"
             ),
             tags$head(tags$style(
               "#load_data-go_button{color: red;
@@ -220,25 +230,9 @@ mod_01_load_data_ui <- function(id) {
             h4("Loading R packages, please wait ... ... ...")
           ),
           htmlOutput(ns("file_format")),
-          h4(
-            "All new iDEP 1.0 in testing model."
-          ),
-    
-          h4(
-            "We welcome any suggestions or questions. Please",
-            a(
-              "Email Jenny",
-              href = "mailto:gelabinfo@gmail.com?Subject=iDEP"
-            ),
-            "or report issues on our ",
-            a(
-              "GitHub page.",
-              href = "https://github.com/espors/idepGolem/issues"
-            )
-          ),
-          h5(
-            "iDEP has not been thoroughly tested."
-          ),
+
+          includeHTML("inst/app/www/messages.html"),
+
           br(),
           img(
             src = "www/flowchart.png",
@@ -256,7 +250,7 @@ mod_01_load_data_ui <- function(id) {
           ns = ns
        ),
         # show help information for data format
-        conditionalPanel("input.go_button == 0 & input.data_format_help != 0",
+        conditionalPanel("input.data_format_help != 0",
           includeHTML("inst/app/www/format.html"),
           ns = ns
         ),
@@ -343,7 +337,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # Message for the status of the app ---------
     output$file_format <- renderUI({
       shinyjs::hideElement(id = "load_message")
-      i <- "<h3>Ready to load data files.</h3>"
+      i <- "<h4>Ready to load data files.</h4>"
       htmltools::HTML(paste(i, collapse = "<br/>"))
     })
 
