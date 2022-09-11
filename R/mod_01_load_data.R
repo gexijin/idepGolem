@@ -174,9 +174,6 @@ mod_01_load_data_ui <- function(id) {
         tableOutput(ns("species_match")),
 
         # Action button for Gene ID examples -----------
-        h5(
-          "Check this out for a list of species and their genome assemblies."
-        ),
         a(
           h5("Questions?", align = "right"),
           href = "https://idepsite.wordpress.com/data-format/",
