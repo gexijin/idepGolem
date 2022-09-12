@@ -28,7 +28,7 @@ mod_12_heatmap_ui <- function(id){
         ),
         ottoPlots::mod_download_figure_ui(
           ns("dl_heatmap_main"),
-          label = "Above"
+          label = "Download: Above"
         ),
         ottoPlots::mod_download_figure_ui(
           ns("dl_heatmap_sub"),
@@ -138,7 +138,10 @@ mod_12_heatmap_server <- function(
     output$sub_heatmap <- renderPlot({
       if (is.null(input$ht_brush)) {
         grid::grid.newpage()
-        grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
+        grid::grid.text("Select a region on the heatmap to zoom in.
+        
+        Selection can be adjusted from the sides.
+        It can also be dragged around.", 0.5, 0.5)
       } else {
         withProgress(message = "Zooming in...", {
           incProgress(0.2)

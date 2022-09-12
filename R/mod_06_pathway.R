@@ -369,7 +369,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
 
     # Remove messages if the tab changes --------
     observe({
-      req(input$submit_model_button != 0 || (
+      req( !is.null(deg$limma())  || (
         tab() != "DEG1" && tab() != "DEG2" &&
         tab() != "Pathway" && tab() != "Genome"
       ))

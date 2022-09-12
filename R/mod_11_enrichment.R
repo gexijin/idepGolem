@@ -508,9 +508,6 @@ mod_11_enrichment_server <- function(
         # only change the ones with URL
         df$'Entrezgene id'[ix] <- tem[ix]
       }
-
-
-
       return(df)
     },
     digits = 2,
@@ -540,6 +537,8 @@ mod_11_enrichment_server <- function(
       counts <- table(cluster_gene_info()$Group)
       txt <- paste0(names(counts), ":", counts, collapse = " genes; ")
     })
+
+
     # returns a data frame
     enrichment_dataframe <- reactive({
       req(!is.null(pathway_table()))
@@ -710,10 +709,10 @@ mod_11_enrichment_server <- function(
 
     # ggplot2 object for the enrichment chart;
     # used both for display and download
-    enrich_barplot_object <- reactive({
-
+    enrich_barplot_object <- reactive({  
       if(is.null(enrichment_dataframe())) {
-        return(NULL)
+        grid::grid.newpage()
+        return(grid::grid.text("Not available.", 0.5, 0.5))
       }
       req(input$pathway_order)
       req(input$order_x)

@@ -406,7 +406,12 @@ mod_02_pre_process_ui <- function(id) {
             h5("Normalized data with Ensembl ID mappings and gene symbols."),
             br(),
             DT::dataTableOutput(outputId = ns("examine_data"))
-          )
+          ),
+          tabPanel(
+            title = "Info",
+            includeHTML("inst/app/www/help_preprocess.htm")
+          ),
+
         )
       )
     )

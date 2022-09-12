@@ -66,12 +66,31 @@ mod_07_genome_ui <- function(id){
               label = "Coding genes only",
               value = TRUE
             )
-          )  
+          )
+        ),
+        fluidRow( 
+          column(
+            width = 5,
+            checkboxInput(
+              inputId = ns("hide_patches"),
+              label = "Hide Patch Chr. ",
+              value = TRUE
+            )
+          ),
+          column(
+            width = 7,
+            checkboxInput(
+              inputId = ns("hide_chr"),
+              label = "Hide Chr. w/ 4 or less genes",
+              value = TRUE
+            )
+          )
         ),
         HTML(
           "<hr style='height:1px;border:none;
           color:#333;background-color:#333;' />"
         ),
+        h5("To identify enriched genomic loci:"),
         fluidRow(
           column(
             width = 6,
@@ -99,14 +118,20 @@ mod_07_genome_ui <- function(id){
           choices = c(0.1, 0.05, 0.01, 0.001, 0.0001, 0.00001)
         )
       ),
-      mainPanel(    
+
+
+
+      mainPanel(
         tabsetPanel(
           tabPanel(
-            "Chromosome Plot",
+            "Chromosomes",
             plotly::plotlyOutput(
               outputId = ns("genome_plotly"),
               height = "900px"
-            )
+            ),
+            h4("Select a region to zoom in. Mouse over the points to 
+            see more information on the gene. Enriched regions are 
+            highlighted by blue or red line segments paralell to the chromosomes.")
           ),
           tabPanel(
             "PREDA (5 Mins)",
@@ -228,8 +253,8 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data){
           label = NULL,
           choices = list("All" = "All"),
           selected = "All"
-        )  
-			}	else {
+        ) 
+      }	else {
         selectInput(
           inputId = ns("select_contrast"),
           label = 
@@ -239,7 +264,7 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data){
 	     )
       } 
 	  })
-    
+
     # visualizing fold change on chrs. 
     output$genome_plotly <- plotly::renderPlotly({
       req(!is.null(deg$limma()))
@@ -265,7 +290,9 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data){
           label_gene_symbol = input$label_gene_symbol,
           ma_window_size = input$ma_window_size,
           ma_window_steps = input$ma_window_steps,
-          ch_region_p_val = input$ch_region_p_val
+          ch_region_p_val = input$ch_region_p_val,
+          hide_patches = input$hide_patches,
+          hide_chr = input$hide_chr
         )
       })
     })
