@@ -29,15 +29,15 @@ PCA_plot <- function(data,
                      sample_info,
                      PCAx = 1,
                      PCAy = 2,
-                     selected_color = "Sample_Name",
-                     selected_shape = "Sample_Name") {
+                     selected_color = "Names",
+                     selected_shape = "Names") {
 
   # no design file
   if (is.null(selected_color)) {
-    selected_color <- "Sample_Name"
+    selected_color <- "Names"
   }
   if (is.null(selected_shape)) {
-    selected_shape <- "Sample_Name"
+    selected_shape <- "Names"
   }
   counts <- data
   memo <- ""
@@ -70,7 +70,7 @@ PCA_plot <- function(data,
     pcaData <- cbind(pcaData, detect_groups(colnames(x), y), sample_info)
   }
   # dim(pcaData)[2]
-  colnames(pcaData)[npc + 1] <- "Sample_Name"
+  colnames(pcaData)[npc + 1] <- "Names"
   if (nlevels(groups) <= 1 | nlevels(groups) > 20) {
     group_fill <- NULL
     legend <- "none"
@@ -131,7 +131,7 @@ PCA_plot <- function(data,
       )
     ) +
     ggplot2::labs(
-      title = paste("Principal Component Analysis (PCA) ", memo),
+      title = memo,
       y = "Dimension 2",
       x = "Dimension 1"
     ) +
@@ -165,10 +165,10 @@ t_SNE_plot <- function(data,
 
   # no design file
   if (is.null(selected_color)) {
-    selected_color <- "Sample_Name"
+    selected_color <- "Names"
   }
   if (is.null(selected_shape)) {
-    selected_shape <- "Sample_Name"
+    selected_shape <- "Names"
   }
 
   counts <- data
@@ -199,7 +199,7 @@ t_SNE_plot <- function(data,
     pcaData <- cbind(pcaData, detect_groups(colnames(x), y), sample_info)
   }
 
-  colnames(pcaData)[1:3] <- c("x1", "x2", "Sample_Name")
+  colnames(pcaData)[1:3] <- c("x1", "x2", "Names")
 
   # Set point size based on number of sample
   point_size <- 6
@@ -244,7 +244,7 @@ t_SNE_plot <- function(data,
       )
     ) +
     ggplot2::labs(
-      title = paste("T-SNE ", memo),
+      title = memo,
       y = "Dimension 2",
       x = "Dimension 1"
     )
@@ -272,10 +272,10 @@ MDS_plot <- function(data,
 
   # no design file
   if (is.null(selected_color)) {
-    selected_color <- "Sample_Name"
+    selected_color <- "Names"
   }
   if (is.null(selected_shape)) {
-    selected_shape <- "Sample_Name"
+    selected_shape <- "Names"
   }
 
   counts <- data
@@ -310,7 +310,7 @@ MDS_plot <- function(data,
   } else {
     pcaData <- cbind(pcaData, detect_groups(colnames(x), y), sample_info)
   }
-  colnames(pcaData)[1:3] <- c("x1", "x2", "Sample_Name")
+  colnames(pcaData)[1:3] <- c("x1", "x2", "Names")
 
   # Set point & text size based on number of sample
   point_size <- 6
@@ -357,7 +357,7 @@ MDS_plot <- function(data,
       )
     ) +
     ggplot2::labs(
-      title = paste("Multi-Dimensional Scaling (MDS) ", memo),
+      title = memo,
       y = "Dimension 2",
       x = "Dimension 1"
     )
@@ -407,7 +407,7 @@ pc_factor_correlation <- function(data,
   pvals[pvals > 1] <- 1
   colnames(pvals) <- colnames(y)
   rownames(pvals) <- paste0("PC", 1:npc)
-  a <- "Correlation between Principal Components (PCs) with factors: "
+  a <- ""
   nchar0 <- nchar(a)
   for (i in 1:npc) {
     j <- which.min(pvals[i, ])
@@ -557,7 +557,7 @@ PCAtools_eigencorplot <- function(processed_data,
                                   sample_info) {
   # missing design
   if (is.null(sample_info)) {
-    return("Upload Design file to see EigenCor plot.")
+    return(NULL)
     # meta_data <- as.data.frame(colnames(processed_data))
     # colnames(meta_data)[1] <- "Sample_Name"
   } else {
