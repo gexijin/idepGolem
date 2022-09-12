@@ -207,7 +207,6 @@ mod_04_pca_ui <- function(id) {
 mod_04_pca_server <- function(id, pre_process, idep_data) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
     # Store client info in a convenience variable
     cdata <- session$clientData
     #get pca image dimensions
@@ -218,7 +217,7 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
             " x ",
             cdata[['output_pca-pca_plot_obj_height']],
             "\nAspect Ratio: ", cdata[['output_pca-pca_plot_obj_width']] / cdata[['output_pca-pca_plot_obj_height']],
-            "\nPlot size (inches): ", "6.5 x ", round(6.5/a_ratio, 3) )
+            "\nPlot size (inches): ", "6.5 x ", round(6.5/a_ratio, 3))
     })
     
     # PCA plot ------------
@@ -445,7 +444,6 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
         choices = colnames(pre_process$all_gene_names())
       )
     })
-    
 
     
     # Markdown report------------
@@ -456,6 +454,7 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       content = function(file) {
         withProgress(message = "Generating Report", {
           incProgress(0.2)
+
       
           # Copy the report file to a temporary directory before processing it, in
           # case we don't have write permissions to the current working dir (which
@@ -470,10 +469,10 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
           
           markdown_location <- paste0(wd, "/vignettes/Reports/pca_workflow.Rmd")
           file.copy(from = markdown_location, to = tempReport, overwrite = TRUE)
-          
           # Set up parameters to pass to Rmd document
           params <- list(
             pre_processed_data = pre_process$data(),
+            pre_processed_descr = pre_process$descr(),
             sample_info = pre_process$sample_info(),
             pc_x = input$PCAx,
             pc_y = input$PCAy,
@@ -489,8 +488,11 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
             point_size = input$pointSize,
             ui_color = input$selectColor,
             ui_shape = input$selectShape
+            
           )
-
+          
+          # stops report generation if params are missing
+          req(params) 
           # Knit the document, passing in the `params` list, and eval it in a
           # child of the global environment (this isolates the code in the document
           # from the code in this app).

@@ -9,7 +9,6 @@
 #' @name fct_02_pre_process.R
 NULL
 
-
 #' @title Pre-Process the data
 #'
 #' @description This function takes in user defined values to
@@ -898,12 +897,12 @@ generate_descr <- function(
   #read counts case
   if (data_file_format == 1){
     part_2 <- switch(counts_transform,
-           "1" = paste0("EdgeR using a pseudocount of ", counts_log_start),
-           "2" = "VST: Variance Stabilizing Transformation", 
-           "3" = "Regularized log")
+                     "1" = paste0("EdgeR using a pseudocount of ", counts_log_start),
+                     "2" = "VST: Variance Stabilizing Transformation", 
+                     "3" = "Regularized log")
     descr <- paste0("Read counts data was uploaded to iDEP v2.0 (citation). ",
                     "The data was filtered to include genes with more than ", min_counts, 
-                    " counts in ", n_min_samples_count, " libraries. The data was transformed with ", part_2,
+                    " counts in ", n_min_samples_count, ifelse(n_min_samples_count > 1," libraries", " library"), ". The data was transformed with ", part_2,
                     ".  Missing values were imputed using ", missing_value, ".")
   }
   #normalized expression values
@@ -913,7 +912,7 @@ generate_descr <- function(
     
     descr <- paste0("Normalized expression values were uploaded to iDEP v2.0 (citation). ",
                     "The data was filtered to include genes with above ", low_filter_fpkm, 
-                    " levels in ", n_min_samples_fpkm, ". The data was ", part_2,
+                    " levels in ", n_min_samples_fpkm, ifelse(n_min_samples_fpkm > 1," libraries", " library"), ". The data was ", part_2,
                     ".  Missing values were imputed using ", missing_value, ".")
   }
   #LFC and FDR
@@ -925,7 +924,8 @@ generate_descr <- function(
                     "data was uploaded to iDEP v2.0 (citation).",
                     "Missing values were imputed using ", missing_value, "." )
   }
+  
   return(descr)
   
-
+  
 }

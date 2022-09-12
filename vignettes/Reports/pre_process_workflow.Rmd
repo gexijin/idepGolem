@@ -3,6 +3,7 @@ title: "Pre-Process Workflow"
 output: html_document
 params:
   loaded_data:
+  descr:
   sample_info:
   data_file_format:
   no_id_conversion:
@@ -25,7 +26,7 @@ params:
     value: !r Sys.Date()
   printcode:
     label: "Display Code"
-    value: TRUE
+    value: FALSE
     input: checkbox
 ---
 ```{r setup, include=FALSE}
@@ -36,6 +37,8 @@ knitr::opts_chunk$set(echo = params$printcode)
 
 This html document contains what parameters values were selected on the IDEP interface. It also includes the plots generated from those selections. 
 
+
+<!-- `r params$descr` -->
 
 <!--ALL SELECTED PARAMETERS-->
 ```{r, include=FALSE}
