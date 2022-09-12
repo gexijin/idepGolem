@@ -36,7 +36,7 @@ This html document contains what parameters values were selected on the IDEP int
 
 <!-- # ALL SELECTED PARAMETERS -->
 
-```{r eval=FALSE, include=FALSE}
+```{r echo=FALSE}
 for (i in 1:length(params)){
   # exclude loaded data & sample info
   if(names(params)[i] != "sample_info" && names(params)[i] != "pre_processed_data" && names(params)[i] != "all_gene_names")
@@ -117,9 +117,11 @@ sd_density(
 ```
 
 
-## Tree
+
+`r ifelse(as.character(params$dist_function) == "1","## Tree (Hierarchical)","")`
 ```{r}
-draw_sample_tree(
+if(params$dist_function == 1){
+ draw_sample_tree(
   tree_data = params$pre_processed_data,
   gene_centering = params$gene_centering,
   gene_normalize = params$gene_normalize,
@@ -130,15 +132,17 @@ draw_sample_tree(
   dist_funs = dist_functions(),
   dist_function = params$dist_function
 )
+}
+
 ```
 
 
-# Correlation Matrix (Not included in app)
-```{r}
-cor_plot(
-  data = params$pre_processed_data,
-  label_pcc = TRUE,
-  heat_cols = c("red", "black", "green"),
-  text_col = "white"
-)
-```
+<!-- # Correlation Matrix (Not included in app) -->
+<!-- ```{r} -->
+<!-- cor_plot( -->
+<!--   data = params$pre_processed_data, -->
+<!--   label_pcc = TRUE, -->
+<!--   heat_cols = c("red", "black", "green"), -->
+<!--   text_col = "white" -->
+<!-- ) -->
+<!-- ``` -->

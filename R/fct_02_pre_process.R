@@ -902,7 +902,7 @@ generate_descr <- function(
                      "3" = "Regularized log")
     descr <- paste0("Read counts data was uploaded to iDEP v2.0 (citation). ",
                     "The data was filtered to include genes with more than ", min_counts, 
-                    " counts in ", n_min_samples_count, " libraries. The data was transformed with ", part_2,
+                    " counts in ", n_min_samples_count, ifelse(n_min_samples_count > 1," libraries", " library"), ". The data was transformed with ", part_2,
                     ".  Missing values were imputed using ", missing_value, ".")
   }
   #normalized expression values
@@ -912,7 +912,7 @@ generate_descr <- function(
     
     descr <- paste0("Normalized expression values were uploaded to iDEP v2.0 (citation). ",
                     "The data was filtered to include genes with above ", low_filter_fpkm, 
-                    " levels in ", n_min_samples_fpkm, ". The data was ", part_2,
+                    " levels in ", n_min_samples_fpkm, ifelse(n_min_samples_fpkm > 1," libraries", " library"), ". The data was ", part_2,
                     ".  Missing values were imputed using ", missing_value, ".")
   }
   #LFC and FDR
