@@ -10,7 +10,7 @@
 mod_09_network_ui <- function(id){
   ns <- NS(id)
   tabPanel(
-    "Network",
+    title = "Network",
     sidebarLayout(
       sidebarPanel(
         h5(
@@ -191,22 +191,21 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab){
 			)
 	  })
 
-
-
     wgcna <- reactive({
       req(!is.null(pre_process$data()))
-
-      get_wgcna(
-        data = pre_process$data(),
-        n_genes = input$n_genes_network,
-        soft_power = input$soft_power,
-        min_module_size = input$min_module_size
-      )
+      withProgress(message = "Runing WGCNA ...", {
+        incProgress(0.2)
+        get_wgcna(
+          data = pre_process$data(),
+          n_genes = input$n_genes_network,
+          soft_power = input$soft_power,
+          min_module_size = input$min_module_size
+        )
+      })
 	  })
 
     output$module_plot <- renderPlot({
       req(!is.null(wgcna()))
-
       get_module_plot(wgcna())
 		})
 
@@ -257,20 +256,14 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab){
 
     gene_lists <- reactive({
       req(!is.null(network_query()))
-
-      shinybusy::show_modal_spinner(
-        spin = "orbit",
-        text = "Running Analysis",
-        color = "#000000"
-      )
-      gene_lists <- list()
-      gene_lists[["Cluster"]] <- dplyr::filter(
-        pre_process$all_gene_names(),
-        ensembl_ID %in% network_query()
-      )
-
-      shinybusy::remove_modal_spinner()
-
+      withProgress(message = "Running Analysis", {
+        incProgress(0.2)
+        gene_lists <- list()
+        gene_lists[["Cluster"]] <- dplyr::filter(
+          pre_process$all_gene_names(),
+          ensembl_ID %in% network_query()
+        )
+      })
       return(gene_lists)
     })
 

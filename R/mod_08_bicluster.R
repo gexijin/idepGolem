@@ -10,7 +10,7 @@
 mod_08_bicluster_ui <- function(id){
   ns <- NS(id)
   tabPanel(
-    "Bicluster",
+    title = "Bicluster",
     sidebarLayout(
       sidebarPanel(
         h5(
@@ -132,14 +132,16 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
     biclust_data <- reactive({
       req(!is.null(biclustering()) && !is.null(input$select_bicluster))
       req(biclustering()$res@Number != 0)
-
-      return(
-        biclust::bicluster(
-          biclustering()$data,
-          biclustering()$res,
-          as.numeric(input$select_bicluster)
-        )[[1]]
-      )
+      withProgress(message = "Runing biclustering", {
+        incProgress(0.2)
+        return(
+          biclust::bicluster(
+            biclustering()$data,
+            biclustering()$res,
+            as.numeric(input$select_bicluster)
+          )[[1]]
+        )
+      })
     })
 
     heatmap_module <- mod_12_heatmap_server(
@@ -163,23 +165,18 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab){
     gene_lists <- reactive({
       req(!is.null(biclust_data()))
 
-      shinybusy::show_modal_spinner(
-        spin = "orbit",
-        text = "Running Analysis",
-        color = "#000000"
-      )
-
-      gene_names <- merge_data(
-        all_gene_names = pre_process$all_gene_names(),
-        data = biclust_data(),
-        merge_ID = "ensembl_ID"
-      )
-      gene_lists <- list()
-      # Only keep the gene names and scrap the data
-      gene_lists[["Cluster"]] <- dplyr::select_if(gene_names, is.character)
-
-      shinybusy::remove_modal_spinner()
-
+      withProgress(message = "Generating gene lists", {
+        incProgress(0.1)
+        gene_names <- merge_data(
+          all_gene_names = pre_process$all_gene_names(),
+          data = biclust_data(),
+          merge_ID = "ensembl_ID"
+        )
+        incProgress(0.3)
+        gene_lists <- list()
+        # Only keep the gene names and scrap the data
+        gene_lists[["Cluster"]] <- dplyr::select_if(gene_names, is.character)
+      })
       return(gene_lists)
     })
 

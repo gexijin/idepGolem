@@ -11,7 +11,7 @@
 mod_04_pca_ui <- function(id) {
   ns <- NS(id)
   tabPanel(
-    "PCA",
+    title = "PCA",
     sidebarLayout(
       sidebarPanel(
         #width of shaded part of screen
@@ -305,30 +305,24 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
     #PCAtools biplot  ---------------------
     biplot <- reactive({
       req(!is.null(pre_process$data()))
-      shinybusy::show_modal_spinner(
-        spin = "orbit",
-        text = "Generating Plots",
-        color = "#000000"
-      )
-      
+      withProgress(message = "Generating Plots", {
+        incProgress(0.2)
 
-      
-      p <- PCA_biplot(
-        data = pre_process$data(),
-        sample_info = pre_process$sample_info(),
-        select_gene_id = input$select_gene_id,
-        all_gene_names = pre_process$all_gene_names(),
-        selected_x = input$x_axis_pc,
-        selected_y = input$y_axis_pc,
-        encircle = input$encircle,
-        showLoadings = input$showLoadings,
-        pointlabs = input$pointLabs,
-        point_size = input$pointSize,
-        ui_color = input$selectColor,
-        ui_shape = input$selectShape
-      )
-      shinybusy::remove_modal_spinner()
-      return(p)
+        PCA_biplot(
+          data = pre_process$data(),
+          sample_info = pre_process$sample_info(),
+          select_gene_id = input$select_gene_id,
+          all_gene_names = pre_process$all_gene_names(),
+          selected_x = input$x_axis_pc,
+          selected_y = input$y_axis_pc,
+          encircle = input$encircle,
+          showLoadings = input$showLoadings,
+          pointlabs = input$pointLabs,
+          point_size = input$pointSize,
+          ui_color = input$selectColor,
+          ui_shape = input$selectShape
+        )
+      })
     })
     
     output$pcatools_biplot <- renderPlot({
@@ -456,65 +450,62 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
     output$report <- downloadHandler(
       
       # For PDF output, change this to "report.pdf"
-      filename ="pca_report.html",
+      filename = "pca_report.html",
       content = function(file) {
-        # Copy the report file to a temporary directory before processing it, in
-        # case we don't have write permissions to the current working dir (which
-        # can happen when deployed).
-        tempReport <- file.path(tempdir(), "pca_workflow.Rmd")
-        #tempReport
-        tempReport<-gsub("\\", "/",tempReport,fixed = TRUE)
-        
-        #This should retrieve the project location on your device:
-        #"C:/Users/bdere/Documents/GitHub/idepGolem"
-        wd <- getwd()
-        
-        markdown_location <-paste0(wd, "/vignettes/Reports/pca_workflow.Rmd")
-        file.copy(from=markdown_location,to = tempReport, overwrite = TRUE)
-        
-        # Set up parameters to pass to Rmd document
-        params <- list(
-          pre_processed_data = pre_process$data(),
-          pre_processed_descr = pre_process$descr(),
-          sample_info = pre_process$sample_info(),
-          pc_x = input$PCAx,
-          pc_y = input$PCAy,
-          color = input$selectFactors1,
-          shape = input$selectFactors2,
-          all_gene_names = pre_process$all_gene_names(),
-          select_gene_id = input$select_gene_id,
-          selected_x = input$x_axis_pc,
-          selected_y = input$y_axis_pc,
-          encircle = input$encircle,
-          showLoadings = input$showLoadings,
-          pointlabs = input$pointLabs,
-          point_size = input$pointSize,
-          ui_color = input$selectColor,
-          ui_shape = input$selectShape
-          
-        )
-        # stops report generation if params are missing
-        req(params) 
-        
-        # Knit the document, passing in the `params` list, and eval it in a
-        # child of the global environment (this isolates the code in the document
-        # from the code in this app).
-        #Show Loading popup
-        shinybusy::show_modal_spinner(
-          spin = "orbit",
-          text = "Generating Report",
-          color = "#000000"
-        )
-        rmarkdown::render(
-          input = tempReport,#markdown_location, 
-          output_file = file,
-          params = params,
-          envir = new.env(parent = globalenv())
-        )
-        shinybusy::remove_modal_spinner()
-        
-      }
+        withProgress(message = "Generating Report", {
+          incProgress(0.2)
+
       
+          # Copy the report file to a temporary directory before processing it, in
+          # case we don't have write permissions to the current working dir (which
+          # can happen when deployed).
+          tempReport <- file.path(tempdir(), "pca_workflow.Rmd")
+          #tempReport
+          tempReport <- gsub("\\", "/", tempReport, fixed = TRUE)
+          
+          #This should retrieve the project location on your device:
+          #"C:/Users/bdere/Documents/GitHub/idepGolem"
+          wd <- getwd()
+          
+          markdown_location <- paste0(wd, "/vignettes/Reports/pca_workflow.Rmd")
+          file.copy(from = markdown_location, to = tempReport, overwrite = TRUE)
+          # Set up parameters to pass to Rmd document
+          params <- list(
+            pre_processed_data = pre_process$data(),
+            pre_processed_descr = pre_process$descr(),
+            sample_info = pre_process$sample_info(),
+            pc_x = input$PCAx,
+            pc_y = input$PCAy,
+            color = input$selectFactors1,
+            shape = input$selectFactors2,
+            all_gene_names = pre_process$all_gene_names(),
+            select_gene_id = input$select_gene_id,
+            selected_x = input$x_axis_pc,
+            selected_y = input$y_axis_pc,
+            encircle = input$encircle,
+            showLoadings = input$showLoadings,
+            pointlabs = input$pointLabs,
+            point_size = input$pointSize,
+            ui_color = input$selectColor,
+            ui_shape = input$selectShape
+            
+          )
+          
+          # stops report generation if params are missing
+          req(params) 
+          # Knit the document, passing in the `params` list, and eval it in a
+          # child of the global environment (this isolates the code in the document
+          # from the code in this app).
+          rmarkdown::render(
+            input = tempReport,#markdown_location, 
+            output_file = file,
+            params = params,
+            envir = new.env(parent = globalenv())
+          )
+        })
+
+      }
+
     )
     
     

@@ -10,8 +10,8 @@
 mod_07_genome_ui <- function(id){
   ns <- NS(id)
   tabPanel(
-    "Genome",
-    sidebarLayout(  
+    title = "Genome",
+    sidebarLayout(
       sidebarPanel( 
         htmlOutput(outputId = ns("list_comparisons_genome")),
         tags$style(
@@ -243,36 +243,44 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data){
     # visualizing fold change on chrs. 
     output$genome_plotly <- plotly::renderPlotly({
       req(!is.null(deg$limma()))
-
-      chromosome_plotly(
-        limma = deg$limma(),
-        select_contrast = input$select_contrast,
-        all_gene_info = pre_process$all_gene_info(),
-        ignore_non_coding = input$ignore_non_coding,
-        limma_p_val_viz = input$limma_p_val_viz,
-        limma_fc_viz = input$limma_fc_viz,
-        label_gene_symbol = input$label_gene_symbol,
-        ma_window_size = input$ma_window_size,
-        ma_window_steps = input$ma_window_steps,
-        ch_region_p_val = input$ch_region_p_val
+      req(!is.null(pre_process$all_gene_info()))
+      req(
+        input$select_contrast,
+        input$ignore_non_coding,
+        input$limma_p_val_viz,
+        input$limma_fc_viz,
+        input$ma_window_size,
+        input$ma_window_steps,
+        input$ch_region_p_val
       )
+      withProgress(message = "Generating plot", {
+        incProgress(0.2)
+        chromosome_plotly(
+          limma = deg$limma(),
+          select_contrast = input$select_contrast,
+          all_gene_info = pre_process$all_gene_info(),
+          ignore_non_coding = input$ignore_non_coding,
+          limma_p_val_viz = input$limma_p_val_viz,
+          limma_fc_viz = input$limma_fc_viz,
+          label_gene_symbol = input$label_gene_symbol,
+          ma_window_size = input$ma_window_size,
+          ma_window_steps = input$ma_window_steps,
+          ch_region_p_val = input$ch_region_p_val
+        )
+      })
     })
 
     # Pre-calculating PREDA, so that changing FDR cutoffs does not trigger entire calculation
     genome_plot_data_pre <- reactive({
       req(!is.null(deg$limma()))
-      shinybusy::show_modal_spinner(
-        spin = "orbit",
-        text = "Running PREDA. This may take up to 5 minutes...",
-        color = "#000000"
-      )
-      res <- get_genome_plot_data_pre(
-        select_contrast = input$select_contrast,
-        limma = deg$limma(),
-        all_gene_info = pre_process$all_gene_info()
-      )
-      shinybusy::remove_modal_spinner()
-      return(res)
+      withProgress(message = "PREDA may take 5 minutes...", {
+        incProgress(0.2)
+        get_genome_plot_data_pre(
+          select_contrast = input$select_contrast,
+          limma = deg$limma(),
+          all_gene_info = pre_process$all_gene_info()
+        )
+      })
     })
 
     # Results from PREDA

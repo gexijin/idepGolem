@@ -10,24 +10,34 @@
 mod_01_load_data_ui <- function(id) {
   ns <- shiny::NS(id)
   tabPanel(
-    "Load Data",
+    title = "Load Data",
     sidebarLayout(
 
       ##################################################################
       #       Load Data sidebar panel
       ##################################################################
       sidebarPanel(
-        # Reset Button -----------
-        p(htmltools::HTML(
-          "<div align=\"right\"><A HREF=\"javascript:history.go(0)\"
-           >Reset</A></div>"
-        )),
+        fluidRow(
+          column(
+            width = 9,
+            p("Select a demo file below; load it to see the magic!")
+          ),
+          column(
+            width = 3,
+            # Reset Button -----------
+            p(htmltools::HTML(
+              "<div align=\"right\"><A HREF=\"javascript:history.go(0)\"
+              >Reset</A></div>"
+            )),
+          )
+        ),
+
 
         # Species Match Drop Down ------------
-        strong("1. Optional: Select or search for species."),
-        fluidRow( 
+        strong("1. Optional: Select or search for species"),
+        fluidRow(
           column(
-            width = 9, 
+            width = 9,
             selectInput(
               inputId = ns("select_org"),
               label = NULL,
@@ -37,14 +47,14 @@ mod_01_load_data_ui <- function(id) {
             )
           ),
           column(
-            width = 3, 
+            width = 3,
             # Species list and genome assemblies ----------
             actionButton(
               inputId = ns("genome_assembl_button"),
               label = "Info"
             )
-          )  
-        ), 
+          )
+        ),
 
         # Conditional .GMT file input bar ----------
         conditionalPanel(
@@ -64,20 +74,32 @@ mod_01_load_data_ui <- function(id) {
           ),
           ns = ns
         ),
-        
+
         # Buttons for data file format ----------
-        radioButtons(
-          inputId = ns("data_file_format"),
-          label = "2. Choose data type",
-          choices = list(
-            "Read counts data (recommended)" = 1,
-            "Normalized expression values (RNA-seq FPKM, microarray, etc.)" = 2,
-            "Fold-changes and corrected P values from CuffDiff or any other
-             program" = 3
+        strong("2. Choose data type"),
+        fluidRow(
+          column(
+            width = 9,
+            selectInput(
+              inputId = ns("data_file_format"),
+              label = NULL,
+              choices = list(
+                "Read counts data (recommended)" = 1,
+                "Normalized expression values (RNA-seq FPKM, microarray, etc.)" = 2,
+                "Fold-changes and corrected P values from CuffDiff or any other
+                program" = 3
+              ),
+              selected = 1
+            )
           ),
-          selected = 1
+          column(
+            width = 3,
+            actionButton(
+              inputId = ns("data_format_help"),
+              label = "Info"
+            )
+          )
         ),
-        
         # Conditional panel for fold changes data file ----------
         conditionalPanel(
           condition = "input.data_file_format == 3",
@@ -96,7 +118,7 @@ mod_01_load_data_ui <- function(id) {
             # Manually namespace the goButton in tag with id in module call
             actionButton(
               inputId = ns("go_button"),
-              label = "Load demo for: "
+              label = "Load demo"
             ),
             tags$head(tags$style(
               "#load_data-go_button{color: red;
@@ -113,7 +135,7 @@ mod_01_load_data_ui <- function(id) {
               choices = " ",
               multiple = FALSE
             )
-          )  
+          )
         ), 
 
         # Expression data file input ----------
@@ -162,9 +184,6 @@ mod_01_load_data_ui <- function(id) {
         tableOutput(ns("species_match")),
 
         # Action button for Gene ID examples -----------
-        h5(
-          "Check this out for a list of species and their genome assemblies."
-        ),
         a(
           h5("Questions?", align = "right"),
           href = "https://idepsite.wordpress.com/data-format/",
@@ -190,7 +209,7 @@ mod_01_load_data_ui <- function(id) {
         DT::dataTableOutput(ns("sample_20")),
 
         # hide welcome screen after data is loaded
-        conditionalPanel("input.go_button == 0",  
+        conditionalPanel("input.go_button == 0 & input.data_format_help == 0",
           # Instructions and flowchart ------------
           fluidRow(
             column(
@@ -201,35 +220,19 @@ mod_01_load_data_ui <- function(id) {
               width = 6,
               img(
                 src = "www/idep_logo.png",
-                width = "100",
-                height = "100"
+                width = "43",
+                height = "50"
               )
-            )      
+            )
           ),
           div(
             id = ns("load_message"),
             h4("Loading R packages, please wait ... ... ...")
           ),
           htmlOutput(ns("file_format")),
-          h4(
-            "All new iDEP 1.0 in testing model."
-          ),
-    
-          h4(
-            "We welcome any suggestions or questions. Please",
-            a(
-              "Email Jenny",
-              href = "mailto:gelabinfo@gmail.com?Subject=iDEP"
-            ),
-            "or report issues on our ",
-            a(
-              "GitHub page.",
-              href = "https://github.com/espors/idepGolem/issues"
-            )
-          ),
-          h5(
-            "iDEP has not been thoroughly tested."
-          ),
+
+          includeHTML("inst/app/www/messages.html"),
+
           br(),
           img(
             src = "www/flowchart.png",
@@ -239,13 +242,18 @@ mod_01_load_data_ui <- function(id) {
           ),
           br(),
           img(
-            src='www/figs.gif',
+            src = 'www/figs.gif',
             align = "center",
-            width="640", 
-            height="480"
+            width = "640", 
+            height = "480"
           ),
           ns = ns
-       )
+       ),
+        # show help information for data format
+        conditionalPanel("input.data_format_help != 0",
+          includeHTML("inst/app/www/format.html"),
+          ns = ns
+        ),
       )
     )
   )
@@ -304,10 +312,32 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       )
     })
 
+      # Show messages when on the Network tab or button is clicked
+    observe({
+      req(is.null(loaded_data()$data) && (
+        tab() != "Load Data" || tab() != "About"
+      ))
+
+      showNotification(
+        ui = paste("Pleaes load a demo file or your own data first."),
+        id = "load_data_first",
+        duration = NULL,
+        type = "error"
+      )
+    })
+
+    # Remove messages if the tab changes --------
+    observe({
+      req(!is.null(loaded_data()$data) || 
+        tab() == "Load Data" || tab() == "About"
+      )
+      removeNotification("load_data_first")
+    })
+
     # Message for the status of the app ---------
     output$file_format <- renderUI({
       shinyjs::hideElement(id = "load_message")
-      i <- "<h3>Ready to load data files.</h3>"
+      i <- "<h4>Ready to load data files.</h4>"
       htmltools::HTML(paste(i, collapse = "<br/>"))
     })
 

@@ -2550,21 +2550,21 @@ plot_ma <- function(
   processed_data, 
   plot_colors
 ) {
-  if(grepl("I:", select_contrast)) {
-    return(NULL)
-  }
+
   if(length(comparisons) == 1) {
     top_1 <- top_genes[[1]]  
   } else {
     top <- top_genes
     ix <- match(select_contrast, names(top))
     if(is.na(ix)) {
-      return(NULL)
+      grid::grid.newpage()
+      return(grid::grid.text("Not available.", 0.5, 0.5))
     }
     top_1 <- top[[ix]] 
   }
   if(dim(top_1)[1] == 0) {
-    return(NULL)
+      grid::grid.newpage()
+      return(grid::grid.text("Not available.", 0.5, 0.5))
   }
   colnames(top_1) <- c("Fold", "FDR")
   # Convert to data frame
@@ -2663,7 +2663,10 @@ plot_deg_scatter <- function(
   sample_info
 ) {
   if(grepl("I:", select_contrast)) {
-    return(NULL)
+    grid::grid.newpage()
+    return(
+      grid::grid.text("Not available for interaction terms.", 0.5, 0.5)
+    )
   }
 
   if(length(comparisons)  == 1) {
@@ -2672,13 +2675,15 @@ plot_deg_scatter <- function(
     top <- top_genes
     ix <- match(select_contrast, names(top))
     if(is.na(ix)) {
-      return(NULL)
+      grid::grid.newpage()
+      return(grid::grid.text("Not available.", 0.5, 0.5))
     }
     top_1 <- top[[ix]] 
   }
     
   if(dim(top_1)[1] == 0) {
-    return(NULL)
+      grid::grid.newpage()
+      return(grid::grid.text("Not available.", 0.5, 0.5))
   }
   colnames(top_1) <- c("Fold", "FDR")
   # Convert to data frame

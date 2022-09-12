@@ -10,7 +10,7 @@
 mod_02_pre_process_ui <- function(id) {
   ns <- NS(id)
   tabPanel(
-    "Pre-Process",
+    title = "Pre-Process",
     sidebarLayout(
 
       # Pre-Process Panel Sidebar ----------
@@ -81,7 +81,7 @@ mod_02_pre_process_ui <- function(id) {
                   label = NULL,
                   value = 4
                 )
-              ) 
+              )
             ),
             ns = ns
           ),
@@ -164,7 +164,7 @@ mod_02_pre_process_ui <- function(id) {
               selected = "geneMedian"
             )
           )
-        ), 
+        ),
         fluidRow(
           column(
             width = 6,
@@ -175,7 +175,7 @@ mod_02_pre_process_ui <- function(id) {
           ),
           column(
             width = 6,
-        # Conditional panel for read count data ------------
+            # Conditional panel for read count data ------------
             conditionalPanel(
               condition = "output.data_file_format == 1",
 
@@ -187,7 +187,7 @@ mod_02_pre_process_ui <- function(id) {
               ns = ns
             )
           )
-        ), 
+        ),
         br(),
         # Show transform messages
         actionButton(
@@ -198,7 +198,7 @@ mod_02_pre_process_ui <- function(id) {
           outputId = ns("rds"),
           label = ".RData File"
         ),
-       downloadButton(
+        downloadButton(
           outputId = ns("report"),
           label = "Report"
         ),
@@ -208,10 +208,10 @@ mod_02_pre_process_ui <- function(id) {
           target = "_blank"
         ),
       ),
-      
+
 
       # Pre-Process Panel Main -----------
-      mainPanel(       
+      mainPanel(
         tabsetPanel(
           id = ns("eda_tabs"),
 
@@ -223,13 +223,13 @@ mod_02_pre_process_ui <- function(id) {
               outputId = ns("total_counts_gg"),
               width = "100%",
               height = "500px"
-            ), 
+            ),
             ottoPlots::mod_download_figure_ui(
-              id = ns("dl_total_counts"), 
+              id = ns("dl_total_counts"),
               label = "Download barplot"
             ),
             h5(
-             "Figure width can be adjusted by changing
+              "Figure width can be adjusted by changing
              the width of browser window."
             )
           ),
@@ -237,7 +237,7 @@ mod_02_pre_process_ui <- function(id) {
           # Scatterplot with interactive axes ----------
           tabPanel(
             title = "Scatterplot",
-          # Axis selectors -----------
+            # Axis selectors -----------
             br(),
             fluidRow(
               column(
@@ -264,13 +264,13 @@ mod_02_pre_process_ui <- function(id) {
               outputId = ns("eda_scatter"),
               width = "100%",
               height = "500px"
-            ), 
+            ),
             ottoPlots::mod_download_figure_ui(
-              id = ns("dl_eda_scatter"), 
+              id = ns("dl_eda_scatter"),
               label = "Download scatterplot"
             ),
             h5(
-             "Figure width can be adjusted by changing
+              "Figure width can be adjusted by changing
              the width of browser window."
             )
           ),
@@ -283,7 +283,7 @@ mod_02_pre_process_ui <- function(id) {
               outputId = ns("eda_boxplot"),
               width = "100%",
               height = "500px"
-            ), 
+            ),
             ottoPlots::mod_download_figure_ui(
               id = ns("dl_eda_boxplot"),
               label = "Download boxplot"
@@ -300,11 +300,11 @@ mod_02_pre_process_ui <- function(id) {
               height = "500px"
             ),
             ottoPlots::mod_download_figure_ui(
-              id = ns("dl_eda_density"), 
+              id = ns("dl_eda_density"),
               label = "Download density plot"
             ),
             h5(
-             "Figure width can be adjusted by changing
+              "Figure width can be adjusted by changing
              the width of browser window."
             )
           ),
@@ -334,13 +334,13 @@ mod_02_pre_process_ui <- function(id) {
               outputId = ns("dev_transfrom"),
               width = "100%",
               height = "500px"
-            ), 
+            ),
             ottoPlots::mod_download_figure_ui(
-              id = ns("dl_dev_transform"), 
+              id = ns("dl_dev_transform"),
               label = "Download transformed plot"
             ),
             h5(
-             "Figure width can be adjusted by changing
+              "Figure width can be adjusted by changing
              the width of browser window."
             )
           ),
@@ -351,7 +351,7 @@ mod_02_pre_process_ui <- function(id) {
             br(),
             fluidRow(
               column(
-                4, 
+                4,
                 # Gene ID Selection -----------
                 selectizeInput(
                   inputId = ns("selected_gene"),
@@ -390,13 +390,13 @@ mod_02_pre_process_ui <- function(id) {
               outputId = ns("gene_plot"),
               width = "100%",
               height = "500px"
-            ), 
+            ),
             ottoPlots::mod_download_figure_ui(
-              id = ns("dl_gene_plot"), 
+              id = ns("dl_gene_plot"),
               label = "Download gene plot"
             ),
             h5(
-             "Figure width can be adjusted by changing
+              "Figure width can be adjusted by changing
              the width of browser window."
             )
           ),
@@ -410,7 +410,7 @@ mod_02_pre_process_ui <- function(id) {
         )
       )
     )
-    )
+  )
 }
 
 #' 01_pre_process Server Functions
@@ -437,7 +437,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         inputId = "scatter_x",
         choices = colnames(processed_data()$data),
         selected = colnames(processed_data()$data)[1]
-      #load_data$converted_data())[1]
+        # load_data$converted_data())[1]
       )
       updateSelectInput(
         session,
@@ -489,14 +489,14 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         no_fdr = load_data$no_fdr()
       )
       shinybusy::remove_modal_spinner()
-      
+
       return(processed_data)
     })
 
     # Counts barplot ------------
     total_counts <- reactive({
       req(!is.null(processed_data()$data))
-      
+
       total_counts_ggplot(
         counts_data = processed_data()$raw_counts,
         sample_info = load_data$sample_info()
@@ -506,15 +506,17 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       print(total_counts())
     })
     dl_total_counts <- ottoPlots::mod_download_figure_server(
-      id = "dl_total_counts", 
-      filename = "total_counts_barplot", 
-      figure = reactive({ total_counts() })
+      id = "dl_total_counts",
+      filename = "total_counts_barplot",
+      figure = reactive({
+        total_counts()
+      })
     )
 
     # Scatter eda plot ----------
     scatter <- reactive({
       req(!is.null(processed_data()$data))
-      
+
       eda_scatter(
         processed_data = processed_data()$data,
         plot_xaxis = input$scatter_x,
@@ -525,15 +527,17 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       print(scatter())
     })
     dl_eda_scatter <- ottoPlots::mod_download_figure_server(
-      id = "dl_eda_scatter", 
-      filename = "scatter_plot", 
-      figure = reactive({ scatter() })
+      id = "dl_eda_scatter",
+      filename = "scatter_plot",
+      figure = reactive({
+        scatter()
+      })
     )
 
     # Box eda plot ----------
     eda_box <- reactive({
       req(!is.null(processed_data()$data))
-      
+
       eda_boxplot(
         processed_data = processed_data()$data,
         sample_info = load_data$sample_info()
@@ -543,15 +547,17 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       print(eda_box())
     })
     dl_eda_boxplot <- ottoPlots::mod_download_figure_server(
-      id = "dl_eda_boxplot", 
-      filename = "transformed_boxplot", 
-      figure = reactive({ eda_box() })
+      id = "dl_eda_boxplot",
+      filename = "transformed_boxplot",
+      figure = reactive({
+        eda_box()
+      })
     )
 
     # Density eda plot ----------
     density <- reactive({
       req(!is.null(processed_data()$data))
-      
+
       eda_density(
         processed_data = processed_data()$data,
         sample_info = load_data$sample_info()
@@ -561,9 +567,11 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       print(density())
     })
     dl_eda_density <- ottoPlots::mod_download_figure_server(
-      id = "dl_eda_density", 
-      filename = "density_plot", 
-      figure = reactive({ density() })
+      id = "dl_eda_density",
+      filename = "density_plot",
+      figure = reactive({
+        density()
+      })
     )
 
     # Standard deviation vs mean plot ----------
@@ -589,11 +597,11 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         choices = heat_choices
       )
     })
-    
+
     # Mean vs SD plot --------
     dev <- reactive({
       req(!is.null(processed_data()$data))
-      
+
       mean_sd_plot(
         processed_data = processed_data()$data,
         heat_cols = heat_colors[[input$heat_color_select]],
@@ -604,9 +612,11 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       print(dev())
     })
     dl_dev_transform <- ottoPlots::mod_download_figure_server(
-      id = "dl_dev_transform", 
-      filename = "transform_plot", 
-      figure = reactive({ dev() })
+      id = "dl_dev_transform",
+      filename = "transform_plot",
+      figure = reactive({
+        dev()
+      })
     )
 
     # Merge Data Sets with Gene names ----------
@@ -677,7 +687,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         apply( # gene SD
           individual_data(),
           MARGIN = 1,
-          FUN = sd #function(x) max(x) - min(x)
+          FUN = sd # function(x) max(x) - min(x)
         ),
         decreasing = TRUE
       )
@@ -706,7 +716,6 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
 
     # Individual gene plot ---------
     gene_plot <- reactive({
-      
       req(individual_data())
       req(input$selected_gene)
       req(!is.null(input$gene_plot_box))
@@ -722,16 +731,18 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         lab_rotate = input$angle_ind_axis_lab
       )
     })
-    
+
     output$gene_plot <- renderPlot({
       req(gene_plot())
       print(gene_plot())
     })
-    
+
     dl_gene_plot <- ottoPlots::mod_download_figure_server(
-      id = "dl_gene_plot", 
-      filename = "gene_plot", 
-      figure = reactive({ gene_plot() })
+      id = "dl_gene_plot",
+      filename = "gene_plot",
+      figure = reactive({
+        gene_plot()
+      })
     )
 
 
@@ -755,75 +766,64 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
 
     # Markdown report
     output$report <- downloadHandler(
-      
       # For PDF output, change this to "report.pdf"
-      filename ="pre_process_report.html",
+      filename = "pre_process_report.html",
       content = function(file) {
-        #Show Loading popup
-        shinybusy::show_modal_spinner(
-          spin = "orbit",
-          text = "Generating Report",
-          color = "#000000"
-        )
-        # Copy the report file to a temporary directory before processing it, in
-        # case we don't have write permissions to the current working dir (which
-        # can happen when deployed).
-        tempReport <- file.path(tempdir(), "pre_process_workflow.Rmd")
-        #tempReport
-        tempReport<-gsub("\\", "/",tempReport,fixed = TRUE)
+        withProgress(message = "Generating Report", {
+          incProgress(0.2)
+          # Copy the report file to a temporary directory before processing it, in
+          # case we don't have write permissions to the current working dir (which
+          # can happen when deployed).
+          tempReport <- file.path(tempdir(), "pre_process_workflow.Rmd")
+          # tempReport
+          tempReport <- gsub("\\", "/", tempReport, fixed = TRUE)
 
-        #This should retrieve the project location on your device:
-        #"C:/Users/bdere/Documents/GitHub/idepGolem"
-        wd <- getwd()
+          # This should retrieve the project location on your device:
+          # "C:/Users/bdere/Documents/GitHub/idepGolem"
+          wd <- getwd()
 
-        markdown_location <-paste0(wd, "/vignettes/Reports/pre_process_workflow.Rmd")
-        file.copy(from=markdown_location,to = tempReport, overwrite = TRUE)
+          markdown_location <- paste0(wd, "/vignettes/Reports/pre_process_workflow.Rmd")
+          file.copy(from = markdown_location, to = tempReport, overwrite = TRUE)
 
-        # Set up parameters to pass to Rmd document
-        params <- list(
-          loaded_data = load_data$converted_data(),
-          descr = processed_data()$descr,
-          sample_info = load_data$sample_info(),
-          data_file_format = load_data$data_file_format(),
-          no_id_conversion = input$no_id_conversion,
-          min_counts = input$min_counts,
-          n_min_samples_count = input$n_min_samples_count,
-          counts_transform = input$counts_transform,
-          counts_log_start = input$counts_log_start,
-          log_transform_fpkm = input$log_transform_fpkm,
-          log_start_fpkm = input$log_start_fpkm,
-          low_filter_fpkm = input$low_filter_fpkm,
-          missing_value = input$missing_value,
-          scatter_x = input$scatter_x,
-          scatter_y = input$scatter_y,
-          sd_color = heat_colors[[input$heat_color_select]],
-          rank = input$rank,
-          no_fdr = load_data$no_fdr()
-
-        )
-        req(params)
-        # Knit the document, passing in the `params` list, and eval it in a
-        # child of the global environment (this isolates the code in the document
-        # from the code in this app).
-        rmarkdown::render(
-          input = tempReport,#markdown_location, 
-          output_file = file,
-          params = params,
-          envir = new.env(parent = globalenv())
-        )
-        shinybusy::remove_modal_spinner()
-        
+          # Set up parameters to pass to Rmd document
+          params <- list(
+            loaded_data = load_data$converted_data(),
+            descr = processed_data()$descr,
+            sample_info = load_data$sample_info(),
+            data_file_format = load_data$data_file_format(),
+            no_id_conversion = input$no_id_conversion,
+            min_counts = input$min_counts,
+            n_min_samples_count = input$n_min_samples_count,
+            counts_transform = input$counts_transform,
+            counts_log_start = input$counts_log_start,
+            log_transform_fpkm = input$log_transform_fpkm,
+            log_start_fpkm = input$log_start_fpkm,
+            low_filter_fpkm = input$low_filter_fpkm,
+            missing_value = input$missing_value,
+            scatter_x = input$scatter_x,
+            scatter_y = input$scatter_y,
+            sd_color = heat_colors[[input$heat_color_select]],
+            rank = input$rank,
+            no_fdr = load_data$no_fdr()
+          )
+          req(params)
+          # Knit the document, passing in the `params` list, and eval it in a
+          # child of the global environment (this isolates the code in the document
+          # from the code in this app).
+          rmarkdown::render(
+            input = tempReport, # markdown_location,
+            output_file = file,
+            params = params,
+            envir = new.env(parent = globalenv())
+          )
+        })
       }
-      
     )
-    
     # RDS with data and inputs
     output$rds <- downloadHandler(
-      filename = paste0("idep_session_",format(Sys.time(),'%Y_%m_%d'),".Rdata"),
-      content = function(file){
-        if(load_data$data_file_format() == 1)
-        {
-
+      filename = paste0("idep_session_", format(Sys.time(), "%Y_%m_%d"), ".Rdata"),
+      content = function(file) {
+        if (load_data$data_file_format() == 1) {
           loaded_data <- load_data$converted_data()
           sample_info <- load_data$sample_info()
           data_file_format <- load_data$data_file_format()
@@ -838,22 +838,23 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
           sd_color <- heat_colors[[input$heat_color_select]]
           rank <- input$rank
 
-          save(loaded_data, 
-               sample_info,
-               data_file_format,
-               no_id_conversion,
-               min_counts,
-               n_min_samples_count,
-               counts_transform,
-               counts_log_start,
-               missing_value,
-               scatter_x,
-               scatter_y,
-               sd_color,
-               rank,
-               file = file)
+          save(loaded_data,
+            sample_info,
+            data_file_format,
+            no_id_conversion,
+            min_counts,
+            n_min_samples_count,
+            counts_transform,
+            counts_log_start,
+            missing_value,
+            scatter_x,
+            scatter_y,
+            sd_color,
+            rank,
+            file = file
+          )
         }
-        if(load_data$data_file_format() == 2){
+        if (load_data$data_file_format() == 2) {
           params_r <- list(
             loaded_data = load_data$converted_data(),
             sample_info = load_data$sample_info(),
@@ -867,10 +868,10 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
             scatter_y = input$scatter_y,
             sd_color = heat_colors[[input$heat_color_select]],
             rank = input$rank
-          ) 
+          )
           save(params_r, file = file)
         }
-        if (load_data$data_file_format() == 3){
+        if (load_data$data_file_format() == 3) {
           params_r <- list(
             loaded_data = load_data$converted_data(),
             sample_info = load_data$sample_info(),
@@ -943,11 +944,11 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     observe({
       req(input$show_messages || tab() == "Pre-Process")
       req(processed_data()$data_type_warning != 0)
-      
+
       message <- switch(as.character(processed_data()$data_type_warning),
-             "1" = "Integers detected. Did you mean to select 'read counts'?",
-             "-1" = "Non count values detected. Did you mean select 'Normalized Expression Values'?"
-  )
+        "1" = "Integers detected. Did you mean to select 'read counts'?",
+        "-1" = "Non count values detected. Did you mean select 'Normalized Expression Values'?"
+      )
 
       showNotification(
         ui = message,
@@ -957,7 +958,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       )
     })
 
-    
+
     # Remove messages if the tab changes --------
     observe({
       req(tab() != "Pre-Process")
@@ -976,8 +977,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
           load_data$select_org(),
           all_gene_info = idep_data$gene_info_files
         )
-      ) 
-		})
+      )
+    })
 
 
     # Return Values -----------
