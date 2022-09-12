@@ -207,7 +207,6 @@ mod_04_pca_ui <- function(id) {
 mod_04_pca_server <- function(id, pre_process, idep_data) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
     # Store client info in a convenience variable
     cdata <- session$clientData
     #get pca image dimensions
@@ -451,7 +450,6 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
         choices = colnames(pre_process$all_gene_names())
       )
     })
-    
 
     
     # Markdown report------------
