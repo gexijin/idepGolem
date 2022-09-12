@@ -21,7 +21,7 @@ params:
   ui_shape:
   printcode:
     label: "Display Code"
-    value: FALSE
+    value: TRUE
     input: checkbox
 ---
 
@@ -39,15 +39,11 @@ library(idepGolem)
 
 This html document contains what parameters values were selected on the IDEP interface of the "PCA" tab. It also includes the plots generated from those selections.
 
-# ALL SELECTED PARAMETERS
+## Pre_process Summary
 `r params$pre_processed_descr`
 
-
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-params$pre_processed_descr
-```
-
-```{r, include=TRUE}
+## All PCA inputs
+```{r echo=FALSE}
 for (i in 1:length(params)){
   # exclude loaded data & sample info
   if(names(params)[i] != "sample_info" && names(params)[i] != "pre_processed_data" && names(params)[i] != "all_gene_names")
@@ -56,9 +52,9 @@ for (i in 1:length(params)){
 ```
 
 
-## PCA plots
+# PCA plots
 
-#Principal Component Analysis
+## Principal Component Analysis
 ```{r}
 PCA_plot(
   data = params$pre_processed_data,
@@ -74,7 +70,7 @@ pc_factor_correlation(
 )
 ```
 
-# T-SNE
+## T-SNE
 ```{r}
 t_SNE_plot(
   data = params$pre_processed_data,
@@ -84,7 +80,7 @@ t_SNE_plot(
   )
 ```
 
-# Multi-Dimensional Scaling
+## Multi-Dimensional Scaling
 ```{r}
 MDS_plot(
   data = params$pre_processed_data,
@@ -95,9 +91,9 @@ MDS_plot(
 ```
 
 
-## PCA tools
+# PCA tools tab
 
-#Biplot
+## Biplot
 ```{r}
 PCA_biplot(
   data = params$pre_processed_data,
@@ -115,12 +111,12 @@ PCA_biplot(
   )
 ```
 
-# Scree Plot
+## Scree Plot
 ```{r}
 PCA_Scree(processed_data = params$pre_processed_data)
 ```
 
-# Eigenvalue Correlation
+<!--# Eigenvalue Correlation-->
 ```{r}
 # PCAtools_eigencorplot(
 #   processed_data = params$pre_processed_data,
