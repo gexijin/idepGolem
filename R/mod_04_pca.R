@@ -15,15 +15,15 @@ mod_04_pca_ui <- function(id) {
     sidebarLayout(
       sidebarPanel(
         #width of shaded part of screen
-        width = 3,
+        #width = 3,
         conditionalPanel(
-          condition = "input.PCA_panels == 'Principal Component Analysis'",
-          fluidRow( 
+          condition = "input.PCA_panels == 'PCA'",
+          fluidRow(
             column(
               width = 6,
               selectInput(
                 inputId = ns("PCAx"),
-                "Principal component for x-axis",
+                label = "X-axis",
                 choices = 1:5,
                 selected = 1
               )
@@ -32,29 +32,32 @@ mod_04_pca_ui <- function(id) {
               width = 6,
               selectInput(
                 inputId = ns("PCAy"),
-                "Principal component for y-axis",
+                label = "Y-axis",
                 choices = 1:5,
                 selected = 2
               )
-            ),
+            )
           ),
           ns=ns
         ),
         #select design elements dynamically
         conditionalPanel(
-          condition = "input.PCA_panels != 'Plots from PCAtools Package'",
-          fluidRow(
-            column(
-              width = 12,
-              uiOutput(
-                outputId = ns("listFactors2")
+          condition = "input.PCA_panels != 'PCAtools Package'",
+            fluidRow(
+              column(
+                width = 6,
+                uiOutput(
+                  outputId = ns("listFactors2")
+                )
               ),
-              uiOutput(
-                outputId = ns("listFactors1")
+              column(
+                width = 6,
+                uiOutput(
+                  outputId = ns("listFactors1")
+                )
               )
             ),
-          ),
-          ns= ns
+          ns = ns
         ),
         conditionalPanel(
           condition = "input.PCA_panels == 't-SNE'",
@@ -66,41 +69,72 @@ mod_04_pca_ui <- function(id) {
         ),
         #PCATools plot options
         conditionalPanel(
-          condition = "input.PCA_panels == 'Plots from PCAtools Package'",
+          condition = "input.PCA_panels == 'PCAtools Package'",
           fluidRow(
             column(
-              width = 12,
-              selectInput(inputId = ns("x_axis_pc"),
-                        label = "X-Axis",
-                        choices = c("PC1", "PC2", "PC3", "PC4", "PC5"),
-                        selected = "PC1"
+              width = 6,
+              selectInput(
+                inputId = ns("x_axis_pc"),
+                label = "X-axis",
+                choices = c("PC1", "PC2", "PC3", "PC4", "PC5"),
+                selected = "PC1"
+              )
             ),
-            selectInput(inputId = ns("y_axis_pc"),
-                        label = "Y-Axis",
-                        choices = c("PC1", "PC2", "PC3", "PC4", "PC5"),
-                        selected = "PC2"
-            ),
-
-            #Dynamic Color and Shape options
-            uiOutput(
-              outputId = ns("pcatools_shape")
-            ),
-            uiOutput(
-              outputId = ns("pcatools_color")
-            ),
-            # Gene ID Selection -----------
-            selectInput(
-              inputId = ns("select_gene_id"),
-              label = "Select Gene ID Label (<= 50 genes):",
-              choices = NULL,
-              selected = NULL
-            ),
-            #plot customization
-            checkboxInput(inputId = ns("showLoadings"), label = "Show Loadings", value = FALSE),
-            checkboxInput(inputId = ns("encircle"), label = "Encircle", value = FALSE),
-            checkboxInput(inputId = ns("pointLabs"), label = "Point Labels", value = TRUE),
-            numericInput(inputId = ns("pointSize"), label = "Point Size (Recommended: 1-10)",value = 3.0, min = 1, max = 15)
+            column(
+              width = 6,
+              selectInput(
+                inputId = ns("y_axis_pc"),
+                label = "Y-axis",
+                choices = c("PC1", "PC2", "PC3", "PC4", "PC5"),
+                selected = "PC2"
+              )
+            )
           ),
+
+          #Dynamic Color and Shape options
+          fluidRow(
+            column(
+              width = 6,
+              uiOutput(
+                outputId = ns("pcatools_shape")
+              )
+            ),
+            column(
+              width = 6,
+              uiOutput(
+                outputId = ns("pcatools_color")
+              )
+            )
+          ),
+          #plot customization
+          checkboxInput(
+            inputId = ns("showLoadings"), 
+            label = "Show Loadings", 
+            value = FALSE
+          ),
+          checkboxInput(
+            inputId = ns("encircle"), 
+            label = "Encircle", 
+            value = FALSE
+          ),
+          checkboxInput(
+            inputId = ns("pointLabs"), 
+            label = "Point Labels", 
+            value = TRUE
+          ),
+          numericInput(
+            inputId = ns("pointSize"), 
+            label = "Point Size (1-10)",
+            value = 3.0, 
+            min = 1, 
+            max = 15
+          ),
+          # Gene ID Selection -----------
+          selectInput(
+            inputId = ns("select_gene_id"),
+            label = "Gene ID",
+            choices = NULL,
+            selected = NULL
           ),
           ns=ns
         ),
@@ -114,55 +148,31 @@ mod_04_pca_ui <- function(id) {
           href = "https://idepsite.wordpress.com/pca/",
           target = "_blank"
         )
-        
       ),
+
+
+
       mainPanel(
         tabsetPanel(
           id = ns("PCA_panels"),
           tabPanel(
-            title="Principal Component Analysis",
+            title = "PCA",
             plotOutput(
               outputId = ns("pca_plot_obj"),
               width = "100%",
               height = "500px"
             ),
+            ottoPlots::mod_download_figure_ui(ns("download_pca")),
+            br(),
             br(),
             shiny::textOutput(
               outputId = ns("pc_correlation")
             ),
             br(),
             shiny::verbatimTextOutput(ns("image_dimensions")),
-            ottoPlots::mod_download_figure_ui(ns("download_pca")),
-            br(),
-            br(),
-            
           ),
           tabPanel(
-            "Multi-Dimensional Scaling",
-            br(),
-            plotOutput(
-              outputId = ns("mds_plot_obj"),
-              width = "100%",
-              height = "500px"
-            ),
-            ottoPlots::mod_download_figure_ui(ns("download_mds")),
-          
-            
-          ),
-          tabPanel(
-            "t-SNE",
-            br(),
-            plotOutput(
-              outputId = ns("t_sne"),
-              width = "100%",
-              height = "500px"
-            ),
-            br(),
-            ottoPlots::mod_download_figure_ui(ns("download_t_sne")),
-            br()
-          ),
-          tabPanel(
-            "Plots from PCAtools Package",
+            "PCAtools Package",
             br(),
             plotOutput(
               outputId = ns("pcatools_biplot"),
@@ -190,7 +200,28 @@ mod_04_pca_ui <- function(id) {
             ottoPlots::mod_download_figure_ui(ns("download_eigencor")),
             br(),
             br()
-            
+          ),
+          tabPanel(
+            "MDS",
+            br(),
+            plotOutput(
+              outputId = ns("mds_plot_obj"),
+              width = "100%",
+              height = "500px"
+            ),
+            ottoPlots::mod_download_figure_ui(ns("download_mds")),
+          ),
+          tabPanel(
+            "t-SNE",
+            br(),
+            plotOutput(
+              outputId = ns("t_sne"),
+              width = "100%",
+              height = "500px"
+            ),
+            br(),
+            ottoPlots::mod_download_figure_ui(ns("download_t_sne")),
+            br()
           )
           # tabPanel(
           #   "Pathway Analysis of PCA",
@@ -383,12 +414,12 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       req(!is.null(pre_process$data()))
 
       if (is.null(pre_process$sample_info()) )
-      { return(HTML("Upload a sample info file to customize this plot.") ) }	 else { 
+      { return(NULL) }	 else { 
         selectInput(
           inputId = ns("selectFactors1"),
           label = "Color ",
-          choices = c( colnames(pre_process$sample_info()), "Sample_Name")
-                    , selected = "Sample_Name")   } 
+          choices = c( colnames(pre_process$sample_info()), "Names")
+                    , selected = "Names")   } 
     })
     
     #select shape
@@ -399,11 +430,11 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       if (is.null(pre_process$sample_info()) )
       { return(NULL) }
       else { 
-        tem <- c( colnames(pre_process$sample_info()), "Sample_Name")
+        tem <- c( colnames(pre_process$sample_info()), "Names")
         selectInput(inputId = ns("selectFactors2"),
                     label="Shape",
                     choices=tem,
-                    selected = "Sample_Name"
+                    selected = "Names"
                     )
       } 
     })
@@ -412,26 +443,29 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
     output$pcatools_color <- renderUI({
       req(!is.null(pre_process$data()))
       
-      if (is.null(pre_process$sample_info()) )
-      { return(HTML("Upload a sample info file to customize this plot.") ) }	 else { 
-        selectInput(
-          inputId = ns("selectColor"),
-          label = "Color",
-          choices = colnames(pre_process$sample_info()),
-          selected = colnames(pre_process$sample_info())[1]
-          )   } 
+      if (is.null(pre_process$sample_info()) ) { 
+        return(NULL) 
+      }
+
+      selectInput(
+        inputId = ns("selectColor"),
+        label = "Color",
+        choices = colnames(pre_process$sample_info()),
+        selected = colnames(pre_process$sample_info())[1]
+      )
     })
     output$pcatools_shape <- renderUI({
       req(!is.null(pre_process$data()))
       
-      if (is.null(pre_process$sample_info()) )
-      { return(HTML("Upload a sample info file to customize this plot.") ) }	 else { 
-        selectInput(
-          inputId = ns("selectShape"),
-          label = "Shape",
-          choices = colnames(pre_process$sample_info()),
-          selected = colnames(pre_process$sample_info())[1]
-        )   } 
+      if (is.null(pre_process$sample_info())) {
+        return(NULL ) 
+      }
+      selectInput(
+        inputId = ns("selectShape"),
+        label = "Shape",
+        choices = colnames(pre_process$sample_info()),
+        selected = colnames(pre_process$sample_info())[1]
+      )   
     })    
     
     # Gene ID Name Choices ----------
@@ -441,7 +475,8 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       updateSelectInput(
         session = session,
         inputId = "select_gene_id",
-        choices = colnames(pre_process$all_gene_names())
+        choices = colnames(pre_process$all_gene_names()),
+        selected = "symbol"
       )
     })
 
