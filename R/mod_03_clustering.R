@@ -883,6 +883,7 @@ p <- '<br><p style="color:red;text-align:right;">Click on the sub-heatmap &#1023
         params <- list(
           pre_processed_data = pre_process$data(),
           sample_info = pre_process$sample_info(),
+          descr = pre_process$descr(),
           all_gene_names = pre_process$all_gene_names(),
           n_genes = input$n_genes,
           k_clusters = input$k_clusters,
@@ -896,11 +897,11 @@ p <- '<br><p style="color:red;text-align:right;">Click on the sub-heatmap &#1023
           gene_centering = input$gene_centering,
           gene_normalize = input$gene_normalize,
           sample_clustering = input$sample_clustering,
-          show_row_dend = input$show_row_dend
-            
-          
+          show_row_dend = input$show_row_dend,
+          selected_genes = input$selected_genes
         )
         
+        req(params)
         # Knit the document, passing in the `params` list, and eval it in a
         # child of the global environment (this isolates the code in the document
         # from the code in this app).
