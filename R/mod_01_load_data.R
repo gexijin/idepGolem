@@ -20,7 +20,8 @@ mod_01_load_data_ui <- function(id) {
         fluidRow(
           column(
             width = 9,
-            p("Select a demo file below; load it to see the magic!")
+            p("Load a demo file below. 
+            Click the tabs to see some magic!")
           ),
           column(
             width = 3,
@@ -113,21 +114,20 @@ mod_01_load_data_ui <- function(id) {
 
         fluidRow( 
           column(
-            width = 6, 
+            width = 6,
             # Button to load demo dataset ----------
             # Manually namespace the goButton in tag with id in module call
             actionButton(
               inputId = ns("go_button"),
-              label = "Load demo"
+              label = "Load demo:"
             ),
             tags$head(tags$style(
               "#load_data-go_button{color: red;
-              font-size: 16px;
-              font-style: italic;}"
+              font-size: 16px;}"
             ))
           ),
           column(
-            width = 6, 
+            width = 6,
             # List of demo files
             selectInput(
               inputId = ns("select_demo"),

@@ -1,0 +1,158 @@
+<p>
+In the pre-process stage, we (1) filter out genes with extremely low expression,
+ (2) Gene IDs are converted to Ensembl gene ID or STRING-db gene ID, and 
+ (3) apply transformations.
+</p>
+<p>
+	<strong>Counts data</strong>
+</p>
+
+<p>
+	<strong>Filtering:</strong>
+	Some genes are not expressed in any samples. Others are expressed at
+	extremely low levels. We need to remove these genes from further analysis.
+	By default, a gene must have more than 0.5 counts per million (CPM) in at
+	least one sample. Otherwise, the gene is removed. Users can specify that
+	genes must be above 0.5 CPM in two samples by changing the "n libraries"
+	option to 2.
+</p>
+<p>
+	CPMs are calculated by normalizing the read counts by the total counts per
+	sample. For example, if sample 1 has 20 million counts in total, then the
+	read counts are divided by 20 to get the CPM.
+</p>
+<p>
+	The R command used for filtering is this.
+</p>
+<p>
+	x &lt;- x[ which( apply( cpm(DGEList(counts = x)), 1, function(y)
+	sum(y&gt;=minCPM)) &gt;= nLibraries ) , ]
+</p>
+<p>
+	The data is normalized by cpm function in <em>edgeR</em>. The number of
+	samples above a minCPM is counted. Only genes with levels above minCPM in
+	at least nLibraries are retained.
+</p>
+<p>
+	It is very common to filter out 30% or even 50% of the genes on the
+	genome-wide expression profiles, as we do not expect all genes in the
+	genome to be expressed in one particular tissue/cell. Keeping lowly
+	expressed genes just adds noise to downstream analyses. But aggressive
+	filtering may lead to missing some genes that are expressed low but are
+	significantly different. minCPM can be reduced if your library size is big.
+	For example, if your library size is 50 million on average, you can lower
+	your minCPM to 0.2. This will eliminate genes represented at least by 10
+	reads.<a name="CountsData_transformation"></a>
+</p>
+<p>
+	<strong>Transformation:</strong>
+	There are 3 options for the transformation of counts data for clustering
+	analysis and principal component analysis:
+</p>
+<ul type="disc">
+	<li>
+		VST: variance stabilizing transform (Anders &amp; Huber 2010)
+	</li>
+	<li>
+		rlog: regularized log (only for N&lt;10, see Love et al. 2014)
+	</li>
+	<li>
+		Started log: log2(x+<em>c</em>)
+	</li>
+</ul>
+<p>
+	VST is performed according to (Anders and Huber 2010) and rlog is based on
+	(Love, Huber et al. 2014). When there are more than 10 samples, rlog
+	becomes slow. The default is started log, where a pseudo count <em>c</em>
+	is added to all counts before log transformation. The constant <em>c</em>
+	can range from 1 to 10. The bigger this number is, the less sensitive it is
+	to noise from low counts. We have found c=4 offer balanced transformation
+	based on several datasets we tried. The started log transformation is
+	equivalent to the logCPM offered in edgeR. The only difference is that the
+	libraries are not all scaled to 1 million per sample. The libraries are
+	scaled first using DESeq2's normalized = TRUE option:
+</p>
+<p>
+	x <- log2( counts(dds, normalized=TRUE) + <em>c</em> )
+</p>
+<p>
+	The effect of these transformations can be visualized below between
+	technical replicates. You can see that VST is very aggressive in
+	transforming the data. The rlog option is slower, especially when there are
+	many samples, but it makes the distribution across samples closer than a
+	simple log.
+</p>
+<img src="https://idepsite.files.wordpress.com/2017/03/transform3.png" alt="transformation">
+<p>
+	For counts data, transformed data is used for exploratory data analysis
+	(EDA, such as clustering analysis and PCA, MDS). If you choose limma-trend
+	to identify differentially expressed genes (DEGs), then transformed data is
+	also used. Both DESeq2 and limma-voom use original read counts data, not
+	the transformed data.
+</p>
+<p>
+	iDEP produces a barplot representing total read counts per library. When
+	the library sizes are more than 3 times different, limma-trend method is
+	not recommended for identifying DEGs. See the manual for
+	<a
+		href="https://www.bioconductor.org/packages/devel/bioc/vignettes/limma/inst/doc/usersguide.pdf"
+	>
+		limma
+	</a>
+	.
+</p>
+<img src="https://idepsite.files.wordpress.com/2018/03/download-e1521424299439.png?w=768&h=503" alt="depth">
+<p>
+	Bias in sequencing depth can exist in samples. The above is an example,
+	where fewer reads in the p53 wild-type samples after radiation treatment.
+	An ANOVA is conducted by iDEP and if P&lt;0.01, a warning is produced. This
+	presents a confounding factor. iDEP also calculates the ratio of the
+	max/min total counts among groups. It is believed that as long as the ratio
+	is within 1.5, it should be acceptable. See this discussion on
+	<a href="https://twitter.com/StevenXGe/status/974086085969170432">
+		Twitter
+	</a>
+	.
+</p>
+<p>
+	<strong>FPKM, microarray or other normalized expression data</strong>
+</p>
+<p>
+	For normalized expression data, a filter is also applied to remove genes
+	expressed at low levels across all samples. For example, users can choose
+	to include only genes expressed at the level of 1 or higher in at least one
+	sample. This number works for FPKM or RPKM data, but it should be changed
+	according to the data format. For cDNA microarrays, where the expression
+	levels are log ratios, we need to set this to a negative number such as
+	-1e20 to disable this filter.
+</p>
+<p>
+	<strong>
+		This filter is very important as it affects downstream analyses. For
+		FPKM, RPKM data, many people choose 1 as a cutoff. For genome-wide
+		expression analysis using DNA microarray, it is safe to choose a cutoff
+		that removes the bottom 20-40% of genes when ranked by maximum
+		expression level across samples in descending order.
+	</strong>
+</p>
+<p>
+	iDEP calculates kurtosis for each of the data columns, and if the mean
+	kurtosis is bigger than 50, a log2 transformation is enforced. Large
+	kurtosis usually indicates the presence of extremely large numbers in the
+	data set that warrants log transformation.
+</p>
+<p>
+	Users can double-check the effects of data transformation by examining the
+	box plot and density plot on this page.
+</p>
+<p>
+	References:
+</p>
+<p>
+	Anders, S. and W. Huber (2010). "Differential expression analysis for
+	sequence count data." <u>Genome Biol</u> <strong>11</strong>(10): R106.
+</p>
+<p>
+	Love, M. I., W. Huber and S. Anders (2014). "Moderated estimation of fold
+change and dispersion for RNA-seq data with DESeq2." <u>Genome Biol</u>	<strong>15</strong>(12): 550.
+</p>

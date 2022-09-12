@@ -600,7 +600,11 @@ p <- '<br><p style="color:red;text-align:right;">Click on the sub-heatmap &#1023
     output$sub_heatmap <- renderPlot({
       if (is.null(input$ht_brush)) {
         grid::grid.newpage()
-        grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
+        grid::grid.text("Select a region on the heatmap to zoom in.
+
+        Selection can be adjusted from the sides.
+        It can also be dragged around.
+        ", 0.5, 0.5)
       } else {
         shinybusy::show_modal_spinner(
           spin = "orbit",

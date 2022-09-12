@@ -14,7 +14,9 @@ chromosome_plotly(
   label_gene_symbol,
   ma_window_size,
   ma_window_steps,
-  ch_region_p_val
+  ch_region_p_val,
+  hide_patches,
+  hide_chr
 )
 }
 \arguments{
