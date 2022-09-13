@@ -570,7 +570,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       all_gene_names = reactive(conversion_info()$all_gene_names),
       matched_ids = reactive(conversion_info()$converted$ids),
       gmt_choices = reactive(conversion_info()$gmt_choices),
-      converted = reactive(conversion_info()$converted), 
+      converted = reactive(conversion_info()$converted),
       no_id_conversion = reactive(input$no_id_conversion)
     )
   })

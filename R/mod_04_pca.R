@@ -421,12 +421,11 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
           choices = c( colnames(pre_process$sample_info()), "Names")
                     , selected = "Names")   } 
     })
-    
+
     #select shape
     output$listFactors2 <- renderUI({
       req(!is.null(pre_process$data()))
 
-      
       if (is.null(pre_process$sample_info()) )
       { return(NULL) }
       else { 
@@ -438,11 +437,10 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
                     )
       } 
     })
-    
+
     # select color & shape for pcatools
     output$pcatools_color <- renderUI({
       req(!is.null(pre_process$data()))
-      
       if (is.null(pre_process$sample_info()) ) { 
         return(NULL) 
       }
@@ -456,7 +454,7 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
     })
     output$pcatools_shape <- renderUI({
       req(!is.null(pre_process$data()))
-      
+
       if (is.null(pre_process$sample_info())) {
         return(NULL ) 
       }
@@ -465,13 +463,13 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
         label = "Shape",
         choices = colnames(pre_process$sample_info()),
         selected = colnames(pre_process$sample_info())[1]
-      )   
-    })    
-    
+      )
+    })
+
     # Gene ID Name Choices ----------
     observe({
       req(!is.null(pre_process$all_gene_names()))
-      
+
       updateSelectInput(
         session = session,
         inputId = "select_gene_id",
