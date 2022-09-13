@@ -4,13 +4,12 @@
 #'
 #' @param id,input,output,session Internal parameters for {shiny}.
 #'
-#' @noRd 
+#' @noRd
 #'
-#' @importFrom shiny NS tagList 
-mod_12_heatmap_ui <- function(id){
+#' @importFrom shiny NS tagList
+mod_12_heatmap_ui <- function(id) {
   ns <- NS(id)
   tagList(
-
     fluidRow(
       column(
         width = 3,
@@ -27,12 +26,10 @@ mod_12_heatmap_ui <- function(id){
           brush = ns("ht_brush")
         ),
         ottoPlots::mod_download_figure_ui(
-          ns("dl_heatmap_main"),
-          label = "Download: Above"
+          ns("dl_heatmap_main")
         ),
         ottoPlots::mod_download_figure_ui(
-          ns("dl_heatmap_sub"),
-          label = "Right"
+          ns("dl_heatmap_sub")
         ),
         uiOutput(
           outputId = ns("ht_click_content")
@@ -50,18 +47,16 @@ mod_12_heatmap_ui <- function(id){
     )
   )
 }
-    
+
 #' 12_heatmap Server Functions
 #'
-#' @noRd 
-mod_12_heatmap_server <- function(
-  id,
-  data,
-  bar,
-  all_gene_names,
-  cluster_rows = FALSE
-){
-  moduleServer(id, function(input, output, session){
+#' @noRd
+mod_12_heatmap_server <- function(id,
+                                  data,
+                                  bar,
+                                  all_gene_names,
+                                  cluster_rows = FALSE) {
+  moduleServer(id, function(input, output, session) {
     ns <- session$ns
     # Interactive heatmap environment
     shiny_env <- new.env()
@@ -69,21 +64,21 @@ mod_12_heatmap_server <- function(
     # Heatmap Colors ----------
     heatmap_colors <- list(
       "Green-Black-Red" = c("green", "black", "red"),
-      "Red-Black-Green" = c("red", "black", "red"), 
+      "Red-Black-Green" = c("red", "black", "red"),
       "Blue-White-Red" = c("blue", "white", "red"),
       "Green-Black-Magenta" = c("green", "black", "magenta"),
       "Blue-Yellow-Red" = c("blue", "yellow", "red"),
-      "Blue-White-Brown" = c("blue", "white", "brown"), 
+      "Blue-White-Brown" = c("blue", "white", "brown"),
       "Orange-White-Blue" = c("orange", "white", "blue")
     )
 
     heatmap_choices <- c(
       "Green-Black-Red",
-      "Red-Black-Green", 
+      "Red-Black-Green",
       "Blue-White-Red",
       "Green-Black-Magenta",
       "Blue-Yellow-Red",
-      "Blue-White-Brown", 
+      "Blue-White-Brown",
       "Orange-White-Blue"
     )
 
@@ -129,7 +124,9 @@ mod_12_heatmap_server <- function(
     dl_heatmap_main <- ottoPlots::mod_download_figure_server(
       id = "dl_heatmap_main",
       filename = "heatmap_main",
-      figure = reactive({ main_heatmap_object() }),
+      figure = reactive({
+        main_heatmap_object()
+      }),
       width = 5,
       height = 8
     )
@@ -139,7 +136,7 @@ mod_12_heatmap_server <- function(
       if (is.null(input$ht_brush)) {
         grid::grid.newpage()
         grid::grid.text("Select a region on the heatmap to zoom in.
-        
+
         Selection can be adjusted from the sides.
         It can also be dragged around.", 0.5, 0.5)
       } else {
@@ -210,7 +207,9 @@ mod_12_heatmap_server <- function(
     dl_heatmap_sub <- ottoPlots::mod_download_figure_server(
       id = "dl_heatmap_sub",
       filename = "heatmap_zoom",
-      figure = reactive({ sub_heatmap_object() }),
+      figure = reactive({
+        sub_heatmap_object()
+      }),
       width = 5,
       height = 7
     )
@@ -218,17 +217,17 @@ mod_12_heatmap_server <- function(
     output$ht_click_content <- renderUI({
       # zoomed in, but not clicked
       if (is.null(input$ht_click) &&
-          !is.null(shiny_env$ht_sub) &&
-          !is.null(input$ht_brush)
+        !is.null(shiny_env$ht_sub) &&
+        !is.null(input$ht_brush)
       ) {
-p <- '<br><p style="color:red;text-align:right;">Click on the sub-heatmap &#10230;</p>'
-          html <- GetoptLong::qq(p)
-          return(HTML(html))
+        p <- '<br><p style="color:red;text-align:right;">Click on the sub-heatmap &#10230;</p>'
+        html <- GetoptLong::qq(p)
+        return(HTML(html))
       }
 
       if (is.null(input$ht_click) ||
-          is.null(shiny_env$ht_sub) ||
-          is.null(input$ht_brush)
+        is.null(shiny_env$ht_sub) ||
+        is.null(input$ht_brush)
       ) {
         return(NULL)
       }
@@ -243,16 +242,12 @@ p <- '<br><p style="color:red;text-align:right;">Click on the sub-heatmap &#1023
         bar = shiny_env$bar,
         data = shiny_env$submap_data
       )
-      
     })
-
-
-
   })
 }
-    
+
 ## To be copied in the UI
 # mod_12_heatmap_ui("12_heatmap_1")
-    
+
 ## To be copied in the server
 # mod_12_heatmap_server("12_heatmap_1")

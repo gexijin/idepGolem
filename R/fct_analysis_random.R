@@ -25,15 +25,13 @@ NULL
 #'  expressed genes
 #' @param min_size Minimum size for a pathway gene set
 #' @param max_size Maximum size for a pathway gene set
-#' 
+#'
 #' @export
-find_overlap_gmt <- function(
-  query, 
-  gene_set,
-  min_fdr = .2,
-  min_size = 2,
-  max_size = 10000
-) {
+find_overlap_gmt <- function(query,
+                             gene_set,
+                             min_fdr = .2,
+                             min_size = 2,
+                             max_size = 10000) {
   total_elements <- 30000 # why 3000?
   min_overlap <- 1 # nolint
   max_terms <- 10 # max number of enriched terms should be user input ????
@@ -84,11 +82,11 @@ find_overlap_gmt <- function(
 }
 
 #' Find overlap for pathway analysis
-#' 
+#'
 #' Use the pathway table from the read_pathway_sets function
 #' to calculate adjusted p-values. Adjusted p-values determine
 #' the enriched pathways from the selected qeury.
-#' 
+#'
 #' @param pathway_table Results from the read_pathway_sets
 #'   query. If NULL or 0 rows there is no significant
 #'   enrichment
@@ -109,11 +107,11 @@ find_overlap_gmt <- function(
 #'   contain information for the matched species
 #' @param use_filtered_background T/F Use the genes that
 #'   passed the pre_process filter as the backgrounf
-#' @param select_org Input for what organism the IDs are 
+#' @param select_org Input for what organism the IDs are
 #'   pertaining to
 #' @param reduced T/F Remove gene sets that are redudant
 #'   from the final result
-#'   
+#'
 #' @export
 #' @return If there is significant enrichment, the data frame
 #'   that is returned has a pathway for each row with the
@@ -121,31 +119,29 @@ find_overlap_gmt <- function(
 #'   number of genes in the query that map to it. It also
 #'   contains a column for the p-value and a list of the
 #'   specific IDs included in the pathway from the query.
-find_overlap <- function(
-  pathway_table,
-  query_set,
-  total_genes,
-  processed_data,
-  gene_info,
-  go,
-  idep_data,
-  sub_pathway_files,
-  use_filtered_background,
-  select_org,
-  reduced = FALSE
-) {
+find_overlap <- function(pathway_table,
+                         query_set,
+                         total_genes,
+                         processed_data,
+                         gene_info,
+                         go,
+                         idep_data,
+                         sub_pathway_files,
+                         use_filtered_background,
+                         select_org,
+                         reduced = FALSE) {
   max_pval_filter <- 0.3
   max_genes_background <- 30000
   min_genes_background <- 1000
   max_terms <- 15
   min_fdr <- .05
-  min_word_overlap <- 0.5 #% of overlapping words for reduandant pathway
-  if(reduced) {
+  min_word_overlap <- 0.5 # % of overlapping words for reduandant pathway
+  if (reduced) {
     reduced <- .9
   }
   error_msg <- data.frame("Enrichment" = "No significant enrichment found!")
 
-  if(select_org == "NEW" && is.null(pathway_table)) {
+  if (select_org == "NEW" && is.null(pathway_table)) {
     return(data.frame("Enrichment" = "No GMT file provided!"))
   } else if (select_org == "NEW") {
     find_overlap_gmt(
@@ -159,15 +155,15 @@ find_overlap <- function(
 
   # pathway_table <- pathway_table[pathway_table$overlap > 1, ]
 
-  if(dim(pathway_table)[1] == 0 || is.null(pathway_table)) {
+  if (dim(pathway_table)[1] == 0 || is.null(pathway_table)) {
     return(error_msg)
   }
 
   # only keep pathways that are overrepresented
-#  pathway_table <- pathway_table[which(
-#    pathway_table$overlap / length(query_set) /
-#    (as.numeric(pathway_table$n) / total_genes) > 1
-#  ), ]
+  #  pathway_table <- pathway_table[which(
+  #    pathway_table$overlap / length(query_set) /
+  #    (as.numeric(pathway_table$n) / total_genes) > 1
+  #  ), ]
 
   pathway_table$pval <- stats::phyper(
     pathway_table$overlap - 1,
@@ -182,14 +178,14 @@ find_overlap <- function(
   )
 
   # remove some with p > 0.3
-#  pathway_table <- subset(pathway_table, pathway_table$pval < max_pval_filter)
+  #  pathway_table <- subset(pathway_table, pathway_table$pval < max_pval_filter)
 
   # Background genes -----------
-  if(!is.null(use_filtered_background)) {
-    if(
-      use_filtered_background && 
-      length(row.names(processed_data)) > min_genes_background &&
-      length(row.names(processed_data)) < max_genes_background + 1
+  if (!is.null(use_filtered_background)) {
+    if (
+      use_filtered_background &&
+        length(row.names(processed_data)) > min_genes_background &&
+        length(row.names(processed_data)) < max_genes_background + 1
     ) {
       pathway_table_bg <- background_pathway_sets(
         processed_data = processed_data,
@@ -201,7 +197,7 @@ find_overlap <- function(
         sub_pathway_files = sub_pathway_files
       )
 
-      # note that both the query size and the background size 
+      # note that both the query size and the background size
       # uses effective size: # of genes with at least one pathway in pathwayDB
       pathway_table$pval <- phyper(
         pathway_table_bg$overlap - 1,
@@ -212,7 +208,7 @@ find_overlap <- function(
       )
       pathway_table$fold <- (pathway_table$overlap / length(query_set)) / (
         as.numeric(pathway_table_bg$overlap_bg) / pathway_table_bg$total_genes_bg[1]
-      )     
+      )
     }
   }
 
@@ -220,11 +216,11 @@ find_overlap <- function(
 
   pathway_table <- pathway_table[order(pathway_table$fdr), ]
 
-  if(dim(pathway_table)[1] > max_terms) {
+  if (dim(pathway_table)[1] > max_terms) {
     pathway_table <- pathway_table[1:max_terms, ]
   }
 
-  if(min(pathway_table$fdr) > min_fdr) {
+  if (min(pathway_table$fdr) > min_fdr) {
     pathway_table <- error_msg
   } else {
     pathway_table <- pathway_table[which(pathway_table$fdr < min_fdr), ]
@@ -242,16 +238,16 @@ find_overlap <- function(
       )
     )
     pathway_table$n <- as.numeric(pathway_table$n)
-    pathway_table$fdr <-  formatC(pathway_table$fdr, format = "e", digits = 2)
+    pathway_table$fdr <- formatC(pathway_table$fdr, format = "e", digits = 2)
     colnames(pathway_table) <- c(
       "FDR", "nGenes", "Pathway size", "Fold enriched",
       "Pathway", "URL", "Genes"
     )
 
-    # Remove redudant gene sets; only do it when there are more than 5. 
+    # Remove redudant gene sets; only do it when there are more than 5.
     # Error when there is only 1 or 2.
-    if(reduced != FALSE && dim(pathway_table)[1] > 5){
-      n <-  nrow(pathway_table)
+    if (reduced != FALSE && dim(pathway_table)[1] > 5) {
+      n <- nrow(pathway_table)
       flag1 <- rep(TRUE, n)
 
       # note that it has to be two space characters for splitting
@@ -262,23 +258,25 @@ find_overlap <- function(
         pathway_table$Pathway,
         function(y) unlist(strsplit(as.character(y), " |  |   "))
       )
-      for(i in 2:n)
-        for(j in 1:(i - 1)) {
-          if(flag1[j]) { # skip if this one is already removed
+      for (i in 2:n) {
+        for (j in 1:(i - 1)) {
+          if (flag1[j]) { # skip if this one is already removed
             ratio1 <- length(intersect(gene_lists[[i]], gene_lists[[j]])) /
               length(union(gene_lists[[i]], gene_lists[[j]]))
 
             # if sufficient genes overlap
-            if(ratio1  > reduced) {
+            if (ratio1 > reduced) {
               # are pathway names similar
-                ratio2 <- length(intersect(pathways[[i]], pathways[[j]])) /
-                  length(union(pathways[[i]], pathways[[j]]))
-                # if 50% of the words in the pathway name shared
-                if(ratio2 > min_word_overlap)
-                  flag1[i] <- FALSE
+              ratio2 <- length(intersect(pathways[[i]], pathways[[j]])) /
+                length(union(pathways[[i]], pathways[[j]]))
+              # if 50% of the words in the pathway name shared
+              if (ratio2 > min_word_overlap) {
+                flag1[i] <- FALSE
+              }
             }
           }
         }
+      }
       pathway_table <- pathway_table[which(flag1), ]
     }
   }
@@ -287,11 +285,11 @@ find_overlap <- function(
 }
 
 #' Determine samples in selected contrast
-#' 
+#'
 #' Find the samples that are in the group of the selected
 #' contrast. Can be used to subset the data to only include
 #' the samples that correspond to the chosen comparison.
-#' 
+#'
 #' @param select_contrast Comparison from DEG analysis to filter
 #'  for the significant genes
 #' @param all_sample_names The column names of the processed data
@@ -306,239 +304,230 @@ find_overlap <- function(
 #' @param counts_deg_method Method of DEG being performed (See
 #'  DEG UI for options)
 #' @param data_file_format Type of data being examined
-#' 
+#'
 #' @export
 #' @return A numeric vector that can be used to index the processed
 #'  data and subset to only include the columns from the selected
 #'  contrast.
-find_contrast_samples <- function(
-  select_contrast,
-  all_sample_names,
-  sample_info = NULL,
-  select_factors_model = NULL,
-  select_model_comprions = NULL,
-  reference_levels = NULL,
-  counts_deg_method = NULL,
-  data_file_format = NULL
-){
-	iz <- match(detect_groups(all_sample_names), unlist(strsplit(select_contrast, "-")))
-	iz <- which(!is.na(iz))
-	
-	# Has design file, but didn't select factors
-	if(!is.null(sample_info) && is.null(select_factors_model) &
-     length(select_model_comprions) == 0) {
-	  
-    find_samples <- function(
-      factor_level,
-      sample_info
-    ) { 
-	    # Given a factor level such as "wt", return a vector indicating the samples 
+find_contrast_samples <- function(select_contrast,
+                                  all_sample_names,
+                                  sample_info = NULL,
+                                  select_factors_model = NULL,
+                                  select_model_comprions = NULL,
+                                  reference_levels = NULL,
+                                  counts_deg_method = NULL,
+                                  data_file_format = NULL) {
+  iz <- match(detect_groups(all_sample_names), unlist(strsplit(select_contrast, "-")))
+  iz <- which(!is.na(iz))
+
+  # Has design file, but didn't select factors
+  if (!is.null(sample_info) && is.null(select_factors_model) &
+    length(select_model_comprions) == 0) {
+    find_samples <- function(factor_level,
+                             sample_info) {
+      # Given a factor level such as "wt", return a vector indicating the samples
       # with TRUE FALSE
-	    #  p53_mock_1  p53_mock_2  p53_mock_3  p53_mock_4 ... p53_IR_4 null_mock_1 null_mock_2 
-	    #  TRUE        TRUE        TRUE        TRUE       ... TRUE     FALSE       FALSE 
-  	  tem <- apply(sample_info, 2, function(y) y == factorLevel )
-  	  colSums(tem) > 0
-  	  tem <- tem[, colSums(tem) > 0]
-  	  return(tem)
-	  }
-	  
-	  
-	  sample_1 <- gsub("-.*", "", select_contrast)
-	  level_1 <- gsub("_.*", "", sample_1)
-	  level_2 <- gsub(".*_", "", sample_1)
-	  iz <- which(find_samples(level_1, sample_info) & find_samples(level_2, sample_info))
-	  
-	  sample_2 <- gsub(".*-", "", select_contrast)
-	  level_1 <- gsub("_.*", "", sample_2)
-	  level_2 <- gsub(".*_", "", sample_2)
-	  iz <- c(iz, which(find_samples(level_1, sample_info) & find_samples(level_2, sample_info)))	  
-	}
-	
-	#Has design file and chose factors
-	if(!is.null(sample_info) & !is.null(select_factors_model) &
-     length(select_model_comprions) > 0) {
-    
+      #  p53_mock_1  p53_mock_2  p53_mock_3  p53_mock_4 ... p53_IR_4 null_mock_1 null_mock_2
+      #  TRUE        TRUE        TRUE        TRUE       ... TRUE     FALSE       FALSE
+      tem <- apply(sample_info, 2, function(y) y == factorLevel)
+      colSums(tem) > 0
+      tem <- tem[, colSums(tem) > 0]
+      return(tem)
+    }
+
+
+    sample_1 <- gsub("-.*", "", select_contrast)
+    level_1 <- gsub("_.*", "", sample_1)
+    level_2 <- gsub(".*_", "", sample_1)
+    iz <- which(find_samples(level_1, sample_info) & find_samples(level_2, sample_info))
+
+    sample_2 <- gsub(".*-", "", select_contrast)
+    level_1 <- gsub("_.*", "", sample_2)
+    level_2 <- gsub(".*_", "", sample_2)
+    iz <- c(iz, which(find_samples(level_1, sample_info) & find_samples(level_2, sample_info)))
+  }
+
+  # Has design file and chose factors
+  if (!is.null(sample_info) & !is.null(select_factors_model) &
+    length(select_model_comprions) > 0) {
+
     # Strings like: "groups: mutant vs. control"
-		comparisons <- gsub(".*: ", "", select_model_comprions)
-    comparisons <- gsub(" vs\\. ", "-", comparisons)		
+    comparisons <- gsub(".*: ", "", select_model_comprions)
+    comparisons <- gsub(" vs\\. ", "-", comparisons)
     # Corresponding factors
-		factors_vector <- gsub(":.*", "", select_model_comprions)
+    factors_vector <- gsub(":.*", "", select_model_comprions)
 
-	  # If read counts data and DESeq2
-		if(data_file_format == 1 & counts_deg_method == 3) {
+    # If read counts data and DESeq2
+    if (data_file_format == 1 & counts_deg_method == 3) {
       # Could be "wt-mu" or "wt-mu_for_conditionB"
-			contrast <- gsub("_for_.*", "", select_contrast)
-      # Selected contrast lookes like: "mutant-control" 
-			ik <- match(contrast, comparisons)
+      contrast <- gsub("_for_.*", "", select_contrast)
+      # Selected contrast lookes like: "mutant-control"
+      ik <- match(contrast, comparisons)
 
-			other_factor_level <- gsub(".*_for_", "", select_contrast)
-			# Find the corresponding factor for the other factor
-			other_factor <- " "
-			if(nchar(other_factor_level) > 0) {
-				for(each_factor in colnames(sample_info)) {
+      other_factor_level <- gsub(".*_for_", "", select_contrast)
+      # Find the corresponding factor for the other factor
+      other_factor <- " "
+      if (nchar(other_factor_level) > 0) {
+        for (each_factor in colnames(sample_info)) {
           if (other_factor_level %in% sample_info[, each_factor]) {
             other_factor <- each_factor
           }
-        }		
-			}
-			
-			if(is.na(ik)) {
+        }
+      }
+
+      if (is.na(ik)) {
         iz <- 1:(length(all_sample_names))
-      # Interaction term, use all samples
+        # Interaction term, use all samples
       } else {
         # Corresponding factors
-				selected_factor <- factors_vector[ik] 
+        selected_factor <- factors_vector[ik]
 
-				iz <- which(sample_info[, selected_factor] %in% unlist(strsplit(contrast, "-")))
+        iz <- which(sample_info[, selected_factor] %in% unlist(strsplit(contrast, "-")))
 
-				# Filter by other factors: reference level
+        # Filter by other factors: reference level
         # c("genotype:wt", "treatment:control")
-				if(!is.null(reference_levels)) {   
-					for(refs in reference_levels) {
-            if(!is.null(refs) & gsub(":.*", "", refs) != selected_factor) {
-							current_factor <- gsub(":.*", "", refs)
+        if (!is.null(reference_levels)) {
+          for (refs in reference_levels) {
+            if (!is.null(refs) & gsub(":.*", "", refs) != selected_factor) {
+              current_factor <- gsub(":.*", "", refs)
               # If not reference level
-							if(nchar(other_factor_level) > 0 & current_factor == other_factor) {
-								iz <- intersect(iz, which(sample_info[, current_factor] == other_factor_level))
-							} else {
+              if (nchar(other_factor_level) > 0 & current_factor == other_factor) {
+                iz <- intersect(iz, which(sample_info[, current_factor] == other_factor_level))
+              } else {
                 iz <- intersect(iz, which(sample_info[, current_factor] == gsub(".*:", "", refs)))
-              }	
-						}
+              }
+            }
           }
-				}			
-				iz <- iz[which(!is.na(iz))]
-			# Switching from limma to DESeq2 causes problem, as reference level is not defined.
-			}
-    # Not DESeq2
-		} else {
-		  # Given level find corresponding sample ids
-			find_ids_from_level <- function(
-        a_level,
-        sample_info
-      ){
-				# Find factor
-				current_factor = ""
-				for(each_factor in colnames(sample_info)) {
+        }
+        iz <- iz[which(!is.na(iz))]
+        # Switching from limma to DESeq2 causes problem, as reference level is not defined.
+      }
+      # Not DESeq2
+    } else {
+      # Given level find corresponding sample ids
+      find_ids_from_level <- function(a_level,
+                                      sample_info) {
+        # Find factor
+        current_factor <- ""
+        for (each_factor in colnames(sample_info)) {
           if (a_level %in% sample_info[, each_factor]) {
             current_factor <- each_factor
           }
-        }			
-				
-        if(nchar(current_factor) > 0) {
-          return(which(sample_info[, current_factor] %in% a_level)) 
+        }
+
+        if (nchar(current_factor) > 0) {
+          return(which(sample_info[, current_factor] %in% a_level))
         } else {
           return(NULL)
-        }	
-      }		
-					
-			if(!grepl(".*_.*-.*_.*", select_contrast)) {
+        }
+      }
+
+      if (!grepl(".*_.*-.*_.*", select_contrast)) {
         iz <- c()
       }
       # Double split!
-			levels_4 <- unlist(strsplit(unlist(strsplit(select_contrast, "-")), "_")) 
-			if(length(levels_4) != 4) { 
-				iz <- c() 
-			} else {
+      levels_4 <- unlist(strsplit(unlist(strsplit(select_contrast, "-")), "_"))
+      if (length(levels_4) != 4) {
+        iz <- c()
+      } else {
         # First sample
-				iz <- intersect(
+        iz <- intersect(
           find_ids_from_level(levels_4[1], sample_info),
           find_ids_from_level(levels_4[2], sample_info)
         )
         # 2nd sample
-				iz <- c(
+        iz <- c(
           iz,
           intersect(
             find_ids_from_level(levels_4[3], sample_info),
             find_ids_from_level(levels_4[4], sample_info)
           )
-        ) 
-			}
-		}
-	}	
-	 
-	if(grepl("I:", select_contrast)) {
+        )
+      }
+    }
+  }
+
+  if (grepl("I:", select_contrast)) {
     # If it is factor design use all samples
     iz <- 1:length(all_sample_names)
   }
-	if(is.na(iz)[1] | length(iz) <= 1 ) {
+  if (is.na(iz)[1] | length(iz) <= 1) {
     iz <- 1:length(all_sample_names)
   }
 
-	return(iz)
+  return(iz)
 }
 
 #' Read gene sets GMT file
 #' This functions cleans and converts to upper case
 #' @export
-read_gmt_robust <- function (in_file) {
-	# Read in the first file 
-	x <- scan(in_file, what = "", sep = "\n")
+read_gmt_robust <- function(in_file) {
+  # Read in the first file
+  x <- scan(in_file, what = "", sep = "\n")
   # GMT files saved by Excel has a lot of empty cells "\t\t\t\t" "\t." means one or more tab
-	# Remove white space
-  x <- gsub(" ", "", x)  
-	# Convert to upper case
+  # Remove white space
+  x <- gsub(" ", "", x)
+  # Convert to upper case
   x <- toupper(x)
 
-	#----Process the first file
-	# Separate elements by one or more whitespace
-	y <- strsplit(x, "\t")
-	# Extract the first vector element and set it as the list element name
-	names(y) <- sapply(y, "[[", 1)
-	# Remove the first vector element from each list element
-	y <- lapply(y, "[", -c(1, 2))
-	# Remove duplicated elements
-	for(i in 1:length(y)) {
+  #----Process the first file
+  # Separate elements by one or more whitespace
+  y <- strsplit(x, "\t")
+  # Extract the first vector element and set it as the list element name
+  names(y) <- sapply(y, "[[", 1)
+  # Remove the first vector element from each list element
+  y <- lapply(y, "[", -c(1, 2))
+  # Remove duplicated elements
+  for (i in 1:length(y)) {
     y[[i]] <- clean_gene_set(y[[i]])
   }
-	# Check the distribution of the size of gene lists sapply(y, length) hold a vector of sizes
-	if(max(sapply(y, length)) < 5) {
+  # Check the distribution of the size of gene lists sapply(y, length) hold a vector of sizes
+  if (max(sapply(y, length)) < 5) {
     cat("Warning! Gene sets have very small number of genes!\n Please double check format.")
   }
   # Gene sets smaller than 1 is ignored!!!
-	y <- y[which(sapply(y, length) > 1)]
+  y <- y[which(sapply(y, length) > 1)]
 
-	return(y)
+  return(y)
 }
 
 # retrieve detailed info on genes
-get_gene_info <- function(
-  converted,
-  select_org,
-  gene_info_files
-) {
-	if(is.null(converted)) {
-    return(as.data.frame("ID not recognized!"))
-  } 
-	query_set <- converted$ids
-	if(length(query_set) == 0) {
+get_gene_info <- function(converted,
+                          select_org,
+                          gene_info_files) {
+  if (is.null(converted)) {
     return(as.data.frame("ID not recognized!"))
   }
-	ix <- grep(converted$species[1, 1], gene_info_files)
-	if(length(ix) == 0) {
-    return(as.data.frame("No matching gene info file found") )
+  query_set <- converted$ids
+  if (length(query_set) == 0) {
+    return(as.data.frame("ID not recognized!"))
+  }
+  ix <- grep(converted$species[1, 1], gene_info_files)
+  if (length(ix) == 0) {
+    return(as.data.frame("No matching gene info file found"))
   } else {
-	  # If selected species is not the default "bestMatch", use that species directly
-	  if(select_org != "BestMatch") {  
-		  ix <- grep(find_species_by_id(select_org)[1, 1], gene_info_files)
-	  }
-	  if(length(ix) == 1) {
-      x <- read.csv(as.character(gene_info_files[ix])) 
-      x[, 1] <- toupper(x[, 1]) 
+    # If selected species is not the default "bestMatch", use that species directly
+    if (select_org != "BestMatch") {
+      ix <- grep(find_species_by_id(select_org)[1, 1], gene_info_files)
+    }
+    if (length(ix) == 1) {
+      x <- read.csv(as.character(gene_info_files[ix]))
+      x[, 1] <- toupper(x[, 1])
       # If symbol is missing use Ensembl IDs
-      x$symbol[is.na(x$symbol) ] <- x[, 1]
+      x$symbol[is.na(x$symbol)] <- x[, 1]
       # If duplicated symbol, paste Ensembl id to the end
       n_occur <- data.frame(table(x$symbol))
       # Rows with duplicated symbols
-      ix_duplicated <- which(n_occur$Freq > 1) 
+      ix_duplicated <- which(n_occur$Freq > 1)
       x$symbol[ix_duplicated] <- paste(x$symbol[ix_duplicated], x[ix_duplicated, 1])
     } else {
-      # Read in the chosen file 
+      # Read in the chosen file
       return(as.data.frame("Multiple geneInfo file found!"))
     }
-	  Set <- match(x$ensembl_gene_id, query_set)
-	  Set[which(is.na(Set))] = "Genome"
-	  Set[which(Set!="Genome")] = "List"
+    Set <- match(x$ensembl_gene_id, query_set)
+    Set[which(is.na(Set))] <- "Genome"
+    Set[which(Set != "Genome")] <- "List"
 
-	  return(cbind(x, Set))
+    return(cbind(x, Set))
   }
 }

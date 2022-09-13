@@ -20,15 +20,14 @@ mod_06_pathway_ui <- function(id) {
           type = "text/css",
           "#pathway-list_comparisons_pathway { width:100%;   margin-top:-12px}"
         ),
-
         selectInput(
-          inputId = ns("pathway_method"), 
-          label = "Select method:", 
+          inputId = ns("pathway_method"),
+          label = "Select method:",
           choices = list(
-            "GAGE" = 1, 
+            "GAGE" = 1,
             "GSEA (preranked fgsea)" = 3,
-            "PGSEA" = 2, 
-            "PGSEA w/ all samples" = 4, 
+            "PGSEA" = 2,
+            "PGSEA w/ all samples" = 4,
             "ReactomePA" = 5
           ),
           selected = 1
@@ -44,14 +43,14 @@ mod_06_pathway_ui <- function(id) {
           type = "text/css",
           "#pathway-select_go { width:100%;   margin-top:-12px}"
         ),
-        fluidRow( 
+        fluidRow(
           column(
             width = 6,
             numericInput(
-              inputId = ns("min_set_size"), 
-              label = h5("Geneset size: Min."), 
-              min = 5, 
-              max = 30, 
+              inputId = ns("min_set_size"),
+              label = h5("Geneset size: Min."),
+              min = 5,
+              max = 30,
               value = 15,
               step = 1
             )
@@ -59,10 +58,10 @@ mod_06_pathway_ui <- function(id) {
           column(
             width = 6,
             numericInput(
-              inputId = ns("max_set_size"), 
-              label = h5("Max."), 
-              min = 1000, 
-              max = 2000, 
+              inputId = ns("max_set_size"),
+              label = h5("Max."),
+              min = 1000,
+              max = 2000,
               value = 2000,
               step = 100
             )
@@ -77,7 +76,7 @@ mod_06_pathway_ui <- function(id) {
           "#pathway-max_set_size { width:100%;   margin-top:-12px}"
         ),
         numericInput(
-          inputId = ns("pathway_p_val_cutoff"), 
+          inputId = ns("pathway_p_val_cutoff"),
           label = h5("Pathway signifiance cutoff (FDR)"),
           value = 0.2,
           min = 1e-20,
@@ -89,9 +88,9 @@ mod_06_pathway_ui <- function(id) {
           "#pathway-pathway_p_val_cutoff { width:100%;   margin-top:-12px}"
         ),
         numericInput(
-          inputId = ns("n_pathway_show"), 
+          inputId = ns("n_pathway_show"),
           label = h5("Number of top pathways to show"),
-          value = 30, 
+          value = 30,
           min = 5,
           max = 100,
           step = 5
@@ -106,7 +105,7 @@ mod_06_pathway_ui <- function(id) {
           value = FALSE
         ),
         numericInput(
-          inputId = ns("gene_p_val_cutoff"), 
+          inputId = ns("gene_p_val_cutoff"),
           label = h5("Remove genes with big FDR before pathway analysis:"),
           value = 1,
           min = 1e-20,
@@ -122,7 +121,7 @@ mod_06_pathway_ui <- function(id) {
         downloadButton(
           outputId = ns("report"),
           label = "Generate Report"
-        ), 
+        ),
         a(
           h5("Questions?", align = "right"),
           href = "https://idepsite.wordpress.com/pathways/",
@@ -143,7 +142,7 @@ mod_06_pathway_ui <- function(id) {
             conditionalPanel(
               condition = "input.pathway_method == 2",
               h5("Red and blue indicates relatively activated
-               and suppressed pathways, respectively. 
+               and suppressed pathways, respectively.
               GS just indicates a color scale."),
               plotOutput(
                 outputId = ns("pgsea_plot"),
@@ -177,12 +176,10 @@ mod_06_pathway_ui <- function(id) {
               outputId = ns("enrichment_tree"),
               width = "100%"
             ),
-
             br(),
-            p("Adjusting the width of the browser 
-            window can render figure differently and  
+            p("Adjusting the width of the browser
+            window can render figure differently and
             resolve the \"Figure margin too wide\" error. ")
-
           ),
           tabPanel(
             title = "Network",
@@ -198,7 +195,7 @@ mod_06_pathway_ui <- function(id) {
               column(
                 width = 1,
                 h5("Cutoff:"),
-                align="right"
+                align = "right"
               ),
               column(
                 width = 2,
@@ -210,7 +207,7 @@ mod_06_pathway_ui <- function(id) {
                   max = 1,
                   step = .1
                 ),
-                align="left"
+                align = "left"
               ),
               column(
                 width = 2,
@@ -233,11 +230,10 @@ mod_06_pathway_ui <- function(id) {
                 )
               )
             ),
-
             h6(
               "Two pathways (nodes) are connected if they share 30% (default, adjustable) or more genes.
-              Green and red represents down- and up-regulated pathways. You can move the nodes by 
-              dragging them, zoom in and out by scrolling, and shift the entire network by click on an 
+              Green and red represents down- and up-regulated pathways. You can move the nodes by
+              dragging them, zoom in and out by scrolling, and shift the entire network by click on an
               empty point and drag. Darker nodes are more significantly enriched gene sets. Bigger nodes
               represent larger gene sets. Thicker edges represent more overlapped genes."
             ),
@@ -255,14 +251,14 @@ mod_06_pathway_ui <- function(id) {
           tabPanel(
             title = "KEGG",
             conditionalPanel(
-              condition = "(input.pathway_method == 1 | input.pathway_method == 2 | 
+              condition = "(input.pathway_method == 1 | input.pathway_method == 2 |
                             input.pathway_method == 3 | input.pathway_method == 4) &
                             input.select_go != 'KEGG'",
               h5("Please select KEGG database, if available, from left and perform pathway analysis first."),
               ns = ns
             ),
             conditionalPanel(
-              condition = "(input.pathway_method == 1 | input.pathway_method == 2 | 
+              condition = "(input.pathway_method == 1 | input.pathway_method == 2 |
                             input.pathway_method == 3 | input.pathway_method == 4) &
                             input.select_go == 'KEGG'",
               fluidRow(
@@ -287,7 +283,6 @@ mod_06_pathway_ui <- function(id) {
                     width = "100%"
                   )
                 )
-
               ),
               imageOutput(
                 outputId = ns("kegg_image"),
@@ -297,8 +292,8 @@ mod_06_pathway_ui <- function(id) {
               h5("Red and green represent up- and down-regulated genes, respectively."),
               ns = ns
             )
-          )
-         , tabPanel(
+          ),
+          tabPanel(
             title = "Info",
             includeHTML("inst/app/www/pathway.html")
           )
@@ -320,14 +315,14 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
 
     # GMT choices for enrichment ----------
     output$select_go_selector <- renderUI({
-	    req(!is.null(pre_process$gmt_choices()))
+      req(!is.null(pre_process$gmt_choices()))
       req(input$pathway_method != 5)
       # if there is KEGG, use KEGG as default
       selected <- "GOBP"
-      if("KEGG" %in% pre_process$gmt_choices()) {
+      if ("KEGG" %in% pre_process$gmt_choices()) {
         selected <- "KEGG"
       }
-	    selectInput(
+      selectInput(
         inputId = ns("select_go"),
         label = "Select Geneset:",
         choices = pre_process$gmt_choices(),
@@ -354,12 +349,12 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     observe({
       req(!is.null(pre_process$data()) && is.null(deg$limma()) && (
         tab() == "DEG1" || tab() == "DEG2" ||
-        tab() == "Pathway" || tab() == "Genome"
+          tab() == "Pathway" || tab() == "Genome"
       ))
 
       showNotification(
-        ui = paste("Differentially expressed genes need to 
-        be identified first. Please select factors and comparisons and 
+        ui = paste("Differentially expressed genes need to
+        be identified first. Please select factors and comparisons and
         click Submit on the DEG1 tab."),
         id = "click_submit_DEG1",
         duration = NULL,
@@ -369,137 +364,133 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
 
     # Remove messages if the tab changes --------
     observe({
-      req( !is.null(deg$limma())  || (
+      req(!is.null(deg$limma()) || (
         tab() != "DEG1" && tab() != "DEG2" &&
-        tab() != "Pathway" && tab() != "Genome"
+          tab() != "Pathway" && tab() != "Genome"
       ))
       removeNotification("click_submit_DEG1")
     })
 
     output$list_comparisons_pathway <- renderUI({
-      if(is.null(deg$limma()$comparisons)) {
+      if (is.null(deg$limma()$comparisons)) {
         selectInput(
           inputId = ns("select_contrast"),
           label = NULL,
           choices = list("All" = "All"),
           selected = "All"
-        )  
-			}	else {
+        )
+      } else {
         selectInput(
           inputId = ns("select_contrast"),
-          label = 
+          label =
             "Select a comparison to examine. \"A-B\" means A vs. B (See heatmap).
             Interaction terms start with \"I:\"",
           choices = deg$limma()$comparisons
-	     )
-      } 
-	  })
+        )
+      }
+    })
 
     output$list_sig_pathways <- renderUI({
-
-        req(!is.null(input$pathway_method))
-        # Default, sometimes these methods returns "No significant pathway found"
-		    choices <- "All"  
-		    if(input$pathway_method == 1) { 
-			    if(!is.null(gage_pathway_data())) {
-            if(dim(gage_pathway_data())[2] > 1) {
-              choices <- gage_pathway_data()[, 2]
-            } 
-          }
-		    } else if(input$pathway_method == 2) {
-          if(!is.null(pgsea_plot_data())) {
-            if(dim(pgsea_plot_data())[2] > 1) {
-					 	  pathways <- as.data.frame(pgsea_plot_data())
-						  choices <- substr(rownames(pathways), 10, nchar(rownames(pathways)))
-					  }
-          }
-				} else if(input$pathway_method == 3) {
-          if(!is.null(fgsea_pathway_data())) {
-            if(dim(fgsea_pathway_data())[2] > 1) {
-              choices <- fgsea_pathway_data()[, 2]
-            }
-          }
-        } else if(input$pathway_method == 4) {
-          if(!is.null(pgsea_plot_all_samples_data())) {
-            if(dim(pgsea_plot_all_samples_data())[2] > 1) {
-					    pathways <- as.data.frame(pgsea_plot_all_samples_data())
-					    choices <- substr(rownames(pathways), 10, nchar(rownames(pathways)))
-				    }
-          }
-        } else if(input$pathway_method == 5) {
-			    if(!is.null(reactome_pa_pathway_data())) {
-            if(dim(reactome_pa_pathway_data())[2] > 1) {
-              choices <- reactome_pa_pathway_data()[, 2]
-            }  
+      req(!is.null(input$pathway_method))
+      # Default, sometimes these methods returns "No significant pathway found"
+      choices <- "All"
+      if (input$pathway_method == 1) {
+        if (!is.null(gage_pathway_data())) {
+          if (dim(gage_pathway_data())[2] > 1) {
+            choices <- gage_pathway_data()[, 2]
           }
         }
-        
-        selectInput(
-          inputId = ns("sig_pathways"),
-          label = "Select a significant pathway:",
-          choices = choices
-        )
-	     
-	  })
+      } else if (input$pathway_method == 2) {
+        if (!is.null(pgsea_plot_data())) {
+          if (dim(pgsea_plot_data())[2] > 1) {
+            pathways <- as.data.frame(pgsea_plot_data())
+            choices <- substr(rownames(pathways), 10, nchar(rownames(pathways)))
+          }
+        }
+      } else if (input$pathway_method == 3) {
+        if (!is.null(fgsea_pathway_data())) {
+          if (dim(fgsea_pathway_data())[2] > 1) {
+            choices <- fgsea_pathway_data()[, 2]
+          }
+        }
+      } else if (input$pathway_method == 4) {
+        if (!is.null(pgsea_plot_all_samples_data())) {
+          if (dim(pgsea_plot_all_samples_data())[2] > 1) {
+            pathways <- as.data.frame(pgsea_plot_all_samples_data())
+            choices <- substr(rownames(pathways), 10, nchar(rownames(pathways)))
+          }
+        }
+      } else if (input$pathway_method == 5) {
+        if (!is.null(reactome_pa_pathway_data())) {
+          if (dim(reactome_pa_pathway_data())[2] > 1) {
+            choices <- reactome_pa_pathway_data()[, 2]
+          }
+        }
+      }
+
+      selectInput(
+        inputId = ns("sig_pathways"),
+        label = "Select a significant pathway:",
+        choices = choices
+      )
+    })
 
     output$list_sig_pathways_kegg <- renderUI({
-
-        req(!is.null(input$pathway_method))
-        # Default, sometimes these methods returns "No significant pathway found"
-		    choices <- "All"  
-		    if(input$pathway_method == 1) { 
-			    if(!is.null(gage_pathway_data())) {
-            if(dim(gage_pathway_data())[2] > 1) {
-              choices <- gage_pathway_data()[, 2]
-            } 
-          }
-		    } else if(input$pathway_method == 2) {
-          if(!is.null(pgsea_plot_data())) {
-            if(dim(pgsea_plot_data())[2] > 1) {
-					 	  pathways <- as.data.frame(pgsea_plot_data())
-						  choices <- substr(rownames(pathways), 10, nchar(rownames(pathways)))
-					  }
-          }
-				} else if(input$pathway_method == 3) {
-          if(!is.null(fgsea_pathway_data())) {
-            if(dim(fgsea_pathway_data())[2] > 1) {
-              choices <- fgsea_pathway_data()[, 2]
-            }
-          }
-        } else if(input$pathway_method == 4) {
-          if(!is.null(pgsea_plot_all_samples_data())) {
-            if(dim(pgsea_plot_all_samples_data())[2] > 1) {
-					    pathways <- as.data.frame(pgsea_plot_all_samples_data())
-					    choices <- substr(rownames(pathways), 10, nchar(rownames(pathways)))
-				    }
-          }
-        } else if(input$pathway_method == 5) {
-			    if(!is.null(reactome_pa_pathway_data())) {
-            if(dim(reactome_pa_pathway_data())[2] > 1) {
-              choices <- reactome_pa_pathway_data()[, 2]
-            }  
+      req(!is.null(input$pathway_method))
+      # Default, sometimes these methods returns "No significant pathway found"
+      choices <- "All"
+      if (input$pathway_method == 1) {
+        if (!is.null(gage_pathway_data())) {
+          if (dim(gage_pathway_data())[2] > 1) {
+            choices <- gage_pathway_data()[, 2]
           }
         }
-
-        # show all pathways if selected
-        if(input$kegg_sig_only && !is.null(gene_sets())) {
-          choices <- names(gene_sets())
+      } else if (input$pathway_method == 2) {
+        if (!is.null(pgsea_plot_data())) {
+          if (dim(pgsea_plot_data())[2] > 1) {
+            pathways <- as.data.frame(pgsea_plot_data())
+            choices <- substr(rownames(pathways), 10, nchar(rownames(pathways)))
+          }
         }
-        selectInput(
-          inputId = ns("sig_pathways_kegg"),
-          label = "Select a KEGG pathway:",
-          choices = choices
-        )
-	    
-	  })
+      } else if (input$pathway_method == 3) {
+        if (!is.null(fgsea_pathway_data())) {
+          if (dim(fgsea_pathway_data())[2] > 1) {
+            choices <- fgsea_pathway_data()[, 2]
+          }
+        }
+      } else if (input$pathway_method == 4) {
+        if (!is.null(pgsea_plot_all_samples_data())) {
+          if (dim(pgsea_plot_all_samples_data())[2] > 1) {
+            pathways <- as.data.frame(pgsea_plot_all_samples_data())
+            choices <- substr(rownames(pathways), 10, nchar(rownames(pathways)))
+          }
+        }
+      } else if (input$pathway_method == 5) {
+        if (!is.null(reactome_pa_pathway_data())) {
+          if (dim(reactome_pa_pathway_data())[2] > 1) {
+            choices <- reactome_pa_pathway_data()[, 2]
+          }
+        }
+      }
+
+      # show all pathways if selected
+      if (input$kegg_sig_only && !is.null(gene_sets())) {
+        choices <- names(gene_sets())
+      }
+      selectInput(
+        inputId = ns("sig_pathways_kegg"),
+        label = "Select a KEGG pathway:",
+        choices = choices
+      )
+    })
 
     gene_sets <- reactive({
-#      req(tab() == "Pathway")
+      #      req(tab() == "Pathway")
       req(!is.null(input$select_go))
 
       withProgress(message = "Reading pathway database", {
         incProgress(0.2)
-        if(pre_process$select_org() == "NEW" && !is.null(pre_process$gmt_file())) {
+        if (pre_process$select_org() == "NEW" && !is.null(pre_process$gmt_file())) {
           in_file <- pre_process$gmt_file()
           in_file <- in_file$datapath
           gene_sets <- read_gmt_robust(in_file)
@@ -518,7 +509,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       return(gene_sets)
     })
 
-    gage_pathway_data <- reactive({  
+    gage_pathway_data <- reactive({
       req(input$pathway_method == 1)
       req(!is.null(deg$limma()))
       req(!is.null(gene_sets()))
@@ -558,31 +549,32 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       req(!is.null(pre_process$data()))
 
       find_contrast_samples(
-        select_contrast = input$select_contrast, 
-		    all_sample_names = colnames(pre_process$data()),
-		    sample_info = pre_process$sample_info(),
-		    select_factors_model = deg$select_factors_model(),
-		    select_model_comprions = deg$select_model_comprions(), 
-		    reference_levels = deg$reference_levels(),
-		    counts_deg_method = deg$counts_deg_method(),
-		    data_file_format = pre_process$data_file_format()
-	    )
+        select_contrast = input$select_contrast,
+        all_sample_names = colnames(pre_process$data()),
+        sample_info = pre_process$sample_info(),
+        select_factors_model = deg$select_factors_model(),
+        select_model_comprions = deg$select_model_comprions(),
+        reference_levels = deg$reference_levels(),
+        counts_deg_method = deg$counts_deg_method(),
+        data_file_format = pre_process$data_file_format()
+      )
     })
 
-    output$pgsea_plot <- renderPlot({
-      req(input$pathway_method == 2)
-      withProgress(message = "Running PGSEA...", {
-        incProgress(0.2)
-        plot_pgsea(
-          my_range = c(input$min_set_size, input$max_set_size),
-          processed_data = pre_process$data(),
-          contrast_samples = contrast_samples(),
-          gene_sets = gene_sets(),
-          pathway_p_val_cutoff = input$pathway_p_val_cutoff,
-          n_pathway_show = input$n_pathway_show
-        )
-      })
-    },
+    output$pgsea_plot <- renderPlot(
+      {
+        req(input$pathway_method == 2)
+        withProgress(message = "Running PGSEA...", {
+          incProgress(0.2)
+          plot_pgsea(
+            my_range = c(input$min_set_size, input$max_set_size),
+            processed_data = pre_process$data(),
+            contrast_samples = contrast_samples(),
+            gene_sets = gene_sets(),
+            pathway_p_val_cutoff = input$pathway_p_val_cutoff,
+            n_pathway_show = input$n_pathway_show
+          )
+        })
+      },
       height = 800,
       width = 800
     )
@@ -637,7 +629,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         ),
         rownames = FALSE
       )
-	  })
+    })
 
     reactome_pa_pathway_data <- reactive({
       req(input$pathway_method == 5)
@@ -658,21 +650,25 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       })
     })
 
-    output$pgsea_plot_all_samples <- renderPlot({
-      req(input$pathway_method == 4)
-      withProgress(message = "Running PGSEA on all samples ...", {
-        incProgress(0.2)
-        pgsea_plot_all(
-          go = input$select_go,
-          my_range = c(input$min_set_size, input$max_set_size),
-          data = pre_process$data(),
-          select_contrast = input$select_contrast,
-          gene_sets = gene_sets(),
-          pathway_p_val_cutoff = input$pathway_p_val_cutoff,
-          n_pathway_show = input$n_pathway_show
-        )
-      })
-    }, height = 800, width = 800)
+    output$pgsea_plot_all_samples <- renderPlot(
+      {
+        req(input$pathway_method == 4)
+        withProgress(message = "Running PGSEA on all samples ...", {
+          incProgress(0.2)
+          pgsea_plot_all(
+            go = input$select_go,
+            my_range = c(input$min_set_size, input$max_set_size),
+            data = pre_process$data(),
+            select_contrast = input$select_contrast,
+            gene_sets = gene_sets(),
+            pathway_p_val_cutoff = input$pathway_p_val_cutoff,
+            n_pathway_show = input$n_pathway_show
+          )
+        })
+      },
+      height = 800,
+      width = 800
+    )
 
     pgsea_plot_all_samples_data <- reactive({
       req(input$pathway_method == 4)
@@ -693,7 +689,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     output$reactome_pa_pathway <- DT::renderDataTable({
       req(input$pathway_method == 5)
       req(!is.null(reactome_pa_pathway_data()))
-	    
+
       DT::datatable(
         reactome_pa_pathway_data(),
         options = list(
@@ -702,12 +698,12 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         ),
         rownames = FALSE
       )
-	  })
+    })
 
     selected_pathway_data <- reactive({
       req(!is.null(input$sig_pathways))
       req(!is.null(gene_sets()))
-      
+
       pathway_select_data(
         sig_pathways = input$sig_pathways,
         gene_sets = gene_sets(),
@@ -717,19 +713,19 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         all_gene_names = pre_process$all_gene_names()
       )
     })
-    
+
     # Kegg Colors --------
     kegg_colors <- list(
-      "Green-Red" = c("green", "red"), 
+      "Green-Red" = c("green", "red"),
       "Blue-Orange" = c("blue", "orange")
     )
     kegg_choices <- c(
-      "Green-Red", 
+      "Green-Red",
       "Blue-Orange"
     )
     observe({
       updateSelectInput(
-        session = session, 
+        session = session,
         inputId = "kegg_color_select",
         choices = kegg_choices
       )
@@ -739,32 +735,41 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
 
     heatmap_module <- mod_12_heatmap_server(
       id = "12_heatmap_1",
-      data = reactive({ selected_pathway_data() }),
-      bar = function() { return(NULL) },
-      all_gene_names = reactive({ pre_process$all_gene_names() }),
+      data = reactive({
+        selected_pathway_data()
+      }),
+      bar = function() {
+        return(NULL)
+      },
+      all_gene_names = reactive({
+        pre_process$all_gene_names()
+      }),
       cluster_rows = TRUE
     )
- 
 
-    output$kegg_image <- renderImage({
-      req(!is.null(input$sig_pathways_kegg))
-      withProgress(message = "Downloading KEGG pathway", {
-        incProgress(0.2)
-        kegg_pathway(
-          go = input$select_go,
-          gage_pathway_data = pathway_list_data()[, 1:5],
-          sig_pathways = input$sig_pathways_kegg,
-          select_contrast = input$select_contrast,
-          limma = deg$limma(),
-          converted = pre_process$converted(),
-          idep_data = idep_data,
-          select_org = pre_process$select_org(), 
-          low_color = kegg_colors[[input$kegg_color_select]][1],
-          high_color = kegg_colors[[input$kegg_color_select]][2]
-        )
-      })
-    }, deleteFile = TRUE)
-    
+
+    output$kegg_image <- renderImage(
+      {
+        req(!is.null(input$sig_pathways_kegg))
+        withProgress(message = "Downloading KEGG pathway", {
+          incProgress(0.2)
+          kegg_pathway(
+            go = input$select_go,
+            gage_pathway_data = pathway_list_data()[, 1:5],
+            sig_pathways = input$sig_pathways_kegg,
+            select_contrast = input$select_contrast,
+            limma = deg$limma(),
+            converted = pre_process$converted(),
+            idep_data = idep_data,
+            select_org = pre_process$select_org(),
+            low_color = kegg_colors[[input$kegg_color_select]][1],
+            high_color = kegg_colors[[input$kegg_color_select]][2]
+          )
+        })
+      },
+      deleteFile = TRUE
+    )
+
     # List of pathways with details
     pathway_list_data <- reactive({
       get_pathway_list_data(
@@ -783,14 +788,14 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     # Enrichment Tree -----------
     output$enrichment_tree <- renderPlot({
       req(!is.null(pathway_list_data()))
-      
+
       enrichment_tree_plot(
         go_table = pathway_list_data(),
         group = "All Groups",
         right_margin = 45
       )
     })
-    
+
     # Define a Network
     network_data_path <- reactive({
       req(!is.null(pathway_list_data()))
@@ -798,7 +803,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       network_data(
         network = pathway_list_data(),
         up_down_reg_deg = input$up_down_reg_deg,
-        wrap_text_network_deg= input$wrap_text_network_deg,
+        wrap_text_network_deg = input$wrap_text_network_deg,
         layout_vis_deg = input$layout_vis_deg,
         edge_cutoff_deg = input$edge_cutoff_deg
       )
@@ -807,13 +812,13 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     # Interactive vis network plot
     output$vis_network_path <- visNetwork::renderVisNetwork({
       req(!is.null(network_data_path()))
-      
+
       vis_network_plot(
         network_data = network_data_path()
       )
     })
-    
-    
+
+
     # Markdown report------------
     output$report <- downloadHandler(
       # For PDF output, change this to "report.pdf"
@@ -855,21 +860,21 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           # case we don't have write permissions to the current working dir (which
           # can happen when deployed).
           tempReport <- file.path(tempdir(), "pathway_workflow.Rmd")
-          #tempReport
+          # tempReport
           tempReport <- gsub("\\", "/", tempReport, fixed = TRUE)
 
-          #This should retrieve the project location on your device:
-          #"C:/Users/bdere/Documents/GitHub/idepGolem"
+          # This should retrieve the project location on your device:
+          # "C:/Users/bdere/Documents/GitHub/idepGolem"
           wd <- getwd()
 
-          markdown_location <-paste0(wd, "/vignettes/Reports/pathway_workflow.Rmd")
+          markdown_location <- paste0(wd, "/vignettes/Reports/pathway_workflow.Rmd")
           file.copy(from = markdown_location, to = tempReport, overwrite = TRUE)
 
           # Knit the document, passing in the `params` list, and eval it in a
           # child of the global environment (this isolates the code in the document
           # from the code in this app).
           rmarkdown::render(
-            input = tempReport, #markdown_location, 
+            input = tempReport, # markdown_location,
             output_file = file,
             params = params,
             envir = new.env(parent = globalenv())

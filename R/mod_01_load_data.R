@@ -1,4 +1,4 @@
-  #' 01_load_data UI Function
+#' 01_load_data UI Function
 #'
 #' @description A shiny Module.
 #'
@@ -20,7 +20,7 @@ mod_01_load_data_ui <- function(id) {
         fluidRow(
           column(
             width = 9,
-            p("Load a demo file below. 
+            p("Load a demo file below.
             Click the tabs to see some magic!")
           ),
           column(
@@ -111,8 +111,7 @@ mod_01_load_data_ui <- function(id) {
           ),
           ns = ns
         ),
-
-        fluidRow( 
+        fluidRow(
           column(
             width = 6,
             # Button to load demo dataset ----------
@@ -136,7 +135,7 @@ mod_01_load_data_ui <- function(id) {
               multiple = FALSE
             )
           )
-        ), 
+        ),
 
         # Expression data file input ----------
         fileInput(
@@ -195,7 +194,7 @@ mod_01_load_data_ui <- function(id) {
 
 
       ##################################################################
-      #       Load Data panel main 
+      #       Load Data panel main
       ##################################################################
       mainPanel(
         shinyjs::useShinyjs(),
@@ -230,9 +229,7 @@ mod_01_load_data_ui <- function(id) {
             h4("Loading R packages, please wait ... ... ...")
           ),
           htmlOutput(ns("file_format")),
-
           includeHTML("inst/app/www/messages.html"),
-
           br(),
           img(
             src = "www/flowchart.png",
@@ -242,13 +239,13 @@ mod_01_load_data_ui <- function(id) {
           ),
           br(),
           img(
-            src = 'www/figs.gif',
+            src = "www/figs.gif",
             align = "center",
-            width = "640", 
+            width = "640",
             height = "480"
           ),
           ns = ns
-       ),
+        ),
         # show help information for data format
         conditionalPanel("input.data_format_help != 0",
           includeHTML("inst/app/www/format.html"),
@@ -273,16 +270,16 @@ mod_01_load_data_ui <- function(id) {
 mod_01_load_data_server <- function(id, idep_data, tab) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
-    #increase max input file size
+
+    # increase max input file size
     options(shiny.maxRequestSize = 2001024^2)
 
     observeEvent(input$genome_assembl_button, {
       shiny::showModal(
         shiny::modalDialog(
           size = "l",
-          p("Search annotated species by common or scientific names, 
-          or NCBI taxonomy id. If your species cannot be found here, 
+          p("Search annotated species by common or scientific names,
+          or NCBI taxonomy id. If your species cannot be found here,
           you can still use iDEP without pathway analysis."),
           DT::renderDataTable({
             df <- idep_data$org_info[, c("ensembl_dataset", "name", "totalGenes")]
@@ -312,7 +309,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       )
     })
 
-      # Show messages when on the Network tab or button is clicked
+    # Show messages when on the Network tab or button is clicked
     observe({
       req(is.null(loaded_data()$data) && (
         tab() != "Load Data" || tab() != "About"
@@ -328,9 +325,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
     # Remove messages if the tab changes --------
     observe({
-      req(!is.null(loaded_data()$data) || 
-        tab() == "Load Data" || tab() == "About"
-      )
+      req(!is.null(loaded_data()$data) ||
+        tab() == "Load Data" || tab() == "About")
       removeNotification("load_data_first")
     })
 
@@ -344,7 +340,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # Provide list of demo files -----------
     observe({
       files <- idep_data$demo_file_info
-      #only keep files of specified format
+      # only keep files of specified format
       files <- files[files$type == input$data_file_format, ]
       choices <- setNames(as.list(files$ID), files$name)
       updateSelectInput(
@@ -355,14 +351,14 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       )
     })
 
-    #Change demo data based on selected format
-    #returns a vector with file names  c(data, design)
+    # Change demo data based on selected format
+    # returns a vector with file names  c(data, design)
     demo_data_file <- reactive({
       req(!is.null(input$select_demo))
       files <- idep_data$demo_file_info
       ix <- which(files$ID == input$select_demo)
-      return(c(  
-        files$expression[ix], 
+      return(c(
+        files$expression[ix],
         files$design[ix]
       ))
     })
@@ -373,11 +369,11 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         expression_file = input$expression_file,
         experiment_file = input$experiment_file,
         go_button = input$go_button,
-        demo_data_file = demo_data_file()[1], 
+        demo_data_file = demo_data_file()[1],
         demo_metadata_file = demo_data_file()[2]
       )
     )
-    
+
     # observeEvent(input$data_file_format, {
     #   req(loaded_data())
     #   loaded_data() <- NULL
@@ -422,94 +418,90 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     observeEvent(input$reset_app, {
       session$reload()
     })
-    
+
     # Get converted IDs ----------
     conversion_info <- reactive({
-      
       req(!is.null(loaded_data()$data))
-      
-      # test data for correct format 
+
+      # test data for correct format
       if (
         min(loaded_data()$data, na.rm = TRUE) < 0 & input$data_file_format == 1
       ) {
         showModal(modalDialog(
-          title = "Somthing seems incorrect...", 
-          tags$p("Negative values were detected in this dataset. This is not 
-                 correct for the selected data type (Read Counts). 
-                 Please double check data type or the data. 
-                 You will not be able to continue until one of these 
+          title = "Somthing seems incorrect...",
+          tags$p("Negative values were detected in this dataset. This is not
+                 correct for the selected data type (Read Counts).
+                 Please double check data type or the data.
+                 You will not be able to continue until one of these
                  are resolved."),
-          tags$br(), 
+          tags$br(),
           tags$p("Upon clicking okay, the application will reset."),
-          size = "m", 
+          size = "m",
           footer = actionButton(ns("reset_app"), "Okay, I will check my inputs!")
         ))
       } else {
-      
+        shinybusy::show_modal_spinner(
+          spin = "orbit",
+          text = "Loading Data",
+          color = "#000000"
+        )
 
-      shinybusy::show_modal_spinner(
-        spin = "orbit",
-        text = "Loading Data",
-        color = "#000000"
-      )
+        converted <- convert_id(
+          rownames(loaded_data()$data),
+          idep_data = idep_data,
+          select_org = input$select_org,
+          max_sample_ids = 200
+        )
 
-      converted <- convert_id(
-        rownames(loaded_data()$data),
-        idep_data = idep_data,
-        select_org = input$select_org,
-        max_sample_ids = 200
-      )
+        all_gene_info <- gene_info(
+          converted = converted,
+          select_org = input$select_org,
+          idep_data = idep_data
+        )
 
-      all_gene_info <- gene_info(
-        converted = converted,
-        select_org = input$select_org,
-        idep_data = idep_data
-      )
+        converted_data <- convert_data(
+          converted = converted,
+          no_id_conversion = input$no_id_conversion,
+          data = loaded_data()$data
+        )
 
-      converted_data <- convert_data(
-        converted = converted,
-        no_id_conversion = input$no_id_conversion,
-        data = loaded_data()$data
-      )
+        all_gene_names <- get_all_gene_names(
+          mapped_ids = converted_data$mapped_ids,
+          all_gene_info = all_gene_info
+        )
 
-      all_gene_names <- get_all_gene_names(
-        mapped_ids = converted_data$mapped_ids,
-        all_gene_info = all_gene_info
-      )
+        gmt_choices <- gmt_category(
+          converted = converted,
+          converted_data = converted_data$data,
+          select_org = input$select_org,
+          gmt_file = input$gmt_file,
+          idep_data = idep_data
+        )
 
-      gmt_choices <- gmt_category(
-        converted = converted,
-        converted_data = converted_data$data,
-        select_org = input$select_org,
-        gmt_file = input$gmt_file,
-        idep_data = idep_data
-      )
+        shinybusy::remove_modal_spinner()
 
-      shinybusy::remove_modal_spinner()
-
-      return(list(
-        converted = converted,
-        all_gene_info = all_gene_info,
-        converted_data = converted_data$data,
-        all_gene_names = all_gene_names,
-        gmt_choices = gmt_choices
-      ))
+        return(list(
+          converted = converted,
+          all_gene_info = all_gene_info,
+          converted_data = converted_data$data,
+          all_gene_names = all_gene_names,
+          gmt_choices = gmt_choices
+        ))
       }
     })
 
     # Species match table ----------
     output$species_match <- renderTable(
       {
-
         if (is.null(input$expression_file) && input$go_button == 0) {
           return(NULL)
         }
         isolate({
           if (is.null(conversion_info()$converted)) {
-            return( as.data.frame("ID not recognized.") )
+            return(as.data.frame("ID not recognized."))
           }
           tem <- conversion_info()$converted$species_match
-          if(nrow(tem) > 50) { # show only 50 
+          if (nrow(tem) > 50) { # show only 50
             tem <- tem[1:50, , drop = FALSE]
           }
           if (is.null(tem)) {
@@ -533,14 +525,14 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # Species match message ----------
     observe({
       req(
-        tab() == "Load Data"
-        && !is.null(conversion_info()$converted) 
-        && input$select_org == idep_data$species_choice[[1]] # species not selected
+        tab() == "Load Data" &&
+          !is.null(conversion_info()$converted) &&
+          input$select_org == idep_data$species_choice[[1]] # species not selected
       )
 
       tem <- conversion_info()$converted$species_match
-       showNotification(
-        ui = paste0("Matched species is '", tem[1, ],".' If that is not your
+      showNotification(
+        ui = paste0("Matched species is '", tem[1, ], ".' If that is not your
                     species, please click Reset and use the dropdown to select
                     the correct species first."),
         id = "species_match",
@@ -549,7 +541,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       )
     })
 
-    
+
     # Remove message if the tab changes --------
     observe({
       req(tab() != "Load Data")

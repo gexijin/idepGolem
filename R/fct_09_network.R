@@ -9,22 +9,22 @@
 NULL
 
 #' Utilize WGCNA function
-#' 
-#' Run the WGCNA package on the processed data. 
-#' 
+#'
+#' Run the WGCNA package on the processed data.
+#'
 #' @param data Data matrix that has been through the pre-processing
 #' @param n_genes Number of most variable genes to use in the function
-#' @param soft_power Value between 1-20 
+#' @param soft_power Value between 1-20
 #'  (https://support.bioconductor.org/p/87024/)
 #' @param min_module_size For modules detected by WGCNA, set a minimum size
-#' 
+#'
 #' @export
 #' @return A list of 8 objects. \code{data} is a submatrix of the input
 #'  parameter \code{data} which on contains the genes that were selected with
 #'  \code{n_genes}. \code{powers} is a numeric vector from 1-10 and then the
 #'  even numbers from 10-20. \code{sft} is a return from the WGCNA package that
 #'  is a list containing \code{powerEstimate} and \code{fitIndices}. For
-#'  information on these objects visit 
+#'  information on these objects visit
 #'  https://www.rdocumentation.org/packages/WGCNA/versions/1.70-3/topics/pickSoftThreshold.
 #'  \code{tom} is another return from the WGCNA package, for information on this
 #'  matrix visit https://www.rdocumentation.org/packages/WGCNA/versions/1.70-3/topics/TOMsimilarityFromExpr.
@@ -34,28 +34,26 @@ NULL
 #'  identified module for the gene. \code{n_modules} gives the number of modules
 #'  calculated. \code{n_genes} tells the number of genes included in the
 #'  modules.
-#' 
-get_wgcna <- function(
-  data,
-  n_genes,
-  soft_power,
-  min_module_size
-) {
-  max_gene_wgcna = 3000
+#'
+get_wgcna <- function(data,
+                      n_genes,
+                      soft_power,
+                      min_module_size) {
+  max_gene_wgcna <- 3000
   # http://pklab.med.harvard.edu/scw2014/WGCNA.html
-  if(n_genes > dim(data)[1]) {
+  if (n_genes > dim(data)[1]) {
     # Max	as data
     n_genes <- dim(data)[1]
   }
-  if(n_genes < 50) {
+  if (n_genes < 50) {
     return(NULL)
   }
-  if(dim(data)[2] < 4) {
+  if (dim(data)[2] < 4) {
     return(NULL)
   }
-  if(n_genes > max_gene_wgcna) {
+  if (n_genes > max_gene_wgcna) {
     n <- max_gene_wgcna
-  } 			
+  }
 
   dat_expr <- t(data[1:n_genes, ])
   sub_gene_names <- colnames(dat_expr)
@@ -108,8 +106,8 @@ get_wgcna <- function(
   module_info <- module_info[which(module_info[, 2] != "grey"), ]
   module_info <- module_info[order(module_info[, 3]), ]
   n_modules <- length(unique(dynamic_colors)) - 1
-  n_genes <- dim(module_info)[1]	
-			
+  n_genes <- dim(module_info)[1]
+
   return(list(
     data = t(dat_expr),
     powers = powers,
@@ -123,24 +121,22 @@ get_wgcna <- function(
 }
 
 #' Dendogram plot of WGCNA modules
-#' 
+#'
 #' Create a dendogram of the WGCNA return that color codes the modules and
 #' includes a hierarchical dendogram.
-#' 
+#'
 #' @param wgcna List returned from the \code{get_wgcna}
-#' 
+#'
 #' @export
 #' @return A dendogram plot of hierarchical clustering with a color bar to
 #'  identify the modules.
-get_module_plot <- function(
-  wgcna
-) {
+get_module_plot <- function(wgcna) {
   diss <- 1 - wgcna$tom
   dynamic_colors <- wgcna$dynamic_colors
-		
+
   hier <- flashClust::flashClust(as.dist(diss), method = "average")
 
-  # Set the diagonal of the dissimilarity to NA 
+  # Set the diagonal of the dissimilarity to NA
   diag(diss) <- NA
   WGCNA::plotDendroAndColors(
     hier,
@@ -155,9 +151,9 @@ get_module_plot <- function(
 }
 
 #' Network of top genes
-#' 
-#' Create a network plot of the top genes found with the WGCNA package. 
-#' 
+#'
+#' Create a network plot of the top genes found with the WGCNA package.
+#'
 #' @param select_wgcna_module The module to create a plot of hte top genes for,
 #'  options can be found with the \code{get_wgcna_modules} function
 #' @param wgcna List returned from the \code{get_wgcna}
@@ -165,157 +161,150 @@ get_module_plot <- function(
 #' @param select_org Organism the expression data is for
 #' @param all_gene_info Gene info that was found from querying the database
 #' @param edge_threshold Wavlue from 1-.1 (.4 recommended)
-#' 
+#'
 #' @export
 #' @return A function that can be stored as an object and then called to produce
 #'  the plot that the function created. If it is note stored and called the
 #'  function will only return another funciton.
-get_network_plot <- function(
-  select_wgcna_module,
-  wgcna,
-  top_genes_network,
-  select_org,
-  all_gene_info,
-  edge_threshold
-) {
+get_network_plot <- function(select_wgcna_module,
+                             wgcna,
+                             top_genes_network,
+                             select_org,
+                             all_gene_info,
+                             edge_threshold) {
   module <- unlist(strsplit(select_wgcna_module, " "))[2]
-  module_colors <- wgcna$dynamic_colors 
+  module_colors <- wgcna$dynamic_colors
   in_module <- (module_colors == module)
 
-  if(select_wgcna_module == "Entire network") {
+  if (select_wgcna_module == "Entire network") {
     in_module <- rep(TRUE, length(in_module))
   }
   dat_expr <- t(wgcna$data)
   probes <- colnames(dat_expr)
   mod_probes <- probes[in_module]
-		
+
   mod_tom <- wgcna$tom[in_module, in_module]
   dimnames(mod_tom) <- list(mod_probes, mod_probes)
 
   n_top <- top_genes_network
-  if(n_top > 1000) {
-    n_top = 1000
+  if (n_top > 1000) {
+    n_top <- 1000
   }
   im_conn <- WGCNA::softConnectivity(dat_expr[, mod_probes])
   top <- (rank(-im_conn) <= n_top)
 
-  # Adding symbols 
+  # Adding symbols
   probe_to_gene <- NULL
-  if(select_org != "NEW" &
-     dim(all_gene_info)[1] > 1) {
+  if (select_org != "NEW" &
+    dim(all_gene_info)[1] > 1) {
     # If more than 50% genes has symbol
-    if(sum(is.na(all_gene_info$symbol)) / dim(all_gene_info)[1] < .5) {
-	  probe_to_gene <- all_gene_info[, c("ensembl_gene_id", "symbol")]
-	  probe_to_gene$symbol <- gsub(" ", "", probe_to_gene$symbol)
+    if (sum(is.na(all_gene_info$symbol)) / dim(all_gene_info)[1] < .5) {
+      probe_to_gene <- all_gene_info[, c("ensembl_gene_id", "symbol")]
+      probe_to_gene$symbol <- gsub(" ", "", probe_to_gene$symbol)
 
       ix <- which(
         is.na(probe_to_gene$symbol) |
-		    nchar(probe_to_gene$symbol) < 2 | 
-		    toupper(probe_to_gene$symbol) == "NA" |  
-		    toupper(probe_to_gene$symbol) == "0"
+          nchar(probe_to_gene$symbol) < 2 |
+          toupper(probe_to_gene$symbol) == "NA" |
+          toupper(probe_to_gene$symbol) == "0"
       )
       # Use gene ID
-	  probe_to_gene[ix, 2] <- probe_to_gene[ix, 1]
-
-	}
+      probe_to_gene[ix, 2] <- probe_to_gene[ix, 1]
+    }
   }
 
   net <- mod_tom[top, top] > edge_threshold
 
-  for(i in 1:dim(net)[1]) {
-    # Remove self connection  
+  for (i in 1:dim(net)[1]) {
+    # Remove self connection
     net[i, i] <- FALSE
   }
-  if(!is.null(probe_to_gene)) {
-	ix <- match(colnames(net), probe_to_gene[, 1])		
-	colnames(net) <- probe_to_gene[ix, 2]
-	ix <- match(rownames(net), probe_to_gene[, 1])		
-	rownames(net) <- probe_to_gene[ix, 2]		
+  if (!is.null(probe_to_gene)) {
+    ix <- match(colnames(net), probe_to_gene[, 1])
+    colnames(net) <- probe_to_gene[ix, 2]
+    ix <- match(rownames(net), probe_to_gene[, 1])
+    rownames(net) <- probe_to_gene[ix, 2]
   }
 
   # http://www.kateto.net/wp-content/uploads/2016/01/NetSciX_2016_Workshop.pdf
-  net_plot <- function(){plot(
-    igraph::graph_from_adjacency_matrix(net, mod ="undirected" ),
-    vertex.label.color = "black",
-    vertex.label.dist = 3,
-    vertex.size = 7
-  )}
+  net_plot <- function() {
+    plot(
+      igraph::graph_from_adjacency_matrix(net, mod = "undirected"),
+      vertex.label.color = "black",
+      vertex.label.dist = 3,
+      vertex.size = 7
+    )
+  }
   return(net_plot)
 }
 
 #' List WGCNA modules
-#' 
+#'
 #' Get the options for modules to select from running the \code{get_wgcna}
 #' function.
-#' 
+#'
 #' @param wgcna List returned from the \code{get_wgcna}
-#' 
+#'
 #' @export
 #' @return A character vector with all the strings that can be filled into the
 #'  inut parameter \code{select_wgcna_module} in other WGCNA functions.
-get_wgcna_modules <- function(
-  wgcna
-) {
-  if(dim(wgcna$module_info)[1] == 0) {
+get_wgcna_modules <- function(wgcna) {
+  if (dim(wgcna$module_info)[1] == 0) {
     # If no module
-	return(NULL) 
-  }	else { 
-	modules <- unique(wgcna$module_info[, c("dynamic_mods", "dynamic_colors")])
-	module_list <- apply(modules, 1, paste, collapse = ". ")
-	module_list <- paste0(
+    return(NULL)
+  } else {
+    modules <- unique(wgcna$module_info[, c("dynamic_mods", "dynamic_colors")])
+    module_list <- apply(modules, 1, paste, collapse = ". ")
+    module_list <- paste0(
       module_list,
       " (",
       table(wgcna$module_info[, "dynamic_mods"]),
       " genes)"
     )
-	module_list <- c(module_list, "Entire network")
+    module_list <- c(module_list, "Entire network")
 
     return(module_list)
   }
 }
 
 #' Gene vector query for enrichment
-#' 
+#'
 #' Select a module to create a vector of gene IDs to use in an enrichment
 #' analysis.
-#' 
+#'
 #' @param select_wgcna_modules The module to create a plot of hte top genes for,
 #'  options can be found with the \code{get_wgcna_modules} function
 #' @param wgcna List returned from the \code{get_wgcna}
-#' 
+#'
 #' @export
 #' @return A vector of genes that are included in the selected module.
-network_enrich_data <- function(
-  select_wgcna_module,
-  wgcna
-) {
+network_enrich_data <- function(select_wgcna_module,
+                                wgcna) {
   module <- unlist(strsplit(select_wgcna_module, " "))[2]
   module_colors <- wgcna$dynamic_colors
   in_module <- (module_colors == module)
 
-  if(select_wgcna_module == "Entire network") {
+  if (select_wgcna_module == "Entire network") {
     in_module <- rep(TRUE, length(in_module))
   }
 
   probes <- rownames(wgcna$data)
-  query  <- probes[in_module]
+  query <- probes[in_module]
   return(query)
 }
 
 #' Scale independence plot
-#' 
+#'
 #' Using the WGCNA return, create a ggplot of scale independence.
-#' 
+#'
 #' @param wgcna List returned from the \code{get_wgcna}
-#' 
+#'
 #' @export
 #' @return A formatted ggplot displaying the scale independence for the
 #'  \code{get_wgcna} function return.
-plot_scale_independence <- function(
-  wgcna
-) {
-  sft = wgcna$sft
-  powers = wgcna$powers
+plot_scale_independence <- function(wgcna) {
+  sft <- wgcna$sft
+  powers <- wgcna$powers
 
   scale_plot <- ggplot2::ggplot(
     data = sft$fitIndices,
@@ -355,19 +344,17 @@ plot_scale_independence <- function(
 }
 
 #' Mean connectivity plot
-#' 
+#'
 #' Create a ggplot from the wgcna object to display the mean connectivity.
-#' 
+#'
 #' @param wgcna List returned from the \code{get_wgcna}
-#' 
+#'
 #' @export
 #' @return A formatted ggplot displaying the mean connectivityfor the
 #'  \code{get_wgcna} function return.
-plot_mean_connectivity <- function(
-  wgcna
-) {
-  sft = wgcna$sft
-  powers = wgcna$powers
+plot_mean_connectivity <- function(wgcna) {
+  sft <- wgcna$sft
+  powers <- wgcna$powers
 
 
   connectivity_plot <- ggplot2::ggplot(
@@ -382,7 +369,7 @@ plot_mean_connectivity <- function(
         label = powers,
         color = "red"
       )
-    ) + 
+    ) +
     ggplot2::labs(
       x = "Soft Threshold (power)",
       y = "Mean Connectivity",

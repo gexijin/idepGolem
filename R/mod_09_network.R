@@ -4,10 +4,10 @@
 #'
 #' @param id,input,output,session Internal parameters for {shiny}.
 #'
-#' @noRd 
+#' @noRd
 #'
-#' @importFrom shiny NS tagList 
-mod_09_network_ui <- function(id){
+#' @importFrom shiny NS tagList
+mod_09_network_ui <- function(id) {
   ns <- NS(id)
   tabPanel(
     title = "Network",
@@ -23,20 +23,20 @@ mod_09_network_ui <- function(id){
           "Only useful when  sample size is large(> 15)."
         ),
         numericInput(
-          inputId = ns("n_genes_network"), 
-          label = h5("Most variable genes to include (< 3001)"), 
-          min = 10, 
-          max = 3000, 
+          inputId = ns("n_genes_network"),
+          label = h5("Most variable genes to include (< 3001)"),
+          min = 10,
+          max = 3000,
           value = 1000
         ),
         fluidRow(
           column(
             width = 6,
             numericInput(
-              inputId = ns("soft_power"), 
-              label = h5("Soft Threshold"), 
-              min = 1, 
-              max = 20, 
+              inputId = ns("soft_power"),
+              label = h5("Soft Threshold"),
+              min = 1,
+              max = 20,
               value = 5
             )
           ),
@@ -45,8 +45,8 @@ mod_09_network_ui <- function(id){
             numericInput(
               inputId = ns("min_module_size"),
               label = h5("Min. Module Size"),
-              min = 10, 
-              max = 100, 
+              min = 10,
+              max = 100,
               value = 20
             )
           )
@@ -68,22 +68,22 @@ mod_09_network_ui <- function(id){
           column(
             width = 6,
             numericInput(
-              inputId = ns("edge_threshold"), 
-              label = h5("Edge Threshold"), 
-              min = 0, 
-              max = 1, 
-              value = .4, 
+              inputId = ns("edge_threshold"),
+              label = h5("Edge Threshold"),
+              min = 0,
+              max = 1,
+              value = .4,
               step = .1
             )
           ),
           column(
             width = 6,
             numericInput(
-              inputId = ns("top_genes_network"), 
-              label = h5("Top genes"), 
-              min = 10, 
-              max = 2000, 
-              value = 10, 
+              inputId = ns("top_genes_network"),
+              label = h5("Top genes"),
+              min = 10,
+              max = 2000,
+              value = 10,
               step = 10
             )
           )
@@ -97,9 +97,10 @@ mod_09_network_ui <- function(id){
           "#network-top_genes_network{ width:100%;   margin-top:-12px}"
         ),
         br(),
-        h5("The network file can be imported to", 
+        h5(
+          "The network file can be imported to",
           a("VisANT", href = "http://visant.bu.edu/", target = "_blank"),
-          " or ", 
+          " or ",
           a("Cytoscape.", href = "http://www.cytoscape.org/", target = "_blank")
         ),
         # Show Network message
@@ -113,9 +114,6 @@ mod_09_network_ui <- function(id){
           target = "_blank"
         )
       ),
-
-
-
       mainPanel(
         tabsetPanel(
           id = ns("network_tabs"),
@@ -169,12 +167,12 @@ mod_09_network_ui <- function(id){
     )
   )
 }
-    
+
 #' 09_network Server Functions
 #'
-#' @noRd 
-mod_09_network_server <- function(id, pre_process, idep_data, tab){
-  moduleServer( id, function(input, output, session){
+#' @noRd
+mod_09_network_server <- function(id, pre_process, idep_data, tab) {
+  moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     # Interactive heatmap environment
@@ -185,11 +183,11 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab){
       module_list <- get_wgcna_modules(wgcna = wgcna())
       req(!is.null(module_list))
       selectInput(
-        inputId = ns("select_wgcna_module"), 
-				label = "Select a module",
-				choices = module_list
-			)
-	  })
+        inputId = ns("select_wgcna_module"),
+        label = "Select a module",
+        choices = module_list
+      )
+    })
 
     wgcna <- reactive({
       req(!is.null(pre_process$data()))
@@ -202,12 +200,12 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab){
           min_module_size = input$min_module_size
         )
       })
-	  })
+    })
 
     output$module_plot <- renderPlot({
       req(!is.null(wgcna()))
       get_module_plot(wgcna())
-		})
+    })
 
     network <- reactiveValues(network_plot = NULL)
 
@@ -226,7 +224,8 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab){
     })
 
     observeEvent(
-      input$network_layout, {
+      input$network_layout,
+      {
         req(!is.null(input$select_wgcna_module))
         req(!is.null(wgcna()))
 
@@ -238,11 +237,12 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab){
           all_gene_info = pre_process$all_gene_info(),
           edge_threshold = input$edge_threshold
         )
-	  })
+      }
+    )
 
     output$module_network <- renderPlot({
       network$network_plot()
-	  })
+    })
 
     network_query <- reactive({
       req(!is.null(input$select_wgcna_module))
@@ -267,22 +267,38 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab){
       return(gene_lists)
     })
 
-  enrichment_table_cluster <- mod_11_enrichment_server(
-    id = "enrichment_table_cluster",
-    results = reactive({ enrichment_network() }) 
-  )
+    enrichment_table_cluster <- mod_11_enrichment_server(
+      id = "enrichment_table_cluster",
+      results = reactive({
+        enrichment_network()
+      })
+    )
 
     enrichment_table_cluster <- mod_11_enrichment_server(
-    id = "enrichment_table_cluster",
-    gmt_choices = reactive({ pre_process$gmt_choices() }),
-    gene_lists = reactive({ gene_lists() }),
-    processed_data = reactive({ pre_process$data()}),
-    gene_info = reactive({ pre_process$all_gene_info()}),
-    idep_data = idep_data,
-    select_org = reactive({ pre_process$select_org()}),
-    converted = reactive({ pre_process$converted() }),
-    gmt_file = reactive({ pre_process$gmt_file() })
-  )
+      id = "enrichment_table_cluster",
+      gmt_choices = reactive({
+        pre_process$gmt_choices()
+      }),
+      gene_lists = reactive({
+        gene_lists()
+      }),
+      processed_data = reactive({
+        pre_process$data()
+      }),
+      gene_info = reactive({
+        pre_process$all_gene_info()
+      }),
+      idep_data = idep_data,
+      select_org = reactive({
+        pre_process$select_org()
+      }),
+      converted = reactive({
+        pre_process$converted()
+      }),
+      gmt_file = reactive({
+        pre_process$gmt_file()
+      })
+    )
 
     output$scale_independence_plot <- renderPlot({
       req(!is.null(wgcna()))
@@ -290,15 +306,15 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab){
       plot_scale_independence(
         wgcna = wgcna()
       )
-	  })
+    })
 
     output$mean_connectivity_plot <- renderPlot({
       req(!is.null(wgcna()))
-      
+
       plot_mean_connectivity(
         wgcna = wgcna()
       )
-	  })
+    })
 
     module_statistic <- reactive({
       req(!is.null(wgcna()))
@@ -334,25 +350,26 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab){
       req(!is.null(network_query()))
 
       data <- pre_process$data()[rownames(pre_process$data()) %in% network_query(), ]
-
     })
 
     heatmap_module <- mod_12_heatmap_server(
       id = "12_heatmap_1",
-      data = reactive({ network_data() }),
-      bar = function() { return(NULL) },
-      all_gene_names = reactive({ pre_process$all_gene_names() }),
+      data = reactive({
+        network_data()
+      }),
+      bar = function() {
+        return(NULL)
+      },
+      all_gene_names = reactive({
+        pre_process$all_gene_names()
+      }),
       cluster_rows = TRUE
     )
-
-
-
-
   })
 }
-    
+
 ## To be copied in the UI
 # mod_09_network_ui("09_network_ui_1")
-    
+
 ## To be copied in the server
 # mod_09_network_server("09_network_ui_1")

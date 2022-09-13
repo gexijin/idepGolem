@@ -18,7 +18,7 @@ mod_03_clustering_ui <- function(id) {
         width = 3,
         # Select Clustering Method ----------
         conditionalPanel(
-          condition = "input.cluster_panels == 'Hierarchical' | 
+          condition = "input.cluster_panels == 'Hierarchical' |
             input.cluster_panels == 'sample_tab'",
           selectInput(
             inputId = ns("cluster_meth"),
@@ -32,9 +32,8 @@ mod_03_clustering_ui <- function(id) {
           ns = ns
         ),
         conditionalPanel(
-          condition = "input.cluster_panels == 'Hierarchical' | 
+          condition = "input.cluster_panels == 'Hierarchical' |
           input.cluster_panels == 'Gene SD Distribution' ",
-
           fluidRow(
             column(width = 6, h5("Top Genes:")),
             column(
@@ -51,45 +50,44 @@ mod_03_clustering_ui <- function(id) {
           ),
           ns = ns
         ),
-
         conditionalPanel(
-          condition = "(input.cluster_panels == 'Hierarchical' | 
+          condition = "(input.cluster_panels == 'Hierarchical' |
             input.cluster_panels == 'sample_tab') &&  input.cluster_meth == 2",
-          
+
           # k- means slidebar -----------
-            
-            sliderInput(
-              inputId = ns("k_clusters"),
-              label = "Number of Clusters:",
-              min   = 2,
-              max   = 20,
-              value = 4,
-              step  = 1
-            ),
-            
-            # Re-run k-means with a different seed
-            actionButton(
-              inputId = ns("k_means_re_run"),
-              label = "Re-Run"
-            ),
-            
-            # Elbow plot pop-up 
-            actionButton(
-              inputId = ns("elbow_pop_up"),
-              label = "How many clusters?"
-            ),
-            # Line break ---------
-            HTML(
-              '<hr style="height:1px;border:none;
+
+          sliderInput(
+            inputId = ns("k_clusters"),
+            label = "Number of Clusters:",
+            min = 2,
+            max = 20,
+            value = 4,
+            step = 1
+          ),
+
+          # Re-run k-means with a different seed
+          actionButton(
+            inputId = ns("k_means_re_run"),
+            label = "Re-Run"
+          ),
+
+          # Elbow plot pop-up
+          actionButton(
+            inputId = ns("elbow_pop_up"),
+            label = "How many clusters?"
+          ),
+          # Line break ---------
+          HTML(
+            '<hr style="height:1px;border:none;
            color:#333;background-color:#333;" />'
-            ),
+          ),
           ns = ns
         ),
 
         # Clustering methods for hierarchical ----------
         conditionalPanel(
-          condition = "input.cluster_meth == 1 && 
-            (input.cluster_panels == 'Hierarchical' | 
+          condition = "input.cluster_meth == 1 &&
+            (input.cluster_panels == 'Hierarchical' |
             input.cluster_panels == 'sample_tab')",
           fluidRow(
             column(width = 4, h5("Distance")),
@@ -136,9 +134,8 @@ mod_03_clustering_ui <- function(id) {
 
         # Checkbox features ------------
         conditionalPanel(
-          condition = "input.cluster_panels == 'Hierarchical' | 
+          condition = "input.cluster_panels == 'Hierarchical' |
             input.cluster_panels == 'sample_tab' ",
-
           checkboxInput(
             inputId = ns("gene_centering"),
             label = "Center genes (substract mean)",
@@ -151,7 +148,6 @@ mod_03_clustering_ui <- function(id) {
           ),
           ns = ns
         ),
-
         conditionalPanel(
           condition = "input.cluster_panels == 'Hierarchical' ",
           fluidRow(
@@ -230,7 +226,6 @@ mod_03_clustering_ui <- function(id) {
           tabPanel(
             title = "Hierarchical",
             br(),
-
             fluidRow(
               column(
                 width = 4,
@@ -241,18 +236,16 @@ mod_03_clustering_ui <- function(id) {
                   brush = ns("ht_brush")
                 ),
                 ottoPlots::mod_download_figure_ui(
-                  ns("dl_heatmap_main"),
-                  label = "Above"
+                  ns("dl_heatmap_main")
                 ),
                 ottoPlots::mod_download_figure_ui(
-                  ns("dl_heatmap_sub"),
-                  label = "Right"
+                  ns("dl_heatmap_sub")
                 ),
                 uiOutput(
                   outputId = ns("ht_click_content")
                 ),
                 checkboxInput(
-                  inputId = ns("cluster_enrichment"), 
+                  inputId = ns("cluster_enrichment"),
                   label = h5("Enrichment in
                     selected genes or k-means clusters(below)"),
                   value = TRUE
@@ -278,7 +271,6 @@ mod_03_clustering_ui <- function(id) {
               mod_11_enrichment_ui(ns("enrichment_table_cluster")),
               ns = ns
             )
-
           ),
 
           # Gene Standard Deviation Distribution ----------
@@ -345,7 +337,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         max_genes <- round(nrow(pre_process$data()), -2)
       }
       updateNumericInput(
-        inputId = "n_genes", 
+        inputId = "n_genes",
         max = max_genes
       )
     })
@@ -353,20 +345,20 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     # Heatmap Colors ----------
     heatmap_colors <- list(
       "Green-Black-Red" = c("green", "black", "red"),
-      "Red-Black-Green" = c("red", "black", "green"), 
+      "Red-Black-Green" = c("red", "black", "green"),
       "Blue-White-Red" = c("blue", "white", "red"),
       "Green-Black-Magenta" = c("green", "black", "magenta"),
       "Blue-Yellow-Red" = c("blue", "yellow", "red"),
-      "Blue-White-Brown" = c("blue", "white", "brown"), 
+      "Blue-White-Brown" = c("blue", "white", "brown"),
       "Orange-White-Blue" = c("orange", "white", "blue")
     )
     heatmap_choices <- c(
       "Green-Black-Red",
-      "Red-Black-Green", 
+      "Red-Black-Green",
       "Blue-White-Red",
       "Green-Black-Magenta",
       "Blue-Yellow-Red",
-      "Blue-White-Brown", 
+      "Blue-White-Brown",
       "Orange-White-Blue"
     )
     observe({
@@ -410,14 +402,14 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     output$list_factors_heatmap <- renderUI({
       choices <- "Names"
       selected <- choices
-      if(!is.null(colnames(pre_process$sample_info()))) {
+      if (!is.null(colnames(pre_process$sample_info()))) {
         factors <- colnames(pre_process$sample_info())
         choices <- c(
           choices,
           factors,
           "All factors"
         )
-      selected <- choices[length(choices)]
+        selected <- choices[length(choices)]
       }
       selectInput(
         inputId = ns("select_factors_heatmap"),
@@ -430,24 +422,26 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     # Standard Deviation Density Plot ----------
     sd_density_plot <- reactive({
       req(!is.null(pre_process$data()))
-      
+
       sd_density(
         data = pre_process$data(),
         n_genes_max = input$n_genes
       )
     })
-    
+
     output$sd_density_plot <- renderPlot({
       print(sd_density_plot())
     })
-    
+
     dl_gene_dist <- ottoPlots::mod_download_figure_server(
-      id = "dl_gene_dist", 
-      filename = "sd_density_plot", 
-      figure = reactive({ sd_density_plot() })
+      id = "dl_gene_dist",
+      filename = "sd_density_plot",
+      figure = reactive({
+        sd_density_plot()
+      })
     )
-    
-    
+
+
 
     # Heatmap Data -----------
     heatmap_data <- reactive({
@@ -487,7 +481,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     output$heatmap_main <- renderPlot({
       req(!is.null(heatmap_data()))
       req(input$select_factors_heatmap)
-#      req(input$selected_genes)
+      #      req(input$selected_genes)
 
       shinybusy::show_modal_spinner(
         spin = "orbit",
@@ -558,7 +552,9 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     dl_heatmap_main <- ottoPlots::mod_download_figure_server(
       id = "dl_heatmap_main",
       filename = "heatmap_main",
-      figure = reactive({ heatmap_main_object() }),
+      figure = reactive({
+        heatmap_main_object()
+      }),
       width = 6,
       height = 16
     )
@@ -568,17 +564,17 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
 
       # zoomed in, but not clicked
       if (is.null(input$ht_click) &&
-          !is.null(shiny_env$ht_sub) &&
-          !is.null(input$ht_brush)
+        !is.null(shiny_env$ht_sub) &&
+        !is.null(input$ht_brush)
       ) {
-p <- '<br><p style="color:red;text-align:right;">Click on the sub-heatmap &#10230;</p>'
-          html <- GetoptLong::qq(p)
-          return(HTML(html))
+        p <- '<br><p style="color:red;text-align:right;">Click on the sub-heatmap &#10230;</p>'
+        html <- GetoptLong::qq(p)
+        return(HTML(html))
       }
       # if not zoomed in, show nothing
       if (is.null(input$ht_click) ||
-          is.null(shiny_env$ht_sub) ||
-          is.null(input$ht_brush)
+        is.null(shiny_env$ht_sub) ||
+        is.null(input$ht_brush)
       ) {
         return(NULL)
       }
@@ -593,7 +589,6 @@ p <- '<br><p style="color:red;text-align:right;">Click on the sub-heatmap &#1023
         cluster_meth = input$cluster_meth,
         click_data = shiny_env$click_data
       )
-      
     })
 
     # Subheatmap creation ---------
@@ -627,7 +622,7 @@ p <- '<br><p style="color:red;text-align:right;">Click on the sub-heatmap &#1023
         shiny_env$sub_groups <- submap_return$sub_groups
         shiny_env$group_colors <- submap_return$group_colors
         shiny_env$click_data <- submap_return$click_data
-        
+
         shiny_env$ht_sub <- ComplexHeatmap::draw(
           shiny_env$ht_sub_obj,
           annotation_legend_list = submap_return$lgd,
@@ -679,7 +674,9 @@ p <- '<br><p style="color:red;text-align:right;">Click on the sub-heatmap &#1023
     dl_heatmap_sub <- ottoPlots::mod_download_figure_server(
       id = "dl_heatmap_sub",
       filename = "heatmap_zoom",
-      figure = reactive({ heatmap_sub_object() }),
+      figure = reactive({
+        heatmap_sub_object()
+      }),
       width = 8,
       height = 12
     )
@@ -688,47 +685,47 @@ p <- '<br><p style="color:red;text-align:right;">Click on the sub-heatmap &#1023
     gene_lists <- reactive({
       req(!is.null(input$select_gene_id))
       req(!is.null(input$ht_brush) || input$cluster_meth == 2)
-      
+
       gene_lists <- list()
-      
+
       if (input$cluster_meth == 1) {
         gene_names <- merge_data(
           all_gene_names = pre_process$all_gene_names(),
           data = shiny_env$submap_data,
           merge_ID = input$select_gene_id
         )
-      
+
         # Only keep the gene names and scrap the data
         gene_lists[["Selection"]] <- dplyr::select_if(gene_names, is.character)
 
-         # k-means-----------------------------------------------------
+        # k-means-----------------------------------------------------
       } else if (input$cluster_meth == 2) {
-        # Get the cluster number and Gene 
+        # Get the cluster number and Gene
 
         req(heatmap_data())
         req(input$k_clusters)
         req(input$select_gene_id)
         req(shiny_env$ht)
-        
+
         row_ord <- ComplexHeatmap::row_order(shiny_env$ht)
 
         req(!is.null(names(row_ord)))
 
         for (i in 1:length(row_ord)) {
           if (i == 1) {
-          clusts <- data.frame(
-            "cluster" = rep(names(row_ord[i]), length(row_ord[[i]])),
-            "row_order" = row_ord[[i]]
-          )
+            clusts <- data.frame(
+              "cluster" = rep(names(row_ord[i]), length(row_ord[[i]])),
+              "row_order" = row_ord[[i]]
+            )
           } else {
-          tem <- data.frame(
-            "cluster" = rep(names(row_ord[i]), length(row_ord[[i]])),
-            "row_order" = row_ord[[i]]
-          )
-          clusts <- rbind(clusts, tem)
+            tem <- data.frame(
+              "cluster" = rep(names(row_ord[i]), length(row_ord[[i]])),
+              "row_order" = row_ord[[i]]
+            )
+            clusts <- rbind(clusts, tem)
           }
         }
-        clusts$id <- rownames(heatmap_data()[clusts$row_order, ]) 
+        clusts$id <- rownames(heatmap_data()[clusts$row_order, ])
 
         # disregard user selection use clusters for enrichment
         for (i in 1:input$k_clusters) {
@@ -740,11 +737,10 @@ p <- '<br><p style="color:red;text-align:right;">Click on the sub-heatmap &#1023
             data = cluster_data,
             merge_ID = input$select_gene_id
           )
-      
-          # Only keep the gene names and scrap the data
-         gene_lists[[paste0("Cluster ", i)]] <-
-          dplyr::select_if(gene_names, is.character)
 
+          # Only keep the gene names and scrap the data
+          gene_lists[[paste0("Cluster ", i)]] <-
+            dplyr::select_if(gene_names, is.character)
         }
       }
 
@@ -754,7 +750,7 @@ p <- '<br><p style="color:red;text-align:right;">Click on the sub-heatmap &#1023
     # Sample Tree ----------
     sample_tree <- reactive({
       req(!is.null(pre_process$data()), input$cluster_meth == 1)
-      
+
       draw_sample_tree(
         tree_data = pre_process$data(),
         gene_centering = input$gene_centering,
@@ -765,39 +761,41 @@ p <- '<br><p style="color:red;text-align:right;">Click on the sub-heatmap &#1023
         hclust_function = input$hclust_function,
         dist_funs = dist_funs,
         dist_function = input$dist_function
-      )  
-      p <- recordPlot() 
+      )
+      p <- recordPlot()
       return(p)
     })
-    
+
     output$sample_tree <- renderPlot({
       print(sample_tree())
     })
-    
+
     dl_sample_tree <- ottoPlots::mod_download_figure_server(
-      id = "dl_sample_tree", 
-      filename = "sample_tree", 
-      figure = reactive({ sample_tree() })
+      id = "dl_sample_tree",
+      filename = "sample_tree",
+      figure = reactive({
+        sample_tree()
+      })
     )
-    
+
     observeEvent(input$cluster_meth, {
-      if (input$cluster_meth == 1){
+      if (input$cluster_meth == 1) {
         showTab(
-          inputId = "cluster_panels", 
+          inputId = "cluster_panels",
           target = "sample_tab"
-        ) 
+        )
       }
     })
-    
+
     observeEvent(input$cluster_meth, {
-      if(input$cluster_meth == 2){
+      if (input$cluster_meth == 2) {
         hideTab(
           inputId = "cluster_panels",
           target = "sample_tab"
         )
       }
     })
-    
+
     # k-Cluster elbow plot ----------
     output$k_clusters <- renderPlot({
       req(!is.null(heatmap_data()))
@@ -806,25 +804,25 @@ p <- '<br><p style="color:red;text-align:right;">Click on the sub-heatmap &#1023
         heatmap_data = heatmap_data()
       )
     })
-    # pop-up modal 
+    # pop-up modal
     observeEvent(input$elbow_pop_up, {
       showModal(modalDialog(
-        plotOutput(ns("k_clusters")), 
-        footer = NULL, 
-        easyClose = TRUE, 
+        plotOutput(ns("k_clusters")),
+        footer = NULL,
+        easyClose = TRUE,
         title = tags$h5(
-          "Following the elbow method, one should choose k so that adding 
+          "Following the elbow method, one should choose k so that adding
           another cluster does not substantially reduce the within groups sum of squares.",
           tags$a(
             "Wikipedia",
             href = "https://en.wikipedia.org/wiki/Determining_the_number_of_clusters_in_a_data_set",
             target = "_blank"
           )
-        ),  
+        ),
       ))
     })
 
-     # Heatmap Download Data -----------
+    # Heatmap Download Data -----------
     heatmap_data_download <- reactive({
       req(!is.null(pre_process$all_gene_names()))
       req(!is.null(heatmap_data()))
@@ -845,23 +843,37 @@ p <- '<br><p style="color:red;text-align:right;">Click on the sub-heatmap &#1023
       }
     )
 
-  enrichment_table_cluster <- mod_11_enrichment_server(
-    id = "enrichment_table_cluster",
-    gmt_choices = reactive({ pre_process$gmt_choices() }),
-    gene_lists = reactive({ gene_lists() }),
-    processed_data = reactive({ pre_process$data()}),
-    gene_info = reactive({ pre_process$all_gene_info()}),
-    idep_data = idep_data,
-    select_org = reactive({ pre_process$select_org()}),
-    converted = reactive({ pre_process$converted() }),
-    gmt_file = reactive({ pre_process$gmt_file() })
-  )
-    
+    enrichment_table_cluster <- mod_11_enrichment_server(
+      id = "enrichment_table_cluster",
+      gmt_choices = reactive({
+        pre_process$gmt_choices()
+      }),
+      gene_lists = reactive({
+        gene_lists()
+      }),
+      processed_data = reactive({
+        pre_process$data()
+      }),
+      gene_info = reactive({
+        pre_process$all_gene_info()
+      }),
+      idep_data = idep_data,
+      select_org = reactive({
+        pre_process$select_org()
+      }),
+      converted = reactive({
+        pre_process$converted()
+      }),
+      gmt_file = reactive({
+        pre_process$gmt_file()
+      })
+    )
+
     # Markdown report------------
     output$report <- downloadHandler(
-      
+
       # For PDF output, change this to "report.pdf"
-      filename ="clustering_report.html",
+      filename = "clustering_report.html",
       content = function(file) {
         withProgress(message = "Generating report", {
           incProgress(0.2)
@@ -869,16 +881,16 @@ p <- '<br><p style="color:red;text-align:right;">Click on the sub-heatmap &#1023
           # case we don't have write permissions to the current working dir (which
           # can happen when deployed).
           tempReport <- file.path(tempdir(), "clustering_workflow.Rmd")
-          #tempReport
-          tempReport<-gsub("\\", "/", tempReport, fixed = TRUE)
-          
-          #This should retrieve the project location on your device:
-          #"C:/Users/bdere/Documents/GitHub/idepGolem"
+          # tempReport
+          tempReport <- gsub("\\", "/", tempReport, fixed = TRUE)
+
+          # This should retrieve the project location on your device:
+          # "C:/Users/bdere/Documents/GitHub/idepGolem"
           wd <- getwd()
-          
-          markdown_location <-paste0(wd, "/vignettes/Reports/clustering_workflow.Rmd")
+
+          markdown_location <- paste0(wd, "/vignettes/Reports/clustering_workflow.Rmd")
           file.copy(from = markdown_location, to = tempReport, overwrite = TRUE)
-          
+
           # Set up parameters to pass to Rmd document
           params <- list(
             pre_processed_data = pre_process$data(),
@@ -900,14 +912,14 @@ p <- '<br><p style="color:red;text-align:right;">Click on the sub-heatmap &#1023
             show_row_dend = input$show_row_dend,
             selected_genes = input$selected_genes
           )
-          
+
           req(params)
-          
+
           # Knit the document, passing in the `params` list, and eval it in a
           # child of the global environment (this isolates the code in the document
           # from the code in this app).
           rmarkdown::render(
-            input = tempReport,#markdown_location, 
+            input = tempReport, # markdown_location,
             output_file = file,
             params = params,
             envir = new.env(parent = globalenv())
