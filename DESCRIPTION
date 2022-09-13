@@ -81,7 +81,9 @@ Imports:
     tippy,
     utils,
     visNetwork,
-    WGCNA
+    WGCNA,
+    shinyBS,
+    bslib
 biocViews: 
     Biobase,
     limma,
