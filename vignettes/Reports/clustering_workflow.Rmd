@@ -4,6 +4,7 @@ output: html_document
 params:
   pre_processed_data:
   all_gene_names:
+  descr:
   sample_info:
   n_genes:
   k_clusters:
@@ -16,8 +17,9 @@ params:
   heatmap_cutoff:
   gene_centering:
   gene_normalize:
-  no_sample_clustering:
+  sample_clustering:
   show_row_dend:
+  selected_genes:
   printcode:
     label: "Display Code"
     value: TRUE
@@ -32,9 +34,9 @@ knitr::opts_chunk$set(echo = params$printcode)
 
 This html document contains what parameters values were selected on the IDEP interface of the "Clustering" tab. It also includes the plots generated from those selections.
 
-# ALL SELECTED PARAMETERS
+<!-- # ALL SELECTED PARAMETERS -->
 
-```{r, include=TRUE}
+```{r echo=FALSE}
 for (i in 1:length(params)){
   # exclude loaded data & sample info
   if(names(params)[i] != "sample_info" && names(params)[i] != "pre_processed_data" && names(params)[i] != "all_gene_names")
@@ -42,27 +44,31 @@ for (i in 1:length(params)){
 }
 ```
 
-# Citation
+## Pre-processing Summary
 
-The following plots were generated using IDEP with the following filters:
-Include only the top `r params$n_genes` genes
-using `r params$select_gene_id` to label
-color scheme: `r params$heatmap_color_select `
-distance: `r switch(params$dist_function,
-"1" = "Hierarchical",
-"2" = "K-Means")`
+`r params$descr`
+
+## Clustering Summary
+
+The following plots were generated using IDEP with the following filters: Include only the top `r params$n_genes` genes using `r params$select_gene_id` to label color scheme: `r params$heatmap_color_select` distance: `r switch(params$dist_function, "1" = "Hierarchical", "2" = "K-Means")`
+
 Linkage: `r params$hclust_function`
+
 Cut off Z-score: `r params$heatmap_cutoff`
+
 Center Genes: `r params$gene_centering`
+
 Gene normalize: `r params$gene_normalize`
+
 Do not cluster samples: `r params$no_sample_clustering`
+
 Show row Dendogram: `r params$show_row_dend`
 
-# Paragraph
+### Paragraph
 
 The following plots were generated using IDEP, including only the top `r params$n_genes` genes, using `r params$select_gene_id` to label, `r switch(params$dist_function, "1" = "Hierarchical", "2" = "K-Means")` distance,`r params$hclust_function` linkage, Cut off Z-score: `r params$heatmap_cutoff`, Center Genes: `r params$gene_centering`. genes are `r if(!params$gene_normalize) paste0(" not ")` normalized.
 
-# Elbow Plot
+## Elbow Plot
 
 ```{r}
 heatmap_data <- process_heatmap_data(
@@ -80,7 +86,7 @@ heatmap_data <- process_heatmap_data(
 k_means_elbow(heatmap_data = heatmap_data)
 ```
 
-# Heatmap
+## Heatmap
 
 ```{r}
 ht <- heatmap_main(
@@ -92,15 +98,16 @@ ht <- heatmap_main(
   dist_funs = dist_functions(),
   dist_function = params$dist_function,
   hclust_function = params$hclust_function,
-  no_sample_clustering = params$no_sample_clustering,
+  sample_clustering = params$sample_clustering,
   heatmap_color_select = params$heatmap_color_select,
   row_dend = params$show_row_dend,
   k_clusters = params$k_clusters,
-  re_run = FALSE
+  re_run = FALSE,
+  selected_genes = params$selected_genes
 )
 ```
 
-# SD Density
+## SD Density
 
 ```{r sd_density}
 sd_density(
@@ -109,10 +116,12 @@ sd_density(
 )
 ```
 
-# Tree
 
+
+`r ifelse(as.character(params$dist_function) == "1","## Tree (Hierarchical)","")`
 ```{r}
-draw_sample_tree(
+if(params$dist_function == 1){
+ draw_sample_tree(
   tree_data = params$pre_processed_data,
   gene_centering = params$gene_centering,
   gene_normalize = params$gene_normalize,
@@ -123,15 +132,17 @@ draw_sample_tree(
   dist_funs = dist_functions(),
   dist_function = params$dist_function
 )
+}
+
 ```
 
-# Correlation Matrix
 
-```{r}
-cor_plot(
-  data = params$pre_processed_data,
-  label_pcc = TRUE,
-  heat_cols = c("red", "black", "green"),
-  text_col = "white"
-)
-```
+<!-- # Correlation Matrix (Not included in app) -->
+<!-- ```{r} -->
+<!-- cor_plot( -->
+<!--   data = params$pre_processed_data, -->
+<!--   label_pcc = TRUE, -->
+<!--   heat_cols = c("red", "black", "green"), -->
+<!--   text_col = "white" -->
+<!-- ) -->
+<!-- ``` -->

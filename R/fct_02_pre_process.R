@@ -9,7 +9,6 @@
 #' @name fct_02_pre_process.R
 NULL
 
-
 #' @title Pre-Process the data
 #'
 #' @description This function takes in user defined values to
@@ -256,31 +255,43 @@ total_counts_ggplot <- function(
     memo <- paste("(only showing 100 samples)")
   }
   groups <- as.factor(
-    detect_groups(colnames(counts_data), sample_info)
+    detect_groups(colnames(counts), sample_info)
   )
-
-  if (nlevels(groups) <= 1 || nlevels(groups) > 20) {
-    grouping <- NULL
-  } else {
-    grouping <- groups
-  }
-
+  
   if (ncol(counts) < 31) {
     x_axis_labels <- 16
   } else {
     x_axis_labels <- 12
   }
-  plot_data <- data.frame(
-    sample = as.factor(colnames(counts)),
-    counts = colSums(counts) / 1e6,
-    group = groups,
-    grouping = grouping
-  )
 
-  plot <- ggplot2::ggplot(
-    data = plot_data,
-    ggplot2::aes(x = sample, y = counts, fill = grouping)
-  ) +
+  if (nlevels(groups) <= 1 || nlevels(groups) > 20) {
+    plot_data <- data.frame(
+      sample = as.factor(colnames(counts)),
+      counts = colSums(counts) / 1e6,
+      group = groups
+    )
+    
+    plot <- ggplot2::ggplot(
+      data = plot_data,
+      ggplot2::aes(x = sample, y = counts)
+    )
+  } else {
+    grouping <- groups
+    
+    plot_data <- data.frame(
+      sample = as.factor(colnames(counts)),
+      counts = colSums(counts) / 1e6,
+      group = groups,
+      grouping = grouping
+    )
+    
+    plot <- ggplot2::ggplot(
+      data = plot_data,
+      ggplot2::aes(x = sample, y = counts, fill = grouping)
+    )
+  }
+
+  plot <- plot +
     ggplot2::geom_bar(stat = "identity") +
     ggplot2::theme_light() +
     ggplot2::theme(
@@ -388,7 +399,7 @@ eda_boxplot <- function(
     memo <- paste(" (only showing 40 samples)")
   }
   groups <- as.factor(
-    detect_groups(colnames(processed_data), sample_info)
+    detect_groups(colnames(counts), sample_info)
   )
 
   if (nlevels(groups) <= 1 | nlevels(groups) > 20) {
@@ -408,6 +419,7 @@ eda_boxplot <- function(
     names_to = "sample",
     values_to = "expression"
   )
+  
   longer_data$groups <- rep(groups, nrow(counts))
   longer_data$grouping <- rep(grouping, nrow(counts))
 
@@ -470,7 +482,7 @@ eda_density <- function(
     memo <- paste(" (only showing 40 samples)")
   }
   groups <- as.factor(
-    detect_groups(colnames(processed_data), sample_info)
+    detect_groups(colnames(counts), sample_info)
   )
 
   if (nlevels(groups) <= 1 | nlevels(groups) > 20) {
@@ -885,12 +897,12 @@ generate_descr <- function(
   #read counts case
   if (data_file_format == 1){
     part_2 <- switch(counts_transform,
-           "1" = paste0("EdgeR using a pseudocount of ", counts_log_start),
-           "2" = "VST: Variance Stabilizing Transformation", 
-           "3" = "Regularized log")
+                     "1" = paste0("EdgeR using a pseudocount of ", counts_log_start),
+                     "2" = "VST: Variance Stabilizing Transformation", 
+                     "3" = "Regularized log")
     descr <- paste0("Read counts data was uploaded to iDEP v2.0 (citation). ",
                     "The data was filtered to include genes with more than ", min_counts, 
-                    " counts in ", n_min_samples_count, " libraries. The data was transformed with ", part_2,
+                    " counts in ", n_min_samples_count, ifelse(n_min_samples_count > 1," libraries", " library"), ". The data was transformed with ", part_2,
                     ".  Missing values were imputed using ", missing_value, ".")
   }
   #normalized expression values
@@ -900,7 +912,7 @@ generate_descr <- function(
     
     descr <- paste0("Normalized expression values were uploaded to iDEP v2.0 (citation). ",
                     "The data was filtered to include genes with above ", low_filter_fpkm, 
-                    " levels in ", n_min_samples_fpkm, ". The data was ", part_2,
+                    " levels in ", n_min_samples_fpkm, ifelse(n_min_samples_fpkm > 1," libraries", " library"), ". The data was ", part_2,
                     ".  Missing values were imputed using ", missing_value, ".")
   }
   #LFC and FDR
@@ -912,7 +924,8 @@ generate_descr <- function(
                     "data was uploaded to iDEP v2.0 (citation).",
                     "Missing values were imputed using ", missing_value, "." )
   }
+  
   return(descr)
   
-
+  
 }

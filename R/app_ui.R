@@ -11,12 +11,14 @@ app_ui <- function(request) {
     # Your application UI logic
 
     navbarPage(
+
       theme = bslib::bs_theme(
         version = 5,
         bootswatch = "simplex", 
         primary = "#546A7B"
       ),
       "iDEP",
+      "iDEP 1.0",
       id = "navbar",
       mod_01_load_data_ui(id = "load_data"),
       mod_02_pre_process_ui(id = "pre_process"),
@@ -30,7 +32,7 @@ app_ui <- function(request) {
       mod_09_network_ui(id = "network"),
       mod_10_doc_ui(id = "doc")
     )
-    ,tags$head(includeHTML(("google_analytics_golem.html")))
+    ,tags$head(includeHTML(("inst/app/www/google_analytics_golem.html")))
   )
 }
 

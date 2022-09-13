@@ -10,7 +10,7 @@
 mod_03_clustering_ui <- function(id) {
   ns <- NS(id)
   tabPanel(
-    "Clustering",
+    title = "Clustering",
     sidebarLayout(
 
       # Heatmap Panel Sidebar ----------
@@ -36,12 +36,12 @@ mod_03_clustering_ui <- function(id) {
           input.cluster_panels == 'Gene SD Distribution' ",
 
           fluidRow(
-            column(width = 7, h5("Genes to include")),
+            column(width = 6, h5("Top Genes:")),
             column(
-              width = 5,
+              width = 6,
               numericInput(
-                inputId = ns("n_genes"), 
-                label = NULL, 
+                inputId = ns("n_genes"),
+                label = NULL,
                 min = 10,
                 max = 12000,
                 value = 1000,
@@ -162,7 +162,7 @@ mod_03_clustering_ui <- function(id) {
             )
           ),
           fluidRow(
-            column(width = 4, h5("Highlight:")),
+            column(width = 4, h5("Mark Genes:")),
             column(
               width = 8,
               htmlOutput(ns("selected_genes_ui"))
@@ -240,8 +240,22 @@ mod_03_clustering_ui <- function(id) {
                   width = "100%",
                   brush = ns("ht_brush")
                 ),
+                ottoPlots::mod_download_figure_ui(
+                  ns("dl_heatmap_main"),
+                  label = "Above"
+                ),
+                ottoPlots::mod_download_figure_ui(
+                  ns("dl_heatmap_sub"),
+                  label = "Right"
+                ),
                 uiOutput(
                   outputId = ns("ht_click_content")
+                ),
+                checkboxInput(
+                  inputId = ns("cluster_enrichment"), 
+                  label = h5("Enrichment in
+                    selected genes or k-means clusters(below)"),
+                  value = TRUE
                 )
               ),
               column(
@@ -253,12 +267,6 @@ mod_03_clustering_ui <- function(id) {
                   click = ns("ht_click")
                 )
               )
-            ),
-            checkboxInput(
-              inputId = ns("cluster_enrichment"), 
-              label = strong("Enrichment analysis on 
-                selected genes or k-means clusters"),
-              value = TRUE
             ),
             conditionalPanel(
               condition = "input.cluster_enrichment == 1 ",
@@ -400,10 +408,22 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
 
     # Sample color bar selector ----------
     output$list_factors_heatmap <- renderUI({
+      choices <- "Names"
+      selected <- choices
+      if(!is.null(colnames(pre_process$sample_info()))) {
+        factors <- colnames(pre_process$sample_info())
+        choices <- c(
+          choices,
+          factors,
+          "All factors"
+        )
+      selected <- choices[length(choices)]
+      }
       selectInput(
         inputId = ns("select_factors_heatmap"),
         label = NULL,
-        choices = c("Sample_Name", colnames(pre_process$sample_info()))
+        choices = choices,
+        selected = selected
       )
     })
 
@@ -456,7 +476,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         inputId = ns("selected_genes"),
         label = NULL,
         choices = row.names(heatmap_data()),
-        selected = sample(row.names(heatmap_data()), 1),
+        selected = NULL,
         multiple = TRUE
       )
     })
@@ -467,7 +487,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     output$heatmap_main <- renderPlot({
       req(!is.null(heatmap_data()))
       req(input$select_factors_heatmap)
-      req(input$selected_genes)
+#      req(input$selected_genes)
 
       shinybusy::show_modal_spinner(
         spin = "orbit",
@@ -501,33 +521,96 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       return(shiny_env$ht)
     })
 
+    heatmap_main_object <- reactive({
+      req(!is.null(heatmap_data()))
+      req(input$select_factors_heatmap)
+
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Creating Heatmap",
+        color = "#000000"
+      )
+
+      # Assign heatmap to be used in multiple components
+      obj <- heatmap_main(
+        data = heatmap_data(),
+        cluster_meth = input$cluster_meth,
+        heatmap_cutoff = input$heatmap_cutoff,
+        sample_info = pre_process$sample_info(),
+        select_factors_heatmap = input$select_factors_heatmap,
+        dist_funs = dist_funs,
+        dist_function = input$dist_function,
+        hclust_function = input$hclust_function,
+        sample_clustering = input$sample_clustering,
+        heatmap_color_select = heatmap_colors[[input$heatmap_color_select]],
+        row_dend = input$show_row_dend,
+        k_clusters = input$k_clusters,
+        re_run = input$k_means_re_run,
+        selected_genes = input$selected_genes
+      )
+
+      shinybusy::remove_modal_spinner()
+
+      return(obj)
+    })
+
+
+    dl_heatmap_main <- ottoPlots::mod_download_figure_server(
+      id = "dl_heatmap_main",
+      filename = "heatmap_main",
+      figure = reactive({ heatmap_main_object() }),
+      width = 6,
+      height = 16
+    )
 
     # Heatmap Click Value ---------
     output$ht_click_content <- renderUI({
-      
-      if (is.null(input$ht_click) | is.null(shiny_env$ht_sub)) { 
-        "Click on zoomed heatmap"
-      } else {
-        cluster_heat_click_info(
-          click = input$ht_click,
-          ht_sub = shiny_env$ht_sub,
-          ht_sub_obj = shiny_env$ht_sub_obj,
-          ht_pos_sub = shiny_env$ht_pos_sub,
-          sub_groups = shiny_env$sub_groups,
-          group_colors = shiny_env$group_colors,
-          cluster_meth = input$cluster_meth,
-          click_data = shiny_env$click_data
-        )
+
+      # zoomed in, but not clicked
+      if (is.null(input$ht_click) &&
+          !is.null(shiny_env$ht_sub) &&
+          !is.null(input$ht_brush)
+      ) {
+p <- '<br><p style="color:red;text-align:right;">Click on the sub-heatmap &#10230;</p>'
+          html <- GetoptLong::qq(p)
+          return(HTML(html))
       }
+      # if not zoomed in, show nothing
+      if (is.null(input$ht_click) ||
+          is.null(shiny_env$ht_sub) ||
+          is.null(input$ht_brush)
+      ) {
+        return(NULL)
+      }
+
+      cluster_heat_click_info(
+        click = input$ht_click,
+        ht_sub = shiny_env$ht_sub,
+        ht_sub_obj = shiny_env$ht_sub_obj,
+        ht_pos_sub = shiny_env$ht_pos_sub,
+        sub_groups = shiny_env$sub_groups,
+        group_colors = shiny_env$group_colors,
+        cluster_meth = input$cluster_meth,
+        click_data = shiny_env$click_data
+      )
+      
     })
 
     # Subheatmap creation ---------
     output$sub_heatmap <- renderPlot({
       if (is.null(input$ht_brush)) {
         grid::grid.newpage()
-        grid::grid.text("Select a region on the heatmap to zoom in. 
-        Gene IDs shows up when less than 60 genes are selected.", 0.5, 0.5)
+        grid::grid.text("Select a region on the heatmap to zoom in.
+
+        Selection can be adjusted from the sides.
+        It can also be dragged around.
+        ", 0.5, 0.5)
       } else {
+        shinybusy::show_modal_spinner(
+          spin = "orbit",
+          text = "Creating sub-heatmap",
+          color = "#000000"
+        )
         submap_return <- heat_sub(
           ht_brush = input$ht_brush,
           ht = shiny_env$ht,
@@ -552,10 +635,54 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         )
 
         shiny_env$ht_pos_sub <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht_sub)
-
+        shinybusy::remove_modal_spinner()
         return(shiny_env$ht_sub)
       }
     })
+
+    # Subheatmap creation ---------
+    heatmap_sub_object <- reactive({
+      if (is.null(input$ht_brush)) {
+        grid::grid.newpage()
+        grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
+      } else {
+        shinybusy::show_modal_spinner(
+          spin = "orbit",
+          text = "Creating sub-heatmap",
+          color = "#000000"
+        )
+        submap_return <- heat_sub(
+          ht_brush = input$ht_brush,
+          ht = shiny_env$ht,
+          ht_pos_main = shiny_env$ht_pos_main,
+          heatmap_data = heatmap_data(),
+          sample_info = pre_process$sample_info(),
+          select_factors_heatmap = input$select_factors_heatmap,
+          cluster_meth = input$cluster_meth
+        )
+        # Objects used in other components ----------
+        shiny_env$ht_sub_obj <- submap_return$ht_select
+        shiny_env$submap_data <- submap_return$submap_data
+        shiny_env$sub_groups <- submap_return$sub_groups
+        shiny_env$group_colors <- submap_return$group_colors
+        shiny_env$click_data <- submap_return$click_data
+
+        shinybusy::remove_modal_spinner()
+        return(ComplexHeatmap::draw(
+          shiny_env$ht_sub_obj,
+          annotation_legend_list = submap_return$lgd,
+          annotation_legend_side = "top"
+        ))
+      }
+    })
+
+    dl_heatmap_sub <- ottoPlots::mod_download_figure_server(
+      id = "dl_heatmap_sub",
+      filename = "heatmap_zoom",
+      figure = reactive({ heatmap_sub_object() }),
+      width = 8,
+      height = 12
+    )
 
     # gene lists for enrichment analysis
     gene_lists <- reactive({
@@ -736,64 +863,58 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       # For PDF output, change this to "report.pdf"
       filename ="clustering_report.html",
       content = function(file) {
-        #Show Loading popup
-        shinybusy::show_modal_spinner(
-          spin = "orbit",
-          text = "Generating Report",
-          color = "#000000"
-        )
-        # Copy the report file to a temporary directory before processing it, in
-        # case we don't have write permissions to the current working dir (which
-        # can happen when deployed).
-        tempReport <- file.path(tempdir(), "clustering_workflow.Rmd")
-        #tempReport
-        tempReport<-gsub("\\", "/",tempReport,fixed = TRUE)
-        
-        #This should retrieve the project location on your device:
-        #"C:/Users/bdere/Documents/GitHub/idepGolem"
-        wd <- getwd()
-        
-        markdown_location <-paste0(wd, "/vignettes/Reports/clustering_workflow.Rmd")
-        file.copy(from=markdown_location,to = tempReport, overwrite = TRUE)
-        
-        # Set up parameters to pass to Rmd document
-        params <- list(
-          pre_processed_data = pre_process$data(),
-          sample_info = pre_process$sample_info(),
-          all_gene_names = pre_process$all_gene_names(),
-          n_genes = input$n_genes,
-          k_clusters = input$k_clusters,
-          cluster_meth = input$cluster_meth,
-          select_gene_id = input$select_gene_id,
-          list_factors_heatmap = input$list_factors_heatmap,
-          heatmap_color_select = heatmap_colors[[input$heatmap_color_select]],
-          dist_function = input$dist_function,
-          hclust_function = input$hclust_function,
-          heatmap_cutoff = input$heatmap_cutoff,
-          gene_centering = input$gene_centering,
-          gene_normalize = input$gene_normalize,
-          sample_clustering = input$sample_clustering,
-          show_row_dend = input$show_row_dend
-            
+        withProgress(message = "Generating report", {
+          incProgress(0.2)
+          # Copy the report file to a temporary directory before processing it, in
+          # case we don't have write permissions to the current working dir (which
+          # can happen when deployed).
+          tempReport <- file.path(tempdir(), "clustering_workflow.Rmd")
+          #tempReport
+          tempReport<-gsub("\\", "/", tempReport, fixed = TRUE)
           
-        )
-        
-        # Knit the document, passing in the `params` list, and eval it in a
-        # child of the global environment (this isolates the code in the document
-        # from the code in this app).
-        rmarkdown::render(
-          input = tempReport,#markdown_location, 
-          output_file = file,
-          params = params,
-          envir = new.env(parent = globalenv())
-        )
-        shinybusy::remove_modal_spinner()
-        
+          #This should retrieve the project location on your device:
+          #"C:/Users/bdere/Documents/GitHub/idepGolem"
+          wd <- getwd()
+          
+          markdown_location <-paste0(wd, "/vignettes/Reports/clustering_workflow.Rmd")
+          file.copy(from = markdown_location, to = tempReport, overwrite = TRUE)
+          
+          # Set up parameters to pass to Rmd document
+          params <- list(
+            pre_processed_data = pre_process$data(),
+            sample_info = pre_process$sample_info(),
+            descr = pre_process$descr(),
+            all_gene_names = pre_process$all_gene_names(),
+            n_genes = input$n_genes,
+            k_clusters = input$k_clusters,
+            cluster_meth = input$cluster_meth,
+            select_gene_id = input$select_gene_id,
+            list_factors_heatmap = input$list_factors_heatmap,
+            heatmap_color_select = heatmap_colors[[input$heatmap_color_select]],
+            dist_function = input$dist_function,
+            hclust_function = input$hclust_function,
+            heatmap_cutoff = input$heatmap_cutoff,
+            gene_centering = input$gene_centering,
+            gene_normalize = input$gene_normalize,
+            sample_clustering = input$sample_clustering,
+            show_row_dend = input$show_row_dend,
+            selected_genes = input$selected_genes
+          )
+          
+          req(params)
+          
+          # Knit the document, passing in the `params` list, and eval it in a
+          # child of the global environment (this isolates the code in the document
+          # from the code in this app).
+          rmarkdown::render(
+            input = tempReport,#markdown_location, 
+            output_file = file,
+            params = params,
+            envir = new.env(parent = globalenv())
+          )
+        })
       }
-      
     )
-    
-
   })
 }
 

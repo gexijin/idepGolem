@@ -10,8 +10,8 @@
 mod_07_genome_ui <- function(id){
   ns <- NS(id)
   tabPanel(
-    "Genome",
-    sidebarLayout(  
+    title = "Genome",
+    sidebarLayout(
       sidebarPanel( 
         htmlOutput(outputId = ns("list_comparisons_genome")),
         tags$style(
@@ -66,12 +66,31 @@ mod_07_genome_ui <- function(id){
               label = "Coding genes only",
               value = TRUE
             )
-          )  
+          )
+        ),
+        fluidRow( 
+          column(
+            width = 5,
+            checkboxInput(
+              inputId = ns("hide_patches"),
+              label = "Hide Patch Chr. ",
+              value = TRUE
+            )
+          ),
+          column(
+            width = 7,
+            checkboxInput(
+              inputId = ns("hide_chr"),
+              label = "Hide Chr. w/ 4 or less genes",
+              value = TRUE
+            )
+          )
         ),
         HTML(
           "<hr style='height:1px;border:none;
           color:#333;background-color:#333;' />"
         ),
+        h5("To identify enriched genomic loci:"),
         fluidRow(
           column(
             width = 6,
@@ -99,14 +118,20 @@ mod_07_genome_ui <- function(id){
           choices = c(0.1, 0.05, 0.01, 0.001, 0.0001, 0.00001)
         )
       ),
-      mainPanel(    
+
+
+
+      mainPanel(
         tabsetPanel(
           tabPanel(
-            "Chromosome Plot",
+            "Chromosomes",
             plotly::plotlyOutput(
               outputId = ns("genome_plotly"),
               height = "900px"
-            )
+            ),
+            h4("Select a region to zoom in. Mouse over the points to 
+            see more information on the gene. Enriched regions are 
+            highlighted by blue or red line segments paralell to the chromosomes.")
           ),
           tabPanel(
             "PREDA (5 Mins)",
@@ -228,8 +253,8 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data){
           label = NULL,
           choices = list("All" = "All"),
           selected = "All"
-        )  
-			}	else {
+        ) 
+      }	else {
         selectInput(
           inputId = ns("select_contrast"),
           label = 
@@ -239,40 +264,50 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data){
 	     )
       } 
 	  })
-    
+
     # visualizing fold change on chrs. 
     output$genome_plotly <- plotly::renderPlotly({
       req(!is.null(deg$limma()))
-
-      chromosome_plotly(
-        limma = deg$limma(),
-        select_contrast = input$select_contrast,
-        all_gene_info = pre_process$all_gene_info(),
-        ignore_non_coding = input$ignore_non_coding,
-        limma_p_val_viz = input$limma_p_val_viz,
-        limma_fc_viz = input$limma_fc_viz,
-        label_gene_symbol = input$label_gene_symbol,
-        ma_window_size = input$ma_window_size,
-        ma_window_steps = input$ma_window_steps,
-        ch_region_p_val = input$ch_region_p_val
+      req(!is.null(pre_process$all_gene_info()))
+      req(
+        input$select_contrast,
+        input$ignore_non_coding,
+        input$limma_p_val_viz,
+        input$limma_fc_viz,
+        input$ma_window_size,
+        input$ma_window_steps,
+        input$ch_region_p_val
       )
+      withProgress(message = "Generating plot", {
+        incProgress(0.2)
+        chromosome_plotly(
+          limma = deg$limma(),
+          select_contrast = input$select_contrast,
+          all_gene_info = pre_process$all_gene_info(),
+          ignore_non_coding = input$ignore_non_coding,
+          limma_p_val_viz = input$limma_p_val_viz,
+          limma_fc_viz = input$limma_fc_viz,
+          label_gene_symbol = input$label_gene_symbol,
+          ma_window_size = input$ma_window_size,
+          ma_window_steps = input$ma_window_steps,
+          ch_region_p_val = input$ch_region_p_val,
+          hide_patches = input$hide_patches,
+          hide_chr = input$hide_chr
+        )
+      })
     })
 
     # Pre-calculating PREDA, so that changing FDR cutoffs does not trigger entire calculation
     genome_plot_data_pre <- reactive({
       req(!is.null(deg$limma()))
-      shinybusy::show_modal_spinner(
-        spin = "orbit",
-        text = "Running PREDA. This may take up to 5 minutes...",
-        color = "#000000"
-      )
-      res <- get_genome_plot_data_pre(
-        select_contrast = input$select_contrast,
-        limma = deg$limma(),
-        all_gene_info = pre_process$all_gene_info()
-      )
-      shinybusy::remove_modal_spinner()
-      return(res)
+      withProgress(message = "PREDA may take 5 minutes...", {
+        incProgress(0.2)
+        get_genome_plot_data_pre(
+          select_contrast = input$select_contrast,
+          limma = deg$limma(),
+          all_gene_info = pre_process$all_gene_info()
+        )
+      })
     })
 
     # Results from PREDA

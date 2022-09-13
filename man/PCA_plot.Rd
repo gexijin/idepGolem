@@ -9,8 +9,8 @@ PCA_plot(
   sample_info,
   PCAx = 1,
   PCAy = 2,
-  selected_color = "Sample_Name",
-  selected_shape = "Sample_Name"
+  selected_color = "Names",
+  selected_shape = "Names"
 )
 }
 \arguments{

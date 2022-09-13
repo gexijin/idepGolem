@@ -275,7 +275,7 @@ mod_11_enrichment_ui <- function(id){
         ),
         tableOutput(ns("gene_info_table")),
         p("Note: In the gene type column, \"C\" indicates 
-        protein-coding genes, and \"pseduo\" means pseduogenes.")
+        protein-coding genes, and \"P\" means pseduogenes.")
       )
     )
 
@@ -368,46 +368,38 @@ mod_11_enrichment_server <- function(
     # returns a list object
     pathway_table <- reactive({
       req(!is.null(gene_lists()))
-      shinybusy::show_modal_spinner(
-        spin = "orbit",
-        text = "Running Analysis",
-        color = "#000000"
-      )
+      withProgress(message = "Enrichment Analysis", {
+        pathway_info <- list()
+          # disregard user selection use clusters for enrichment
+        for (i in 1:length(gene_lists())) {
+          incProgress(1 / length(gene_lists()))
+          gene_names_query <- gene_lists()[[i]]
+          req(!is.null(input$select_go))
+          gene_sets <- read_pathway_sets(
+            all_gene_names_query = gene_names_query,
+            converted = converted(), #n
+            go = input$select_go,
+            select_org = select_org(),
+            gmt_file = gmt_file(), #n
+            idep_data = idep_data,
+            gene_info = gene_info()
+          )
 
-      pathway_info <- list()
-
-        # disregard user selection use clusters for enrichment
-      for (i in 1:length(gene_lists())) {
-        gene_names_query <- gene_lists()[[i]]
-        req(!is.null(input$select_go))
-        gene_sets <- read_pathway_sets(
-          all_gene_names_query = gene_names_query,
-          converted = converted(), #n
-          go = input$select_go,
-          select_org = select_org(),
-          gmt_file = gmt_file(), #n
-          idep_data = idep_data,
-          gene_info = gene_info()
-        )
-
-        pathway_info[[names(gene_lists())[i]]] <- find_overlap(
-          pathway_table = gene_sets$pathway_table,
-          query_set = gene_sets$query_set,
-          total_genes = gene_sets$total_genes,
-          processed_data = processed_data(),
-          gene_info = gene_info(),
-          go = input$select_go,
-          idep_data = idep_data,
-          select_org = select_org(),
-          sub_pathway_files = gene_sets$pathway_files,
-          use_filtered_background = input$filtered_background,
-          reduced = input$remove_redudant
-        )
-
-      }
-
-      shinybusy::remove_modal_spinner()
-
+          pathway_info[[names(gene_lists())[i]]] <- find_overlap(
+            pathway_table = gene_sets$pathway_table,
+            query_set = gene_sets$query_set,
+            total_genes = gene_sets$total_genes,
+            processed_data = processed_data(),
+            gene_info = gene_info(),
+            go = input$select_go,
+            idep_data = idep_data,
+            select_org = select_org(),
+            sub_pathway_files = gene_sets$pathway_files,
+            use_filtered_background = input$filtered_background,
+            reduced = input$remove_redudant
+          )
+        }
+      })
       return(pathway_info)
     })
 
@@ -457,10 +449,13 @@ mod_11_enrichment_server <- function(
 
         #df$start_position <- round(df$start_position / 1e6, 2)
         # protein_coding --> coding; processed_pseduogene --> pseduogene
-        df$gene_biotype <- gsub(".*_", "", df$gene_biotype)
-        df$gene_biotype <- gsub("pseudogene", "pseudo", df$gene_biotype)
+
+        df$gene_biotype <- gsub(".*pseudogene", "P", df$gene_biotype)
         # coding is not shown
-        df$gene_biotype <- gsub("coding", "C", df$gene_biotype)
+        df$gene_biotype <- gsub("coding|protein_coding", "C", df$gene_biotype)
+        # TR_J_gene  --> TR_J
+        df$gene_biotype <- gsub("_gene", "", df$gene_biotype)
+
         # GL456211.1 ---> ""
         df$chromosome_name[nchar(df$chromosome_name) > 5] <- ""
 
@@ -513,9 +508,6 @@ mod_11_enrichment_server <- function(
         # only change the ones with URL
         df$'Entrezgene id'[ix] <- tem[ix]
       }
-
-
-
       return(df)
     },
     digits = 2,
@@ -533,9 +525,9 @@ mod_11_enrichment_server <- function(
       },
       content = function(file) {
         write.csv(
-          cluster_gene_info(), 
+          cluster_gene_info(),
           file,
-          row.names=FALSE
+          row.names = FALSE
         )
       }
     )
@@ -545,6 +537,8 @@ mod_11_enrichment_server <- function(
       counts <- table(cluster_gene_info()$Group)
       txt <- paste0(names(counts), ":", counts, collapse = " genes; ")
     })
+
+
     # returns a data frame
     enrichment_dataframe <- reactive({
       req(!is.null(pathway_table()))
@@ -659,8 +653,8 @@ mod_11_enrichment_server <- function(
     # Interactive vis network plot
     output$vis_network_deg <- visNetwork::renderVisNetwork({
       req(!is.null(network_data_deg()))
-      req(nrow(network_data_deg()$edges) > 1)
-      req(nrow(network_data_deg()$nodes) > 1)
+      req(nrow(network_data_deg()$edges) > 2)
+      req(nrow(network_data_deg()$nodes) > 2)
       vis_network_plot(
         network_data = network_data_deg()
       )
@@ -715,10 +709,10 @@ mod_11_enrichment_server <- function(
 
     # ggplot2 object for the enrichment chart;
     # used both for display and download
-    enrich_barplot_object <- reactive({
-
+    enrich_barplot_object <- reactive({  
       if(is.null(enrichment_dataframe())) {
-        return(NULL)
+        grid::grid.newpage()
+        return(grid::grid.text("Not available.", 0.5, 0.5))
       }
       req(input$pathway_order)
       req(input$order_x)

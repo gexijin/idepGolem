@@ -14,11 +14,7 @@ mod_05_deg_1_ui <- function(id) {
     sidebarLayout(
       sidebarPanel(
         # Button to run DEG analysis for the specified model
-        actionButton(
-          inputId = ns("submit_model_button"),
-          label = "Submit",
-          style = "float:right"
-        ),
+        uiOutput(ns("submit_ui")),
         tags$head(tags$style(
           "#deg-submit_model_button{font-size: 20px;color: red}"
         )),
@@ -95,7 +91,7 @@ mod_05_deg_1_ui <- function(id) {
             inputId = ns("independent_filtering"),
             label = "Independent filtering of lower counts",
             value = TRUE
-          ),          
+          ),
           ns = ns
        ),
         tags$br(),
@@ -198,14 +194,14 @@ mod_05_deg_2_ui <- function(id) {
     sidebarLayout(
       sidebarPanel(
         htmlOutput(outputId = ns("list_comparisons")),
-        h6("Select a comparison to examine. 
+        h6("Select a comparison to examine the associated DEGs. 
           \"A-B\" means A vs. B (See heatmap).
             Interaction terms start with \"I:\""),
         conditionalPanel(
           condition = "input.step_2 == 'Volcano Plot' | 
             input.step_2 == 'MA Plot'", 
           selectInput(
-            inputId = ns("plot_color_select"), 
+            inputId = ns("plot_color_select"),
             label = "Color scale",
             choices = "Red-Green"
           ),
@@ -271,6 +267,14 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     # Interactive heatmap environment
     deg_env <- new.env()
 
+    output$submit_ui <- renderUI({
+      req(model_comparisons())
+      actionButton(
+        inputId = ns("submit_model_button"),
+        label = "Submit",
+        style = "float:right"
+      )
+    })
     
     # DEG STEP 1 ----------
     output$data_file_format <- reactive({
@@ -281,14 +285,15 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       name = "data_file_format",
       suspendWhenHidden = FALSE
     )
-
+    
     # Experiment Design UI Elements ------------
     output$list_factors_deg <- renderUI({
-      list_factors <- list_factors_ui(
+      list_factors <-  list_factors_ui(
         sample_info = pre_process$sample_info(),
         data_file_format = pre_process$data_file_format(),
         counts_deg_method = input$counts_deg_method
       )
+      
       if(class(list_factors)[1] == "list") {
         return(
           checkboxGroupInput(
@@ -318,20 +323,24 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         )
       )
 	  })
-
-    output$list_model_comparisons <- renderUI({
+    
+    model_comparisons <- reactive({
       req(pre_process$data() & pre_process$data_file_format() != 3)
-		  model_comparisons <- list_model_comparisons_ui(
+      
+      list_model_comparisons_ui(
         sample_info = pre_process$sample_info(),
         select_factors_model = input$select_factors_model,
         processed_data = pre_process$data()
       )
-      req(!is.null(model_comparisons))
+    })
+
+    output$list_model_comparisons <- renderUI({
+      req(model_comparisons())
       checkboxGroupInput(
         inputId = ns("select_model_comprions"), 
-			  label = h5(model_comparisons$title),
-        choices = model_comparisons$choices,
-        selected = model_comparisons$choices[[1]]
+			  label = h5(model_comparisons()$title),
+        choices = model_comparisons()$choices,
+        selected = model_comparisons()$choices[[1]]
       )
 	  })
 
@@ -447,50 +456,46 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         req(!is.null(pre_process$raw_counts()) |
           !is.null(pre_process$data())
         )
-      
-        shinybusy::show_modal_spinner(
-          spin = "orbit",
-          text = "Running Analysis",
-          color = "#000000"
-        )
-        
-        # only use with DESeq2
-        threshold_wald_test <- FALSE
-        if(input$counts_deg_method == 3) {
-          threshold_wald_test <- input$threshold_wald_test
-        }
+        withProgress(message = "DEG analysis...", {
+          incProgress(0.4)
+          
+          # only use with DESeq2
+          threshold_wald_test <- FALSE
+          if(input$counts_deg_method == 3) {
+            threshold_wald_test <- input$threshold_wald_test
+          }
 
-        independent_filtering <- TRUE
-        if(input$counts_deg_method == 3) {
-          independent_filtering <- input$independent_filtering
-        }
+          independent_filtering <- TRUE
+          if(input$counts_deg_method == 3) {
+            independent_filtering <- input$independent_filtering
+          }
 
-        deg$limma <- limma_value(
-          data_file_format = pre_process$data_file_format(),
-          counts_deg_method = input$counts_deg_method,
-          raw_counts = pre_process$raw_counts(),
-          limma_p_val = input$limma_p_val,
-          limma_fc = input$limma_fc,
-          select_model_comprions = input$select_model_comprions,
-          sample_info = pre_process$sample_info(),
-          select_factors_model = input$select_factors_model,
-          select_interactions = input$select_interactions,
-          select_block_factors_model = input$select_block_factors_model,
-          factor_reference_levels = factor_reference_levels(),
-          processed_data = pre_process$data(),
-          counts_log_start = pre_process$counts_log_start(),
-          p_vals = pre_process$p_vals(),
-          threshold_wald_test = threshold_wald_test,
-          independent_filtering = independent_filtering
-        )
-        
-        updateTabsetPanel(
-          session = session, 
-          inputId = "step_1", 
-          selected = "results_tab"
-        )
-        shinybusy::remove_modal_spinner()
-      }  
+          deg$limma <- limma_value(
+            data_file_format = pre_process$data_file_format(),
+            counts_deg_method = input$counts_deg_method,
+            raw_counts = pre_process$raw_counts(),
+            limma_p_val = input$limma_p_val,
+            limma_fc = input$limma_fc,
+            select_model_comprions = input$select_model_comprions,
+            sample_info = pre_process$sample_info(),
+            select_factors_model = input$select_factors_model,
+            select_interactions = input$select_interactions,
+            select_block_factors_model = input$select_block_factors_model,
+            factor_reference_levels = factor_reference_levels(),
+            processed_data = pre_process$data(),
+            counts_log_start = pre_process$counts_log_start(),
+            p_vals = pre_process$p_vals(),
+            threshold_wald_test = threshold_wald_test,
+            independent_filtering = independent_filtering
+          )
+
+          updateTabsetPanel(
+            session = session, 
+            inputId = "step_1", 
+            selected = "results_tab"
+          )
+        })
+      }
     )
     
     deg_info <- reactive({
@@ -679,10 +684,17 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       )
     })
 
+    # bar to make the heatmap module reactive
+    # otherwise, error when switching heatmap
+    heatmap_bar <- reactive({
+      req(!is.null(heat_data()))
+      heat_data()$bar
+
+    })
     heatmap_module <- mod_12_heatmap_server(
       id = "12_heatmap_1",
       data = reactive({ heat_data()$genes }),
-      bar = heat_data()$bar,
+      bar = reactive({ heatmap_bar() }),
       all_gene_names = reactive({ pre_process$all_gene_names() }),
       cluster_rows = FALSE
     )
@@ -797,33 +809,29 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     # enrichment analysis results for both up and down regulated gene
     pathway_deg <- reactive({
       req(!is.null(up_reg_data()))
+      withProgress(message = "Enrichment analysis for DEGs.", {
+        incProgress(0.1)
+        deg_lists <- list()
+        lists <- c("Upregulated", "Downregulated")
 
-      shinybusy::show_modal_spinner(
-        spin = "orbit",
-        text = "Running Analysis",
-        color = "#000000"
-      )
+        for(direction in lists) {
+          
+          if(direction == lists[1]) {
+            data <- up_reg_data()
+          } else {
+            data <- down_reg_data()
+          }
 
-      deg_lists <- list()
-      lists <- c("Upregulated", "Downregulated")
-
-      for(direction in lists) {
-
-        if(direction == lists[1]) {
-          data <- up_reg_data()
-        } else {
-          data <- down_reg_data()
+          gene_names <- merge_data(
+            all_gene_names = pre_process$all_gene_names(),
+            data = data,
+            merge_ID = "ensembl_ID"
+          )
+          # Only keep the gene names and scrap the data
+          deg_lists[[direction]] <- dplyr::select_if(gene_names, is.character)
+          incProgress(0.5)
         }
-
-        gene_names <- merge_data(
-          all_gene_names = pre_process$all_gene_names(),
-          data = data,
-          merge_ID = "ensembl_ID"
-        )
-        # Only keep the gene names and scrap the data
-         deg_lists[[direction]] <- dplyr::select_if(gene_names, is.character)
-      }
-      shinybusy::remove_modal_spinner()
+      })
       return(deg_lists)
     })
 
@@ -839,33 +847,6 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     converted = reactive({ pre_process$converted() }),
     gmt_file = reactive({ pre_process$gmt_file() })
   )
- 
-
-      # Show messages when on the Network tab or button is clicked
-    observe({
-      req(input$submit_model_button == 0 && (
-        tab() == "DEG1" || tab() == "DEG2" ||
-        tab() == "Pathway" || tab() == "Genome"
-      ))
-
-      showNotification(
-        ui = paste("Differentially expressed genes need to 
-        be identified first. Please select factors and comparisons and 
-        click Submit on the DEG1 tab."),
-        id = "click_submit_DEG1",
-        duration = NULL,
-        type = "error"
-      )
-    })
-
-    # Remove messages if the tab changes --------
-    observe({
-      req(input$submit_model_button != 0 || (
-        tab() != "DEG1" && tab() != "DEG2" &&
-        tab() != "Pathway" && tab() != "Genome"
-      ))
-      removeNotification("click_submit_DEG1")
-    })
 
     list(
       limma = reactive(deg$limma),

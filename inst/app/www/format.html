@@ -1,0 +1,1661 @@
+<h1>
+    Data format
+</h1>
+<p>
+    iDEP accepts four types of files, namely:
+</p>
+<ol start="1" type="1">
+    <li>
+        Gene expression matrix (
+        <a
+            href="https://github.com/iDEP-SDSU/idep/blob/master/shinyapps/idep/exampleData/GSE37704_sailfish_genecounts.csv"
+        >
+            example1
+        </a>
+        ,
+        <a
+            href="https://github.com/iDEP-SDSU/idep/blob/master/shinyapps/idep/exampleData/BcellGSE71176_p53.csv"
+        >
+            example2
+        </a>
+        ),
+    </li>
+    <li>
+        fold-change and P values (
+        <a
+            href="https://github.com/iDEP-SDSU/idep/blob/master/shinyapps/idep/exampleData/GSE71176_FC_Pval.csv"
+        >
+            example
+        </a>
+        ),
+    </li>
+    <li>
+        experimental design (
+        <a
+            href="https://github.com/iDEP-SDSU/idep/blob/master/shinyapps/idep/exampleData/BcellGSE71176_p53_sampleInfo.csv"
+        >
+            example
+        </a>
+        ), and
+    </li>
+    <li>
+        gene sets (
+        <a
+            href="https://github.com/iDEP-SDSU/idep/blob/master/shinyapps/idep/exampleData/Cucumber_GO.gmt"
+        >
+            example
+        </a>
+        ).
+    </li>
+</ol>
+<p>
+    Many example files can be loaded directly into iDEP using the “Load demo
+    for:” button.
+</p>
+<p>
+    <a name="gene_expression_matrix"></a>
+</p>
+<h3>
+    1. Gene expression matrix
+</h3>
+<p>
+    Upload a CSV (comma-separated value) or tab-delimited text files containing
+    gene expression data.
+    <u>
+        For RNA-seq data, gene-level read count data is recommended, as
+        differentially expressed genes (DEGs) can be identified based on
+        statistical modeling of counts using DESeq2. FPKM, RPKM, TPM, or other
+        types of normalized expression data (DNA microarray, proteomics, etc.)
+        are also accepted
+    </u>
+    . The file size limit is 100 Mb.
+</p>
+<p>
+    Each row represents the expression level of a gene. The first row is
+    treated as sample names. Each column contains data on a sample with the
+    first column as gene IDs. You do not need to log-transform your data before
+uploading it to iDEP. The first few lines of a typical    <strong>read-count file</strong> look like this:
+</p>
+<table border="1" cellspacing="3" cellpadding="0" width="383">
+    <tbody>
+        <tr>
+            <td width="119">
+            </td>
+            <td width="61">
+                <p>
+                    Ctl_1
+                </p>
+            </td>
+            <td width="60">
+                <p>
+                    Ctl_2
+                </p>
+            </td>
+            <td width="71">
+                <p>
+                    Treat_1
+                </p>
+            </td>
+            <td width="73">
+                <p>
+                    Treat_2
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td width="119">
+                <p>
+                    ENSG00000198888
+                </p>
+            </td>
+            <td width="61">
+                <p>
+                    12
+                </p>
+            </td>
+            <td width="60">
+                <p>
+                    242
+                </p>
+            </td>
+            <td width="71">
+                <p>
+                    43
+                </p>
+            </td>
+            <td width="73">
+                <p>
+                    96
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td width="119">
+                <p>
+                    ENSG00000198763
+                </p>
+            </td>
+            <td width="61">
+                <p>
+                    2
+                </p>
+            </td>
+            <td width="60">
+                <p>
+                    0
+                </p>
+            </td>
+            <td width="71">
+                <p>
+                    1
+                </p>
+            </td>
+            <td width="73">
+                <p>
+                    0
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td width="119">
+                <p>
+                    ENSG00000198804
+                </p>
+            </td>
+            <td width="61">
+                <p>
+                    130975
+                </p>
+            </td>
+            <td width="60">
+                <p>
+                    151207
+                </p>
+            </td>
+            <td width="71">
+                <p>
+                    178130
+                </p>
+            </td>
+            <td width="73">
+                <p>
+                    196727
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td width="119">
+                <p>
+                    ENSG00000198712
+                </p>
+            </td>
+            <td width="61">
+                <p>
+                    15
+                </p>
+            </td>
+            <td width="60">
+                <p>
+                    32
+                </p>
+            </td>
+            <td width="71">
+                <p>
+                    6
+                </p>
+            </td>
+            <td width="73">
+                <p>
+                    9
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td width="119">
+                <p>
+                    ENSG00000228253
+                </p>
+            </td>
+            <td width="61">
+                <p>
+                    9304
+                </p>
+            </td>
+            <td width="60">
+                <p>
+                    11160
+                </p>
+            </td>
+            <td width="71">
+                <p>
+                    12608
+                </p>
+            </td>
+            <td width="73">
+                <p>
+                    13041
+                </p>
+            </td>
+        </tr>
+    </tbody>
+</table>
+<h3>
+    Gene IDs
+</h3>
+<p>
+    iDEP can convert most types of common gene IDs to Ensembl gene IDs, which
+    are used internally for enrichment analyses. It also uses gene IDs to guess
+    what organism your data is derived from. See a list of plant and animal
+    species covered by the database by clicking on the <strong>Info</strong>
+    button next to the species selection. If your gene IDs do not match
+    anything in the database, you can still use the website to do clustering
+    analysis and identify DEGs.
+</p>
+<p>
+    If multiple IDs are mapped to the same ENSEMBL gene, only the one with the
+    largest standard deviation is kept. Gene IDs not recognized by iDEP will be
+    kept in the data using original gene IDs.
+</p>
+<p>
+Users can also avoid gene ID conversion by checking the<strong>Do not convert gene IDs to Ensembl</strong> checkbox in the    <strong>Pre-Process</strong> page. This is useful when the user’s data is
+    already Ensembl gene IDs, or the user just wants to conduct exploratory
+    data analysis (EDA) and identify DEGs.
+</p>
+<h3>
+    Sample names
+</h3>
+<p>
+    <u>
+        Name columns carefully as iDEP parses column names to define sample
+        groups.
+    </u>
+    Replicates should be denoted by “_Rep1”, “_Rep2”, “_Rep3” at the end. Or it
+    can be simply “_1”, “_2”, “_3”. For example,
+    <em>
+        Control_1, Control_2, TreatmentA_1, TreatmentA_2, TreatmentB_1,
+        TreatmentB_2
+    </em>
+    . The first part defines 3 sample groups that form the basis for
+    differential expression analysis. All pair-wise comparisons are listed and
+    analyzed. Also, avoid using a hyphen “-” or a dot “.” in sample names. It
+    affects the parsing of sample names. But underscore “_” is allowed.
+</p>
+<p>
+    More complex study designs can be represented by uploading a study design
+    file. See below.
+    <br/>
+    <br/>
+    <a name="LFCs"></a>
+</p>
+<h3>
+    2. Experiment design file
+</h3>
+<p>
+    You can upload a sample information file (CSV or tab-delimited text file)
+    representing the experimental design. This is especially useful when the
+    experiment is complex, or you want to control for batch effect or paired
+    samples.
+    <em>
+        The column names in the design file must match the those in the
+        expression matrix file.
+    </em>
+</p>
+<p>
+    <strong>A. Paired samples (ignored by many)</strong>
+</p>
+<p>
+    Paired samples are quite common but are often ignored. For example,
+    researchers want to know if eating ice cream will change gene expression in
+    the mouse blood cells. On Monday they draw blood on the first mouse before
+    and after feeding ice cream. To get more robust results, they repeated the
+    experiment on Tuesday and Wednesday using two different mice. We have three
+    replicates. Clearly, the first control and first treatment samples are
+    derived from the same mice and the experiment is done on Monday.
+    <strong>
+        There is special one-to-one relationship among control and treatment
+        samples.
+    </strong>
+    To account for the systematic biases, we need to control for this paired
+    effect. This is like situations of paired t-tests. To achieve this, we need
+    a design file like this:
+</p>
+<table border="1" cellspacing="3" cellpadding="0" width="511">
+    <tbody>
+        <tr>
+            <td width="64">
+            </td>
+            <td width="64">
+                <p>
+                    Ctrl_1
+                </p>
+            </td>
+            <td width="64">
+                <p>
+                    Ctrl_2
+                </p>
+            </td>
+            <td width="64">
+                <p>
+                    Ctrl_3
+                </p>
+            </td>
+            <td width="80">
+                <p>
+                    Treat_1
+                </p>
+            </td>
+            <td width="104">
+                <p>
+                    Treat_2
+                </p>
+            </td>
+            <td width="71">
+                <p>
+                    Treat_3
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>
+                    Treatment
+                </p>
+            </td>
+            <td>
+                <p>
+                    Ctrl
+                </p>
+            </td>
+            <td>
+                <p>
+                    Ctrl
+                </p>
+            </td>
+            <td>
+                <p>
+                    Ctrl
+                </p>
+            </td>
+            <td>
+                <p>
+                    Treat
+                </p>
+            </td>
+            <td>
+                <p>
+                    Treat
+                </p>
+            </td>
+            <td>
+                <p>
+                    Treat
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>
+                    pairs
+                </p>
+            </td>
+            <td>
+                <p>
+                    1
+                </p>
+            </td>
+            <td>
+                <p>
+                    2
+                </p>
+            </td>
+            <td>
+                <p>
+                    3
+                </p>
+            </td>
+            <td>
+                <p>
+                    1
+                </p>
+            </td>
+            <td>
+                <p>
+                    2
+                </p>
+            </td>
+            <td>
+                <p>
+                    3
+                </p>
+            </td>
+        </tr>
+    </tbody>
+</table>
+<p>
+    The sample names in the first row must match the sample names in the
+    expression matrix file. Here we have two factors, “Treatment” and “pairs”.
+    <strong>
+        In the DEG1 tab, we can choose the factor <em>pairs</em> as a block
+        factor.
+    </strong>
+    This will enable DESeq2 or <em>limma</em> to run paired tests by using a
+    statistical model: ~ group + pairs. More generally, block factors can be
+    used to control many other confounding factors.
+</p>
+<p>
+    The levels of different factors must be distinct. Otherwise, iDEP will add
+    factor names to these levels to avoid confusion.
+</p>
+<p>
+    <strong>B. 2×2 factorial design </strong>
+</p>
+<p>
+    Many types of experiments can be represented as factorial designs. This is
+    a classic 2×2 factor example, where two genotypes are studied before and
+    after treatment. For example, in one of our demo data, the mutant has p53
+    knocked out and the treatment is ionizing radiation (IR). The researchers
+    wanted to study p53-dependent and independent pathways in IR response.
+</p>
+<table border="1" cellspacing="3" cellpadding="0" width="758">
+    <tbody>
+        <tr>
+            <td width="40">
+            </td>
+            <td width="92">
+                <p>
+                    WT_Ctrl_1
+                </p>
+            </td>
+            <td width="92">
+                <p>
+                    WT_Ctrl_2
+                </p>
+            </td>
+            <td width="121">
+                <p>
+                    WT_Trt_1
+                </p>
+            </td>
+            <td width="121">
+                <p>
+                    WT_Trt_2
+                </p>
+            </td>
+            <td width="40">
+                <p>
+                    Mu_Ctrl_1
+                </p>
+            </td>
+            <td width="40">
+                <p>
+                    Mu_Ctrl_2
+                </p>
+            </td>
+            <td width="40">
+                <p>
+                    Mu_Trt_1
+                </p>
+            </td>
+            <td width="40">
+                <p>
+                    Mu_Trt_2
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td width="40">
+                <p>
+                    Genotype
+                </p>
+            </td>
+            <td width="92">
+                <p>
+                    WT
+                </p>
+            </td>
+            <td width="92">
+                <p>
+                    WT
+                </p>
+            </td>
+            <td width="121">
+                <p>
+                    WT
+                </p>
+            </td>
+            <td width="121">
+                <p>
+                    WT
+                </p>
+            </td>
+            <td width="40">
+                <p>
+                    Mu
+                </p>
+            </td>
+            <td width="40">
+                <p>
+                    Mu
+                </p>
+            </td>
+            <td width="40">
+                <p>
+                    Mu
+                </p>
+            </td>
+            <td width="40">
+                <p>
+                    Mu
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td width="40">
+                <p>
+                    Treatment
+                </p>
+            </td>
+            <td width="92">
+                <p>
+                    Ctrl
+                </p>
+            </td>
+            <td width="92">
+                <p>
+                    Ctrl
+                </p>
+            </td>
+            <td width="121">
+                <p>
+                    Trt
+                </p>
+            </td>
+            <td width="121">
+                <p>
+                    Trt
+                </p>
+            </td>
+            <td width="40">
+                <p>
+                    Ctrl
+                </p>
+            </td>
+            <td width="40">
+                <p>
+                    Ctrl
+                </p>
+            </td>
+            <td width="40">
+                <p>
+                    Trt
+                </p>
+            </td>
+            <td width="40">
+                <p>
+                    Trt
+                </p>
+            </td>
+        </tr>
+    </tbody>
+</table>
+<p>
+    If we do not suspect any difference in IR response (two factors are
+    independent), we could use a model: <strong>~ Genotype + Treatment</strong>
+    . The results include two comparisons:
+</p>
+<ol start="1" type="1">
+    <li>
+        What is the difference between genotypes (WT vs Mu)?
+    </li>
+    <li>
+        What is the response to Treatment (Trt vs Ctrl)?
+    </li>
+</ol>
+<p>
+    <strong>C. 2×2 factorial design with interaction </strong>
+</p>
+<p>
+    If we suspect that the mutant will respond differently, then we should use
+the interaction term using this model:    <strong>~ Genotype + Treatment + Genotype*Treatment</strong>
+</p>
+<p>
+    The interaction term will tell use the difference in response. DESeq2 or
+    limma will give us results to answer these questions:
+</p>
+<ol start="1" type="1">
+    <li>
+        What is the response in WT,
+    </li>
+    <li>
+        What is the response in Mu,
+    </li>
+    <li>
+        The difference in response (interaction term),
+    </li>
+    <li>
+        The difference between WT and Mu, without treatment,
+    </li>
+    <li>
+        The difference between WT and Mu, with treatment.
+    </li>
+</ol>
+<p>
+    Sometimes factorial design is used but not obvious. For example, a
+    researcher knocked out two genes, ESR1 and ESR2, first separately and then
+    both. Here we have four biological samples, wild-type, ESR1 knockout, ESR2
+    knockout, and double knock out (DKO). The researcher is very interested in
+    the effect of double knockout. This can be represented by this design
+    matrix:
+</p>
+<table border="1" cellspacing="0" cellpadding="0" width="689">
+    <colgroup>
+        <col span="9" width="64"/>
+    </colgroup>
+    <tbody>
+        <tr>
+            <td width="64">
+            </td>
+            <td width="64">
+                <p>
+                    WT_1
+                </p>
+            </td>
+            <td width="64">
+                <p>
+                    WT_2
+                </p>
+            </td>
+            <td width="64">
+                <p>
+                    ESR1_1
+                </p>
+            </td>
+            <td width="64">
+                <p>
+                    ESR1_2
+                </p>
+            </td>
+            <td width="64">
+                <p>
+                    ESR2_1
+                </p>
+            </td>
+            <td width="64">
+                <p>
+                    ESR2_2
+                </p>
+            </td>
+            <td width="64">
+                <p>
+                    DKO_1
+                </p>
+            </td>
+            <td width="64">
+                <p>
+                    DKO_2
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>
+                    ESR1
+                </p>
+            </td>
+            <td>
+                <p>
+                    1WT
+                </p>
+            </td>
+            <td>
+                <p>
+                    1WT
+                </p>
+            </td>
+            <td>
+                <p>
+                    1KO
+                </p>
+            </td>
+            <td>
+                <p>
+                    1KO
+                </p>
+            </td>
+            <td>
+                <p>
+                    1WT
+                </p>
+            </td>
+            <td>
+                <p>
+                    1WT
+                </p>
+            </td>
+            <td>
+                <p>
+                    1KO
+                </p>
+            </td>
+            <td>
+                <p>
+                    1KO
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>
+                    ESR2
+                </p>
+            </td>
+            <td>
+                <p>
+                    2WT
+                </p>
+            </td>
+            <td>
+                <p>
+                    2WT
+                </p>
+            </td>
+            <td>
+                <p>
+                    2WT
+                </p>
+            </td>
+            <td>
+                <p>
+                    2WT
+                </p>
+            </td>
+            <td>
+                <p>
+                    2KO
+                </p>
+            </td>
+            <td>
+                <p>
+                    2KO
+                </p>
+            </td>
+            <td>
+                <p>
+                    2KO
+                </p>
+            </td>
+            <td>
+                <p>
+                    2KO
+                </p>
+            </td>
+        </tr>
+    </tbody>
+</table>
+<p>
+    You can set up a model in iDEP like : ~ ESR1 + ESR2 + ESR1:ESR2, where the
+    last term represents the interaction term, representing the special effects
+    of double knockout.
+</p>
+<p>
+    <strong>D. 2×3, 3×3 designs</strong>
+</p>
+<p>
+    If two genotypes are treated with two drugs, then there will be three
+    conditions including the control. We have two genotypes under three
+    conditions, namely a 2×3 design.
+</p>
+<p>
+    If three cell lines are treated with 2 drugs, then it is 3×3 design. But we
+    still have two factors. Just these factors are having more than 2 levels.
+</p>
+<p>
+    <strong>E. Three or more factors</strong>
+</p>
+<p>
+    Some researchers tried to get a lot of information into the design matrix.
+    On human cancer samples, for example, they put in sex, disease type, etc.
+    One common error is that the model is so complex that it requires a lot of
+    samples for the model to be fitted. This is especially true when you
+    consider interaction terms with factors. Sometimes, users created a model
+    with dozens of factors, but they only provided 10 samples. In that
+    situation, it is an impossible task and the DEG1 page will give an error.
+</p>
+<p>
+    iDEP is designed to handle simple experiment designs. It is limited in
+dealing with complex models. Currently, interaction terms using the    <em>limma</em> package are only available for two-factor design.
+</p>
+<p>
+    <strong>F. Time course data</strong>
+</p>
+<p>
+    Time points can be represented as factors too. For example, researchers
+    treated plants with cold temperature and wanted to see gene expression
+    change in both roots and leaves. Note that the untreated samples were
+    labeled as 0 hours.
+</p>
+<table border="1" cellspacing="3" cellpadding="0" width="1173">
+    <tbody>
+        <tr>
+            <td width="79">
+            </td>
+            <td width="81">
+                <p>
+                    leaf_0h_1
+                </p>
+            </td>
+            <td width="81">
+                <p>
+                    leaf_0h_2
+                </p>
+            </td>
+            <td width="91">
+                <p>
+                    leaf_12h_1
+                </p>
+            </td>
+            <td width="91">
+                <p>
+                    leaf_12h_2
+                </p>
+            </td>
+            <td width="91">
+                <p>
+                    leaf_48h_1
+                </p>
+            </td>
+            <td width="91">
+                <p>
+                    leaf_48h_2
+                </p>
+            </td>
+            <td width="83">
+                <p>
+                    root_0h_1
+                </p>
+            </td>
+            <td width="83">
+                <p>
+                    root_0h_2
+                </p>
+            </td>
+            <td width="93">
+                <p>
+                    root_12h_1
+                </p>
+            </td>
+            <td width="93">
+                <p>
+                    root_12h_2
+                </p>
+            </td>
+            <td width="93">
+                <p>
+                    root_48h_1
+                </p>
+            </td>
+            <td width="93">
+                <p>
+                    root_48h_2
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>
+                    time
+                </p>
+            </td>
+            <td>
+                <p>
+                    0h
+                </p>
+            </td>
+            <td>
+                <p>
+                    0h
+                </p>
+            </td>
+            <td>
+                <p>
+                    12h
+                </p>
+            </td>
+            <td>
+                <p>
+                    12h
+                </p>
+            </td>
+            <td>
+                <p>
+                    48h
+                </p>
+            </td>
+            <td>
+                <p>
+                    48h
+                </p>
+            </td>
+            <td>
+                <p>
+                    0h
+                </p>
+            </td>
+            <td>
+                <p>
+                    0h
+                </p>
+            </td>
+            <td>
+                <p>
+                    12h
+                </p>
+            </td>
+            <td>
+                <p>
+                    12h
+                </p>
+            </td>
+            <td>
+                <p>
+                    48h
+                </p>
+            </td>
+            <td>
+                <p>
+                    48h
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>
+                    tissue
+                </p>
+            </td>
+            <td>
+                <p>
+                    leaf
+                </p>
+            </td>
+            <td>
+                <p>
+                    leaf
+                </p>
+            </td>
+            <td>
+                <p>
+                    leaf
+                </p>
+            </td>
+            <td>
+                <p>
+                    leaf
+                </p>
+            </td>
+            <td>
+                <p>
+                    leaf
+                </p>
+            </td>
+            <td>
+                <p>
+                    leaf
+                </p>
+            </td>
+            <td>
+                <p>
+                    root
+                </p>
+            </td>
+            <td>
+                <p>
+                    root
+                </p>
+            </td>
+            <td>
+                <p>
+                    root
+                </p>
+            </td>
+            <td>
+                <p>
+                    root
+                </p>
+            </td>
+            <td>
+                <p>
+                    root
+                </p>
+            </td>
+            <td>
+                <p>
+                    root
+                </p>
+            </td>
+        </tr>
+    </tbody>
+</table>
+<h3>
+    3. Fold-changes and P values from other programs
+</h3>
+<p>
+    Users can also upload a file containing log fold-changes (LFCs) and P
+    values that were derived from Cuffdiff or other programs. It does not even
+    have to be RNA-seq data. iDEP will use these numbers directly for DEGs and
+    downstream analysis such as clustering, Venn diagrams, enrichment analysis,
+    and pathway analysis. Below is an example of two comparisons (trtA, trtB)
+    where LFC and FDR derived from Cuffdiff.
+</p>
+<table border="1" cellspacing="3" cellpadding="0" width="320">
+    <tbody>
+        <tr>
+            <td width="64">
+            </td>
+            <td width="64">
+                <p>
+                    trtA_LFC
+                </p>
+            </td>
+            <td width="64">
+                <p>
+                    FDR
+                </p>
+            </td>
+            <td width="64">
+                <p>
+                    trtB_LFC
+                </p>
+            </td>
+            <td width="64">
+                <p>
+                    FDR
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>
+                    Atp13a1
+                </p>
+            </td>
+            <td>
+                <p>
+                    -1.6474
+                </p>
+            </td>
+            <td>
+                <p>
+                    0.001
+                </p>
+            </td>
+            <td>
+                <p>
+                    1.2
+                </p>
+            </td>
+            <td>
+                <p>
+                    0.3
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>
+                    Pten
+                </p>
+            </td>
+            <td>
+                <p>
+                    -2.0093
+                </p>
+            </td>
+            <td>
+                <p>
+                    0.8
+                </p>
+            </td>
+            <td>
+                <p>
+                    0
+                </p>
+            </td>
+            <td>
+                <p>
+                    0.12
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>
+                    Blnk
+                </p>
+            </td>
+            <td>
+                <p>
+                    1.4008
+                </p>
+            </td>
+            <td>
+                <p>
+                    0.02
+                </p>
+            </td>
+            <td>
+                <p>
+                    -1.5
+                </p>
+            </td>
+            <td>
+                <p>
+                    0.001
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>
+                    Btk
+                </p>
+            </td>
+            <td>
+                <p>
+                    -1.9195
+                </p>
+            </td>
+            <td>
+                <p>
+                    0.34
+                </p>
+            </td>
+            <td>
+                <p>
+                    2.3
+                </p>
+            </td>
+            <td>
+                <p>
+                    0.01
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>
+                    Zmynd8
+                </p>
+            </td>
+            <td>
+                <p>
+                    2.2636
+                </p>
+            </td>
+            <td>
+                <p>
+                    0.12
+                </p>
+            </td>
+            <td>
+                <p>
+                    -0.5
+                </p>
+            </td>
+            <td>
+                <p>
+                    0.8
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>
+                    Pgd
+                </p>
+            </td>
+            <td>
+                <p>
+                    -2.2744
+                </p>
+            </td>
+            <td>
+                <p>
+                    0.001
+                </p>
+            </td>
+            <td>
+                <p>
+                    2.7
+                </p>
+            </td>
+            <td>
+                <p>
+                    0.001
+                </p>
+            </td>
+        </tr>
+    </tbody>
+</table>
+<p>
+    Users can also just upload log fold-changes. With such data, we can run EDA
+    and pathway analysis.
+</p>
+<table border="1" cellspacing="3" cellpadding="0" width="192">
+    <tbody>
+        <tr>
+            <td width="64">
+            </td>
+            <td width="64">
+                <p>
+                    LFC1
+                </p>
+            </td>
+            <td width="64">
+                <p>
+                    LFC2
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>
+                    Atp13a1
+                </p>
+            </td>
+            <td>
+                <p>
+                    -1.6474
+                </p>
+            </td>
+            <td>
+                <p>
+                    1.2
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>
+                    Pten
+                </p>
+            </td>
+            <td>
+                <p>
+                    -2.0093
+                </p>
+            </td>
+            <td>
+                <p>
+                    0
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>
+                    Blnk
+                </p>
+            </td>
+            <td>
+                <p>
+                    1.4008
+                </p>
+            </td>
+            <td>
+                <p>
+                    -1.5
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>
+                    Btk
+                </p>
+            </td>
+            <td>
+                <p>
+                    -1.9195
+                </p>
+            </td>
+            <td>
+                <p>
+                    2.3
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>
+                    Zmynd8
+                </p>
+            </td>
+            <td>
+                <p>
+                    2.2636
+                </p>
+            </td>
+            <td>
+                <p>
+                    -0.5
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>
+                    Pgd
+                </p>
+            </td>
+            <td>
+                <p>
+                    -2.2744
+                </p>
+            </td>
+            <td>
+                <p>
+                    2.7
+                </p>
+            </td>
+        </tr>
+    </tbody>
+</table>
+<h3>
+</h3>
+<h3>
+    4. Upload pathway data for new species
+</h3>
+<p>
+    Users can also upload their own gene set file for enrichment analysis and
+    pathway analysis. This is possible by choosing “**NEW SPECIES**” in step 3
+    of the data upload page.
+</p>
+<p>
+    Gene set files must be in GMT format, which is explained in details
+    <a
+        href="https://software.broadinstitute.org/cancer/software/gsea/wiki/index.php/Data_formats#GMT:_Gene_Matrix_Transposed_file_format_.28.2A.gmt.29"
+    >
+        here
+    </a>
+    . An example is shown below. The first column is pathway ID, the 2nd column
+    is some memo text that is ignored, the rest are gene IDs. The gene IDs do
+    not have to be Ensembl IDs, but must match the gene IDs in uploaded
+    expression data. This is because no gene ID conversion will be done.
+Pathway data used by iDEP is available    <a href="http://ge-lab.org/#/data">here</a>.
+</p>
+<table border="1" cellspacing="3" cellpadding="0" width="1088">
+    <tbody>
+        <tr>
+            <td width="64">
+                <p>
+                    GOBP_hsa_ens_GO:0000966_RNA_5-end_processing
+                </p>
+            </td>
+            <td width="64">
+                <p>
+                    AnyText
+                </p>
+            </td>
+            <td width="64">
+                <p>
+                    ENSG00000146109
+                </p>
+            </td>
+            <td width="64">
+                <p>
+                    ENSG00000197181
+                </p>
+            </td>
+            <td width="64">
+                <p>
+                    ENSG00000138035
+                </p>
+            </td>
+            <td width="64">
+                <p>
+                    ENSG00000174173
+                </p>
+            </td>
+            <td width="64">
+                <p>
+                    ENSG00000087269
+                </p>
+            </td>
+            <td width="128" colspan="2">
+                <p>
+                    ENSG00000120800
+                </p>
+            </td>
+            <td width="64">
+            </td>
+            <td width="64">
+            </td>
+            <td width="64">
+            </td>
+            <td width="64">
+            </td>
+            <td width="64">
+            </td>
+            <td width="64">
+            </td>
+            <td width="64">
+            </td>
+            <td width="64">
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>
+                    GOBP_hsa_ens_GO:0001503_ossification
+                </p>
+            </td>
+            <td>
+                <p>
+                    AnyText
+                </p>
+            </td>
+            <td>
+                <p>
+                    ENSG00000020633
+                </p>
+            </td>
+            <td>
+                <p>
+                    ENSG00000087494
+                </p>
+            </td>
+            <td>
+                <p>
+                    ENSG00000118785
+                </p>
+            </td>
+            <td>
+                <p>
+                    ENSG00000136929
+                </p>
+            </td>
+            <td>
+                <p>
+                    ENSG00000138756
+                </p>
+            </td>
+            <td>
+                <p>
+                    ENSG00000159216
+                </p>
+            </td>
+            <td>
+                <p>
+                    ENSG00000162337
+                </p>
+            </td>
+            <td>
+                <p>
+                    ENSG00000168646
+                </p>
+            </td>
+            <td>
+                <p>
+                    ENSG00000173868
+                </p>
+            </td>
+            <td>
+                <p>
+                    ENSG00000197594
+                </p>
+            </td>
+            <td>
+                <p>
+                    ENSG00000011028
+                </p>
+            </td>
+            <td>
+                <p>
+                    ENSG00000012223
+                </p>
+            </td>
+            <td>
+                <p>
+                    ENSG00000014123
+                </p>
+            </td>
+            <td>
+                <p>
+                    ENSG00000017427
+                </p>
+            </td>
+            <td>
+                <p>
+                    ENSG00000029559
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>
+                    GOBP_hsa_ens_GO:0001510_RNA_methylation
+                </p>
+            </td>
+            <td>
+                <p>
+                    AnyText
+                </p>
+            </td>
+            <td>
+                <p>
+                    ENSG00000059588
+                </p>
+            </td>
+            <td>
+                <p>
+                    ENSG00000068438
+                </p>
+            </td>
+            <td>
+                <p>
+                    ENSG00000104907
+                </p>
+            </td>
+            <td>
+                <p>
+                    ENSG00000105202
+                </p>
+            </td>
+            <td>
+                <p>
+                    ENSG00000108592
+                </p>
+            </td>
+            <td>
+                <p>
+                    ENSG00000111641
+                </p>
+            </td>
+            <td>
+                <p>
+                    ENSG00000122435
+                </p>
+            </td>
+            <td>
+                <p>
+                    ENSG00000122687
+                </p>
+            </td>
+            <td>
+                <p>
+                    ENSG00000126749
+                </p>
+            </td>
+            <td>
+                <p>
+                    ENSG00000127804
+                </p>
+            </td>
+            <td>
+                <p>
+                    ENSG00000130299
+                </p>
+            </td>
+            <td>
+                <p>
+                    ENSG00000130305
+                </p>
+            </td>
+            <td>
+                <p>
+                    ENSG00000134077
+                </p>
+            </td>
+            <td>
+                <p>
+                    ENSG00000135297
+                </p>
+            </td>
+            <td>
+                <p>
+                    ENSG00000138050
+                </p>
+            </td>
+        </tr>
+    </tbody>
+</table>
+<h3>
+    Sample size
+</h3>
+<p>
+    To use <em>limma</em> or <em>DESeq2</em> to identify DEGs, you should have
+    at least two groups (biological samples), each with two or more replicates.
+    For running exploratory data analysis such as PCA, hierarchical clustering
+    and k-Means clustering, you can have just two data columns in your file.
+</p>
+<h3>
+    R code for reading data:
+</h3>
+<pre>x &lt;- read.csv(inFile) # try CSV</pre>
+<pre>if(dim(x)[2] &lt;= 2 )   # ifless than 3 columns, try tab-deliminated</pre>
+<pre>  x &lt;-read.table(inFile, sep="\t",header=TRUE)       </pre>
+<pre>x[,1] &lt;- toupper(x[,1])</pre>
+<pre>x = x[order(-apply(x[,2:dim(x)[2]],1,sd) ),]</pre>
+<pre>x &lt;- x[!duplicated(x[,1]) ,]</pre>
+<pre>rownames(x) &lt;- x[,1]</pre>
+<pre>x &lt;- as.matrix(x[,-1])</pre>
+<h3>
+    R code for parsing sample names:
+</h3>
+<pre>detectGroups &lt;- function(x){  # x are col names</pre>
+<pre>     tem &lt;-gsub("[0-9]*$","",x) # Remove all numbers from end</pre>
+<pre>     tem &lt;-gsub("_Rep$","",tem); # remove "_Rep" from end</pre>
+<pre>     tem &lt;-gsub("_rep$","",tem); # remove "_rep" from end</pre>
+<pre>     tem &lt;-gsub("_REP$","",tem)  # remove "_REP" from end</pre>
+<pre>     return( tem )</pre>
+<pre> }</pre>
+<pre>groups = detectGroups( colnames(data) )</pre>
+<p>
+    As you could see from here, all numbers at the end of sample names are
+    disregarded. Thus you can name your samples like WT1, WT2, Treatment1,
+    Treatment2, etc.
+</p>
+<p align="right">
+    Updated 9/10/2022
+</p>

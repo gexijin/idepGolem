@@ -38,7 +38,9 @@ chromosome_plotly <- function(
   label_gene_symbol,
   ma_window_size,
   ma_window_steps,
-  ch_region_p_val
+  ch_region_p_val,
+  hide_patches,
+  hide_chr
 ) {
   # Default plot
   fake <- data.frame(a = 1:3, b = 1:3)
@@ -51,14 +53,14 @@ chromosome_plotly <- function(
     )
 
   if(length(limma$comparisons) == 1) {
-    top_1 <- limma$top_genes[[1]]  
+    top_1 <- limma$top_genes[[1]]
   } else {
-	top <- limma$top_genes
-	ix <- match(select_contrast, names(top))
-	if(is.na(ix)) {
+    top <- limma$top_genes
+    ix <- match(select_contrast, names(top))
+    if(is.na(ix)) {
       return(plotly::ggplotly(p))
     }
-	top_1 <- top[[ix]] 
+    top_1 <- top[[ix]]
   }
   if(dim(top_1)[1] == 0) {
     return(plotly::ggplotly(p))
@@ -99,17 +101,44 @@ chromosome_plotly <- function(
     
     x <- x[!is.na(x$chromosome_name), ]
     x <- x[!is.na(x$start_position), ]
-            
-    tem <- sort(table(x$chromosome_name), decreasing = T)
+
+    # Only keep significant genes
+    ix <- which(
+      (x$FDR< as.numeric(limma_p_val_viz)) &
+      (abs(x$Fold) > log2(as.numeric(limma_fc_viz)))
+    )
+
+    if(length(ix) < 5) {
+      return(NULL)
+    }
+    # Remove non-significant / not selected genes
+    # Keep a copy
+    x0 <- x
+    x <- x[ix, ]
+
+    # gather info on chrosomes
+    tem <- sort(table(x$chromosome_name), decreasing = TRUE)
     # ch with less than 100 genes are excluded
-    ch <- names(tem[tem >= 1])  
+    if(hide_chr) {
+      ch <- names(tem[tem >= 5])
+    } else {
+      ch <- names(tem[tem >= 1])
+    }
+
     if(length(ch) > 50) {
       # At most 50 ch
       ch <- ch[1:50]
     }
-    # ch. name less than 10 characters
-    ch <- ch[nchar(ch) <= 12]
-    ch <- ch[order(as.numeric(ch) ) ]
+
+    if(hide_patches) {
+      tem <- nchar(ch)
+      # only keep within 2 MAD from the median
+      ix <- which(tem <= median(tem) + 2 * mad(tem) + 0.0001)
+      ch <- ch[ix]
+      # ch. name less than 10 characters
+      #    ch <- ch[nchar(ch) <= 12]
+    }
+    ch <- ch[order(as.numeric(ch))]
     tem <- ch
     # The numbers are continous from 1 to length(ch)
     ch <- 1:(length(ch))
@@ -120,7 +149,7 @@ chromosome_plotly <- function(
     # Numeric encoding
     x$chNum <- 1 
     x$chNum <- ch[x$chromosome_name]
-      
+
     # Use max position as chr. length before filtering
     ch_length_table <- aggregate(start_position ~ chromosome_name, data = x, max)
     # Add chr. numer 
@@ -130,226 +159,214 @@ chromosome_plotly <- function(
     ch_length_table <- ch_length_table[order(ch_length_table$chNum), ]
     ch_length_table$start_position <- ch_length_table$start_position / 1e6
 
-    # Only keep significant genes
-    ix <- which(
-      (x$FDR< as.numeric(limma_p_val_viz)) &
-      (abs(x$Fold) > log2(as.numeric(limma_fc_viz)))
+    # Prepare coordinates
+    # Mbp
+    x$start_position <- x$start_position / 1000000
+    # Distance between chs.
+    chD <- 30
+    # Max log2 fold 
+    fold_cutoff <- 4
+
+    # log2 fold within -5 to 5
+    x$Fold[which(x$Fold > fold_cutoff)] <- fold_cutoff
+    x$Fold[which(x$Fold < -1 * fold_cutoff)] <- -1 * fold_cutoff 
+    x$Fold <- 4 * x$Fold
+
+    x$y <- x$chNum * chD + x$Fold
+    ch_total <- dim(ch_length_table)[1] 
+    x$R <- as.factor(sign(x$Fold))
+
+    colnames(x)[which(colnames(x) == "start_position")] <- "x"
+    x$R <- as.character(x$R)
+    x$R[x$R == "-1"] <- "Down"
+    x$R[x$R == "1"] <- "Up"
+    x$R <- as.factor(x$R)
+    # remove chromosomes with no genes left
+    x <- droplevels(x)
+    # Don't define x and y, so that we could plot use two datasets
+    p <- ggplot2::ggplot() +
+      ggplot2::geom_point(
+        data = x,
+        ggplot2::aes(
+          x = x,
+          y = y,
+          color = R,
+          text = paste0(
+            "Symbol: ",
+            symbol,
+            "\nRegulation: ",
+            R,
+            "\nChr Pos: ",
+            x
+          )
+        ),
+        shape = 20,
+        size = 0.2
+      )
+
+    if(label_gene_symbol) {
+      p <- p + ggplot2::geom_text(
+        data = x,
+        ggplot2::aes(x = x, y = y, label = symbol),
+        check_overlap = FALSE,
+        angle = 45,
+        size = 2,
+        vjust = 0,
+        nudge_y = 4 
+      )
+    }
+    # Label y with ch names
+    p <- p + ggplot2::scale_y_continuous(
+      labels = paste(
+        "chr",
+        names(ch[ch_length_table$chNum]), sep = ""
+      ), 
+      breaks = chD * (1:ch_total), 
+      limits = c(0, chD * (ch_total + 1) + 5)
     )
 
-    if(length(ix) > 5) { 
-      # Remove non-significant / not selected genes
-      # Keep a copy
-      x0 <- x
-      x <- x[ix, ]
-      # Prepare coordinates
-      # Mbp
-      x$start_position <- x$start_position / 1000000
-      # Distance between chs.
-      chD <- 30
-      # Max log2 fold 
-      fold_cutoff <- 4
-        
-      # log2 fold within -5 to 5
-      x$Fold[which(x$Fold > fold_cutoff)] <- fold_cutoff
-      x$Fold[which(x$Fold < -1 * fold_cutoff)] <- -1 * fold_cutoff 
-      x$Fold <- 4 * x$Fold
-    
-      x$y <- x$chNum * chD + x$Fold
-      ch_total <- dim(ch_length_table)[1] 
-      x$R <- as.factor(sign(x$Fold))
-        
-      colnames(x)[which(colnames(x) == "start_position")] <- "x"
-      x$R <- as.character(x$R)
-      x$R[x$R == "-1"] <- "Down"
-      x$R[x$R == "1"] <- "Up"
-      x$R <- as.factor(x$R)
-        
-      # Don't define x and y, so that we could plot use two datasets
-      p <- ggplot2::ggplot() +
-        ggplot2::geom_point(
-          data = x,
-          ggplot2::aes(
-            x = x,
-            y = y,
-            color = R,
-            text = paste0(
-              "Symbol: ",
-              symbol,
-              "\nRegulation: ",
-              R,
-              "\nChr Pos: ",
-              x
-            )
-          ),
-          shape = 20,
-          size = 0.2
-        )
-
-      if(label_gene_symbol) {
-        p <- p + ggplot2::geom_text(
-          data = x,
-          ggplot2::aes(x = x, y = y, label = symbol),
-          check_overlap = FALSE,
-          angle = 45,
-          size = 2,
-          vjust = 0,
-          nudge_y = 4 
-        )
-      }
-      # Label y with ch names
-      p <- p + ggplot2::scale_y_continuous(
-        labels = paste(
-          "chr",
-          names(ch[ch_length_table$chNum]), sep = ""
-        ), 
-        breaks = chD * (1:ch_total), 
-        limits = c(0, chD * (ch_total + 1) + 5)
+    # Draw horizontal lines for each ch.
+    for(i in 1:dim(ch_length_table)[1]) {
+      p <- p + ggplot2::annotate(
+        "segment",
+        x = 0,
+        xend = ch_length_table$start_position[i],
+        y = ch_length_table$chNum[i] * chD,
+        yend = ch_length_table$chNum[i] * chD
       )
-        
-      # Draw horizontal lines for each ch.
-      for(i in 1:dim(ch_length_table)[1]) {
-        p <- p + ggplot2::annotate(
-          "segment",
-          x = 0,
-          xend = ch_length_table$start_position[i],
-          y = ch_length_table$chNum[i] * chD,
-          yend = ch_length_table$chNum[i] * chD
-        )
+    }
+    # Change legend  http://ggplot2.tidyverse.org/reference/scale_manual.html
+    # Customize legend text
+    p <- p + ggplot2::scale_color_manual(
+      name = "",   
+      values = c("red", "blue"),
+      breaks = c("Up", "Down"),
+      labels = c("Up", "Dn")
+    ) 
+    p <- p + ggplot2::xlab("Position on chrs. (Mbp)") +
+      ggplot2::theme(axis.title.y = ggplot2::element_blank())
+    p <- p + ggplot2::theme(legend.position = "none")
+
+
+    x0 <- x0[x0$chromosome_name %in% unique(x$chromosome_name), ]
+    # Numeric encoding
+    x0$chNum <- 1
+    x0$chNum <- ch[ x0$chromosome_name ]
+    # Mbp
+    x0$start_position <- x0$start_position / 1e6
+
+    window_size <- as.numeric(ma_window_size) 
+    # Step size is then windowSize / steps
+    steps <- as.numeric(ma_window_steps)
+
+    # Centering 
+    x0$Fold <-  x0$Fold - mean(x0$Fold)
+
+    for(i in 0:(steps-1)) {
+      # Step size is windowSize/steps
+      # If windowSize=10 and steps = 2; then step size is 5Mb
+      # 1.3 becomes 5, 11.2 -> 15 for step 1
+      # 1.3 -> -5
+      x0$x <- (
+        floor((x0$start_position - i * window_size / steps) / window_size)  
+        + 0.5 + i / steps
+      ) * window_size
+
+      moving_average_start <- x0 |>
+        dplyr::select(chNum, x, Fold) |>
+        # Beginning bin can be negative for first bin in the 2nd step
+        dplyr::filter( x >= 0) |>   
+        dplyr::group_by(chNum, x) |>
+        dplyr::summarize(
+          ma = mean(Fold),
+          n = dplyr::n(),
+          pval = ifelse(
+            dplyr::n() >= 3 && sd(Fold) > 0, stats::t.test(Fold)$p.value, 0
+          )
+        ) |>
+        # na when only 1 data point?
+        dplyr::filter(!is.na(pval))
+
+      if(i == 0) {
+        moving_average <- moving_average_start
+      } else {
+        moving_average <- rbind(moving_average, moving_average_start)  
       }
-      # Change legend  http://ggplot2.tidyverse.org/reference/scale_manual.html
-      # Customize legend text
-      p <- p + ggplot2::scale_color_manual(
-        name = "",   
-        values = c("red", "blue"),
-        breaks = c("Up", "Down"),
-        labels = c("Up", "Dn")
-      ) 
-      p <- p + ggplot2::xlab("Position on chrs. (Mbp)") +
-        ggplot2::theme(axis.title.y = ggplot2::element_blank())      
-      p <- p + ggplot2::theme(legend.position = "none")
+    }
+    # Translate fold to y coordinates
+    moving_average <- moving_average |>
+      dplyr::filter(n >= 3) |>
+      dplyr::mutate(pval = stats::p.adjust(pval, method = "fdr")) |>
+      dplyr::filter(pval < as.numeric(ch_region_p_val)) |>
+      dplyr::mutate(y = ifelse(ma > 0, 1, -1)) |>
+      dplyr::mutate(y = chNum * chD + 3 * y) |>
+      dplyr::mutate(ma = ifelse(ma > 0, 1, -1)) |>
+      dplyr::mutate(ma = as.factor(ma))
 
-             
-      x0 <- x0[x0$chromosome_name %in% unique(x$chromosome_name), ]
-      # Numeric encoding
-      x0$chNum <- 1
-      x0$chNum <- ch[ x0$chromosome_name ]
-      # Mbp
-      x0$start_position <- x0$start_position / 1e6             
+    moving_average$ma <- as.character(moving_average$ma)
+    moving_average$ma[moving_average$ma == "-1"] <- "Down"
+    moving_average$ma[moving_average$ma == "1"] <- "Up"
+    moving_average$ma <- as.factor(moving_average$ma)
 
-      window_size <- as.numeric(ma_window_size) 
-      # Step size is then windowSize / steps         
-      steps <- as.numeric(ma_window_steps)       
+    # Significant regions are marked as horizontal error bars 
+    if(dim(moving_average)[1] > 0) {
+      p <- p + ggplot2::geom_errorbarh(
+        data = moving_average,
+        ggplot2::aes(
+          x = x, 
+          y = y, 
+          xmin = x - window_size / 2, 
+          xmax = x + window_size / 2,
+          colour = ma,
+          text = paste0(
+            paste0(
+            "Window: ",
+            x - window_size / 2,
+            " - ",
+            x + window_size / 2,
+            "\nRegulation: ",
+            ma,
+            "\nChr Pos: ",
+            x
+          )
+          )
+        ),
+        size = 2, 
+        height = 15
+      )
 
-      # Centering 
-      x0$Fold <-  x0$Fold - mean(x0$Fold)             
-
-            
-                             
-      for(i in 0:(steps-1)) {
-        # Step size is windowSize/steps   
-        # If windowSize=10 and steps = 2; then step size is 5Mb
-        # 1.3 becomes 5, 11.2 -> 15 for step 1
-        # 1.3 -> -5
-        x0$x <- (
-          floor((x0$start_position - i * window_size / steps) / window_size)  
-          + 0.5 + i / steps
-        ) * window_size
-
-        moving_average_start <- x0 |>
-          dplyr::select(chNum, x, Fold) |>
-          # Beginning bin can be negative for first bin in the 2nd step
-          dplyr::filter( x >= 0) |>   
-          dplyr::group_by(chNum, x) |>
-          dplyr::summarize(
-            ma = mean(Fold),
-            n = dplyr::n(),
-            pval = ifelse(
-              dplyr::n() >= 3 && sd(Fold) > 0, stats::t.test(Fold)$p.value, 0
-            )
-          ) |>
-          # na when only 1 data point?
-          dplyr::filter(!is.na(pval))
-
-        if(i == 0) {
-          moving_average <- moving_average_start
-        } else {
-          moving_average <- rbind(moving_average, moving_average_start)  
-        }        
-      }      
-      # Translate fold to y coordinates
-      moving_average <- moving_average |>
-        dplyr::filter(n >= 3) |>
-        dplyr::mutate(pval = stats::p.adjust(pval, method = "fdr")) |>
-        dplyr::filter(pval < as.numeric(ch_region_p_val)) |>
-        dplyr::mutate(y = ifelse(ma > 0, 1, -1)) |>
-        dplyr::mutate(y = chNum * chD + 3 * y) |>
-        dplyr::mutate(ma = ifelse(ma > 0, 1, -1)) |>
-        dplyr::mutate(ma = as.factor(ma))
-
-      moving_average$ma <- as.character(moving_average$ma)
-      moving_average$ma[moving_average$ma == "-1"] <- "Down"
-      moving_average$ma[moving_average$ma == "1"] <- "Up"
-      moving_average$ma <- as.factor(moving_average$ma)
-
-      # Significant regions are marked as horizontal error bars 
-      if(dim(moving_average)[1] > 0) {
-        p <- p + ggplot2::geom_errorbarh(
-          data = moving_average,
-          ggplot2::aes(
-            x = x, 
-            y = y, 
-            xmin = x - window_size / 2, 
-            xmax = x + window_size / 2,
-            colour = ma,
-            text = paste0(
-              paste0(
-              "Window: ",
-              x - window_size / 2,
-              " - ",
-              x + window_size / 2,
-              "\nRegulation: ",
-              ma,
-              "\nChr Pos: ",
-              x
-            )
-            )
-          ), 
-          size = 2, 
-          height = 15
-        )
-
-        # Label significant regions
-        sig_ch <- sort(table(moving_average$chNum), decreasing = TRUE)
-        sig_ch <- names(ch)[ as.numeric(names(sig_ch))]
-        if(length(sig_ch) <= 5) {
-          # More than 5 just show 5
-          sig_ch <- paste0("chr", sig_ch, collapse = ", ")
-        } else {
-          sig_ch <- sig_ch[1:5]
-          sig_ch <- paste0("chr", sig_ch, collapse = ", ")                  
-          sig_ch <- paste0(sig_ch, ", ...")
-        }
-
-        sig_ch <- paste(
-          dim(moving_average)[1], 
-          " enriched regions \n(",
-          round(
-            sum(ch_length_table$start_position) /
-            window_size * steps * as.numeric(ch_region_p_val),
-            2
-          ),
-          " expected)  detected on:\n ",
-          sig_ch
-        )
-                 
-        p <- p + ggplot2::annotate(
-          geom = "text", 
-          x = max(x$x) * 0.70,
-          y = max(x$y) * 0.90,
-          label = sig_ch
-        )
+      # Label significant regions
+      sig_ch <- sort(table(moving_average$chNum), decreasing = TRUE)
+      sig_ch <- names(ch)[ as.numeric(names(sig_ch))]
+      if(length(sig_ch) <= 5) {
+        # More than 5 just show 5
+        sig_ch <- paste0("chr", sig_ch, collapse = ", ")
+      } else {
+        sig_ch <- sig_ch[1:5]
+        sig_ch <- paste0("chr", sig_ch, collapse = ", ")
+        sig_ch <- paste0(sig_ch, ", ...")
       }
-    } 		
+
+      sig_ch <- paste(
+        dim(moving_average)[1], 
+        " enriched regions \n(",
+        round(
+          sum(ch_length_table$start_position) /
+          window_size * steps * as.numeric(ch_region_p_val),
+          2
+        ),
+        " expected)  detected on:\n ",
+        sig_ch
+      )
+
+      p <- p + ggplot2::annotate(
+        geom = "text", 
+        x = max(x$x) * 0.70,
+        y = max(x$y) * 0.90,
+        label = sig_ch
+      )
+    }
+  
   }
   plotly::ggplotly(p, tooltip = "text") 
 }
