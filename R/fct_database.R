@@ -863,17 +863,23 @@ read_gene_sets <- function(converted,
     go <- "GOBP"
   }
 
+  sql_query <- "SELECT DISTINCT gene, pathwayID FROM pathway WHERE "
+
+  # faster if category is first
+  if (go != "All") {
+    sql_query <- paste0(sql_query, "  category ='", go, "' AND ")
+  }
+
   # Get Gene sets
   sql_query <- paste(
-    "select distinct gene, pathwayID from pathway where gene IN ('",
+    sql_query,
+    " gene IN ('",
     paste(query_set, collapse = "', '"),
     "')",
     sep = ""
   )
 
-  if (go != "All") {
-    sql_query <- paste0(sql_query, " AND category ='", go, "'")
-  }
+
   result <- DBI::dbGetQuery(pathway, sql_query)
   if (dim(result)[1] == 0) {
     return(list(x = as.data.frame("No matching species or gene ID file!")))
