@@ -354,7 +354,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # Change demo data based on selected format
     # returns a vector with file names  c(data, design)
     demo_data_file <- reactive({
-      req(!is.null(input$select_demo))
+      req((input$select_demo != " "))
+
       files <- idep_data$demo_file_info
       ix <- which(files$ID == input$select_demo)
       return(c(
@@ -364,7 +365,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     })
 
     # Reactive element to load the data from the user or demo data ---------
-    loaded_data <- reactive(
+    loaded_data <- reactive({
       input_data(
         expression_file = input$expression_file,
         experiment_file = input$experiment_file,
@@ -372,7 +373,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         demo_data_file = demo_data_file()[1],
         demo_metadata_file = demo_data_file()[2]
       )
-    )
+    })
 
     # observeEvent(input$data_file_format, {
     #   req(loaded_data())
