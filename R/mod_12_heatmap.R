@@ -25,11 +25,19 @@ mod_12_heatmap_ui <- function(id) {
           width = "100%",
           brush = ns("ht_brush")
         ),
-        ottoPlots::mod_download_figure_ui(
-          ns("dl_heatmap_main")
-        ),
-        ottoPlots::mod_download_figure_ui(
-          ns("dl_heatmap_sub")
+        fluidRow(
+          column(
+            width = 6,
+            ottoPlots::mod_download_figure_ui(
+              ns("dl_heatmap_main")
+            )
+          ),
+          column(
+            width = 6,
+            ottoPlots::mod_download_figure_ui(
+              ns("dl_heatmap_sub")
+            )
+          )
         ),
         uiOutput(
           outputId = ns("ht_click_content")
@@ -128,7 +136,8 @@ mod_12_heatmap_server <- function(id,
         main_heatmap_object()
       }),
       width = 5,
-      height = 8
+      height = 8,
+      label = "Above"
     )
 
 
@@ -211,7 +220,8 @@ mod_12_heatmap_server <- function(id,
         sub_heatmap_object()
       }),
       width = 5,
-      height = 7
+      height = 7,
+      label = "Right"
     )
     # Sub Heatmap Click Value ---------
     output$ht_click_content <- renderUI({

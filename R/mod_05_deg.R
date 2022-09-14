@@ -629,7 +629,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       filename = "venn_diagram",
       figure = reactive({
         venn()
-      })
+      }),
+      label = ""
     )
 
 
@@ -747,7 +748,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       filename = "volcano_plot",
       figure = reactive({
         vol_plot()
-      }) # stays as a reactive variable
+      }),
+      label = ""
     )
 
     # ma plot----------------
@@ -775,7 +777,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       filename = "ma_plot",
       figure = reactive({
         ma_plot()
-      })
+      }),
+      label = ""
     )
 
     output$scatter_plot <- renderPlot({

@@ -68,12 +68,13 @@ mod_11_enrichment_ui <- function(id) {
         tableOutput(ns("show_enrichment")),
         downloadButton(
           outputId = ns("download_enrichment"),
-          label = "Download"
+          label = "CSV file"
         )
       ),
       tabPanel(
         title = "Tree",
         plotOutput(ns("enrichment_tree")),
+        br(),
         ottoPlots::mod_download_figure_ui(
           id = ns("dl_treeplot")
         )
@@ -256,7 +257,7 @@ mod_11_enrichment_ui <- function(id) {
           ),
           column(
             width = 2,
-            downloadButton(ns("download_gene_info"), "Download")
+            downloadButton(ns("download_gene_info"), "CSV file")
           ),
           column(
             width = 3,
@@ -636,7 +637,8 @@ mod_11_enrichment_server <- function(id,
         enrichment_tree_object()
       }),
       width = 12,
-      height = 6
+      height = 6,
+      label = ""
     )
 
     # Define a Network
@@ -768,7 +770,8 @@ mod_11_enrichment_server <- function(id,
         enrich_barplot_object()
       }),
       width = 8,
-      height = 6
+      height = 6,
+      label = "Download"
     )
   })
 }
