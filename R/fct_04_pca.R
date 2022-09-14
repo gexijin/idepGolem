@@ -520,28 +520,29 @@ PCA_Scree <- function(processed_data) {
     elbow <- PCAtools::findElbowPoint(pca_obj$variance)
   )
 
-    p <- PCAtools::screeplot(
-      pca_obj,
-      vline = c(horn$n, elbow)
+  p <- PCAtools::screeplot(
+    pca_obj,
+    vline = c(horn$n, elbow)
+  )
+  p <- p +
+    ggplot2::geom_label(
+      ggplot2::aes(
+        x = horn$n + .1,
+        y = 60,
+        label = "Horn's",
+        vjust = .5,
+        hjust = .5,
+        size = 8
+      )
     )
-    p <- p +
-      ggplot2::geom_label(
-        ggplot2::aes(
-          x = horn$n + .1,
-          y = 60,
-          label = "Horn's",
-          vjust = .5,
-          hjust = .5,
-          size = 8
-        ))
-    p<- p + ggplot2::geom_label(ggplot2::aes(
-            x = elbow + .1,
-            y = 70,
-            label = "Elbow",
-            vjust = .5,
-            hjust = .5,
-            size = 8
-          ))
+  p <- p + ggplot2::geom_label(ggplot2::aes(
+    x = elbow + .1,
+    y = 70,
+    label = "Elbow",
+    vjust = .5,
+    hjust = .5,
+    size = 8
+  ))
   return(p)
 }
 

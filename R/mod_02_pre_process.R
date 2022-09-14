@@ -225,8 +225,7 @@ mod_02_pre_process_ui <- function(id) {
               height = "500px"
             ),
             ottoPlots::mod_download_figure_ui(
-              id = ns("dl_total_counts"),
-              label = "Download barplot"
+              id = ns("dl_total_counts")
             ),
             h5(
               "Figure width can be adjusted by changing
@@ -266,8 +265,7 @@ mod_02_pre_process_ui <- function(id) {
               height = "500px"
             ),
             ottoPlots::mod_download_figure_ui(
-              id = ns("dl_eda_scatter"),
-              label = "Download scatterplot"
+              id = ns("dl_eda_scatter")
             ),
             h5(
               "Figure width can be adjusted by changing
@@ -285,8 +283,7 @@ mod_02_pre_process_ui <- function(id) {
               height = "500px"
             ),
             ottoPlots::mod_download_figure_ui(
-              id = ns("dl_eda_boxplot"),
-              label = "Download boxplot"
+              id = ns("dl_eda_boxplot")
             )
           ),
 
@@ -300,8 +297,7 @@ mod_02_pre_process_ui <- function(id) {
               height = "500px"
             ),
             ottoPlots::mod_download_figure_ui(
-              id = ns("dl_eda_density"),
-              label = "Download density plot"
+              id = ns("dl_eda_density")
             ),
             h5(
               "Figure width can be adjusted by changing
@@ -336,8 +332,7 @@ mod_02_pre_process_ui <- function(id) {
               height = "500px"
             ),
             ottoPlots::mod_download_figure_ui(
-              id = ns("dl_dev_transform"),
-              label = "Download transformed plot"
+              id = ns("dl_dev_transform")
             ),
             h5(
               "Figure width can be adjusted by changing
@@ -392,8 +387,7 @@ mod_02_pre_process_ui <- function(id) {
               height = "500px"
             ),
             ottoPlots::mod_download_figure_ui(
-              id = ns("dl_gene_plot"),
-              label = "Download gene plot"
+              id = ns("dl_gene_plot")
             ),
             h5(
               "Figure width can be adjusted by changing
@@ -411,7 +405,6 @@ mod_02_pre_process_ui <- function(id) {
             title = "Info",
             includeHTML("inst/app/www/help_preprocess.htm")
           ),
-
         )
       )
     )

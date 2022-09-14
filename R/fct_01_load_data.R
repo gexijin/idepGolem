@@ -9,25 +9,23 @@
 NULL
 
 #' Retrieve detailed info on genes
-#' 
+#'
 #' This function retrieves detailed gene information from the
-#' database for the matched species. 
-#' 
+#' database for the matched species.
+#'
 #' @param converted Return value from the convert_id function. Contains
 #'  information about the gene IDs for the matched species.
 #' @param select_org The user selected organism for the expression data.
 #'  Default is "BestMatch."
-#' @param idep_data Read data files from the database. 
-#' 
+#' @param idep_data Read data files from the database.
+#'
 #' @export
 #' @return A data frame containing information on all ensembl IDs for the
 #'  matched species. Usually a very large data frame due to the amount
 #'  of IDs that the data base contains.
-gene_info <- function(
-    converted,
-    select_org,
-    idep_data
-) {
+gene_info <- function(converted,
+                      select_org,
+                      idep_data) {
   check <- check_object_state(
     check_exp = (is.null(converted)),
     true_message = as.data.frame("ID not recognized!")
@@ -35,7 +33,7 @@ gene_info <- function(
   if (check$bool) {
     return(check)
   }
-  
+
   query_set <- converted$ids
   check <- check_object_state(
     check_exp = (length(query_set) == 0),
@@ -44,7 +42,7 @@ gene_info <- function(
   if (check$bool) {
     return(check)
   }
-  
+
   ix <- grep(
     pattern = converted$species[1, 1],
     x = idep_data$gene_info_files
@@ -56,7 +54,7 @@ gene_info <- function(
   if (check$bool) {
     return(check)
   }
-  
+
   # If selected species is not the default "bestMatch",
   # use that species directly
   if (select_org != idep_data$species_choice[[1]]) {
@@ -68,7 +66,7 @@ gene_info <- function(
       x = idep_data$gene_info_files
     )
   }
-  
+
   check <- check_object_state(
     check_exp = (length(ix) != 1),
     true_message = as.data.frame("Multiple geneInfo file found!")
@@ -78,14 +76,14 @@ gene_info <- function(
   } else {
     gene_info_csv <- read.csv(as.character(idep_data$gene_info_files[ix]))
     gene_info_csv[, 1] <- toupper(gene_info_csv[, 1])
-    #remove the two spaces in gene symbol
+    # remove the two spaces in gene symbol
     gene_info_csv$symbol <- gsub(
-      " ", 
-      "", 
+      " ",
+      "",
       gene_info_csv$symbol
     )
   }
-  
+
   set <- match(gene_info_csv$ensembl_gene_id, query_set)
   set[which(is.na(set))] <- "Genome"
   set[which(set != "Genome")] <- "List"
@@ -109,7 +107,7 @@ gene_info <- function(
 #' @param go_button TRUE/FALSE that tells the app to
 #' load the demo data files
 #' @param demo_data_file Expression demo data path (idep_data$demo_data_file)
-#' @param demo_metadata_file Experiment demo data path 
+#' @param demo_metadata_file Experiment demo data path
 #'  (idep_data$demo_metadata_file)
 #'
 #' @export
@@ -117,19 +115,17 @@ gene_info <- function(
 #' and the sample information. If there is no experiment file it
 #' only returns the expression data.
 #'
-input_data <- function(
-    expression_file,
-    experiment_file,
-    go_button,
-    demo_data_file,
-    demo_metadata_file
-) {
+input_data <- function(expression_file,
+                       experiment_file,
+                       go_button,
+                       demo_data_file,
+                       demo_metadata_file) {
   in_file_data <- expression_file
   in_file_data <- in_file_data$datapath
-  
+
   if (is.null(in_file_data) && go_button == 0) {
     return(NULL)
-  } else if (go_button > 0) {    # use demo data
+  } else if (go_button > 0) { # use demo data
     in_file_data <- demo_data_file
   }
 
@@ -146,7 +142,7 @@ input_data <- function(
         comment.char = ""
       )
     }
-    
+
     # Filter out non-numeric columns ---------
     num_col <- c(TRUE)
     for (i in 2:ncol(data)) {
@@ -167,7 +163,7 @@ input_data <- function(
     # Format gene ids --------
     data[, 1] <- toupper(data[, 1])
     data[, 1] <- gsub(" |\"|\'", "", data[, 1])
-    
+
     # Remove duplicated genes ----------
     data <- data[!duplicated(data[, 1]), ]
 
@@ -177,13 +173,12 @@ input_data <- function(
     # Set gene ids as rownames and get rid of column ---------
     rownames(data) <- data[, 1]
     data <- as.matrix(data[, c(-1)])
-    
+
     # Remove "-" or "." from sample names ----------
     colnames(data) <- gsub("-", "", colnames(data))
     colnames(data) <- gsub("\\.", "", colnames(data))
-
   })
-  
+
   # Read experiment file ----------
   in_file_expr <- experiment_file
   in_file_expr <- in_file_expr$datapath
@@ -195,22 +190,22 @@ input_data <- function(
   } else if (go_button > 0) {
     sample_info_demo <- NULL
     # if design file is not ""
-    if(!is.null(demo_data_file)){
-      if(nchar(demo_metadata_file) > 2) {
+    if (!is.null(demo_data_file)) {
+      if (nchar(demo_metadata_file) > 2) {
         sample_info_demo <- t(read.csv(
           demo_metadata_file,
           row.names = 1,
           header = T,
           colClasses = "character"
-        )) 
-      } 
+        ))
+      }
     }
     return(list(
       sample_info = sample_info_demo,
       data = data
     ))
   }
-  
+
   isolate({
     # Read experiment file ----------
     expr <- read.csv(
@@ -231,7 +226,7 @@ input_data <- function(
     # remove "-" or "." from sample names ----------
     colnames(expr) <- gsub("-", "", colnames(expr))
     colnames(expr) <- gsub("\\.", "", colnames(expr))
-    
+
     # Matching with column names of expression file ----------
     matches <- match(
       toupper(colnames(data)), toupper(colnames(expr))
@@ -242,26 +237,26 @@ input_data <- function(
         nrow(expr) >= 1 && nrow(expr) < 500,
       "Error!!! Sample information file not recognized. Column names
        must be exactly the same. Each row is a factor. Each column
-       represent a sample.  Please see documentation on format. 
+       represent a sample.  Please see documentation on format.
        Please click on the Reset button and try again."
     ))
-    
+
     # Check factor levels, change if needed ----------
     for (i in 1:nrow(expr)) {
       expr[i, ] <- gsub("-", "", expr[i, ])
       expr[i, ] <- gsub("\\.", "", expr[i, ])
       # Remove whitespace
-      expr[i, ] <- gsub(" ", "", expr[i, ]) 
+      expr[i, ] <- gsub(" ", "", expr[i, ])
       # Convert to upper case to avoid mixing
-      expr[i, ] <- toupper(expr[i, ])    
+      expr[i, ] <- toupper(expr[i, ])
     }
-    
+
     # Factor levels match ---------
     if (length(unique(matches)) == ncol(data)) {
       expr <- expr[, matches]
       if (
         sum(apply(expr, 1, function(y) length(unique(y)))) >
-        length(unique(unlist(expr)))) {
+          length(unique(unlist(expr)))) {
         factor_names <- apply(
           expr,
           2,
@@ -294,11 +289,9 @@ input_data <- function(
 #' @param data Data from inputed expression file
 #' @export
 #' @return Returns original data with rownames converted to ensembl
-convert_data <- function(
-    converted,
-    data,
-    no_id_conversion
-) {
+convert_data <- function(converted,
+                         data,
+                         no_id_conversion) {
   if (is.null(converted) || no_id_conversion) {
     return(list(
       data = data,
@@ -306,7 +299,7 @@ convert_data <- function(
     ))
   } else {
     mapping <- converted$conversion_table
-    
+
     rownames(data) <- toupper(rownames(data))
     merged <- merge(
       mapping[, 1:2],
@@ -317,23 +310,23 @@ convert_data <- function(
     )
     no_match <- which(is.na(merged[, 2]))
     merged[no_match, 2] <- merged[no_match, 1]
-    
+
     mapped_ids <- merged[, 1:2]
-    
+
     # Multiple matches use one with highest SD ----------
     tmp <- apply(merged[, 3:(ncol(merged))], 1, sd)
     merged <- merged[order(merged[, 2], -tmp), ]
     merged <- merged[!duplicated(merged[, 2]), ]
     rownames(merged) <- merged[, 2]
     merged <- as.matrix(merged[, c(-1, -2)])
-    
+
     # Order by SD ----------
     merged <- merged[order(-apply(
       merged[, 1:ncol(merged)],
       1,
       sd
     )), ]
-    
+
     return(list(
       data = merged,
       mapped_ids = mapped_ids
@@ -354,23 +347,21 @@ convert_data <- function(
 #' idep had gene names for. Two columns means the IDs were converted
 #' to ensembl format, but no species was found for the gene names.
 #' One means no conversion occurred.
-get_all_gene_names <- function(
-    mapped_ids,
-    all_gene_info
-) {
+get_all_gene_names <- function(mapped_ids,
+                               all_gene_info) {
 
   # not converted
   if (is.null(dim(mapped_ids))) {
     return(data.frame(
       "User_ID" = mapped_ids,
       "ensembl_ID" = mapped_ids, # dummy data
-      "symbol" = mapped_ids      # dummy data
-      ))
+      "symbol" = mapped_ids # dummy data
+    ))
   } else if (!is.null(all_gene_info$bool)) { # ensembl ID only, no symbol
     return(data.frame(
       "User_ID" = mapped_ids[, 1],
       "ensembl_ID" = mapped_ids[, 2],
-      "symbol" = mapped_ids[, 1]  # dummy data
+      "symbol" = mapped_ids[, 1] # dummy data
     ))
   } else {
     mapped_ids <- data.frame(
@@ -402,7 +393,7 @@ get_all_gene_names <- function(
       symbol,
       tidyselect::everything()
     )
-    
+
     return(all_names)
   }
 }

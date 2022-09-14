@@ -13,8 +13,8 @@ NULL
 
 # if environmental variable is not set, use relative path
 DATAPATH <- Sys.getenv("IDEP_DATABASE")[1]
-if(nchar(DATAPATH) == 0) {
-   DATAPATH = "../../data/data104b/"
+if (nchar(DATAPATH) == 0) {
+  DATAPATH <- "../../data/data104b/"
 }
 
 #' connect_convert_db connects to the convertIDs.db and returns the
@@ -91,9 +91,9 @@ get_idep_data <- function(datapath = DATAPATH) {
 
   # demo_data_info.csv file
   # columns: ID, expression, design, type, name
-  # ID column must be unique 
+  # ID column must be unique
   # The type column 1- read counts, 2- normalized , 3 LFC&Pval
-  # The files must be available in the data_go folder of the database. 
+  # The files must be available in the data_go folder of the database.
   # Leave blank if design file is missing
   # Default file have smallest ID, within the same type.
 
@@ -102,16 +102,16 @@ get_idep_data <- function(datapath = DATAPATH) {
   )
   # add path for expression matrix
   demo_file_info$expression <- paste0(
-    datapath, 
-    "data_go/", 
+    datapath,
+    "data_go/",
     demo_file_info$expression
   )
 
   # add path for design file if exist
   ix <- which(nchar(demo_file_info$design) > 2)
   demo_file_info$design[ix] <- paste0(
-    datapath, 
-    "data_go/", 
+    datapath,
+    "data_go/",
     demo_file_info$design[ix]
   )
 
@@ -259,7 +259,7 @@ convert_id <- function(query,
                        max_sample_ids = 100) {
   # Solves the issue of app shut down when species
   # is deleted after genes are uploaded.
-  if(is.null(select_org)) {
+  if (is.null(select_org)) {
     return(NULL)
   }
 
@@ -276,13 +276,13 @@ convert_id <- function(query,
   # when the query is small, use the quary
 
   # acutal number of samples, for calculating % later
-  n_sample_ids <- length(query_set) 
+  n_sample_ids <- length(query_set)
   test_query_string <- query_string
   if (length(query_set) > max_sample_ids) {
     n_sample_ids <- max_sample_ids
     test_query_set <- sample(query_set, max_sample_ids)
     test_query_string <- paste0(
-      "('", 
+      "('",
       paste(test_query_set, collapse = "', '"),
       "')"
     )
@@ -294,14 +294,14 @@ convert_id <- function(query,
   if (select_org == idep_data$species_choice[[1]]) {
 
     # First send a query to determine the species
-    # nested SQL to determine the number of query 
+    # nested SQL to determine the number of query
     # genes matched to species, idType combinations
     query_species <- paste0(
       "SELECT species, idType, COUNT(species)
       as freq FROM
       (SELECT DISTINCT id, species, idType
         FROM mapping WHERE id IN ",
-        test_query_string,
+      test_query_string,
       ")  GROUP BY species,idType"
     )
 
@@ -314,32 +314,32 @@ convert_id <- function(query,
     matched <- matched[order(-matched$freq), ]
     matched <- matched[!duplicated(matched$species), ]
 
-    sorted <- matched$freq 
+    sorted <- matched$freq
     names(sorted) <- paste(matched$species, matched$idType)
     sorted <- sort(sorted, decreasing = TRUE)
 
     # Try to use Ensembl instead of STRING-db genome annotation
-    if(length(sorted) > 1) { # if more than 1 species matched
-      if(sorted[1] <= sorted[2] *1.1  # if the #1 species and #2 are close
-        && as.numeric(gsub(" .*", "", names(sorted[1]))) < 0 # STRINGdb
-        && as.numeric( gsub(" .*", "", names(sorted[2]))) > 0 # ensembl 
-      ) { #swap 1 and 2
-          tem <- sorted[2]
-          sorted[2] <- sorted[1]
-          names(sorted)[2] <- names(sorted)[1]
-          sorted[1] <- tem
-          names(sorted)[1] <- names(tem)
-        }
+    if (length(sorted) > 1) { # if more than 1 species matched
+      if (sorted[1] <= sorted[2] * 1.1 # if the #1 species and #2 are close
+      && as.numeric(gsub(" .*", "", names(sorted[1]))) < 0 # STRINGdb
+      && as.numeric(gsub(" .*", "", names(sorted[2]))) > 0 # ensembl
+      ) { # swap 1 and 2
+        tem <- sorted[2]
+        sorted[2] <- sorted[1]
+        names(sorted)[2] <- names(sorted)[1]
+        sorted[1] <- tem
+        names(sorted)[1] <- names(tem)
+      }
     }
     recognized <- names(sorted[1])
 
     matched <- sorted
-    matched <- as.data.frame(matched)	
+    matched <- as.data.frame(matched)
     colnames(matched) <- "Freq"
 
     # add species name "Mouse"
     matched$name <- sapply(
-      X = as.numeric(gsub(" .*","",row.names(matched))),
+      X = as.numeric(gsub(" .*", "", row.names(matched))),
       FUN = find_species_by_id_name,
       org_info = idep_data$org_info
     )
@@ -351,18 +351,18 @@ convert_id <- function(query,
     )
     matched <- matched[, "name", drop = FALSE]
 
-		if(length(sorted) == 1) { # if only  one species matched # nolint
+    if (length(sorted) == 1) { # if only  one species matched # nolint
       matched <- matched[, 1, drop = FALSE]
-    } else {# if more than one species matched
+    } else { # if more than one species matched
       # remove duplicated
       dup_species <- duplicated(gsub(" .*", "", row.names(matched)))
-      matched <- matched[!dup_species, ,drop = FALSE] 
+      matched <- matched[!dup_species, , drop = FALSE]
     }
 
     query_statement <- paste0(
-      "select distinct id,ens,species,idType from mapping where ",  
-      " species = '", gsub(" .*","", recognized), "'",
-      " AND idType = '", gsub(".* ","", recognized), "'",
+      "select distinct id,ens,species,idType from mapping where ",
+      " species = '", gsub(" .*", "", recognized), "'",
+      " AND idType = '", gsub(".* ", "", recognized), "'",
       " AND id IN ", query_string
     )
 
@@ -370,7 +370,6 @@ convert_id <- function(query,
     if (dim(result)[1] == 0) {
       return(NULL)
     }
-
   } else {
     # if species is selected ---------------------------------------------------
     query_statement <- paste0(
@@ -384,7 +383,7 @@ convert_id <- function(query,
 
     if (nrow(result) == 0) {
       return(NULL)
-    } 
+    }
 
     # resolve multiple ID types, get the most matched
     best_id_type <- as.integer(
@@ -413,7 +412,7 @@ convert_id <- function(query,
 
   # many user id to one ensembl id mapping, keep all
   # remove duplicates in ensembl_gene_id
-  #result <- result[which(!duplicated(result[, 2])), ]
+  # result <- result[which(!duplicated(result[, 2])), ]
 
   colnames(matched) <- c("Matched Species (/%genes)")
   conversion_table <- result[, 1:2]
@@ -491,14 +490,14 @@ read_pathway_sets <- function(all_gene_names_query,
 
   query_set <- all_gene_names_query[, 2]
 
-#  if (!is.null(gene_info)) {
-#    if (dim(gene_info)[1] > 1) {
-#      gene_info <- gene_info[which(
-#        gene_info$gene_biotype == "protein_coding"
-#      ), ]
-#      query_set <- intersect(query_set, gene_info[, 1])
-#    }
-#  }
+  #  if (!is.null(gene_info)) {
+  #    if (dim(gene_info)[1] > 1) {
+  #      gene_info <- gene_info[which(
+  #        gene_info$gene_biotype == "protein_coding"
+  #      ), ]
+  #      query_set <- intersect(query_set, gene_info[, 1])
+  #    }
+  #  }
 
   if (length(query_set) == 0) {
     return(id_not_recognized)
@@ -543,7 +542,8 @@ read_pathway_sets <- function(all_gene_names_query,
     sql_query <- paste(
       "SELECT DISTINCT gene,pathwayID FROM pathway WHERE category='", go, "'",
       " AND gene IN ('", paste(query_set, collapse = "', '"), "')",
-      sep = "")
+      sep = ""
+    )
   }
   result <- DBI::dbGetQuery(pathway, sql_query)
 
@@ -586,26 +586,27 @@ read_pathway_sets <- function(all_gene_names_query,
     pathway_merge$gene_sets <- gene_sets
   }
 
-    # list of query genes that have at least one pathway in db
-    query_set_db <- unique(result$gene)
-    query_set <- query_set_db # only use genes included in DB
+  # list of query genes that have at least one pathway in db
+  query_set_db <- unique(result$gene)
+  query_set <- query_set_db # only use genes included in DB
 
-    # total number of genes in pathway db
-    sql_query <- "SELECT COUNT ( DISTINCT gene ) FROM pathway"
+  # total number of genes in pathway db
+  sql_query <- "SELECT COUNT ( DISTINCT gene ) FROM pathway"
 
-    if (go != "All") {
-      sql_query <- paste(
-        sql_query,
-        " WHERE category='", go, "'",
-        sep = "")
-    }
-    total_genes_db <- DBI::dbGetQuery(
-      pathway,
-      sql_query
+  if (go != "All") {
+    sql_query <- paste(
+      sql_query,
+      " WHERE category='", go, "'",
+      sep = ""
     )
-    total_genes_db <- as.integer(total_genes_db)
+  }
+  total_genes_db <- DBI::dbGetQuery(
+    pathway,
+    sql_query
+  )
+  total_genes_db <- as.integer(total_genes_db)
 
-    total_genes <- total_genes_db
+  total_genes <- total_genes_db
 
   DBI::dbDisconnect(pathway)
 
@@ -650,14 +651,14 @@ background_pathway_sets <- function(processed_data,
                                     sub_pathway_files) {
   query_set <- rownames(processed_data)
 
-#  if (!is.null(gene_info)) {
-#    if (dim(gene_info)[1] > 1) {
-#      query_set <- intersect(
-#        query_set,
-#        gene_info[which(gene_info$gene_biotype == "protein_coding"), 1]
-#      )
-#    }
-#  }
+  #  if (!is.null(gene_info)) {
+  #    if (dim(gene_info)[1] > 1) {
+  #      query_set <- intersect(
+  #        query_set,
+  #        gene_info[which(gene_info$gene_biotype == "protein_coding"), 1]
+  #      )
+  #    }
+  #  }
 
   pathway <- DBI::dbConnect(
     drv = RSQLite::dbDriver("SQLite"),
@@ -677,7 +678,7 @@ background_pathway_sets <- function(processed_data,
   # Make sure the background set includes the query set
   query_set <- unique(c(query_set, sub_query))
 
-  
+
   sql_query <- "SELECT DISTINCT gene,pathwayID FROM pathway "
   if (go != "All") {
     sql_query <- paste0(sql_query, " WHERE category ='", go, "'")
@@ -693,7 +694,7 @@ background_pathway_sets <- function(processed_data,
     " AND gene IN ('",
     paste(query_set, collapse = "', '"), "')",
     sep = ""
-  ) 
+  )
 
 
   results <- DBI::dbGetQuery(pathway, sql_query)
@@ -953,11 +954,11 @@ convert_ensembl_to_entrez <- function(query,
   if (dim(result)[1] == 0) {
     return(NULL)
   }
-	ix = match(result$ens, names(query))
+  ix <- match(result$ens, names(query))
 
-	tem <- query[ix]
-  names(tem) = result$id
-	return(tem)
+  tem <- query[ix]
+  names(tem) <- result$id
+  return(tem)
 }
 
 #' Find pathway IDs for a KEGG description

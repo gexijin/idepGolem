@@ -1,9 +1,9 @@
-# Global variable: list of column names in the pathway enrichment 
+# Global variable: list of column names in the pathway enrichment
 # results data frame, and their display name on the plot.
 column_selection <- list(
-  "-log10(FDR)" = "EnrichmentFDR", 
-  "Fold Enrichment" = "FoldEnrichment", 
-  "Genes" =  "nGenes",
+  "-log10(FDR)" = "EnrichmentFDR",
+  "Fold Enrichment" = "FoldEnrichment",
+  "Genes" = "nGenes",
   "Category Name" = "Pathway"
 )
 
@@ -13,15 +13,14 @@ column_selection <- list(
 #'
 #' @param id,input,output,session Internal parameters for {shiny}.
 #'
-#' @noRd 
+#' @noRd
 #'
-#' @importFrom shiny NS tagList 
-mod_11_enrichment_ui <- function(id){
+#' @importFrom shiny NS tagList
+mod_11_enrichment_ui <- function(id) {
   ns <- NS(id)
   library(shinyBS)
 
   tagList(
-
     fluidRow(
       column(
         width = 4,
@@ -35,14 +34,12 @@ mod_11_enrichment_ui <- function(id){
         width = 4,
         actionButton(ns("customize_button"), "More options")
       )
-
     ),
     shinyBS::bsModal(
       id = ns("modalExample"),
       title = "More options",
       trigger = ns("customize_button"),
       size = "small",
-
       selectInput(
         inputId = ns("sort_by"),
         label = NULL,
@@ -78,8 +75,7 @@ mod_11_enrichment_ui <- function(id){
         title = "Tree",
         plotOutput(ns("enrichment_tree")),
         ottoPlots::mod_download_figure_ui(
-          id = ns("dl_treeplot"),
-          label = "Download"
+          id = ns("dl_treeplot")
         )
       ),
       tabPanel(
@@ -126,15 +122,15 @@ mod_11_enrichment_ui <- function(id){
           width = "100%"
         ),
         h6(
-          "Two pathways (nodes) are connected if they 
+          "Two pathways (nodes) are connected if they
           share 30% (default, adjustable) or more genes.
           Green and red represents down- and up-regulated
-           pathways. You can move the nodes by 
-          dragging them, zoom in and out by scrolling, and 
-          shift the entire network by click on an 
-          empty point and drag. Darker nodes are more 
+           pathways. You can move the nodes by
+          dragging them, zoom in and out by scrolling, and
+          shift the entire network by click on an
+          empty point and drag. Darker nodes are more
           significantly enriched gene sets. Bigger nodes
-          represent larger gene sets. Thicker edges 
+          represent larger gene sets. Thicker edges
           represent more overlapped genes."
         )
       ),
@@ -144,13 +140,13 @@ mod_11_enrichment_ui <- function(id){
         plotOutput(ns("enrich_barchart"), width = "100%", height = "100%"),
         fluidRow(
           column(
-            width = 3, 
+            width = 3,
             selectInput(
               inputId = ns("pathway_order"),
               label = h5("Sort Pathway by"),
               choices = column_selection,
               selected = column_selection[1]
-            ) 
+            )
           ),
           column(
             width = 3,
@@ -167,43 +163,42 @@ mod_11_enrichment_ui <- function(id){
               inputId = ns("plot_color"),
               label = h5("Color"),
               choices = column_selection[1:3],
-              selected = column_selection[2] 
+              selected = column_selection[2]
             )
           ),
           column(
-            width = 3, 
+            width = 3,
             selectInput(
               inputId = ns("plot_size"),
               label = h5("Size"),
               choices = column_selection[1:3],
-              selected = column_selection[3] 
+              selected = column_selection[3]
             )
           )
         ),
-
         fluidRow(
           column(
             width = 3,
             numericInput(
               inputId = ns("font_size"),
-                label = h5("Font Size"),
-                value = 12,
-                min = 3,
-                max = 18,
-                step = 1
-              )
-            ),
+              label = h5("Font Size"),
+              value = 12,
+              min = 3,
+              max = 18,
+              step = 1
+            )
+          ),
           column(
-            width = 3, 
+            width = 3,
             numericInput(
               inputId = ns("marker_size"),
-                label = h5("Circle Size"),
-                value = 4,
-                min = 0,
-                max = 10,
-                step = 1
-              )
-            ),
+              label = h5("Circle Size"),
+              value = 4,
+              min = 0,
+              max = 10,
+              step = 1
+            )
+          ),
           column(
             width = 3,
             selectInput(
@@ -223,35 +218,33 @@ mod_11_enrichment_ui <- function(id){
             )
           )
         ),
-
         fluidRow(
           column(
-            width = 3, 
+            width = 3,
             selectInput(
               inputId = ns("chart_type"),
-                label = h5("Chart type"),
-                choices = c("lollipop", "dotplot", "barplot"),
-                selected = "lollipop"
-              )
-            ),
+              label = h5("Chart type"),
+              choices = c("lollipop", "dotplot", "barplot"),
+              selected = "lollipop"
+            )
+          ),
           column(
             width = 3,
             selectInput(
               inputId = ns("aspect_ratio"),
               label = h5("Aspect Ratio"),
-              choices = .1* (5:30),
+              choices = .1 * (5:30),
               selected = 2
             )
           ),
           column(
             width = 3,
-            style = "margin-top: 25px;", 
+            style = "margin-top: 25px;",
             ottoPlots::mod_download_figure_ui(
-              id = ns("dl_barplot"),
-              label = "Download"
+              id = ns("dl_barplot")
             )
           )
-        ) # 3rd row 
+        ) # 3rd row
       ),
       tabPanel(
         title = "Genes",
@@ -270,52 +263,49 @@ mod_11_enrichment_ui <- function(id){
             checkboxInput(
               ns("show_detail"),
               "Detailed Desc.",
-              value = FALSE)
+              value = FALSE
             )
+          )
         ),
         tableOutput(ns("gene_info_table")),
-        p("Note: In the gene type column, \"C\" indicates 
+        p("Note: In the gene type column, \"C\" indicates
         protein-coding genes, and \"P\" means pseduogenes.")
       )
     )
-
   )
 }
-    
+
 #' 11_enrichment Server Functions
 #' @param id module Id
 #' @param results a list containing results from pathway analysis.
 #'  Each element is a data frame. But the last column is a list,
 #' hosting genes.
-#' @noRd 
-mod_11_enrichment_server <- function(
-  id,
-  results, # pathway table with fdr, fold, etc
-  gmt_choices, # list of pathway categories "GOBP"
-  gene_lists, # list of genes, each element is a list
-  processed_data,
-  gene_info,
-  idep_data,
-  select_org,
-  converted,
-  gmt_file
-  ){
-  moduleServer(id, function(input, output, session){
+#' @noRd
+mod_11_enrichment_server <- function(id,
+                                     results, # pathway table with fdr, fold, etc
+                                     gmt_choices, # list of pathway categories "GOBP"
+                                     gene_lists, # list of genes, each element is a list
+                                     processed_data,
+                                     gene_info,
+                                     idep_data,
+                                     select_org,
+                                     converted,
+                                     gmt_file) {
+  moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-        # GMT choices for enrichment ----------
+    # GMT choices for enrichment ----------
     output$select_go_selector <- renderUI({
+      req(!is.null(gmt_choices()))
 
-	    req(!is.null(gmt_choices()))
-
-      selected = gmt_choices()[1] # default, overwrite by below
-      if("GOBP" %in% gmt_choices()) {
+      selected <- gmt_choices()[1] # default, overwrite by below
+      if ("GOBP" %in% gmt_choices()) {
         selected <- "GOBP"
       }
-      if("KEGG" %in% gmt_choices()) {
+      if ("KEGG" %in% gmt_choices()) {
         selected <- "KEGG"
       }
-	    selectInput(
+      selectInput(
         inputId = ns("select_go"),
         label = NULL,
         choices = gmt_choices(),
@@ -335,17 +325,17 @@ mod_11_enrichment_server <- function(
     })
 
     output$select_cluster <- renderUI({
-	    req(!is.null(enrichment_dataframe()))
+      req(!is.null(enrichment_dataframe()))
       choices <- sort(unique(enrichment_dataframe()$group))
       selected <- choices[1]
-      if(length(choices) > 1) {
+      if (length(choices) > 1) {
         choices <- c("All Groups", choices)
         # if two groups, defaults to both
-        if(length(choices) == 3) {
+        if (length(choices) == 3) {
           selected <- choices[1]
         }
       }
-	    selectInput(
+      selectInput(
         inputId = ns("select_cluster"),
         label = NULL,
         choices = choices,
@@ -370,17 +360,17 @@ mod_11_enrichment_server <- function(
       req(!is.null(gene_lists()))
       withProgress(message = "Enrichment Analysis", {
         pathway_info <- list()
-          # disregard user selection use clusters for enrichment
+        # disregard user selection use clusters for enrichment
         for (i in 1:length(gene_lists())) {
           incProgress(1 / length(gene_lists()))
           gene_names_query <- gene_lists()[[i]]
           req(!is.null(input$select_go))
           gene_sets <- read_pathway_sets(
             all_gene_names_query = gene_names_query,
-            converted = converted(), #n
+            converted = converted(), # n
             go = input$select_go,
             select_org = select_org(),
-            gmt_file = gmt_file(), #n
+            gmt_file = gmt_file(), # n
             idep_data = idep_data,
             gene_info = gene_info()
           )
@@ -409,12 +399,13 @@ mod_11_enrichment_server <- function(
       req(gene_info())
       req(!is.null(input$select_cluster))
 
-      df <- do.call(rbind,
-        #combine multiple data frames that are elements of a list
+      df <- do.call(
+        rbind,
+        # combine multiple data frames that are elements of a list
         lapply(
           names(gene_lists()),
           function(x) {
-            if(input$select_cluster != "All Groups" && 
+            if (input$select_cluster != "All Groups" &&
               input$select_cluster != x
             ) {
               return(NULL)
@@ -427,7 +418,7 @@ mod_11_enrichment_server <- function(
           }
         )
       )
-      if(!is.null(df)) {
+      if (!is.null(df)) {
         df <- subset(
           df,
           select = c(
@@ -436,18 +427,18 @@ mod_11_enrichment_server <- function(
             symbol,
             entrezgene_id,
             chromosome_name,
-            #start_position,
+            # start_position,
             gene_biotype,
             description
           )
         )
-        #show detailed gene info for string species
-        if(!input$show_detail) {
+        # show detailed gene info for string species
+        if (!input$show_detail) {
           df$description <- gsub(";.*|\\[.*", "", df$description)
         }
 
 
-        #df$start_position <- round(df$start_position / 1e6, 2)
+        # df$start_position <- round(df$start_position / 1e6, 2)
         # protein_coding --> coding; processed_pseduogene --> pseduogene
 
         df$gene_biotype <- gsub(".*pseudogene", "P", df$gene_biotype)
@@ -460,63 +451,67 @@ mod_11_enrichment_server <- function(
         df$chromosome_name[nchar(df$chromosome_name) > 5] <- ""
 
         colnames(df) <- c(
-            "Group",
-            "Ensembl id",
-            "Symbol",
-            "Entrezgene id",
-            "Chr",
-            #"Position (Mbp)",
-            "Type",
-            "Description"
+          "Group",
+          "Ensembl id",
+          "Symbol",
+          "Entrezgene id",
+          "Chr",
+          # "Position (Mbp)",
+          "Type",
+          "Description"
         )
         # Remove columns with all missing values;
         df <- df[, which(!apply(is.na(df), 2, sum) == nrow(df))]
       }
 
       return(df)
-
     })
 
-    output$gene_info_table <- renderTable({
-      req(!is.null(cluster_gene_info()))
-      df <- cluster_gene_info()
-      if(length(unique(cluster_gene_info()$Group)) == 1) {
-        df <- subset(df, select = - Group)
-      } else {
-        df$Group[duplicated(df$Group)] <- ""
-      }
-      # add link to Ensembl
-      ix <- grepl("ENS", df$'Ensembl id')
-      if(sum(ix) > 0) { # at least one has http?
-        tem <- paste0("<a href='http://www.ensembl.org/id/",
-                      df$'Ensembl id',
-                      "' target='_blank'>",
-                      df$'Ensembl id',
-                      "</a>")
-        # only change the ones with URL
-        df$'Ensembl id'[ix] <- tem[ix]
-      }
+    output$gene_info_table <- renderTable(
+      {
+        req(!is.null(cluster_gene_info()))
+        df <- cluster_gene_info()
+        if (length(unique(cluster_gene_info()$Group)) == 1) {
+          df <- subset(df, select = -Group)
+        } else {
+          df$Group[duplicated(df$Group)] <- ""
+        }
+        # add link to Ensembl
+        ix <- grepl("ENS", df$"Ensembl id")
+        if (sum(ix) > 0) { # at least one has http?
+          tem <- paste0(
+            "<a href='http://www.ensembl.org/id/",
+            df$"Ensembl id",
+            "' target='_blank'>",
+            df$"Ensembl id",
+            "</a>"
+          )
+          # only change the ones with URL
+          df$"Ensembl id"[ix] <- tem[ix]
+        }
 
-      # first see if it is Entrez gene ID-----------------------
-      ix <- !is.na(as.numeric(df$'Entrezgene id'))
-      if(sum(ix) > 0) { # at least one has http?
-        tem <- paste0("<a href='https://www.ncbi.nlm.nih.gov/gene/", 
-                      df$'Entrezgene id',
-                      "' target='_blank'>",
-                      df$'Entrezgene id',
-                      "</a>")
-        # only change the ones with URL
-        df$'Entrezgene id'[ix] <- tem[ix]
-      }
-      return(df)
-    },
-    digits = 2,
-    spacing = "s",
-    striped = TRUE,
-    bordered = TRUE,
-    width = "auto",
-    hover = TRUE,
-    sanitize.text.function = function(x) x
+        # first see if it is Entrez gene ID-----------------------
+        ix <- !is.na(as.numeric(df$"Entrezgene id"))
+        if (sum(ix) > 0) { # at least one has http?
+          tem <- paste0(
+            "<a href='https://www.ncbi.nlm.nih.gov/gene/",
+            df$"Entrezgene id",
+            "' target='_blank'>",
+            df$"Entrezgene id",
+            "</a>"
+          )
+          # only change the ones with URL
+          df$"Entrezgene id"[ix] <- tem[ix]
+        }
+        return(df)
+      },
+      digits = 2,
+      spacing = "s",
+      striped = TRUE,
+      bordered = TRUE,
+      width = "auto",
+      hover = TRUE,
+      sanitize.text.function = function(x) x
     )
 
     output$download_gene_info <- downloadHandler(
@@ -543,12 +538,13 @@ mod_11_enrichment_server <- function(
     enrichment_dataframe <- reactive({
       req(!is.null(pathway_table()))
 
-      results_all <- do.call(rbind,
-        #combine multiple data frames that are elements of a list
+      results_all <- do.call(
+        rbind,
+        # combine multiple data frames that are elements of a list
         lapply(
           names(pathway_table()),
           function(x) {
-            if(ncol(pathway_table()[[x]]) == 1) {
+            if (ncol(pathway_table()[[x]]) == 1) {
               return(NULL)
             }
             df1 <- data_frame_with_list(pathway_table()[[x]])
@@ -558,10 +554,12 @@ mod_11_enrichment_server <- function(
         )
       )
 
-      if(!is.null(results_all)){
-        if(ncol(results_all) > 1) {
-          results_all <- results_all[,
-            c("group",
+      if (!is.null(results_all)) {
+        if (ncol(results_all) > 1) {
+          results_all <- results_all[
+            ,
+            c(
+              "group",
               colnames(results_all)[1:(ncol(results_all) - 1)]
             )
           ]
@@ -575,12 +573,13 @@ mod_11_enrichment_server <- function(
     enrichment_dataframe_for_tree <- reactive({
       req(!is.null(pathway_table()))
 
-      results_all <- do.call(rbind,
-        #combine multiple data frames that are elements of a list
+      results_all <- do.call(
+        rbind,
+        # combine multiple data frames that are elements of a list
         lapply(
           names(pathway_table()),
           function(x) {
-            if(ncol(pathway_table()[[x]]) == 1) {
+            if (ncol(pathway_table()[[x]]) == 1) {
               return(NULL)
             }
             df1 <- pathway_table()[[x]]
@@ -590,10 +589,12 @@ mod_11_enrichment_server <- function(
         )
       )
 
-      if(!is.null(results_all)){
-        if(ncol(results_all) > 1) {
-          results_all <- results_all[,
-            c("group",
+      if (!is.null(results_all)) {
+        if (ncol(results_all) > 1) {
+          results_all <- results_all[
+            ,
+            c(
+              "group",
               colnames(results_all)[1:(ncol(results_all) - 1)]
             )
           ]
@@ -605,7 +606,7 @@ mod_11_enrichment_server <- function(
         )
         results_all$FDR <- as.numeric(results_all$FDR)
         colnames(results_all) <- c(
-          "Direction", "adj_p_val", "Pathway.size", "Pathways",  "Genes"
+          "Direction", "adj_p_val", "Pathway.size", "Pathways", "Genes"
         )
       }
       return(results_all)
@@ -631,7 +632,9 @@ mod_11_enrichment_server <- function(
     dl_treeplot <- ottoPlots::mod_download_figure_server(
       id = "dl_treeplot",
       filename = "enrichment_tree",
-      figure = reactive({ enrichment_tree_object() }),
+      figure = reactive({
+        enrichment_tree_object()
+      }),
       width = 12,
       height = 6
     )
@@ -660,57 +663,58 @@ mod_11_enrichment_server <- function(
       )
     })
 
-    output$show_enrichment <- renderTable({
-      if(is.null(enrichment_dataframe())) {
-        return(as.data.frame("No significant enrichment found."))
-      } 
+    output$show_enrichment <- renderTable(
+      {
+        if (is.null(enrichment_dataframe())) {
+          return(as.data.frame("No significant enrichment found."))
+        }
 
-      res <- enrichment_dataframe()
-      colnames(res) <- gsub("\\.", " ", colnames(res))
-      if(input$sort_by == "Fold") {
-        res <- res[order(res$group, -res$'Fold enriched'), ]
-      }
-      # if only one group remove group column
-      if(length(unique(res$group)) == 1) {
-        res <- res[, -1]
-      } else {
-        # if multiple groups clean up 
-        res$group[duplicated(res$group)] <- ""
-      }
+        res <- enrichment_dataframe()
+        colnames(res) <- gsub("\\.", " ", colnames(res))
+        if (input$sort_by == "Fold") {
+          res <- res[order(res$group, -res$"Fold enriched"), ]
+        }
+        # if only one group remove group column
+        if (length(unique(res$group)) == 1) {
+          res <- res[, -1]
+        } else {
+          # if multiple groups clean up
+          res$group[duplicated(res$group)] <- ""
+        }
 
-      res$'nGenes' <- as.character(res$'nGenes')
-      res$'Fold enriched' <- as.character(round(res$'Fold enriched', 1))
-      res$'Pathway size' <- as.character(
-        res$'Pathway size'
-      )
+        res$"nGenes" <- as.character(res$"nGenes")
+        res$"Fold enriched" <- as.character(round(res$"Fold enriched", 1))
+        res$"Pathway size" <- as.character(
+          res$"Pathway size"
+        )
 
-      res$'Pathway' <- hyperText(
-        res$'Pathway',
-        res$URL
-      )
-      res <- subset(res, select = - Genes)
-      res <- subset(res, select = - URL)
+        res$"Pathway" <- hyperText(
+          res$"Pathway",
+          res$URL
+        )
+        res <- subset(res, select = -Genes)
+        res <- subset(res, select = -URL)
 
-      #remove pathway size
-      colnames(res) <- gsub("Pathway size", "PathwaySize", colnames(res))
-      res <- subset(res, select = - PathwaySize)
+        # remove pathway size
+        colnames(res) <- gsub("Pathway size", "PathwaySize", colnames(res))
+        res <- subset(res, select = -PathwaySize)
 
-      colnames(res)[ncol(res)] <- "Pathway (Click for more info)"
-      return(res)
-    },
-    digits = -1,
-    spacing = "s",
-    striped = TRUE,
-    bordered = TRUE,
-    width = "auto",
-    hover = TRUE,
-    sanitize.text.function = function(x) x
+        colnames(res)[ncol(res)] <- "Pathway (Click for more info)"
+        return(res)
+      },
+      digits = -1,
+      spacing = "s",
+      striped = TRUE,
+      bordered = TRUE,
+      width = "auto",
+      hover = TRUE,
+      sanitize.text.function = function(x) x
     )
 
     # ggplot2 object for the enrichment chart;
     # used both for display and download
-    enrich_barplot_object <- reactive({  
-      if(is.null(enrichment_dataframe())) {
+    enrich_barplot_object <- reactive({
+      if (is.null(enrichment_dataframe())) {
         grid::grid.newpage()
         return(grid::grid.text("Not available.", 0.5, 0.5))
       }
@@ -726,49 +730,49 @@ mod_11_enrichment_server <- function(
       req(input$aspect_ratio)
       req(input$select_cluster)
 
-    enrich_barplot(
-      enrichment_dataframe = enrichment_dataframe(),
-      pathway_order = input$pathway_order,
-      order_x = input$order_x,
-      plot_size = input$plot_size,
-      plot_color = input$plot_color,
-      plot_font_size = input$font_size,
-      plot_marker_size = input$marker_size,
-      plot_high_color = input$high_color,
-      plot_low_color = input$log_color,
-      chart_type = input$chart_type,
-      aspect_ratio = input$aspect_ratio,
-      select_cluster = input$select_cluster
-    )
-
+      enrich_barplot(
+        enrichment_dataframe = enrichment_dataframe(),
+        pathway_order = input$pathway_order,
+        order_x = input$order_x,
+        plot_size = input$plot_size,
+        plot_color = input$plot_color,
+        plot_font_size = input$font_size,
+        plot_marker_size = input$marker_size,
+        plot_high_color = input$high_color,
+        plot_low_color = input$log_color,
+        chart_type = input$chart_type,
+        aspect_ratio = input$aspect_ratio,
+        select_cluster = input$select_cluster
+      )
     })
 
     # Enrichment plot for display on the screen
-    #https://stackoverflow.com/questions/34792998/shiny-variable-height-of-renderplot
-    output$enrich_barchart <- renderPlot({
-      enrich_barplot_object()
-    }, 
-    # height increases as the number of terms increase. max at 1200, min 350
-    height = function(){ 
-      round(max(350, min(2500, round(18 * as.numeric(20))))) # 20 is maxTerms
-    },
-    width = function(){
-      round( max(350, min(2500, round(18 * as.numeric(20)))) * as.numeric(input$aspect_ratio) )
-    }
+    # https://stackoverflow.com/questions/34792998/shiny-variable-height-of-renderplot
+    output$enrich_barchart <- renderPlot(
+      {
+        enrich_barplot_object()
+      },
+      # height increases as the number of terms increase. max at 1200, min 350
+      height = function() {
+        round(max(350, min(2500, round(18 * as.numeric(20))))) # 20 is maxTerms
+      },
+      width = function() {
+        round(max(350, min(2500, round(18 * as.numeric(20)))) * as.numeric(input$aspect_ratio))
+      }
     )
 
     dl_barplot <- ottoPlots::mod_download_figure_server(
       id = "dl_barplot",
       filename = "enrichment_barplot",
-      figure = reactive({ enrich_barplot_object() })
+      figure = reactive({
+        enrich_barplot_object()
+      })
     )
-
   })
-
 }
-    
+
 ## To be copied in the UI
 # mod_11_enrichment_ui("11_enrichment_1")
-    
+
 ## To be copied in the server
 # mod_11_enrichment_server("11_enrichment_1")

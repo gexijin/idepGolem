@@ -4,15 +4,15 @@
 #'
 #' @param id,input,output,session Internal parameters for {shiny}.
 #'
-#' @noRd 
+#' @noRd
 #'
-#' @importFrom shiny NS tagList 
-mod_07_genome_ui <- function(id){
+#' @importFrom shiny NS tagList
+mod_07_genome_ui <- function(id) {
   ns <- NS(id)
   tabPanel(
     title = "Genome",
     sidebarLayout(
-      sidebarPanel( 
+      sidebarPanel(
         htmlOutput(outputId = ns("list_comparisons_genome")),
         tags$style(
           type = "text/css",
@@ -22,10 +22,10 @@ mod_07_genome_ui <- function(id){
           column(
             width = 6,
             numericInput(
-              inputId = ns("limma_p_val_viz"), 
-              label = h5("Genes: FDR "), 
+              inputId = ns("limma_p_val_viz"),
+              label = h5("Genes: FDR "),
               value = 0.1,
-              min = 1e-5, 
+              min = 1e-5,
               max = 1,
               step = .05
             )
@@ -33,8 +33,8 @@ mod_07_genome_ui <- function(id){
           column(
             width = 6,
             numericInput(
-              inputId = ns("limma_fc_viz"), 
-              label = h5("Fold change"), 
+              inputId = ns("limma_fc_viz"),
+              label = h5("Fold change"),
               value = 2,
               min = 1,
               max = 100,
@@ -50,7 +50,7 @@ mod_07_genome_ui <- function(id){
           type = "text/css",
           "#genome-limma_fc_viz{ width:100%;   margin-top:-12px}"
         ),
-        fluidRow( 
+        fluidRow(
           column(
             width = 6,
             checkboxInput(
@@ -68,7 +68,7 @@ mod_07_genome_ui <- function(id){
             )
           )
         ),
-        fluidRow( 
+        fluidRow(
           column(
             width = 5,
             checkboxInput(
@@ -112,15 +112,12 @@ mod_07_genome_ui <- function(id){
           )
         ),
         selectInput(
-          inputId = ns("ch_region_p_val"), 
+          inputId = ns("ch_region_p_val"),
           label = h5("FDR cutoff for window"),
           selected = 0.0001,
           choices = c(0.1, 0.05, 0.01, 0.001, 0.0001, 0.00001)
         )
       ),
-
-
-
       mainPanel(
         tabsetPanel(
           tabPanel(
@@ -129,18 +126,18 @@ mod_07_genome_ui <- function(id){
               outputId = ns("genome_plotly"),
               height = "900px"
             ),
-            h4("Select a region to zoom in. Mouse over the points to 
-            see more information on the gene. Enriched regions are 
+            h4("Select a region to zoom in. Mouse over the points to
+            see more information on the gene. Enriched regions are
             highlighted by blue or red line segments paralell to the chromosomes.")
           ),
           tabPanel(
             "PREDA (5 Mins)",
-            fluidRow( 
+            fluidRow(
               column(
                 width = 3,
                 numericInput(
-                  inputId = ns("regions_p_val_cutoff"), 
-                  label = h5("Min. FDR"), 
+                  inputId = ns("regions_p_val_cutoff"),
+                  label = h5("Min. FDR"),
                   value = 0.01,
                   min = 1e-20,
                   max = 1,
@@ -152,8 +149,8 @@ mod_07_genome_ui <- function(id){
                 numericInput(
                   inputId = ns("statistic_cutoff"),
                   label = h5("Min. Statistic"),
-                  min = .2, 
-                  max = 1.5, 
+                  min = .2,
+                  max = 1.5,
                   value = .5,
                   step = .1
                 )
@@ -173,7 +170,7 @@ mod_07_genome_ui <- function(id){
             "(PREDA) Genes",
             DT::dataTableOutput(outputId = ns("genes_chr_regions"))
           ),
-                    tabPanel(
+          tabPanel(
             "Info",
             h3(
               "Where are your differentially expressed genes (DEGs)
@@ -231,41 +228,41 @@ mod_07_genome_ui <- function(id){
               "Very slow (5 mins), but may be useful in studying
               cancer or other diseases that might involve chromosomal
               gain or loss."
-            ) 
+            )
           )
         )
       )
-    )   
+    )
   )
 }
-    
+
 #' mod_07_genome Server Functions
 #'
-#' @noRd 
-mod_07_genome_server <- function(id, pre_process, deg, idep_data){
-  moduleServer(id, function(input, output, session){
+#' @noRd
+mod_07_genome_server <- function(id, pre_process, deg, idep_data) {
+  moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     output$list_comparisons_genome <- renderUI({
-      if(is.null(deg$limma()$comparisons)) {
+      if (is.null(deg$limma()$comparisons)) {
         selectInput(
           inputId = ns("select_contrast"),
           label = NULL,
           choices = list("All" = "All"),
           selected = "All"
-        ) 
-      }	else {
+        )
+      } else {
         selectInput(
           inputId = ns("select_contrast"),
-          label = 
+          label =
             "Select a comparison to examine. \"A-B\" means A vs. B (See heatmap).
             Interaction terms start with \"I:\"",
           choices = deg$limma()$comparisons
-	     )
-      } 
-	  })
+        )
+      }
+    })
 
-    # visualizing fold change on chrs. 
+    # visualizing fold change on chrs.
     output$genome_plotly <- plotly::renderPlotly({
       req(!is.null(deg$limma()))
       req(!is.null(pre_process$all_gene_info()))
@@ -322,14 +319,13 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data){
         regions_p_val_cutoff = input$regions_p_val_cutoff,
         statistic_cutoff = input$statistic_cutoff
       )
-
     })
 
-    # Using PREDA to identify significant genomic regions 
+    # Using PREDA to identify significant genomic regions
     output$genome_plot <- renderPlot({
       req(!is.null(genome_plot_data()))
 
-	    get_genome_plot(
+      get_genome_plot(
         genome_plot_data = genome_plot_data(),
         regions_p_val_cutoff = input$regions_p_val_cutoff,
         statistic_cutoff = input$statistic_cutoff
@@ -337,10 +333,10 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data){
     })
 
     output$chr_regions <- DT::renderDataTable({
-	    req(!is.null(genome_plot_data()))
+      req(!is.null(genome_plot_data()))
 
       region_data <- genome_plot_data()$Regions[, c(8, 1:6, 9)]
-	    colnames(region_data)[1] <- "RegionID"
+      colnames(region_data)[1] <- "RegionID"
 
       DT::datatable(
         region_data,
@@ -353,11 +349,11 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data){
     })
 
     output$genes_chr_regions <- DT::renderDataTable({
-	    req(!is.null(genome_plot_data()))
+      req(!is.null(genome_plot_data()))
 
       genes <- genome_plot_data()$Genes[, -c(5, 10, 12)]
-	    genes$Fold <- round(genes$Fold, 3)
-	    colnames(genes)[2] <- "Dir"
+      genes$Fold <- round(genes$Fold, 3)
+      colnames(genes)[2] <- "Dir"
 
       DT::datatable(
         genes,
@@ -370,9 +366,9 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data){
     })
   })
 }
-    
+
 ## To be copied in the UI
 # mod_07_genome_ui("mod_07_genome_ui_1")
-    
+
 ## To be copied in the server
 # mod_07_genome_server("mod_07_genome_ui_1")

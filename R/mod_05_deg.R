@@ -25,7 +25,7 @@ mod_05_deg_1_ui <- function(id) {
           condition = "output.data_file_format == 1",
           selectInput(
             inputId = ns("counts_deg_method"),
-            label = "Method:", 
+            label = "Method:",
             choices = list(
               "DESeq2" = 3,
               "limma-voom" = 2,
@@ -34,7 +34,7 @@ mod_05_deg_1_ui <- function(id) {
             selected = 3
           ),
           tags$style(
-            type = 'text/css',
+            type = "text/css",
             "#deg-counts_deg_method {width:100%;   margin-top:-12px}"
           ),
           ns = ns
@@ -42,7 +42,7 @@ mod_05_deg_1_ui <- function(id) {
         # Label when the limma method is selected
         conditionalPanel(
           condition = "output.data_file_format == 2",
-          h5("Using the limma package"), 
+          h5("Using the limma package"),
           ns = ns
         ),
         fluidRow(
@@ -51,7 +51,7 @@ mod_05_deg_1_ui <- function(id) {
             # Adjusted significant p-value to use
             numericInput(
               inputId = ns("limma_p_val"),
-              label = h5("FDR cutoff"), 
+              label = h5("FDR cutoff"),
               value = 0.1,
               min = 1e-5,
               max = 1,
@@ -93,7 +93,7 @@ mod_05_deg_1_ui <- function(id) {
             value = TRUE
           ),
           ns = ns
-       ),
+        ),
         tags$br(),
         tags$br(),
         uiOutput(ns("download_lfc_button")),
@@ -104,10 +104,6 @@ mod_05_deg_1_ui <- function(id) {
           target = "_blank"
         )
       ),
-
-
-
-
       mainPanel(
         tabsetPanel(
           id = ns("step_1"),
@@ -121,7 +117,7 @@ mod_05_deg_1_ui <- function(id) {
               column(
                 width = 6,
                 htmlOutput(outputId = ns("list_block_factors_deg"))
-              ) 
+              )
             ),
             fluidRow(
               htmlOutput(outputId = ns("select_reference_levels"))
@@ -132,9 +128,8 @@ mod_05_deg_1_ui <- function(id) {
               "#deg-experiment_design{color: red;font-size: 16px;}"
             )),
             htmlOutput(outputId = ns("list_model_comparisons")),
-            h3("Use the submit button in the sidebar once the desired 
-               design is selected!"
-            ),
+            h3("Use the submit button in the sidebar once the desired
+               design is selected!"),
             a(
               h5("More info on DESeq2 experiment design", align = "right"),
               href = "http://rpubs.com/ge600/deseq2",
@@ -165,16 +160,15 @@ mod_05_deg_1_ui <- function(id) {
               value = TRUE
             ),
             htmlOutput(outputId = ns("list_comparisons_venn")),
-            plotOutput(outputId = ns("venn_plot")), 
+            plotOutput(outputId = ns("venn_plot")),
             ottoPlots::mod_download_figure_ui(
-              id = ns("dl_venn"), 
-              label = "Download venn diagram"
+              id = ns("dl_venn")
             )
           ),
           tabPanel(
             title = "R Code",
             downloadButton(
-              outputId = ns("dl_deg_code"), 
+              outputId = ns("dl_deg_code"),
               label = "Code"
             ),
             verbatimTextOutput(
@@ -194,12 +188,12 @@ mod_05_deg_2_ui <- function(id) {
     sidebarLayout(
       sidebarPanel(
         htmlOutput(outputId = ns("list_comparisons")),
-        h6("Select a comparison to examine the associated DEGs. 
+        h6("Select a comparison to examine the associated DEGs.
           \"A-B\" means A vs. B (See heatmap).
             Interaction terms start with \"I:\""),
         conditionalPanel(
-          condition = "input.step_2 == 'Volcano Plot' | 
-            input.step_2 == 'MA Plot'", 
+          condition = "input.step_2 == 'Volcano Plot' |
+            input.step_2 == 'MA Plot'",
           selectInput(
             inputId = ns("plot_color_select"),
             label = "Color scale",
@@ -233,10 +227,9 @@ mod_05_deg_2_ui <- function(id) {
               outputId = ns("ma_plot"),
               height = "500px",
               width = "100%"
-            ), 
+            ),
             ottoPlots::mod_download_figure_ui(ns("download_ma"))
           ),
-          
           tabPanel(
             title = "Scatter Plot",
             br(),
@@ -275,7 +268,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         style = "float:right"
       )
     })
-    
+
     # DEG STEP 1 ----------
     output$data_file_format <- reactive({
       pre_process$data_file_format()
@@ -285,20 +278,20 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       name = "data_file_format",
       suspendWhenHidden = FALSE
     )
-    
+
     # Experiment Design UI Elements ------------
     output$list_factors_deg <- renderUI({
-      list_factors <-  list_factors_ui(
+      list_factors <- list_factors_ui(
         sample_info = pre_process$sample_info(),
         data_file_format = pre_process$data_file_format(),
         counts_deg_method = input$counts_deg_method
       )
-      
-      if(class(list_factors)[1] == "list") {
+
+      if (class(list_factors)[1] == "list") {
         return(
           checkboxGroupInput(
-            inputId = ns("select_factors_model"), 
-            h5(list_factors$title), 
+            inputId = ns("select_factors_model"),
+            h5(list_factors$title),
             choices = list_factors$choices,
             selected = list_factors$choices[1]
           )
@@ -306,9 +299,9 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       } else {
         return(list_factors)
       }
-	  })
+    })
 
-    output$list_block_factors_deg <- renderUI({ 
+    output$list_block_factors_deg <- renderUI({
       choices <- list_block_factors_ui(
         sample_info = pre_process$sample_info(),
         select_factors_model = input$select_factors_model
@@ -316,17 +309,17 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       req(!is.null(choices))
       return(
         checkboxGroupInput(
-          inputId = ns("select_block_factors_model"), 
-          h5("Select a factor for batch effect or paired samples, if needed."), 
+          inputId = ns("select_block_factors_model"),
+          h5("Select a factor for batch effect or paired samples, if needed."),
           choices = choices,
           selected = NULL
         )
       )
-	  })
-    
+    })
+
     model_comparisons <- reactive({
       req(pre_process$data() & pre_process$data_file_format() != 3)
-      
+
       list_model_comparisons_ui(
         sample_info = pre_process$sample_info(),
         select_factors_model = input$select_factors_model,
@@ -337,12 +330,12 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     output$list_model_comparisons <- renderUI({
       req(model_comparisons())
       checkboxGroupInput(
-        inputId = ns("select_model_comprions"), 
-			  label = h5(model_comparisons()$title),
+        inputId = ns("select_model_comprions"),
+        label = h5(model_comparisons()$title),
         choices = model_comparisons()$choices,
         selected = model_comparisons()$choices[[1]]
       )
-	  })
+    })
 
     output$list_interaction_terms <- renderUI({
       interactions <- list_interaction_terms_ui(
@@ -351,35 +344,35 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       )
       req(!is.null(interactions))
       checkboxGroupInput(
-        inputId = ns("select_interactions"), 
-				label = h5(
+        inputId = ns("select_interactions"),
+        label = h5(
           "Interaction terms between factors(e.g. genotypes repond differently
           to treatment?):"
         ),
-				choices = interactions,
+        choices = interactions,
         selected = NULL
       )
-	  }) 
+    })
 
-	
-	  # Set limits for selections of factors
+
+    # Set limits for selections of factors
     observe({
-    	if(length(input$select_factors_model) > 6) {
+      if (length(input$select_factors_model) > 6) {
         updateCheckboxGroupInput(
           session,
           ns("select_factors_model"),
           selected = tail(input$select_factors_model, 6)
         )
       }
-      if(input$counts_deg_method !=3 ) {
-        if(length(input$select_factors_model) > 2) {
+      if (input$counts_deg_method != 3) {
+        if (length(input$select_factors_model) > 2) {
           updateCheckboxGroupInput(
             session,
             ns("select_factors_model"),
             selected = tail(input$select_factors_model, 2)
           )
         }
-        if(length(input$select_block_factors_model) > 1) {
+        if (length(input$select_block_factors_model) > 1) {
           updateCheckboxGroupInput(
             session,
             ns("select_block_factors_model"),
@@ -387,15 +380,15 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
           )
         }
       }
-      
-      if(length(input$select_comparisons_venn) > 5) {
+
+      if (length(input$select_comparisons_venn) > 5) {
         updateCheckboxGroupInput(
           session,
           ns("select_comparisons_venn"),
           selected = tail(input$select_comparisons_venn, 5)
         )
       }
-		})
+    })
 
     output$experiment_design <- renderText({
       experiment_design_txt(
@@ -424,9 +417,9 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
                   "reference_level_factor_",
                   which(names(select_choices) == x)
                 )
-              ), 
-							label = h5(paste0("Reference/baseline level for ", x)),
-							choices = setNames(
+              ),
+              label = h5(paste0("Reference/baseline level for ", x)),
+              choices = setNames(
                 as.list(paste0(x, ":", select_choices[[x]])),
                 select_choices[[x]]
               )
@@ -440,33 +433,33 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       return(
         c(
           input$reference_level_factor_1,
-				  input$reference_level_factor_2,
-				  input$reference_level_factor_3,
-				  input$reference_level_factor_4,
-				  input$reference_level_factor_5,
-				  input$reference_level_factor_6
+          input$reference_level_factor_2,
+          input$reference_level_factor_3,
+          input$reference_level_factor_4,
+          input$reference_level_factor_5,
+          input$reference_level_factor_6
         )
       )
     )
 
-      # Observe submit button ------ 
+    # Observe submit button ------
     deg <- reactiveValues(limma = NULL)
     observeEvent(
-      input$submit_model_button, {
+      input$submit_model_button,
+      {
         req(!is.null(pre_process$raw_counts()) |
-          !is.null(pre_process$data())
-        )
+          !is.null(pre_process$data()))
         withProgress(message = "DEG analysis...", {
           incProgress(0.4)
-          
+
           # only use with DESeq2
           threshold_wald_test <- FALSE
-          if(input$counts_deg_method == 3) {
+          if (input$counts_deg_method == 3) {
             threshold_wald_test <- input$threshold_wald_test
           }
 
           independent_filtering <- TRUE
-          if(input$counts_deg_method == 3) {
+          if (input$counts_deg_method == 3) {
             independent_filtering <- input$independent_filtering
           }
 
@@ -490,61 +483,61 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
           )
 
           updateTabsetPanel(
-            session = session, 
-            inputId = "step_1", 
+            session = session,
+            inputId = "step_1",
             selected = "results_tab"
           )
         })
       }
     )
-    
+
     deg_info <- reactive({
       req(!is.null(deg$limma$results))
-      
-    deg_information(
-        limma_value = deg$limma, 
+
+      deg_information(
+        limma_value = deg$limma,
         gene_names = pre_process$all_gene_names(),
-        processed_data = pre_process$data(), 
+        processed_data = pre_process$data(),
         no_id_conversion = load_data$no_id_conversion()
       )[[1]]
     })
-    
+
     deg_method <- c(
-      "limma_trend", 
-      "limma_voom", 
+      "limma_trend",
+      "limma_voom",
       "DESeq2"
     )
 
     name <- reactive({
       paste0(
-        "deg_values_", 
-        deg_method[as.numeric(input$counts_deg_method)], 
+        "deg_values_",
+        deg_method[as.numeric(input$counts_deg_method)],
         ".csv"
       )
     })
-    
+
     output$download_lfc <- downloadHandler(
-      filename = function(){
+      filename = function() {
         name()
-      }, 
+      },
       content = function(file) {
         write.csv(deg_info(), file, row.names = FALSE)
       }
     )
-    
+
     output$download_lfc_button <- renderUI({
       req(!is.null(deg_info()))
       downloadButton(
-        outputId = ns("download_lfc"), 
+        outputId = ns("download_lfc"),
         "Results & data"
       )
     })
-    
+
     output$note_download_lfc_button <- renderUI({
       req(!is.null(deg_info()))
       tippy::tippy_this(
         elementId = ns("download_lfc"),
-        tooltip = "This data includes log fold change, adjusted p-value and 
+        tooltip = "This data includes log fold change, adjusted p-value and
             processed data from Pre-Process tab.",
         theme = "light-border"
       )
@@ -557,11 +550,12 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       )
     })
 
-    output$sig_gene_stats_table <- renderTable({
-      req(!is.null(deg$limma))
-      
-		  genes_stat_table(limma = deg$limma)
-    },
+    output$sig_gene_stats_table <- renderTable(
+      {
+        req(!is.null(deg$limma))
+
+        genes_stat_table(limma = deg$limma)
+      },
       digits = 0,
       spacing = "s",
       include.rownames = FALSE,
@@ -573,7 +567,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
 
     output$deg_code <- renderText({
       req(!is.null(deg$limma))
-		  deg$limma$expr
+      deg$limma$expr
     })
 
     output$dl_deg_code <- downloadHandler(
@@ -581,14 +575,14 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         "DEG_code.R"
       },
       content = function(file) {
-        if(is.null(deg$limma)) {
+        if (is.null(deg$limma)) {
           writeLines(" Nothing!", file)
         } else {
           writeLines(deg$limma$expr, file)
         }
       }
     )
-    
+
 
     output$list_comparisons_venn <- renderUI({
       req(!is.null(deg$limma))
@@ -597,7 +591,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         limma = deg$limma,
         up_down_regulated = input$up_down_regulated
       )
-      if(is.null(venn_comp$choices)) {
+      if (is.null(venn_comp$choices)) {
         selectInput(
           inputId = ns("select_comparisons_venn"),
           label = NULL,
@@ -606,20 +600,19 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         )
       } else {
         checkboxGroupInput(
-          inputId = ns("select_comparisons_venn"), 
-			    label = h4("Select up to 5 comparisons"), 
-			    choices = venn_comp$choices,
-			    selected = venn_comp$choices_first_three
+          inputId = ns("select_comparisons_venn"),
+          label = h4("Select up to 5 comparisons"),
+          choices = venn_comp$choices,
+          selected = venn_comp$choices_first_three
         )
       }
+    })
 
-	  })
-
-    # venn diagram ----- 
+    # venn diagram -----
     venn <- reactive({
       req(!is.null(deg$limma))
       req(!is.null(input$select_comparisons_venn))
-      
+
       venn <- plot_venn(
         limma = deg$limma,
         up_down_regulated = input$up_down_regulated,
@@ -632,44 +625,45 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       print(venn())
     })
     dl_venn <- ottoPlots::mod_download_figure_server(
-      id = "dl_venn", 
-      filename = "venn_diagram", 
-      figure = reactive({ venn() })
+      id = "dl_venn",
+      filename = "venn_diagram",
+      figure = reactive({
+        venn()
+      })
     )
-    
+
 
     # DEG STEP 2 --------
     output$list_comparisons <- renderUI({
-      
-      if(is.null(deg$limma$comparisons)) {
+      if (is.null(deg$limma$comparisons)) {
         selectInput(
           inputId = ns("select_contrast"),
           label = NULL,
           choices = list("All" = "All"),
           selected = "All"
-        )  
-			}	else {
+        )
+      } else {
         selectInput(
           inputId = ns("select_contrast"),
           label = NULL,
           choices = deg$limma$comparisons
-	     )
-      } 
-	  })
+        )
+      }
+    })
 
     contrast_samples <- reactive({
       req(!is.null(input$select_contrast))
 
       find_contrast_samples(
-        select_contrast = input$select_contrast, 
-		    all_sample_names = colnames(pre_process$data()),
-		    sample_info = pre_process$sample_info(),
-		    select_factors_model = input$select_factors_model,
-		    select_model_comprions = input$select_model_comprions, 
-		    reference_levels = factor_reference_levels(),
-		    counts_deg_method = input$counts_deg_method,
-		    data_file_format = pre_process$data_file_format()
-	    )
+        select_contrast = input$select_contrast,
+        all_sample_names = colnames(pre_process$data()),
+        sample_info = pre_process$sample_info(),
+        select_factors_model = input$select_factors_model,
+        select_model_comprions = input$select_model_comprions,
+        reference_levels = factor_reference_levels(),
+        counts_deg_method = input$counts_deg_method,
+        data_file_format = pre_process$data_file_format()
+      )
     })
 
     heat_data <- reactive({
@@ -689,46 +683,51 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     heatmap_bar <- reactive({
       req(!is.null(heat_data()))
       heat_data()$bar
-
     })
     heatmap_module <- mod_12_heatmap_server(
       id = "12_heatmap_1",
-      data = reactive({ heat_data()$genes }),
-      bar = reactive({ heatmap_bar() }),
-      all_gene_names = reactive({ pre_process$all_gene_names() }),
+      data = reactive({
+        heat_data()$genes
+      }),
+      bar = reactive({
+        heatmap_bar()
+      }),
+      all_gene_names = reactive({
+        pre_process$all_gene_names()
+      }),
       cluster_rows = FALSE
     )
 
-    # Plot colors ------- 
+    # Plot colors -------
     plot_colors <- list(
-      "Green-Red" = c("green", "grey45", "red"), 
-      "Red-Green" = c("red", "grey45", "green"), 
-      "Blue-Red" = c("blue", "grey45", "red"), 
+      "Green-Red" = c("green", "grey45", "red"),
+      "Red-Green" = c("red", "grey45", "green"),
+      "Blue-Red" = c("blue", "grey45", "red"),
       "Green-Magenta" = c("green", "grey45", "magenta"),
       "Orange-Blue" = c("orange", "grey45", "blue")
     )
-    
+
     plot_choices <- c(
-      "Green-Red", 
-      "Red-Green", 
-      "Blue-Red", 
-      "Green-Magenta", 
+      "Green-Red",
+      "Red-Green",
+      "Blue-Red",
+      "Green-Magenta",
       "Orange-Blue"
     )
-    
+
     observe({
       updateSelectInput(
-        session = session, 
-        inputId = "plot_color_select", 
+        session = session,
+        inputId = "plot_color_select",
         choices = plot_choices
       )
     })
 
-    
+
     # volcano plot -----
     vol_plot <- reactive({
       req(!is.null(deg$limma$top_genes))
-      
+
       vol <- plot_volcano(
         select_contrast = input$select_contrast,
         comparisons = deg$limma$comparisons,
@@ -742,17 +741,19 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     output$volcano_plot <- renderPlot({
       print(vol_plot())
     })
-    
+
     download_volcano <- ottoPlots::mod_download_figure_server(
-      "download_volcano", 
-      filename = "volcano_plot", 
-      figure = reactive({ vol_plot() }) # stays as a reactive variable
+      "download_volcano",
+      filename = "volcano_plot",
+      figure = reactive({
+        vol_plot()
+      }) # stays as a reactive variable
     )
-    
+
     # ma plot----------------
     ma_plot <- reactive({
       req(!is.null(deg$limma$top_genes))
-      
+
       plot_ma(
         select_contrast = input$select_contrast,
         comparisons = deg$limma$comparisons,
@@ -760,19 +761,21 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         limma_p_val = input$limma_p_val,
         limma_fc = input$limma_fc,
         contrast_samples = contrast_samples(),
-        processed_data = pre_process$data(), 
+        processed_data = pre_process$data(),
         plot_colors = plot_colors[[input$plot_color_select]]
       )
     })
-    
+
     output$ma_plot <- renderPlot({
-	    print(ma_plot())
+      print(ma_plot())
     })
-    
+
     download_ma <- ottoPlots::mod_download_figure_server(
-      "download_ma", 
-      filename = "ma_plot", 
-      figure = reactive({ ma_plot() })
+      "download_ma",
+      filename = "ma_plot",
+      figure = reactive({
+        ma_plot()
+      })
     )
 
     output$scatter_plot <- renderPlot({
@@ -814,9 +817,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         deg_lists <- list()
         lists <- c("Upregulated", "Downregulated")
 
-        for(direction in lists) {
-          
-          if(direction == lists[1]) {
+        for (direction in lists) {
+          if (direction == lists[1]) {
             data <- up_reg_data()
           } else {
             data <- down_reg_data()
@@ -836,17 +838,31 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     })
 
 
-  enrichment_table_cluster <- mod_11_enrichment_server(
-    id = "enrichment_table_cluster",
-    gmt_choices = reactive({ pre_process$gmt_choices() }),
-    gene_lists = reactive({ pathway_deg()  }),
-    processed_data = reactive({ pre_process$data()}),
-    gene_info = reactive({ pre_process$all_gene_info()}),
-    idep_data = idep_data,
-    select_org = reactive({ pre_process$select_org()}),
-    converted = reactive({ pre_process$converted() }),
-    gmt_file = reactive({ pre_process$gmt_file() })
-  )
+    enrichment_table_cluster <- mod_11_enrichment_server(
+      id = "enrichment_table_cluster",
+      gmt_choices = reactive({
+        pre_process$gmt_choices()
+      }),
+      gene_lists = reactive({
+        pathway_deg()
+      }),
+      processed_data = reactive({
+        pre_process$data()
+      }),
+      gene_info = reactive({
+        pre_process$all_gene_info()
+      }),
+      idep_data = idep_data,
+      select_org = reactive({
+        pre_process$select_org()
+      }),
+      converted = reactive({
+        pre_process$converted()
+      }),
+      gmt_file = reactive({
+        pre_process$gmt_file()
+      })
+    )
 
     list(
       limma = reactive(deg$limma),
@@ -856,7 +872,6 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       counts_deg_method = reactive(input$counts_deg_method)
     )
   })
-
 }
 
 ## To be copied in the UI

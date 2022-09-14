@@ -28,25 +28,23 @@ NULL
 #' @param counts_transform Type of transformation for counts data
 #' @param counts_log_start Value added to log for counts data
 #' @param no_fdr Fold changes only data with no p values
-#' 
+#'
 #' @export
 #' @return A list containing the transformed data, the mean kurtosis,
 #' the raw counts, a data type warning, the size of the original data,
 #' and p-values.
-pre_process <- function(
-  data,
-  missing_value,
-  data_file_format,
-  low_filter_fpkm,
-  n_min_samples_fpkm,
-  log_transform_fpkm,
-  log_start_fpkm,
-  min_counts,
-  n_min_samples_count,
-  counts_transform,
-  counts_log_start,
-  no_fdr
-) {
+pre_process <- function(data,
+                        missing_value,
+                        data_file_format,
+                        low_filter_fpkm,
+                        n_min_samples_fpkm,
+                        log_transform_fpkm,
+                        log_start_fpkm,
+                        min_counts,
+                        n_min_samples_count,
+                        counts_transform,
+                        counts_log_start,
+                        no_fdr) {
   data_type_warning <- 0
   data_size_original <- dim(data)
   kurtosis_log <- 50
@@ -201,8 +199,8 @@ pre_process <- function(
     1,
     sd
   )), ]
-  
-  #Generate paragraph of processing selections
+
+  # Generate paragraph of processing selections
   descr <- generate_descr(
     missing_value,
     data_file_format,
@@ -242,10 +240,8 @@ pre_process <- function(
 #'
 #' @export
 #' @return formatted ggbarplot
-total_counts_ggplot <- function(
-  counts_data,
-  sample_info
-) {
+total_counts_ggplot <- function(counts_data,
+                                sample_info) {
   counts <- counts_data
   memo <- ""
 
@@ -257,7 +253,7 @@ total_counts_ggplot <- function(
   groups <- as.factor(
     detect_groups(colnames(counts), sample_info)
   )
-  
+
   if (ncol(counts) < 31) {
     x_axis_labels <- 16
   } else {
@@ -270,21 +266,21 @@ total_counts_ggplot <- function(
       counts = colSums(counts) / 1e6,
       group = groups
     )
-    
+
     plot <- ggplot2::ggplot(
       data = plot_data,
       ggplot2::aes(x = sample, y = counts)
     )
   } else {
     grouping <- groups
-    
+
     plot_data <- data.frame(
       sample = as.factor(colnames(counts)),
       counts = colSums(counts) / 1e6,
       group = groups,
       grouping = grouping
     )
-    
+
     plot <- ggplot2::ggplot(
       data = plot_data,
       ggplot2::aes(x = sample, y = counts, fill = grouping)
@@ -333,13 +329,11 @@ total_counts_ggplot <- function(
 #' @param plot_xaxis Sample to plot on the x-axis
 #' @param plot_yaxis Sample to plot on the y axis
 #'
-#' @export 
+#' @export
 #' @return Returns a formatted gg scatterplot
-eda_scatter <- function(
-  processed_data,
-  plot_xaxis,
-  plot_yaxis
-) {
+eda_scatter <- function(processed_data,
+                        plot_xaxis,
+                        plot_yaxis) {
   plot_data <- as.data.frame(processed_data)
   scatter <- ggplot2::ggplot(
     plot_data,
@@ -383,13 +377,11 @@ eda_scatter <- function(
 #' @param processed_data Data that has gone through the pre-processing
 #' @param sample_info Sample_info from the experiment file
 #'
-#' @export 
+#' @export
 #' @return Formatted gg boxplot of the distribution of counts for each
 #'  sample
-eda_boxplot <- function(
-  processed_data,
-  sample_info
-) {
+eda_boxplot <- function(processed_data,
+                        sample_info) {
   counts <- as.data.frame(processed_data)
   memo <- ""
 
@@ -419,7 +411,7 @@ eda_boxplot <- function(
     names_to = "sample",
     values_to = "expression"
   )
-  
+
   longer_data$groups <- rep(groups, nrow(counts))
   longer_data$grouping <- rep(grouping, nrow(counts))
 
@@ -467,12 +459,10 @@ eda_boxplot <- function(
 #' @param processed_data Data that has gone through the pre-processing
 #' @param sample_info Sample_info from the experiment file
 #'
-#' @export 
+#' @export
 #' @return Returns a formatted gg density plot
-eda_density <- function(
-  processed_data,
-  sample_info
-) {
+eda_density <- function(processed_data,
+                        sample_info) {
   counts <- as.data.frame(processed_data)
   memo <- ""
 
@@ -562,19 +552,17 @@ eda_density <- function(
 #' @param use_sd T/F for standard error or standard deviation bars on bar plot
 #' @param select_org Species the expression data is from
 #'
-#' @export 
+#' @export
 #' @return A formatted ggplot. For gene_plot_box = TRUE the return will be a
 #'  lineplot for the expression of each individual sample for the selected gene.
 #'  If gene_plot_box = FALSE the return will be a barplot for the groups provided
 #'  in the sample information.
-individual_plots <- function(
-  individual_data,
-  sample_info,
-  selected_gene,
-  gene_plot_box,
-  use_sd,
-  lab_rotate
-) {
+individual_plots <- function(individual_data,
+                             sample_info,
+                             selected_gene,
+                             gene_plot_box,
+                             use_sd,
+                             lab_rotate) {
   individual_data <- as.data.frame(individual_data)
   individual_data$symbol <- rownames(individual_data)
 
@@ -695,13 +683,11 @@ individual_plots <- function(
 #' @param all_gene_names Data frame with all gene names
 #' @param n_matched Count of matched IDs after processing
 #'
-#' @export 
+#' @export
 #' @return Message about processed data
-conversion_counts_message <- function(
-  data_size,
-  all_gene_names,
-  n_matched
-) {
+conversion_counts_message <- function(data_size,
+                                      all_gene_names,
+                                      n_matched) {
   if (ncol(all_gene_names) == 1) {
     return(paste(
       data_size[1], "genes in", data_size[4], "samples.",
@@ -727,13 +713,11 @@ conversion_counts_message <- function(
 #' @param raw_counts Raw counts data from the processing function
 #' @param sample_info Experiment file information about each sample
 #'
-#' @export 
+#' @export
 #' @return Message for the UI
-counts_bias_message <- function(
-  raw_counts,
-  data_file_format,
-  sample_info
-) {
+counts_bias_message <- function(raw_counts,
+                                data_file_format,
+                                sample_info) {
   total_counts <- colSums(raw_counts)
   groups <- as.factor(
     detect_groups(
@@ -763,8 +747,8 @@ counts_bias_message <- function(
     for (j in 1:ncol(y)) {
       pval <- summary(
         aov(
-        total_counts ~ as.factor(y[, j])
-      )
+          total_counts ~ as.factor(y[, j])
+        )
       )[[1]][["Pr(>F)"]][1]
 
       if (pval < 0.01) {
@@ -779,24 +763,22 @@ counts_bias_message <- function(
 }
 
 #' Mean vs. Standard Deviation plot
-#' 
+#'
 #' Create a plot that shows the standard deviation as the
 #' Y-axis across the mean of the counts data on the X-axis.
 #' Option to make the X-axis the rank of the mean which
 #' does a better job showing the spread of the data.
-#' 
+#'
 #' @param processed_data Data that has gone through the pre-processing
 #' @param rank TRUE/FALSE whether to use the rank of the mean or not
 #' @param heat_cols Heat color to use with black in the plot
-#' 
-#' @export 
+#'
+#' @export
 #' @return A formatted ggplot hexplot of the mean and standard
 #'  deviation of the processed data
-mean_sd_plot <- function(
-  processed_data,
-  rank,
-  heat_cols
-) {
+mean_sd_plot <- function(processed_data,
+                         rank,
+                         heat_cols) {
   table_data <- data.frame(
     "x_axis" = apply(
       processed_data,
@@ -811,48 +793,48 @@ mean_sd_plot <- function(
   )
 
   if (rank) {
-    table_data$x_axis <- rank(table_data$x_axis) 
+    table_data$x_axis <- rank(table_data$x_axis)
   }
   low_col <- "black"
   high_col <- heat_cols[[1]]
 
   hex_plot <- ggplot2::ggplot(
-      table_data,
-      ggplot2::aes(x = x_axis, y = y_axis)
+    table_data,
+    ggplot2::aes(x = x_axis, y = y_axis)
   ) +
-  ggplot2::geom_hex(bins = 75) +
-  ggplot2::geom_smooth(
-    method = "gam",
-    formula = y ~ s(x, bs = "cs")
-  ) +
-  ggplot2::scale_fill_gradient2(
-    mid = low_col,
-    high = high_col
-  ) +
-  ggplot2::theme_light() +
-  ggplot2::theme(
-    plot.title = ggplot2::element_text(
-      color = "black",
-      size = 16,
-      face = "bold",
-      hjust = .5
-    ),
-    axis.text.x = ggplot2::element_text(size = 14),
-    axis.text.y = ggplot2::element_text(size = 14),
-    axis.title.x = ggplot2::element_text(
-      color = "black",
-      size = 14
-    ),
-    axis.title.y = ggplot2::element_text(
-      color = "black",
-      size = 14
-    ),
-    legend.text = ggplot2::element_text(size = 12)
-  ) +
-  ggplot2::labs(
-    title = "Mean vs. Standard Deviation",
-    y = "Standard Deviation"
-  )
+    ggplot2::geom_hex(bins = 75) +
+    ggplot2::geom_smooth(
+      method = "gam",
+      formula = y ~ s(x, bs = "cs")
+    ) +
+    ggplot2::scale_fill_gradient2(
+      mid = low_col,
+      high = high_col
+    ) +
+    ggplot2::theme_light() +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(
+        color = "black",
+        size = 16,
+        face = "bold",
+        hjust = .5
+      ),
+      axis.text.x = ggplot2::element_text(size = 14),
+      axis.text.y = ggplot2::element_text(size = 14),
+      axis.title.x = ggplot2::element_text(
+        color = "black",
+        size = 14
+      ),
+      axis.title.y = ggplot2::element_text(
+        color = "black",
+        size = 14
+      ),
+      legend.text = ggplot2::element_text(size = 12)
+    ) +
+    ggplot2::labs(
+      title = "Mean vs. Standard Deviation",
+      y = "Standard Deviation"
+    )
 
   if (rank) {
     hex_plot <- hex_plot +
@@ -866,7 +848,7 @@ mean_sd_plot <- function(
 }
 
 #' Write paragraph containing process details
-#' 
+#'
 #' @param missing_value Method to deal with missing data
 #' @param data_file_format Type of data being examined
 #' @param low_filter_fpkm Low count filter for the fpkm data
@@ -878,54 +860,60 @@ mean_sd_plot <- function(
 #' @param counts_transform Type of transformation for counts data
 #' @param counts_log_start Value added to log for counts data
 #' @param no_fdr Fold changes only data with no p values
-#' 
+#'
 #' @return string with process summary
-#' 
-generate_descr <- function(
-    missing_value,
-    data_file_format,
-    low_filter_fpkm,
-    n_min_samples_fpkm,
-    log_transform_fpkm,
-    log_start_fpkm,
-    min_counts,
-    n_min_samples_count,
-    counts_transform,
-    counts_log_start,
-    no_fdr
-){
-  #read counts case
-  if (data_file_format == 1){
+#'
+generate_descr <- function(missing_value,
+                           data_file_format,
+                           low_filter_fpkm,
+                           n_min_samples_fpkm,
+                           log_transform_fpkm,
+                           log_start_fpkm,
+                           min_counts,
+                           n_min_samples_count,
+                           counts_transform,
+                           counts_log_start,
+                           no_fdr) {
+  # read counts case
+  if (data_file_format == 1) {
     part_2 <- switch(counts_transform,
-                     "1" = paste0("EdgeR using a pseudocount of ", counts_log_start),
-                     "2" = "VST: Variance Stabilizing Transformation", 
-                     "3" = "Regularized log")
-    descr <- paste0("Read counts data was uploaded to iDEP v2.0 (citation). ",
-                    "The data was filtered to include genes with more than ", min_counts, 
-                    " counts in ", n_min_samples_count, ifelse(n_min_samples_count > 1," libraries", " library"), ". The data was transformed with ", part_2,
-                    ".  Missing values were imputed using ", missing_value, ".")
+      "1" = paste0("EdgeR using a pseudocount of ", counts_log_start),
+      "2" = "VST: Variance Stabilizing Transformation",
+      "3" = "Regularized log"
+    )
+    descr <- paste0(
+      "Read counts data was uploaded to iDEP v2.0 (citation). ",
+      "The data was filtered to include genes with more than ", min_counts,
+      " counts in ", n_min_samples_count, ifelse(n_min_samples_count > 1, " libraries", " library"), ". The data was transformed with ", part_2,
+      ".  Missing values were imputed using ", missing_value, "."
+    )
   }
-  #normalized expression values
-  if (data_file_format == 2){
-    part_2 <- switch(toString(log_transform_fpkm), "FALSE" = "not log transformed", 
-                     "TRUE" = paste0("log transformed with a psuedocount of ", log_start_fpkm, ""))
-    
-    descr <- paste0("Normalized expression values were uploaded to iDEP v2.0 (citation). ",
-                    "The data was filtered to include genes with above ", low_filter_fpkm, 
-                    " levels in ", n_min_samples_fpkm, ifelse(n_min_samples_fpkm > 1," libraries", " library"), ". The data was ", part_2,
-                    ".  Missing values were imputed using ", missing_value, ".")
+  # normalized expression values
+  if (data_file_format == 2) {
+    part_2 <- switch(toString(log_transform_fpkm),
+      "FALSE" = "not log transformed",
+      "TRUE" = paste0("log transformed with a psuedocount of ", log_start_fpkm, "")
+    )
+
+    descr <- paste0(
+      "Normalized expression values were uploaded to iDEP v2.0 (citation). ",
+      "The data was filtered to include genes with above ", low_filter_fpkm,
+      " levels in ", n_min_samples_fpkm, ifelse(n_min_samples_fpkm > 1, " libraries", " library"), ". The data was ", part_2,
+      ".  Missing values were imputed using ", missing_value, "."
+    )
   }
-  #LFC and FDR
-  if (data_file_format == 3){
+  # LFC and FDR
+  if (data_file_format == 3) {
     part_2 <- switch(toString(no_fdr),
-                     "TRUE" = "",
-                     "FALSE" = " and corrected p-value ")
-    descr <- paste0("Log Fold Change ", part_2, 
-                    "data was uploaded to iDEP v2.0 (citation).",
-                    "Missing values were imputed using ", missing_value, "." )
+      "TRUE" = "",
+      "FALSE" = " and corrected p-value "
+    )
+    descr <- paste0(
+      "Log Fold Change ", part_2,
+      "data was uploaded to iDEP v2.0 (citation).",
+      "Missing values were imputed using ", missing_value, "."
+    )
   }
-  
+
   return(descr)
-  
-  
 }

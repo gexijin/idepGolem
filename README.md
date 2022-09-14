@@ -20,6 +20,12 @@ How to make environment variable for each OS:
 * [Mac](https://phoenixnap.com/kb/set-environment-variable-mac)
 * [Linux](https://linuxize.com/post/how-to-set-and-list-environment-variables-in-linux/)
 
+On Linux and Mac you need these build tools:
+
+* gcc
+* gcc-fortran
+* cmake
+
 ### Get the code
 
 You need devtools(for Windows you also need RTOOLS)

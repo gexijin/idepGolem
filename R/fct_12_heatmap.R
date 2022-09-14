@@ -1,10 +1,10 @@
 #' Heatmap for significant contrast genes
-#' 
+#'
 #' Create a ComplexHeatmap of the processed expression data for
-#' the genes that were significantly expressed in the selected 
+#' the genes that were significantly expressed in the selected
 #' comparison. The data for this heatmap comes from the
 #' deg_heat_data function.
-#' 
+#'
 #' @param data Submatrix of the processed data matrix from the
 #'  deg_heta_data function
 #' @param bar Vector to signify a positive (1) expression fold
@@ -12,22 +12,20 @@
 #' @param heatmap_color_select Color vector to use for the
 #'  heatmap expression scale
 #' @param whether to cluster rows
-#' 
+#'
 #' @export
 #' @return A drawn heatmap from the filtered data.
-deg_heatmap <- function(
-  data,
-  bar,
-  heatmap_color_select,
-  cluster_rows
-) {
+deg_heatmap <- function(data,
+                        bar,
+                        heatmap_color_select,
+                        cluster_rows) {
   # Number of genes to show
   n_genes <- as.character(table(bar))
 
   data <- as.matrix(data) - apply(data, 1, mean)
-  cutoff <- median(unlist(data)) + 3 * sd(unlist(data)) 
+  cutoff <- median(unlist(data)) + 3 * sd(unlist(data))
   data[data > cutoff] <- cutoff
-  cutoff <- median(unlist(data)) - 3 * sd(unlist(data)) 
+  cutoff <- median(unlist(data)) - 3 * sd(unlist(data))
   data[data < cutoff] <- cutoff
 
   # Color scale
@@ -42,11 +40,11 @@ deg_heatmap <- function(
       heatmap_color_select
     )
   }
-  
+
   groups <- detect_groups(colnames(data))
   group_count <- length(unique(groups))
   groups_colors <- gg_color_hue(2 + group_count)
-  
+
   top_ann <- ComplexHeatmap::HeatmapAnnotation(
     Group = groups,
     col = list(
@@ -58,11 +56,11 @@ deg_heatmap <- function(
     show_annotation_name = list(Group = FALSE),
     show_legend = FALSE
   )
-  
+
   row_ann <- NULL
-  if(!is.null(bar)) {
+  if (!is.null(bar)) {
     bar[bar == -1] <- "Negative"
-    bar[bar == 1]  <- "Positive"
+    bar[bar == 1] <- "Positive"
     groups <- bar
 
     row_ann <- ComplexHeatmap::rowAnnotation(
@@ -114,10 +112,10 @@ deg_heatmap <- function(
 }
 
 #' Plot brush selection from main heatmap
-#' 
+#'
 #' Create a ComplexHeatmap object from the User brush selection
 #' that is a sub plot of the main plot.
-#' 
+#'
 #' @param ht_brush Input from the user creating a brush selection
 #'  on the main heatmap
 #' @param ht Main heatmap from the deg_heatmap function
@@ -127,18 +125,16 @@ deg_heatmap <- function(
 #'  the main heatmap
 #' @param bar, groups of genes for colar bar on the left side
 #' @param all_gene_names Data matrix of all the mapped gene names
-#' 
+#'
 #' @export
 #' @return A ComplexHeatmap object of the brushed selection from
 #'  the main heatmap.
-deg_heat_sub <- function(
-  ht_brush,
-  ht,
-  ht_pos_main,
-  heatmap_data,
-  bar,
-  all_gene_names
-) {
+deg_heat_sub <- function(ht_brush,
+                         ht,
+                         ht_pos_main,
+                         heatmap_data,
+                         bar,
+                         all_gene_names) {
   max_genes <- 2000
   lt <- InteractiveComplexHeatmap::getPositionFromBrush(ht_brush)
   pos1 <- lt[[1]]
@@ -154,56 +150,56 @@ deg_heat_sub <- function(
   )
 
   # Annotations ----------
-    column_groups <- detect_groups(colnames(heatmap_data))
-    group_count <- length(unique(column_groups))
-    groups_colors <- gg_color_hue(2 + group_count)
-  
-    top_ann <- ComplexHeatmap::HeatmapAnnotation(
-      Group = column_groups,
+  column_groups <- detect_groups(colnames(heatmap_data))
+  group_count <- length(unique(column_groups))
+  groups_colors <- gg_color_hue(2 + group_count)
+
+  top_ann <- ComplexHeatmap::HeatmapAnnotation(
+    Group = column_groups,
+    col = list(
+      Group = setNames(
+        groups_colors[1:group_count],
+        unique(column_groups)
+      )
+    ),
+    annotation_legend_param = list(
+      Group = list(nrow = 1, title = NULL)
+    ),
+    show_annotation_name = list(Group = FALSE),
+    show_legend = TRUE
+  )
+
+  row_ann <- NULL
+  if (!is.null(bar)) {
+    bar[bar == -1] <- "Down"
+    bar[bar == 1] <- "Up"
+    row_groups <- bar
+
+    row_ann <- ComplexHeatmap::rowAnnotation(
+      Change = row_groups,
       col = list(
-        Group = setNames(
-          groups_colors[1:group_count],
-          unique(column_groups)
+        Change = setNames(
+          groups_colors[(group_count + 1):length(groups_colors)],
+          unique(row_groups)
         )
       ),
       annotation_legend_param = list(
-        Group = list(nrow = 1, title = NULL)
+        Change = list(nrow = 1, title = NULL)
       ),
-      show_annotation_name = list(Group = FALSE),
+      show_annotation_name = list(Change = FALSE),
       show_legend = TRUE
     )
+    group_col_return <- setNames(
+      groups_colors,
+      c(unique(column_groups), unique(row_groups))
+    )
+  } else {
+    group_col_return <- setNames(
+      groups_colors,
+      c(unique(column_groups))
+    )
+  }
 
-    row_ann <- NULL
-    if(!is.null(bar)) {
-      bar[bar == -1] <- "Down"
-      bar[bar == 1]  <- "Up"
-      row_groups <- bar
-
-      row_ann <- ComplexHeatmap::rowAnnotation(
-        Change = row_groups,
-        col = list(
-          Change = setNames(
-            groups_colors[(group_count + 1):length(groups_colors)],
-            unique(row_groups)
-          )
-        ),
-        annotation_legend_param = list(
-          Change = list(nrow = 1, title = NULL)
-        ),
-        show_annotation_name = list(Change = FALSE),
-        show_legend = TRUE
-      )
-      group_col_return <- setNames(
-        groups_colors,
-        c(unique(column_groups), unique(row_groups))
-      )       
-    }  else {
-      group_col_return <- setNames(
-        groups_colors,
-        c(unique(column_groups))
-      )      
-    } 
-    
 
 
   # End annotation ---------
@@ -211,7 +207,7 @@ deg_heat_sub <- function(
   column_index <- unlist(pos[1, "column_index"])
   row_index <- unlist(pos[1, "row_index"])
   top_ann <- top_ann[column_index]
-  if(!is.null(bar)) {
+  if (!is.null(bar)) {
     row_ann <- row_ann[row_index]
   }
   column_groups <- column_groups[column_index]
@@ -226,7 +222,7 @@ deg_heat_sub <- function(
   }
 
 
-  if(ncol(all_gene_names) == 3) {
+  if (ncol(all_gene_names) == 3) {
     genes <- rowname_id_swap(
       data_matrix = m[row_index, column_index, drop = FALSE],
       all_gene_names = all_gene_names,
@@ -249,23 +245,23 @@ deg_heat_sub <- function(
     name = "heat_1"
   )
 
-# Show a subset of gene names when more than 50 is selected.
-# causes problem with returned click info.
-#  if (length(row_index) > max_genes) {
-#    loci <- seq(
-#      from = 1,
-#      to = nrow(genes),
-#      by = round(nrow(m) / 30, 0)
-#    )
-#    anno <- ComplexHeatmap::anno_mark(
-#      at = loci,
-#      labels = row.names(m)[loci],
-#      which = "row",
-#      labels_gp = grid::gpar(fontsize = 10),
-#      padding = ggtree::unit(.5, "mm")
-#    )
-#    ht_select <- ht_select + ComplexHeatmap::rowAnnotation(mark = anno)
-#  }
+  # Show a subset of gene names when more than 50 is selected.
+  # causes problem with returned click info.
+  #  if (length(row_index) > max_genes) {
+  #    loci <- seq(
+  #      from = 1,
+  #      to = nrow(genes),
+  #      by = round(nrow(m) / 30, 0)
+  #    )
+  #    anno <- ComplexHeatmap::anno_mark(
+  #      at = loci,
+  #      labels = row.names(m)[loci],
+  #      which = "row",
+  #      labels_gp = grid::gpar(fontsize = 10),
+  #      padding = ggtree::unit(.5, "mm")
+  #    )
+  #    ht_select <- ht_select + ComplexHeatmap::rowAnnotation(mark = anno)
+  #  }
 
   return(list(
     ht_select = ht_select,
@@ -277,12 +273,12 @@ deg_heat_sub <- function(
 }
 
 #' HTML code for sub-heatmap selected cell
-#' 
+#'
 #' Create HTML code for a cell of information on the cell of the
 #' sub-heatmap that the User clicks on. The cell contains the
 #' expression value, the sample, the gene, the group and the
-#' direction of the fold change. 
-#' 
+#' direction of the fold change.
+#'
 #' @param click Information fro what cell is clicked in the
 #'  sub-heatmap
 #' @param ht_sub The drawn sub-heatmap
@@ -296,22 +292,20 @@ deg_heat_sub <- function(
 #' @param bar Vector to signify a positive (1) expression fold
 #'  change or a negative (-1) change
 #' @param data Sub data matrix that is plotted in the sub-heatmap
-#' 
+#'
 #' @export
 #' @return HTML code that will be used in the shiny UI to tell
 #'  the user the information of the cell they selected.
-deg_click_info <- function(
-  click,
-  ht_sub,
-  ht_sub_obj,
-  ht_pos_sub,
-  sub_groups,
-  group_colors,
-  bar,
-  data
-) {
+deg_click_info <- function(click,
+                           ht_sub,
+                           ht_sub_obj,
+                           ht_pos_sub,
+                           sub_groups,
+                           group_colors,
+                           bar,
+                           data) {
   pos1 <- InteractiveComplexHeatmap::getPositionFromClick(click)
-    
+
   pos <- InteractiveComplexHeatmap::selectPosition(
     ht_sub,
     mark = FALSE,
@@ -319,7 +313,7 @@ deg_click_info <- function(
     verbose = FALSE,
     ht_pos = ht_pos_sub
   )
-  
+
   row_index <- pos[1, "row_index"]
   column_index <- pos[1, "column_index"]
 
@@ -341,21 +335,22 @@ deg_click_info <- function(
   p <- "
 <div>
 <pre>
-@{gene} 
+@{gene}
 Value: @{round(value, 2)} <span style='background-color:@{col};width=50px;'>    </span>
 Sample: @{sample}
 Group: @{group_name} <span style='background-color:@{group_col};width=50px;'>    </span>
 "
 
-if(!is.null(bar)){
-  up_down <- bar[row_index]
-  up_down_col <- group_colors[[up_down]]
-  p <- paste0(p, 
-    "Regulation: @{up_down} <span style='background-color:@{up_down_col};width=50px;'>    </span>"  
-  )
-}
-p <- paste0(p, "</pre></div>")
-html <- GetoptLong::qq(p)
+  if (!is.null(bar)) {
+    up_down <- bar[row_index]
+    up_down_col <- group_colors[[up_down]]
+    p <- paste0(
+      p,
+      "Regulation: @{up_down} <span style='background-color:@{up_down_col};width=50px;'>    </span>"
+    )
+  }
+  p <- paste0(p, "</pre></div>")
+  html <- GetoptLong::qq(p)
 
- return(HTML(html))
+  return(HTML(html))
 }

@@ -1,4 +1,4 @@
-#' 10_doc 
+#' 10_doc
 #'
 #' @description A fct function
 #'
@@ -18,9 +18,7 @@ NULL
 #' @param sample_info Sample_info from the experiment file
 #'
 #' @return Returns a formatted gg density plot
-doc_hist <- function(
-  processed_data,
-  sampleID
-) {
+doc_hist <- function(processed_data,
+                     sampleID) {
   hist(processed_data[, as.integer(sampleID)])
 }

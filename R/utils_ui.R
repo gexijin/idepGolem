@@ -20,7 +20,7 @@ NULL
 #'
 #'
 #' @return names of a set
-#' 
+#'
 make_pull_down_menu <- function(funs) {
   return(setNames(1:length(funs), names(funs)))
 }

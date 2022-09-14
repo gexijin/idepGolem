@@ -14,8 +14,8 @@ mod_04_pca_ui <- function(id) {
     title = "PCA",
     sidebarLayout(
       sidebarPanel(
-        #width of shaded part of screen
-        #width = 3,
+        # width of shaded part of screen
+        # width = 3,
         conditionalPanel(
           condition = "input.PCA_panels == 'PCA'",
           fluidRow(
@@ -38,36 +38,35 @@ mod_04_pca_ui <- function(id) {
               )
             )
           ),
-          ns=ns
+          ns = ns
         ),
-        #select design elements dynamically
+        # select design elements dynamically
         conditionalPanel(
           condition = "input.PCA_panels != 'PCAtools Package'",
-            fluidRow(
-              column(
-                width = 6,
-                uiOutput(
-                  outputId = ns("listFactors2")
-                )
-              ),
-              column(
-                width = 6,
-                uiOutput(
-                  outputId = ns("listFactors1")
-                )
+          fluidRow(
+            column(
+              width = 6,
+              uiOutput(
+                outputId = ns("listFactors2")
               )
             ),
+            column(
+              width = 6,
+              uiOutput(
+                outputId = ns("listFactors1")
+              )
+            )
+          ),
           ns = ns
         ),
         conditionalPanel(
           condition = "input.PCA_panels == 't-SNE'",
-          fluidRow( 
+          fluidRow(
             actionButton(inputId = ns("seedTSNE"), label = "Re-calculate from new seed")
           ),
-          
-          ns=ns
+          ns = ns
         ),
-        #PCATools plot options
+        # PCATools plot options
         conditionalPanel(
           condition = "input.PCA_panels == 'PCAtools Package'",
           fluidRow(
@@ -91,7 +90,7 @@ mod_04_pca_ui <- function(id) {
             )
           ),
 
-          #Dynamic Color and Shape options
+          # Dynamic Color and Shape options
           fluidRow(
             column(
               width = 6,
@@ -106,27 +105,27 @@ mod_04_pca_ui <- function(id) {
               )
             )
           ),
-          #plot customization
+          # plot customization
           checkboxInput(
-            inputId = ns("showLoadings"), 
-            label = "Show Loadings", 
+            inputId = ns("showLoadings"),
+            label = "Show Loadings",
             value = FALSE
           ),
           checkboxInput(
-            inputId = ns("encircle"), 
-            label = "Encircle", 
+            inputId = ns("encircle"),
+            label = "Encircle",
             value = FALSE
           ),
           checkboxInput(
-            inputId = ns("pointLabs"), 
-            label = "Point Labels", 
+            inputId = ns("pointLabs"),
+            label = "Point Labels",
             value = TRUE
           ),
           numericInput(
-            inputId = ns("pointSize"), 
+            inputId = ns("pointSize"),
             label = "Point Size (1-10)",
-            value = 3.0, 
-            min = 1, 
+            value = 3.0,
+            min = 1,
             max = 15
           ),
           # Gene ID Selection -----------
@@ -136,22 +135,19 @@ mod_04_pca_ui <- function(id) {
             choices = NULL,
             selected = NULL
           ),
-          ns=ns
+          ns = ns
         ),
         # Download report button
         downloadButton(
           outputId = ns("report"),
           label = "Generate Report"
-        ), 
+        ),
         a(
           h5("Questions?", align = "right"),
           href = "https://idepsite.wordpress.com/pca/",
           target = "_blank"
         )
       ),
-
-
-
       mainPanel(
         tabsetPanel(
           id = ns("PCA_panels"),
@@ -240,22 +236,24 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
     ns <- session$ns
     # Store client info in a convenience variable
     cdata <- session$clientData
-    #get pca image dimensions
+    # get pca image dimensions
     output$image_dimensions <- renderText({
-      a_ratio <- cdata[['output_pca-pca_plot_obj_width']] / cdata[['output_pca-pca_plot_obj_height']]
-      paste("Plot size (pixels): ",
-            cdata[['output_pca-pca_plot_obj_width']],
-            " x ",
-            cdata[['output_pca-pca_plot_obj_height']],
-            "\nAspect Ratio: ", cdata[['output_pca-pca_plot_obj_width']] / cdata[['output_pca-pca_plot_obj_height']],
-            "\nPlot size (inches): ", "6.5 x ", round(6.5/a_ratio, 3))
+      a_ratio <- cdata[["output_pca-pca_plot_obj_width"]] / cdata[["output_pca-pca_plot_obj_height"]]
+      paste(
+        "Plot size (pixels): ",
+        cdata[["output_pca-pca_plot_obj_width"]],
+        " x ",
+        cdata[["output_pca-pca_plot_obj_height"]],
+        "\nAspect Ratio: ", cdata[["output_pca-pca_plot_obj_width"]] / cdata[["output_pca-pca_plot_obj_height"]],
+        "\nPlot size (inches): ", "6.5 x ", round(6.5 / a_ratio, 3)
+      )
     })
-    
+
     # PCA plot ------------
     # reactive part -----
     pca_plot <- reactive({
       req(!is.null(pre_process$data()))
-      
+
       p <- PCA_plot(
         data = pre_process$data(),
         sample_info = pre_process$sample_info(),
@@ -271,11 +269,13 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
 
     # Download Button
     download_pca <- ottoPlots::mod_download_figure_server(
-      id = "download_pca", 
-      filename = "pca_plot", 
-      figure = reactive({ pca_plot() }) # stays as a reactive variable
+      id = "download_pca",
+      filename = "pca_plot",
+      figure = reactive({
+        pca_plot()
+      }) # stays as a reactive variable
     )
-    
+
     # PC Factor Correlation ---------
     output$pc_correlation <- renderText({
       req(!is.null(pre_process$data()))
@@ -283,16 +283,15 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
         data = pre_process$data(),
         sample_info = pre_process$sample_info()
       )
-      
     })
 
-    
+
     # t_SNE plot -----------------
     t_SNE_plot_obj <- reactive({
       req(!is.null(pre_process$data()))
-      
+
       input$seedTSNE
-      
+
       t_SNE_plot(
         data = pre_process$data(),
         sample_info = pre_process$sample_info(),
@@ -305,13 +304,15 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
     })
     # Download Button
     download_t_sne <- ottoPlots::mod_download_figure_server(
-      id = "download_t_sne", 
-      filename = "t_sne_plot", 
-      figure = reactive({ t_SNE_plot_obj() }) # stays as a reactive variable
+      id = "download_t_sne",
+      filename = "t_sne_plot",
+      figure = reactive({
+        t_SNE_plot_obj()
+      }) # stays as a reactive variable
     )
-    
+
     # MDS plot ------------
-    
+
     mds_plot <- reactive({
       req(!is.null(pre_process$data()))
 
@@ -320,7 +321,6 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
         sample_info = pre_process$sample_info(),
         selected_shape = input$selectFactors2,
         selected_color = input$selectFactors1
-
       )
     })
     output$mds_plot_obj <- renderPlot({
@@ -328,12 +328,14 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
     })
     # Download Button
     download_mds <- ottoPlots::mod_download_figure_server(
-      id = "download_mds", 
-      filename = "mds_plot", 
-      figure = reactive({mds_plot() }) # stays as a reactive variable
+      id = "download_mds",
+      filename = "mds_plot",
+      figure = reactive({
+        mds_plot()
+      }) # stays as a reactive variable
     )
-    
-    #PCAtools biplot  ---------------------
+
+    # PCAtools biplot  ---------------------
     biplot <- reactive({
       req(!is.null(pre_process$data()))
       withProgress(message = "Generating Plots", {
@@ -355,44 +357,47 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
         )
       })
     })
-    
+
     output$pcatools_biplot <- renderPlot({
       print(biplot())
     })
 
-    
+
     # Download Button
     download_biplot <- ottoPlots::mod_download_figure_server(
-      id = "download_biplot", 
-      filename = "biplot", 
-      figure = reactive({biplot() }) # stays as a reactive variable
+      id = "download_biplot",
+      filename = "biplot",
+      figure = reactive({
+        biplot()
+      }) # stays as a reactive variable
     )
-    
-    #PCAtools Scree Plot --------------------
+
+    # PCAtools Scree Plot --------------------
     scree <- reactive({
       req(!is.null(pre_process$data()))
-      
+
       PCA_Scree(
         processed_data = pre_process$data()
       )
-      
     })
     output$pcatools_scree <- renderPlot({
       print(scree())
-    }) 
-    
+    })
+
     # Download Button
     download_scree <- ottoPlots::mod_download_figure_server(
-      id = "download_scree", 
-      filename = "scree", 
-      figure = reactive({scree() }) # stays as a reactive variable
+      id = "download_scree",
+      filename = "scree",
+      figure = reactive({
+        scree()
+      }) # stays as a reactive variable
     )
-    
-    
-    #PCAtools Eigencor Plot --------------------
+
+
+    # PCAtools Eigencor Plot --------------------
     eigencor <- reactive({
       req(!is.null(pre_process$data()))
-      
+
       p <- PCAtools_eigencorplot(
         processed_data = pre_process$data(),
         sample_info = pre_process$sample_info()
@@ -405,44 +410,50 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
 
     # Download Button
     download_eigencor <- ottoPlots::mod_download_figure_server(
-      id = "download_eigencor", 
-      filename = "eigencor", 
-      figure = reactive({ eigencor() }) # stays as a reactive variable
+      id = "download_eigencor",
+      filename = "eigencor",
+      figure = reactive({
+        eigencor()
+      }) # stays as a reactive variable
     )
     # select color
     output$listFactors1 <- renderUI({
       req(!is.null(pre_process$data()))
 
-      if (is.null(pre_process$sample_info()) )
-      { return(NULL) }	 else { 
+      if (is.null(pre_process$sample_info())) {
+        return(NULL)
+      } else {
         selectInput(
           inputId = ns("selectFactors1"),
           label = "Color ",
-          choices = c( colnames(pre_process$sample_info()), "Names")
-                    , selected = "Names")   } 
+          choices = c(colnames(pre_process$sample_info()), "Names"),
+          selected = "Names"
+        )
+      }
     })
 
-    #select shape
+    # select shape
     output$listFactors2 <- renderUI({
       req(!is.null(pre_process$data()))
 
-      if (is.null(pre_process$sample_info()) )
-      { return(NULL) }
-      else { 
-        tem <- c( colnames(pre_process$sample_info()), "Names")
-        selectInput(inputId = ns("selectFactors2"),
-                    label="Shape",
-                    choices=tem,
-                    selected = "Names"
-                    )
-      } 
+      if (is.null(pre_process$sample_info())) {
+        return(NULL)
+      } else {
+        tem <- c(colnames(pre_process$sample_info()), "Names")
+        selectInput(
+          inputId = ns("selectFactors2"),
+          label = "Shape",
+          choices = tem,
+          selected = "Names"
+        )
+      }
     })
 
     # select color & shape for pcatools
     output$pcatools_color <- renderUI({
       req(!is.null(pre_process$data()))
-      if (is.null(pre_process$sample_info()) ) { 
-        return(NULL) 
+      if (is.null(pre_process$sample_info())) {
+        return(NULL)
       }
 
       selectInput(
@@ -456,7 +467,7 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       req(!is.null(pre_process$data()))
 
       if (is.null(pre_process$sample_info())) {
-        return(NULL ) 
+        return(NULL)
       }
       selectInput(
         inputId = ns("selectShape"),
@@ -478,28 +489,28 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       )
     })
 
-    
+
     # Markdown report------------
     output$report <- downloadHandler(
-      
+
       # For PDF output, change this to "report.pdf"
       filename = "pca_report.html",
       content = function(file) {
         withProgress(message = "Generating Report", {
           incProgress(0.2)
 
-      
+
           # Copy the report file to a temporary directory before processing it, in
           # case we don't have write permissions to the current working dir (which
           # can happen when deployed).
           tempReport <- file.path(tempdir(), "pca_workflow.Rmd")
-          #tempReport
+          # tempReport
           tempReport <- gsub("\\", "/", tempReport, fixed = TRUE)
-          
-          #This should retrieve the project location on your device:
-          #"C:/Users/bdere/Documents/GitHub/idepGolem"
+
+          # This should retrieve the project location on your device:
+          # "C:/Users/bdere/Documents/GitHub/idepGolem"
           wd <- getwd()
-          
+
           markdown_location <- paste0(wd, "/vignettes/Reports/pca_workflow.Rmd")
           file.copy(from = markdown_location, to = tempReport, overwrite = TRUE)
           # Set up parameters to pass to Rmd document
@@ -521,27 +532,22 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
             point_size = input$pointSize,
             ui_color = input$selectColor,
             ui_shape = input$selectShape
-            
           )
-          
+
           # stops report generation if params are missing
-          req(params) 
+          req(params)
           # Knit the document, passing in the `params` list, and eval it in a
           # child of the global environment (this isolates the code in the document
           # from the code in this app).
           rmarkdown::render(
-            input = tempReport,#markdown_location, 
+            input = tempReport, # markdown_location,
             output_file = file,
             params = params,
             envir = new.env(parent = globalenv())
           )
         })
-
       }
-
     )
-    
-    
   })
 }
 
