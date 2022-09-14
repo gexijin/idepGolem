@@ -11,18 +11,18 @@ get_biclustering(data, n_genes, biclust_method)
 
 \item{n_genes}{Number of most variable genes to include in the analysis}
 
-\item{biclust_method}{Method of biclustering to perform (biclust::BCCC(), 
-QUBIC::BCQU(), runibic::BCUnibic(), biclust::BCXmotifs(), 
-biclust::BCPlaid(), biclust::BCSpectral(), biclust::BCBimax(), 
+\item{biclust_method}{Method of biclustering to perform (biclust::BCCC(),
+QUBIC::BCQU(), runibic::BCUnibic(), biclust::BCXmotifs(),
+biclust::BCPlaid(), biclust::BCSpectral(), biclust::BCBimax(),
 biclust::BCQuest())}
 }
 \value{
 A list containing two object. \code{data} is the submatrix from the
  processed data with the biclust function \code{discetize} performed on it.
- For information on this function visit 
+ For information on this function visit
  https://rdrr.io/cran/biclust/man/discretize.html. \code{res} is the return
  from using the \code{biclust} function with the selected method. For
- information on this function visit 
+ information on this function visit
  https://www.rdocumentation.org/packages/biclust/versions/2.0.3/topics/biclust.
 }
 \description{

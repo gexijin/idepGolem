@@ -44,7 +44,7 @@ set of genes that correspond to a particular pathway in
 the database (from read_gene_sets function)}
 }
 \value{
-A data frame with the pathway analysis statistics and 
+A data frame with the pathway analysis statistics and
  the gene sets for each significantly enriched pathway.
 }
 \description{

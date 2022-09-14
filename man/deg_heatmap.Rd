@@ -23,7 +23,7 @@ A drawn heatmap from the filtered data.
 }
 \description{
 Create a ComplexHeatmap of the processed expression data for
-the genes that were significantly expressed in the selected 
+the genes that were significantly expressed in the selected
 comparison. The data for this heatmap comes from the
 deg_heat_data function.
 }

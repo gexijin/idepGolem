@@ -235,19 +235,27 @@ mod_03_clustering_ui <- function(id) {
                   width = "100%",
                   brush = ns("ht_brush")
                 ),
-                ottoPlots::mod_download_figure_ui(
-                  ns("dl_heatmap_main")
-                ),
-                ottoPlots::mod_download_figure_ui(
-                  ns("dl_heatmap_sub")
+                fluidRow(
+                  column(
+                    width = 6,
+                    ottoPlots::mod_download_figure_ui(
+                      ns("dl_heatmap_main")
+                    )
+                  ),
+                  column(
+                    width = 6,
+                    ottoPlots::mod_download_figure_ui(
+                      ns("dl_heatmap_sub")
+                    )
+                  )
                 ),
                 uiOutput(
                   outputId = ns("ht_click_content")
                 ),
                 checkboxInput(
                   inputId = ns("cluster_enrichment"),
-                  label = h5("Enrichment in
-                    selected genes or k-means clusters(below)"),
+                  label = h5("GO Enrichment in
+                    selected genes or k-means clusters (below)"),
                   value = TRUE
                 )
               ),
@@ -438,7 +446,8 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       filename = "sd_density_plot",
       figure = reactive({
         sd_density_plot()
-      })
+      }),
+      label = ""
     )
 
 
@@ -556,7 +565,8 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         heatmap_main_object()
       }),
       width = 6,
-      height = 16
+      height = 16,
+      label = "Top"
     )
 
     # Heatmap Click Value ---------
@@ -678,7 +688,8 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         heatmap_sub_object()
       }),
       width = 8,
-      height = 12
+      height = 12,
+      label = "Right"
     )
 
     # gene lists for enrichment analysis
@@ -775,7 +786,8 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       filename = "sample_tree",
       figure = reactive({
         sample_tree()
-      })
+      }),
+      label = ""
     )
 
     observeEvent(input$cluster_meth, {

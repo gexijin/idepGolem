@@ -11,7 +11,7 @@ get_wgcna(data, n_genes, soft_power, min_module_size)
 
 \item{n_genes}{Number of most variable genes to use in the function}
 
-\item{soft_power}{Value between 1-20 
+\item{soft_power}{Value between 1-20
 (https://support.bioconductor.org/p/87024/)}
 
 \item{min_module_size}{For modules detected by WGCNA, set a minimum size}
@@ -22,7 +22,7 @@ A list of 8 objects. \code{data} is a submatrix of the input
  \code{n_genes}. \code{powers} is a numeric vector from 1-10 and then the
  even numbers from 10-20. \code{sft} is a return from the WGCNA package that
  is a list containing \code{powerEstimate} and \code{fitIndices}. For
- information on these objects visit 
+ information on these objects visit
  https://www.rdocumentation.org/packages/WGCNA/versions/1.70-3/topics/pickSoftThreshold.
  \code{tom} is another return from the WGCNA package, for information on this
  matrix visit https://www.rdocumentation.org/packages/WGCNA/versions/1.70-3/topics/TOMsimilarityFromExpr.

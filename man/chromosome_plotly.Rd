@@ -34,7 +34,7 @@ chromosome_plotly(
 
 \item{label_gene_symbol}{Paste the gene symbol label on the plot}
 
-\item{ma_window_size}{Moving average window size for a chromosome 
+\item{ma_window_size}{Moving average window size for a chromosome
 (1, 2, 4, 6, 8, 10, 15, 20)}
 
 \item{ma_window_steps}{Number of moving average window steps (1, 2, 3, 4)}

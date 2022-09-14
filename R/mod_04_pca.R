@@ -273,7 +273,8 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       filename = "pca_plot",
       figure = reactive({
         pca_plot()
-      }) # stays as a reactive variable
+      }),
+      label = ""
     )
 
     # PC Factor Correlation ---------
@@ -308,7 +309,8 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       filename = "t_sne_plot",
       figure = reactive({
         t_SNE_plot_obj()
-      }) # stays as a reactive variable
+      }),
+      label = ""
     )
 
     # MDS plot ------------
@@ -332,7 +334,8 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       filename = "mds_plot",
       figure = reactive({
         mds_plot()
-      }) # stays as a reactive variable
+      }),
+      label = ""
     )
 
     # PCAtools biplot  ---------------------
@@ -369,7 +372,8 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       filename = "biplot",
       figure = reactive({
         biplot()
-      }) # stays as a reactive variable
+      }),
+      label = ""
     )
 
     # PCAtools Scree Plot --------------------
@@ -390,7 +394,8 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       filename = "scree",
       figure = reactive({
         scree()
-      }) # stays as a reactive variable
+      }),
+      label = ""
     )
 
 
@@ -414,7 +419,8 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       filename = "eigencor",
       figure = reactive({
         eigencor()
-      }) # stays as a reactive variable
+      }),
+      label = ""
     )
     # select color
     output$listFactors1 <- renderUI({

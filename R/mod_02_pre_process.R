@@ -508,7 +508,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       filename = "total_counts_barplot",
       figure = reactive({
         total_counts()
-      })
+      }),
+      label = ""
     )
 
     # Scatter eda plot ----------
@@ -529,7 +530,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       filename = "scatter_plot",
       figure = reactive({
         scatter()
-      })
+      }),
+      label = ""
     )
 
     # Box eda plot ----------
@@ -549,7 +551,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       filename = "transformed_boxplot",
       figure = reactive({
         eda_box()
-      })
+      }),
+      label = ""
     )
 
     # Density eda plot ----------
@@ -569,7 +572,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       filename = "density_plot",
       figure = reactive({
         density()
-      })
+      }),
+      label = ""
     )
 
     # Standard deviation vs mean plot ----------
@@ -614,7 +618,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       filename = "transform_plot",
       figure = reactive({
         dev()
-      })
+      }),
+      label = ""
     )
 
     # Merge Data Sets with Gene names ----------
@@ -740,7 +745,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       filename = "gene_plot",
       figure = reactive({
         gene_plot()
-      })
+      }),
+      label = ""
     )
 
 

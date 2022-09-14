@@ -63,11 +63,11 @@ from pre-processing}
 \item{p_vals}{The vector of p-vals calculated in pre-process for
 significant expression}
 
-\item{threshold_wald_test}{whether to use threshold-based Wald test 
-to test null hypothesis that the absolute value of fold-change is 
+\item{threshold_wald_test}{whether to use threshold-based Wald test
+to test null hypothesis that the absolute value of fold-change is
 bigger than a value}
 
-\item{independent_filtering}{whether or not to conduct independent 
+\item{independent_filtering}{whether or not to conduct independent
 filtering in DESeq2 results function.}
 }
 \value{
