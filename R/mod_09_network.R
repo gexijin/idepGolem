@@ -64,50 +64,7 @@ mod_09_network_ui <- function(id) {
           "<hr style='height:1px;border:none;color:#333;background-color:#333;' />"
         ),
         htmlOutput(outputId = ns("list_wgcna_modules")),
-        fluidRow(
-          column(
-            width = 6,
-            numericInput(
-              inputId = ns("edge_threshold"),
-              label = h5("Edge Threshold"),
-              min = 0,
-              max = 1,
-              value = .4,
-              step = .1
-            )
-          ),
-          column(
-            width = 6,
-            numericInput(
-              inputId = ns("top_genes_network"),
-              label = h5("Top genes"),
-              min = 10,
-              max = 2000,
-              value = 10,
-              step = 10
-            )
-          )
-        ),
-        tags$style(
-          type = "text/css",
-          "#network-edge_threshold{ width:100%;   margin-top:-12px}"
-        ),
-        tags$style(
-          type = "text/css",
-          "#network-top_genes_network{ width:100%;   margin-top:-12px}"
-        ),
-        br(),
-        h5(
-          "The network file can be imported to",
-          a("VisANT", href = "http://visant.bu.edu/", target = "_blank"),
-          " or ",
-          a("Cytoscape.", href = "http://www.cytoscape.org/", target = "_blank")
-        ),
-        # Show Network message
-        actionButton(
-          inputId = ns("show_messages"),
-          label = "Show Network Summary"
-        ),
+        textOutput(ns("module_statistic")),
         a(
           h5("Questions?", align = "right"),
           href = "https://idepsite.wordpress.com/network/",
@@ -128,12 +85,64 @@ mod_09_network_ui <- function(id) {
           tabPanel(
             "Network Plot",
             br(),
-            actionButton(
-              inputId = ns("network_layout"),
-              label = "Change network layout",
-              style = "float:center"
+            fluidRow(
+              column(
+                width = 4,
+                numericInput(
+                  inputId = ns("edge_threshold"),
+                  label = h5("Edge Threshold"),
+                  min = 0,
+                  max = 1,
+                  value = .4,
+                  step = .1
+                )
+              ),
+              column(
+                width = 4,
+                numericInput(
+                  inputId = ns("top_genes_network"),
+                  label = h5("Top genes"),
+                  min = 10,
+                  max = 2000,
+                  value = 10,
+                  step = 10
+                )
+              ),
+              column(
+                width = 4,
+                style = "margin-top: 25px;",
+                actionButton(
+                  inputId = ns("network_layout"),
+                  label = "Change network layout",
+                  style = "float:center"
+                )
+              )
             ),
+            tags$style(
+              type = "text/css",
+              "#network-edge_threshold{ width:100%;   margin-top:-12px}"
+            ),
+            tags$style(
+              type = "text/css",
+              "#network-top_genes_network{ width:100%;   margin-top:-12px}"
+            ),
+            br(),
             plotOutput(outputId = ns("module_network"))
+#            ,h5(
+#              "The network file can be imported to",
+#              a("VisANT", href = "http://visant.bu.edu/", target = "_blank"),
+#              " or ",
+#              a("Cytoscape.", href = "http://www.cytoscape.org/", target = "_blank")
+#            ),
+          ),
+          tabPanel(
+            title = "Heatmap",
+            mod_12_heatmap_ui(ns("12_heatmap_1"))
+          ),
+          tabPanel(
+            "Enrichment",
+            h4("Enriched pathways in the selected module"),
+            mod_11_enrichment_ui(ns("enrichment_table_cluster"))
           ),
           tabPanel(
             "Scale Independence",
@@ -152,15 +161,6 @@ mod_09_network_ui <- function(id) {
               width = "100%",
               height = "500px"
             )
-          ),
-          tabPanel(
-            "Enrichment",
-            h4("Enriched pathways in the selected module"),
-            mod_11_enrichment_ui(ns("enrichment_table_cluster"))
-          ),
-          tabPanel(
-            title = "Heatmap",
-            mod_12_heatmap_ui(ns("12_heatmap_1"))
           )
         )
       )
@@ -316,7 +316,7 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
       )
     })
 
-    module_statistic <- reactive({
+    output$module_statistic <- renderText({
       req(!is.null(wgcna()))
       paste(
         "A network of",
@@ -327,18 +327,6 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
       )
     })
 
-    # Show messages when on the Network tab or button is clicked
-    observe({
-      req(input$show_messages || tab() == "Network")
-      req(!is.null(module_statistic()))
-
-      showNotification(
-        ui = module_statistic(),
-        id = "network_summary",
-        duration = NULL,
-        type = "default"
-      )
-    })
 
     # Remove messages if the tab changes --------
     observe({
