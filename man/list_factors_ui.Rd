@@ -19,8 +19,8 @@ A list containing a string title and a vector of
  comparisons to choose from.
 }
 \description{
-Create a list of options for comparisons from the 
-sample_info. Also create a title to be used in a 
+Create a list of options for comparisons from the
+sample_info. Also create a title to be used in a
 UI checkbox based off the date file format and the
 DEG method. The list of options will become
 checkboxes for the user to create their experiment

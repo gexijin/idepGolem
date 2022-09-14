@@ -24,7 +24,7 @@ load the demo data files}
 
 \item{demo_data_file}{Expression demo data path (idep_data$demo_data_file)}
 
-\item{demo_metadata_file}{Experiment demo data path 
+\item{demo_metadata_file}{Experiment demo data path
 (idep_data$demo_metadata_file)}
 }
 \value{

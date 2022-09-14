@@ -45,6 +45,6 @@ A ggplot with the X-axis the mean expression value and
  the Y-axis the calculated fold-change from the DEG analysis.
 }
 \description{
-Draw a ggplot of the overal mean expression for each gene 
+Draw a ggplot of the overal mean expression for each gene
 and the calculated fold change for the selected comparison.
 }

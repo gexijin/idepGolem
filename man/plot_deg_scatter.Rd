@@ -45,7 +45,7 @@ A formatted ggplot with the X-axis as the mean expression
  the other contrast group.
 }
 \description{
-Create a scatter plot of the expression value for each gene 
+Create a scatter plot of the expression value for each gene
 in the two groups for the selected contrast. For the selected
 contrast, the mean expression is calculated for a gene in both
 group of samples in the contrast and plotted in a scatter plot.

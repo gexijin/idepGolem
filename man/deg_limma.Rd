@@ -53,6 +53,6 @@ The return value is the results of the DEG analysis. These
         processed_data = processed_data,
 }
 \description{
-Used in the limma_value function to perform DEG analysis using the 
+Used in the limma_value function to perform DEG analysis using the
 limma package. It is not recommended to use this function on its own.
 }

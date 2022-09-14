@@ -766,7 +766,9 @@ mod_11_enrichment_server <- function(id,
       filename = "enrichment_barplot",
       figure = reactive({
         enrich_barplot_object()
-      })
+      }),
+      width = 8,
+      height = 6
     )
   })
 }

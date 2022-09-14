@@ -19,6 +19,6 @@ Returns a character string of an interaction term
 }
 \description{
 This functions uses the sample info file and the selected
-model factors to create interaction terms to be used in the 
+model factors to create interaction terms to be used in the
 DEG process.
 }

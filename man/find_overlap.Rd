@@ -48,7 +48,7 @@ contain information for the matched species}
 \item{use_filtered_background}{T/F Use the genes that
 passed the pre_process filter as the backgrounf}
 
-\item{select_org}{Input for what organism the IDs are 
+\item{select_org}{Input for what organism the IDs are
 pertaining to}
 
 \item{reduced}{T/F Remove gene sets that are redudant
