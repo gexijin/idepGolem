@@ -863,17 +863,23 @@ read_gene_sets <- function(converted,
     go <- "GOBP"
   }
 
+  sql_query <- "SELECT DISTINCT gene, pathwayID FROM pathway WHERE "
+
+  # faster if category is first
+  if (go != "All") {
+    sql_query <- paste0(sql_query, "  category ='", go, "' AND ")
+  }
+
   # Get Gene sets
   sql_query <- paste(
-    "select distinct gene, pathwayID from pathway where gene IN ('",
+    sql_query,
+    " gene IN ('",
     paste(query_set, collapse = "', '"),
     "')",
     sep = ""
   )
 
-  if (go != "All") {
-    sql_query <- paste0(sql_query, " AND category ='", go, "'")
-  }
+
   result <- DBI::dbGetQuery(pathway, sql_query)
   if (dim(result)[1] == 0) {
     return(list(x = as.data.frame("No matching species or gene ID file!")))
@@ -895,7 +901,7 @@ read_gene_sets <- function(converted,
   pathway_info <- DBI::dbGetQuery(
     pathway,
     paste(
-      "select distinct id,Description from pathwayInfo where id IN ('",
+      "select distinct id,Description,memo from pathwayInfo where id IN ('",
       paste(pathway_ids[, 1], collapse = "', '"),
       "') ",
       sep = ""
@@ -904,7 +910,12 @@ read_gene_sets <- function(converted,
   ix <- match(pathway_ids[, 1], pathway_info[, 1])
   names(gene_sets) <- pathway_info[ix, 2]
   DBI::dbDisconnect(pathway)
-  return(gene_sets)
+  return(
+    list(
+      gene_lists = gene_sets,
+      pathway_info = pathway_info
+    )
+  )
 }
 
 #' Convert IDs from ensembl to entrez

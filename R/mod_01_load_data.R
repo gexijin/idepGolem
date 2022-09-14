@@ -131,7 +131,7 @@ mod_01_load_data_ui <- function(id) {
             selectInput(
               inputId = ns("select_demo"),
               label = NULL,
-              choices = " ",
+              choices = NULL,
               multiple = FALSE
             )
           )
@@ -354,7 +354,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # Change demo data based on selected format
     # returns a vector with file names  c(data, design)
     demo_data_file <- reactive({
-      req((input$select_demo != " "))
+      req(input$select_demo)
 
       files <- idep_data$demo_file_info
       ix <- which(files$ID == input$select_demo)
