@@ -895,7 +895,7 @@ read_gene_sets <- function(converted,
   pathway_info <- DBI::dbGetQuery(
     pathway,
     paste(
-      "select distinct id,Description from pathwayInfo where id IN ('",
+      "select distinct id,Description,memo from pathwayInfo where id IN ('",
       paste(pathway_ids[, 1], collapse = "', '"),
       "') ",
       sep = ""
@@ -904,7 +904,12 @@ read_gene_sets <- function(converted,
   ix <- match(pathway_ids[, 1], pathway_info[, 1])
   names(gene_sets) <- pathway_info[ix, 2]
   DBI::dbDisconnect(pathway)
-  return(gene_sets)
+  return(
+    list(
+      gene_lists = gene_sets,
+      pathway_info = pathway_info
+    )
+  )
 }
 
 #' Convert IDs from ensembl to entrez
