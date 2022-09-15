@@ -14,8 +14,9 @@ mod_01_load_data_ui <- function(id) {
     sidebarLayout(
 
       ##################################################################
-      #       Load Data sidebar panel
+      #       Load Data sidebar panel ----
       ##################################################################
+
       sidebarPanel(
         fluidRow(
           column(
@@ -111,6 +112,19 @@ mod_01_load_data_ui <- function(id) {
           ),
           ns = ns
         ),
+
+        # Load expression data options ----------
+        # Includes load demo action button, demo data dropdown, and expression
+        # file upload box
+        uiOutput(ns("load_data_ui")),
+
+        # alternative UI output message for once expression data is loaded
+        uiOutput(ns("load_data_alt")),
+
+        # Experiment design file input ----------
+        uiOutput(ns("design_file_ui")),
+
+        # Yes or no to converting IDs -------------
         fluidRow(
           column(
             width = 6,
@@ -187,10 +201,8 @@ mod_01_load_data_ui <- function(id) {
       ),
 
 
-
-
       ##################################################################
-      #       Load Data panel main
+      #       Load Data panel main ----
       ##################################################################
       mainPanel(
         shinyjs::useShinyjs(),
@@ -202,51 +214,16 @@ mod_01_load_data_ui <- function(id) {
 
         # Display first 20 rows of the data ----------
         DT::dataTableOutput(ns("sample_20")),
+        div(
+          id = ns("load_message"),
+          h4("Loading R packages, please wait ... ... ...")
+        ),
 
-        # hide welcome screen after data is loaded
-        conditionalPanel("input.go_button == 0 & input.data_format_help == 0",
-          # Instructions and flowchart ------------
-          fluidRow(
-            column(
-              width = 5,
-              h4("Welcome to iDEP!")
-            ),
-            column(
-              width = 6,
-              img(
-                src = "www/idep_logo.png",
-                width = "43",
-                height = "50"
-              )
-            )
-          ),
-          div(
-            id = ns("load_message"),
-            h4("Loading R packages, please wait ... ... ...")
-          ),
-          htmlOutput(ns("file_format")),
-          includeHTML("inst/app/www/messages.html"),
-          br(),
-          img(
-            src = "www/flowchart.png",
-            align = "center",
-            width = "562",
-            height = "383"
-          ),
-          br(),
-          img(
-            src = "www/figs.gif",
-            align = "center",
-            width = "640",
-            height = "480"
-          ),
-          ns = ns
-        ),
-        # show help information for data format
-        conditionalPanel("input.data_format_help != 0",
-          includeHTML("inst/app/www/format.html"),
-          ns = ns
-        ),
+        # Hide welcome screen after data is loaded -----
+        uiOutput(ns("welcome_ui")),
+
+        # Display file format help html document when prompted ----
+        uiOutput(ns("format_help_ui"))
       )
     )
   )
@@ -270,6 +247,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # increase max input file size
     options(shiny.maxRequestSize = 2001024^2)
 
+    # Pop-up modal for gene assembl information ----
     observeEvent(input$genome_assembl_button, {
       shiny::showModal(
         shiny::modalDialog(
@@ -294,6 +272,115 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       )
     })
 
+
+    # UI elements for load demo action button, demo data drop down, and -----
+    # expression file upload
+    output$load_data_ui <- renderUI({
+      req(
+        (is.null(input$go_button) || input$go_button == 0) &&
+          is.null(input$expression_file)
+      )
+      req(input$data_file_format)
+
+      # get demo data files based on specified format
+      files <- idep_data$demo_file_info
+      files <- files[files$type == input$data_file_format, ]
+      choices <- setNames(as.list(files$ID), files$name)
+
+      tagList(
+        fluidRow(
+          column(
+            width = 6,
+            actionButton(
+              inputId = ns("go_button"),
+              label = "Load demo:"
+            ),
+            tags$head(tags$style(
+              "#load_data-go_button{color: red;
+              font-size: 16px;}"
+            ))
+          ),
+          column(
+            width = 6,
+            selectInput(
+              inputId = ns("select_demo"),
+              label = NULL,
+              choices = choices,
+              selected = choices[[1]]
+            )
+          )
+        ),
+
+        # Expression data file input
+        fileInput(
+          inputId = ns("expression_file"),
+          label = "3. Upload expression data (CSV or text)",
+          accept = c(
+            "text/csv",
+            "text/comma-separated-values",
+            "text/tab-separated-values",
+            "text/plain",
+            ".csv",
+            ".tsv"
+          )
+        )
+      )
+    })
+
+    # Alternate ui message to reset app once data is loaded ----
+    output$load_data_alt <- renderUI({
+      req(!(
+        (is.null(input$go_button) || input$go_button == 0) &&
+          is.null(input$expression_file)
+      ))
+
+      # reset message and action button
+      tagList(
+        fluidRow(
+          column(
+            width = 8,
+            tags$style("h5 { color: red;}"),
+            h5(
+              "To load different expression data, please reset the application",
+              icon("arrow-right")
+            ),
+          ),
+          column(
+            width = 4,
+            actionButton(
+              ns("reset_data"),
+              label = "Reset app"
+            )
+          )
+        )
+      )
+    })
+
+    observeEvent(input$reset_data, {
+      session$reload()
+    })
+
+    # UI element for design file upload ----
+    output$design_file_ui <- renderUI({
+      req(is.null(input$go_button) || input$go_button == 0)
+
+      tagList(
+        fileInput(
+          inputId = ns("experiment_file"),
+          label = ("4. Optional: Upload an experiment design file(CSV or text)"),
+          accept = c(
+            "text/csv",
+            "text/comma-separated-values",
+            "text/tab-separated-values",
+            "text/plain",
+            ".csv",
+            ".tsv"
+          )
+        )
+      )
+    })
+
+
     # Provide species list for dropdown selection -----------
     observe({
       updateSelectizeInput(
@@ -305,7 +392,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       )
     })
 
-    # Show messages when on the Network tab or button is clicked
+    # Show messages when on the Network tab or button is clicked ----
     observe({
       req(is.null(loaded_data()$data) && (
         tab() != "Load Data" || tab() != "About"
@@ -333,21 +420,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       htmltools::HTML(paste(i, collapse = "<br/>"))
     })
 
-    # Provide list of demo files -----------
-    observe({
-      files <- idep_data$demo_file_info
-      # only keep files of specified format
-      files <- files[files$type == input$data_file_format, ]
-      choices <- setNames(as.list(files$ID), files$name)
-      updateSelectInput(
-        session = session,
-        inputId = "select_demo",
-        choices = choices,
-        selected = choices[[1]]
-      )
-    })
-
-    # Change demo data based on selected format
+    # Change demo data based on selected format ----
     # returns a vector with file names  c(data, design)
     demo_data_file <- reactive({
       req(input$select_demo)
@@ -362,6 +435,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
     # Reactive element to load the data from the user or demo data ---------
     loaded_data <- reactive({
+      req(!is.null(input$go_button))
       input_data(
         expression_file = input$expression_file,
         experiment_file = input$experiment_file,
@@ -370,11 +444,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         demo_metadata_file = demo_data_file()[2]
       )
     })
-
-    # observeEvent(input$data_file_format, {
-    #   req(loaded_data())
-    #   loaded_data() <- NULL
-    # })
 
     # Sample information table -----------
     output$sample_info_table <- DT::renderDataTable({
@@ -410,10 +479,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         ),
         rownames = TRUE
       )
-    })
-
-    observeEvent(input$reset_app, {
-      session$reload()
     })
 
     # Get converted IDs ----------
@@ -487,9 +552,14 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       }
     })
 
+    observeEvent(input$reset_app, {
+      session$reload()
+    })
+
     # Species match table ----------
     output$species_match <- renderTable(
       {
+        req(!is.null(input$go_button))
         if (is.null(input$expression_file) && input$go_button == 0) {
           return(NULL)
         }
@@ -544,6 +614,49 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       req(tab() != "Load Data")
 
       removeNotification("species_match")
+    })
+
+    output$welcome_ui <- renderUI({
+      req(input$go_button == 0 & !is.null(input$go_button))
+
+      tagList(
+        fluidRow(
+          column(
+            width = 5,
+            h3("Welcome to iDEP!")
+          ),
+          column(
+            width = 6,
+            img(
+              src = "www/idep_logo.png",
+              width = "43",
+              height = "50"
+            )
+          )
+        ),
+        htmlOutput(ns("file_format")),
+        includeHTML("inst/app/www/messages.html"),
+        br(),
+        img(
+          src = "www/flowchart.png",
+          align = "center",
+          width = "562",
+          height = "383"
+        ),
+        br(),
+        img(
+          src = "www/figs.gif",
+          align = "center",
+          width = "640",
+          height = "480"
+        )
+      )
+    })
+
+    output$format_help_ui <- renderUI({
+      req(input$data_format_help != 0)
+
+      includeHTML("inst/app/www/format.html")
     })
 
 
