@@ -128,12 +128,12 @@ mod_09_network_ui <- function(id) {
             ),
             br(),
             plotOutput(outputId = ns("module_network"))
-#            ,h5(
-#              "The network file can be imported to",
-#              a("VisANT", href = "http://visant.bu.edu/", target = "_blank"),
-#              " or ",
-#              a("Cytoscape.", href = "http://www.cytoscape.org/", target = "_blank")
-#            ),
+            #            ,h5(
+            #              "The network file can be imported to",
+            #              a("VisANT", href = "http://visant.bu.edu/", target = "_blank"),
+            #              " or ",
+            #              a("Cytoscape.", href = "http://www.cytoscape.org/", target = "_blank")
+            #            ),
           ),
           tabPanel(
             title = "Heatmap",
