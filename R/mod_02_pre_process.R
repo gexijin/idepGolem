@@ -202,6 +202,34 @@ mod_02_pre_process_ui <- function(id) {
           outputId = ns("report"),
           label = "Report"
         ),
+        actionButton(ns("customize_button"), "Customize Plots"),
+        shinyBS::bsModal(
+          id = ns("modalExample"),
+          title = "Plot options",
+          trigger = ns("customize_button"),
+          size = "small",
+          selectInput(
+            inputId = ns("heatmap_color_select"),
+            label = "Heatmap Color scheme:",
+            choices = c(
+              "Green-Black-Red",
+              "Red-Black-Green",
+              "Blue-White-Red",
+              "Green-Black-Magenta",
+              "Blue-Yellow-Red",
+              "Blue-White-Brown",
+              "Orange-White-Blue"
+            ),
+            selected = "Green-Black-Red",
+            width = "100%"
+          ),
+          selectInput(
+            inputId = ns("select_gene_id"),
+            label = "Gene ID for sub-heatmap with < 60 genes:",
+            choices = c("symbol", "ensembl_ID", "User_ID"),
+            selected = "symbol"
+          )
+        ),
         a(
           h5("Questions?", align = "right"),
           href = "https://idepsite.wordpress.com/pre-process/",
@@ -1000,7 +1028,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       data_file_format = reactive(load_data$data_file_format()),
       counts_log_start = reactive(input$counts_log_start),
       all_gene_info = reactive(all_gene_info()),
-      descr = reactive(processed_data()$descr)
+      descr = reactive(processed_data()$descr),
+      heatmap_color_select = reactive(input$heatmap_color_select)
     )
   })
 }
