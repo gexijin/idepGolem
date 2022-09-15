@@ -685,6 +685,13 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       req(!is.null(heat_data()))
       heat_data()$bar
     })
+
+    # split "green-white-red" to c("green", "white", "red")
+    heatmap_color_select <- reactive({
+      req(pre_process$heatmap_color_select())
+      unlist(strsplit(pre_process$heatmap_color_select(), "-"))
+    })
+
     heatmap_module <- mod_12_heatmap_server(
       id = "12_heatmap_1",
       data = reactive({
@@ -696,7 +703,10 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       all_gene_names = reactive({
         pre_process$all_gene_names()
       }),
-      cluster_rows = FALSE
+      cluster_rows = FALSE,
+      heatmap_color = reactive({
+        heatmap_color_select()
+      })
     )
 
     # Plot colors -------

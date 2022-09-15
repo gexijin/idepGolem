@@ -181,14 +181,8 @@ mod_03_clustering_ui <- function(id) {
               value = TRUE
             ),
             selectInput(
-              inputId = ns("heatmap_color_select"),
-              label = "Heatmap Color scheme:",
-              choices = "green-black-red",
-              width = "100%"
-            ),
-            selectInput(
               inputId = ns("select_gene_id"),
-              label = "Gene ID for sub-heatmap with < 60 genes:",
+              label = "Gene ID for sub-heatmap:",
               choices = NULL,
               selected = NULL
             ),
@@ -350,32 +344,6 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       )
     })
 
-    # Heatmap Colors ----------
-    heatmap_colors <- list(
-      "Green-Black-Red" = c("green", "black", "red"),
-      "Red-Black-Green" = c("red", "black", "green"),
-      "Blue-White-Red" = c("blue", "white", "red"),
-      "Green-Black-Magenta" = c("green", "black", "magenta"),
-      "Blue-Yellow-Red" = c("blue", "yellow", "red"),
-      "Blue-White-Brown" = c("blue", "white", "brown"),
-      "Orange-White-Blue" = c("orange", "white", "blue")
-    )
-    heatmap_choices <- c(
-      "Green-Black-Red",
-      "Red-Black-Green",
-      "Blue-White-Red",
-      "Green-Black-Magenta",
-      "Blue-Yellow-Red",
-      "Blue-White-Brown",
-      "Orange-White-Blue"
-    )
-    observe({
-      updateSelectInput(
-        session = session,
-        inputId = "heatmap_color_select",
-        choices = heatmap_choices
-      )
-    })
 
     # Distance functions -----------
     dist_funs <- dist_functions()
@@ -484,6 +452,12 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       )
     })
 
+    # split "green-white-red" to c("green", "white", "red")
+    heatmap_color_select <- reactive({
+      req(pre_process$heatmap_color_select())
+      unlist(strsplit(pre_process$heatmap_color_select(), "-"))
+    })
+
     # HEATMAP -----------
     # Information on interactivity
     # https://jokergoo.github.io/2020/05/15/interactive-complexheatmap/
@@ -497,7 +471,6 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         text = "Creating Heatmap",
         color = "#000000"
       )
-
       # Assign heatmap to be used in multiple components
       shiny_env$ht <- heatmap_main(
         data = heatmap_data(),
@@ -509,7 +482,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         dist_function = input$dist_function,
         hclust_function = input$hclust_function,
         sample_clustering = input$sample_clustering,
-        heatmap_color_select = heatmap_colors[[input$heatmap_color_select]],
+        heatmap_color_select = heatmap_color_select(),
         row_dend = input$show_row_dend,
         k_clusters = input$k_clusters,
         re_run = input$k_means_re_run,
@@ -545,7 +518,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         dist_function = input$dist_function,
         hclust_function = input$hclust_function,
         sample_clustering = input$sample_clustering,
-        heatmap_color_select = heatmap_colors[[input$heatmap_color_select]],
+        heatmap_color_select = heatmap_color_select(),
         row_dend = input$show_row_dend,
         k_clusters = input$k_clusters,
         re_run = input$k_means_re_run,
@@ -914,7 +887,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
             cluster_meth = input$cluster_meth,
             select_gene_id = input$select_gene_id,
             list_factors_heatmap = input$list_factors_heatmap,
-            heatmap_color_select = heatmap_colors[[input$heatmap_color_select]],
+            heatmap_color_select = heatmap_color_select(),
             dist_function = input$dist_function,
             hclust_function = input$hclust_function,
             heatmap_cutoff = input$heatmap_cutoff,

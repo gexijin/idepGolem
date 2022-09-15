@@ -151,12 +151,10 @@ mod_01_load_data_ui <- function(id) {
           )
         ),
 
-
-
         # Experiment design file input ----------
         fileInput(
           inputId = ns("experiment_file"),
-          label = ("4. Optional: Upload an experiment design file(CSV or text)"),
+          label = ("4. Optional: Experiment design file(CSV or text)"),
           accept = c(
             "text/csv",
             "text/comma-separated-values",
@@ -166,13 +164,11 @@ mod_01_load_data_ui <- function(id) {
             ".tsv"
           )
         ),
-        # Yes or no to converting IDs -------------
         checkboxInput(
           inputId = ns("no_id_conversion"),
-          label = "Do not convert gene IDs to Ensembl.",
+          label = "Do not convert gene IDs",
           value = FALSE
         ),
-
         # Link to public RNA-seq datasets ----------
         a(
           h4("Public RNA-seq datasets"),
