@@ -453,7 +453,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     })
 
     # split "green-white-red" to c("green", "white", "red")
-    heatmap_color_select_fun <- reactive({
+    heatmap_color_select <- reactive({
       req(pre_process$heatmap_color_select())
       unlist(strsplit(pre_process$heatmap_color_select(), "-"))
     })
@@ -482,7 +482,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         dist_function = input$dist_function,
         hclust_function = input$hclust_function,
         sample_clustering = input$sample_clustering,
-        heatmap_color_select = heatmap_color_select_fun(),
+        heatmap_color_select = heatmap_color_select(),
         row_dend = input$show_row_dend,
         k_clusters = input$k_clusters,
         re_run = input$k_means_re_run,
@@ -518,7 +518,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         dist_function = input$dist_function,
         hclust_function = input$hclust_function,
         sample_clustering = input$sample_clustering,
-        heatmap_color_select = heatmap_color_select_fun(),
+        heatmap_color_select = heatmap_color_select(),
         row_dend = input$show_row_dend,
         k_clusters = input$k_clusters,
         re_run = input$k_means_re_run,
@@ -887,7 +887,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
             cluster_meth = input$cluster_meth,
             select_gene_id = input$select_gene_id,
             list_factors_heatmap = input$list_factors_heatmap,
-            heatmap_color_select = heatmap_color_select_fun(),
+            heatmap_color_select = heatmap_color_select(),
             dist_function = input$dist_function,
             hclust_function = input$hclust_function,
             heatmap_cutoff = input$heatmap_cutoff,
