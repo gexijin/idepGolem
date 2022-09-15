@@ -116,14 +116,7 @@ mod_01_load_data_ui <- function(id) {
             width = 6,
             # Button to load demo dataset ----------
             # Manually namespace the goButton in tag with id in module call
-            actionButton(
-              inputId = ns("go_button"),
-              label = "Load demo:"
-            ),
-            tags$head(tags$style(
-              "#load_data-go_button{color: red;
-              font-size: 16px;}"
-            ))
+            uiOutput(ns("load_demo_ui"))
           ),
           column(
             width = 6,
@@ -248,7 +241,7 @@ mod_01_load_data_ui <- function(id) {
         ),
         # show help information for data format
         conditionalPanel("input.data_format_help != 0",
-          includeHTML("inst/app/www/format.html"),
+          #includeHTML("inst/app/www/format.html"),
           ns = ns
         ),
       )
@@ -297,6 +290,23 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         )
       )
     })
+    
+    output$load_demo_ui <- renderUI({
+      #req(!exists(load_data))
+      req((is.null(input$go_button) || input$go_button == 0) && is.null(input$expression_file))
+      tagList(
+        actionButton(
+          inputId = ns("go_button"),
+          label = "Load demo:"
+        ),
+        tags$head(tags$style(
+          "#load_data-go_button{color: red;
+              font-size: 16px;}"
+        ))
+      )
+    })
+    
+    #outputOptions(output, "load_demo_ui", suspendWhenHidden = FALSE)
 
     # Provide species list for dropdown selection -----------
     observe({
@@ -364,7 +374,9 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     })
 
     # Reactive element to load the data from the user or demo data ---------
-    loaded_data <- reactive(
+    loaded_data <- reactive({
+      req(!is.null(input$go_button))
+      
       input_data(
         expression_file = input$expression_file,
         experiment_file = input$experiment_file,
@@ -372,7 +384,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         demo_data_file = demo_data_file()[1],
         demo_metadata_file = demo_data_file()[2]
       )
-    )
+    })
 
     # observeEvent(input$data_file_format, {
     #   req(loaded_data())
@@ -493,6 +505,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # Species match table ----------
     output$species_match <- renderTable(
       {
+        req(!is.null(input$go_button))
         if (is.null(input$expression_file) && input$go_button == 0) {
           return(NULL)
         }
