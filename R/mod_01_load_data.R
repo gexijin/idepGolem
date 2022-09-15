@@ -14,7 +14,7 @@ mod_01_load_data_ui <- function(id) {
     sidebarLayout(
 
       ##################################################################
-      #       Load Data sidebar panel
+      #       Load Data sidebar panel ----
       ##################################################################
       sidebarPanel(
         fluidRow(
@@ -111,18 +111,18 @@ mod_01_load_data_ui <- function(id) {
           ),
           ns = ns
         ),
-        
+
         # Load expression data options ----------
-        # Includes load demo action button, demo data dropdown, and expression 
-        # file upload box 
+        # Includes load demo action button, demo data dropdown, and expression
+        # file upload box
         uiOutput(ns("load_data_ui")),
-        
-        # alternative UI output message for once expression data is loaded 
+
+        # alternative UI output message for once expression data is loaded
         uiOutput(ns("load_data_alt")),
 
         # Experiment design file input ----------
         uiOutput(ns("design_file_ui")),
-        
+
         # Yes or no to converting IDs -------------
         checkboxInput(
           inputId = ns("no_id_conversion"),
@@ -151,7 +151,7 @@ mod_01_load_data_ui <- function(id) {
 
 
       ##################################################################
-      #       Load Data panel main
+      #       Load Data panel main ----
       ##################################################################
       mainPanel(
         shinyjs::useShinyjs(),
@@ -165,7 +165,7 @@ mod_01_load_data_ui <- function(id) {
         DT::dataTableOutput(ns("sample_20")),
 
         # hide welcome screen after data is loaded
-        conditionalPanel("input.go_button == 0 & input.data_format_help == 0",
+        conditionalPanel("input.go_button == 0",
           # Instructions and flowchart ------------
           fluidRow(
             column(
@@ -205,7 +205,7 @@ mod_01_load_data_ui <- function(id) {
         ),
         # show help information for data format
         conditionalPanel("input.data_format_help != 0",
-          #includeHTML("inst/app/www/format.html"),
+          includeHTML("inst/app/www/format.html"),
           ns = ns
         ),
       )
@@ -254,27 +254,26 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         )
       )
     })
-    
-    
+
+
     # ui elements for load demo action button, demo data drop down, and -----
-    # expression file upload    
+    # expression file upload
     output$load_data_ui <- renderUI({
-      
       req(
-        (is.null(input$go_button) || input$go_button == 0) && 
+        (is.null(input$go_button) || input$go_button == 0) &&
           is.null(input$expression_file)
       )
       req(input$data_file_format)
-      
-      # get demo data files based on specified format 
+
+      # get demo data files based on specified format
       files <- idep_data$demo_file_info
       files <- files[files$type == input$data_file_format, ]
       choices <- setNames(as.list(files$ID), files$name)
-      
+
       tagList(
         fluidRow(
           column(
-            width = 6, 
+            width = 6,
             actionButton(
               inputId = ns("go_button"),
               label = "Load demo:"
@@ -283,19 +282,19 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
               "#load_data-go_button{color: red;
               font-size: 16px;}"
             ))
-          ), 
+          ),
           column(
-            width = 6, 
+            width = 6,
             selectInput(
-              inputId = ns("select_demo"), 
-              label = NULL, 
-              choices = choices, 
+              inputId = ns("select_demo"),
+              label = NULL,
+              choices = choices,
               selected = choices[[1]]
             )
           )
-        ), 
-        
-        # Expression data file input 
+        ),
+
+        # Expression data file input
         fileInput(
           inputId = ns("expression_file"),
           label = "3. Upload expression data (CSV or text)",
@@ -310,44 +309,44 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         )
       )
     })
-    
-    # alternate ui message to reset app once data is loaded ---- 
+
+    # alternate ui message to reset app once data is loaded ----
     output$load_data_alt <- renderUI({
       req(!(
-        (is.null(input$go_button) || input$go_button == 0) && 
+        (is.null(input$go_button) || input$go_button == 0) &&
           is.null(input$expression_file)
       ))
-      
-      # reset message and action button 
+
+      # reset message and action button
       tagList(
         fluidRow(
           column(
-            width = 8, 
+            width = 8,
             tags$style("h5 { color: red;}"),
             h5(
-              "To load different expression data, please reset the application", 
+              "To load different expression data, please reset the application",
               icon("arrow-right")
-            ), 
+            ),
           ),
           column(
-            width = 4, 
+            width = 4,
             actionButton(
-              ns("reset_data"), 
+              ns("reset_data"),
               label = "Reset app"
             )
           )
         )
       )
     })
-    
+
     observeEvent(input$reset_data, {
       session$reload()
     })
-    
+
     # ui element for design file upload ----
     output$design_file_ui <- renderUI({
       req(is.null(input$go_button) || input$go_button == 0)
-      
+
       tagList(
         fileInput(
           inputId = ns("experiment_file"),
@@ -363,7 +362,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         )
       )
     })
-    
+
 
     # Provide species list for dropdown selection -----------
     observe({
@@ -419,7 +418,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # Reactive element to load the data from the user or demo data ---------
     loaded_data <- reactive({
       req(!is.null(input$go_button))
-      
+
       input_data(
         expression_file = input$expression_file,
         experiment_file = input$experiment_file,
@@ -428,11 +427,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         demo_metadata_file = demo_data_file()[2]
       )
     })
-
-    # observeEvent(input$data_file_format, {
-    #   req(loaded_data())
-    #   loaded_data() <- NULL
-    # })
 
     # Sample information table -----------
     output$sample_info_table <- DT::renderDataTable({
