@@ -136,7 +136,7 @@ mod_06_pathway_ui <- function(id) {
             br(),
             conditionalPanel(
               condition = "input.pathway_method == 1",
-              DT::dataTableOutput(outputId = ns("gage_pathway_table")),
+              tableOutput(ns("gage_pathway_table")),
               ns = ns
             ),
             conditionalPanel(
@@ -152,7 +152,7 @@ mod_06_pathway_ui <- function(id) {
             ),
             conditionalPanel(
               condition = "input.pathway_method == 3",
-              DT::dataTableOutput(outputId = ns("fgsea_pathway")),
+              tableOutput(outputId = ns("fgsea_pathway")),
               ns = ns
             ),
             conditionalPanel(
@@ -475,7 +475,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
 
       # show all pathways if selected
       if (input$kegg_sig_only && !is.null(gene_sets())) {
-        choices <- names(gene_sets())
+        choices <- names(gene_sets()$gene_lists)
       }
       selectInput(
         inputId = ns("sig_pathways_kegg"),
@@ -523,7 +523,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           max_set_size = input$max_set_size,
           limma = deg$limma(),
           gene_p_val_cutoff = input$gene_p_val_cutoff,
-          gene_sets = gene_sets(),
+          gene_sets = gene_sets()$gene_lists,
           absolute_fold = input$absolute_fold,
           pathway_p_val_cutoff = input$pathway_p_val_cutoff,
           n_pathway_show = input$n_pathway_show
@@ -531,18 +531,28 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       })
     })
 
-    output$gage_pathway_table <- DT::renderDataTable({
-      req(!is.null(gage_pathway_data()))
+    output$gage_pathway_table <- renderTable(
+      {
+        req(!is.null(gage_pathway_data()))
 
-      DT::datatable(
-        gage_pathway_data(),
-        options = list(
-          pageLength = 15,
-          scrollX = "500px"
-        ),
-        rownames = FALSE
-      )
-    })
+        res <- gage_pathway_data()
+        # add URL
+        ix <- match(res[, 2], gene_sets()$pathway_info$description)
+        res[, 2] <- hyperText(
+          res[, 2],
+          gene_sets()$pathway_info$memo[ix]
+        )
+        res$Genes <- as.character(res$Genes)
+        return(res)
+      },
+      digits = -1,
+      spacing = "s",
+      striped = TRUE,
+      bordered = TRUE,
+      width = "auto",
+      hover = TRUE,
+      sanitize.text.function = function(x) x
+    )
 
     contrast_samples <- reactive({
       req(!is.null(input$select_contrast))
@@ -569,7 +579,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
             my_range = c(input$min_set_size, input$max_set_size),
             processed_data = pre_process$data(),
             contrast_samples = contrast_samples(),
-            gene_sets = gene_sets(),
+            gene_sets = gene_sets()$gene_lists,
             pathway_p_val_cutoff = input$pathway_p_val_cutoff,
             n_pathway_show = input$n_pathway_show
           )
@@ -588,7 +598,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           my_range = c(input$min_set_size, input$max_set_size),
           data = pre_process$data(),
           select_contrast = input$select_contrast,
-          gene_sets = gene_sets(),
+          gene_sets = gene_sets()$gene_lists,
           sample_info = pre_process$sample_info(),
           select_factors_model = deg$select_factors_model(),
           select_model_comprions = deg$select_model_comprions(),
@@ -609,7 +619,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           my_range = c(input$min_set_size, input$max_set_size),
           limma = deg$limma(),
           gene_p_val_cutoff = input$gene_p_val_cutoff,
-          gene_sets = gene_sets(),
+          gene_sets = gene_sets()$gene_lists,
           absolute_fold = input$absolute_fold,
           pathway_p_val_cutoff = input$pathway_p_val_cutoff,
           n_pathway_show = input$n_pathway_show
@@ -617,19 +627,32 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       })
     })
 
-    output$fgsea_pathway <- DT::renderDataTable({
-      req(input$pathway_method == 3)
-      req(!is.null(fgsea_pathway_data()))
+    output$fgsea_pathway <- renderTable(
+      {
+        req(input$pathway_method == 3)
+        req(!is.null(fgsea_pathway_data()))
 
-      DT::datatable(
-        fgsea_pathway_data(),
-        options = list(
-          pageLength = 15,
-          scrollX = "500px"
-        ),
-        rownames = FALSE
-      )
-    })
+        res <- fgsea_pathway_data()
+
+        # add URL
+        ix <- match(res[, 2], gene_sets()$pathway_info$description)
+        res[, 2] <- hyperText(
+          res[, 2],
+          gene_sets()$pathway_info$memo[ix]
+        )
+        res$Genes <- as.character(res$Genes)
+        return(res)
+      },
+      digits = -1,
+      spacing = "s",
+      striped = TRUE,
+      bordered = TRUE,
+      width = "auto",
+      hover = TRUE,
+      sanitize.text.function = function(x) x
+    )
+
+
 
     reactome_pa_pathway_data <- reactive({
       req(input$pathway_method == 5)
@@ -660,7 +683,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
             my_range = c(input$min_set_size, input$max_set_size),
             data = pre_process$data(),
             select_contrast = input$select_contrast,
-            gene_sets = gene_sets(),
+            gene_sets = gene_sets()$gene_lists,
             pathway_p_val_cutoff = input$pathway_p_val_cutoff,
             n_pathway_show = input$n_pathway_show
           )
@@ -678,7 +701,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         get_pgsea_plot_all_samples_data(
           data = pre_process$data(),
           select_contrast = input$select_contrast,
-          gene_sets = gene_sets(),
+          gene_sets = gene_sets()$gene_lists,
           my_range = c(input$min_set_size, input$max_set_size),
           pathway_p_val_cutoff = input$pathway_p_val_cutoff,
           n_pathway_show = input$n_pathway_show
@@ -702,11 +725,11 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
 
     selected_pathway_data <- reactive({
       req(!is.null(input$sig_pathways))
-      req(!is.null(gene_sets()))
+      req(!is.null(gene_sets()$gene_lists))
 
       pathway_select_data(
         sig_pathways = input$sig_pathways,
-        gene_sets = gene_sets(),
+        gene_sets = gene_sets()$gene_lists,
         contrast_samples = contrast_samples(),
         data = pre_process$data(),
         select_org = pre_process$select_org(),
@@ -731,7 +754,11 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       )
     })
 
-
+    # split "green-white-red" to c("green", "white", "red")
+    heatmap_color_select <- reactive({
+      req(pre_process$heatmap_color_select())
+      unlist(strsplit(pre_process$heatmap_color_select(), "-"))
+    })
 
     heatmap_module <- mod_12_heatmap_server(
       id = "12_heatmap_1",
@@ -744,7 +771,10 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       all_gene_names = reactive({
         pre_process$all_gene_names()
       }),
-      cluster_rows = TRUE
+      cluster_rows = TRUE,
+      heatmap_color = reactive({
+        heatmap_color_select()
+      })
     )
 
 
@@ -781,7 +811,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         go = input$select_go,
         select_org = pre_process$select_org(),
         gene_info = pre_process$all_gene_info(),
-        gene_sets = gene_sets()
+        gene_sets = gene_sets()$gene_lists
       )
     })
 
@@ -841,7 +871,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           max_set_size = input$max_set_size,
           limma = deg$limma(),
           gene_p_val_cutoff = input$gene_p_val_cutoff,
-          gene_sets = gene_sets(),
+          gene_sets = gene_sets()$gene_lists,
           absolute_fold = input$absolute_fold,
           pathway_p_val_cutoff = input$pathway_p_val_cutoff,
           n_pathway_show = input$n_pathway_show,

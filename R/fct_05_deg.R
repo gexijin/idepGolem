@@ -2799,7 +2799,7 @@ deg_information <- function(limma_value,
     degs_data <- dplyr::full_join(degs_data, processed_data, by = "User_ID")
 
 
-    degs_data <- degs_data %>%
+    degs_data <- degs_data |>
       dplyr::relocate(User_ID)
   } else {
 
@@ -2832,9 +2832,9 @@ deg_information <- function(limma_value,
     degs_data <- dplyr::full_join(degs_data, processed_data, by = "ensembl_ID")
 
 
-    degs_data <- degs_data %>%
-      dplyr::relocate(User_ID) %>%
-      dplyr::relocate(ensembl_ID) %>%
+    degs_data <- degs_data |>
+      dplyr::relocate(User_ID) |>
+      dplyr::relocate(ensembl_ID) |>
       dplyr::relocate(symbol)
   }
   return(list(degs_data, limma_value$Results))

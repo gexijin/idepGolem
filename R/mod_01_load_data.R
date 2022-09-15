@@ -131,7 +131,7 @@ mod_01_load_data_ui <- function(id) {
             selectInput(
               inputId = ns("select_demo"),
               label = NULL,
-              choices = " ",
+              choices = NULL,
               multiple = FALSE
             )
           )
@@ -151,12 +151,10 @@ mod_01_load_data_ui <- function(id) {
           )
         ),
 
-
-
         # Experiment design file input ----------
         fileInput(
           inputId = ns("experiment_file"),
-          label = ("4. Optional: Upload an experiment design file(CSV or text)"),
+          label = ("4. Optional: Experiment design file(CSV or text)"),
           accept = c(
             "text/csv",
             "text/comma-separated-values",
@@ -166,13 +164,11 @@ mod_01_load_data_ui <- function(id) {
             ".tsv"
           )
         ),
-        # Yes or no to converting IDs -------------
         checkboxInput(
           inputId = ns("no_id_conversion"),
-          label = "Do not convert gene IDs to Ensembl.",
+          label = "Do not convert gene IDs",
           value = FALSE
         ),
-
         # Link to public RNA-seq datasets ----------
         a(
           h4("Public RNA-seq datasets"),
@@ -354,7 +350,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # Change demo data based on selected format
     # returns a vector with file names  c(data, design)
     demo_data_file <- reactive({
-      req(!is.null(input$select_demo))
+      req(input$select_demo)
+
       files <- idep_data$demo_file_info
       ix <- which(files$ID == input$select_demo)
       return(c(
@@ -364,7 +361,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     })
 
     # Reactive element to load the data from the user or demo data ---------
-    loaded_data <- reactive(
+    loaded_data <- reactive({
       input_data(
         expression_file = input$expression_file,
         experiment_file = input$experiment_file,
@@ -372,7 +369,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         demo_data_file = demo_data_file()[1],
         demo_metadata_file = demo_data_file()[2]
       )
-    )
+    })
 
     # observeEvent(input$data_file_format, {
     #   req(loaded_data())

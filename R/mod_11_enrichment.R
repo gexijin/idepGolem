@@ -240,7 +240,7 @@ mod_11_enrichment_ui <- function(id) {
           ),
           column(
             width = 3,
-            style = "margin-top: 25px;",
+            style = "margin-top: 30px;",
             ottoPlots::mod_download_figure_ui(
               id = ns("dl_barplot")
             )
