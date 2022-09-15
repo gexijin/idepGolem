@@ -13,12 +13,6 @@ mod_12_heatmap_ui <- function(id) {
     fluidRow(
       column(
         width = 3,
-        selectInput(
-          inputId = ns("heatmap_color_select"),
-          label = NULL,
-          choices = "green-black-red",
-          width = "100%"
-        ),
         plotOutput(
           outputId = ns("main_heatmap"),
           height = "450px",
@@ -63,40 +57,12 @@ mod_12_heatmap_server <- function(id,
                                   data,
                                   bar,
                                   all_gene_names,
-                                  cluster_rows = FALSE) {
+                                  cluster_rows = FALSE,
+                                  heatmap_color) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     # Interactive heatmap environment
     shiny_env <- new.env()
-
-    # Heatmap Colors ----------
-    heatmap_colors <- list(
-      "Green-Black-Red" = c("green", "black", "red"),
-      "Red-Black-Green" = c("red", "black", "red"),
-      "Blue-White-Red" = c("blue", "white", "red"),
-      "Green-Black-Magenta" = c("green", "black", "magenta"),
-      "Blue-Yellow-Red" = c("blue", "yellow", "red"),
-      "Blue-White-Brown" = c("blue", "white", "brown"),
-      "Orange-White-Blue" = c("orange", "white", "blue")
-    )
-
-    heatmap_choices <- c(
-      "Green-Black-Red",
-      "Red-Black-Green",
-      "Blue-White-Red",
-      "Green-Black-Magenta",
-      "Blue-Yellow-Red",
-      "Blue-White-Brown",
-      "Orange-White-Blue"
-    )
-
-    observe({
-      updateSelectInput(
-        session = session,
-        inputId = "heatmap_color_select",
-        choices = heatmap_choices
-      )
-    })
 
     output$main_heatmap <- renderPlot({
       req(!is.null(data()))
@@ -106,7 +72,7 @@ mod_12_heatmap_server <- function(id,
         shiny_env$ht <- deg_heatmap(
           data = data(),
           bar = bar(),
-          heatmap_color_select = heatmap_colors[[input$heatmap_color_select]],
+          heatmap_color_select = heatmap_color(),
           cluster_rows = cluster_rows
         )
 
@@ -123,7 +89,7 @@ mod_12_heatmap_server <- function(id,
         deg_heatmap(
           data = data(),
           bar = bar(),
-          heatmap_color_select = heatmap_colors[[input$heatmap_color_select]],
+          heatmap_color_select = heatmap_color(),
           cluster_rows = cluster_rows
         )
       })
