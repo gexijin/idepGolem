@@ -111,54 +111,18 @@ mod_01_load_data_ui <- function(id) {
           ),
           ns = ns
         ),
-        fluidRow(
-          column(
-            width = 6,
-            # Button to load demo dataset ----------
-            # Manually namespace the goButton in tag with id in module call
-            uiOutput(ns("load_demo_ui"))
-          ),
-          column(
-            width = 6,
-            # List of demo files
-            selectInput(
-              inputId = ns("select_demo"),
-              label = NULL,
-              choices = " ",
-              multiple = FALSE
-            )
-          )
-        ),
-
-        # Expression data file input ----------
-        fileInput(
-          inputId = ns("expression_file"),
-          label = "3. Upload expression data (CSV or text)",
-          accept = c(
-            "text/csv",
-            "text/comma-separated-values",
-            "text/tab-separated-values",
-            "text/plain",
-            ".csv",
-            ".tsv"
-          )
-        ),
-
-
+        
+        # Load expression data options ----------
+        # Includes load demo action button, demo data dropdown, and expression 
+        # file upload box 
+        uiOutput(ns("load_data_ui")),
+        
+        # alternative UI output message for once expression data is loaded 
+        uiOutput(ns("load_data_alt")),
 
         # Experiment design file input ----------
-        fileInput(
-          inputId = ns("experiment_file"),
-          label = ("4. Optional: Upload an experiment design file(CSV or text)"),
-          accept = c(
-            "text/csv",
-            "text/comma-separated-values",
-            "text/tab-separated-values",
-            "text/plain",
-            ".csv",
-            ".tsv"
-          )
-        ),
+        uiOutput(ns("design_file_ui")),
+        
         # Yes or no to converting IDs -------------
         checkboxInput(
           inputId = ns("no_id_conversion"),
@@ -291,22 +255,115 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       )
     })
     
-    output$load_demo_ui <- renderUI({
-      #req(!exists(load_data))
-      req((is.null(input$go_button) || input$go_button == 0) && is.null(input$expression_file))
+    
+    # ui elements for load demo action button, demo data drop down, and -----
+    # expression file upload    
+    output$load_data_ui <- renderUI({
+      
+      req(
+        (is.null(input$go_button) || input$go_button == 0) && 
+          is.null(input$expression_file)
+      )
+      req(input$data_file_format)
+      
+      # get demo data files based on specified format 
+      files <- idep_data$demo_file_info
+      files <- files[files$type == input$data_file_format, ]
+      choices <- setNames(as.list(files$ID), files$name)
+      
       tagList(
-        actionButton(
-          inputId = ns("go_button"),
-          label = "Load demo:"
-        ),
-        tags$head(tags$style(
-          "#load_data-go_button{color: red;
+        fluidRow(
+          column(
+            width = 6, 
+            actionButton(
+              inputId = ns("go_button"),
+              label = "Load demo:"
+            ),
+            tags$head(tags$style(
+              "#load_data-go_button{color: red;
               font-size: 16px;}"
-        ))
+            ))
+          ), 
+          column(
+            width = 6, 
+            selectInput(
+              inputId = ns("select_demo"), 
+              label = NULL, 
+              choices = choices, 
+              selected = choices[[1]]
+            )
+          )
+        ), 
+        
+        # Expression data file input 
+        fileInput(
+          inputId = ns("expression_file"),
+          label = "3. Upload expression data (CSV or text)",
+          accept = c(
+            "text/csv",
+            "text/comma-separated-values",
+            "text/tab-separated-values",
+            "text/plain",
+            ".csv",
+            ".tsv"
+          )
+        )
       )
     })
     
-    #outputOptions(output, "load_demo_ui", suspendWhenHidden = FALSE)
+    # alternate ui message to reset app once data is loaded ---- 
+    output$load_data_alt <- renderUI({
+      req(!(
+        (is.null(input$go_button) || input$go_button == 0) && 
+          is.null(input$expression_file)
+      ))
+      
+      # reset message and action button 
+      tagList(
+        fluidRow(
+          column(
+            width = 8, 
+            tags$style("h5 { color: red;}"),
+            h5(
+              "To load different expression data, please reset the application", 
+              icon("arrow-right")
+            ), 
+          ),
+          column(
+            width = 4, 
+            actionButton(
+              ns("reset_data"), 
+              label = "Reset app"
+            )
+          )
+        )
+      )
+    })
+    
+    observeEvent(input$reset_data, {
+      session$reload()
+    })
+    
+    # ui element for design file upload ----
+    output$design_file_ui <- renderUI({
+      req(is.null(input$go_button) || input$go_button == 0)
+      
+      tagList(
+        fileInput(
+          inputId = ns("experiment_file"),
+          label = ("4. Optional: Upload an experiment design file(CSV or text)"),
+          accept = c(
+            "text/csv",
+            "text/comma-separated-values",
+            "text/tab-separated-values",
+            "text/plain",
+            ".csv",
+            ".tsv"
+          )
+        )
+      )
+    })
+    
 
     # Provide species list for dropdown selection -----------
     observe({
@@ -345,20 +402,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       shinyjs::hideElement(id = "load_message")
       i <- "<h4>Ready to load data files.</h4>"
       htmltools::HTML(paste(i, collapse = "<br/>"))
-    })
-
-    # Provide list of demo files -----------
-    observe({
-      files <- idep_data$demo_file_info
-      # only keep files of specified format
-      files <- files[files$type == input$data_file_format, ]
-      choices <- setNames(as.list(files$ID), files$name)
-      updateSelectInput(
-        session = session,
-        inputId = "select_demo",
-        choices = choices,
-        selected = choices[[1]]
-      )
     })
 
     # Change demo data based on selected format
