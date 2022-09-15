@@ -37,7 +37,6 @@ Imports:
     igraph,
     InteractiveComplexHeatmap,
     knitr,
-    magrittr,
     ottoPlots,
     org.Ag.eg.db,
     org.At.tair.db,
