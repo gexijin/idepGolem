@@ -125,59 +125,6 @@ mod_01_load_data_ui <- function(id) {
         uiOutput(ns("design_file_ui")),
 
         # Yes or no to converting IDs -------------
-        fluidRow(
-          column(
-            width = 6,
-            # Button to load demo dataset ----------
-            # Manually namespace the goButton in tag with id in module call
-            actionButton(
-              inputId = ns("go_button"),
-              label = "Load demo:"
-            ),
-            tags$head(tags$style(
-              "#load_data-go_button{color: red;
-              font-size: 16px;}"
-            ))
-          ),
-          column(
-            width = 6,
-            # List of demo files
-            selectInput(
-              inputId = ns("select_demo"),
-              label = NULL,
-              choices = NULL,
-              multiple = FALSE
-            )
-          )
-        ),
-
-        # Expression data file input ----------
-        fileInput(
-          inputId = ns("expression_file"),
-          label = "3. Upload expression data (CSV or text)",
-          accept = c(
-            "text/csv",
-            "text/comma-separated-values",
-            "text/tab-separated-values",
-            "text/plain",
-            ".csv",
-            ".tsv"
-          )
-        ),
-
-        # Experiment design file input ----------
-        fileInput(
-          inputId = ns("experiment_file"),
-          label = ("4. Optional: Experiment design file(CSV or text)"),
-          accept = c(
-            "text/csv",
-            "text/comma-separated-values",
-            "text/tab-separated-values",
-            "text/plain",
-            ".csv",
-            ".tsv"
-          )
-        ),
         checkboxInput(
           inputId = ns("no_id_conversion"),
           label = "Do not convert gene IDs",
