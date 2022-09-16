@@ -55,6 +55,11 @@ mod_01_load_data_ui <- function(id) {
               inputId = ns("genome_assembl_button"),
               label = "Info"
             )
+          ),
+          tippy::tippy_this(
+            ns("genome_assembl_button"),
+            "Additional info on annotated species",
+            theme = "light-border"
           )
         ),
 
@@ -99,6 +104,11 @@ mod_01_load_data_ui <- function(id) {
             actionButton(
               inputId = ns("data_format_help"),
               label = "Info"
+            ),
+            tippy::tippy_this(
+              ns("data_format_help"),
+              "Additional info on accepted data types",
+              theme = "light-border"
             )
           )
         ),
@@ -245,7 +255,12 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             tags$head(tags$style(
               "#load_data-go_button{color: red;
               font-size: 16px;}"
-            ))
+            )),
+            tippy::tippy_this(
+              ns("go_button"),
+              "Load the selected demo data",
+              theme = "light-border"
+            )
           ),
           column(
             width = 6,
@@ -254,7 +269,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
               label = NULL,
               choices = choices,
               selected = choices[[1]]
-            )
+            ),
           )
         ),
 
@@ -286,9 +301,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         fluidRow(
           column(
             width = 8,
-            tags$style("h5 { color: red;}"),
             h5(
-              "To load different expression data, please reset the application",
+              strong("To load different expression data, please reset the application"),
               icon("arrow-right")
             ),
           ),
@@ -297,6 +311,10 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             actionButton(
               ns("reset_data"),
               label = "Reset app"
+            ),
+            tippy::with_tippy(
+              ns("reset_data"),
+              "Reset the entire application"
             )
           )
         )
@@ -565,8 +583,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
     output$welcome_ui <- renderUI({
       req(
-        input$go_button == 0 & 
-          !is.null(input$go_button) & 
+        input$go_button == 0 &
+          !is.null(input$go_button) &
           input$data_format_help == 0
       )
 
