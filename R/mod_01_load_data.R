@@ -564,7 +564,11 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     })
 
     output$welcome_ui <- renderUI({
-      req(input$go_button == 0 & !is.null(input$go_button))
+      req(
+        input$go_button == 0 & 
+          !is.null(input$go_button) & 
+          input$data_format_help == 0
+      )
 
       tagList(
         fluidRow(
