@@ -128,13 +128,6 @@ mod_04_pca_ui <- function(id) {
             min = 1,
             max = 15
           ),
-          # Gene ID Selection -----------
-          selectInput(
-            inputId = ns("select_gene_id"),
-            label = "Gene ID",
-            choices = NULL,
-            selected = NULL
-          ),
           ns = ns
         ),
         # Download report button
@@ -347,7 +340,7 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
         PCA_biplot(
           data = pre_process$data(),
           sample_info = pre_process$sample_info(),
-          select_gene_id = input$select_gene_id,
+          select_gene_id = pre_process$select_gene_id(),
           all_gene_names = pre_process$all_gene_names(),
           selected_x = input$x_axis_pc,
           selected_y = input$y_axis_pc,
@@ -483,17 +476,6 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       )
     })
 
-    # Gene ID Name Choices ----------
-    observe({
-      req(!is.null(pre_process$all_gene_names()))
-
-      updateSelectInput(
-        session = session,
-        inputId = "select_gene_id",
-        choices = colnames(pre_process$all_gene_names()),
-        selected = "symbol"
-      )
-    })
 
 
     # Markdown report------------
@@ -529,7 +511,7 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
             color = input$selectFactors1,
             shape = input$selectFactors2,
             all_gene_names = pre_process$all_gene_names(),
-            select_gene_id = input$select_gene_id,
+            select_gene_id = pre_process$select_gene_id(),
             selected_x = input$x_axis_pc,
             selected_y = input$y_axis_pc,
             encircle = input$encircle,

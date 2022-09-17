@@ -24,7 +24,7 @@ mod_10_doc_ui <- function(id) {
         apply for the next round
         of funding.
         Hundreds of strong, enthusiastic letters sent to us in 2019
-        was essential when we applied for the current
+        were essential when we applied for the current
         grant from NIH/NHGRI (R01HG010805),
         which expires in 20 months. Your letters will help sustain
         and improve this service."),
@@ -111,7 +111,8 @@ mod_10_doc_ui <- function(id) {
        to ensure our analysis is correct, but there is no guarantee.
       "),
       p(" By offering so many combinations of methods to analyze a data set,
-      iDEP enables people to pick up the results that like to see (confirmation bias).
+      iDEP enables users to rationalize. It is human nature to focus on results 
+      that we like to see (confirmation bias).
       It is unfortunate that you can almost found further support for almost any theory
       from the massive but noisy literature.
       We encourage users to be critical of the results obtained using iDEP.

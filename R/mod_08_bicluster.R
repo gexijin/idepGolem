@@ -163,6 +163,9 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab) {
       cluster_rows = TRUE,
       heatmap_color = reactive({
         heatmap_color_select()
+      }),
+      select_gene_id = reactive({
+        pre_process$select_gene_id()
       })
     )
 
