@@ -340,12 +340,6 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
       data <- pre_process$data()[rownames(pre_process$data()) %in% network_query(), ]
     })
 
-    # split "green-white-red" to c("green", "white", "red")
-    heatmap_color_select <- reactive({
-      req(pre_process$heatmap_color_select())
-      unlist(strsplit(pre_process$heatmap_color_select(), "-"))
-    })
-
     heatmap_module <- mod_12_heatmap_server(
       id = "12_heatmap_1",
       data = reactive({
@@ -359,7 +353,10 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
       }),
       cluster_rows = TRUE,
       heatmap_color = reactive({
-        heatmap_color_select()
+        pre_process$heatmap_color_select()
+      }),
+      select_gene_id = reactive({
+        pre_process$select_gene_id()
       })
     )
   })

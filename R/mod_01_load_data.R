@@ -133,19 +133,54 @@ mod_01_load_data_ui <- function(id) {
 
         # Experiment design file input ----------
         uiOutput(ns("design_file_ui")),
-
-        # Yes or no to converting IDs -------------
-        checkboxInput(
-          inputId = ns("no_id_conversion"),
-          label = "Do not convert gene IDs",
-          value = FALSE
+        fluidRow(
+          column(
+            width = 8,
+            # Yes or no to converting IDs -------------
+            checkboxInput(
+              inputId = ns("no_id_conversion"),
+              label = "Do not convert gene IDs",
+              value = FALSE
+            )
+          ),
+          column(
+            width = 4,
+            actionButton(ns("customize_button"), "Plot Options")
+          )
         ),
+        shinyBS::bsModal(
+          id = ns("modalExample"),
+          title = "Plot options",
+          trigger = ns("customize_button"),
+          size = "small",
+          selectInput(
+            inputId = ns("heatmap_color_select"),
+            label = "Heatmap Color scheme:",
+            choices = c(
+              "Green-Black-Red",
+              "Red-Black-Green",
+              "Blue-White-Red",
+              "Green-Black-Magenta",
+              "Blue-Yellow-Red",
+              "Blue-White-Brown",
+              "Orange-White-Blue"
+            ),
+            selected = "Green-Black-Red",
+            width = "100%"
+          ),
+          selectInput(
+            inputId = ns("select_gene_id"),
+            label = "Gene ID type for plots",
+            choices = c("symbol", "ensembl_ID", "User_ID"),
+            selected = "symbol"
+          )
+        ),
+
         # Link to public RNA-seq datasets ----------
         a(
           h4("Public RNA-seq datasets"),
           href = "http://bioinformatics.sdstate.edu/reads/"
         ),
-
         # Table output for species loading progress -----------
         tableOutput(ns("species_match")),
 
@@ -311,10 +346,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             actionButton(
               ns("reset_data"),
               label = "Reset app"
-            ),
-            tippy::with_tippy(
-              ns("reset_data"),
-              "Reset the entire application"
             )
           )
         )
@@ -642,7 +673,9 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       matched_ids = reactive(conversion_info()$converted$ids),
       gmt_choices = reactive(conversion_info()$gmt_choices),
       converted = reactive(conversion_info()$converted),
-      no_id_conversion = reactive(input$no_id_conversion)
+      no_id_conversion = reactive(input$no_id_conversion),
+      heatmap_color_select = reactive(input$heatmap_color_select),
+      select_gene_id = reactive(input$select_gene_id)
     )
   })
 }
