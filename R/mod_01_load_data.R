@@ -333,27 +333,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
       # reset message and action button
       tagList(
-        fluidRow(
-          column(
-            width = 8,
-            h5(
-              strong("To load new files, reset the application"),
-              icon("arrow-right")
-            ),
-          ),
-          column(
-            width = 4,
-            actionButton(
-              ns("reset_data"),
-              label = "Reset"
-            )
-          )
-        )
+        h5("To load new files, reset the application from above.")
       )
-    })
-
-    observeEvent(input$reset_data, {
-      session$reload()
     })
 
     # UI element for design file upload ----
