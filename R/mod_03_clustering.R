@@ -190,7 +190,7 @@ mod_03_clustering_ui <- function(id) {
         br(),
         downloadButton(
           outputId = ns("report"),
-          label = "Generate Report"
+          label = "Report"
         ),
         a(
           h5("Questions?", align = "right"),

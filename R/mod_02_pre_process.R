@@ -189,18 +189,18 @@ mod_02_pre_process_ui <- function(id) {
           )
         ),
         br(),
-        # Show transform messages
-        actionButton(
-          inputId = ns("show_messages"),
-          label = "Messages"
-        ),
         downloadButton(
           outputId = ns("rds"),
-          label = ".RData File"
+          label = ".RData"
         ),
         downloadButton(
           outputId = ns("report"),
           label = "Report"
+        ),
+        # Show transform messages
+        actionButton(
+          inputId = ns("show_messages"),
+          label = "Messages"
         ),
         a(
           h5("Questions?", align = "right"),
