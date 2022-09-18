@@ -337,7 +337,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           column(
             width = 8,
             h5(
-              strong("To load different expression data, please reset the application"),
+              strong("To load new files, reset the application"),
               icon("arrow-right")
             ),
           ),
@@ -345,7 +345,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             width = 4,
             actionButton(
               ns("reset_data"),
-              label = "Reset app"
+              label = "Reset"
             )
           )
         )
