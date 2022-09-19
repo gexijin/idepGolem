@@ -180,12 +180,6 @@ mod_03_clustering_ui <- function(id) {
               label = "Show Row Dendogram",
               value = TRUE
             ),
-            selectInput(
-              inputId = ns("select_gene_id"),
-              label = "Gene ID for sub-heatmap:",
-              choices = NULL,
-              selected = NULL
-            ),
             downloadButton(
               outputId = ns("download_heatmap_data"),
               label = "Heatmap data"
@@ -196,7 +190,7 @@ mod_03_clustering_ui <- function(id) {
         br(),
         downloadButton(
           outputId = ns("report"),
-          label = "Generate Report"
+          label = "Report"
         ),
         a(
           h5("Questions?", align = "right"),
@@ -362,18 +356,6 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     # Hclust Functions ----------
     hclust_funs <- hcluster_functions()
 
-    # Gene ID Name Choices ----------
-    observe({
-      req(!is.null(pre_process$all_gene_names()))
-
-      updateSelectInput(
-        session = session,
-        inputId = "select_gene_id",
-        choices = colnames(pre_process$all_gene_names()),
-        selected = "symbol"
-      )
-    })
-
     # Sample color bar selector ----------
     output$list_factors_heatmap <- renderUI({
       choices <- "Names"
@@ -432,7 +414,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         sample_centering = FALSE,
         sample_normalize = FALSE,
         all_gene_names = pre_process$all_gene_names(),
-        select_gene_id = input$select_gene_id
+        select_gene_id = pre_process$select_gene_id()
       )
     })
 
@@ -667,7 +649,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
 
     # gene lists for enrichment analysis
     gene_lists <- reactive({
-      req(!is.null(input$select_gene_id))
+      req(!is.null(pre_process$select_gene_id()))
       req(!is.null(input$ht_brush) || input$cluster_meth == 2)
 
       gene_lists <- list()
@@ -676,7 +658,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         gene_names <- merge_data(
           all_gene_names = pre_process$all_gene_names(),
           data = shiny_env$submap_data,
-          merge_ID = input$select_gene_id
+          merge_ID = pre_process$select_gene_id()
         )
 
         # Only keep the gene names and scrap the data
@@ -688,7 +670,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
 
         req(heatmap_data())
         req(input$k_clusters)
-        req(input$select_gene_id)
+        req(pre_process$select_gene_id())
         req(shiny_env$ht)
 
         row_ord <- ComplexHeatmap::row_order(shiny_env$ht)
@@ -719,7 +701,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
           gene_names <- merge_data(
             all_gene_names = pre_process$all_gene_names(),
             data = cluster_data,
-            merge_ID = input$select_gene_id
+            merge_ID = pre_process$select_gene_id()
           )
 
           # Only keep the gene names and scrap the data
@@ -815,7 +797,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       merged_data <- merge_data(
         pre_process$all_gene_names(),
         heatmap_data(),
-        merge_ID = input$select_gene_id
+        merge_ID = pre_process$select_gene_id()
       )
     })
 
@@ -885,7 +867,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
             n_genes = input$n_genes,
             k_clusters = input$k_clusters,
             cluster_meth = input$cluster_meth,
-            select_gene_id = input$select_gene_id,
+            select_gene_id = pre_process$select_gene_id(),
             list_factors_heatmap = input$list_factors_heatmap,
             heatmap_color_select = heatmap_color_select(),
             dist_function = input$dist_function,

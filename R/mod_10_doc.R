@@ -24,7 +24,7 @@ mod_10_doc_ui <- function(id) {
         apply for the next round
         of funding.
         Hundreds of strong, enthusiastic letters sent to us in 2019
-        was essential when we applied for the current
+        were essential when we applied for the current
         grant from NIH/NHGRI (R01HG010805),
         which expires in 20 months. Your letters will help sustain
         and improve this service."),
@@ -51,16 +51,17 @@ mod_10_doc_ui <- function(id) {
       Technology (OIT) at SDSU. Mirror site is enabled by a JetStream2
       allocation award (BIO210175), which is supported by NSF.
       "),
-      h3("Citation"),
+      h3("Please cite the iDEP paper"),
       p(
-        "Ge, Son & Yao, iDEP: an integrated web application for differential
+        "If you use iDEP, even just for prelimiary analysis,
+        please cite: Ge, Son & Yao, iDEP:
+        an integrated web application for differential
         expression and pathway analysis of RNA-Seq data, ",
         a("BMC Bioinformatics 19:1-24, 2018.",
           href = "https://doi.org/10.1186/s12859-018-2486-6",
           target = "_blank"
-        )
-      ),
-      p(
+        ),
+        "Merely mentioning iDEP with an URL is insufficient. It is difficult to track.",
         "Consider citing other tools that form the foundation of iDEP, such as ",
         a("ENSEMBL, ",
           href = "https:/doi.org/10.1093/nar/gkab1049",
@@ -90,6 +91,19 @@ mod_10_doc_ui <- function(id) {
           target = "_blank"
         )
       ),
+      p(
+        "According to Google Scholar, more than",
+        a("450 papers cited iDEP,",
+          href = "https://scholar.google.com/scholar?oi=bibs&hl=en&cites=6502699637682046008,17999801138713500070,11001860275874506471",
+          target = "_blank"
+        ),
+        " as of Sept 18, 2022.",
+        "But our website has been accessed over 316,000 times by 83,000 users,
+        spending 17.5 minutes each time. For every 1000 users, only 6 cited
+        the iDEP paper, which is disappointingly low. Consider citing iDEP even
+        if you used it just for preliminary analysis. Otherwise, this tool might
+        just vanish."
+      ),
       h3("Source code and database"),
       p(
         "Source code is available on ",
@@ -104,6 +118,27 @@ mod_10_doc_ui <- function(id) {
           href = "http://bioinformatics.sdstate.edu/data/"
         )
       ),
+      h3("Contact us"),
+      p(
+        "Please email",
+        a(
+          " Jenny",
+          href = "mailto:gelabinfo@gmail.com?Subject=iDEP"
+        ),
+        " (recommended) or ",
+        a("Dr. Ge",
+          href = "mailto:xijin.ge@sdstate.edu?Subject=iDEP"
+        ),
+        " (unreliable). Follow us on ",
+        a("Twitter",
+          href = "https://twitter.com/StevenXGe"
+        ),
+        " for recent updates. ",
+        "File bug reports on ",
+        a("GitHub.",
+          href = "https://github.com/espors/idepGolem"
+        )
+      ),
       h3("NO GUARANTEE OF ACCURACY"),
       p("iDEP is developed by a small team with limited resources.
        We have not thoroughly tested it. So please verify all
@@ -111,13 +146,56 @@ mod_10_doc_ui <- function(id) {
        to ensure our analysis is correct, but there is no guarantee.
       "),
       p(" By offering so many combinations of methods to analyze a data set,
-      iDEP enables people to pick up the results that like to see (confirmation bias).
-      It is unfortunate that you can almost found further support for almost any theory
+      iDEP enables users to rationalize. It is human nature to focus on results
+      that we like to see (confirmation bias).
+      It is unfortunate that you can almost found further support
+      for almost any theory
       from the massive but noisy literature.
       We encourage users to be critical of the results obtained using iDEP.
       Try to focus on robust results, rather than those that only should up
       with a certain parameter using a particular method.
-      ")
+      "),
+      h3("Reproducibility"),
+      p("Download the reports in the multiple
+       tabs, which has the parameters and results. Also download and try
+       the the R code on the DEG1 tab."),
+      h4("Previous versions of iDEP are still useable:"),
+      a("iDEP 0.96 with Ensembl Release 104, released July 30, 2022 ",
+        href = "http://bioinformatics.sdstate.edu/idep96/"
+      ),
+      br(),
+      a("iDEP 0.95 with Ensembl Release 104, released Feb. 8, 2022 ",
+        href = "http://bioinformatics.sdstate.edu/idep95/"
+      ),
+      br(),
+      a("iDEP 0.94 with Ensembl Release 104, released on Oct. 15, 2021 ",
+        href = "http://bioinformatics.sdstate.edu/idep94/"
+      ),
+      br(),
+      a("iDEP 0.93 with Ensembl Release 103, released May 20, 2021 ",
+        href = "http://bioinformatics.sdstate.edu/idep93/"
+      ),
+      br(),
+      a("iDEP 0.92 with Ensembl Release 100, released May 20, 2021 ",
+        href = "http://bioinformatics.sdstate.edu/idep92/"
+      ),
+      br(),
+      a("iDEP 0.90 with Ensembl Release 96, released May 19, 2021 ",
+        href = "http://bioinformatics.sdstate.edu/idep90/"
+      ),
+      br(),
+      a("iDEP 0.85 with Ensembl Release 95, released March 29, 2019 ",
+        href = "http://bioinformatics.sdstate.edu/idep85/"
+      ),
+      br(),
+      a("iDEP 0.82 with Ensembl  Release 92, released July 11, 2018 ",
+        href = "http://bioinformatics.sdstate.edu/idep82/"
+      ),
+      br(),
+      a("iDEP 0.73 with Ensembl  Release 91,  released December 2017 ",
+        href = "http://bioinformatics.sdstate.edu/idep73/"
+      ),
+      htmlOutput(ns("session_info"))
     )
   )
 }
@@ -128,6 +206,12 @@ mod_10_doc_ui <- function(id) {
 mod_10_doc_server <- function(id, pre_process, idep_data, tab) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    output$session_info <- renderUI({
+      i <- c("<br><h4>R session info: </h4>")
+      i <- c(i, capture.output(sessionInfo()))
+      HTML(paste(i, collapse = "<br/>"))
+    })
   })
 }
 

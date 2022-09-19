@@ -4,7 +4,15 @@
 \alias{deg_heat_sub}
 \title{Plot brush selection from main heatmap}
 \usage{
-deg_heat_sub(ht_brush, ht, ht_pos_main, heatmap_data, bar, all_gene_names)
+deg_heat_sub(
+  ht_brush,
+  ht,
+  ht_pos_main,
+  heatmap_data,
+  bar,
+  all_gene_names,
+  select_gene_id
+)
 }
 \arguments{
 \item{ht_brush}{Input from the user creating a brush selection

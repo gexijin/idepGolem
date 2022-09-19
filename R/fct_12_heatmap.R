@@ -134,7 +134,8 @@ deg_heat_sub <- function(ht_brush,
                          ht_pos_main,
                          heatmap_data,
                          bar,
-                         all_gene_names) {
+                         all_gene_names,
+                         select_gene_id) {
   max_genes <- 2000
   lt <- InteractiveComplexHeatmap::getPositionFromBrush(ht_brush)
   pos1 <- lt[[1]]
@@ -226,7 +227,7 @@ deg_heat_sub <- function(ht_brush,
     genes <- rowname_id_swap(
       data_matrix = m[row_index, column_index, drop = FALSE],
       all_gene_names = all_gene_names,
-      select_gene_id = "symbol"
+      select_gene_id = select_gene_id
     )
   } else {
     genes <- m[row_index, column_index, drop = FALSE]
