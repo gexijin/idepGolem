@@ -51,9 +51,11 @@ mod_10_doc_ui <- function(id) {
       Technology (OIT) at SDSU. Mirror site is enabled by a JetStream2
       allocation award (BIO210175), which is supported by NSF.
       "),
-      h3("Please cite the BMC Genomics paper!"),
+      h3("Please cite the iDEP paper"),
       p(
-        "If you use iDEP, please cite: Ge, Son & Yao, iDEP: an integrated web application for differential
+        "If you use iDEP, even just for prelimiary analysis,
+        please cite: Ge, Son & Yao, iDEP:
+        an integrated web application for differential
         expression and pathway analysis of RNA-Seq data, ",
         a("BMC Bioinformatics 19:1-24, 2018.",
           href = "https://doi.org/10.1186/s12859-018-2486-6",
@@ -127,7 +129,7 @@ mod_10_doc_ui <- function(id) {
         a("Dr. Ge",
           href = "mailto:xijin.ge@sdstate.edu?Subject=iDEP"
         ),
-        " (unpredictable). Follow us on ",
+        " (unreliable). Follow us on ",
         a("Twitter",
           href = "https://twitter.com/StevenXGe"
         ),
