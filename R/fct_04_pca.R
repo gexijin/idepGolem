@@ -583,14 +583,64 @@ PCAtools_eigencorplot <- function(processed_data,
 
 
 
-#' Gets plot dimensions from session$clientdata
+#' Gets plot width dimensions from session$clientdata
 #'
-#' @param data Data that has been through pre-processing
-#' @param sample_info Design Matrix
-#' @return Formatted plot generated with PCAtools package
+#' @param client_data session info from shiny
+#' @param plot_name Name of plot object
+#' @param tab Tab name
+#' @return string with dimension info
 #' @export
-get_dimensions <- function(client_data,
+get_plot_width <- function(client_data,
                            plot_name,
                            tab) {
-  return(1)
+  tryCatch(
+    {
+      width <- paste0("output_", tab, "-", plot_name, "_width")
+      height <- paste0("output_", tab, "-", plot_name, "_height")
+      w <- client_data[[width]]
+      # h <- client_data[[height]]
+    },
+    Warning = function(w) {
+      print("Warning in get_plot_width")
+    },
+    error = function(e) {
+      print("Error in get_plot_width")
+    }
+  )
+
+  # return width in inches -- default to 6.5
+  return(6.5)
+}
+
+
+#' Gets plot height size from session$clientdata
+#'
+#' @param client_data session info from shiny
+#' @param plot_name Name of plot object
+#' @param tab Tab name
+#' @return height in inches of plot
+#' @export
+get_plot_height <- function(client_data,
+                            plot_name,
+                            tab) {
+  tryCatch(
+    {
+      h <- 5.0099
+      width <- paste0("output_", tab, "-", plot_name, "_width")
+      height <- paste0("output_", tab, "-", plot_name, "_height")
+      w <- client_data[[width]]
+      h <- client_data[[height]]
+      aspect_ratio <- h / w
+      h <- aspect_ratio * 6.5
+    },
+    warning = function(w) {
+      print("Warning in get_plot_height")
+    },
+    error = function(e) {
+      print("Error in get_plot_height")
+    }
+  )
+
+
+  return(round(h, 3))
 }

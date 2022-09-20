@@ -158,7 +158,6 @@ mod_04_pca_ui <- function(id) {
               outputId = ns("pc_correlation")
             ),
             br(),
-            shiny::verbatimTextOutput(ns("image_dimensions")),
           ),
           tabPanel(
             "PCAtools Package",
@@ -228,19 +227,6 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     # Store client info in a convenience variable
-    cdata <- session$clientData
-    # get pca image dimensions
-    output$image_dimensions <- renderText({
-      a_ratio <- cdata[["output_pca-pca_plot_obj_width"]] / cdata[["output_pca-pca_plot_obj_height"]]
-      paste(
-        "Plot size (pixels): ",
-        cdata[["output_pca-pca_plot_obj_width"]],
-        " x ",
-        cdata[["output_pca-pca_plot_obj_height"]],
-        "\nAspect Ratio: ", cdata[["output_pca-pca_plot_obj_width"]] / cdata[["output_pca-pca_plot_obj_height"]],
-        "\nPlot size (inches): ", "6.5 x ", round(6.5 / a_ratio, 3)
-      )
-    })
 
     # PCA plot ------------
     # reactive part -----
@@ -267,7 +253,17 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       figure = reactive({
         pca_plot()
       }),
-      label = ""
+      label = "",
+      width = get_plot_width(
+        client_data = session$clientData,
+        plot_name = "pca_plot_obj",
+        tab = id
+      ),
+      height = get_plot_height(
+        client_data = session$clientData,
+        plot_name = "pca_plot_obj",
+        tab = id
+      )
     )
 
     # PC Factor Correlation ---------
