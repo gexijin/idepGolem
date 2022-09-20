@@ -85,9 +85,6 @@ PCA_plot <- function(data,
     x_axis_labels <- 12
   }
 
-  P1 <- paste("PC", PCAx, sep = "")
-  P2 <- paste("PC", PCAy, sep = "")
-
 
   # Set point & text size based on number of sample
   point_size <- 6
@@ -141,6 +138,109 @@ PCA_plot <- function(data,
   percentVar <- round(100 * summary(pca.object)$importance[2, PCAxy], 0)
   plot_PCA <- plot_PCA + ggplot2::xlab(paste0("PC", PCAx, ": ", percentVar[1], "% Variance"))
   plot_PCA <- plot_PCA + ggplot2::ylab(paste0("PC", PCAy, ": ", percentVar[2], "% Variance"))
+  return(plot_PCA)
+}
+
+#' Principal Component Analysis
+#'
+#' Draw a PCA plot where user selects which PCs on axes
+#'
+#' @param data Data that has been through pre-processing
+#' @param sample_info Matrix array with experiment info
+#' @param PCAx PC on x axis
+#' @param PCAy PC on y axis
+#' @param PCAz PC on z axis
+#' @param selected_color color
+#' @param selected_shape shape
+#'
+#' @export
+#' @return Formatted PCA plot
+#'
+PCA_plot_3d <- function(data,
+                        sample_info,
+                        PCAx = 1,
+                        PCAy = 2,
+                        PCAz = 3,
+                        selected_color = "Names",
+                        selected_shape = "Names") {
+
+  # no design file
+  if (is.null(selected_color)) {
+    selected_color <- "Names"
+  }
+  if (is.null(selected_shape)) {
+    selected_shape <- "Names"
+  }
+  counts <- data
+  memo <- ""
+
+  if (ncol(counts) > 100) {
+    part <- 1:100
+    counts <- counts[, part]
+    memo <- paste("(only showing 100 samples)")
+  }
+
+  if (ncol(counts) < 31) {
+    x_axis_labels <- 16
+  } else {
+    x_axis_labels <- 12
+  }
+
+  pca.object <- prcomp(t(data))
+
+  # 5 pc's or number of columns if <5
+  npc <- min(5, ncol(data))
+  pcaData <- as.data.frame(pca.object$x[, 1:npc])
+
+  groups <- detect_groups(sample_names = colnames(data), sample_info = sample_info)
+  # Missing design clause
+  if (is.null(sample_info)) {
+    pcaData <- cbind(pcaData, detect_groups(colnames(data), sample_info))
+  } else {
+    pcaData <- cbind(pcaData, detect_groups(colnames(data), sample_info), sample_info)
+  }
+  colnames(pcaData)[npc + 1] <- "Names"
+
+  # selected principal components
+  PCAxyz <- c(as.integer(PCAx), as.integer(PCAy), as.integer(PCAz))
+  percentVar <- round(100 * summary(pca.object)$importance[2, PCAxyz], 0)
+  plot_PCA <- plotly::plot_ly(pcaData,
+    x = pcaData[, as.integer(PCAx)],
+    y = pcaData[, as.integer(PCAy)],
+    z = pcaData[, as.integer(PCAz)],
+    color = pcaData[, selected_color],
+    symbol = pcaData[, selected_shape],
+    text = rownames(pcaData)[1],
+    hovertemplate = paste(
+      "<b>%{text}</b><br><br>",
+      "PC ", PCAy, ":%{y:.3f}<br>",
+      "PC ", PCAx, ":%{x:.3f}<br>",
+      "PC ", PCAz, ":%{z:.3f}<br>",
+      "<extra></extra>"
+    ),
+    type = "scatter3d",
+    mode = "markers",
+    width =
+    )
+  plot_PCA <- plotly::layout(
+    p = plot_PCA,
+    legend = list(title = list(text = paste0(selected_color, " ", selected_shape))),
+    plot_bgcolor = "#e5ecf6",
+    scene = list(
+      xaxis = list(
+        title = paste0("PC", PCAx, ": ", percentVar[1], "% Variance"),
+        automargin = TRUE
+      ),
+      yaxis = list(
+        title = paste0("PC", PCAy, ": ", percentVar[2], "% Variance"),
+        automargin = TRUE
+      ),
+      zaxis = list(
+        title = paste0("PC", PCAz, ": ", percentVar[3], "% Variance"),
+        automargin = TRUE
+      )
+    )
+  )
   return(plot_PCA)
 }
 
