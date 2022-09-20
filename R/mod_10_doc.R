@@ -51,7 +51,7 @@ mod_10_doc_ui <- function(id) {
       Technology (OIT) at SDSU. Mirror site is enabled by a JetStream2
       allocation award (BIO210175), which is supported by NSF.
       "),
-      h3("Please cite the iDEP paper"),
+      h3("Please cite the iDEP paper! Otherwise, this service might disappear"),
       p(
         "If you use iDEP, even just for prelimiary analysis,
         please cite: Ge, Son & Yao, iDEP:
