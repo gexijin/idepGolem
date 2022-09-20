@@ -65,6 +65,7 @@ Imports:
     PREDA,
     PREDAsampledata,
     QUBIC,
+    ReactomePA,
     reshape2,
     rmarkdown,
     RSQLite,
