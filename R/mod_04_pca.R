@@ -40,6 +40,40 @@ mod_04_pca_ui <- function(id) {
           ),
           ns = ns
         ),
+        conditionalPanel(
+          condition = "input.PCA_panels == 'PCA 3D'",
+          fluidRow(
+            column(
+              width = 6,
+              selectInput(
+                inputId = ns("PCAx"),
+                label = "X-axis",
+                choices = 1:5,
+                selected = 1
+              )
+            ),
+            column(
+              width = 6,
+              selectInput(
+                inputId = ns("PCAy"),
+                label = "Y-axis",
+                choices = 1:5,
+                selected = 2
+              )
+            ),
+            column(
+              width = 6,
+              selectInput(
+                inputId = ns("PCAz"),
+                label = "Z-axis",
+                choices = 1:5,
+                selected = 3
+              )
+            )
+          ),
+          h5("use camera in figure to download a png file to Downloads"),
+          ns = ns
+        ),
         # select design elements dynamically
         conditionalPanel(
           condition = "input.PCA_panels != 'PCAtools Package'",
@@ -146,10 +180,10 @@ mod_04_pca_ui <- function(id) {
           id = ns("PCA_panels"),
           tabPanel(
             title = "PCA",
-            plotOutput(
+            plotly::plotlyOutput(
               outputId = ns("pca_plot_obj"),
               width = "100%",
-              height = "500px"
+              height = "700px"
             ),
             ottoPlots::mod_download_figure_ui(ns("download_pca")),
             br(),
@@ -158,6 +192,19 @@ mod_04_pca_ui <- function(id) {
               outputId = ns("pc_correlation")
             ),
             br(),
+          ),
+          tabPanel(
+            title = "PCA 3D",
+            plotly::plotlyOutput(
+              outputId = ns("pca_plot_obj_3d"),
+              width = "100%",
+              height = "700px"
+            ),
+            br(),
+            br(),
+            shiny::textOutput(
+              outputId = ns("pc_correlation_3d")
+            ),
           ),
           tabPanel(
             "PCAtools Package",
@@ -242,8 +289,8 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
         selected_color = input$selectFactors1
       )
     })
-    output$pca_plot_obj <- renderPlot({
-      print(pca_plot())
+    output$pca_plot_obj <- plotly::renderPlotly({
+      plotly::ggplotly(pca_plot())
     })
 
     # Download Button
@@ -275,6 +322,33 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       )
     })
 
+    # PCA plot 3D ------------
+    # reactive part -----
+    pca_plot_3d <- reactive({
+      req(!is.null(pre_process$data()))
+
+      p <- PCA_plot_3d(
+        data = pre_process$data(),
+        sample_info = pre_process$sample_info(),
+        PCAx = input$PCAx,
+        PCAy = input$PCAy,
+        PCAz = input$PCAz,
+        selected_shape = input$selectFactors2,
+        selected_color = input$selectFactors1
+      )
+    })
+    output$pca_plot_obj_3d <- plotly::renderPlotly({
+      pca_plot_3d()
+    })
+
+    # PC Factor Correlation ---------
+    output$pc_correlation_3d <- renderText({
+      req(!is.null(pre_process$data()))
+      pc_factor_correlation(
+        data = pre_process$data(),
+        sample_info = pre_process$sample_info()
+      )
+    })
 
     # t_SNE plot -----------------
     t_SNE_plot_obj <- reactive({

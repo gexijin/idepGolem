@@ -25,6 +25,8 @@ On Linux and Mac you need these build tools:
 * gcc
 * gcc-fortran
 * cmake
+* pandoc version 1.12.3 or higher
+* libproj-dev or similar
 
 ### Get the code
 
