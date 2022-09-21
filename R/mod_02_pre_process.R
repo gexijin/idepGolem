@@ -53,7 +53,7 @@ mod_02_pre_process_ui <- function(id) {
           ),
 
           # Type of transformation to perform on the counts data
-          radioButtons(
+          selectInput(
             inputId = ns("counts_transform"),
             label = "Transform counts data for clustering & PCA.",
             choices = c(
@@ -171,6 +171,11 @@ mod_02_pre_process_ui <- function(id) {
             downloadButton(
               outputId = ns("download_processed_data"),
               label = "Processed data"
+            ),
+            tippy::tippy_this(
+              ns("download_processed_data"),
+              "Download transformed data",
+              theme = "light-border"
             )
           ),
           column(
@@ -184,6 +189,11 @@ mod_02_pre_process_ui <- function(id) {
                 outputId = ns("download_converted_counts"),
                 label = "Converted counts"
               ),
+              tippy::tippy_this(
+                ns("download_converted_counts"),
+                "Download counts data with converted IDs",
+                theme = "light-border"
+              ),
               ns = ns
             )
           )
@@ -193,14 +203,29 @@ mod_02_pre_process_ui <- function(id) {
           outputId = ns("rds"),
           label = ".RData"
         ),
+        tippy::tippy_this(
+          ns("rds"),
+          "Download converted data as .Rdata format",
+          theme = "light-border"
+        ),
         downloadButton(
           outputId = ns("report"),
           label = "Report"
+        ),
+        tippy::tippy_this(
+          ns("report"),
+          "Generate HTML report of pre-processing tab",
+          theme = "light-border"
         ),
         # Show transform messages
         actionButton(
           inputId = ns("show_messages"),
           label = "Messages"
+        ),
+        tippy::tippy_this(
+          ns("show_messages"),
+          "Display all messages",
+          theme = "light-border"
         ),
         a(
           h5("Questions?", align = "right"),
