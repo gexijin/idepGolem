@@ -13,10 +13,10 @@ app_ui <- function(request) {
     navbarPage(
       "iDEP 1.0",
       id = "navbar",
-      theme <- bslib::bs_theme(
+      theme = bslib::bs_theme(
         version = 5,
         primary = "#223E94",
-        secondary = "#FED106",
+        secondary = "#0D223E",
         warning = "#ffc107",
         bg = "#fbfbfb",
         fg = "#0D223E",
