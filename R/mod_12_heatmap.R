@@ -58,7 +58,8 @@ mod_12_heatmap_server <- function(id,
                                   bar,
                                   all_gene_names,
                                   cluster_rows = FALSE,
-                                  heatmap_color) {
+                                  heatmap_color,
+                                  select_gene_id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     # Interactive heatmap environment
@@ -72,7 +73,7 @@ mod_12_heatmap_server <- function(id,
         shiny_env$ht <- deg_heatmap(
           data = data(),
           bar = bar(),
-          heatmap_color_select = heatmap_color(),
+          heatmap_color_select = unlist(strsplit(heatmap_color(), "-")),
           cluster_rows = cluster_rows
         )
 
@@ -89,7 +90,7 @@ mod_12_heatmap_server <- function(id,
         deg_heatmap(
           data = data(),
           bar = bar(),
-          heatmap_color_select = heatmap_color(),
+          heatmap_color_select = unlist(strsplit(heatmap_color(), "-")),
           cluster_rows = cluster_rows
         )
       })
@@ -124,7 +125,8 @@ mod_12_heatmap_server <- function(id,
             ht_pos_main = shiny_env$ht_pos_main,
             heatmap_data = data(),
             bar = bar(),
-            all_gene_names = all_gene_names()
+            all_gene_names = all_gene_names(),
+            select_gene_id = select_gene_id()
           )
           incProgress(0.6)
           shiny_env$ht_select <- heat_return$ht_select
@@ -159,7 +161,8 @@ mod_12_heatmap_server <- function(id,
             ht_pos_main = shiny_env$ht_pos_main,
             heatmap_data = data(),
             bar = bar(),
-            all_gene_names = all_gene_names()
+            all_gene_names = all_gene_names(),
+            select_gene_id = select_gene_id()
           )
           incProgress(0.6)
           shiny_env$ht_select <- heat_return$ht_select

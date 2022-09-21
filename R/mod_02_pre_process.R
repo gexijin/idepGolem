@@ -189,46 +189,18 @@ mod_02_pre_process_ui <- function(id) {
           )
         ),
         br(),
-        # Show transform messages
-        actionButton(
-          inputId = ns("show_messages"),
-          label = "Messages"
-        ),
         downloadButton(
           outputId = ns("rds"),
-          label = ".RData File"
+          label = ".RData"
         ),
         downloadButton(
           outputId = ns("report"),
           label = "Report"
         ),
-        actionButton(ns("customize_button"), "Customize Plots"),
-        shinyBS::bsModal(
-          id = ns("modalExample"),
-          title = "Plot options",
-          trigger = ns("customize_button"),
-          size = "small",
-          selectInput(
-            inputId = ns("heatmap_color_select"),
-            label = "Heatmap Color scheme:",
-            choices = c(
-              "Green-Black-Red",
-              "Red-Black-Green",
-              "Blue-White-Red",
-              "Green-Black-Magenta",
-              "Blue-Yellow-Red",
-              "Blue-White-Brown",
-              "Orange-White-Blue"
-            ),
-            selected = "Green-Black-Red",
-            width = "100%"
-          ),
-          selectInput(
-            inputId = ns("select_gene_id"),
-            label = "Gene ID for sub-heatmap with < 60 genes:",
-            choices = c("symbol", "ensembl_ID", "User_ID"),
-            selected = "symbol"
-          )
+        # Show transform messages
+        actionButton(
+          inputId = ns("show_messages"),
+          label = "Messages"
         ),
         a(
           h5("Questions?", align = "right"),
@@ -382,12 +354,6 @@ mod_02_pre_process_ui <- function(id) {
                   choices = "",
                   selected = NULL,
                   multiple = TRUE
-                ),
-                selectInput(
-                  inputId = ns("select_gene_id"),
-                  label = NULL,
-                  choices = NULL,
-                  selected = NULL
                 )
               ),
               column(
@@ -684,18 +650,6 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       )
     })
 
-    # Gene ID Name Choices ----------
-    observe({
-      req(!is.null(load_data$all_gene_names()))
-
-      updateSelectInput(
-        session = session,
-        inputId = "select_gene_id",
-        choices = colnames(load_data$all_gene_names()),
-        selected = "symbol"
-      )
-    })
-
     # Individual plot data ------------
     individual_data <- reactive({
       req(!is.null(processed_data()$data))
@@ -703,7 +657,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       rowname_id_swap(
         data_matrix = processed_data()$data,
         all_gene_names = load_data$all_gene_names(),
-        select_gene_id = input$select_gene_id
+        select_gene_id = load_data$select_gene_id()
       )
     })
 
@@ -1029,7 +983,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       counts_log_start = reactive(input$counts_log_start),
       all_gene_info = reactive(all_gene_info()),
       descr = reactive(processed_data()$descr),
-      heatmap_color_select = reactive(input$heatmap_color_select)
+      heatmap_color_select = reactive(load_data$heatmap_color_select()),
+      select_gene_id = reactive(load_data$select_gene_id())
     )
   })
 }

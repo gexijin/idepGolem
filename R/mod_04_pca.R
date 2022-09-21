@@ -40,6 +40,40 @@ mod_04_pca_ui <- function(id) {
           ),
           ns = ns
         ),
+        conditionalPanel(
+          condition = "input.PCA_panels == 'PCA 3D'",
+          fluidRow(
+            column(
+              width = 6,
+              selectInput(
+                inputId = ns("PCAx"),
+                label = "X-axis",
+                choices = 1:5,
+                selected = 1
+              )
+            ),
+            column(
+              width = 6,
+              selectInput(
+                inputId = ns("PCAy"),
+                label = "Y-axis",
+                choices = 1:5,
+                selected = 2
+              )
+            ),
+            column(
+              width = 6,
+              selectInput(
+                inputId = ns("PCAz"),
+                label = "Z-axis",
+                choices = 1:5,
+                selected = 3
+              )
+            )
+          ),
+          h5("use camera in figure to download a png file to Downloads"),
+          ns = ns
+        ),
         # select design elements dynamically
         conditionalPanel(
           condition = "input.PCA_panels != 'PCAtools Package'",
@@ -128,13 +162,6 @@ mod_04_pca_ui <- function(id) {
             min = 1,
             max = 15
           ),
-          # Gene ID Selection -----------
-          selectInput(
-            inputId = ns("select_gene_id"),
-            label = "Gene ID",
-            choices = NULL,
-            selected = NULL
-          ),
           ns = ns
         ),
         # Download report button
@@ -153,10 +180,10 @@ mod_04_pca_ui <- function(id) {
           id = ns("PCA_panels"),
           tabPanel(
             title = "PCA",
-            plotOutput(
+            plotly::plotlyOutput(
               outputId = ns("pca_plot_obj"),
               width = "100%",
-              height = "500px"
+              height = "700px"
             ),
             ottoPlots::mod_download_figure_ui(ns("download_pca")),
             br(),
@@ -165,7 +192,19 @@ mod_04_pca_ui <- function(id) {
               outputId = ns("pc_correlation")
             ),
             br(),
-            shiny::verbatimTextOutput(ns("image_dimensions")),
+          ),
+          tabPanel(
+            title = "PCA 3D",
+            plotly::plotlyOutput(
+              outputId = ns("pca_plot_obj_3d"),
+              width = "100%",
+              height = "700px"
+            ),
+            br(),
+            br(),
+            shiny::textOutput(
+              outputId = ns("pc_correlation_3d")
+            ),
           ),
           tabPanel(
             "PCAtools Package",
@@ -235,19 +274,6 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     # Store client info in a convenience variable
-    cdata <- session$clientData
-    # get pca image dimensions
-    output$image_dimensions <- renderText({
-      a_ratio <- cdata[["output_pca-pca_plot_obj_width"]] / cdata[["output_pca-pca_plot_obj_height"]]
-      paste(
-        "Plot size (pixels): ",
-        cdata[["output_pca-pca_plot_obj_width"]],
-        " x ",
-        cdata[["output_pca-pca_plot_obj_height"]],
-        "\nAspect Ratio: ", cdata[["output_pca-pca_plot_obj_width"]] / cdata[["output_pca-pca_plot_obj_height"]],
-        "\nPlot size (inches): ", "6.5 x ", round(6.5 / a_ratio, 3)
-      )
-    })
 
     # PCA plot ------------
     # reactive part -----
@@ -263,8 +289,8 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
         selected_color = input$selectFactors1
       )
     })
-    output$pca_plot_obj <- renderPlot({
-      print(pca_plot())
+    output$pca_plot_obj <- plotly::renderPlotly({
+      plotly::ggplotly(pca_plot())
     })
 
     # Download Button
@@ -274,7 +300,17 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       figure = reactive({
         pca_plot()
       }),
-      label = ""
+      label = "",
+      width = get_plot_width(
+        client_data = session$clientData,
+        plot_name = "pca_plot_obj",
+        tab = id
+      ),
+      height = get_plot_height(
+        client_data = session$clientData,
+        plot_name = "pca_plot_obj",
+        tab = id
+      )
     )
 
     # PC Factor Correlation ---------
@@ -286,6 +322,33 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       )
     })
 
+    # PCA plot 3D ------------
+    # reactive part -----
+    pca_plot_3d <- reactive({
+      req(!is.null(pre_process$data()))
+
+      p <- PCA_plot_3d(
+        data = pre_process$data(),
+        sample_info = pre_process$sample_info(),
+        PCAx = input$PCAx,
+        PCAy = input$PCAy,
+        PCAz = input$PCAz,
+        selected_shape = input$selectFactors2,
+        selected_color = input$selectFactors1
+      )
+    })
+    output$pca_plot_obj_3d <- plotly::renderPlotly({
+      pca_plot_3d()
+    })
+
+    # PC Factor Correlation ---------
+    output$pc_correlation_3d <- renderText({
+      req(!is.null(pre_process$data()))
+      pc_factor_correlation(
+        data = pre_process$data(),
+        sample_info = pre_process$sample_info()
+      )
+    })
 
     # t_SNE plot -----------------
     t_SNE_plot_obj <- reactive({
@@ -347,7 +410,7 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
         PCA_biplot(
           data = pre_process$data(),
           sample_info = pre_process$sample_info(),
-          select_gene_id = input$select_gene_id,
+          select_gene_id = pre_process$select_gene_id(),
           all_gene_names = pre_process$all_gene_names(),
           selected_x = input$x_axis_pc,
           selected_y = input$y_axis_pc,
@@ -483,17 +546,6 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       )
     })
 
-    # Gene ID Name Choices ----------
-    observe({
-      req(!is.null(pre_process$all_gene_names()))
-
-      updateSelectInput(
-        session = session,
-        inputId = "select_gene_id",
-        choices = colnames(pre_process$all_gene_names()),
-        selected = "symbol"
-      )
-    })
 
 
     # Markdown report------------
@@ -529,7 +581,7 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
             color = input$selectFactors1,
             shape = input$selectFactors2,
             all_gene_names = pre_process$all_gene_names(),
-            select_gene_id = input$select_gene_id,
+            select_gene_id = pre_process$select_gene_id(),
             selected_x = input$x_axis_pc,
             selected_y = input$y_axis_pc,
             encircle = input$encircle,
