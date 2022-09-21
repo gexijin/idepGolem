@@ -70,11 +70,20 @@ mod_03_clustering_ui <- function(id) {
             inputId = ns("k_means_re_run"),
             label = "Re-Run"
           ),
-
+          tippy::tippy_this(
+            ns("k_means_re_run"),
+            "Re-run the k-Means algorithm",
+            theme = "light-border"
+          ),
           # Elbow plot pop-up
           actionButton(
             inputId = ns("elbow_pop_up"),
             label = "How many clusters?"
+          ),
+          tippy::tippy_this(
+            ns("elbow_pop_up"),
+            "k-Means elbow plot",
+            theme = "light-border"
           ),
           # Line break ---------
           HTML(
@@ -165,6 +174,11 @@ mod_03_clustering_ui <- function(id) {
             )
           ),
           actionButton(ns("customize_button"), "More options"),
+          tippy::tippy_this(
+            ns("customize_button"),
+            "Data transformations and download heatmap data",
+            theme = "light-border"
+          ),
           shinyBS::bsModal(
             id = ns("modalExample"),
             title = "More options",
@@ -183,6 +197,11 @@ mod_03_clustering_ui <- function(id) {
             downloadButton(
               outputId = ns("download_heatmap_data"),
               label = "Heatmap data"
+            ),
+            tippy::tippy_this(
+              ns("download_heatmap_data"),
+              "Download heatmap data",
+              theme = "light-border"
             )
           ),
           ns = ns
@@ -191,6 +210,11 @@ mod_03_clustering_ui <- function(id) {
         downloadButton(
           outputId = ns("report"),
           label = "Report"
+        ),
+        tippy::tippy_this(
+          ns("report"),
+          "Generate HTML report of clustering tab",
+          theme = "light-border"
         ),
         a(
           h5("Questions?", align = "right"),
