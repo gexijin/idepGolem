@@ -148,6 +148,11 @@ mod_01_load_data_ui <- function(id) {
             actionButton(ns("customize_button"), "Plot Options")
           )
         ),
+        tippy::tippy_this(
+          ns("customize_button"),
+          "Customize plots throughout app",
+          theme = "light-border"
+        ),
         shinyBS::bsModal(
           id = ns("modalExample"),
           title = "Plot options",
