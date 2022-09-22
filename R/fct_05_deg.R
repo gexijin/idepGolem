@@ -2347,6 +2347,77 @@ plot_venn <- function(limma,
   )
 }
 
+plot_upset <- function(limma,
+                       up_down_regulated,
+                       select_comparisons_venn) {
+  results <- limma$results
+
+  # Split by up or down regulation
+  if (up_down_regulated) {
+    result_up <- results
+    result_up[result_up < 0] <- 0
+    colnames(result_up) <- paste0("Up_", colnames(result_up))
+    result_down <- results
+    result_down[result_down > 0] <- 0
+    colnames(result_down) <- paste0("Down_", colnames(result_down))
+    results <- cbind(result_up, result_down)
+  }
+
+  ixa <- c()
+  for (comps in select_comparisons_venn) {
+    # If not interaction term
+    if (!grepl("^I:|^I-|^Up_I:|^Up_I-|^Down_I:|^Down_I-", comps)) {
+      ix <- match(comps, colnames(results))
+    } else {
+      # Mismatch in comparison names for interaction terms for DESeq2
+      # I:water_Wet.genetic_Hy   in the selected Contrast
+      # Diff-water_Wet-genetic_Hy  in column names
+      tem <- gsub("^I-", "I:", colnames(results))
+      tem <- gsub("-", "\\.", tem)
+      ix <- match(comps, tem)
+
+      # This is for limma package
+      if (is.na(ix)) {
+        ix <- match(comps, colnames(results))
+      }
+    }
+    ixa <- c(ixa, ix)
+  }
+  # Only use selected comparisons
+  results <- results[, ixa, drop = FALSE]
+  if (dim(results)[2] > 5) {
+    results <- results[, 1:5]
+  }
+  colnames(results) <- gsub("^I-", "I:", colnames(results))
+
+  library(tidyverse)
+  data <- results %>%
+    as_tibble() %>%
+    mutate(id = 1:n()) %>%
+    gather(Group, GroupMember, all_of(colnames(results))) %>%
+    group_by_at(vars(-c(Group, GroupMember))) %>%
+    nest() %>%
+    mutate(Group = map(data, ~ if (all(.x$GroupMember == 0)) {
+      character(0)
+    } else {
+      .x$Group[.x$GroupMember != 0]
+    }))
+
+  plot <- ggplot(data, aes(x = Group)) +
+    geom_bar(fill = "blue") +
+    geom_text(
+      stat = "count",
+      aes(label = after_stat(count)),
+      vjust = -1,
+      size = 3
+    ) +
+    scale_y_continuous() +
+    ggupset::scale_x_upset()
+
+  return(plot)
+}
+
+
 #' Find data for the heatmap
 #'
 #' Filter the processed data into a submatrix that only contains

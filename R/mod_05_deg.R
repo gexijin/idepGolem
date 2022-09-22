@@ -161,6 +161,7 @@ mod_05_deg_1_ui <- function(id) {
             ),
             htmlOutput(outputId = ns("list_comparisons_venn")),
             plotOutput(outputId = ns("venn_plot")),
+            plotOutput(outputId = ns("upset_plot")),
             ottoPlots::mod_download_figure_ui(
               id = ns("dl_venn")
             )
@@ -632,6 +633,21 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       }),
       label = ""
     )
+
+    upset <- reactive({
+      req(!is.null(deg$limma))
+      req(!is.null(input$select_comparisons_venn))
+
+      upset <- plot_upset(
+        limma = deg$limma,
+        up_down_regulated = input$up_down_regulated,
+        select_comparisons_venn = input$select_comparisons_venn
+      )
+    })
+
+    output$upset_plot <- renderPlot({
+      print(upset())
+    })
 
 
     # DEG STEP 2 --------
