@@ -81,10 +81,10 @@ for (i in 1:length(params)){
 library(idepGolem)
 ```
 
+## Summary
+`r switch(params$data_file_format, "1" = "Read Counts data", "2" = "Normalized expression values", "3" = "Log Fold Change and corrected P values data")` were analyzed using iDEP v1.0 [[Citation](#citation-1)]. `r switch(params$data_file_format,  "1" = paste0("The data was first filtered to remove reads below ", params$min_counts," CPM in at least ", params$n_min_samples_count, " sample(s). Then the data was transformed with ",  switch(params$counts_transform, "1" = paste0("EdgeR using a pseudocount of ", params$counts_log_start), "2" = "VST: Variance Stabilizing Transformation",  "3" = "Regularized log"), ". Missing values were imputed using ", params$missing_value, "."), "2" = paste0("The data was ",switch(toString(params$log_transform_fpkm), "FALSE" = "not log transformed.", "TRUE" = paste0(" log transformed with a psuedocount of ", params$log_start_fpkm, ".")), " Then it was filtered to only keep genes above level ", params$low_filter_fpkm, " in at least ", params$n_min_samples_fpkm, " sample(s). Missing values were imputed using ", params$missing_value, "."))`
 
-`r switch(params$data_file_format, "1" = "Read Counts data", "2" = "Normalized expression values", "3" = "Log Fold Change and corrected P values data")` were analyzed using iDEP v0.97 [[Citation](#citation-1)]. `r switch(params$data_file_format,  "1" = paste0("The data was first filtered to remove reads below ", params$min_counts," CPM in at least ", params$n_min_samples_count, " sample(s). Then the data was transformed with ",  switch(params$counts_transform, "1" = paste0("EdgeR using a pseudocount of ", params$counts_log_start), "2" = "VST: Variance Stabilizing Transformation",  "3" = "Regularized log"), ". Missing values were imputed using ", params$missing_value, "."), "2" = paste0("The data was ",switch(toString(params$log_transform_fpkm), "FALSE" = "not log transformed.", "TRUE" = paste0(" log transformed with a psuedocount of ", params$log_start_fpkm, ".")), " Then it was filtered to only keep genes above level ", params$low_filter_fpkm, " in at least ", params$n_min_samples_fpkm, " sample(s). Missing values were imputed using ", params$missing_value, "."))`
-
-# PLOTS
+## Plots
 
 ```{r Pre-Process Data, include = FALSE }
 processed_data <- idepGolem::pre_process(
