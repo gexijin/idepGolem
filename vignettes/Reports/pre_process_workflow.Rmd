@@ -1,7 +1,8 @@
 ---
-title: "Pre-Process Workflow"
-output: html_document
-code_folding: hide
+title: "Pre-Processing and Exploratory Data Analysis"
+output: 
+  html_document:
+    code_folding: hide
 params:
   loaded_data:
   descr:
@@ -27,7 +28,7 @@ params:
     value: !r Sys.Date()
   printcode:
     label: "Display Code"
-    value: FALSE
+    value: TRUE
     input: checkbox
 ---
 
@@ -37,13 +38,20 @@ knitr::opts_chunk$set(echo = params$printcode)
 
 <!-- This document cannot be knit directly from R studio -->
 
-# Citation
+<div>
 
+::: {style="color: Blue"}
 ## If this site has contributed to your work, please cite our article:
 
 Ge, S.X., Son, E.W. & Yao, R. iDEP: an integrated web application for differential expression and pathway analysis of RNA-Seq data. BMC Bioinformatics 19, 534 (2018). <https://doi.org/10.1186/s12859-018-2486-6>
+:::
 
-# Pre-Processing and Exploratory Data Analysis
+## 
+
+</div>
+
+------------------------------------------------------------------------
+
 
 This html document contains what parameters values were selected on the IDEP interface. It also includes the plots generated from those selections.
 
@@ -73,7 +81,6 @@ for (i in 1:length(params)){
 library(idepGolem)
 ```
 
-# CITATION {#citation-1}
 
 `r switch(params$data_file_format, "1" = "Read Counts data", "2" = "Normalized expression values", "3" = "Log Fold Change and corrected P values data")` were analyzed using iDEP v0.97 [[Citation](#citation-1)]. `r switch(params$data_file_format,  "1" = paste0("The data was first filtered to remove reads below ", params$min_counts," CPM in at least ", params$n_min_samples_count, " sample(s). Then the data was transformed with ",  switch(params$counts_transform, "1" = paste0("EdgeR using a pseudocount of ", params$counts_log_start), "2" = "VST: Variance Stabilizing Transformation",  "3" = "Regularized log"), ". Missing values were imputed using ", params$missing_value, "."), "2" = paste0("The data was ",switch(toString(params$log_transform_fpkm), "FALSE" = "not log transformed.", "TRUE" = paste0(" log transformed with a psuedocount of ", params$log_start_fpkm, ".")), " Then it was filtered to only keep genes above level ", params$low_filter_fpkm, " in at least ", params$n_min_samples_fpkm, " sample(s). Missing values were imputed using ", params$missing_value, "."))`
 
