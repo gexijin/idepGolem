@@ -122,6 +122,11 @@ mod_06_pathway_ui <- function(id) {
           outputId = ns("report"),
           label = "Generate Report"
         ),
+        tippy::tippy_this(
+          ns("report"),
+          "Generate HTML report of pathway tab",
+          theme = "light-border"
+        ),
         a(
           h5("Questions?", align = "right"),
           href = "https://idepsite.wordpress.com/pathways/",
