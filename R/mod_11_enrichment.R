@@ -32,7 +32,12 @@ mod_11_enrichment_ui <- function(id) {
       ),
       column(
         width = 4,
-        actionButton(ns("customize_button"), "More options")
+        actionButton(ns("customize_button"), "More options"),
+        tippy::tippy_this(
+          ns("customize_button"),
+          "Customize enrichment analysis",
+          theme = "light-border"
+        ),
       )
     ),
     shinyBS::bsModal(
@@ -69,7 +74,12 @@ mod_11_enrichment_ui <- function(id) {
         downloadButton(
           outputId = ns("download_enrichment"),
           label = "CSV file"
-        )
+        ),
+        tippy::tippy_this(
+          ns("download_enrichment"),
+          "Download enrichment analysis",
+          theme = "light-border"
+        ),
       ),
       tabPanel(
         title = "Tree",
@@ -258,6 +268,11 @@ mod_11_enrichment_ui <- function(id) {
           column(
             width = 2,
             downloadButton(ns("download_gene_info"), "CSV file")
+          ),
+          tippy::tippy_this(
+            ns("download_gene_info"),
+            "Download enrichment analysis results",
+            theme = "light-border"
           ),
           column(
             width = 3,
