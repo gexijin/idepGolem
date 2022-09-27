@@ -173,6 +173,11 @@ mod_05_deg_1_ui <- function(id) {
               outputId = ns("dl_deg_code"),
               label = "Code"
             ),
+            tippy::tippy_this(
+              ns("dl_deg_code"),
+              "Download .R file of DEG code",
+              theme = "light-border"
+            ),
             verbatimTextOutput(
               ns("deg_code")
             )
@@ -264,10 +269,17 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
 
     output$submit_ui <- renderUI({
       req(model_comparisons())
-      actionButton(
-        inputId = ns("submit_model_button"),
-        label = "Submit",
-        style = "float:right"
+      tagList(
+        actionButton(
+          inputId = ns("submit_model_button"),
+          label = "Submit",
+          style = "float:right"
+        ),
+        tippy::tippy_this(
+          ns("submit_model_button"),
+          "Run DEG analysis",
+          theme = "light-border"
+        )
       )
     })
 
