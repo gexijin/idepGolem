@@ -163,7 +163,6 @@ MDS_plot(
   selected_shape = "Sample_Name"
 )
 ```
-
 # PCAtools plots
 ```{r, eval=FALSE}
 #devtools::load_all()
@@ -270,12 +269,12 @@ down_reg_data <- as.data.frame(down_reg_data)
 down_reg_data$direction <- rep("Down", nrow(down_reg_data))
 #down_reg_data
 
-# main_heat_deg <- deg_heatmap(
-#   data = deg_heat$genes,
-#   bar = deg_heat$bar,
-#   heatmap_color_select = c("green", "black", "red")
-# )
-# ComplexHeatmap::draw(main_heat_deg)
+main_heat_deg <- deg_heatmap(
+  data = deg_heat$genes,
+  bar = deg_heat$bar,
+  heatmap_color_select = c("green", "black", "red")
+)
+ComplexHeatmap::draw(main_heat_deg)
 
 plot_volcano(
   select_contrast = "NULL-WT",
@@ -297,163 +296,6 @@ plot_ma(
   plot_colors = c("red","yellow", "blue")
 )
 ```
-
-```{r}
-comp_venn <- list_comp_venn(
-  limma = limma, 
-  up_down_regulated = TRUE
-)
-
-
-plot_venn(
-  limma = limma,
-  up_down_regulated = TRUE, 
-  select_comparisons_venn = comp_venn$choices_first_three
-)
-```
-
-
-```{r}
-results <- limma$results
-select_comparisons_venn = comp_venn$choices_first_three
-
-result_up <- results
-result_up[result_up < 0] <- 0
-colnames(result_up) <- paste0("Up_", colnames(result_up))
-result_down <- results
-result_down[result_down > 0] <- 0
-colnames(result_down) <- paste0("Down_", colnames(result_down))
-results <- cbind(result_up, result_down)
-
- ixa <- c()
-  for (comps in select_comparisons_venn) {
-    # If not interaction term
-    if (!grepl("^I:|^I-|^Up_I:|^Up_I-|^Down_I:|^Down_I-", comps)) {
-      ix <- match(comps, colnames(results))
-    } else {
-      # Mismatch in comparison names for interaction terms for DESeq2
-      # I:water_Wet.genetic_Hy   in the selected Contrast
-      # Diff-water_Wet-genetic_Hy  in column names
-      tem <- gsub("^I-", "I:", colnames(results))
-      tem <- gsub("-", "\\.", tem)
-      ix <- match(comps, tem)
-
-      # This is for limma package
-      if (is.na(ix)) {
-        ix <- match(comps, colnames(results))
-      }
-    }
-    ixa <- c(ixa, ix)
-  }
- 
- 
-  # Only use selected comparisons
-  results2 <- results[, ixa, drop = FALSE]
-  if (dim(results)[2] > 5) {
-    results <- results[, 1:5]
-  }
-  colnames(results) <- gsub("^I-", "I:", colnames(results))
-
-```
-
-
-```{r}
-
-results <- limma$results
-
-
-select_comparisons_venn = comp_venn$choices_first_three
-
-result_up <- results
-result_up[result_up < 0] <- 0
-colnames(result_up) <- paste0("Up_", colnames(result_up))
-result_down <- results
-result_down[result_down > 0] <- 0
-colnames(result_down) <- paste0("Down_", colnames(result_down))
-results <- cbind(result_up, result_down)
-
-temp <- results %>%
-  as_tibble() %>%
-  mutate(id = 1:n()) %>%
-  gather(Group, GroupMember, `Up_NULL-WT`:`Down_I:p53_NULL-Treatment_IR`) %>% 
-  group_by_at(vars(-c(Group, GroupMember))) %>%
-  nest() %>%
-  mutate(Group =  map(data, ~ if(all(.x$GroupMember == 0)){ character(0) }else{ .x$Group[.x$GroupMember == 1]} )) %>% 
-  select(-data, -id)
-
-ggplot(temp, aes(x = Group)) + 
-  geom_bar(fill = "blue") + 
-  geom_text(stat = "count", aes(label = after_stat(count)), vjust = -1, size = 3) + 
-  scale_y_continuous(limits = c(0, 1350)) + 
-  scale_x_upset(n_intersections = 20)
-  
-
-switch <- function(value){
-  ifelse(value != 0, colnames(value), value)
-}
-
-colnam <- colnames(results)
-
-test <- results %>% 
-  as_tibble() %>% 
-  mutate(across(everything(), .fns = as.character))
-
-for (i in 1:length(colnam)) {
-  test[test[,i] != 0, i] <- colnam[i]
-  test[test[,i]  == 0, i] <- NA
-}
-
-x <- split(as.data.frame(test), 1:nrow(test))
-
-my_fun <- function(data, colnam){
-  list <- c() 
-  for (i in length(colnam)) {
-    list <- c(list, data[i])
-  }
-}
-
-for (i in 1:dim(test)[1]){
-   test[i, length(colnam) + 1] = my_fun(test[i, ], colnam)
-}
-```
-
-
-```{r}
-results <- limma$results
-select_comparisons_venn = comp_venn$choices_first_three
-
-result_up <- results
-result_up[result_up < 0] <- 0
-colnames(result_up) <- paste0("Up_", colnames(result_up))
-result_down <- results
-result_down[result_down > 0] <- 0
-colnames(result_down) <- paste0("Down_", colnames(result_down))
-results <- cbind(result_up, result_down)
-
-options <- colnames(results)
-
-
-test <- results %>%
-  mutate(list = list)
-```
-
-
-```{r}
-library(ggupset)
-library(ggplot2)
-library(tidyverse)
-
-df <- tidy_movies %>%
-  dplyr::distinct(title, year, length, .keep_all = TRUE)
-
-ggplot(df, aes(x = Genres)) + 
-  geom_bar(fill = "blue") + 
-  geom_text(stat = "count", aes(label = after_stat(count)), vjust = -1, size = 3) + 
-  scale_y_continuous(limits = c(0, 1350)) + 
-  scale_x_upset(n_intersections = 20)
-```
-
-
 
 # Pathway Tab Stuff
 ```{r}
