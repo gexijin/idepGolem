@@ -4,7 +4,7 @@
 \alias{plot_venn}
 \title{Create a venn diagram plot}
 \usage{
-plot_venn(limma, up_down_regulated, select_comparisons_venn)
+plot_venn(results)
 }
 \arguments{
 \item{limma}{limma Returned list of results from the limma_value
