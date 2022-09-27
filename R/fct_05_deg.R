@@ -2281,21 +2281,24 @@ list_comp_venn <- function(limma,
   }
 }
 
-#' Create a venn diagram plot
+#' Prep data for venn diagram
 #'
-#' Plot a venn diagram that illustrates the number of significantly
-#' expressed genes that overlap for multiple comparisons.
+#' @description This function prepares the data from the DEG results
+#' with some data transformations and filtering based on specified
+#' parameters. The data is then passed into the \code{plot_venn} and
+#' \code{plot_upset} functions.
 #'
-#' @param limma limma Returned list of results from the limma_value
+#' @param limma Returned list of results from the limma_value
 #'  function
 #' @param up_down_regulated Split the comparisons into either
 #'  up or down regulated
 #' @param select_comparisons_venn The comparisons to plot on the
 #'  venn diagram
 #'
+#' @return A data frame of formatted data for use in a venn diagram or
+#' upset plot
 #' @export
-#' @return A formatted venn diagram plot of the selected comparisons.
-plot_venn <- function(limma,
+prep_venn <- function(limma,
                       up_down_regulated,
                       select_comparisons_venn) {
   results <- limma$results
@@ -2333,10 +2336,30 @@ plot_venn <- function(limma,
   }
   # Only use selected comparisons
   results <- results[, ixa, drop = FALSE]
+
+  colnames(results) <- gsub("^I-", "I:", colnames(results))
+
+  return(results)
+}
+
+#' Create a venn diagram plot
+#'
+#' Plot a venn diagram that illustrates the number of significantly
+#' expressed genes that overlap for multiple comparisons.
+#'
+#' @param limma limma Returned list of results from the limma_value
+#'  function
+#' @param up_down_regulated Split the comparisons into either
+#'  up or down regulated
+#' @param select_comparisons_venn The comparisons to plot on the
+#'  venn diagram
+#'
+#' @export
+#' @return A formatted venn diagram plot of the selected comparisons.
+plot_venn <- function(results) {
   if (dim(results)[2] > 5) {
     results <- results[, 1:5]
   }
-  colnames(results) <- gsub("^I-", "I:", colnames(results))
 
   return(
     limma::vennDiagram(
@@ -2346,6 +2369,50 @@ plot_venn <- function(limma,
     )
   )
 }
+
+#' Plot upset graph
+#'
+#' @param results Dataframe from \code{venn_data()}
+#'
+#' @return A \code{ggplot2} object
+#'
+#' @export
+#'
+plot_upset <- function(results) {
+
+  # get the groups of data by category
+  data <- results |>
+    tidyr::as_tibble() |>
+    dplyr::mutate(id = 1:dplyr::n()) |>
+    tidyr::gather(Group, GroupMember, dplyr::all_of(colnames(results))) |>
+    dplyr::group_by_at(dplyr::vars(-c(Group, GroupMember))) |>
+    tidyr::nest() |>
+    dplyr::mutate(
+      Group = purrr::map(
+        data,
+        ~ if (all(.x$GroupMember == 0)) {
+          character(0)
+        } else {
+          .x$Group[.x$GroupMember != 0]
+        }
+      )
+    )
+
+  plot <- ggplot2::ggplot(data, ggplot2::aes(x = Group)) +
+    ggplot2::geom_bar(fill = "grey") +
+    ggplot2::geom_text(
+      stat = "count",
+      ggplot2::aes(label = ggplot2::after_stat(count)),
+      vjust = -1,
+      size = 3
+    ) +
+    ggplot2::theme_light() +
+    ggplot2::scale_y_continuous() +
+    ggupset::scale_x_upset()
+
+  return(plot)
+}
+
 
 #' Find data for the heatmap
 #'

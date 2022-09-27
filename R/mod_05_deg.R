@@ -163,7 +163,9 @@ mod_05_deg_1_ui <- function(id) {
             plotOutput(outputId = ns("venn_plot")),
             ottoPlots::mod_download_figure_ui(
               id = ns("dl_venn")
-            )
+            ),
+            plotOutput(outputId = ns("upset_plot")),
+            ottoPlots::mod_download_figure_ui(id = ns("dl_upset"))
           ),
           tabPanel(
             title = "R Code",
@@ -611,24 +613,38 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
           selected = "All"
         )
       } else {
-        checkboxGroupInput(
-          inputId = ns("select_comparisons_venn"),
-          label = h4("Select up to 5 comparisons"),
-          choices = venn_comp$choices,
-          selected = venn_comp$choices_first_three
+        tagList(
+          h4("Select comparisons:"),
+          h6("The venn diagram will only display up to 5 comparisons"),
+          checkboxGroupInput(
+            inputId = ns("select_comparisons_venn"),
+            label = NULL,
+            choices = venn_comp$choices,
+            selected = venn_comp$choices_first_three
+          )
         )
       }
     })
 
     # venn diagram -----
+    venn_data <- reactive({
+      req(!is.null(deg$limma))
+      req(!is.null(input$select_comparisons_venn))
+      req(input$up_down_regulated)
+
+      prep_venn(
+        limma = deg$limma,
+        up_down_regulated = input$up_down_regulated,
+        select_comparisons_venn = input$select_comparisons_venn
+      )
+    })
+
     venn <- reactive({
       req(!is.null(deg$limma))
       req(!is.null(input$select_comparisons_venn))
 
       venn <- plot_venn(
-        limma = deg$limma,
-        up_down_regulated = input$up_down_regulated,
-        select_comparisons_venn = input$select_comparisons_venn
+        results = venn_data()
       )
       p <- recordPlot()
       return(p)
@@ -641,6 +657,25 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       filename = "venn_diagram",
       figure = reactive({
         venn()
+      }),
+      label = ""
+    )
+
+    upset <- reactive({
+      upset <- plot_upset(
+        results = venn_data()
+      )
+    })
+
+    output$upset_plot <- renderPlot({
+      print(upset())
+    })
+
+    dl_upset <- ottoPlots::mod_download_figure_server(
+      id = "dl_upset",
+      filename = "upset_plot",
+      figure = reactive({
+        upset()
       }),
       label = ""
     )
