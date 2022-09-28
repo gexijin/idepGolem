@@ -17,12 +17,12 @@ up or down regulated}
 venn diagram}
 }
 \value{
-A data frame of formatted data for use in a venn diagram or 
+A data frame of formatted data for use in a venn diagram or
 upset plot
 }
 \description{
-This function prepares the data from the DEG results 
-with some data transformations and filtering based on specified 
-parameters. The data is then passed into the \code{plot_venn} and 
+This function prepares the data from the DEG results
+with some data transformations and filtering based on specified
+parameters. The data is then passed into the \code{plot_venn} and
 \code{plot_upset} functions.
 }
