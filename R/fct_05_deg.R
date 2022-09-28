@@ -2404,11 +2404,21 @@ plot_upset <- function(results) {
       stat = "count",
       ggplot2::aes(label = ggplot2::after_stat(count)),
       vjust = -1,
-      size = 3
+      size = 5
     ) +
     ggplot2::theme_light() +
-    ggplot2::scale_y_continuous() +
-    ggupset::scale_x_upset()
+    ggplot2::scale_y_continuous(limits = function(x) {
+      x * 1.1
+    }) +
+    ggupset::scale_x_upset() +
+    ggupset::theme_combmatrix(
+      combmatrix.panel.line.size = 0,
+      combmatrix.panel.point.size = 4,
+      combmatrix.label.text = ggplot2::element_text(size = 17),
+      combmatrix.label.extra_spacing = 10
+    ) +
+    ggplot2::xlab(NULL) +
+    ggplot2::ylab(NULL)
 
   return(plot)
 }
