@@ -165,7 +165,16 @@ mod_05_deg_1_ui <- function(id) {
               id = ns("dl_venn")
             ),
             plotOutput(outputId = ns("upset_plot")),
-            ottoPlots::mod_download_figure_ui(id = ns("dl_upset"))
+            ottoPlots::mod_download_figure_ui(id = ns("dl_upset")),
+            tags$p("The above graph is an UpSet plot that is an alternative to a
+            venn diagram. The plot shows the intersections of the data in the
+            combination matrix (bottom) and the columns show how many genes are
+            in each intersection."),
+            tags$a(
+              h5("More info on plot", align = "right"),
+              href = "https://en.wikipedia.org/wiki/UpSet_Plot#:~:text=UpSet%20plots%20are%20a%20data,sets%20(or%20vice%20versa).",
+              target = "_blank"
+            )
           ),
           tabPanel(
             title = "R Code",
