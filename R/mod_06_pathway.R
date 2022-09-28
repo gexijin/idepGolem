@@ -541,13 +541,15 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         req(!is.null(gage_pathway_data()))
 
         res <- gage_pathway_data()
-        # add URL
-        ix <- match(res[, 2], gene_sets()$pathway_info$description)
-        res[, 2] <- hyperText(
-          res[, 2],
-          gene_sets()$pathway_info$memo[ix]
-        )
-        res$Genes <- as.character(res$Genes)
+        if (ncol(res) > 1) {
+          # add URL
+          ix <- match(res[, 2], gene_sets()$pathway_info$description)
+          res[, 2] <- hyperText(
+            res[, 2],
+            gene_sets()$pathway_info$memo[ix]
+          )
+          res$Genes <- as.character(res$Genes)
+        }
         return(res)
       },
       digits = -1,
@@ -638,14 +640,16 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         req(!is.null(fgsea_pathway_data()))
 
         res <- fgsea_pathway_data()
+        if (ncol(res) > 1) {
+          # add URL
+          ix <- match(res[, 2], gene_sets()$pathway_info$description)
+          res[, 2] <- hyperText(
+            res[, 2],
+            gene_sets()$pathway_info$memo[ix]
+          )
+          res$Genes <- as.character(res$Genes)
+        }
 
-        # add URL
-        ix <- match(res[, 2], gene_sets()$pathway_info$description)
-        res[, 2] <- hyperText(
-          res[, 2],
-          gene_sets()$pathway_info$memo[ix]
-        )
-        res$Genes <- as.character(res$Genes)
         return(res)
       },
       digits = -1,
