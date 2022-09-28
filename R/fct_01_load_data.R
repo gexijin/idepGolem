@@ -227,6 +227,10 @@ input_data <- function(expression_file,
     colnames(expr) <- gsub("-", "", colnames(expr))
     colnames(expr) <- gsub("\\.", "", colnames(expr))
 
+    rownames(expr) <- gsub("-", "", rownames(expr))
+    rownames(expr) <- gsub("\\.", "", rownames(expr))
+    rownames(expr) <- gsub(" ", "", rownames(expr))
+
     # Matching with column names of expression file ----------
     matches <- match(
       toupper(colnames(data)), toupper(colnames(expr))
