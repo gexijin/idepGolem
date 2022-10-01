@@ -2391,12 +2391,13 @@ plot_upset <- function(results) {
       Group = purrr::map(
         data,
         ~ if (all(.x$GroupMember == 0)) {
-          character(0)
+          NA
         } else {
           .x$Group[.x$GroupMember != 0]
         }
       )
-    )
+    ) |>
+    dplyr::filter(!is.na(Group))
 
   plot <- ggplot2::ggplot(data, ggplot2::aes(x = Group)) +
     ggplot2::geom_bar(fill = "grey") +
