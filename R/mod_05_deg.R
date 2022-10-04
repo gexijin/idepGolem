@@ -163,6 +163,17 @@ mod_05_deg_1_ui <- function(id) {
             plotOutput(outputId = ns("venn_plot")),
             ottoPlots::mod_download_figure_ui(
               id = ns("dl_venn")
+            ),
+            plotOutput(outputId = ns("upset_plot")),
+            ottoPlots::mod_download_figure_ui(id = ns("dl_upset")),
+            tags$p("The above graph is an UpSet plot that is an alternative to a
+            venn diagram. The plot shows the intersections of the data in the
+            combination matrix (bottom) and the columns show how many genes are
+            in each intersection."),
+            tags$a(
+              h5("More info on plot", align = "right"),
+              href = "https://en.wikipedia.org/wiki/UpSet_Plot#:~:text=UpSet%20plots%20are%20a%20data,sets%20(or%20vice%20versa).",
+              target = "_blank"
             )
           ),
           tabPanel(
@@ -170,6 +181,11 @@ mod_05_deg_1_ui <- function(id) {
             downloadButton(
               outputId = ns("dl_deg_code"),
               label = "Code"
+            ),
+            tippy::tippy_this(
+              ns("dl_deg_code"),
+              "Download .R file of DEG code",
+              theme = "light-border"
             ),
             verbatimTextOutput(
               ns("deg_code")
@@ -262,10 +278,17 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
 
     output$submit_ui <- renderUI({
       req(model_comparisons())
-      actionButton(
-        inputId = ns("submit_model_button"),
-        label = "Submit",
-        style = "float:right"
+      tagList(
+        actionButton(
+          inputId = ns("submit_model_button"),
+          label = "Submit",
+          style = "float:right"
+        ),
+        tippy::tippy_this(
+          ns("submit_model_button"),
+          "Run DEG analysis",
+          theme = "light-border"
+        )
       )
     })
 
@@ -599,24 +622,38 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
           selected = "All"
         )
       } else {
-        checkboxGroupInput(
-          inputId = ns("select_comparisons_venn"),
-          label = h4("Select up to 5 comparisons"),
-          choices = venn_comp$choices,
-          selected = venn_comp$choices_first_three
+        tagList(
+          h4("Select comparisons:"),
+          h6("The venn diagram will only display up to 5 comparisons"),
+          checkboxGroupInput(
+            inputId = ns("select_comparisons_venn"),
+            label = NULL,
+            choices = venn_comp$choices,
+            selected = venn_comp$choices_first_three
+          )
         )
       }
     })
 
     # venn diagram -----
+    venn_data <- reactive({
+      req(!is.null(deg$limma))
+      req(!is.null(input$select_comparisons_venn))
+      req(input$up_down_regulated)
+
+      prep_venn(
+        limma = deg$limma,
+        up_down_regulated = input$up_down_regulated,
+        select_comparisons_venn = input$select_comparisons_venn
+      )
+    })
+
     venn <- reactive({
       req(!is.null(deg$limma))
       req(!is.null(input$select_comparisons_venn))
 
       venn <- plot_venn(
-        limma = deg$limma,
-        up_down_regulated = input$up_down_regulated,
-        select_comparisons_venn = input$select_comparisons_venn
+        results = venn_data()
       )
       p <- recordPlot()
       return(p)
@@ -629,6 +666,25 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       filename = "venn_diagram",
       figure = reactive({
         venn()
+      }),
+      label = ""
+    )
+
+    upset <- reactive({
+      upset <- plot_upset(
+        results = venn_data()
+      )
+    })
+
+    output$upset_plot <- renderPlot({
+      print(upset())
+    })
+
+    dl_upset <- ottoPlots::mod_download_figure_server(
+      id = "dl_upset",
+      filename = "upset_plot",
+      figure = reactive({
+        upset()
       }),
       label = ""
     )

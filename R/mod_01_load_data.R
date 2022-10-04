@@ -148,6 +148,11 @@ mod_01_load_data_ui <- function(id) {
             actionButton(ns("customize_button"), "Plot Options")
           )
         ),
+        tippy::tippy_this(
+          ns("customize_button"),
+          "Customize plots throughout app",
+          theme = "light-border"
+        ),
         shinyBS::bsModal(
           id = ns("modalExample"),
           title = "Plot options",
@@ -183,6 +188,11 @@ mod_01_load_data_ui <- function(id) {
         ),
         # Table output for species loading progress -----------
         tableOutput(ns("species_match")),
+        a(
+          h5("Citation information", align = "right"),
+          href = "https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-018-2486-6#citeas",
+          target = "_blank"
+        ),
 
         # Action button for Gene ID examples -----------
         a(
@@ -238,6 +248,27 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
     # increase max input file size
     options(shiny.maxRequestSize = 2001024^2)
+
+    welcome_modal <- shiny::modalDialog(
+      title = "Welcome to iDEP!",
+      tags$p("We hope that you find our application useful. If iDEP is used,
+      even for preliminrary analysis, please cite:"),
+      tags$h4("Ge, Son & Yao, iDEP: an integrated web application for
+      differential expression and pathway analysis of RNA-Seq data,
+      BMC Bioinformatics 19:1-24, 2018.", style = "color:#6B1518"),
+      tags$p("By citing the iDEP paper, you will help this service remain
+      available in the future. Visit the 'About' tab for more information."),
+      tags$a(
+        h5("Download citation"),
+        href = "https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-018-2486-6#citeas",
+        target = "_blank"
+      ),
+      tags$h4("How-to videos coming soon!"),
+      easyClose = T,
+      size = "l"
+    )
+
+    shiny::showModal(welcome_modal)
 
     # Pop-up modal for gene assembl information ----
     observeEvent(input$genome_assembl_button, {

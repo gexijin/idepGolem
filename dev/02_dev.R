@@ -63,6 +63,8 @@ usethis::use_package("grDevices")
 usethis::use_package("PCAtools")
 usethis::use_package("tippy")
 usethis::use_package("ottoPlots")
+usethis::use_package("ggupset")
+usethis::use_package("purrr")
 
 ## Add modules ----
 ## Create a module infrastructure in R/

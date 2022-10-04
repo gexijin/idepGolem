@@ -297,7 +297,6 @@ plot_ma(
 )
 ```
 
-
 # Pathway Tab Stuff
 ```{r}
 gene_sets <- read_gene_sets(

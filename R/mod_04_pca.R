@@ -169,6 +169,11 @@ mod_04_pca_ui <- function(id) {
           outputId = ns("report"),
           label = "Generate Report"
         ),
+        tippy::tippy_this(
+          ns("report"),
+          "Generate HTML report of PCA tab",
+          theme = "light-border"
+        ),
         a(
           h5("Questions?", align = "right"),
           href = "https://idepsite.wordpress.com/pca/",
