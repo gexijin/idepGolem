@@ -48,7 +48,7 @@ mod_06_pathway_ui <- function(id) {
             width = 6,
             numericInput(
               inputId = ns("min_set_size"),
-              label = h5("Geneset size: Min."),
+              label = "Geneset size: Min.",
               min = 5,
               max = 30,
               value = 15,
@@ -59,7 +59,7 @@ mod_06_pathway_ui <- function(id) {
             width = 6,
             numericInput(
               inputId = ns("max_set_size"),
-              label = h5("Max."),
+              label = "Max.",
               min = 1000,
               max = 2000,
               value = 2000,
@@ -77,7 +77,7 @@ mod_06_pathway_ui <- function(id) {
         ),
         numericInput(
           inputId = ns("pathway_p_val_cutoff"),
-          label = h5("Pathway signifiance cutoff (FDR)"),
+          label = "Pathway signifiance cutoff (FDR)",
           value = 0.2,
           min = 1e-20,
           max = 1,
@@ -89,7 +89,7 @@ mod_06_pathway_ui <- function(id) {
         ),
         numericInput(
           inputId = ns("n_pathway_show"),
-          label = h5("Number of top pathways to show"),
+          label = "Number of top pathways to show",
           value = 30,
           min = 5,
           max = 100,
@@ -106,7 +106,7 @@ mod_06_pathway_ui <- function(id) {
         ),
         numericInput(
           inputId = ns("gene_p_val_cutoff"),
-          label = h5("Remove genes with big FDR before pathway analysis:"),
+          label = "Remove genes with big FDR before pathway analysis:",
           value = 1,
           min = 1e-20,
           max = 1,
@@ -116,7 +116,7 @@ mod_06_pathway_ui <- function(id) {
           type = "text/css",
           "#pathway-gene_p_val_cutoff { width:100%;   margin-top:-12px}"
         ),
-        h5("* Warning! The many combinations can lead to false positives in pathway analyses."),
+        h6("* Warning! The many combinations can lead to false positives in pathway analyses."),
         # Download report button
         downloadButton(
           outputId = ns("report"),
@@ -188,7 +188,7 @@ mod_06_pathway_ui <- function(id) {
           ),
           tabPanel(
             title = "Network",
-            h5("Connected gene sets share more genes. Color of node correspond to adjuested Pvalues."),
+            p("Connected gene sets share more genes. Color of node correspond to adjuested Pvalues."),
             fluidRow(
               column(
                 width = 2,
