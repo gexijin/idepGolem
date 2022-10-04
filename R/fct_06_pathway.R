@@ -906,10 +906,15 @@ get_pathway_list_data <- function(pathway_method,
   # looking up genes for each pathway
   for (i in 1:nrow(pathways)) {
     # Find the gene set
+    print(i)
     ix <- which(names(gene_sets) == pathways$Pathways[i])
     if (length(ix) != 0) {
       # Retrieve genes
-      genes <- gene_sets[[ix]]
+      if (length(ix) > 1) {
+        genes <- gene_sets[[ix[[3]]]]
+      } else {
+        genes <- gene_sets[[ix]]
+      }
 
       if (!is.null(probe_to_gene)) {
         iy <- match(genes, probe_to_gene[, 1])
