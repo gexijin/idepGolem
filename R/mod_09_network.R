@@ -24,7 +24,7 @@ mod_09_network_ui <- function(id) {
         ),
         numericInput(
           inputId = ns("n_genes_network"),
-          label = h5("Most variable genes to include (< 3001)"),
+          label = "Most variable genes to include (< 3001)",
           min = 10,
           max = 3000,
           value = 1000
@@ -34,7 +34,7 @@ mod_09_network_ui <- function(id) {
             width = 6,
             numericInput(
               inputId = ns("soft_power"),
-              label = h5("Soft Threshold"),
+              label = "Soft Threshold",
               min = 1,
               max = 20,
               value = 5
@@ -44,7 +44,7 @@ mod_09_network_ui <- function(id) {
             width = 6,
             numericInput(
               inputId = ns("min_module_size"),
-              label = h5("Min. Module Size"),
+              label = "Min. Module Size",
               min = 10,
               max = 100,
               value = 20
@@ -90,7 +90,7 @@ mod_09_network_ui <- function(id) {
                 width = 4,
                 numericInput(
                   inputId = ns("edge_threshold"),
-                  label = h5("Edge Threshold"),
+                  label = "Edge Threshold",
                   min = 0,
                   max = 1,
                   value = .4,
@@ -101,7 +101,7 @@ mod_09_network_ui <- function(id) {
                 width = 4,
                 numericInput(
                   inputId = ns("top_genes_network"),
-                  label = h5("Top genes"),
+                  label = "Top genes",
                   min = 10,
                   max = 2000,
                   value = 10,
@@ -141,7 +141,7 @@ mod_09_network_ui <- function(id) {
           ),
           tabPanel(
             "Enrichment",
-            h4("Enriched pathways in the selected module"),
+            p("Enriched pathways in the selected module"),
             mod_11_enrichment_ui(ns("enrichment_table_cluster"))
           ),
           tabPanel(

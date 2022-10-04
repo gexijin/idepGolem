@@ -35,7 +35,7 @@ mod_03_clustering_ui <- function(id) {
           condition = "input.cluster_panels == 'Hierarchical' |
           input.cluster_panels == 'Gene SD Distribution' ",
           fluidRow(
-            column(width = 6, h5("Top Genes:")),
+            column(width = 6, p("Top Genes:")),
             column(
               width = 6,
               numericInput(
@@ -99,7 +99,7 @@ mod_03_clustering_ui <- function(id) {
             (input.cluster_panels == 'Hierarchical' |
             input.cluster_panels == 'sample_tab')",
           fluidRow(
-            column(width = 4, h5("Distance")),
+            column(width = 4, p("Distance")),
             column(
               width = 8,
               selectInput(
@@ -111,7 +111,7 @@ mod_03_clustering_ui <- function(id) {
             )
           ),
           fluidRow(
-            column(width = 4, h5("Linkage")),
+            column(width = 4, p("Linkage")),
             column(
               width = 8,
               selectInput(
@@ -126,7 +126,7 @@ mod_03_clustering_ui <- function(id) {
             )
           ),
           fluidRow(
-            column(width = 7, h5("Max Z score")),
+            column(width = 7, p("Max Z score")),
             column(
               width = 5,
               numericInput(
@@ -160,14 +160,14 @@ mod_03_clustering_ui <- function(id) {
         conditionalPanel(
           condition = "input.cluster_panels == 'Hierarchical' ",
           fluidRow(
-            column(width = 4, h5("Samples color")),
+            column(width = 4, p("Samples color")),
             column(
               width = 8,
               htmlOutput(ns("list_factors_heatmap"))
             )
           ),
           fluidRow(
-            column(width = 4, h5("Mark Genes:")),
+            column(width = 4, p("Mark Genes:")),
             column(
               width = 8,
               htmlOutput(ns("selected_genes_ui"))

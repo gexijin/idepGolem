@@ -28,7 +28,7 @@ mod_02_pre_process_ui <- function(id) {
               # Min counts per million (works with min samples)
               numericInput(
                 inputId = ns("min_counts"),
-                label = h5("Min. CPM"),
+                label = "Min. CPM",
                 value = 0.5
               )
             ),
@@ -38,7 +38,7 @@ mod_02_pre_process_ui <- function(id) {
               # Min samples per row to have min CPM
               numericInput(
                 inputId = ns("n_min_samples_count"),
-                label = h5("n libraries"),
+                label = "n libraries",
                 value = 1
               )
             )
@@ -70,7 +70,7 @@ mod_02_pre_process_ui <- function(id) {
             fluidRow(
               column(
                 width = 5,
-                h5("Pseudo count c:")
+                "Pseudo count c:"
               ),
               column(
                 width = 7,
@@ -99,7 +99,7 @@ mod_02_pre_process_ui <- function(id) {
               # Fold counts min (works with min samples)
               numericInput(
                 inputId = ns("low_filter_fpkm"),
-                label = h5("Min. level"),
+                label = "Min. level",
                 value = -1000
               )
             ),
@@ -109,7 +109,7 @@ mod_02_pre_process_ui <- function(id) {
               # Min samples per row to have the low filter
               numericInput(
                 inputId = ns("n_min_samples_fpkm"),
-                label = h5("n samples"),
+                label = "n samples",
                 value = 1
               )
             )
@@ -133,7 +133,7 @@ mod_02_pre_process_ui <- function(id) {
           # Constant to add if yes to a log transform
           numericInput(
             inputId = ns("log_start_fpkm"),
-            label = h5("Constant c for started log: log(x+c)"),
+            label = "Constant c for started log: log(x+c)",
             value = 1
           ),
           tags$style(
@@ -147,7 +147,7 @@ mod_02_pre_process_ui <- function(id) {
         fluidRow(
           column(
             width = 5,
-            h5("Missing values:")
+            p("Missing values:")
           ),
           column(
             width = 7,

@@ -71,7 +71,7 @@ mod_04_pca_ui <- function(id) {
               )
             )
           ),
-          h5("use camera in figure to download a png file to Downloads"),
+          p("Use camera icon in figure to download image"),
           ns = ns
         ),
         # select design elements dynamically
@@ -96,7 +96,11 @@ mod_04_pca_ui <- function(id) {
         conditionalPanel(
           condition = "input.PCA_panels == 't-SNE'",
           fluidRow(
-            actionButton(inputId = ns("seedTSNE"), label = "Re-calculate from new seed")
+            actionButton(
+              inputId = ns("seedTSNE"),
+              label = "Re-calculate from new seed"
+            ),
+            tags$br()
           ),
           ns = ns
         ),
@@ -369,6 +373,7 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       )
     })
     output$t_sne <- renderPlot({
+      req(t_SNE_plot_obj())
       print(t_SNE_plot_obj())
     })
     # Download Button
@@ -394,6 +399,7 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       )
     })
     output$mds_plot_obj <- renderPlot({
+      req(mds_plot())
       print(mds_plot())
     })
     # Download Button
@@ -430,6 +436,7 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
     })
 
     output$pcatools_biplot <- renderPlot({
+      req(biplot())
       print(biplot())
     })
 
@@ -453,6 +460,7 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       )
     })
     output$pcatools_scree <- renderPlot({
+      req(scree())
       print(scree())
     })
 
@@ -478,6 +486,7 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       return(p)
     })
     output$pcatools_eigencor <- renderPlot({
+      req(eigencor())
       print(eigencor())
     })
 
