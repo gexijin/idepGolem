@@ -2506,13 +2506,7 @@ deg_heat_data <- function(limma,
   ))
 }
 
-
-
-#' Volcano DEG plot
-#'
-#' Use the results from limma-value to create a volcano plot to
-#' illustrate the significantly expressed genes. Up and down
-#' regulated genes are colored on the ggplot.
+#' Data processing for volcano plot
 #'
 #' @param select_contrast Comparison from DEG analysis to filter
 #'  for the significant genes
@@ -2524,18 +2518,16 @@ deg_heat_data <- function(limma,
 #'  the expressed genes
 #' @param limma_fc Minimum fold change value to use in determining
 #'  the expressed genes
-#' @param plot_colors List containing three colors to differentiate between
-#'  the up-regulated, down-regulated, and other genes
 #'
+#' @return A list containing processed data for volcano plot in
+#'  \code{plot_volcano()} and list of differently expressed genes for labeling
 #' @export
-#' @return ggplot with the fold value as the X-axis and the log 10
-#'  value of the adjusted p-value as the Y-axis.
-plot_volcano <- function(select_contrast,
+#'
+volcano_data <- function(select_contrast,
                          comparisons,
                          top_genes,
                          limma_p_val,
-                         limma_fc,
-                         plot_colors) {
+                         limma_fc) {
   if (is.null(select_contrast) || is.null(comparisons) ||
     length(top_genes) == 0) {
     return(NULL)
@@ -2566,41 +2558,83 @@ plot_volcano <- function(select_contrast,
     top_1$FDR <= limma_p_val & top_1$Fold <= -log2(limma_fc)
   )] <- "Down"
 
-  return(
-    ggplot2::ggplot(top_1, ggplot2::aes(x = Fold, y = -log10(FDR))) +
-      ggplot2::geom_point(ggplot2::aes(color = upOrDown)) +
-      ggplot2::scale_color_manual(values = plot_colors) +
-      ggplot2::theme_light() +
-      ggplot2::theme(
-        legend.position = "right",
-        axis.title.x = ggplot2::element_text(
-          color = "black",
-          size = 14
-        ),
-        axis.title.y = ggplot2::element_text(
-          color = "black",
-          size = 14
-        ),
-        axis.text.x = ggplot2::element_text(
-          size = 16
-        ),
-        axis.text.y = ggplot2::element_text(
-          size = 16
-        ),
-        plot.title = ggplot2::element_text(
-          color = "black",
-          size = 16,
-          face = "bold",
-          hjust = .5
-        )
-      ) +
-      ggplot2::labs(
-        title = "Fold Change vs. Adjusted p-Value",
-        y = "-log10(Adjusted p-Val)",
-        x = "Fold Change",
-        color = "Regulated"
+  anotate_genes <- top_1 |>
+    dplyr::filter(upOrDown != "None")
+
+  return(list(
+    data = top_1,
+    anotate_genes = anotate_genes
+  ))
+}
+
+
+#' Volcano DEG plot
+#'
+#' Use the results from limma-value to create a volcano plot to
+#' illustrate the significantly expressed genes. Up and down
+#' regulated genes are colored on the ggplot.
+#'
+#' @param plot_colors List containing three colors to differentiate between
+#'  the up-regulated, down-regulated, and other genes
+#' @param anotate_genes List of gene names to anotate. Default is NULL.
+#' @param data Dataframe of processed data from \code{volcano_data()}.
+#'
+#' @export
+#' @return ggplot with the fold value as the X-axis and the log 10
+#'  value of the adjusted p-value as the Y-axis.
+plot_volcano <- function(data,
+                         anotate_genes = NULL,
+                         plot_colors) {
+  anotate_data <- data |>
+    dplyr::mutate(genes = rownames(data)) |>
+    dplyr::filter(genes %in% anotate_genes)
+
+  plot <- ggplot2::ggplot(data, ggplot2::aes(x = Fold, y = -log10(FDR))) +
+    ggplot2::geom_point(ggplot2::aes(color = upOrDown)) +
+    ggplot2::scale_color_manual(values = plot_colors) +
+    ggplot2::theme_light() +
+    ggplot2::theme(
+      legend.position = "right",
+      axis.title.x = ggplot2::element_text(
+        color = "black",
+        size = 14
+      ),
+      axis.title.y = ggplot2::element_text(
+        color = "black",
+        size = 14
+      ),
+      axis.text.x = ggplot2::element_text(
+        size = 16
+      ),
+      axis.text.y = ggplot2::element_text(
+        size = 16
+      ),
+      plot.title = ggplot2::element_text(
+        color = "black",
+        size = 16,
+        face = "bold",
+        hjust = .5
       )
-  )
+    ) +
+    ggplot2::labs(
+      title = "Fold Change vs. Adjusted p-Value",
+      y = "-log10(Adjusted p-Val)",
+      x = "Fold Change",
+      color = "Regulated"
+    ) +
+    ggrepel::geom_text_repel(
+      data = anotate_data,
+      ggplot2::aes(label = genes),
+      size = 3,
+      min.segment.length = 0,
+      max.time = 1,
+      max.overlaps = 25,
+      direction = "both",
+      nudge_x = .5,
+      nudge_y = 2
+    )
+
+  return(plot)
 }
 
 #' Plot mean expression and fold change
@@ -2624,6 +2658,8 @@ plot_volcano <- function(select_contrast,
 #'  pre-processing
 #' @param plot_colors List containing three colors to differentiate between
 #'  the up-regulated, down-regulated, and other genes
+#'  @param anotate_genes List containing the gene names to be labeled on the
+#'   plot. Default is NULL.
 #'
 #' @export
 #' @return A ggplot with the X-axis the mean expression value and
@@ -2635,7 +2671,8 @@ plot_ma <- function(select_contrast,
                     limma_fc,
                     contrast_samples,
                     processed_data,
-                    plot_colors) {
+                    plot_colors,
+                    anotate_genes = NULL) {
   if (length(comparisons) == 1) {
     top_1 <- top_genes[[1]]
   } else {
@@ -2672,41 +2709,56 @@ plot_ma <- function(select_contrast,
 
   genes <- merge(average_data, top_1, by = "row.names")
 
+  anotate_data <- genes |>
+    dplyr::filter(Row.names %in% anotate_genes)
+
+  plot <- ggplot2::ggplot(genes, ggplot2::aes(x = Average, y = Fold)) +
+    ggplot2::geom_point(ggplot2::aes(color = upOrDown)) +
+    ggplot2::scale_color_manual(values = plot_colors) +
+    ggplot2::theme_light() +
+    ggplot2::theme(
+      legend.position = "right",
+      axis.title.x = ggplot2::element_text(
+        color = "black",
+        size = 14
+      ),
+      axis.title.y = ggplot2::element_text(
+        color = "black",
+        size = 14
+      ),
+      axis.text.x = ggplot2::element_text(
+        size = 16
+      ),
+      axis.text.y = ggplot2::element_text(
+        size = 16
+      ),
+      plot.title = ggplot2::element_text(
+        color = "black",
+        size = 16,
+        face = "bold",
+        hjust = .5
+      )
+    ) +
+    ggplot2::labs(
+      title = "Average Expression vs. Log2 Fold Change",
+      y = "Log2 Fold Change",
+      x = "Average Expression",
+      color = "Regulated"
+    ) +
+    ggrepel::geom_text_repel(
+      data = anotate_data,
+      ggplot2::aes(label = Row.names),
+      size = 3,
+      min.segment.length = 0,
+      max.time = 2,
+      max.overlaps = 25,
+      direction = "both",
+      nudge_x = 0.5,
+      nudge_y = 2
+    )
 
   return(
-    ggplot2::ggplot(genes, ggplot2::aes(x = Average, y = Fold)) +
-      ggplot2::geom_point(ggplot2::aes(color = upOrDown)) +
-      ggplot2::scale_color_manual(values = plot_colors) +
-      ggplot2::theme_light() +
-      ggplot2::theme(
-        legend.position = "right",
-        axis.title.x = ggplot2::element_text(
-          color = "black",
-          size = 14
-        ),
-        axis.title.y = ggplot2::element_text(
-          color = "black",
-          size = 14
-        ),
-        axis.text.x = ggplot2::element_text(
-          size = 16
-        ),
-        axis.text.y = ggplot2::element_text(
-          size = 16
-        ),
-        plot.title = ggplot2::element_text(
-          color = "black",
-          size = 16,
-          face = "bold",
-          hjust = .5
-        )
-      ) +
-      ggplot2::labs(
-        title = "Average Expression vs. Log2 Fold Change",
-        y = "Log2 Fold Change",
-        x = "Average Expression",
-        color = "Regulated"
-      )
+    plot
   )
 }
 

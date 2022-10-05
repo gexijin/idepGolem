@@ -12,7 +12,8 @@ plot_ma(
   limma_fc,
   contrast_samples,
   processed_data,
-  plot_colors
+  plot_colors,
+  anotate_genes = NULL
 )
 }
 \arguments{
@@ -38,7 +39,9 @@ comparison}
 pre-processing}
 
 \item{plot_colors}{List containing three colors to differentiate between
-the up-regulated, down-regulated, and other genes}
+the up-regulated, down-regulated, and other genes
+@param anotate_genes List containing the gene names to be labeled on the 
+ plot. Default is NULL.}
 }
 \value{
 A ggplot with the X-axis the mean expression value and

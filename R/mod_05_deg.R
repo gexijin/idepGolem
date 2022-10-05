@@ -215,6 +215,10 @@ mod_05_deg_2_ui <- function(id) {
             label = "Color scale",
             choices = "Red-Green"
           ),
+          actionButton(
+            inputId = ns("customize_labels"),
+            label = "Customize gene labels"
+          ),
           ns = ns
         ),
         width = 2
@@ -787,18 +791,114 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       )
     })
 
+    observeEvent(input$customize_labels, {
+      shiny::showModal(
+        shiny::modalDialog(
+          size = "m",
+          p("Customize which genes are labeled."),
+          selectInput(
+            inputId = ns("gene_label_type"),
+            label = "Gene selection",
+            choices = list(
+              "Do not label genes" = 1,
+              "Label specific gene(s) from list" = 2,
+              "Label top n genes" = 3,
+              "Label genes above a certain threshold" = 4
+            ),
+            selected = 1
+          ),
+          conditionalPanel(
+            condition = "input.gene_label_type == 2",
+            selectInput(
+              inputId = ns("vol_genes"),
+              label = "Label Genes",
+              choices = rownames(vol_data()$anotate_genes),
+              multiple = TRUE,
+              selectize = TRUE
+            ),
+            ns = ns
+          ),
+          conditionalPanel(
+            condition = "input.gene_label_type == 3",
+            fluidRow(
+              column(
+                width = 6,
+                numericInput(
+                  inputId = ns("num_genes"),
+                  label = "Label top n genes",
+                  min = 1,
+                  max = 25,
+                  value = 5
+                )
+              ),
+              column(
+                width = 6,
+                selectInput(
+                  inputId = ns("sort_type"),
+                  label = "By",
+                  choices = list(
+                    "Absolute LFC" = 1,
+                    "-log10( Adjusted p-Val )" = 2,
+                    "Distance from the origin" = 3
+                  ),
+                  selected = 1
+                )
+              )
+            ),
+            ns = ns
+          ),
+          conditionalPanel(
+            condition = "input.gene_label_type == 4",
+            fluidRow(
+              p("Label genes with"),
+              column(
+                width = 6,
+                numericInput(
+                  inputId = ns("min_lfc"),
+                  label = "Absolute LFC greater than",
+                  min = 2,
+                  max = 20,
+                  value = 3
+                )
+              ),
+              column(
+                width = 6,
+                numericInput(
+                  inputId = ns("min_lfdr"),
+                  label = "-log10( Adj. p-Val ) greater than",
+                  min = 5,
+                  max = 60,
+                  value = 20
+                )
+              )
+            ),
+            ns = ns
+          )
+        )
+      )
+    })
+
 
     # volcano plot -----
-    vol_plot <- reactive({
-      req(!is.null(deg$limma$top_genes))
+    vol_data <- reactive({
+      req(input$select_contrast, deg$limma, input$limma_p_val, input$limma_fc)
 
-      vol <- plot_volcano(
+      volcano_data(
         select_contrast = input$select_contrast,
         comparisons = deg$limma$comparisons,
         top_genes = deg$limma$top_genes,
         limma_p_val = input$limma_p_val,
-        limma_fc = input$limma_fc,
-        plot_colors = plot_colors[[input$plot_color_select]]
+        limma_fc = input$limma_fc
+      )
+    })
+
+    vol_plot <- reactive({
+      req(vol_data())
+
+      vol <- plot_volcano(
+        data = vol_data()$data,
+        plot_colors = plot_colors[[input$plot_color_select]],
+        anotate_genes = input$vol_genes
       )
     })
 
@@ -827,7 +927,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         limma_fc = input$limma_fc,
         contrast_samples = contrast_samples(),
         processed_data = pre_process$data(),
-        plot_colors = plot_colors[[input$plot_color_select]]
+        plot_colors = plot_colors[[input$plot_color_select]],
+        anotate_genes = input$vol_genes
       )
     })
 
