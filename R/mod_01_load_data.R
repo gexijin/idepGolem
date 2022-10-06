@@ -36,13 +36,13 @@ mod_01_load_data_ui <- function(id) {
 
 
         # Species Match Drop Down ------------
-        strong("1. Optional: Select or search for species"),
+        # strong("1. Optional: Select or search for species"),
         fluidRow(
           column(
             width = 9,
             selectInput(
               inputId = ns("select_org"),
-              label = NULL,
+              label = strong("1. Optional: Select or search for species"),
               choices = " ",
               multiple = FALSE,
               selectize = TRUE
@@ -83,13 +83,12 @@ mod_01_load_data_ui <- function(id) {
         ),
 
         # Buttons for data file format ----------
-        strong("2. Choose data type"),
         fluidRow(
           column(
             width = 9,
             selectInput(
               inputId = ns("data_file_format"),
-              label = NULL,
+              label = strong("2. Choose data type"),
               choices = list(
                 "Read counts data (recommended)" = 1,
                 "Normalized expression values (RNA-seq FPKM, microarray, etc.)" = 2,
@@ -342,7 +341,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         # Expression data file input
         fileInput(
           inputId = ns("expression_file"),
-          label = "3. Upload expression data (CSV or text)",
+          label = strong("3. Upload expression data (CSV or text)"),
           accept = c(
             "text/csv",
             "text/comma-separated-values",
@@ -375,7 +374,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       tagList(
         fileInput(
           inputId = ns("experiment_file"),
-          label = ("4. Optional: Upload an experiment design file(CSV or text)"),
+          label = strong("4. Optional: Upload an experiment design file(CSV or text)"),
           accept = c(
             "text/csv",
             "text/comma-separated-values",

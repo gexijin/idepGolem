@@ -23,7 +23,7 @@ mod_07_genome_ui <- function(id) {
             width = 6,
             numericInput(
               inputId = ns("limma_p_val_viz"),
-              label = h5("Genes: FDR "),
+              label = "Genes: FDR ",
               value = 0.1,
               min = 1e-5,
               max = 1,
@@ -34,7 +34,7 @@ mod_07_genome_ui <- function(id) {
             width = 6,
             numericInput(
               inputId = ns("limma_fc_viz"),
-              label = h5("Fold change"),
+              label = "Fold change",
               value = 2,
               min = 1,
               max = 100,
@@ -96,7 +96,7 @@ mod_07_genome_ui <- function(id) {
             width = 6,
             selectInput(
               inputId = ns("ma_window_size"),
-              label = h5("Window Size (Mb)"),
+              label = "Window Size (Mb)",
               selected = 6,
               choices = c(1, 2, 4, 6, 8, 10, 15, 20)
             )
@@ -105,7 +105,7 @@ mod_07_genome_ui <- function(id) {
             width = 6,
             selectInput(
               inputId = ns("ma_window_steps"),
-              label = h5("Steps"),
+              label = "Steps",
               selected = 2,
               choices = c(1, 2, 3, 4)
             )
@@ -113,7 +113,7 @@ mod_07_genome_ui <- function(id) {
         ),
         selectInput(
           inputId = ns("ch_region_p_val"),
-          label = h5("FDR cutoff for window"),
+          label = "FDR cutoff for window",
           selected = 0.0001,
           choices = c(0.1, 0.05, 0.01, 0.001, 0.0001, 0.00001)
         )
@@ -126,7 +126,7 @@ mod_07_genome_ui <- function(id) {
               outputId = ns("genome_plotly"),
               height = "900px"
             ),
-            h4("Select a region to zoom in. Mouse over the points to
+            p("Select a region to zoom in. Mouse over the points to
             see more information on the gene. Enriched regions are
             highlighted by blue or red line segments paralell to the chromosomes.")
           ),

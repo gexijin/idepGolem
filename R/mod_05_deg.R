@@ -51,7 +51,7 @@ mod_05_deg_1_ui <- function(id) {
             # Adjusted significant p-value to use
             numericInput(
               inputId = ns("limma_p_val"),
-              label = h5("FDR cutoff"),
+              label = "FDR cutoff",
               value = 0.1,
               min = 1e-5,
               max = 1,
@@ -63,7 +63,7 @@ mod_05_deg_1_ui <- function(id) {
             # Min fold change to use
             numericInput(
               inputId = ns("limma_fc"),
-              label = h5("Min fold-change"),
+              label = "Min fold-change",
               value = 2,
               min = 1,
               max = 100,
@@ -144,7 +144,7 @@ mod_05_deg_1_ui <- function(id) {
             ),
             br(),
             br(),
-            h4(
+            h5(
               "Numbers of differentially expressed genes for all comparisons.
               \"B-A\" means B vs. A. Interaction terms start with \"I:\" "
             ),
@@ -204,7 +204,7 @@ mod_05_deg_2_ui <- function(id) {
     sidebarLayout(
       sidebarPanel(
         htmlOutput(outputId = ns("list_comparisons")),
-        h6("Select a comparison to examine the associated DEGs.
+        p("Select a comparison to examine the associated DEGs.
           \"A-B\" means A vs. B (See heatmap).
             Interaction terms start with \"I:\""),
         conditionalPanel(

@@ -1,6 +1,8 @@
 ---
 title: "Clustering Workflow"
-output: html_document
+output: 
+  html_document:
+    code_folding: hide
 params:
   pre_processed_data:
   all_gene_names:
@@ -29,6 +31,17 @@ params:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = params$printcode)
 ```
+<div>
+
+::: {style="color: Blue"}
+## If this site has contributed to your work, please cite our article:
+
+Ge, S.X., Son, E.W. & Yao, R. iDEP: an integrated web application for differential expression and pathway analysis of RNA-Seq data. BMC Bioinformatics 19, 534 (2018). <https://doi.org/10.1186/s12859-018-2486-6>
+:::
+
+## 
+
+</div>
 
 <!-- This document cannot be knit directly from R studio -->
 
