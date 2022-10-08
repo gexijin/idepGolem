@@ -258,8 +258,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       tags$p("By citing the iDEP paper, you will help this service remain
       available in the future. Visit the 'About' tab for more information."),
       tags$a(
-        h5("Download citation"),
-        href = "https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-018-2486-6#citeas",
+        h5("Full text on BMC Bioinformatics"),
+        href = "https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-018-2486-6",
         target = "_blank"
       ),
       tags$h4("How-to videos coming soon!"),
