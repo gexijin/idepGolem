@@ -40,7 +40,7 @@ pre-processing}
 
 \item{plot_colors}{List containing three colors to differentiate between
 the up-regulated, down-regulated, and other genes
-@param anotate_genes List containing the gene names to be labeled on the 
+@param anotate_genes List containing the gene names to be labeled on the
  plot. Default is NULL.}
 }
 \value{

@@ -23,7 +23,7 @@ the expressed genes}
 the expressed genes}
 }
 \value{
-A list containing processed data for volcano plot in 
+A list containing processed data for volcano plot in
  \code{plot_volcano()} and list of differently expressed genes for labeling
 }
 \description{

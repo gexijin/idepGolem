@@ -864,7 +864,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
               column(
                 width = 6,
                 numericInput(
-                  inputId = ns("min_lfdr"),
+                  inputId = ns("min_adjp"),
                   label = "-log10( Adj. p-Val ) greater than",
                   min = 5,
                   max = 60,
@@ -876,6 +876,49 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
           )
         )
       )
+    })
+
+    gene_labels <- reactive({
+      req(vol_data())
+
+      data <- vol_data()$data |>
+        dplyr::filter(upOrDown != "None")
+
+      if (is.null(input$gene_label_type)) {
+        genes <- NULL
+      } else if (input$gene_label_type == 1) {
+        genes <- NULL
+      } else if (input$gene_label_type == 2) {
+        req(input$vol_genes)
+        genes <- input$vol_genes
+      } else if (input$gene_label_type == 3) {
+        req(input$sort_type, input$num_genes)
+
+        if (input$sort_type == 1) {
+          sorted <- data |>
+            dplyr::arrange(desc(abs(Fold))) |>
+            dplyr::slice(1:input$num_genes)
+          genes <- rownames(sorted)
+        } else if (input$sort_type == 2) {
+          sorted <- data |>
+            dplyr::arrange(desc(-log10(FDR))) |>
+            dplyr::slice(1:input$num_genes)
+          genes <- rownames(sorted)
+        } else if (input$sort_type == 3) {
+          sorted <- data |>
+            dplyr::mutate(dist = sqrt((Fold^2) + (-log10(FDR))^2)) |>
+            dplyr::arrange(desc(dist)) |>
+            dplyr::slice(1:input$num_genes)
+          genes <- rownames(sorted)
+        }
+      } else if (input$gene_label_type == 4) {
+        req(input$min_lfc, input$min_adjp)
+        sorted <- data |>
+          dplyr::filter(abs(Fold) >= input$min_lfc & -log10(FDR) > input$min_adjp)
+        genes <- rownames(sorted)
+      }
+
+      return(genes)
     })
 
 
@@ -893,12 +936,12 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     })
 
     vol_plot <- reactive({
-      req(vol_data())
+      req(vol_data(), input$plot_color_select)
 
       vol <- plot_volcano(
         data = vol_data()$data,
         plot_colors = plot_colors[[input$plot_color_select]],
-        anotate_genes = input$vol_genes
+        anotate_genes = gene_labels()
       )
     })
 
