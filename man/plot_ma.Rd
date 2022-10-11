@@ -4,19 +4,14 @@
 \alias{plot_ma}
 \title{Plot mean expression and fold change}
 \usage{
-plot_ma(
-  select_contrast,
-  comparisons,
-  top_genes,
-  limma_p_val,
-  limma_fc,
-  contrast_samples,
-  processed_data,
-  plot_colors,
-  anotate_genes = NULL
-)
+plot_ma(data, plot_colors, anotate_genes = NULL)
 }
 \arguments{
+\item{plot_colors}{List containing three colors to differentiate between
+the up-regulated, down-regulated, and other genes
+@param anotate_genes List containing the gene names to be labeled on the
+ plot. Default is NULL.}
+
 \item{select_contrast}{Comparison from DEG analysis to filter
 for the significant genes}
 
@@ -37,11 +32,6 @@ comparison}
 
 \item{processed_data}{Data matrix that has gone through
 pre-processing}
-
-\item{plot_colors}{List containing three colors to differentiate between
-the up-regulated, down-regulated, and other genes
-@param anotate_genes List containing the gene names to be labeled on the
- plot. Default is NULL.}
 }
 \value{
 A ggplot with the X-axis the mean expression value and

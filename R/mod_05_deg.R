@@ -812,7 +812,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
             selectInput(
               inputId = ns("vol_genes"),
               label = "Label Genes",
-              choices = rownames(vol_data()$anotate_genes),
+              choices = vol_data()$anotate_genes$Row.names,
               multiple = TRUE,
               selectize = TRUE
             ),
@@ -898,24 +898,29 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
           sorted <- data |>
             dplyr::arrange(desc(abs(Fold))) |>
             dplyr::slice(1:input$num_genes)
-          genes <- rownames(sorted)
+          genes <- sorted |>
+            dplyr::pull(Row.names)
+          print(genes)
         } else if (input$sort_type == 2) {
           sorted <- data |>
             dplyr::arrange(desc(-log10(FDR))) |>
             dplyr::slice(1:input$num_genes)
-          genes <- rownames(sorted)
+          genes <- sorted |>
+            dplyr::pull(Row.names)
         } else if (input$sort_type == 3) {
           sorted <- data |>
             dplyr::mutate(dist = sqrt((Fold^2) + (-log10(FDR))^2)) |>
             dplyr::arrange(desc(dist)) |>
             dplyr::slice(1:input$num_genes)
-          genes <- rownames(sorted)
+          genes <- sorted |>
+            dplyr::pull(Row.names)
         }
       } else if (input$gene_label_type == 4) {
         req(input$min_lfc, input$min_adjp)
         sorted <- data |>
           dplyr::filter(abs(Fold) >= input$min_lfc & -log10(FDR) > input$min_adjp)
-        genes <- rownames(sorted)
+        genes <- sorted |>
+          dplyr::pull(Row.names)
       }
 
       return(genes)
@@ -931,7 +936,9 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         comparisons = deg$limma$comparisons,
         top_genes = deg$limma$top_genes,
         limma_p_val = input$limma_p_val,
-        limma_fc = input$limma_fc
+        limma_fc = input$limma_fc,
+        processed_data = pre_process$data(),
+        contrast_samples = contrast_samples()
       )
     })
 
@@ -960,16 +967,10 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
 
     # ma plot----------------
     ma_plot <- reactive({
-      req(!is.null(deg$limma$top_genes))
+      req(vol_data())
 
       plot_ma(
-        select_contrast = input$select_contrast,
-        comparisons = deg$limma$comparisons,
-        top_genes = deg$limma$top_genes,
-        limma_p_val = input$limma_p_val,
-        limma_fc = input$limma_fc,
-        contrast_samples = contrast_samples(),
-        processed_data = pre_process$data(),
+        data = vol_data()$data, 
         plot_colors = plot_colors[[input$plot_color_select]],
         anotate_genes = input$vol_genes
       )

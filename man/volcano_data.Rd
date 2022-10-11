@@ -4,7 +4,15 @@
 \alias{volcano_data}
 \title{Data processing for volcano plot}
 \usage{
-volcano_data(select_contrast, comparisons, top_genes, limma_p_val, limma_fc)
+volcano_data(
+  select_contrast,
+  comparisons,
+  top_genes,
+  limma_p_val,
+  limma_fc,
+  processed_data,
+  contrast_samples
+)
 }
 \arguments{
 \item{select_contrast}{Comparison from DEG analysis to filter

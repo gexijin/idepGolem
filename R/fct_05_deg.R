@@ -2506,7 +2506,7 @@ deg_heat_data <- function(limma,
   ))
 }
 
-#' Data processing for volcano plot
+#' Data processing for volcano and ma plot
 #'
 #' @param select_contrast Comparison from DEG analysis to filter
 #'  for the significant genes
@@ -2518,16 +2518,23 @@ deg_heat_data <- function(limma,
 #'  the expressed genes
 #' @param limma_fc Minimum fold change value to use in determining
 #'  the expressed genes
+#' @param processed_data Data matrix that has gone through
+#'  pre-processing
+#' @param contrast_samples Samples that are included in the selected
+#'  comparison
 #'
 #' @return A list containing processed data for volcano plot in
-#'  \code{plot_volcano()} and list of differently expressed genes for labeling
+#'  \code{plot_volcano()} & \code{plot_ma()} and list of differently expressed
+#'  genes for labeling
 #' @export
 #'
 volcano_data <- function(select_contrast,
                          comparisons,
                          top_genes,
                          limma_p_val,
-                         limma_fc) {
+                         limma_fc,
+                         processed_data,
+                         contrast_samples) {
   if (is.null(select_contrast) || is.null(comparisons) ||
     length(top_genes) == 0) {
     return(NULL)
@@ -2543,7 +2550,8 @@ volcano_data <- function(select_contrast,
     top_1 <- top[[ix]]
   }
   if (dim(top_1)[1] == 0) {
-    return(NULL)
+    grid::grid.newpage()
+    return(grid::grid.text("Not available.", 0.5, 0.5))
   }
   colnames(top_1) <- c("Fold", "FDR")
   # Convert to data frame
@@ -2558,11 +2566,19 @@ volcano_data <- function(select_contrast,
     top_1$FDR <= limma_p_val & top_1$Fold <= -log2(limma_fc)
   )] <- "Down"
 
-  anotate_genes <- top_1 |>
+  iz <- contrast_samples
+
+  average_data <- as.data.frame(apply(processed_data[, iz], 1, mean))
+  colnames(average_data) <- "Average"
+  rownames(average_data) <- rownames(processed_data)
+
+  genes <- merge(average_data, top_1, by = "row.names")
+
+  anotate_genes <- genes |>
     dplyr::filter(upOrDown != "None")
 
   return(list(
-    data = top_1,
+    data = genes,
     anotate_genes = anotate_genes
   ))
 }
@@ -2586,8 +2602,7 @@ plot_volcano <- function(data,
                          anotate_genes = NULL,
                          plot_colors) {
   anotate_data <- data |>
-    dplyr::mutate(genes = rownames(data)) |>
-    dplyr::filter(genes %in% anotate_genes)
+    dplyr::filter(Row.names %in% anotate_genes)
 
   plot <- ggplot2::ggplot(data, ggplot2::aes(x = Fold, y = -log10(FDR))) +
     ggplot2::geom_point(ggplot2::aes(color = upOrDown)) +
@@ -2624,7 +2639,7 @@ plot_volcano <- function(data,
     ) +
     ggrepel::geom_text_repel(
       data = anotate_data,
-      ggplot2::aes(label = genes),
+      ggplot2::aes(label = Row.names),
       size = 3,
       min.segment.length = 0,
       max.time = 1,
@@ -2642,77 +2657,22 @@ plot_volcano <- function(data,
 #' Draw a ggplot of the overal mean expression for each gene
 #' and the calculated fold change for the selected comparison.
 #'
-#' @param select_contrast Comparison from DEG analysis to filter
-#'  for the significant genes
-#' @param comparisons The comparisons vector from the results list
-#'  of the limma_value function
-#' @param top_genes top_genes list from results list of the
-#'  limma_value function
-#' @param limma_p_val Significant p-value to use to in determining
-#'  the expressed genes
-#' @param limma_fc Minimum fold change value to use in determining
-#'  the expressed genes
-#' @param contrast_samples Samples that are included in the selected
-#'  comparison
-#' @param processed_data Data matrix that has gone through
-#'  pre-processing
-#' @param plot_colors List containing three colors to differentiate between
-#'  the up-regulated, down-regulated, and other genes
-#'  @param anotate_genes List containing the gene names to be labeled on the
+#' @param data Dataframe of processed data from \code{volcano_data()}
+#' @param anotate_genes List containing the gene names to be labeled on the
 #'   plot. Default is NULL.
+#' @param plot_colors List containing three colors to differentiate between
+#'   the up-regulated, down-regulated, and other genes
 #'
 #' @export
 #' @return A ggplot with the X-axis the mean expression value and
 #'  the Y-axis the calculated fold-change from the DEG analysis.
-plot_ma <- function(select_contrast,
-                    comparisons,
-                    top_genes,
-                    limma_p_val,
-                    limma_fc,
-                    contrast_samples,
-                    processed_data,
+plot_ma <- function(data,
                     plot_colors,
                     anotate_genes = NULL) {
-  if (length(comparisons) == 1) {
-    top_1 <- top_genes[[1]]
-  } else {
-    top <- top_genes
-    ix <- match(select_contrast, names(top))
-    if (is.na(ix)) {
-      grid::grid.newpage()
-      return(grid::grid.text("Not available.", 0.5, 0.5))
-    }
-    top_1 <- top[[ix]]
-  }
-  if (dim(top_1)[1] == 0) {
-    grid::grid.newpage()
-    return(grid::grid.text("Not available.", 0.5, 0.5))
-  }
-  colnames(top_1) <- c("Fold", "FDR")
-  # Convert to data frame
-  top_1 <- as.data.frame(top_1)
-  # Remove NA's
-  top_1 <- top_1[which(!(is.na(top_1$Fold) | is.na(top_1$FDR))), ]
-  top_1$upOrDown <- "None"
-  top_1$upOrDown[which(
-    top_1$FDR <= limma_p_val & top_1$Fold >= log2(limma_fc)
-  )] <- "Up"
-  top_1$upOrDown[which(
-    top_1$FDR <= limma_p_val & top_1$Fold <= -log2(limma_fc)
-  )] <- "Down"
-
-  iz <- contrast_samples
-
-  average_data <- as.data.frame(apply(processed_data[, iz], 1, mean))
-  colnames(average_data) <- "Average"
-  rownames(average_data) <- rownames(processed_data)
-
-  genes <- merge(average_data, top_1, by = "row.names")
-
-  anotate_data <- genes |>
+  anotate_data <- data |>
     dplyr::filter(Row.names %in% anotate_genes)
 
-  plot <- ggplot2::ggplot(genes, ggplot2::aes(x = Average, y = Fold)) +
+  plot <- ggplot2::ggplot(data, ggplot2::aes(x = Average, y = Fold)) +
     ggplot2::geom_point(ggplot2::aes(color = upOrDown)) +
     ggplot2::scale_color_manual(values = plot_colors) +
     ggplot2::theme_light() +
