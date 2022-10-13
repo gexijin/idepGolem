@@ -215,10 +215,16 @@ mod_05_deg_2_ui <- function(id) {
             label = "Color scale",
             choices = "Red-Green"
           ),
-          actionButton(
-            inputId = ns("customize_labels"),
-            label = "Customize gene labels"
-          ),
+          ns = ns
+        ),
+        conditionalPanel(
+          condition = "input.step_2 == 'Volcano Plot' ",
+          mod_label_ui(ns("label_volcano")),
+          ns = ns
+        ),
+        conditionalPanel(
+          condition = "input.step_2 == 'MA Plot' ",
+          mod_label_ui(ns("label_ma")),
           ns = ns
         ),
         width = 2
@@ -791,140 +797,139 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       )
     })
 
-    observeEvent(input$customize_labels, {
-      shiny::showModal(
-        shiny::modalDialog(
-          size = "m",
-          p("Customize which genes are labeled."),
-          selectInput(
-            inputId = ns("gene_label_type"),
-            label = "Gene selection",
-            choices = list(
-              "Do not label genes" = 1,
-              "Label specific gene(s) from list" = 2,
-              "Label top n genes" = 3,
-              "Label genes above a certain threshold" = 4
-            ),
-            selected = 1
-          ),
-          conditionalPanel(
-            condition = "input.gene_label_type == 2",
-            selectInput(
-              inputId = ns("vol_genes"),
-              label = "Label Genes",
-              choices = vol_data()$anotate_genes$Row.names,
-              multiple = TRUE,
-              selectize = TRUE
-            ),
-            ns = ns
-          ),
-          conditionalPanel(
-            condition = "input.gene_label_type == 3",
-            fluidRow(
-              column(
-                width = 6,
-                numericInput(
-                  inputId = ns("num_genes"),
-                  label = "Label top n genes",
-                  min = 1,
-                  max = 25,
-                  value = 5
-                )
-              ),
-              column(
-                width = 6,
-                selectInput(
-                  inputId = ns("sort_type"),
-                  label = "By",
-                  choices = list(
-                    "Absolute LFC" = 1,
-                    "-log10( Adjusted p-Val )" = 2,
-                    "Distance from the origin" = 3
-                  ),
-                  selected = 1
-                )
-              )
-            ),
-            ns = ns
-          ),
-          conditionalPanel(
-            condition = "input.gene_label_type == 4",
-            fluidRow(
-              p("Label genes with"),
-              column(
-                width = 6,
-                numericInput(
-                  inputId = ns("min_lfc"),
-                  label = "Absolute LFC greater than",
-                  min = 2,
-                  max = 20,
-                  value = 3
-                )
-              ),
-              column(
-                width = 6,
-                numericInput(
-                  inputId = ns("min_adjp"),
-                  label = "-log10( Adj. p-Val ) greater than",
-                  min = 5,
-                  max = 60,
-                  value = 20
-                )
-              )
-            ),
-            ns = ns
-          )
-        )
-      )
-    })
-
-    gene_labels <- reactive({
-      req(vol_data())
-
-      data <- vol_data()$data |>
-        dplyr::filter(upOrDown != "None")
-
-      if (is.null(input$gene_label_type)) {
-        genes <- NULL
-      } else if (input$gene_label_type == 1) {
-        genes <- NULL
-      } else if (input$gene_label_type == 2) {
-        req(input$vol_genes)
-        genes <- input$vol_genes
-      } else if (input$gene_label_type == 3) {
-        req(input$sort_type, input$num_genes)
-
-        if (input$sort_type == 1) {
-          sorted <- data |>
-            dplyr::arrange(desc(abs(Fold))) |>
-            dplyr::slice(1:input$num_genes)
-          genes <- sorted |>
-            dplyr::pull(Row.names)
-          print(genes)
-        } else if (input$sort_type == 2) {
-          sorted <- data |>
-            dplyr::arrange(desc(-log10(FDR))) |>
-            dplyr::slice(1:input$num_genes)
-          genes <- sorted |>
-            dplyr::pull(Row.names)
-        } else if (input$sort_type == 3) {
-          sorted <- data |>
-            dplyr::mutate(dist = sqrt((Fold^2) + (-log10(FDR))^2)) |>
-            dplyr::arrange(desc(dist)) |>
-            dplyr::slice(1:input$num_genes)
-          genes <- sorted |>
-            dplyr::pull(Row.names)
-        }
-      } else if (input$gene_label_type == 4) {
-        req(input$min_lfc, input$min_adjp)
-        sorted <- data |>
-          dplyr::filter(abs(Fold) >= input$min_lfc & -log10(FDR) > input$min_adjp)
-        genes <- sorted |>
-          dplyr::pull(Row.names)
-      }
-
-      return(genes)
-    })
+    # observeEvent(input$customize_labels, {
+    #   shiny::showModal(
+    #     shiny::modalDialog(
+    #       size = "m",
+    #       p("Customize which genes are labeled."),
+    #       selectInput(
+    #         inputId = ns("gene_label_type"),
+    #         label = "Gene selection",
+    #         choices = list(
+    #           "Do not label genes" = 1,
+    #           "Label specific gene(s) from list" = 2,
+    #           "Label top n genes" = 3,
+    #           "Label genes above a certain threshold" = 4
+    #         ),
+    #         selected = 1
+    #       ),
+    #       conditionalPanel(
+    #         condition = "input.gene_label_type == 2",
+    #         selectInput(
+    #           inputId = ns("vol_genes"),
+    #           label = "Label Genes",
+    #           choices = vol_data()$anotate_genes$Row.names,
+    #           multiple = TRUE,
+    #           selectize = TRUE
+    #         ),
+    #         ns = ns
+    #       ),
+    #       conditionalPanel(
+    #         condition = "input.gene_label_type == 3",
+    #         fluidRow(
+    #           column(
+    #             width = 6,
+    #             numericInput(
+    #               inputId = ns("num_genes"),
+    #               label = "Label top n genes",
+    #               min = 1,
+    #               max = 25,
+    #               value = 5
+    #             )
+    #           ),
+    #           column(
+    #             width = 6,
+    #             selectInput(
+    #               inputId = ns("sort_type"),
+    #               label = "By",
+    #               choices = list(
+    #                 "Absolute LFC" = 1,
+    #                 "-log10( Adjusted p-Val )" = 2,
+    #                 "Distance from the origin" = 3
+    #               ),
+    #               selected = 1
+    #             )
+    #           )
+    #         ),
+    #         ns = ns
+    #       ),
+    #       conditionalPanel(
+    #         condition = "input.gene_label_type == 4",
+    #         fluidRow(
+    #           p("Label genes with"),
+    #           column(
+    #             width = 6,
+    #             numericInput(
+    #               inputId = ns("min_lfc"),
+    #               label = "Absolute LFC greater than",
+    #               min = 2,
+    #               max = 20,
+    #               value = 3
+    #             )
+    #           ),
+    #           column(
+    #             width = 6,
+    #             numericInput(
+    #               inputId = ns("min_adjp"),
+    #               label = "-log10( Adj. p-Val ) greater than",
+    #               min = 5,
+    #               max = 60,
+    #               value = 20
+    #             )
+    #           )
+    #         ),
+    #         ns = ns
+    #       )
+    #     )
+    #   )
+    # })
+    #
+    # gene_labels <- reactive({
+    #   req(vol_data())
+    #   data <- vol_data()$data |>
+    #     dplyr::filter(upOrDown != "None")
+    #
+    #   if (is.null(input$gene_label_type)) {
+    #     genes <- NULL
+    #   } else if (input$gene_label_type == 1) {
+    #     genes <- NULL
+    #   } else if (input$gene_label_type == 2) {
+    #     req(input$vol_genes)
+    #     genes <- input$vol_genes
+    #   } else if (input$gene_label_type == 3) {
+    #     req(input$sort_type, input$num_genes)
+    #
+    #     if (input$sort_type == 1) {
+    #       sorted <- data |>
+    #         dplyr::arrange(desc(abs(Fold))) |>
+    #         dplyr::slice(1:input$num_genes)
+    #       genes <- sorted |>
+    #         dplyr::pull(Row.names)
+    #       print(genes)
+    #     } else if (input$sort_type == 2) {
+    #       sorted <- data |>
+    #         dplyr::arrange(desc(-log10(FDR))) |>
+    #         dplyr::slice(1:input$num_genes)
+    #       genes <- sorted |>
+    #         dplyr::pull(Row.names)
+    #     } else if (input$sort_type == 3) {
+    #       sorted <- data |>
+    #         dplyr::mutate(dist = sqrt((Fold^2) + (-log10(FDR))^2)) |>
+    #         dplyr::arrange(desc(dist)) |>
+    #         dplyr::slice(1:input$num_genes)
+    #       genes <- sorted |>
+    #         dplyr::pull(Row.names)
+    #     }
+    #   } else if (input$gene_label_type == 4) {
+    #     req(input$min_lfc, input$min_adjp)
+    #     sorted <- data |>
+    #       dplyr::filter(abs(Fold) >= input$min_lfc & -log10(FDR) > input$min_adjp)
+    #     genes <- sorted |>
+    #       dplyr::pull(Row.names)
+    #   }
+    #
+    #   return(genes)
+    # })
 
 
     # volcano plot -----
@@ -941,6 +946,22 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         contrast_samples = contrast_samples()
       )
     })
+
+    gene_labels <- mod_label_server(
+      "label_volcano",
+      data_list = reactive({
+        vol_data()
+      }),
+      method = "volcano"
+    )
+
+    gene_labels_ma <- mod_label_server(
+      "label_ma",
+      data_list = reactive({
+        vol_data()
+      }),
+      method = "ma"
+    )
 
     vol_plot <- reactive({
       req(vol_data(), input$plot_color_select)
@@ -970,9 +991,9 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       req(vol_data())
 
       plot_ma(
-        data = vol_data()$data, 
+        data = vol_data()$data,
         plot_colors = plot_colors[[input$plot_color_select]],
-        anotate_genes = input$vol_genes
+        anotate_genes = gene_labels_ma()
       )
     })
 

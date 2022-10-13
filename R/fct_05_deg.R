@@ -2929,3 +2929,212 @@ deg_information <- function(limma_value,
   }
   return(list(degs_data, limma_value$Results))
 }
+
+#' UI component to customize gene labels
+#'
+#' This component contains an action button to activate the pop-up modal to
+#' customize how genes are labeled on the volcano or ma plot.
+#'
+#' @param id Namespace ID
+#'
+#' @return Shiny module
+#' @export
+mod_label_ui <- function(id) {
+  ns <- shiny::NS(id)
+  tagList(
+    actionButton(
+      inputId = ns("customize_labels"),
+      label = "Customize gene labels"
+    )
+  )
+}
+
+#' Server component to customize gene labels
+#'
+#' This component contains the pop-up modal and data processing to customize
+#'  how genes are labeled on the volcano or ma plot. Users have the option to
+#'  not label genes, label specific genes, label top n genes by a certain value,
+#'  or label genes above certain threshold.
+#'
+#' @param id Namespace ID
+#' @param data_list List of gene data from \code{volcano_data()}
+#' @param method String designating if the results are for the volcano plot or
+#'   ma plot
+#'
+#' @return A shiny module. 
+#' @export
+mod_label_server <- function(id, data_list, method = c("volcano", "ma")) {
+  moduleServer(id, function(input, output, session) {
+    ns <- session$ns
+
+    if (method != "volcano" & method != "ma") {
+      stop(
+        "The method parameter is misspecified. It must either be 'volcano' or 'ma'."
+      )
+    }
+
+    if (method == "volcano") {
+      choice_list <- list(
+        "Absolute LFC" = 1,
+        "-log10( Adjusted p-Val )" = 2,
+        "Distance from the origin" = 3
+      )
+      name <- "-log10 (Adj. p-Val )"
+    } else {
+      choice_list <- list(
+        "Absolute LFC" = 1,
+        "Average Expression" = 2,
+        "Distance from the origin" = 3
+      )
+      name <- "Average expression"
+    }
+
+    # pop up modal for selections ----
+    observeEvent(input$customize_labels, {
+      shiny::showModal(
+        shiny::modalDialog(
+          size = "m",
+          p("Customize which genes are labeled."),
+          selectInput(
+            inputId = ns("gene_label_type"),
+            label = "Gene selection",
+            choices = list(
+              "Do not label genes" = 1,
+              "Label specific gene(s) from list" = 2,
+              "Label top n genes" = 3,
+              "Label genes above a certain threshold" = 4
+            ),
+            selected = 1
+          ),
+          conditionalPanel(
+            condition = "input.gene_label_type == 2",
+            selectInput(
+              inputId = ns("vol_genes"),
+              label = "Label Genes",
+              choices = data_list()$anotate_genes$Row.names,
+              multiple = TRUE,
+              selectize = TRUE
+            ),
+            ns = ns
+          ),
+          conditionalPanel(
+            condition = "input.gene_label_type == 3",
+            fluidRow(
+              column(
+                width = 6,
+                numericInput(
+                  inputId = ns("num_genes"),
+                  label = "Label top n genes",
+                  min = 1,
+                  max = 25,
+                  value = 5
+                )
+              ),
+              column(
+                width = 6,
+                selectInput(
+                  inputId = ns("sort_type"),
+                  label = "By",
+                  choices = choice_list,
+                  selected = 1
+                )
+              )
+            ),
+            ns = ns
+          ),
+          conditionalPanel(
+            condition = "input.gene_label_type == 4",
+            fluidRow(
+              p("Label genes with"),
+              column(
+                width = 6,
+                numericInput(
+                  inputId = ns("min_lfc"),
+                  label = "Absolute LFC greater than",
+                  min = 2,
+                  max = 20,
+                  value = 3
+                )
+              ),
+              column(
+                width = 6,
+                numericInput(
+                  inputId = ns("min_value"),
+                  label = paste0(name, " greater than"),
+                  min = 5,
+                  max = 60,
+                  value = 20
+                )
+              )
+            ),
+            ns = ns
+          ),
+          p("Only genes that were identified as differently expressed can be labeled.")
+        )
+      )
+    })
+
+    # filter genes based on selections ----
+    gene_labels <- reactive({
+      req(data_list())
+      data <- data_list()$data |>
+        dplyr::filter(upOrDown != "None")
+
+      if (method == "volcano") {
+        data <- data |>
+          dplyr::mutate(
+            var = -log10(FDR),
+            Fold = abs(Fold),
+            dist = sqrt(Fold^2 + var^2)
+          )
+      } else {
+        data <- data |>
+          dplyr::mutate(
+            var = Average,
+            Fold = abs(Fold),
+            dist = sqrt(Fold^2 + var^2)
+          )
+      }
+
+
+      if (is.null(input$gene_label_type)) {
+        genes <- NULL
+      } else if (input$gene_label_type == 1) {
+        genes <- NULL
+      } else if (input$gene_label_type == 2) {
+        genes <- input$vol_genes
+      } else if (input$gene_label_type == 3) {
+        if (input$sort_type == 1) {
+          sorted <- data |>
+            dplyr::arrange(dplyr::desc(Fold)) |>
+            dplyr::slice(1:input$num_genes)
+          genes <- sorted |>
+            dplyr::pull(Row.names)
+        } else if (input$sort_type == 2) {
+          sorted <- data |>
+            dplyr::arrange(dplyr::desc(var)) |>
+            dplyr::slice(1:input$num_genes)
+          genes <- sorted |>
+            dplyr::pull(Row.names)
+        } else if (input$sort_type == 3) {
+          sorted <- data |>
+            dplyr::arrange(dplyr::desc(dist)) |>
+            dplyr::slice(1:input$num_genes)
+          genes <- sorted |>
+            dplyr::pull(Row.names)
+        }
+      } else if (input$gene_label_type == 4) {
+        sorted <- data |>
+          dplyr::filter(Fold >= input$min_lfc & var > input$min_value)
+        genes <- sorted |>
+          dplyr::pull(Row.names)
+      }
+
+      return(genes)
+    })
+
+    return(reactive({
+      gene_labels()
+    }))
+  })
+}
