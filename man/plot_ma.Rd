@@ -4,41 +4,16 @@
 \alias{plot_ma}
 \title{Plot mean expression and fold change}
 \usage{
-plot_ma(
-  select_contrast,
-  comparisons,
-  top_genes,
-  limma_p_val,
-  limma_fc,
-  contrast_samples,
-  processed_data,
-  plot_colors
-)
+plot_ma(data, plot_colors, anotate_genes = NULL)
 }
 \arguments{
-\item{select_contrast}{Comparison from DEG analysis to filter
-for the significant genes}
-
-\item{comparisons}{The comparisons vector from the results list
-of the limma_value function}
-
-\item{top_genes}{top_genes list from results list of the
-limma_value function}
-
-\item{limma_p_val}{Significant p-value to use to in determining
-the expressed genes}
-
-\item{limma_fc}{Minimum fold change value to use in determining
-the expressed genes}
-
-\item{contrast_samples}{Samples that are included in the selected
-comparison}
-
-\item{processed_data}{Data matrix that has gone through
-pre-processing}
+\item{data}{Dataframe of processed data from \code{volcano_data()}}
 
 \item{plot_colors}{List containing three colors to differentiate between
 the up-regulated, down-regulated, and other genes}
+
+\item{anotate_genes}{List containing the gene names to be labeled on the
+plot. Default is NULL.}
 }
 \value{
 A ggplot with the X-axis the mean expression value and

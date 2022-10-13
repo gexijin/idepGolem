@@ -2506,13 +2506,7 @@ deg_heat_data <- function(limma,
   ))
 }
 
-
-
-#' Volcano DEG plot
-#'
-#' Use the results from limma-value to create a volcano plot to
-#' illustrate the significantly expressed genes. Up and down
-#' regulated genes are colored on the ggplot.
+#' Data processing for volcano and ma plot
 #'
 #' @param select_contrast Comparison from DEG analysis to filter
 #'  for the significant genes
@@ -2524,18 +2518,23 @@ deg_heat_data <- function(limma,
 #'  the expressed genes
 #' @param limma_fc Minimum fold change value to use in determining
 #'  the expressed genes
-#' @param plot_colors List containing three colors to differentiate between
-#'  the up-regulated, down-regulated, and other genes
+#' @param processed_data Data matrix that has gone through
+#'  pre-processing
+#' @param contrast_samples Samples that are included in the selected
+#'  comparison
 #'
+#' @return A list containing processed data for volcano plot in
+#'  \code{plot_volcano()} & \code{plot_ma()} and list of differently expressed
+#'  genes for labeling
 #' @export
-#' @return ggplot with the fold value as the X-axis and the log 10
-#'  value of the adjusted p-value as the Y-axis.
-plot_volcano <- function(select_contrast,
+#'
+volcano_data <- function(select_contrast,
                          comparisons,
                          top_genes,
                          limma_p_val,
                          limma_fc,
-                         plot_colors) {
+                         processed_data,
+                         contrast_samples) {
   if (is.null(select_contrast) || is.null(comparisons) ||
     length(top_genes) == 0) {
     return(NULL)
@@ -2547,103 +2546,6 @@ plot_volcano <- function(select_contrast,
     ix <- match(select_contrast, names(top))
     if (is.na(ix)) {
       return(NULL)
-    }
-    top_1 <- top[[ix]]
-  }
-  if (dim(top_1)[1] == 0) {
-    return(NULL)
-  }
-  colnames(top_1) <- c("Fold", "FDR")
-  # Convert to data frame
-  top_1 <- as.data.frame(top_1)
-  # Remove NA's
-  top_1 <- top_1[which(!(is.na(top_1$Fold) | is.na(top_1$FDR))), ]
-  top_1$upOrDown <- "None"
-  top_1$upOrDown[which(
-    top_1$FDR <= limma_p_val & top_1$Fold >= log2(limma_fc)
-  )] <- "Up"
-  top_1$upOrDown[which(
-    top_1$FDR <= limma_p_val & top_1$Fold <= -log2(limma_fc)
-  )] <- "Down"
-
-  return(
-    ggplot2::ggplot(top_1, ggplot2::aes(x = Fold, y = -log10(FDR))) +
-      ggplot2::geom_point(ggplot2::aes(color = upOrDown)) +
-      ggplot2::scale_color_manual(values = plot_colors) +
-      ggplot2::theme_light() +
-      ggplot2::theme(
-        legend.position = "right",
-        axis.title.x = ggplot2::element_text(
-          color = "black",
-          size = 14
-        ),
-        axis.title.y = ggplot2::element_text(
-          color = "black",
-          size = 14
-        ),
-        axis.text.x = ggplot2::element_text(
-          size = 16
-        ),
-        axis.text.y = ggplot2::element_text(
-          size = 16
-        ),
-        plot.title = ggplot2::element_text(
-          color = "black",
-          size = 16,
-          face = "bold",
-          hjust = .5
-        )
-      ) +
-      ggplot2::labs(
-        title = "Fold Change vs. Adjusted p-Value",
-        y = "-log10(Adjusted p-Val)",
-        x = "Fold Change",
-        color = "Regulated"
-      )
-  )
-}
-
-#' Plot mean expression and fold change
-#'
-#' Draw a ggplot of the overal mean expression for each gene
-#' and the calculated fold change for the selected comparison.
-#'
-#' @param select_contrast Comparison from DEG analysis to filter
-#'  for the significant genes
-#' @param comparisons The comparisons vector from the results list
-#'  of the limma_value function
-#' @param top_genes top_genes list from results list of the
-#'  limma_value function
-#' @param limma_p_val Significant p-value to use to in determining
-#'  the expressed genes
-#' @param limma_fc Minimum fold change value to use in determining
-#'  the expressed genes
-#' @param contrast_samples Samples that are included in the selected
-#'  comparison
-#' @param processed_data Data matrix that has gone through
-#'  pre-processing
-#' @param plot_colors List containing three colors to differentiate between
-#'  the up-regulated, down-regulated, and other genes
-#'
-#' @export
-#' @return A ggplot with the X-axis the mean expression value and
-#'  the Y-axis the calculated fold-change from the DEG analysis.
-plot_ma <- function(select_contrast,
-                    comparisons,
-                    top_genes,
-                    limma_p_val,
-                    limma_fc,
-                    contrast_samples,
-                    processed_data,
-                    plot_colors) {
-  if (length(comparisons) == 1) {
-    top_1 <- top_genes[[1]]
-  } else {
-    top <- top_genes
-    ix <- match(select_contrast, names(top))
-    if (is.na(ix)) {
-      grid::grid.newpage()
-      return(grid::grid.text("Not available.", 0.5, 0.5))
     }
     top_1 <- top[[ix]]
   }
@@ -2672,41 +2574,151 @@ plot_ma <- function(select_contrast,
 
   genes <- merge(average_data, top_1, by = "row.names")
 
+  anotate_genes <- genes |>
+    dplyr::filter(upOrDown != "None")
+
+  return(list(
+    data = genes,
+    anotate_genes = anotate_genes
+  ))
+}
+
+
+#' Volcano DEG plot
+#'
+#' Use the results from limma-value to create a volcano plot to
+#' illustrate the significantly expressed genes. Up and down
+#' regulated genes are colored on the ggplot.
+#'
+#' @param plot_colors List containing three colors to differentiate between
+#'  the up-regulated, down-regulated, and other genes
+#' @param anotate_genes List of gene names to anotate. Default is NULL.
+#' @param data Dataframe of processed data from \code{volcano_data()}.
+#'
+#' @export
+#' @return ggplot with the fold value as the X-axis and the log 10
+#'  value of the adjusted p-value as the Y-axis.
+plot_volcano <- function(data,
+                         anotate_genes = NULL,
+                         plot_colors) {
+  anotate_data <- data |>
+    dplyr::filter(Row.names %in% anotate_genes)
+
+  plot <- ggplot2::ggplot(data, ggplot2::aes(x = Fold, y = -log10(FDR))) +
+    ggplot2::geom_point(ggplot2::aes(color = upOrDown)) +
+    ggplot2::scale_color_manual(values = plot_colors) +
+    ggplot2::theme_light() +
+    ggplot2::theme(
+      legend.position = "right",
+      axis.title.x = ggplot2::element_text(
+        color = "black",
+        size = 14
+      ),
+      axis.title.y = ggplot2::element_text(
+        color = "black",
+        size = 14
+      ),
+      axis.text.x = ggplot2::element_text(
+        size = 16
+      ),
+      axis.text.y = ggplot2::element_text(
+        size = 16
+      ),
+      plot.title = ggplot2::element_text(
+        color = "black",
+        size = 16,
+        face = "bold",
+        hjust = .5
+      )
+    ) +
+    ggplot2::labs(
+      title = "Fold Change vs. Adjusted p-Value",
+      y = "-log10(Adjusted p-Val)",
+      x = "Fold Change",
+      color = "Regulated"
+    ) +
+    ggrepel::geom_text_repel(
+      data = anotate_data,
+      ggplot2::aes(label = Row.names),
+      size = 3,
+      min.segment.length = 0,
+      max.time = 1,
+      max.overlaps = 25,
+      direction = "both",
+      nudge_x = .5,
+      nudge_y = 2
+    )
+
+  return(plot)
+}
+
+#' Plot mean expression and fold change
+#'
+#' Draw a ggplot of the overal mean expression for each gene
+#' and the calculated fold change for the selected comparison.
+#'
+#' @param data Dataframe of processed data from \code{volcano_data()}
+#' @param anotate_genes List containing the gene names to be labeled on the
+#'   plot. Default is NULL.
+#' @param plot_colors List containing three colors to differentiate between
+#'   the up-regulated, down-regulated, and other genes
+#'
+#' @export
+#' @return A ggplot with the X-axis the mean expression value and
+#'  the Y-axis the calculated fold-change from the DEG analysis.
+plot_ma <- function(data,
+                    plot_colors,
+                    anotate_genes = NULL) {
+  anotate_data <- data |>
+    dplyr::filter(Row.names %in% anotate_genes)
+
+  plot <- ggplot2::ggplot(data, ggplot2::aes(x = Average, y = Fold)) +
+    ggplot2::geom_point(ggplot2::aes(color = upOrDown)) +
+    ggplot2::scale_color_manual(values = plot_colors) +
+    ggplot2::theme_light() +
+    ggplot2::theme(
+      legend.position = "right",
+      axis.title.x = ggplot2::element_text(
+        color = "black",
+        size = 14
+      ),
+      axis.title.y = ggplot2::element_text(
+        color = "black",
+        size = 14
+      ),
+      axis.text.x = ggplot2::element_text(
+        size = 16
+      ),
+      axis.text.y = ggplot2::element_text(
+        size = 16
+      ),
+      plot.title = ggplot2::element_text(
+        color = "black",
+        size = 16,
+        face = "bold",
+        hjust = .5
+      )
+    ) +
+    ggplot2::labs(
+      title = "Average Expression vs. Log2 Fold Change",
+      y = "Log2 Fold Change",
+      x = "Average Expression",
+      color = "Regulated"
+    ) +
+    ggrepel::geom_text_repel(
+      data = anotate_data,
+      ggplot2::aes(label = Row.names),
+      size = 3,
+      min.segment.length = 0,
+      max.time = 2,
+      max.overlaps = 25,
+      direction = "both",
+      nudge_x = 0.5,
+      nudge_y = 2
+    )
 
   return(
-    ggplot2::ggplot(genes, ggplot2::aes(x = Average, y = Fold)) +
-      ggplot2::geom_point(ggplot2::aes(color = upOrDown)) +
-      ggplot2::scale_color_manual(values = plot_colors) +
-      ggplot2::theme_light() +
-      ggplot2::theme(
-        legend.position = "right",
-        axis.title.x = ggplot2::element_text(
-          color = "black",
-          size = 14
-        ),
-        axis.title.y = ggplot2::element_text(
-          color = "black",
-          size = 14
-        ),
-        axis.text.x = ggplot2::element_text(
-          size = 16
-        ),
-        axis.text.y = ggplot2::element_text(
-          size = 16
-        ),
-        plot.title = ggplot2::element_text(
-          color = "black",
-          size = 16,
-          face = "bold",
-          hjust = .5
-        )
-      ) +
-      ggplot2::labs(
-        title = "Average Expression vs. Log2 Fold Change",
-        y = "Log2 Fold Change",
-        x = "Average Expression",
-        color = "Regulated"
-      )
+    plot
   )
 }
 
@@ -2916,4 +2928,213 @@ deg_information <- function(limma_value,
       dplyr::relocate(symbol)
   }
   return(list(degs_data, limma_value$Results))
+}
+
+#' UI component to customize gene labels
+#'
+#' This component contains an action button to activate the pop-up modal to
+#' customize how genes are labeled on the volcano or ma plot.
+#'
+#' @param id Namespace ID
+#'
+#' @return Shiny module
+#' @export
+mod_label_ui <- function(id) {
+  ns <- shiny::NS(id)
+  tagList(
+    actionButton(
+      inputId = ns("customize_labels"),
+      label = "Customize gene labels"
+    )
+  )
+}
+
+#' Server component to customize gene labels
+#'
+#' This component contains the pop-up modal and data processing to customize
+#'  how genes are labeled on the volcano or ma plot. Users have the option to
+#'  not label genes, label specific genes, label top n genes by a certain value,
+#'  or label genes above certain threshold.
+#'
+#' @param id Namespace ID
+#' @param data_list List of gene data from \code{volcano_data()}
+#' @param method String designating if the results are for the volcano plot or
+#'   ma plot
+#'
+#' @return A shiny module. 
+#' @export
+mod_label_server <- function(id, data_list, method = c("volcano", "ma")) {
+  moduleServer(id, function(input, output, session) {
+    ns <- session$ns
+
+    if (method != "volcano" & method != "ma") {
+      stop(
+        "The method parameter is misspecified. It must either be 'volcano' or 'ma'."
+      )
+    }
+
+    if (method == "volcano") {
+      choice_list <- list(
+        "Absolute LFC" = 1,
+        "-log10( Adjusted p-Val )" = 2,
+        "Distance from the origin" = 3
+      )
+      name <- "-log10 (Adj. p-Val )"
+    } else {
+      choice_list <- list(
+        "Absolute LFC" = 1,
+        "Average Expression" = 2,
+        "Distance from the origin" = 3
+      )
+      name <- "Average expression"
+    }
+
+    # pop up modal for selections ----
+    observeEvent(input$customize_labels, {
+      shiny::showModal(
+        shiny::modalDialog(
+          size = "m",
+          p("Customize which genes are labeled."),
+          selectInput(
+            inputId = ns("gene_label_type"),
+            label = "Gene selection",
+            choices = list(
+              "Do not label genes" = 1,
+              "Label specific gene(s) from list" = 2,
+              "Label top n genes" = 3,
+              "Label genes above a certain threshold" = 4
+            ),
+            selected = 1
+          ),
+          conditionalPanel(
+            condition = "input.gene_label_type == 2",
+            selectInput(
+              inputId = ns("vol_genes"),
+              label = "Label Genes",
+              choices = data_list()$anotate_genes$Row.names,
+              multiple = TRUE,
+              selectize = TRUE
+            ),
+            ns = ns
+          ),
+          conditionalPanel(
+            condition = "input.gene_label_type == 3",
+            fluidRow(
+              column(
+                width = 6,
+                numericInput(
+                  inputId = ns("num_genes"),
+                  label = "Label top n genes",
+                  min = 1,
+                  max = 25,
+                  value = 5
+                )
+              ),
+              column(
+                width = 6,
+                selectInput(
+                  inputId = ns("sort_type"),
+                  label = "By",
+                  choices = choice_list,
+                  selected = 1
+                )
+              )
+            ),
+            ns = ns
+          ),
+          conditionalPanel(
+            condition = "input.gene_label_type == 4",
+            fluidRow(
+              p("Label genes with"),
+              column(
+                width = 6,
+                numericInput(
+                  inputId = ns("min_lfc"),
+                  label = "Absolute LFC greater than",
+                  min = 2,
+                  max = 20,
+                  value = 3
+                )
+              ),
+              column(
+                width = 6,
+                numericInput(
+                  inputId = ns("min_value"),
+                  label = paste0(name, " greater than"),
+                  min = 5,
+                  max = 60,
+                  value = 20
+                )
+              )
+            ),
+            ns = ns
+          ),
+          p("Only genes that were identified as differently expressed can be labeled.")
+        )
+      )
+    })
+
+    # filter genes based on selections ----
+    gene_labels <- reactive({
+      req(data_list())
+      data <- data_list()$data |>
+        dplyr::filter(upOrDown != "None")
+
+      if (method == "volcano") {
+        data <- data |>
+          dplyr::mutate(
+            var = -log10(FDR),
+            Fold = abs(Fold),
+            dist = sqrt(Fold^2 + var^2)
+          )
+      } else {
+        data <- data |>
+          dplyr::mutate(
+            var = Average,
+            Fold = abs(Fold),
+            dist = sqrt(Fold^2 + var^2)
+          )
+      }
+
+
+      if (is.null(input$gene_label_type)) {
+        genes <- NULL
+      } else if (input$gene_label_type == 1) {
+        genes <- NULL
+      } else if (input$gene_label_type == 2) {
+        genes <- input$vol_genes
+      } else if (input$gene_label_type == 3) {
+        if (input$sort_type == 1) {
+          sorted <- data |>
+            dplyr::arrange(dplyr::desc(Fold)) |>
+            dplyr::slice(1:input$num_genes)
+          genes <- sorted |>
+            dplyr::pull(Row.names)
+        } else if (input$sort_type == 2) {
+          sorted <- data |>
+            dplyr::arrange(dplyr::desc(var)) |>
+            dplyr::slice(1:input$num_genes)
+          genes <- sorted |>
+            dplyr::pull(Row.names)
+        } else if (input$sort_type == 3) {
+          sorted <- data |>
+            dplyr::arrange(dplyr::desc(dist)) |>
+            dplyr::slice(1:input$num_genes)
+          genes <- sorted |>
+            dplyr::pull(Row.names)
+        }
+      } else if (input$gene_label_type == 4) {
+        sorted <- data |>
+          dplyr::filter(Fold >= input$min_lfc & var > input$min_value)
+        genes <- sorted |>
+          dplyr::pull(Row.names)
+      }
+
+      return(genes)
+    })
+
+    return(reactive({
+      gene_labels()
+    }))
+  })
 }

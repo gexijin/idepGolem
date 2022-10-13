@@ -152,33 +152,6 @@ mod_01_load_data_ui <- function(id) {
           "Customize plots throughout app",
           theme = "light-border"
         ),
-        shinyBS::bsModal(
-          id = ns("modalExample"),
-          title = "Plot options",
-          trigger = ns("customize_button"),
-          size = "small",
-          selectInput(
-            inputId = ns("heatmap_color_select"),
-            label = "Heatmap Color scheme:",
-            choices = c(
-              "Green-Black-Red",
-              "Red-Black-Green",
-              "Blue-White-Red",
-              "Green-Black-Magenta",
-              "Blue-Yellow-Red",
-              "Blue-White-Brown",
-              "Orange-White-Blue"
-            ),
-            selected = "Green-Black-Red",
-            width = "100%"
-          ),
-          selectInput(
-            inputId = ns("select_gene_id"),
-            label = "Gene ID type for plots",
-            choices = c("symbol", "ensembl_ID", "User_ID"),
-            selected = "symbol"
-          )
-        ),
 
         # Link to public RNA-seq datasets ----------
         a(
@@ -247,6 +220,36 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
     # increase max input file size
     options(shiny.maxRequestSize = 2001024^2)
+
+    observeEvent(input$customize_button, {
+      shiny::showModal(
+        shiny::modalDialog(
+          selectInput(
+            inputId = ns("heatmap_color_select"),
+            label = "Heatmap Color scheme:",
+            choices = c(
+              "Green-Black-Red",
+              "Red-Black-Green",
+              "Blue-White-Red",
+              "Green-Black-Magenta",
+              "Blue-Yellow-Red",
+              "Blue-White-Brown",
+              "Orange-White-Blue"
+            ),
+            selected = "Green-Black-Red",
+            width = "100%"
+          ),
+          selectInput(
+            inputId = ns("select_gene_id"),
+            label = "Gene ID type for plots",
+            choices = c("symbol", "ensembl_ID", "User_ID"),
+            selected = "symbol"
+          ),
+          easyClose = TRUE,
+          size = "m"
+        )
+      )
+    })
 
     welcome_modal <- shiny::modalDialog(
       title = "Welcome to iDEP!",

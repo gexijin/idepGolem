@@ -4,30 +4,12 @@
 \alias{plot_volcano}
 \title{Volcano DEG plot}
 \usage{
-plot_volcano(
-  select_contrast,
-  comparisons,
-  top_genes,
-  limma_p_val,
-  limma_fc,
-  plot_colors
-)
+plot_volcano(data, anotate_genes = NULL, plot_colors)
 }
 \arguments{
-\item{select_contrast}{Comparison from DEG analysis to filter
-for the significant genes}
+\item{data}{Dataframe of processed data from \code{volcano_data()}.}
 
-\item{comparisons}{The comparisons vector from the results list
-of the limma_value function}
-
-\item{top_genes}{top_genes list from results list of the
-limma_value function}
-
-\item{limma_p_val}{Significant p-value to use to in determining
-the expressed genes}
-
-\item{limma_fc}{Minimum fold change value to use in determining
-the expressed genes}
+\item{anotate_genes}{List of gene names to anotate. Default is NULL.}
 
 \item{plot_colors}{List containing three colors to differentiate between
 the up-regulated, down-regulated, and other genes}
