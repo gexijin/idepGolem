@@ -32,6 +32,7 @@ library(idepGolem)
 idep_data <- get_idep_data()
 
 DATABASE <- Sys.getenv("IDEP_DATABASE")[1]
+DATABASE <- "F:/IDEP_DATABASE/"
 YOUR_DATA_PATH <- paste0(DATABASE, "data_go/BcellGSE71176_p53.csv")
 YOUR_EXPERIMENT_PATH <- paste0(DATABASE, "data_go/BcellGSE71176_p53_sampleInfo.csv")
 
@@ -269,19 +270,24 @@ down_reg_data <- as.data.frame(down_reg_data)
 down_reg_data$direction <- rep("Down", nrow(down_reg_data))
 #down_reg_data
 
-main_heat_deg <- deg_heatmap(
-  data = deg_heat$genes,
-  bar = deg_heat$bar,
-  heatmap_color_select = c("green", "black", "red")
-)
-ComplexHeatmap::draw(main_heat_deg)
+# main_heat_deg <- deg_heatmap(
+#   data = deg_heat$genes,
+#   bar = deg_heat$bar,
+#   heatmap_color_select = c("green", "black", "red")
+# )
+# ComplexHeatmap::draw(main_heat_deg)
 
-plot_volcano(
+volcano_data <- volcano_data(
   select_contrast = "NULL-WT",
   comparisons = limma$comparisons,
   top_genes = limma$top_genes,
   limma_p_val = .1,
-  limma_fc = 2, 
+  limma_fc = 2
+)
+
+plot_volcano(
+  data = volcano_data, 
+  anotate_genes = NULL,
   plot_colors = c("red", "grey", "blue")
 )
 
@@ -296,6 +302,201 @@ plot_ma(
   plot_colors = c("red","yellow", "blue")
 )
 ```
+
+```{r}
+plot_ma(
+  select_contrast = "NULL-WT",
+  comparisons = limma$comparisons,
+  top_genes = limma$top_genes,
+  limma_p_val = .1,
+  limma_fc = 2,
+  contrast_samples = contrast_samples,
+  processed_data = processed_data$data, 
+  plot_colors = c("red","yellow", "blue")
+)
+```
+
+
+```{r}
+volcano_dat <- volcano_data(
+  select_contrast = "NULL-WT",
+  comparisons = limma$comparisons,
+  top_genes = limma$top_genes,
+  limma_p_val = .1,
+  limma_fc = 2
+)
+
+plot_volcano(
+  data = volcano_dat$data, 
+  anotate_genes = top_genes,
+  plot_colors = c("red", "grey", "blue")
+)
+```
+
+```{r}
+gene_label_type = 3 # label top n genes 
+num_genes = 10 
+sort_type = 3 # distance from the origin 
+min_lfc = 3 
+min_adjp = 10 
+
+data <- volcano_dat$data |> 
+  dplyr::filter(upOrDown != "None")
+
+if (gene_label_type == 1) {
+  genes <- NULL
+} else if (gene_label_type == 2) {
+  req(input$vol_genes)
+  genes <- input$vol_genes 
+} else if (gene_label_type == 3) {
+  if (sort_type == 1) {
+    sorted <- data |>
+      dplyr::arrange(desc(abs(Fold))) |>
+      dplyr::slice(1:num_genes)
+    genes <- rownames(sorted)
+  } else if (sort_type == 2){
+    sorted <- data |> 
+      dplyr::arrange(desc(-log10(FDR))) |> 
+      dplyr::slice(1:num_genes)
+    genes <- rownames(sorted)
+  } else if (sort_type == 3){
+    sorted <- data |> 
+      dplyr::mutate(dist = sqrt((Fold^2) + (-log10(FDR))^2)) |> 
+      dplyr::arrange(desc(dist)) |> 
+      dplyr::slice(1:num_genes)
+    genes <- rownames(sorted)
+  }
+} else if (gene_label_type == 4) {
+  sorted <- data |> 
+    dplyr::filter(abs(Fold) >= min_lfc & -log10(FDR) > min_adjp)
+  genes <- rownames(sorted)
+}
+```
+
+
+```{r}
+top_genes <- volcano_dat$anotate_genes %>% 
+  mutate(
+    genes = rownames(.), 
+    abs_fold = abs(Fold), 
+    log_fdr = -log10(FDR),
+    distance = sqrt((Fold^2) + (log_fdr^2))
+  ) 
+
+View(top_genes) 
+
+top_lfc <- top_genes %>%
+  arrange(desc(abs_fold)) %>%
+  slice(1:10) %>%
+  pull(genes) 
+
+top_fdr <- top_genes %>%
+  arrange(desc(log_fdr)) %>%
+  slice(1:10) %>%
+  pull(genes) 
+
+top_dist <- top_genes %>%
+  arrange(desc(distance)) %>%
+  slice(1:10) %>%
+  pull(genes) 
+
+plot_volcano(
+  data = volcano_dat$data, 
+  anotate_genes = top_lfc,
+  plot_colors = c("red", "grey", "blue")
+)
+
+plot_volcano(
+  data = volcano_dat$data, 
+  anotate_genes = top_fdr,
+  plot_colors = c("red", "grey", "blue")
+)
+
+plot_volcano(
+  data = volcano_dat$data, 
+  anotate_genes = top_dist,
+  plot_colors = c("red", "grey", "blue")
+)
+```
+
+
+
+
+```{r}
+x <- plot_volcano(
+  select_contrast = "NULL-WT",
+  comparisons = limma$comparisons,
+  top_genes = limma$top_genes,
+  limma_p_val = .1,
+  limma_fc = 2, 
+  plot_colors = c("red", "grey", "blue")
+)
+
+my_list <- x$data %>%
+  filter(upOrDown != "None")
+
+my_list
+
+x$plot + 
+  geom_text(
+    data = my_list, 
+    aes(x = Fold, y = -log10(FDR), label = rownames(my_list)), 
+    nudge_x = 0.25, 
+    nudge_y = 0.25, 
+    check_overlap = T, 
+  )
+```
+```{r}
+plot_ma(
+  select_contrast = "NULL-WT",
+  comparisons = limma$comparisons,
+  top_genes = limma$top_genes,
+  limma_p_val = .1,
+  limma_fc = 2,
+  contrast_samples = contrast_samples,
+  processed_data = processed_data$data, 
+  plot_colors = c("red","grey", "blue")
+)
+```
+
+
+
+```{r}
+x$plot + 
+  ggrepel::geom_text_repel(
+    data = my_list, 
+    aes(label = rownames(my_list)),
+    size = 3, 
+    min.segment.length = 0, 
+    max.time = 1, 
+    max.overlaps = 25, 
+    direction = "both", 
+    force_pull = 50
+  )
+
+```
+
+```{r}
+volcano_dat <- volcano_data(
+  select_contrast = "NULL-WT",
+  comparisons = limma$comparisons,
+  top_genes = limma$top_genes,
+  limma_p_val = .1,
+  limma_fc = 2
+)
+
+gene_list <- rownames(volcano_dat$anotate_genes)[1:4]
+
+volcano_plot <- plot_volcano(
+  data = volcano_dat$data, 
+  plot_colors = c("red", "grey", "blue"), 
+  anotate_genes = NULL
+)
+  
+
+volcano_plot
+```
+
 
 # Pathway Tab Stuff
 ```{r}
