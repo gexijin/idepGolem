@@ -1,9 +1,10 @@
-# iDEPGOLEM
+# iDEP (integrated Differential Expression & Pathway analysis)
 
 ## Description
 
-This is the Golem shiny package of [iDEP](<https://github.com/iDEP-SDSU/idep>).
-The reason for this repository is to allow for users to locally install a package version of iDEP.
+This is the Shiny app of [iDEP](<http:://bioinformatics.sdstate.edu/idepg/>), developed as an R package based on the Golem framework.
+iDEP is a online analytics tool that enables uers to analyze gene expression data graphically, interactively and reproducibly. 
+
 
 ## Installation
 
