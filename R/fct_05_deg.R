@@ -2961,7 +2961,7 @@ mod_label_ui <- function(id) {
 #' @param method String designating if the results are for the volcano plot or
 #'   ma plot
 #'
-#' @return A shiny module. 
+#' @return A shiny module.
 #' @export
 mod_label_server <- function(id, data_list, method = c("volcano", "ma")) {
   moduleServer(id, function(input, output, session) {
