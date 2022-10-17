@@ -245,12 +245,21 @@ mod_02_pre_process_ui <- function(id) {
             title = "Barplot",
             br(),
             plotOutput(
-              outputId = ns("total_counts_gg"),
+              outputId = ns("raw_counts_gg"),
               width = "100%",
               height = "500px"
             ),
             ottoPlots::mod_download_figure_ui(
-              id = ns("dl_total_counts")
+              id = ns("dl_raw_counts_gg")
+            ),
+            br(),
+            plotOutput(
+              outputId = ns("processed_counts_gg"),
+              width = "100%",
+              height = "500px"
+            ),
+            ottoPlots::mod_download_figure_ui(
+              id = ns("dl_processed_counts_gg")
             ),
             h5(
               "Figure width can be adjusted by changing
@@ -511,22 +520,44 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     })
 
     # Counts barplot ------------
-    total_counts <- reactive({
-      req(!is.null(processed_data()$data))
+    raw_counts <- reactive({
+      req(!is.null(processed_data()$raw_counts))
 
       total_counts_ggplot(
         counts_data = processed_data()$raw_counts,
-        sample_info = load_data$sample_info()
+        sample_info = load_data$sample_info(),
+        type = "Raw"
       )
     })
-    output$total_counts_gg <- renderPlot({
-      print(total_counts())
+    output$raw_counts_gg <- renderPlot({
+      print(raw_counts())
     })
-    dl_total_counts <- ottoPlots::mod_download_figure_server(
-      id = "dl_total_counts",
-      filename = "total_counts_barplot",
+    dl_raw_counts_gg <- ottoPlots::mod_download_figure_server(
+      id = "dl_raw_counts_gg",
+      filename = "raw_counts_barplot",
       figure = reactive({
-        total_counts()
+        raw_counts()
+      }),
+      label = ""
+    )
+    # Raw Counts barplot ------------
+    processed_counts <- reactive({
+      req(!is.null(processed_data()$data))
+
+      total_counts_ggplot(
+        counts_data = processed_data()$data,
+        sample_info = load_data$sample_info(),
+        type = "Transformed"
+      )
+    })
+    output$processed_counts_gg <- renderPlot({
+      print(processed_counts())
+    })
+    dl_processed_counts_gg <- ottoPlots::mod_download_figure_server(
+      id = "dl_processed_counts_gg",
+      filename = "processed_counts_barplot",
+      figure = reactive({
+        processed_counts()
       }),
       label = ""
     )
