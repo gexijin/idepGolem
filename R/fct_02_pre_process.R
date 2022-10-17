@@ -241,7 +241,8 @@ pre_process <- function(data,
 #' @export
 #' @return formatted ggbarplot
 total_counts_ggplot <- function(counts_data,
-                                sample_info) {
+                                sample_info,
+                                type = "") {
   counts <- counts_data
   memo <- ""
 
@@ -312,8 +313,8 @@ total_counts_ggplot <- function(counts_data,
       )
     ) +
     ggplot2::labs(
-      title = paste("Total Raw Read Counts (Millions)", memo),
-      y = "Raw Counts (Millions)"
+      title = paste("Total", type, "Read Counts (Millions)", memo),
+      y = paste(type, "Counts (Millions)")
     )
 
   return(plot)
