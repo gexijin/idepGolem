@@ -253,20 +253,24 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
     welcome_modal <- shiny::modalDialog(
       title = "Welcome to iDEP!",
-      tags$p("We hope that you find our application useful. If iDEP is used,
-      even for preliminrary analysis, please cite:"),
-      tags$h4("Ge, Son & Yao, iDEP: an integrated web application for
+      tags$p(
+        "We hope that you find our application useful. If iDEP is used,
+      even for preliminrary analysis, please cite: ",
+        "Ge, Son & Yao, iDEP: an integrated web application for
       differential expression and pathway analysis of RNA-Seq data,
-      BMC Bioinformatics 19:1-24, 2018.", style = "color:#6B1518"),
-      tags$p("By citing the iDEP paper, you will help this service remain
-      available in the future. Visit the 'About' tab for more information."),
-      tags$a(
-        h5("Full text on BMC Bioinformatics"),
-        href = "https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-018-2486-6",
-        target = "_blank"
+      BMC Bioinformatics 19:1-24, 2018.",
+        a(
+          "Link",
+          href = "https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-018-2486-6",
+          target = "_blank"
+        )
+      ),
+      tags$h5("By citing the iDEP paper, you will help this service remain
+      available in the future.",
+        style = "color:#6B1518"
       ),
       tags$h4("How-to videos coming soon!"),
-      easyClose = T,
+      easyClose = TRUE,
       size = "l"
     )
 
