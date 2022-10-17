@@ -4,7 +4,7 @@
 \alias{total_counts_ggplot}
 \title{Creates a barplot of the count data}
 \usage{
-total_counts_ggplot(counts_data, sample_info)
+total_counts_ggplot(counts_data, sample_info, type = "")
 }
 \arguments{
 \item{counts_data}{Raw counts from gene expression data}
