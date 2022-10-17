@@ -125,36 +125,6 @@ mod_03_clustering_ui <- function(id) {
               )
             )
           ),
-          fluidRow(
-            column(width = 7, p("Max Z score")),
-            column(
-              width = 5,
-              numericInput(
-                inputId = ns("heatmap_cutoff"),
-                label = NULL,
-                value = 3,
-                min = 2,
-                step = 1
-              )
-            )
-          ),
-          ns = ns
-        ),
-
-        # Checkbox features ------------
-        conditionalPanel(
-          condition = "input.cluster_panels == 'Hierarchical' |
-            input.cluster_panels == 'sample_tab' ",
-          checkboxInput(
-            inputId = ns("gene_centering"),
-            label = "Center genes (substract mean)",
-            value = TRUE
-          ),
-          checkboxInput(
-            inputId = ns("gene_normalize"),
-            label = "Normalize genes (divide by SD)",
-            value = FALSE
-          ),
           ns = ns
         ),
         conditionalPanel(
@@ -173,36 +143,38 @@ mod_03_clustering_ui <- function(id) {
               htmlOutput(ns("selected_genes_ui"))
             )
           ),
-          actionButton(ns("customize_button"), "More options"),
-          tippy::tippy_this(
-            ns("customize_button"),
-            "Data transformations and download heatmap data",
-            theme = "light-border"
+          shinyjs::useShinyjs(),
+          checkboxInput(ns("customize_button"), "More options"),
+          checkboxInput(
+            inputId = ns("sample_clustering"),
+            label = "Cluster samples",
+            value = FALSE
           ),
-          shinyBS::bsModal(
-            id = ns("modalExample"),
-            title = "More options",
-            trigger = ns("customize_button"),
-            size = "small",
-            checkboxInput(
-              inputId = ns("sample_clustering"),
-              label = "Cluster samples",
-              value = FALSE
-            ),
-            checkboxInput(
-              inputId = ns("show_row_dend"),
-              label = "Show Row Dendogram",
-              value = TRUE
-            ),
-            downloadButton(
-              outputId = ns("download_heatmap_data"),
-              label = "Heatmap data"
-            ),
-            tippy::tippy_this(
-              ns("download_heatmap_data"),
-              "Download heatmap data",
-              theme = "light-border"
-            )
+          checkboxInput(
+            inputId = ns("show_row_dend"),
+            label = "Show Row Dendogram",
+            value = TRUE
+          ),
+          checkboxInput(
+            inputId = ns("gene_centering"),
+            label = "Center genes (substract mean)",
+            value = TRUE
+          ),
+          checkboxInput(
+            inputId = ns("gene_normalize"),
+            label = "Normalize genes (divide by SD)",
+            value = FALSE
+          ),
+          numericInput(
+            inputId = ns("heatmap_cutoff"),
+            label = "Max Z score:",
+            value = 3,
+            min = 2,
+            step = 1
+          ),
+          downloadButton(
+            outputId = ns("download_heatmap_data"),
+            label = "Heatmap data"
           ),
           ns = ns
         ),
@@ -362,6 +334,13 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       )
     })
 
+    observe({
+      shinyjs::toggle(id = "sample_clustering", condition = input$customize_button)
+      shinyjs::toggle(id = "show_row_dend", condition = input$customize_button)
+      shinyjs::toggle(id = "heatmap_cutoff", condition = input$customize_button)
+      shinyjs::toggle(id = "gene_normalize", condition = input$customize_button)
+      shinyjs::toggle(id = "gene_centering", condition = input$customize_button)
+    })
 
     # Distance functions -----------
     dist_funs <- dist_functions()
