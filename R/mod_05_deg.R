@@ -217,6 +217,16 @@ mod_05_deg_2_ui <- function(id) {
           ),
           ns = ns
         ),
+        conditionalPanel(
+          condition = "input.step_2 == 'Volcano Plot' ",
+          mod_label_ui(ns("label_volcano")),
+          ns = ns
+        ),
+        conditionalPanel(
+          condition = "input.step_2 == 'MA Plot' ",
+          mod_label_ui(ns("label_ma")),
+          ns = ns
+        ),
         width = 2
       ),
       mainPanel(
@@ -787,18 +797,44 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       )
     })
 
-
     # volcano plot -----
-    vol_plot <- reactive({
-      req(!is.null(deg$limma$top_genes))
+    vol_data <- reactive({
+      req(input$select_contrast, deg$limma, input$limma_p_val, input$limma_fc)
 
-      vol <- plot_volcano(
+      volcano_data(
         select_contrast = input$select_contrast,
         comparisons = deg$limma$comparisons,
         top_genes = deg$limma$top_genes,
         limma_p_val = input$limma_p_val,
         limma_fc = input$limma_fc,
-        plot_colors = plot_colors[[input$plot_color_select]]
+        processed_data = pre_process$data(),
+        contrast_samples = contrast_samples()
+      )
+    })
+
+    gene_labels <- mod_label_server(
+      "label_volcano",
+      data_list = reactive({
+        vol_data()
+      }),
+      method = "volcano"
+    )
+
+    gene_labels_ma <- mod_label_server(
+      "label_ma",
+      data_list = reactive({
+        vol_data()
+      }),
+      method = "ma"
+    )
+
+    vol_plot <- reactive({
+      req(vol_data(), input$plot_color_select)
+
+      vol <- plot_volcano(
+        data = vol_data()$data,
+        plot_colors = plot_colors[[input$plot_color_select]],
+        anotate_genes = gene_labels()
       )
     })
 
@@ -817,17 +853,12 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
 
     # ma plot----------------
     ma_plot <- reactive({
-      req(!is.null(deg$limma$top_genes))
+      req(vol_data())
 
       plot_ma(
-        select_contrast = input$select_contrast,
-        comparisons = deg$limma$comparisons,
-        top_genes = deg$limma$top_genes,
-        limma_p_val = input$limma_p_val,
-        limma_fc = input$limma_fc,
-        contrast_samples = contrast_samples(),
-        processed_data = pre_process$data(),
-        plot_colors = plot_colors[[input$plot_color_select]]
+        data = vol_data()$data,
+        plot_colors = plot_colors[[input$plot_color_select]],
+        anotate_genes = gene_labels_ma()
       )
     })
 
