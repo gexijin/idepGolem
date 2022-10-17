@@ -14,6 +14,9 @@ mod_label_server(id, data_list, method = c("volcano", "ma"))
 \item{method}{String designating if the results are for the volcano plot or
 ma plot}
 }
+\value{
+A shiny module.
+}
 \description{
 This component contains the pop-up modal and data processing to customize
  how genes are labeled on the volcano or ma plot. Users have the option to
