@@ -687,20 +687,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       gmt_choices = reactive(conversion_info()$gmt_choices),
       converted = reactive(conversion_info()$converted),
       no_id_conversion = reactive(input$no_id_conversion),
-      heatmap_color_select = reactive({
-        ifelse(
-          !is.null(input$heatmap_color_select),
-          input$heatmap_color_select,
-          "Green-Black-Red"
-        )
-      }),
-      select_gene_id = reactive({
-        ifelse(
-          !is.null(input$select_gene_id),
-          input$select_gene_id,
-          "symbol"
-        )
-      })
+      heatmap_color_select = reactive(input$heatmap_color_select),
+      select_gene_id = reactive(input$select_gene_id)
     )
   })
 }

@@ -719,7 +719,6 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
 
     # Individual genes selection ----------
     observe({
-      req(tab() == "Pre-Process")
       req(!is.null(processed_data()$data))
       req(!is.null(individual_data()))
 
