@@ -21,7 +21,7 @@ app_ui <- function(request) {
         fg = "#0D223E",
         base_font = bslib::font_google("Fira Sans"),
         heading_font = bslib::font_google("Roboto Slab"),
-        font_scale = 0.5,
+        font_scale = 0.8,
         "navbar-bg" = "#0033A0"
       ),
       mod_01_load_data_ui(id = "load_data"),
