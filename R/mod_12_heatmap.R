@@ -111,36 +111,46 @@ mod_12_heatmap_server <- function(id,
         Selection can be adjusted from the sides.
         It can also be dragged around.", 0.5, 0.5)
       } else {
-        withProgress(message = "Zooming in...", {
-          incProgress(0.2)
+        shinybusy::show_modal_spinner(
+          spin = "orbit",
+          text = "Creating Heatmap",
+          color = "#000000"
+        )
+        shinybusy::remove_modal_spinner()
+        heat_return <- sub_heatmap_calc()
 
-          heat_return <- deg_heat_sub(
-            ht_brush = input$ht_brush,
-            ht = shiny_env$ht,
-            ht_pos_main = shiny_env$ht_pos_main,
-            heatmap_data = data(),
-            bar = bar(),
-            all_gene_names = all_gene_names(),
-            select_gene_id = select_gene_id()
-          )
-          incProgress(0.6)
-          shiny_env$ht_select <- heat_return$ht_select
-          shiny_env$submap_data <- heat_return$submap_data
-          shiny_env$group_colors <- heat_return$group_colors
-          shiny_env$column_groups <- heat_return$column_groups
-          shiny_env$bar <- heat_return$bar
 
-          shiny_env$ht_sub <- ComplexHeatmap::draw(
-            shiny_env$ht_select,
-            annotation_legend_side = "top",
-            heatmap_legend_side = "top"
-          )
+        shiny_env$ht_select <- heat_return$ht_select
+        shiny_env$submap_data <- heat_return$submap_data
+        shiny_env$group_colors <- heat_return$group_colors
+        shiny_env$column_groups <- heat_return$column_groups
+        shiny_env$bar <- heat_return$bar
 
-          shiny_env$ht_pos_sub <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht_sub)
+        shiny_env$ht_sub <- ComplexHeatmap::draw(
+          shiny_env$ht_select,
+          annotation_legend_side = "top",
+          heatmap_legend_side = "top"
+        )
 
-          return(shiny_env$ht_sub)
-        })
+        shiny_env$ht_pos_sub <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht_sub)
+
+        return(shiny_env$ht_sub)
       }
+    })
+
+    sub_heatmap_calc <- reactive({
+      try(
+        heat_return <- deg_heat_sub(
+          ht_brush = input$ht_brush,
+          ht = shiny_env$ht,
+          ht_pos_main = shiny_env$ht_pos_main,
+          heatmap_data = data(),
+          bar = bar(),
+          all_gene_names = all_gene_names(),
+          select_gene_id = select_gene_id()
+        )
+      )
+      return(heat_return)
     })
 
     sub_heatmap_object <- reactive({
@@ -148,32 +158,29 @@ mod_12_heatmap_server <- function(id,
         grid::grid.newpage()
         grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
       } else {
-        withProgress(message = "Creating sub-heatmap", {
-          incProgress(0.2)
-          heat_return <- deg_heat_sub(
-            ht_brush = input$ht_brush,
-            ht = shiny_env$ht,
-            ht_pos_main = shiny_env$ht_pos_main,
-            heatmap_data = data(),
-            bar = bar(),
-            all_gene_names = all_gene_names(),
-            select_gene_id = select_gene_id()
-          )
-          incProgress(0.6)
-          shiny_env$ht_select <- heat_return$ht_select
-          shiny_env$submap_data <- heat_return$submap_data
-          shiny_env$group_colors <- heat_return$group_colors
-          shiny_env$column_groups <- heat_return$column_groups
-          shiny_env$bar <- heat_return$bar
+        shinybusy::show_modal_spinner(
+          spin = "orbit",
+          text = "Creating Heatmap",
+          color = "#000000"
+        )
+        try(
+          heat_return <- sub_heatmap_calc()
+        )
+        shinybusy::remove_modal_spinner()
 
-          return(
-            ComplexHeatmap::draw(
-              shiny_env$ht_select,
-              annotation_legend_side = "top",
-              heatmap_legend_side = "top"
-            )
+        shiny_env$ht_select <- heat_return$ht_select
+        shiny_env$submap_data <- heat_return$submap_data
+        shiny_env$group_colors <- heat_return$group_colors
+        shiny_env$column_groups <- heat_return$column_groups
+        shiny_env$bar <- heat_return$bar
+
+        return(
+          ComplexHeatmap::draw(
+            shiny_env$ht_select,
+            annotation_legend_side = "top",
+            heatmap_legend_side = "top"
           )
-        })
+        )
       }
     })
 

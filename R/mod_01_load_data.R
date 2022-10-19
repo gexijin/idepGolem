@@ -141,7 +141,6 @@ mod_01_load_data_ui <- function(id) {
         fluidRow(
           column(
             width = 4,
-            shinyjs::useShinyjs(),
             checkboxInput(
               inputId = ns("customize_button"),
               label = "Show Options",

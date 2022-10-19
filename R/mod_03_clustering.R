@@ -143,7 +143,6 @@ mod_03_clustering_ui <- function(id) {
               htmlOutput(ns("selected_genes_ui"))
             )
           ),
-          shinyjs::useShinyjs(),
           checkboxInput(ns("customize_button"), "More options"),
           checkboxInput(
             inputId = ns("sample_clustering"),
@@ -458,6 +457,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       )
 
       shiny_env$ht <- heatmap_main_object()
+      shinybusy::remove_modal_spinner()
       # Use heatmap position in multiple components
       shiny_env$ht_pos_main <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht)
       return(shiny_env$ht)
@@ -466,12 +466,6 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     heatmap_main_object <- reactive({
       req(!is.null(heatmap_data()))
       req(input$select_factors_heatmap)
-
-      shinybusy::show_modal_spinner(
-        spin = "orbit",
-        text = "Creating Heatmap",
-        color = "#000000"
-      )
 
       # Assign heatmap to be used in multiple components
       try(
@@ -492,8 +486,6 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
           selected_genes = input$selected_genes
         )
       )
-
-      shinybusy::remove_modal_spinner()
 
       return(obj)
     })
@@ -557,7 +549,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
           text = "Creating sub-heatmap",
           color = "#000000"
         )
-        try( # tolerates error; otherwise stuck with spinner
+        try(
           submap_return <- heatmap_sub_object_calc()
         )
         shinybusy::remove_modal_spinner()
@@ -582,12 +574,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     })
 
     heatmap_sub_object_calc <- reactive({
-      shinybusy::show_modal_spinner(
-        spin = "orbit",
-        text = "Creating sub-heatmap",
-        color = "#000000"
-      )
-      try(
+      try( # tolerates error; otherwise stuck with spinner
         submap_return <- heat_sub(
           ht_brush = input$ht_brush,
           ht = shiny_env$ht,
@@ -598,7 +585,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
           cluster_meth = input$cluster_meth
         )
       )
-      shinybusy::remove_modal_spinner()
+
       return(submap_return)
     })
     # Subheatmap creation ---------
@@ -607,7 +594,15 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         grid::grid.newpage()
         grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
       } else {
-        submap_return <- heatmap_sub_object_calc()
+        shinybusy::show_modal_spinner(
+          spin = "orbit",
+          text = "Creating sub-heatmap",
+          color = "#000000"
+        )
+        try(
+          submap_return <- heatmap_sub_object_calc()
+        )
+        shinybusy::remove_modal_spinner()
         # Objects used in other components ----------
         shiny_env$ht_sub_obj <- submap_return$ht_select
         shiny_env$submap_data <- submap_return$submap_data
