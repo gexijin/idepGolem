@@ -4,7 +4,7 @@
 \alias{convert_data}
 \title{Convert expression data rownames to ensembl}
 \usage{
-convert_data(converted, data, no_id_conversion)
+convert_data(converted, data, no_id_conversion, multiple_map)
 }
 \arguments{
 \item{converted}{Data from convert_id function containing converted ids}

@@ -143,7 +143,6 @@ mod_03_clustering_ui <- function(id) {
               htmlOutput(ns("selected_genes_ui"))
             )
           ),
-          shinyjs::useShinyjs(),
           checkboxInput(ns("customize_button"), "More options"),
           checkboxInput(
             inputId = ns("sample_clustering"),
@@ -456,29 +455,11 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         text = "Creating Heatmap",
         color = "#000000"
       )
-      # Assign heatmap to be used in multiple components
-      shiny_env$ht <- heatmap_main(
-        data = heatmap_data(),
-        cluster_meth = input$cluster_meth,
-        heatmap_cutoff = input$heatmap_cutoff,
-        sample_info = pre_process$sample_info(),
-        select_factors_heatmap = input$select_factors_heatmap,
-        dist_funs = dist_funs,
-        dist_function = input$dist_function,
-        hclust_function = input$hclust_function,
-        sample_clustering = input$sample_clustering,
-        heatmap_color_select = heatmap_color_select(),
-        row_dend = input$show_row_dend,
-        k_clusters = input$k_clusters,
-        re_run = input$k_means_re_run,
-        selected_genes = input$selected_genes
-      )
 
+      shiny_env$ht <- heatmap_main_object()
+      shinybusy::remove_modal_spinner()
       # Use heatmap position in multiple components
       shiny_env$ht_pos_main <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht)
-
-      shinybusy::remove_modal_spinner()
-
       return(shiny_env$ht)
     })
 
@@ -486,31 +467,25 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       req(!is.null(heatmap_data()))
       req(input$select_factors_heatmap)
 
-      shinybusy::show_modal_spinner(
-        spin = "orbit",
-        text = "Creating Heatmap",
-        color = "#000000"
-      )
-
       # Assign heatmap to be used in multiple components
-      obj <- heatmap_main(
-        data = heatmap_data(),
-        cluster_meth = input$cluster_meth,
-        heatmap_cutoff = input$heatmap_cutoff,
-        sample_info = pre_process$sample_info(),
-        select_factors_heatmap = input$select_factors_heatmap,
-        dist_funs = dist_funs,
-        dist_function = input$dist_function,
-        hclust_function = input$hclust_function,
-        sample_clustering = input$sample_clustering,
-        heatmap_color_select = heatmap_color_select(),
-        row_dend = input$show_row_dend,
-        k_clusters = input$k_clusters,
-        re_run = input$k_means_re_run,
-        selected_genes = input$selected_genes
+      try(
+        obj <- heatmap_main(
+          data = heatmap_data(),
+          cluster_meth = input$cluster_meth,
+          heatmap_cutoff = input$heatmap_cutoff,
+          sample_info = pre_process$sample_info(),
+          select_factors_heatmap = input$select_factors_heatmap,
+          dist_funs = dist_funs,
+          dist_function = input$dist_function,
+          hclust_function = input$hclust_function,
+          sample_clustering = input$sample_clustering,
+          heatmap_color_select = heatmap_color_select(),
+          row_dend = input$show_row_dend,
+          k_clusters = input$k_clusters,
+          re_run = input$k_means_re_run,
+          selected_genes = input$selected_genes
+        )
       )
-
-      shinybusy::remove_modal_spinner()
 
       return(obj)
     })
@@ -574,16 +549,10 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
           text = "Creating sub-heatmap",
           color = "#000000"
         )
-        submap_return <- heat_sub(
-          ht_brush = input$ht_brush,
-          ht = shiny_env$ht,
-          ht_pos_main = shiny_env$ht_pos_main,
-          heatmap_data = heatmap_data(),
-          sample_info = pre_process$sample_info(),
-          select_factors_heatmap = input$select_factors_heatmap,
-          cluster_meth = input$cluster_meth
+        try(
+          submap_return <- heatmap_sub_object_calc()
         )
-
+        shinybusy::remove_modal_spinner()
         # Objects used in other components ----------
         shiny_env$ht_sub_obj <- submap_return$ht_select
         shiny_env$submap_data <- submap_return$submap_data
@@ -598,11 +567,27 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         )
 
         shiny_env$ht_pos_sub <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht_sub)
-        shinybusy::remove_modal_spinner()
+
+
         return(shiny_env$ht_sub)
       }
     })
 
+    heatmap_sub_object_calc <- reactive({
+      try( # tolerates error; otherwise stuck with spinner
+        submap_return <- heat_sub(
+          ht_brush = input$ht_brush,
+          ht = shiny_env$ht,
+          ht_pos_main = shiny_env$ht_pos_main,
+          heatmap_data = heatmap_data(),
+          sample_info = pre_process$sample_info(),
+          select_factors_heatmap = input$select_factors_heatmap,
+          cluster_meth = input$cluster_meth
+        )
+      )
+
+      return(submap_return)
+    })
     # Subheatmap creation ---------
     heatmap_sub_object <- reactive({
       if (is.null(input$ht_brush)) {
@@ -614,15 +599,10 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
           text = "Creating sub-heatmap",
           color = "#000000"
         )
-        submap_return <- heat_sub(
-          ht_brush = input$ht_brush,
-          ht = shiny_env$ht,
-          ht_pos_main = shiny_env$ht_pos_main,
-          heatmap_data = heatmap_data(),
-          sample_info = pre_process$sample_info(),
-          select_factors_heatmap = input$select_factors_heatmap,
-          cluster_meth = input$cluster_meth
+        try(
+          submap_return <- heatmap_sub_object_calc()
         )
+        shinybusy::remove_modal_spinner()
         # Objects used in other components ----------
         shiny_env$ht_sub_obj <- submap_return$ht_select
         shiny_env$submap_data <- submap_return$submap_data
@@ -630,7 +610,6 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         shiny_env$group_colors <- submap_return$group_colors
         shiny_env$click_data <- submap_return$click_data
 
-        shinybusy::remove_modal_spinner()
         return(ComplexHeatmap::draw(
           shiny_env$ht_sub_obj,
           annotation_legend_list = submap_return$lgd,

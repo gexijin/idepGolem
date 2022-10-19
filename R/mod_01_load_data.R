@@ -92,10 +92,16 @@ mod_01_load_data_ui <- function(id) {
               choices = list(
                 "Read counts data (recommended)" = 1,
                 "Normalized expression values (RNA-seq FPKM, microarray, etc.)" = 2,
-                "Fold-changes and corrected P values from CuffDiff or any other
+                "Fold-changes and adjusted P-values from CuffDiff or any other
                 program" = 3
               ),
-              selected = 1
+              selected = 1,
+              selectize = FALSE
+            ),
+            tippy::tippy_this(
+              ns("data_file_format"),
+              "Read counts data can be analyzed using DESeq2.  ",
+              theme = "light-border"
             )
           ),
           column(
@@ -134,6 +140,14 @@ mod_01_load_data_ui <- function(id) {
         uiOutput(ns("design_file_ui")),
         fluidRow(
           column(
+            width = 4,
+            checkboxInput(
+              inputId = ns("customize_button"),
+              label = "Show Options",
+              value = FALSE
+            )
+          ),
+          column(
             width = 8,
             # Yes or no to converting IDs -------------
             checkboxInput(
@@ -141,16 +155,28 @@ mod_01_load_data_ui <- function(id) {
               label = "Do not convert gene IDs",
               value = FALSE
             )
-          ),
-          column(
-            width = 4,
-            shinyjs::useShinyjs(),
-            checkboxInput(
-              inputId = ns("customize_button"),
-              label = "Plot Options",
-              value = FALSE
-            )
           )
+        ),
+        selectInput(
+          inputId = ns("multiple_map"),
+          label = "Multiple mapped IDs:",
+          choices = list(
+            "Sum" = "sum",
+            "Average" = "mean",
+            "Median" = "median",
+            "Max" = "max",
+            "Max SD" = "max_sd"
+          ),
+          selected = "Sum",
+          selectize = FALSE
+        ),
+        tippy::tippy_this(
+          ns("multiple_map"),
+          "When multiple IDs map to the same gene, we can summerize
+          data in a certain way (sum, mean, median, max),
+          or just keep the rows with the the most variation (max SD).
+          When uploading transcript level counts, choose \"sum\" to aggregate gene level counts. ",
+          theme = "light-border"
         ),
         selectInput(
           inputId = ns("heatmap_color_select"),
@@ -245,6 +271,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     observe({
       shinyjs::toggle(id = "heatmap_color_select", condition = input$customize_button)
       shinyjs::toggle(id = "select_gene_id", condition = input$customize_button)
+      shinyjs::toggle(id = "multiple_map", condition = input$customize_button)
     })
 
     welcome_modal <- shiny::modalDialog(
@@ -325,7 +352,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             )),
             tippy::tippy_this(
               ns("go_button"),
-              "Load the selected demo data",
+              "Load the selected demo file",
               theme = "light-border"
             )
           ),
@@ -335,8 +362,14 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
               inputId = ns("select_demo"),
               label = NULL,
               choices = choices,
-              selected = choices[[1]]
+              selected = choices[[1]],
+              selectize = FALSE
             ),
+            tippy::tippy_this(
+              ns("select_demo"),
+              "Select a demo file then click the \"Load Demo\"",
+              theme = "light-border"
+            )
           )
         ),
 
@@ -533,7 +566,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         converted_data <- convert_data(
           converted = converted,
           no_id_conversion = input$no_id_conversion,
-          data = loaded_data()$data
+          data = loaded_data()$data,
+          multiple_map = input$multiple_map
         )
 
         all_gene_names <- get_all_gene_names(
@@ -688,7 +722,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       converted = reactive(conversion_info()$converted),
       no_id_conversion = reactive(input$no_id_conversion),
       heatmap_color_select = reactive(input$heatmap_color_select),
-      select_gene_id = reactive(input$select_gene_id)
+      select_gene_id = reactive(input$select_gene_id),
+      multiple_map = reactive(input$multiple_map)
     )
   })
 }

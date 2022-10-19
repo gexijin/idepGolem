@@ -115,7 +115,7 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab) {
     })
 
     output$list_biclusters <- renderUI({
-      req(tab() == "Bicluster")
+      #      req(tab() == "Bicluster")
       req(!is.null(biclustering()))
       req(biclustering()$res@Number != 0)
 
