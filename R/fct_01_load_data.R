@@ -295,7 +295,8 @@ input_data <- function(expression_file,
 #' @return Returns original data with rownames converted to ensembl
 convert_data <- function(converted,
                          data,
-                         no_id_conversion) {
+                         no_id_conversion,
+                         multiple_map) {
   if (is.null(converted) || no_id_conversion) {
     return(list(
       data = data,
@@ -317,12 +318,42 @@ convert_data <- function(converted,
 
     mapped_ids <- merged[, 1:2]
 
-    # Multiple matches use one with highest SD ----------
-    tmp <- apply(merged[, 3:(ncol(merged))], 1, sd)
-    merged <- merged[order(merged[, 2], -tmp), ]
-    merged <- merged[!duplicated(merged[, 2]), ]
-    rownames(merged) <- merged[, 2]
-    merged <- as.matrix(merged[, c(-1, -2)])
+    # remove user id
+    merged <- merged[, -1]
+
+    if (multiple_map == "max_sd") {
+      # Multiple matches use one with highest SD ----------
+      tmp <- apply(merged[, 2:(ncol(merged))], 1, sd)
+      merged <- merged[order(merged[, 1], -tmp), ]
+      merged <- merged[!duplicated(merged[, 1]), ]
+    } else {
+      # aggregate multiple ids mapped to the same gene
+      merged <- switch(multiple_map,
+        "sum" = aggregate(
+          . ~ ensembl_gene_id,
+          data = merged,
+          FUN = sum
+        ),
+        "mean" = aggregate(
+          . ~ ensembl_gene_id,
+          data = merged,
+          FUN = mean
+        ),
+        "max" = aggregate(
+          . ~ ensembl_gene_id,
+          data = merged,
+          FUN = max
+        ),
+        "median" = aggregate(
+          . ~ ensembl_gene_id,
+          data = merged,
+          FUN = median
+        )
+      )
+    }
+
+    rownames(merged) <- merged[, 1]
+    merged <- as.matrix(merged[, c(-1)])
 
     # Order by SD ----------
     merged <- merged[order(-apply(
