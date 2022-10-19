@@ -70,12 +70,7 @@ mod_12_heatmap_server <- function(id,
       withProgress(message = "Creating Heatmap", {
         incProgress(0.2)
         # Assign heatmap to be used in multiple components
-        shiny_env$ht <- deg_heatmap(
-          data = data(),
-          bar = bar(),
-          heatmap_color_select = unlist(strsplit(heatmap_color(), "-")),
-          cluster_rows = cluster_rows
-        )
+        shiny_env$ht <- main_heatmap_object()
 
         # Use heatmap position in multiple components
         shiny_env$ht_pos_main <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht)
