@@ -9,9 +9,12 @@ convert_data(converted, data, no_id_conversion, multiple_map)
 \arguments{
 \item{converted}{Data from convert_id function containing converted ids}
 
-\item{data}{Data from inputed expression file}
+\item{data}{Data from the input expression file}
 
 \item{no_id_conversion}{TRUE/FALSE for converting data ids or not}
+
+\item{multiple_map}{String to designate how to handle the values from 
+multiple}
 }
 \value{
 Returns original data with rownames converted to ensembl

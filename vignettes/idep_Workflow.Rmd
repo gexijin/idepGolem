@@ -18,12 +18,12 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup}
-library(idepGolem)
+#library(idepGolem)
 ```
 
 
 ```{r}
-#devtools::load_all()
+devtools::load_all()
 ```
 
 # LOAD DATA FUNCTIONS
@@ -33,6 +33,7 @@ idep_data <- get_idep_data()
 
 DATABASE <- Sys.getenv("IDEP_DATABASE")[1]
 DATABASE <- "F:/IDEP_DATABASE/"
+
 YOUR_DATA_PATH <- paste0(DATABASE, "data_go/BcellGSE71176_p53.csv")
 YOUR_EXPERIMENT_PATH <- paste0(DATABASE, "data_go/BcellGSE71176_p53_sampleInfo.csv")
 
