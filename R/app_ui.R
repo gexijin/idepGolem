@@ -24,6 +24,7 @@ app_ui <- function(request) {
       #        font_scale = 0.8,
       #        "navbar-bg" = "#0033A0"
       #      ),
+      id = "navbar",
       mod_01_load_data_ui(id = "load_data"),
       mod_02_pre_process_ui(id = "pre_process"),
       mod_03_clustering_ui(id = "clustering"),
