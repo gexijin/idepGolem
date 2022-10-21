@@ -351,7 +351,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           column(
             width = 3,
             align = "right",
-            style = "margin-top: 8px;",
+            # style = "margin-top: 8px;",
             "Demo files:"
           ),
           column(
@@ -371,14 +371,13 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             )
           ),
           column(
-            width = 4,
+            width = 5,
             actionButton(
               inputId = ns("go_button"),
               label = "Load demo"
             ),
             tags$head(tags$style(
-              "#load_data-go_button{color: red;
-              font-size: 16px;}"
+              "#load_data-go_button{color: red;}"
             )),
             tippy::tippy_this(
               ns("go_button"),
