@@ -12,18 +12,18 @@ app_ui <- function(request) {
 
     navbarPage(
       "iDEP 1.0",
-      #      theme = bslib::bs_theme(
-      #        version = 5,
-      #        primary = "#0033A0",
-      #        secondary = "#CBD3EB",
-      #        warning = "#ffc107",
-      #        bg = "#fbfbfb",
-      #        fg = "#0D223E",
-      #        base_font = bslib::font_google("Fira Sans"),
-      #        heading_font = bslib::font_google("Roboto Slab"),
-      #        font_scale = 0.8,
-      #        "navbar-bg" = "#0033A0"
-      #      ),
+      theme = bslib::bs_theme(
+        version = 5,
+        primary = "#0033A0",
+        secondary = "#CBD3EB",
+        warning = "#ffc107",
+        bg = "#fbfbfb",
+        fg = "#0D223E",
+        base_font = bslib::font_google("Fira Sans"),
+        heading_font = bslib::font_google("Roboto Slab"),
+        font_scale = 0.8,
+        "navbar-bg" = "#0033A0"
+      ),
       id = "navbar",
       mod_01_load_data_ui(id = "load_data"),
       mod_02_pre_process_ui(id = "pre_process"),
@@ -63,7 +63,7 @@ golem_add_external_resources <- function() {
     ),
     bundle_resources(
       path = app_sys("app/www"),
-      app_title = "idepGolem"
+      app_title = "iDEP"
     )
     # Add here other external resources
     # for example, you can add shinyalert::useShinyalert()

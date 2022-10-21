@@ -237,8 +237,8 @@ mod_03_clustering_ui <- function(id) {
                 ),
                 checkboxInput(
                   inputId = ns("cluster_enrichment"),
-                  label = h5("GO Enrichment in
-                    selected genes or k-means clusters (below)"),
+                  label = "See below for GO Enrichment in
+                    selected genes",
                   value = TRUE
                 )
               ),
@@ -594,15 +594,10 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         grid::grid.newpage()
         grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
       } else {
-        shinybusy::show_modal_spinner(
-          spin = "orbit",
-          text = "Creating sub-heatmap",
-          color = "#000000"
-        )
         try(
           submap_return <- heatmap_sub_object_calc()
         )
-        shinybusy::remove_modal_spinner()
+
         # Objects used in other components ----------
         shiny_env$ht_sub_obj <- submap_return$ht_select
         shiny_env$submap_data <- submap_return$submap_data
