@@ -32,37 +32,41 @@ mod_11_enrichment_ui <- function(id) {
       ),
       column(
         width = 4,
-        actionButton(ns("customize_button"), "More options"),
-        tippy::tippy_this(
-          ns("customize_button"),
-          "Customize enrichment analysis",
-          theme = "light-border"
-        ),
+        checkboxInput(
+          inputId = ns("customize_button"),
+          label = "More options",
+          value = FALSE
+        )
       )
     ),
-    shinyBS::bsModal(
-      id = ns("modalExample"),
-      title = "More options",
-      trigger = ns("customize_button"),
-      size = "small",
-      selectInput(
-        inputId = ns("sort_by"),
-        label = NULL,
-        choices = list(
-          "Sort by FDR" = "FDR",
-          "Sort by fold enriched" = "Fold"
-        ),
-        selected = "FDR"
+    fluidRow(
+      column(
+        width = 4,
+        selectInput(
+          inputId = ns("sort_by"),
+          label = NULL,
+          choices = list(
+            "Sort by FDR" = "FDR",
+            "Sort by fold enriched" = "Fold"
+          ),
+          selected = "FDR"
+        )
       ),
-      checkboxInput(
-        inputId = ns("filtered_background"),
-        label = "Use filtered genes as background.",
-        value = TRUE
+      column(
+        width = 4,
+        checkboxInput(
+          inputId = ns("filtered_background"),
+          label = "Use filtered genes as background.",
+          value = TRUE
+        )
       ),
-      checkboxInput(
-        inputId = ns("remove_redudant"),
-        label = "Remove Redudant Gene Sets",
-        value = FALSE
+      column(
+        width = 4,
+        checkboxInput(
+          inputId = ns("remove_redudant"),
+          label = "Remove Redudant Gene Sets",
+          value = FALSE
+        )
       )
     ),
     tabsetPanel(
@@ -309,7 +313,11 @@ mod_11_enrichment_server <- function(id,
                                      gmt_file) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-
+    observe({
+      shinyjs::toggle(id = "sort_by", condition = input$customize_button)
+      shinyjs::toggle(id = "filtered_background", condition = input$customize_button)
+      shinyjs::toggle(id = "remove_redudant", condition = input$customize_button)
+    })
     # GMT choices for enrichment ----------
     output$select_go_selector <- renderUI({
       req(!is.null(gmt_choices()))

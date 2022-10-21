@@ -153,7 +153,7 @@ mod_05_deg_1_ui <- function(id) {
             )
           ),
           tabPanel(
-            title = "Venn Diagram",
+            title = "Venn Diagram & UpSet plot",
             checkboxInput(
               inputId = ns("up_down_regulated"),
               label = "Split gene lists by up- or down-regulation",
