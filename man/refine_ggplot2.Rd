@@ -4,10 +4,10 @@
 \alias{refine_ggplot2}
 \title{Change ggplot2 plots}
 \usage{
-refine_ggplot2(plot, gridline)
+refine_ggplot2(p, gridline, ggplot2_theme = "light")
 }
 \arguments{
-\item{plot}{ggplot2 object}
+\item{p}{ggplot2 object}
 
 \item{gridline}{TRUE of FALSE}
 }

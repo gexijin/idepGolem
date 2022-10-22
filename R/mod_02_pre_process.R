@@ -529,7 +529,11 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         sample_info = load_data$sample_info(),
         type = "Raw"
       )
-      refine_ggplot2(p, gridline = load_data$plot_grid_lines())
+      refine_ggplot2(
+        p = p,
+        gridline = load_data$plot_grid_lines(),
+        ggplot2_theme = load_data$ggplot2_theme()
+      )
     })
     output$raw_counts_gg <- renderPlot({
       print(raw_counts())
@@ -573,7 +577,11 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         plot_xaxis = input$scatter_x,
         plot_yaxis = input$scatter_y
       )
-      refine_ggplot2(p, gridline = load_data$plot_grid_lines())
+      refine_ggplot2(
+        p = p,
+        gridline = load_data$plot_grid_lines(),
+        ggplot2_theme = load_data$ggplot2_theme()
+      )
     })
     output$eda_scatter <- renderPlot({
       print(scatter())
@@ -595,7 +603,11 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         processed_data = processed_data()$data,
         sample_info = load_data$sample_info()
       )
-      refine_ggplot2(p, gridline = load_data$plot_grid_lines())
+      refine_ggplot2(
+        p = p,
+        gridline = load_data$plot_grid_lines(),
+        ggplot2_theme = load_data$ggplot2_theme()
+      )
     })
     output$eda_boxplot <- renderPlot({
       print(eda_box())
@@ -617,7 +629,11 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         processed_data = processed_data()$data,
         sample_info = load_data$sample_info()
       )
-      refine_ggplot2(p, gridline = load_data$plot_grid_lines())
+      refine_ggplot2(
+        p = p,
+        gridline = load_data$plot_grid_lines(),
+        ggplot2_theme = load_data$ggplot2_theme()
+      )
     })
     output$eda_density <- renderPlot({
       print(density())
@@ -664,7 +680,11 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         heat_cols = heat_colors[[input$heat_color_select]],
         rank = input$rank
       )
-      refine_ggplot2(p, gridline = load_data$plot_grid_lines())
+      refine_ggplot2(
+        p = p,
+        gridline = load_data$plot_grid_lines(),
+        ggplot2_theme = load_data$ggplot2_theme()
+      )
     })
     output$dev_transfrom <- renderPlot({
       print(dev())
@@ -776,7 +796,11 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         use_sd = input$use_sd,
         lab_rotate = input$angle_ind_axis_lab
       )
-      refine_ggplot2(p, gridline = load_data$plot_grid_lines())
+      refine_ggplot2(
+        p = p,
+        gridline = load_data$plot_grid_lines(),
+        ggplot2_theme = load_data$ggplot2_theme()
+      )
     })
 
     output$gene_plot <- renderPlot({
@@ -1047,7 +1071,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       descr = reactive(processed_data()$descr),
       heatmap_color_select = reactive(load_data$heatmap_color_select()),
       select_gene_id = reactive(load_data$select_gene_id()),
-      plot_grid_lines = reactive(load_data$plot_grid_lines())
+      plot_grid_lines = reactive(load_data$plot_grid_lines()),
+      ggplot2_theme = reactive(load_data$ggplot2_theme())
     )
   })
 }

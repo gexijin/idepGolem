@@ -1015,17 +1015,28 @@ hyperText <- function(textVector, urlVector) {
 #' Change ggplot2 plots
 #'
 #'
-#' @param plot ggplot2 object
+#' @param p ggplot2 object
 #' @param gridline TRUE of FALSE
 #'
 #' @export
 #' @return ggplot2 object
-refine_ggplot2 <- function(plot, gridline) {
-  plot <- plot + ggplot2::theme_light(base_size = 15)
+refine_ggplot2 <- function(p, gridline, ggplot2_theme = "light") {
+
+  # apply theme based on selection
+  p <- switch(ggplot2_theme,
+    "linedraw" = p + ggplot2::theme_linedraw(),
+    "classic" = p + ggplot2::theme_classic(),
+    "gray" = p + ggplot2::theme_gray(),
+    "light" = p + ggplot2::theme_light(),
+    "dark" = p + ggplot2::theme_dark(),
+    "bw" = p + ggplot2::theme_bw(),
+    p # default, no change
+  )
+
   if (!gridline) { # by default it has gridlines
-    plot <- plot +
+    p <- p +
       ggplot2::theme(panel.grid = ggplot2::element_blank())
   }
 
-  return(plot)
+  return(p)
 }

@@ -386,7 +386,11 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         data = pre_process$data(),
         n_genes_max = input$n_genes
       )
-      refine_ggplot2(p, gridline = pre_process$plot_grid_lines())
+      refine_ggplot2(
+        p = p,
+        gridline = pre_process$plot_grid_lines(),
+        ggplot2_theme = pre_process$ggplot2_theme()
+      )
     })
 
     output$sd_density_plot <- renderPlot({
@@ -814,6 +818,9 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       }),
       plot_grid_lines = reactive({
         pre_process$plot_grid_lines()
+      }),
+      ggplot2_theme = reactive({
+        pre_process$ggplot2_theme()
       })
     )
 

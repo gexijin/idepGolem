@@ -581,7 +581,11 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       p <- sig_genes_plot(
         results = deg$limma$results
       )
-      refine_ggplot2(p, gridline = pre_process$plot_grid_lines())
+      refine_ggplot2(
+        p = p,
+        gridline = pre_process$plot_grid_lines(),
+        ggplot2_theme = pre_process$ggplot2_theme()
+      )
     })
 
     output$sig_gene_stats_table <- renderTable(
@@ -685,7 +689,11 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       p <- plot_upset(
         results = venn_data()
       )
-      refine_ggplot2(p, gridline = pre_process$plot_grid_lines())
+      refine_ggplot2(
+        p = p,
+        gridline = pre_process$plot_grid_lines(),
+        ggplot2_theme = pre_process$ggplot2_theme()
+      )
     })
 
     output$upset_plot <- renderPlot({
@@ -838,7 +846,11 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         plot_colors = plot_colors[[input$plot_color_select]],
         anotate_genes = gene_labels()
       )
-      refine_ggplot2(p, gridline = pre_process$plot_grid_lines())
+      refine_ggplot2(
+        p = p,
+        gridline = pre_process$plot_grid_lines(),
+        ggplot2_theme = pre_process$ggplot2_theme()
+      )
     })
 
     output$volcano_plot <- renderPlot({
@@ -863,7 +875,11 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         plot_colors = plot_colors[[input$plot_color_select]],
         anotate_genes = gene_labels_ma()
       )
-      refine_ggplot2(p, gridline = pre_process$plot_grid_lines())
+      refine_ggplot2(
+        p = p,
+        gridline = pre_process$plot_grid_lines(),
+        ggplot2_theme = pre_process$ggplot2_theme()
+      )
     })
 
     output$ma_plot <- renderPlot({
@@ -892,7 +908,11 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         processed_data = pre_process$data(),
         sample_info = pre_process$sample_info()
       )
-      refine_ggplot2(p, gridline = pre_process$plot_grid_lines())
+      refine_ggplot2(
+        p = p,
+        gridline = pre_process$plot_grid_lines(),
+        ggplot2_theme = pre_process$ggplot2_theme()
+      )
     })
 
     # Split up and down genes into two data bases ---------
@@ -966,6 +986,9 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       }),
       plot_grid_lines = reactive({
         pre_process$plot_grid_lines()
+      }),
+      ggplot2_theme = reactive({
+        pre_process$ggplot2_theme()
       })
     )
 

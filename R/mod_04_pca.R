@@ -297,7 +297,11 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
         selected_shape = input$selectFactors2,
         selected_color = input$selectFactors1
       )
-      refine_ggplot2(p, gridline = pre_process$plot_grid_lines())
+      refine_ggplot2(
+        p = p,
+        gridline = pre_process$plot_grid_lines(),
+        ggplot2_theme = pre_process$ggplot2_theme()
+      )
     })
     output$pca_plot_obj <- plotly::renderPlotly({
       plotly::ggplotly(pca_plot())
@@ -372,7 +376,11 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
         selected_shape = input$selectFactors2,
         selected_color = input$selectFactors1
       )
-      refine_ggplot2(p, gridline = pre_process$plot_grid_lines())
+      refine_ggplot2(
+        p = p,
+        gridline = pre_process$plot_grid_lines(),
+        ggplot2_theme = pre_process$ggplot2_theme()
+      )
     })
     output$t_sne <- renderPlot({
       req(t_SNE_plot_obj())
@@ -399,7 +407,11 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
         selected_shape = input$selectFactors2,
         selected_color = input$selectFactors1
       )
-      refine_ggplot2(p, gridline = pre_process$plot_grid_lines())
+      refine_ggplot2(
+        p = p,
+        gridline = pre_process$plot_grid_lines(),
+        ggplot2_theme = pre_process$ggplot2_theme()
+      )
     })
     output$mds_plot_obj <- renderPlot({
       req(mds_plot())
@@ -488,7 +500,11 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
         processed_data = pre_process$data(),
         sample_info = pre_process$sample_info()
       )
-      refine_ggplot2(p, gridline = pre_process$plot_grid_lines())
+      refine_ggplot2(
+        p = p,
+        gridline = pre_process$plot_grid_lines(),
+        ggplot2_theme = pre_process$ggplot2_theme()
+      )
     })
     output$pcatools_eigencor <- renderPlot({
       req(eigencor())

@@ -311,7 +311,8 @@ mod_11_enrichment_server <- function(id,
                                      select_org,
                                      converted,
                                      gmt_file,
-                                     plot_grid_lines) {
+                                     plot_grid_lines,
+                                     ggplot2_theme) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     observe({
@@ -770,7 +771,11 @@ mod_11_enrichment_server <- function(id,
         aspect_ratio = input$aspect_ratio,
         select_cluster = input$select_cluster
       )
-      refine_ggplot2(p, gridline = plot_grid_lines())
+      refine_ggplot2(
+        p = p,
+        gridline = plot_grid_lines(),
+        ggplot2_theme = ggplot2_theme()
+      )
     })
 
     # Enrichment plot for display on the screen
