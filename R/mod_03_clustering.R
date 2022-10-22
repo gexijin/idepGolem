@@ -20,7 +20,7 @@ mod_03_clustering_ui <- function(id) {
         conditionalPanel(
           condition = "input.cluster_panels == 'Hierarchical' |
             input.cluster_panels == 'sample_tab'",
-          selectInput(
+          radioButtons(
             inputId = ns("cluster_meth"),
             label = NULL,
             choices = list(
@@ -310,7 +310,7 @@ mod_03_clustering_ui <- function(id) {
 #' 03_heatmap Server Functions
 #'
 #' @noRd
-mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
+mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -382,9 +382,14 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     sd_density_plot <- reactive({
       req(!is.null(pre_process$data()))
 
-      sd_density(
+      p <- sd_density(
         data = pre_process$data(),
         n_genes_max = input$n_genes
+      )
+      refine_ggplot2(
+        p = p,
+        gridline = pre_process$plot_grid_lines(),
+        ggplot2_theme = pre_process$ggplot2_theme()
       )
     })
 
@@ -810,6 +815,12 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       }),
       gmt_file = reactive({
         pre_process$gmt_file()
+      }),
+      plot_grid_lines = reactive({
+        pre_process$plot_grid_lines()
+      }),
+      ggplot2_theme = reactive({
+        pre_process$ggplot2_theme()
       })
     )
 

@@ -170,6 +170,33 @@ mod_01_load_data_ui <- function(id) {
           choices = c("symbol", "ensembl_ID", "User_ID"),
           selected = "symbol"
         ),
+        selectInput(
+          inputId = ns("ggplot2_theme"),
+          label = "ggplot2 scheme:",
+          choices = c(
+            "default", # no change
+            "gray",
+            "bw",
+            "light",
+            "dark",
+            "classic",
+            "minimal",
+            "linedraw"
+          ),
+          selected = "default",
+          width = "100%",
+          selectize = FALSE
+        ),
+        tippy::tippy_this(
+          ns("ggplot2_theme"),
+          "Changes the styles for all 20 ggplot2 plots.",
+          theme = "light-border"
+        ),
+        checkboxInput(
+          inputId = ns("plot_grid_lines"),
+          label = "Add grid lines to plots",
+          value = FALSE
+        ),
         checkboxInput(
           inputId = ns("no_id_conversion"),
           label = "Do not convert gene IDs",
@@ -267,6 +294,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       shinyjs::toggle(id = "select_gene_id", condition = input$customize_button)
       shinyjs::toggle(id = "multiple_map", condition = input$customize_button)
       shinyjs::toggle(id = "no_id_conversion", condition = input$customize_button)
+      shinyjs::toggle(id = "plot_grid_lines", condition = input$customize_button)
+      shinyjs::toggle(id = "ggplot2_theme", condition = input$customize_button)
     })
 
     welcome_modal <- shiny::modalDialog(
@@ -737,7 +766,9 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       no_id_conversion = reactive(input$no_id_conversion),
       heatmap_color_select = reactive(input$heatmap_color_select),
       select_gene_id = reactive(input$select_gene_id),
-      multiple_map = reactive(input$multiple_map)
+      multiple_map = reactive(input$multiple_map),
+      plot_grid_lines = reactive(input$plot_grid_lines),
+      ggplot2_theme = reactive(input$ggplot2_theme)
     )
   })
 }

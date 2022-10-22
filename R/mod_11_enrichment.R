@@ -310,7 +310,9 @@ mod_11_enrichment_server <- function(id,
                                      idep_data,
                                      select_org,
                                      converted,
-                                     gmt_file) {
+                                     gmt_file,
+                                     plot_grid_lines,
+                                     ggplot2_theme) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     observe({
@@ -755,7 +757,7 @@ mod_11_enrichment_server <- function(id,
       req(input$aspect_ratio)
       req(input$select_cluster)
 
-      enrich_barplot(
+      p <- enrich_barplot(
         enrichment_dataframe = enrichment_dataframe(),
         pathway_order = input$pathway_order,
         order_x = input$order_x,
@@ -768,6 +770,11 @@ mod_11_enrichment_server <- function(id,
         chart_type = input$chart_type,
         aspect_ratio = input$aspect_ratio,
         select_cluster = input$select_cluster
+      )
+      refine_ggplot2(
+        p = p,
+        gridline = plot_grid_lines(),
+        ggplot2_theme = ggplot2_theme()
       )
     })
 
