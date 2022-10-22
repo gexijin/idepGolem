@@ -267,12 +267,6 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
       return(gene_lists)
     })
 
-    enrichment_table_cluster <- mod_11_enrichment_server(
-      id = "enrichment_table_cluster",
-      results = reactive({
-        enrichment_network()
-      })
-    )
 
     enrichment_table_cluster <- mod_11_enrichment_server(
       id = "enrichment_table_cluster",
@@ -297,23 +291,28 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
       }),
       gmt_file = reactive({
         pre_process$gmt_file()
+      }),
+      plot_grid_lines = reactive({
+        pre_process$plot_grid_lines()
       })
     )
 
     output$scale_independence_plot <- renderPlot({
       req(!is.null(wgcna()))
 
-      plot_scale_independence(
+      p <- plot_scale_independence(
         wgcna = wgcna()
       )
+      refine_ggplot2(p, gridline = pre_process$plot_grid_lines())
     })
 
     output$mean_connectivity_plot <- renderPlot({
       req(!is.null(wgcna()))
 
-      plot_mean_connectivity(
+      p <- plot_mean_connectivity(
         wgcna = wgcna()
       )
+      refine_ggplot2(p, gridline = pre_process$plot_grid_lines())
     })
 
     output$module_statistic <- renderText({

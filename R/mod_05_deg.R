@@ -16,7 +16,7 @@ mod_05_deg_1_ui <- function(id) {
         # Button to run DEG analysis for the specified model
         uiOutput(ns("submit_ui")),
         tags$head(tags$style(
-          "#deg-submit_model_button{font-size: 20px;color: red}"
+          "#deg-submit_model_button{font-size: 16px;color: red}"
         )),
         br(),
         br(),
@@ -578,9 +578,10 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
 
     output$sig_gene_stats <- renderPlot({
       req(!is.null(deg$limma$results))
-      sig_genes_plot(
+      p <- sig_genes_plot(
         results = deg$limma$results
       )
+      refine_ggplot2(p, gridline = pre_process$plot_grid_lines())
     })
 
     output$sig_gene_stats_table <- renderTable(
@@ -681,9 +682,10 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     )
 
     upset <- reactive({
-      upset <- plot_upset(
+      p <- plot_upset(
         results = venn_data()
       )
+      refine_ggplot2(p, gridline = pre_process$plot_grid_lines())
     })
 
     output$upset_plot <- renderPlot({
@@ -831,11 +833,12 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     vol_plot <- reactive({
       req(vol_data(), input$plot_color_select)
 
-      vol <- plot_volcano(
+      p <- vol <- plot_volcano(
         data = vol_data()$data,
         plot_colors = plot_colors[[input$plot_color_select]],
         anotate_genes = gene_labels()
       )
+      refine_ggplot2(p, gridline = pre_process$plot_grid_lines())
     })
 
     output$volcano_plot <- renderPlot({
@@ -855,11 +858,12 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     ma_plot <- reactive({
       req(vol_data())
 
-      plot_ma(
+      p <- plot_ma(
         data = vol_data()$data,
         plot_colors = plot_colors[[input$plot_color_select]],
         anotate_genes = gene_labels_ma()
       )
+      refine_ggplot2(p, gridline = pre_process$plot_grid_lines())
     })
 
     output$ma_plot <- renderPlot({
@@ -878,7 +882,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     output$scatter_plot <- renderPlot({
       req(!is.null(deg$limma$top_genes))
 
-      plot_deg_scatter(
+      p <- plot_deg_scatter(
         select_contrast = input$select_contrast,
         comparisons = deg$limma$comparisons,
         top_genes = deg$limma$top_genes,
@@ -888,6 +892,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         processed_data = pre_process$data(),
         sample_info = pre_process$sample_info()
       )
+      refine_ggplot2(p, gridline = pre_process$plot_grid_lines())
     })
 
     # Split up and down genes into two data bases ---------
@@ -958,6 +963,9 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       }),
       gmt_file = reactive({
         pre_process$gmt_file()
+      }),
+      plot_grid_lines = reactive({
+        pre_process$plot_grid_lines()
       })
     )
 

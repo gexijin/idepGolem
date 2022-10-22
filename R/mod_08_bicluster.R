@@ -220,6 +220,9 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab) {
       }),
       gmt_file = reactive({
         pre_process$gmt_file()
+      }),
+      plot_grid_lines = reactive({
+        pre_process$plot_grid_lines()
       })
     )
 

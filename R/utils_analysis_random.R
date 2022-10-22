@@ -1010,3 +1010,22 @@ hyperText <- function(textVector, urlVector) {
   }
   return(textVector)
 }
+
+
+#' Change ggplot2 plots
+#'
+#'
+#' @param plot ggplot2 object
+#' @param gridline TRUE of FALSE
+#'
+#' @export
+#' @return ggplot2 object
+refine_ggplot2 <- function(plot, gridline) {
+  plot <- plot + ggplot2::theme_light(base_size = 15)
+  if (!gridline) { # by default it has gridlines
+    plot <- plot +
+      ggplot2::theme(panel.grid = ggplot2::element_blank())
+  }
+
+  return(plot)
+}
