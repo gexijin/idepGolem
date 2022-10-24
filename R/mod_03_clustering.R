@@ -20,7 +20,7 @@ mod_03_clustering_ui <- function(id) {
         conditionalPanel(
           condition = "input.cluster_panels == 'Hierarchical' |
             input.cluster_panels == 'sample_tab'",
-          selectInput(
+          radioButtons(
             inputId = ns("cluster_meth"),
             label = NULL,
             choices = list(
@@ -237,8 +237,7 @@ mod_03_clustering_ui <- function(id) {
                 ),
                 checkboxInput(
                   inputId = ns("cluster_enrichment"),
-                  label = h5("GO Enrichment in
-                    selected genes or k-means clusters (below)"),
+                  label = HTML(GetoptLong::qq("GO enrichment for selected genes &#8595 &#8595;")),
                   value = TRUE
                 )
               ),
@@ -311,7 +310,7 @@ mod_03_clustering_ui <- function(id) {
 #' 03_heatmap Server Functions
 #'
 #' @noRd
-mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
+mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -383,9 +382,14 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     sd_density_plot <- reactive({
       req(!is.null(pre_process$data()))
 
-      sd_density(
+      p <- sd_density(
         data = pre_process$data(),
         n_genes_max = input$n_genes
+      )
+      refine_ggplot2(
+        p = p,
+        gridline = pre_process$plot_grid_lines(),
+        ggplot2_theme = pre_process$ggplot2_theme()
       )
     })
 
@@ -457,9 +461,10 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       )
 
       shiny_env$ht <- heatmap_main_object()
-      shinybusy::remove_modal_spinner()
+
       # Use heatmap position in multiple components
       shiny_env$ht_pos_main <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht)
+      shinybusy::remove_modal_spinner()
       return(shiny_env$ht)
     })
 
@@ -552,7 +557,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         try(
           submap_return <- heatmap_sub_object_calc()
         )
-        shinybusy::remove_modal_spinner()
+
         # Objects used in other components ----------
         shiny_env$ht_sub_obj <- submap_return$ht_select
         shiny_env$submap_data <- submap_return$submap_data
@@ -568,7 +573,7 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
 
         shiny_env$ht_pos_sub <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht_sub)
 
-
+        shinybusy::remove_modal_spinner()
         return(shiny_env$ht_sub)
       }
     })
@@ -594,15 +599,10 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         grid::grid.newpage()
         grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
       } else {
-        shinybusy::show_modal_spinner(
-          spin = "orbit",
-          text = "Creating sub-heatmap",
-          color = "#000000"
-        )
         try(
           submap_return <- heatmap_sub_object_calc()
         )
-        shinybusy::remove_modal_spinner()
+
         # Objects used in other components ----------
         shiny_env$ht_sub_obj <- submap_return$ht_select
         shiny_env$submap_data <- submap_return$submap_data
@@ -815,6 +815,12 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       }),
       gmt_file = reactive({
         pre_process$gmt_file()
+      }),
+      plot_grid_lines = reactive({
+        pre_process$plot_grid_lines()
+      }),
+      ggplot2_theme = reactive({
+        pre_process$ggplot2_theme()
       })
     )
 
