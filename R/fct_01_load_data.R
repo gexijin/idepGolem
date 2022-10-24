@@ -291,16 +291,16 @@ input_data <- function(expression_file,
 #' @param converted Data from convert_id function containing converted ids
 #' @param no_id_conversion TRUE/FALSE for converting data ids or not
 #' @param data Data from the input expression file
-#' @param multiple_map String to designate how to handle values when multiple 
-#'   ids are matched to the same gene. Options are 'mean', 'median', 'sum', 
+#' @param multiple_map String to designate how to handle values when multiple
+#'   ids are matched to the same gene. Options are 'mean', 'median', 'sum',
 #'   'max', and 'max_id'.
-#'   
+#'
 #' @export
 #' @return Returns original data with rownames converted to ensembl
 convert_data <- function(converted,
                          data,
                          no_id_conversion,
-                         multiple_map = 
+                         multiple_map =
                            c("mean", "median", "sum", "max", "max_sd")) {
   if (is.null(converted) || no_id_conversion) {
     return(list(

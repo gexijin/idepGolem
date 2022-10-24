@@ -11,7 +11,8 @@
 #'  change or a negative (-1) change
 #' @param heatmap_color_select Color vector to use for the
 #'  heatmap expression scale
-#' @param whether to cluster rows
+#' @param cluster_row Boolean to indicate whether or not to cluster rows
+#'  (TRUE/FALSE)
 #'
 #' @export
 #' @return A drawn heatmap from the filtered data.
