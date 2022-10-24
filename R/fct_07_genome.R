@@ -25,6 +25,10 @@ NULL
 #' @param ma_window_steps Number of moving average window steps (1, 2, 3, 4)
 #' @param ch_region_p_val P-value to use for finding significant chromosome
 #'  region enrichment
+#' @param hide_patches Boolean to indicate to only keep within 2 MAD from the
+#'  median (TRUE/FALSE)
+#' @param hide_chr Boolean to indicate if chromosomes with less than 100 genes
+#'  are excluded (TRUE/FALSE)
 #'
 #' @export
 #' @return Plotly visualization of chromosomes and significantly enriched genes

@@ -4,14 +4,23 @@
 \alias{convert_data}
 \title{Convert expression data rownames to ensembl}
 \usage{
-convert_data(converted, data, no_id_conversion, multiple_map)
+convert_data(
+  converted,
+  data,
+  no_id_conversion,
+  multiple_map = c("mean", "median", "sum", "max", "max_sd")
+)
 }
 \arguments{
 \item{converted}{Data from convert_id function containing converted ids}
 
-\item{data}{Data from inputed expression file}
+\item{data}{Data from the input expression file}
 
 \item{no_id_conversion}{TRUE/FALSE for converting data ids or not}
+
+\item{multiple_map}{String to designate how to handle values when multiple
+ids are matched to the same gene. Options are 'mean', 'median', 'sum',
+'max', and 'max_id'.}
 }
 \value{
 Returns original data with rownames converted to ensembl
