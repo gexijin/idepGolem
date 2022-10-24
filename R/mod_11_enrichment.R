@@ -645,7 +645,7 @@ mod_11_enrichment_server <- function(id,
       enrichment_tree_plot(
         go_table = enrichment_dataframe_for_tree(),
         group = input$select_cluster,
-        right_margin = 45
+        right_margin = 30
       )
     })
 

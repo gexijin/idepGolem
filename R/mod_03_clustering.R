@@ -18,7 +18,7 @@ mod_03_clustering_ui <- function(id) {
         width = 3,
         # Select Clustering Method ----------
         conditionalPanel(
-          condition = "input.cluster_panels == 'Hierarchical' |
+          condition = "input.cluster_panels == 'Heatmap' |
             input.cluster_panels == 'sample_tab'",
           radioButtons(
             inputId = ns("cluster_meth"),
@@ -32,7 +32,7 @@ mod_03_clustering_ui <- function(id) {
           ns = ns
         ),
         conditionalPanel(
-          condition = "input.cluster_panels == 'Hierarchical' |
+          condition = "input.cluster_panels == 'Heatmap' |
           input.cluster_panels == 'Gene SD Distribution' ",
           fluidRow(
             column(width = 6, p("Top Genes:")),
@@ -51,7 +51,7 @@ mod_03_clustering_ui <- function(id) {
           ns = ns
         ),
         conditionalPanel(
-          condition = "(input.cluster_panels == 'Hierarchical' |
+          condition = "(input.cluster_panels == 'Heatmap' |
             input.cluster_panels == 'sample_tab') &&  input.cluster_meth == 2",
 
           # k- means slidebar -----------
@@ -93,10 +93,10 @@ mod_03_clustering_ui <- function(id) {
           ns = ns
         ),
 
-        # Clustering methods for hierarchical ----------
+        # Clustering methods for Heatmap ----------
         conditionalPanel(
           condition = "input.cluster_meth == 1 &&
-            (input.cluster_panels == 'Hierarchical' |
+            (input.cluster_panels == 'Heatmap' |
             input.cluster_panels == 'sample_tab')",
           fluidRow(
             column(width = 4, p("Distance")),
@@ -128,7 +128,7 @@ mod_03_clustering_ui <- function(id) {
           ns = ns
         ),
         conditionalPanel(
-          condition = "input.cluster_panels == 'Hierarchical' ",
+          condition = "input.cluster_panels == 'Heatmap' ",
           fluidRow(
             column(width = 4, p("Samples color")),
             column(
@@ -207,7 +207,7 @@ mod_03_clustering_ui <- function(id) {
           id = ns("cluster_panels"),
           # Heatmap panel ----------
           tabPanel(
-            title = "Hierarchical",
+            title = "Heatmap",
             br(),
             fluidRow(
               column(
@@ -234,15 +234,20 @@ mod_03_clustering_ui <- function(id) {
                 ),
                 uiOutput(
                   outputId = ns("ht_click_content")
-                ),
-                checkboxInput(
-                  inputId = ns("cluster_enrichment"),
-                  label = HTML(GetoptLong::qq("GO enrichment for selected genes &#8595 &#8595;")),
-                  value = TRUE
                 )
               ),
               column(
                 width = 8,
+                checkboxInput(
+                  inputId = ns("cluster_enrichment"),
+                  label = HTML(GetoptLong::qq("Show enrichment")),
+                  value = FALSE
+                ),
+                conditionalPanel(
+                  condition = "input.cluster_enrichment == 1 ",
+                  mod_11_enrichment_ui(ns("enrichment_table_cluster")),
+                  ns = ns
+                ),
                 plotOutput(
                   outputId = ns("sub_heatmap"),
                   height = "650px",
@@ -250,16 +255,6 @@ mod_03_clustering_ui <- function(id) {
                   click = ns("ht_click")
                 )
               )
-            ),
-            conditionalPanel(
-              condition = "input.cluster_enrichment == 1 ",
-              # Line break ---------
-              HTML(
-                '<hr style="height:1px;border:none;
-            color:#333;background-color:#333;" />'
-              ),
-              mod_11_enrichment_ui(ns("enrichment_table_cluster")),
-              ns = ns
             )
           ),
 
@@ -515,7 +510,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         !is.null(shiny_env$ht_sub) &&
         !is.null(input$ht_brush)
       ) {
-        p <- '<br><p style="color:red;text-align:right;">Click on the sub-heatmap &#10230;</p>'
+        p <- '<br><p style="color:red;text-align:right;">Click on the sub-heatmap</p>'
         html <- GetoptLong::qq(p)
         return(HTML(html))
       }
