@@ -43,7 +43,7 @@ mod_03_clustering_ui <- function(id) {
                 label = NULL,
                 min = 10,
                 max = 12000,
-                value = 1000,
+                value = 2000,
                 step = 10
               )
             )
@@ -61,7 +61,7 @@ mod_03_clustering_ui <- function(id) {
             label = "Number of Clusters:",
             min = 2,
             max = 20,
-            value = 4,
+            value = 6,
             step = 1
           ),
 
@@ -682,7 +682,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           )
 
           # Only keep the gene names and scrap the data
-          gene_lists[[paste0("Cluster ", i)]] <-
+          gene_lists[[paste0("", i)]] <-
             dplyr::select_if(gene_names, is.character)
         }
       }
