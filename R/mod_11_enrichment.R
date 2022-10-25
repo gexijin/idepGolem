@@ -377,7 +377,7 @@ mod_11_enrichment_server <- function(id,
         }
       }
       choices_name <- choices
-      ix <- which(nchar(choices) == 1 )  # "1" <- "Cluster 1"
+      ix <- which(nchar(choices) == 1) # "1" <- "Cluster 1"
       choices_name[ix] <- paste("Cluster ", choices[ix])
       if (min(nchar(choices)) == 1) {
         choices <- setNames(choices, choices_name)
