@@ -317,7 +317,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       tags$h5(
         "If this server is busy, please use a mirror sever ",
         a("http://ge-lab.org/idepg/", href = "http://149.165.154.220/idepg/"),
-        ", hosted by NSF-funded JetStream2."
+        " hosted by NSF-funded JetStream2."
       ),
       tags$h4("How-to videos coming soon!"),
       easyClose = TRUE,
