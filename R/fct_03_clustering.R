@@ -846,3 +846,52 @@ data_frame_with_list <- function(data_object) {
   )
   return(new_frame)
 }
+
+
+#' Prep heatmap data for download
+#'
+#' Prep heatmap data for download by merging with clusters.
+#'
+#' @param heatmap
+#' @param heatmap_data
+#' @param cluster_meth
+#'
+#' @return
+#' @export
+#'
+#' @examples
+prep_download <- function(heatmap,
+                          heatmap_data,
+                          cluster_meth) {
+  if (cluster_meth == 2) {
+    row_ord <- ComplexHeatmap::row_order(heatmap)
+
+    for (i in 1:length(row_ord)) {
+      if (i == 1) {
+        clusts <- data.frame(
+          "cluster" = rep(names(row_ord[i]), length(row_ord[[i]])),
+          "row_order" = row_ord[[i]]
+        )
+      } else {
+        tem <- data.frame(
+          "cluster" = rep(names(row_ord[i]), length(row_ord[[i]])),
+          "row_order" = row_ord[[i]]
+        )
+        clusts <- rbind(clusts, tem)
+      }
+    }
+
+    rownames(clusts) <- rownames(heatmap_data[clusts$row_order, ])
+    clusts <- clusts |>
+      dplyr::select(-c(row_order))
+
+    data <- merge(heatmap_data, clusts, by = "row.names", all = TRUE)
+    rownames(data) <- data$Row.names
+    data <- data |>
+      dplyr::select(-c(Row.names))
+
+    return(data)
+  } else {
+    return(heatmap_data  )
+  }
+}
