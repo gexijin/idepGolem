@@ -182,12 +182,15 @@ PCAtools_eigencorplot(
       )
 ```
 
-
-#### SEARCHING
+# Clustering 
 ```{r}
+n_genes <- 20 
+dist_funs <- dist_functions()
+hclust_funs <- hcluster_functions()
+
 heatmap_data <- process_heatmap_data(
   data = processed_data$data,
-  n_genes_max = 50,
+  n_genes_max = n_genes,
   gene_centering = TRUE,
   gene_normalize = FALSE,
   sample_centering = FALSE,
@@ -195,9 +198,35 @@ heatmap_data <- process_heatmap_data(
   all_gene_names = gene_names,
   select_gene_id = "ensembl_ID"
 )
-dist_funs <- dist_functions()
-hclust_funs <- hcluster_functions()
 
+heat_map <- heatmap_main(
+  data = heatmap_data, 
+  cluster_meth = 1, 
+  heatmap_cutoff = 3,
+  sample_info = as.data.frame(load_data$sample_info), 
+  select_factors_heatmap = "All factors", 
+  dist_function = 1, 
+  dist_funs = dist_funs,
+  hclust_function = "average", 
+  sample_clustering = F, 
+  heatmap_color_select = c("red", "white", "blue"), 
+  row_dend = T, 
+  k_clusters = 5, 
+  re_run = 5, 
+  selected_genes = NULL
+)
+
+heatmap_clusters <- prep_download(
+  heatmap = heat_map, 
+  heatmap_data = heatmap_data, 
+  cluster_meth = 1, 
+  num_clust = 5
+)
+```
+
+
+#### SEARCHING
+```{r}
 gene_sets <- read_pathway_sets(
   all_gene_names_query = gene_names[1:500, ],
   converted = converted,
