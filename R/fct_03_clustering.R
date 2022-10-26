@@ -850,19 +850,24 @@ data_frame_with_list <- function(data_object) {
 
 #' Prep heatmap data for download
 #'
-#' Prep heatmap data for download by merging with clusters.
+#' Prep heatmap data for download or additional analysis by merging gene ids
+#' with the clusters from kmean clustering or hierarchical clustering.
 #'
-#' @param heatmap
-#' @param heatmap_data
-#' @param cluster_meth
+#' @param heatmap Heatmap object from the \code{heatmap_main()} function.
+#' @param heatmap_data Matrix of heatmap data from the
+#'   \code{process_heatmap_data()} function
+#' @param cluster_meth Integer designating the clustering method used. 1 for
+#'   hierarchical and 2 for kmeans
+#' @param num_clust If using hierarchical clustering, the number of clusters to
+#'   extract. Leave as \code{NULL} for kmeans clustering
 #'
-#' @return
+#' @return A dataframe with the heatmap data and associated clusters.
 #' @export
-#'
-#' @examples
 prep_download <- function(heatmap,
                           heatmap_data,
-                          cluster_meth) {
+                          cluster_meth = c(1, 2),
+                          num_clust = NULL) {
+  # kmeans clustering
   if (cluster_meth == 2) {
     row_ord <- ComplexHeatmap::row_order(heatmap)
 
@@ -891,7 +896,33 @@ prep_download <- function(heatmap,
       dplyr::select(-c(Row.names))
 
     return(data)
+
+    # hierarchical clustering
+  } else if (cluster_meth == 1) {
+    if (num_clust > dim(heatmap_data)[1]) {
+      stop(
+        paste0(
+          "The number of clusters must be between 1 and ",
+          dim(heatmap_data)[1]
+        )
+      )
+    }
+
+    hclust <- as.hclust(ComplexHeatmap::row_dend(heatmap))
+    clusters <- as.data.frame(cutree(hclust, num_clust))
+    colnames(clusters) <- "cluster"
+
+    data <- merge(heatmap_data, clusters, by = "row.names", all = TRUE)
+    rownames(data) <- data$Row.names
+    data <- data |>
+      dplyr::select(-c(Row.names))
+
+    return(data)
+
+    # miss-specified method
   } else {
-    return(heatmap_data  )
+    message("Custering method not recognized, only the heatmap data is returned.
+            Please use 1 for heirarchical and 2 for kmeans.")
+    return(heatmap_data)
   }
 }
