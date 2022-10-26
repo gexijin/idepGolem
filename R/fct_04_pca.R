@@ -98,9 +98,12 @@ PCA_plot <- function(data,
       x = paste0("PC", PCAx),
       y = paste0("PC", PCAy),
       color = selected_color,
-      shape = selected_shape
+      shape = selected_shape,
+      group = selected_shape
     )
   ) +
+    #Preferred shapes
+    ggplot2::scale_shape_manual(values = c(15,16,17,18,3,4,7,8,9,10,11,12,13,14,0,1,2,5,6,19,20, 30:100)) +
     ggplot2::geom_point(size = point_size) +
     ggplot2::theme_light() +
     ggplot2::theme(
@@ -140,6 +143,10 @@ PCA_plot <- function(data,
   plot_PCA <- plot_PCA + ggplot2::ylab(paste0("PC", PCAy, ": ", percentVar[2], "% Variance"))
   return(plot_PCA)
 }
+
+
+
+
 
 #' Principal Component Analysis
 #'
@@ -318,6 +325,8 @@ t_SNE_plot <- function(data,
     )
   ) +
     ggplot2::geom_point(size = point_size) +
+    #Preferred shapes
+    ggplot2::scale_shape_manual(values = c(15,16,17,18,3,4,7,8,9,10,11,12,13,14,0,1,2,5,6,19,20, 30:100)) +
     ggplot2::theme_light() +
     ggplot2::theme(
       legend.position = "right",
@@ -431,6 +440,8 @@ MDS_plot <- function(data,
     )
   )
   p <- p + ggplot2::geom_point(size = point_size) +
+    #Preferred shapes
+    ggplot2::scale_shape_manual(values = c(15,16,17,18,3,4,7,8,9,10,11,12,13,14,0,1,2,5,6,19,20, 30:100)) +
     ggplot2::theme_light() +
     ggplot2::theme(
       legend.position = "right",
