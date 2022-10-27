@@ -22,9 +22,10 @@ heatmap_main(
 )
 }
 \arguments{
-\item{data}{Data returned from process_heatmap_data}
+\item{data}{Data matrix returned from \code{\link{process_heatmap_data}()}}
 
-\item{cluster_meth}{Type of clustering to use (Hierarchical/k-Means)}
+\item{cluster_meth}{Integer indicating which clustering method to use 1 for 
+hierarchical and 2 for kmeans.}
 
 \item{heatmap_cutoff}{Z score max to filter data}
 
@@ -38,15 +39,17 @@ heatmap_main(
 
 \item{hclust_function}{Type of clustering to perform}
 
-\item{sample_clustering}{TRUE/FALSE Specify whehter to cluster columns}
+\item{sample_clustering}{TRUE/FALSE Specify whether to cluster columns}
 
 \item{heatmap_color_select}{Vector of colors for heatmap scale}
 
-\item{row_dend}{TRUE/FALSE Hide row dendogram,}
+\item{row_dend}{TRUE/FALSE Hide row dendrogram,}
 
 \item{k_clusters}{Number of clusters to use for k-means}
 
 \item{re_run}{Re-run k-means with a different seed}
+
+\item{selected_genes}{Character list of genes to label on the heatmap}
 }
 \value{
 Heatmap of the processed data.
@@ -55,5 +58,19 @@ Heatmap of the processed data.
 Uses the package ComplexHeatmaps to draw a heatmap of the
 processed data that has been prepared for the heatmap. The
 returned heatmap visualizes the processed expression of the
-gene range provided in process_heatmap_data.
+gene range provided in [process_heatmap_data].
 }
+\seealso{
+\code{\link{dist_functions}()} for available distance functions
+
+Other clustering: 
+\code{\link{draw_sample_tree}()},
+\code{\link{process_heatmap_data}()},
+\code{\link{sd_density}()}
+
+Other plots: 
+\code{\link{draw_sample_tree}()},
+\code{\link{sd_density}()}
+}
+\concept{clustering}
+\concept{plots}

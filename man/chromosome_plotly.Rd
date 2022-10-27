@@ -42,10 +42,10 @@ chromosome_plotly(
 \item{ch_region_p_val}{P-value to use for finding significant chromosome
 region enrichment}
 
-\item{hide_patches}{Boolean to indicate to only keep within 2 MAD from the 
+\item{hide_patches}{Boolean to indicate to only keep within 2 MAD from the
 median (TRUE/FALSE)}
 
-\item{hide_chr}{Boolean to indicate if chromosomes with less than 100 genes 
+\item{hide_chr}{Boolean to indicate if chromosomes with less than 100 genes
 are excluded (TRUE/FALSE)}
 }
 \value{

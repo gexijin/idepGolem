@@ -2,7 +2,7 @@
 % Please edit documentation in R/fct_03_clustering.R
 \name{process_heatmap_data}
 \alias{process_heatmap_data}
-\title{Heatmap data process}
+\title{Heatmap data processing}
 \usage{
 process_heatmap_data(
   data,
@@ -18,7 +18,7 @@ process_heatmap_data(
 \arguments{
 \item{data}{Processed data matrix}
 
-\item{n_genes_max}{Row number upper limit to display in heatmap}
+\item{n_genes_max}{Integer for for number upper limit to display in heatmap}
 
 \item{gene_centering}{TRUE/FALSE subtract mean from gene rows}
 
@@ -30,8 +30,8 @@ process_heatmap_data(
 
 \item{all_gene_names}{Data frame of gene names}
 
-\item{select_gene_id}{Desired ID type for heatmap labels
-(User_ID, ensembl_ID, symbol)}
+\item{select_gene_id}{Character string designating desired ID type for 
+heatmap labels (User_ID, ensembl_ID, symbol)}
 }
 \value{
 Subsetted data matrix ([n_genes_min:n_genes_max, ]) with
@@ -43,3 +43,10 @@ to be displayed in a heatmap. It takes in limits for
 what genes to subset, what centering and standardizing
 to perform, and what gene ID label to use.
 }
+\seealso{
+Other clustering: 
+\code{\link{draw_sample_tree}()},
+\code{\link{heatmap_main}()},
+\code{\link{sd_density}()}
+}
+\concept{clustering}

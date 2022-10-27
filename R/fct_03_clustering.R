@@ -12,15 +12,19 @@ NULL
 
 #' Density plot of data standard deviation
 #'
-#' Draw a denisty plot of the standard deviation in the
-#' data. Add vertical red lines for a range of genes.
+#' Draw a density plot of the standard deviation in the
+#' data. The function also adds a  vertical red lines for a specified range of 
+#' genes.
 #'
-#' @param data Data that has been through pre-processing
-#' @param n_genes_max Upper limit of gene range
+#' @param data Data matrix that has been through pre-processing
+#' @param n_genes_max Integer for the upper limit of gene range
 #'
 #' @export
 #' @return Formatted density plot of the standard deviation
 #' distribution.
+#' 
+#' @family plots
+#' @family clustering
 sd_density <- function(data,
                        n_genes_max) {
   n_genes_min <- 5
@@ -117,7 +121,7 @@ sd_density <- function(data,
 }
 
 
-#' Heatmap data process
+#' Heatmap data processing 
 #'
 #' This function prepares the data from pre-processing
 #' to be displayed in a heatmap. It takes in limits for
@@ -125,18 +129,20 @@ sd_density <- function(data,
 #' to perform, and what gene ID label to use.
 #'
 #' @param data Processed data matrix
-#' @param n_genes_max Row number upper limit to display in heatmap
+#' @param n_genes_max Integer for for number upper limit to display in heatmap
 #' @param gene_centering TRUE/FALSE subtract mean from gene rows
 #' @param gene_normalize TRUE/FALSE divide by SD in gene rows
 #' @param sample_centering TRUE/FALSE subtract mean from sample columns
 #' @param sample_normalize TRUE/FALSE divide by SD in sample columns
 #' @param all_gene_names Data frame of gene names
-#' @param select_gene_id Desired ID type for heatmap labels
-#'  (User_ID, ensembl_ID, symbol)
+#' @param select_gene_id Character string designating desired ID type for 
+#'   heatmap labels (User_ID, ensembl_ID, symbol)
 #'
 #' @export
 #' @return Subsetted data matrix ([n_genes_min:n_genes_max, ]) with
 #'   gene IDs as the select_gene_id
+#'   
+#' @family clustering
 process_heatmap_data <- function(data,
                                  n_genes_max,
                                  gene_centering,
@@ -196,24 +202,30 @@ process_heatmap_data <- function(data,
 #' Uses the package ComplexHeatmaps to draw a heatmap of the
 #' processed data that has been prepared for the heatmap. The
 #' returned heatmap visualizes the processed expression of the
-#' gene range provided in process_heatmap_data.
+#' gene range provided in [process_heatmap_data].
 #'
-#' @param data Data returned from process_heatmap_data
-#' @param cluster_meth Type of clustering to use (Hierarchical/k-Means)
+#' @param data Data matrix returned from \code{\link{process_heatmap_data}()}
+#' @param cluster_meth Integer indicating which clustering method to use 1 for 
+#'   hierarchical and 2 for kmeans. 
 #' @param heatmap_cutoff Z score max to filter data
 #' @param sample_info Experiment design information from load data
 #' @param select_factors_heatmap Factor group for annotation legend
-#' @param dist_funs List of distance functions to use in heatmap
+#' @param dist_funs List of distance functions to use in heatmap 
 #' @param dist_function The selected distance function to use
 #' @param hclust_function Type of clustering to perform
-#' @param sample_clustering TRUE/FALSE Specify whehter to cluster columns
+#' @param sample_clustering TRUE/FALSE Specify whether to cluster columns
 #' @param heatmap_color_select Vector of colors for heatmap scale
-#' @param row_dend TRUE/FALSE Hide row dendogram,
+#' @param row_dend TRUE/FALSE Hide row dendrogram,
 #' @param k_clusters Number of clusters to use for k-means
 #' @param re_run Re-run k-means with a different seed
+#' @param selected_genes Character list of genes to label on the heatmap 
 #'
 #' @export
 #' @return Heatmap of the processed data.
+#' 
+#' @family clustering
+#' @family plots 
+#' @seealso \code{\link{dist_functions}()} for available distance functions 
 heatmap_main <- function(data,
                          cluster_meth,
                          heatmap_cutoff,
@@ -363,20 +375,24 @@ heatmap_main <- function(data,
 
 #' Draw a dendogram of data samples
 #'
-#' Create a clustered tree of the samples in the dataset.
+#' Create a clustered tree of the samples in the dataset based on hierarchical 
+#'   clustering 
 #'
 #' @param tree_data Data that has been through pre-processing
 #' @param gene_centering TRUE/FALSE subtract mean from gene rows
 #' @param gene_normalize TRUE/FALSE divide by SD in gene rows
 #' @param sample_centering TRUE/FALSE subtract mean from sample columns
 #' @param sample_normalize TRUE/FALSE divide by SD in sample columns
-#' @param hclust_funs Clustering functions defined in idep
+#' @param hclust_funs Clustering functions defined in idep, \code{\link{hcluster_functions}()}
 #' @param hclust_function String of chosen clustering method
-#' @param dist_funs Distance functions defined in idep
+#' @param dist_funs Distance functions defined in idep \code{\link{dist_functions}()}
 #' @param dist_function Selected distance function
 #'
 #' @export
 #' @return Dendogram plot of dataset samples
+#' 
+#' @family plots 
+#' @family clustering 
 draw_sample_tree <- function(tree_data,
                              gene_centering,
                              gene_normalize,
