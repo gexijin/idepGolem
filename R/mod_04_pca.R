@@ -168,15 +168,25 @@ mod_04_pca_ui <- function(id) {
           ),
           ns = ns
         ),
+        
+        fluidRow(
+          column(4,
         # Download report button
-        downloadButton(
+          downloadButton(
           outputId = ns("report"),
           label = "Generate Report"
-        ),
+        ) ), column(4, offset = 0,
+               downloadButton(
+                 outputId = ns("pca_data"),
+                 label = "Download PCA data"
+               ) ),
+
+
         tippy::tippy_this(
           ns("report"),
           "Generate HTML report of PCA tab",
           theme = "light-border"
+        ),
         ),
         a(
           h5("Questions?", align = "right"),
@@ -613,6 +623,18 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       )
     })
 
+    # Download PCA table --------------
+    pca_data <- reactive({get_pc(data = pre_process$data(),
+                                 sample_info = pre_process$sample_info())})
+    
+    output$pca_data <- downloadHandler(
+      filename = function(){
+        paste(gsub("-","_",Sys.Date()),"_pca_data.csv", sep = "")
+      },
+      content <- function(file){
+        write.csv(pca_data(), file = file)
+      }
+    )
 
 
     # Markdown report------------
