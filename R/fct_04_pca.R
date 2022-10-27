@@ -102,8 +102,8 @@ PCA_plot <- function(data,
       group = selected_shape
     )
   ) +
-    #Preferred shapes
-    ggplot2::scale_shape_manual(values = c(15,16,17,18,3,4,7,8,9,10,11,12,13,14,0,1,2,5,6,19,20, 30:100)) +
+    # Preferred shapes
+    ggplot2::scale_shape_manual(values = c(15, 16, 17, 18, 3, 4, 7, 8, 9, 10, 11, 12, 13, 14, 0, 1, 2, 5, 6, 19, 20, 30:100)) +
     ggplot2::geom_point(size = point_size) +
     ggplot2::theme_light() +
     ggplot2::theme(
@@ -134,8 +134,11 @@ PCA_plot <- function(data,
       title = memo,
       y = "Dimension 2",
       x = "Dimension 1"
-    ) +
-    ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(shape = 15)))
+    ) #+
+  # removed - causes plot legend to be missing shapes
+  # ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(shape = 15)))
+
+
   # selected principal components
   PCAxy <- c(as.integer(PCAx), as.integer(PCAy))
   percentVar <- round(100 * summary(pca.object)$importance[2, PCAxy], 0)
@@ -325,8 +328,8 @@ t_SNE_plot <- function(data,
     )
   ) +
     ggplot2::geom_point(size = point_size) +
-    #Preferred shapes
-    ggplot2::scale_shape_manual(values = c(15,16,17,18,3,4,7,8,9,10,11,12,13,14,0,1,2,5,6,19,20, 30:100)) +
+    # Preferred shapes
+    ggplot2::scale_shape_manual(values = c(15, 16, 17, 18, 3, 4, 7, 8, 9, 10, 11, 12, 13, 14, 0, 1, 2, 5, 6, 19, 20, 30:100)) +
     ggplot2::theme_light() +
     ggplot2::theme(
       legend.position = "right",
@@ -440,8 +443,8 @@ MDS_plot <- function(data,
     )
   )
   p <- p + ggplot2::geom_point(size = point_size) +
-    #Preferred shapes
-    ggplot2::scale_shape_manual(values = c(15,16,17,18,3,4,7,8,9,10,11,12,13,14,0,1,2,5,6,19,20, 30:100)) +
+    # Preferred shapes
+    ggplot2::scale_shape_manual(values = c(15, 16, 17, 18, 3, 4, 7, 8, 9, 10, 11, 12, 13, 14, 0, 1, 2, 5, 6, 19, 20, 30:100)) +
     ggplot2::theme_light() +
     ggplot2::theme(
       legend.position = "right",
