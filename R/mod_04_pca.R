@@ -197,7 +197,7 @@ mod_04_pca_ui <- function(id) {
             ),
             ottoPlots::mod_download_figure_ui(ns("download_interactive_pca")),
             br(),
-            h5("This plot is not interactive, but you may prefer how this plot looks when exported."),
+            h5("\n Non-Interactive Plot"),
             plotOutput(
               outputId = ns("pca_plot_obj"),
               width = "100%",
