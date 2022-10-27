@@ -20,7 +20,7 @@ mod_03_clustering_ui <- function(id) {
         conditionalPanel(
           condition = "input.cluster_panels == 'Hierarchical' |
             input.cluster_panels == 'sample_tab'",
-          selectInput(
+          radioButtons(
             inputId = ns("cluster_meth"),
             label = NULL,
             choices = list(
@@ -125,36 +125,6 @@ mod_03_clustering_ui <- function(id) {
               )
             )
           ),
-          fluidRow(
-            column(width = 7, p("Max Z score")),
-            column(
-              width = 5,
-              numericInput(
-                inputId = ns("heatmap_cutoff"),
-                label = NULL,
-                value = 3,
-                min = 2,
-                step = 1
-              )
-            )
-          ),
-          ns = ns
-        ),
-
-        # Checkbox features ------------
-        conditionalPanel(
-          condition = "input.cluster_panels == 'Hierarchical' |
-            input.cluster_panels == 'sample_tab' ",
-          checkboxInput(
-            inputId = ns("gene_centering"),
-            label = "Center genes (substract mean)",
-            value = TRUE
-          ),
-          checkboxInput(
-            inputId = ns("gene_normalize"),
-            label = "Normalize genes (divide by SD)",
-            value = FALSE
-          ),
           ns = ns
         ),
         conditionalPanel(
@@ -173,36 +143,37 @@ mod_03_clustering_ui <- function(id) {
               htmlOutput(ns("selected_genes_ui"))
             )
           ),
-          actionButton(ns("customize_button"), "More options"),
-          tippy::tippy_this(
-            ns("customize_button"),
-            "Data transformations and download heatmap data",
-            theme = "light-border"
+          checkboxInput(ns("customize_button"), "More options"),
+          checkboxInput(
+            inputId = ns("sample_clustering"),
+            label = "Cluster samples",
+            value = FALSE
           ),
-          shinyBS::bsModal(
-            id = ns("modalExample"),
-            title = "More options",
-            trigger = ns("customize_button"),
-            size = "small",
-            checkboxInput(
-              inputId = ns("sample_clustering"),
-              label = "Cluster samples",
-              value = FALSE
-            ),
-            checkboxInput(
-              inputId = ns("show_row_dend"),
-              label = "Show Row Dendogram",
-              value = TRUE
-            ),
-            downloadButton(
-              outputId = ns("download_heatmap_data"),
-              label = "Heatmap data"
-            ),
-            tippy::tippy_this(
-              ns("download_heatmap_data"),
-              "Download heatmap data",
-              theme = "light-border"
-            )
+          checkboxInput(
+            inputId = ns("show_row_dend"),
+            label = "Show Row Dendogram",
+            value = TRUE
+          ),
+          checkboxInput(
+            inputId = ns("gene_centering"),
+            label = "Center genes (substract mean)",
+            value = TRUE
+          ),
+          checkboxInput(
+            inputId = ns("gene_normalize"),
+            label = "Normalize genes (divide by SD)",
+            value = FALSE
+          ),
+          numericInput(
+            inputId = ns("heatmap_cutoff"),
+            label = "Max Z score:",
+            value = 3,
+            min = 2,
+            step = 1
+          ),
+          downloadButton(
+            outputId = ns("download_heatmap_data"),
+            label = "Heatmap data"
           ),
           ns = ns
         ),
@@ -266,8 +237,7 @@ mod_03_clustering_ui <- function(id) {
                 ),
                 checkboxInput(
                   inputId = ns("cluster_enrichment"),
-                  label = h5("GO Enrichment in
-                    selected genes or k-means clusters (below)"),
+                  label = HTML(GetoptLong::qq("GO enrichment for selected genes &#8595 &#8595;")),
                   value = TRUE
                 )
               ),
@@ -340,7 +310,7 @@ mod_03_clustering_ui <- function(id) {
 #' 03_heatmap Server Functions
 #'
 #' @noRd
-mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
+mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -362,6 +332,13 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       )
     })
 
+    observe({
+      shinyjs::toggle(id = "sample_clustering", condition = input$customize_button)
+      shinyjs::toggle(id = "show_row_dend", condition = input$customize_button)
+      shinyjs::toggle(id = "heatmap_cutoff", condition = input$customize_button)
+      shinyjs::toggle(id = "gene_normalize", condition = input$customize_button)
+      shinyjs::toggle(id = "gene_centering", condition = input$customize_button)
+    })
 
     # Distance functions -----------
     dist_funs <- dist_functions()
@@ -405,9 +382,14 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
     sd_density_plot <- reactive({
       req(!is.null(pre_process$data()))
 
-      sd_density(
+      p <- sd_density(
         data = pre_process$data(),
         n_genes_max = input$n_genes
+      )
+      refine_ggplot2(
+        p = p,
+        gridline = pre_process$plot_grid_lines(),
+        ggplot2_theme = pre_process$ggplot2_theme()
       )
     })
 
@@ -477,29 +459,12 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         text = "Creating Heatmap",
         color = "#000000"
       )
-      # Assign heatmap to be used in multiple components
-      shiny_env$ht <- heatmap_main(
-        data = heatmap_data(),
-        cluster_meth = input$cluster_meth,
-        heatmap_cutoff = input$heatmap_cutoff,
-        sample_info = pre_process$sample_info(),
-        select_factors_heatmap = input$select_factors_heatmap,
-        dist_funs = dist_funs,
-        dist_function = input$dist_function,
-        hclust_function = input$hclust_function,
-        sample_clustering = input$sample_clustering,
-        heatmap_color_select = heatmap_color_select(),
-        row_dend = input$show_row_dend,
-        k_clusters = input$k_clusters,
-        re_run = input$k_means_re_run,
-        selected_genes = input$selected_genes
-      )
+
+      shiny_env$ht <- heatmap_main_object()
 
       # Use heatmap position in multiple components
       shiny_env$ht_pos_main <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht)
-
       shinybusy::remove_modal_spinner()
-
       return(shiny_env$ht)
     })
 
@@ -507,31 +472,25 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       req(!is.null(heatmap_data()))
       req(input$select_factors_heatmap)
 
-      shinybusy::show_modal_spinner(
-        spin = "orbit",
-        text = "Creating Heatmap",
-        color = "#000000"
-      )
-
       # Assign heatmap to be used in multiple components
-      obj <- heatmap_main(
-        data = heatmap_data(),
-        cluster_meth = input$cluster_meth,
-        heatmap_cutoff = input$heatmap_cutoff,
-        sample_info = pre_process$sample_info(),
-        select_factors_heatmap = input$select_factors_heatmap,
-        dist_funs = dist_funs,
-        dist_function = input$dist_function,
-        hclust_function = input$hclust_function,
-        sample_clustering = input$sample_clustering,
-        heatmap_color_select = heatmap_color_select(),
-        row_dend = input$show_row_dend,
-        k_clusters = input$k_clusters,
-        re_run = input$k_means_re_run,
-        selected_genes = input$selected_genes
+      try(
+        obj <- heatmap_main(
+          data = heatmap_data(),
+          cluster_meth = input$cluster_meth,
+          heatmap_cutoff = input$heatmap_cutoff,
+          sample_info = pre_process$sample_info(),
+          select_factors_heatmap = input$select_factors_heatmap,
+          dist_funs = dist_funs,
+          dist_function = input$dist_function,
+          hclust_function = input$hclust_function,
+          sample_clustering = input$sample_clustering,
+          heatmap_color_select = heatmap_color_select(),
+          row_dend = input$show_row_dend,
+          k_clusters = input$k_clusters,
+          re_run = input$k_means_re_run,
+          selected_genes = input$selected_genes
+        )
       )
-
-      shinybusy::remove_modal_spinner()
 
       return(obj)
     })
@@ -595,14 +554,8 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
           text = "Creating sub-heatmap",
           color = "#000000"
         )
-        submap_return <- heat_sub(
-          ht_brush = input$ht_brush,
-          ht = shiny_env$ht,
-          ht_pos_main = shiny_env$ht_pos_main,
-          heatmap_data = heatmap_data(),
-          sample_info = pre_process$sample_info(),
-          select_factors_heatmap = input$select_factors_heatmap,
-          cluster_meth = input$cluster_meth
+        try(
+          submap_return <- heatmap_sub_object_calc()
         )
 
         # Objects used in other components ----------
@@ -619,22 +572,14 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         )
 
         shiny_env$ht_pos_sub <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht_sub)
+
         shinybusy::remove_modal_spinner()
         return(shiny_env$ht_sub)
       }
     })
 
-    # Subheatmap creation ---------
-    heatmap_sub_object <- reactive({
-      if (is.null(input$ht_brush)) {
-        grid::grid.newpage()
-        grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
-      } else {
-        shinybusy::show_modal_spinner(
-          spin = "orbit",
-          text = "Creating sub-heatmap",
-          color = "#000000"
-        )
+    heatmap_sub_object_calc <- reactive({
+      try( # tolerates error; otherwise stuck with spinner
         submap_return <- heat_sub(
           ht_brush = input$ht_brush,
           ht = shiny_env$ht,
@@ -644,6 +589,20 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
           select_factors_heatmap = input$select_factors_heatmap,
           cluster_meth = input$cluster_meth
         )
+      )
+
+      return(submap_return)
+    })
+    # Subheatmap creation ---------
+    heatmap_sub_object <- reactive({
+      if (is.null(input$ht_brush)) {
+        grid::grid.newpage()
+        grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
+      } else {
+        try(
+          submap_return <- heatmap_sub_object_calc()
+        )
+
         # Objects used in other components ----------
         shiny_env$ht_sub_obj <- submap_return$ht_select
         shiny_env$submap_data <- submap_return$submap_data
@@ -651,7 +610,6 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
         shiny_env$group_colors <- submap_return$group_colors
         shiny_env$click_data <- submap_return$click_data
 
-        shinybusy::remove_modal_spinner()
         return(ComplexHeatmap::draw(
           shiny_env$ht_sub_obj,
           annotation_legend_list = submap_return$lgd,
@@ -857,6 +815,12 @@ mod_03_clustering_server <- function(id, pre_process, idep_data, tab) {
       }),
       gmt_file = reactive({
         pre_process$gmt_file()
+      }),
+      plot_grid_lines = reactive({
+        pre_process$plot_grid_lines()
+      }),
+      ggplot2_theme = reactive({
+        pre_process$ggplot2_theme()
       })
     )
 

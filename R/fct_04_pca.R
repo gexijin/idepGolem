@@ -496,7 +496,7 @@ pc_factor_correlation <- function(data,
   }
 
   if (dim(y)[2] == 1) {
-    return("No design file uploaded")
+    return(NULL)
   }
   pca.object <- prcomp(t(x))
 

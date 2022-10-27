@@ -106,23 +106,10 @@ sd_density <- function(data,
       ) +
       ggplot2::annotate(
         "text",
-        x = cutoff_max - 0.4 * sd(sds[, 1]),
+        x = cutoff_max + 0.4 * sd(sds[, 1]),
         y = 1,
         colour = "red",
         label = paste0("Upper: ", n_genes_max)
-      ) +
-      ggplot2::geom_vline(
-        ggplot2::aes(xintercept = cutoff_min),
-        color = "red",
-        linetype = "dashed",
-        size = 1
-      ) +
-      ggplot2::annotate(
-        "text",
-        x = cutoff_min + 0.4 * sd(sds[, 1]),
-        y = 1,
-        colour = "red",
-        label = paste0("Lower: ", n_genes_min)
       )
 
     return(plot)

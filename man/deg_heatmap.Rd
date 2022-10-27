@@ -16,7 +16,8 @@ change or a negative (-1) change}
 \item{heatmap_color_select}{Color vector to use for the
 heatmap expression scale}
 
-\item{whether}{to cluster rows}
+\item{cluster_row}{Boolean to indicate whether or not to cluster rows
+(TRUE/FALSE)}
 }
 \value{
 A drawn heatmap from the filtered data.

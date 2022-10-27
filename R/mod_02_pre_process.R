@@ -267,6 +267,39 @@ mod_02_pre_process_ui <- function(id) {
             )
           ),
 
+
+          # Boxplot of transformed data ----------
+          tabPanel(
+            title = "Boxplot",
+            br(),
+            plotOutput(
+              outputId = ns("eda_boxplot"),
+              width = "100%",
+              height = "500px"
+            ),
+            ottoPlots::mod_download_figure_ui(
+              id = ns("dl_eda_boxplot")
+            )
+          ),
+
+          # Density plot of transformed data ---------
+          tabPanel(
+            title = "Density Plot",
+            br(),
+            plotOutput(
+              outputId = ns("eda_density"),
+              width = "100%",
+              height = "500px"
+            ),
+            ottoPlots::mod_download_figure_ui(
+              id = ns("dl_eda_density")
+            ),
+            h5(
+              "Figure width can be adjusted by changing
+             the width of browser window."
+            )
+          ),
+
           # Scatterplot with interactive axes ----------
           tabPanel(
             title = "Scatterplot",
@@ -300,38 +333,6 @@ mod_02_pre_process_ui <- function(id) {
             ),
             ottoPlots::mod_download_figure_ui(
               id = ns("dl_eda_scatter")
-            ),
-            h5(
-              "Figure width can be adjusted by changing
-             the width of browser window."
-            )
-          ),
-
-          # Boxplot of transformed data ----------
-          tabPanel(
-            title = "Boxplot",
-            br(),
-            plotOutput(
-              outputId = ns("eda_boxplot"),
-              width = "100%",
-              height = "500px"
-            ),
-            ottoPlots::mod_download_figure_ui(
-              id = ns("dl_eda_boxplot")
-            )
-          ),
-
-          # Density plot of transformed data ---------
-          tabPanel(
-            title = "Density Plot",
-            br(),
-            plotOutput(
-              outputId = ns("eda_density"),
-              width = "100%",
-              height = "500px"
-            ),
-            ottoPlots::mod_download_figure_ui(
-              id = ns("dl_eda_density")
             ),
             h5(
               "Figure width can be adjusted by changing
@@ -523,10 +524,15 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     raw_counts <- reactive({
       req(!is.null(processed_data()$raw_counts))
 
-      total_counts_ggplot(
+      p <- total_counts_ggplot(
         counts_data = processed_data()$raw_counts,
         sample_info = load_data$sample_info(),
         type = "Raw"
+      )
+      refine_ggplot2(
+        p = p,
+        gridline = load_data$plot_grid_lines(),
+        ggplot2_theme = load_data$ggplot2_theme()
       )
     })
     output$raw_counts_gg <- renderPlot({
@@ -566,10 +572,15 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     scatter <- reactive({
       req(!is.null(processed_data()$data))
 
-      eda_scatter(
+      p <- eda_scatter(
         processed_data = processed_data()$data,
         plot_xaxis = input$scatter_x,
         plot_yaxis = input$scatter_y
+      )
+      refine_ggplot2(
+        p = p,
+        gridline = load_data$plot_grid_lines(),
+        ggplot2_theme = load_data$ggplot2_theme()
       )
     })
     output$eda_scatter <- renderPlot({
@@ -588,9 +599,14 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     eda_box <- reactive({
       req(!is.null(processed_data()$data))
 
-      eda_boxplot(
+      p <- eda_boxplot(
         processed_data = processed_data()$data,
         sample_info = load_data$sample_info()
+      )
+      refine_ggplot2(
+        p = p,
+        gridline = load_data$plot_grid_lines(),
+        ggplot2_theme = load_data$ggplot2_theme()
       )
     })
     output$eda_boxplot <- renderPlot({
@@ -609,9 +625,14 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     density <- reactive({
       req(!is.null(processed_data()$data))
 
-      eda_density(
+      p <- eda_density(
         processed_data = processed_data()$data,
         sample_info = load_data$sample_info()
+      )
+      refine_ggplot2(
+        p = p,
+        gridline = load_data$plot_grid_lines(),
+        ggplot2_theme = load_data$ggplot2_theme()
       )
     })
     output$eda_density <- renderPlot({
@@ -654,10 +675,15 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     dev <- reactive({
       req(!is.null(processed_data()$data))
 
-      mean_sd_plot(
+      p <- mean_sd_plot(
         processed_data = processed_data()$data,
         heat_cols = heat_colors[[input$heat_color_select]],
         rank = input$rank
+      )
+      refine_ggplot2(
+        p = p,
+        gridline = load_data$plot_grid_lines(),
+        ggplot2_theme = load_data$ggplot2_theme()
       )
     })
     output$dev_transfrom <- renderPlot({
@@ -719,7 +745,6 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
 
     # Individual genes selection ----------
     observe({
-      req(tab() == "Pre-Process")
       req(!is.null(processed_data()$data))
       req(!is.null(individual_data()))
 
@@ -763,13 +788,18 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       req(!is.null(input$use_sd))
       req(input$angle_ind_axis_lab)
 
-      individual_plots(
+      p <- individual_plots(
         individual_data = individual_data(),
         sample_info = load_data$sample_info(),
         selected_gene = input$selected_gene,
         gene_plot_box = input$gene_plot_box,
         use_sd = input$use_sd,
         lab_rotate = input$angle_ind_axis_lab
+      )
+      refine_ggplot2(
+        p = p,
+        gridline = load_data$plot_grid_lines(),
+        ggplot2_theme = load_data$ggplot2_theme()
       )
     })
 
@@ -1040,7 +1070,9 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       all_gene_info = reactive(all_gene_info()),
       descr = reactive(processed_data()$descr),
       heatmap_color_select = reactive(load_data$heatmap_color_select()),
-      select_gene_id = reactive(load_data$select_gene_id())
+      select_gene_id = reactive(load_data$select_gene_id()),
+      plot_grid_lines = reactive(load_data$plot_grid_lines()),
+      ggplot2_theme = reactive(load_data$ggplot2_theme())
     )
   })
 }

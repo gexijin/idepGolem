@@ -306,6 +306,11 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
         selected_shape = input$selectFactors2,
         selected_color = input$selectFactors1
       )
+      refine_ggplot2(
+        p = p,
+        gridline = pre_process$plot_grid_lines(),
+        ggplot2_theme = pre_process$ggplot2_theme()
+      )
     })
     output$interactive_pca_plot_obj <- plotly::renderPlotly({
       plotly::ggplotly(pca_plot())
@@ -397,11 +402,16 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
 
       input$seedTSNE
 
-      t_SNE_plot(
+      p <- t_SNE_plot(
         data = pre_process$data(),
         sample_info = pre_process$sample_info(),
         selected_shape = input$selectFactors2,
         selected_color = input$selectFactors1
+      )
+      refine_ggplot2(
+        p = p,
+        gridline = pre_process$plot_grid_lines(),
+        ggplot2_theme = pre_process$ggplot2_theme()
       )
     })
     output$t_sne <- renderPlot({
@@ -423,11 +433,16 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
     mds_plot <- reactive({
       req(!is.null(pre_process$data()))
 
-      MDS_plot(
+      p <- MDS_plot(
         data = pre_process$data(),
         sample_info = pre_process$sample_info(),
         selected_shape = input$selectFactors2,
         selected_color = input$selectFactors1
+      )
+      refine_ggplot2(
+        p = p,
+        gridline = pre_process$plot_grid_lines(),
+        ggplot2_theme = pre_process$ggplot2_theme()
       )
     })
     output$mds_plot_obj <- renderPlot({
@@ -450,7 +465,7 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       withProgress(message = "Generating Plots", {
         incProgress(0.2)
 
-        PCA_biplot(
+        p <- PCA_biplot(
           data = pre_process$data(),
           sample_info = pre_process$sample_info(),
           select_gene_id = pre_process$select_gene_id(),
@@ -464,6 +479,7 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
           ui_color = input$selectColor,
           ui_shape = input$selectShape
         )
+        #        refine_ggplot2(p, gridline = pre_process$plot_grid_lines())
       })
     })
 
@@ -487,9 +503,10 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
     scree <- reactive({
       req(!is.null(pre_process$data()))
 
-      PCA_Scree(
+      p <- PCA_Scree(
         processed_data = pre_process$data()
       )
+      #      refine_ggplot2(p, gridline = pre_process$plot_grid_lines())
     })
     output$pcatools_scree <- renderPlot({
       req(scree())
@@ -515,7 +532,11 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
         processed_data = pre_process$data(),
         sample_info = pre_process$sample_info()
       )
-      return(p)
+      refine_ggplot2(
+        p = p,
+        gridline = pre_process$plot_grid_lines(),
+        ggplot2_theme = pre_process$ggplot2_theme()
+      )
     })
     output$pcatools_eigencor <- renderPlot({
       req(eigencor())

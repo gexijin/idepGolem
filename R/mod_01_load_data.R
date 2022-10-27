@@ -18,31 +18,16 @@ mod_01_load_data_ui <- function(id) {
       ##################################################################
 
       sidebarPanel(
-        fluidRow(
-          column(
-            width = 9,
-            p("Load a demo file below.
-            Click the tabs to see some magic!")
-          ),
-          column(
-            width = 3,
-            # Reset Button -----------
-            p(htmltools::HTML(
-              "<div align=\"right\"><A HREF=\"javascript:history.go(0)\"
-              >Reset</A></div>"
-            )),
-          )
-        ),
-
-
+        # alternative UI output message for once expression data is loaded
+        uiOutput(ns("load_data_alt")),
         # Species Match Drop Down ------------
-        # strong("1. Optional: Select or search for species"),
+        strong("1. Optional: Select or search for species"),
         fluidRow(
           column(
             width = 9,
             selectInput(
               inputId = ns("select_org"),
-              label = strong("1. Optional: Select or search for species"),
+              label = NULL,
               choices = " ",
               multiple = FALSE,
               selectize = TRUE
@@ -58,7 +43,7 @@ mod_01_load_data_ui <- function(id) {
           ),
           tippy::tippy_this(
             ns("genome_assembl_button"),
-            "Additional info on annotated species",
+            "List of annotated species.",
             theme = "light-border"
           )
         ),
@@ -83,19 +68,26 @@ mod_01_load_data_ui <- function(id) {
         ),
 
         # Buttons for data file format ----------
+        strong("2. Choose data type"),
         fluidRow(
           column(
             width = 9,
             selectInput(
               inputId = ns("data_file_format"),
-              label = strong("2. Choose data type"),
+              label = NULL,
               choices = list(
                 "Read counts data (recommended)" = 1,
                 "Normalized expression values (RNA-seq FPKM, microarray, etc.)" = 2,
-                "Fold-changes and corrected P values from CuffDiff or any other
+                "Fold-changes and adjusted P-values from CuffDiff or any other
                 program" = 3
               ),
-              selected = 1
+              selected = 1,
+              selectize = FALSE
+            ),
+            tippy::tippy_this(
+              ns("data_file_format"),
+              "Read counts data can be analyzed using DESeq2.  ",
+              theme = "light-border"
             )
           ),
           column(
@@ -127,50 +119,126 @@ mod_01_load_data_ui <- function(id) {
         # file upload box
         uiOutput(ns("load_data_ui")),
 
-        # alternative UI output message for once expression data is loaded
-        uiOutput(ns("load_data_alt")),
+
 
         # Experiment design file input ----------
         uiOutput(ns("design_file_ui")),
-        fluidRow(
-          column(
-            width = 8,
-            # Yes or no to converting IDs -------------
-            checkboxInput(
-              inputId = ns("no_id_conversion"),
-              label = "Do not convert gene IDs",
-              value = FALSE
-            )
+        checkboxInput(
+          inputId = ns("customize_button"),
+          label = "Show Options",
+          value = FALSE
+        ),
+        selectInput(
+          inputId = ns("multiple_map"),
+          label = "Multiple mapped IDs:",
+          choices = list(
+            "Sum" = "sum",
+            "Average" = "mean",
+            "Median" = "median",
+            "Max" = "max",
+            "Max SD" = "max_sd"
           ),
-          column(
-            width = 4,
-            actionButton(ns("customize_button"), "Plot Options")
-          )
+          selected = "Sum",
+          selectize = FALSE
         ),
         tippy::tippy_this(
-          ns("customize_button"),
-          "Customize plots throughout app",
+          ns("multiple_map"),
+          "When multiple IDs map to the same gene, we can summerize
+          data in a certain way (sum, mean, median, max),
+          or just keep the rows with the the most variation (max SD).
+          When uploading transcript level counts, choose \"sum\" to aggregate gene level counts. ",
           theme = "light-border"
         ),
-
-        # Link to public RNA-seq datasets ----------
-        a(
-          h4("Public RNA-seq datasets"),
-          href = "http://bioinformatics.sdstate.edu/reads/"
+        selectInput(
+          inputId = ns("heatmap_color_select"),
+          label = "Heatmap Color scheme:",
+          choices = c(
+            "Green-Black-Red",
+            "Red-Black-Green",
+            "Blue-White-Red",
+            "Green-Black-Magenta",
+            "Blue-Yellow-Red",
+            "Blue-White-Brown",
+            "Orange-White-Blue"
+          ),
+          selected = "Green-Black-Red",
+          width = "100%"
+        ),
+        selectInput(
+          inputId = ns("select_gene_id"),
+          label = "Gene ID type for plots",
+          choices = c("symbol", "ensembl_ID", "User_ID"),
+          selected = "symbol"
+        ),
+        selectInput(
+          inputId = ns("ggplot2_theme"),
+          label = "ggplot2 scheme:",
+          choices = c(
+            "default", # no change
+            "gray",
+            "bw",
+            "light",
+            "dark",
+            "classic",
+            "minimal",
+            "linedraw"
+          ),
+          selected = "default",
+          width = "100%",
+          selectize = FALSE
+        ),
+        tippy::tippy_this(
+          ns("ggplot2_theme"),
+          "Changes the styles for all 20 ggplot2 plots.",
+          theme = "light-border"
+        ),
+        checkboxInput(
+          inputId = ns("plot_grid_lines"),
+          label = "Add grid lines to plots",
+          value = FALSE
+        ),
+        checkboxInput(
+          inputId = ns("no_id_conversion"),
+          label = "Do not convert gene IDs",
+          value = FALSE
+        ),
+        tippy::tippy_this(
+          ns("no_id_conversion"),
+          "If selected, uploaded gene IDs will not be converted to ENSEMBL gene IDs,
+          which is used as a central id type in pathway databases.",
+          theme = "light-border"
         ),
         # Table output for species loading progress -----------
         tableOutput(ns("species_match")),
-        a(
-          h5("Citation information", align = "right"),
-          href = "https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-018-2486-6#citeas",
-          target = "_blank"
-        ),
-
-        # Action button for Gene ID examples -----------
-        a(
-          h5("Questions?", align = "right"),
-          href = "https://idepsite.wordpress.com/data-format/",
-          target = "_blank"
+        fluidRow(
+          column(
+            width = 4,
+            align = "left",
+            # Link to public RNA-seq datasets ----------
+            a(
+              "Public Data",
+              href = "http://bioinformatics.sdstate.edu/reads/"
+            ),
+          ),
+          column(
+            width = 4,
+            align = "center",
+            a(
+              "Cite iDEP",
+              href = "https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-018-2486-6#citeas",
+              target = "_blank"
+            ),
+          ),
+          column(
+            width = 4,
+            align = "right",
+            # Action button for Gene ID examples -----------
+            a(
+              "Questions?",
+              href = "https://idepsite.wordpress.com/data-format/",
+              target = "_blank"
+            )
+          )
         )
       ),
 
@@ -180,6 +248,9 @@ mod_01_load_data_ui <- function(id) {
       ##################################################################
       mainPanel(
         shinyjs::useShinyjs(),
+
+        # Display file format help html document when prompted ----
+        uiOutput(ns("format_help_ui")),
 
         # Table output for sample tissue type ----------
         DT::dataTableOutput(ns("sample_info_table")),
@@ -194,10 +265,7 @@ mod_01_load_data_ui <- function(id) {
         ),
 
         # Hide welcome screen after data is loaded -----
-        uiOutput(ns("welcome_ui")),
-
-        # Display file format help html document when prompted ----
-        uiOutput(ns("format_help_ui"))
+        uiOutput(ns("welcome_ui"))
       )
     )
   )
@@ -221,52 +289,35 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # increase max input file size
     options(shiny.maxRequestSize = 2001024^2)
 
-    observeEvent(input$customize_button, {
-      shiny::showModal(
-        shiny::modalDialog(
-          selectInput(
-            inputId = ns("heatmap_color_select"),
-            label = "Heatmap Color scheme:",
-            choices = c(
-              "Green-Black-Red",
-              "Red-Black-Green",
-              "Blue-White-Red",
-              "Green-Black-Magenta",
-              "Blue-Yellow-Red",
-              "Blue-White-Brown",
-              "Orange-White-Blue"
-            ),
-            selected = "Green-Black-Red",
-            width = "100%"
-          ),
-          selectInput(
-            inputId = ns("select_gene_id"),
-            label = "Gene ID type for plots",
-            choices = c("symbol", "ensembl_ID", "User_ID"),
-            selected = "symbol"
-          ),
-          easyClose = TRUE,
-          size = "m"
-        )
-      )
+    observe({
+      shinyjs::toggle(id = "heatmap_color_select", condition = input$customize_button)
+      shinyjs::toggle(id = "select_gene_id", condition = input$customize_button)
+      shinyjs::toggle(id = "multiple_map", condition = input$customize_button)
+      shinyjs::toggle(id = "no_id_conversion", condition = input$customize_button)
+      shinyjs::toggle(id = "plot_grid_lines", condition = input$customize_button)
+      shinyjs::toggle(id = "ggplot2_theme", condition = input$customize_button)
     })
 
     welcome_modal <- shiny::modalDialog(
       title = "Welcome to iDEP!",
-      tags$p("We hope that you find our application useful. If iDEP is used,
-      even for preliminrary analysis, please cite:"),
-      tags$h4("Ge, Son & Yao, iDEP: an integrated web application for
+      tags$p(
+        "We hope that you find our application useful. If iDEP is used,
+      even for preliminrary analysis, please cite: ",
+        "Ge, Son & Yao, iDEP: an integrated web application for
       differential expression and pathway analysis of RNA-Seq data,
-      BMC Bioinformatics 19:1-24, 2018.", style = "color:#6B1518"),
-      tags$p("By citing the iDEP paper, you will help this service remain
-      available in the future. Visit the 'About' tab for more information."),
-      tags$a(
-        h5("Full text on BMC Bioinformatics"),
-        href = "https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-018-2486-6",
-        target = "_blank"
+      BMC Bioinformatics 19:1-24, 2018.",
+        a(
+          "Link",
+          href = "https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-018-2486-6",
+          target = "_blank"
+        )
+      ),
+      tags$h5("By citing the iDEP paper, you will help this service remain
+      available in the future.",
+        style = "color:#6B1518"
       ),
       tags$h4("How-to videos coming soon!"),
-      easyClose = T,
+      easyClose = TRUE,
       size = "l"
     )
 
@@ -312,38 +363,10 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       files <- files[files$type == input$data_file_format, ]
       choices <- setNames(as.list(files$ID), files$name)
       tagList(
-        fluidRow(
-          column(
-            width = 6,
-            actionButton(
-              inputId = ns("go_button"),
-              label = "Load demo:"
-            ),
-            tags$head(tags$style(
-              "#load_data-go_button{color: red;
-              font-size: 16px;}"
-            )),
-            tippy::tippy_this(
-              ns("go_button"),
-              "Load the selected demo data",
-              theme = "light-border"
-            )
-          ),
-          column(
-            width = 6,
-            selectInput(
-              inputId = ns("select_demo"),
-              label = NULL,
-              choices = choices,
-              selected = choices[[1]]
-            ),
-          )
-        ),
-
         # Expression data file input
         fileInput(
           inputId = ns("expression_file"),
-          label = strong("3. Upload expression data (CSV or text)"),
+          label = strong("3. Upload expression data (CSV or text), or use a demo file"),
           accept = c(
             "text/csv",
             "text/comma-separated-values",
@@ -352,23 +375,76 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             ".csv",
             ".tsv"
           )
+        ),
+        fluidRow(
+          column(
+            width = 3,
+            align = "right",
+            # style = "margin-top: 8px;",
+            "Demo files:"
+          ),
+          column(
+            width = 4,
+            align = "left",
+            selectInput(
+              inputId = ns("select_demo"),
+              label = NULL,
+              choices = choices,
+              selected = choices[[1]],
+              selectize = FALSE
+            ),
+            tippy::tippy_this(
+              ns("select_demo"),
+              "Select a demo file then click the \"Load Demo\"",
+              theme = "light-border"
+            )
+          ),
+          column(
+            width = 5,
+            actionButton(
+              inputId = ns("go_button"),
+              label = "Load demo"
+            ),
+            tags$head(tags$style(
+              "#load_data-go_button{color: red;}"
+            )),
+            tippy::tippy_this(
+              ns("go_button"),
+              "Load the selected demo file",
+              theme = "light-border"
+            )
+          )
         )
       )
     })
 
     # Alternate ui message to reset app once data is loaded ----
     output$load_data_alt <- renderUI({
-      req(!(
-        (is.null(input$go_button) || input$go_button == 0) &&
-          is.null(input$expression_file)
-      ))
+      if (
+        is.null(input$go_button) || input$go_button == 0 && is.null(input$expression_file)
 
-      # reset message and action button
-      tagList(
-        h5("To load new files, reset the application from above.")
-      )
+      ) {
+        p("iDEP: integrated Differential Expression and Pathway analysis")
+      } else {
+        # reset message and action button
+        tagList(
+          fluidRow(
+            column(
+              width = 12,
+              align = "right",
+              actionButton(
+                inputId = ns("reset_app_new_data"),
+                label = "Reset to load new data",
+                align = "right"
+              )
+            )
+          )
+        )
+      }
     })
-
+    observeEvent(input$reset_app_new_data, {
+      session$reload()
+    })
     # UI element for design file upload ----
     output$design_file_ui <- renderUI({
       req(is.null(input$go_button) || input$go_button == 0)
@@ -533,7 +609,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         converted_data <- convert_data(
           converted = converted,
           no_id_conversion = input$no_id_conversion,
-          data = loaded_data()$data
+          data = loaded_data()$data,
+          multiple_map = input$multiple_map
         )
 
         all_gene_names <- get_all_gene_names(
@@ -687,20 +764,11 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       gmt_choices = reactive(conversion_info()$gmt_choices),
       converted = reactive(conversion_info()$converted),
       no_id_conversion = reactive(input$no_id_conversion),
-      heatmap_color_select = reactive({
-        ifelse(
-          !is.null(input$heatmap_color_select),
-          input$heatmap_color_select,
-          "Green-Black-Red"
-        )
-      }),
-      select_gene_id = reactive({
-        ifelse(
-          !is.null(input$select_gene_id),
-          input$select_gene_id,
-          "symbol"
-        )
-      })
+      heatmap_color_select = reactive(input$heatmap_color_select),
+      select_gene_id = reactive(input$select_gene_id),
+      multiple_map = reactive(input$multiple_map),
+      plot_grid_lines = reactive(input$plot_grid_lines),
+      ggplot2_theme = reactive(input$ggplot2_theme)
     )
   })
 }
