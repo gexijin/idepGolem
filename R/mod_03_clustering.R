@@ -263,7 +263,9 @@ mod_03_clustering_ui <- function(id) {
                 fluidRow(
                   column(
                     width = 3,
-                    htmlOutput(ns("download_sub_ui"))
+                    ottoPlots::mod_download_figure_ui(
+                      ns("dl_heatmap_sub")
+                    )
                   ),
                   column(
                     width = 9,
@@ -520,20 +522,6 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       label = NULL
     )
 
-    # Heatmap Click Value ---------
-    output$download_sub_ui <- renderUI({
-
-      # zoomed in, but not clicked
-      if (
-        !is.null(input$ht_brush)
-      ) {
-        ottoPlots::mod_download_figure_ui(
-          ns("dl_heatmap_sub")
-        )
-      } else {
-        return(NULL)
-      }
-    })
 
     # Heatmap Click Value ---------
     output$ht_click_content <- renderUI({
