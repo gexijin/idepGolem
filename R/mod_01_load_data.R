@@ -172,7 +172,7 @@ mod_01_load_data_ui <- function(id) {
         ),
         selectInput(
           inputId = ns("ggplot2_theme"),
-          label = "ggplot2 scheme:",
+          label = "ggplot2 theme:",
           choices = c(
             "default", # no change
             "gray",
