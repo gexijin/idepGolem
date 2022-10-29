@@ -31,6 +31,7 @@ mod_03_clustering_ui <- function(id) {
           ),
           ns = ns
         ),
+        HTML('<hr style="height:1px;border:none;color:#333;background-color:#333;" />'),
         conditionalPanel(
           condition = "input.cluster_panels == 'Heatmap' |
           input.cluster_panels == 'Gene SD Distribution' ",
@@ -45,6 +46,15 @@ mod_03_clustering_ui <- function(id) {
                 max = 12000,
                 value = 2000,
                 step = 10
+              ),
+              tippy::tippy_this(
+                ns("n_genes"),
+                "Genes are ranked by standard deviations across samples
+                based on the transformed data.
+                By showing the patterns of the genes with most varability,
+                this give us a big picture view of the general pattern of
+                gene expression.",
+                theme = "light-border"
               )
             )
           ),
@@ -72,7 +82,7 @@ mod_03_clustering_ui <- function(id) {
           ),
           tippy::tippy_this(
             ns("k_means_re_run"),
-            "Re-run the k-Means algorithm",
+            "Re-run the k-Means algorithm using different seeds for random number generator.",
             theme = "light-border"
           ),
           # Elbow plot pop-up
@@ -231,17 +241,23 @@ mod_03_clustering_ui <- function(id) {
                       ns("dl_heatmap_sub")
                     )
                   )
-                ),
-                uiOutput(
-                  outputId = ns("ht_click_content")
                 )
               ),
               column(
                 width = 8,
                 checkboxInput(
                   inputId = ns("cluster_enrichment"),
-                  label = HTML(GetoptLong::qq("Show enrichment")),
+                  label = strong("Show enrichment"),
                   value = FALSE
+                ),
+                tippy::tippy_this(
+                  ns("cluster_enrichment"),
+                  "Conducts GO enrichment on the selected genes.
+                  For hierarchical clustering, users need to select a
+                  region to zoom in first.
+                  When k-means is used, enrichment analyses are
+                  conducted on all clusters, regardless of your selection.",
+                  theme = "light-border"
                 ),
                 conditionalPanel(
                   condition = "input.cluster_enrichment == 1 ",
@@ -253,7 +269,11 @@ mod_03_clustering_ui <- function(id) {
                   height = "650px",
                   width = "100%",
                   click = ns("ht_click")
-                )
+                ),
+                br(),
+                uiOutput(
+                  outputId = ns("ht_click_content")
+                ),
               )
             )
           ),
@@ -510,7 +530,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         !is.null(shiny_env$ht_sub) &&
         !is.null(input$ht_brush)
       ) {
-        p <- '<br><p style="color:red;text-align:right;">Click on the sub-heatmap</p>'
+        p <- '<br><p style="color:red;text-align:left;">Click on the sub-heatmap for more info</p>'
         html <- GetoptLong::qq(p)
         return(HTML(html))
       }
