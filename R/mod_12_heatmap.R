@@ -124,7 +124,7 @@ mod_12_heatmap_server <- function(id,
       row_index <- unlist(pos[1, "row_index"])
       # convert to height, pxiels
       height1 <- max(
-        200, # minimum
+        400, # minimum
         min(
           30000, # maximum
           12 * length(row_index)

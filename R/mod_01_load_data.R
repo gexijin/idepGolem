@@ -208,8 +208,6 @@ mod_01_load_data_ui <- function(id) {
           which is used as a central id type in pathway databases.",
           theme = "light-border"
         ),
-        # Table output for species loading progress -----------
-        tableOutput(ns("species_match")),
         fluidRow(
           column(
             width = 4,
@@ -239,7 +237,11 @@ mod_01_load_data_ui <- function(id) {
               target = "_blank"
             )
           )
-        )
+        ),
+        # Table output for species loading progress -----------
+        br(),
+        br(),
+        tableOutput(ns("species_match"))
       ),
 
 

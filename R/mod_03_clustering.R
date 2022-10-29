@@ -577,7 +577,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       row_index <- unlist(pos[1, "row_index"])
       # convert to height, pxiels
       height1 <- max(
-        200, # minimum
+        400, # minimum
         min(
           30000, # maximum
           12 * length(row_index)
