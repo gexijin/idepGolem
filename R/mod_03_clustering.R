@@ -228,19 +228,8 @@ mod_03_clustering_ui <- function(id) {
                   width = "100%",
                   brush = ns("ht_brush")
                 ),
-                fluidRow(
-                  column(
-                    width = 6,
-                    ottoPlots::mod_download_figure_ui(
-                      ns("dl_heatmap_main")
-                    )
-                  ),
-                  column(
-                    width = 6,
-                    ottoPlots::mod_download_figure_ui(
-                      ns("dl_heatmap_sub")
-                    )
-                  )
+                ottoPlots::mod_download_figure_ui(
+                  ns("dl_heatmap_main")
                 )
               ),
               column(
@@ -271,9 +260,20 @@ mod_03_clustering_ui <- function(id) {
                   click = ns("ht_click")
                 ),
                 br(),
-                uiOutput(
-                  outputId = ns("ht_click_content")
-                ),
+                fluidRow(
+                  column(
+                    width = 3,
+                    ottoPlots::mod_download_figure_ui(
+                      ns("dl_heatmap_sub")
+                    )
+                  ),
+                  column(
+                    width = 9,
+                    uiOutput(
+                      outputId = ns("ht_click_content")
+                    )
+                  )
+                )
               )
             )
           ),
@@ -519,8 +519,9 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       }),
       width = 6,
       height = 16,
-      label = "Top"
+      label = NULL
     )
+
 
     # Heatmap Click Value ---------
     output$ht_click_content <- renderUI({
@@ -641,7 +642,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       }),
       width = 8,
       height = 12,
-      label = "Right"
+      label = NULL
     )
 
     # gene lists for enrichment analysis
