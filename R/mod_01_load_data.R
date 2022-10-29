@@ -125,7 +125,7 @@ mod_01_load_data_ui <- function(id) {
         uiOutput(ns("design_file_ui")),
         checkboxInput(
           inputId = ns("customize_button"),
-          label = "Show Options",
+          label = strong("More Options"),
           value = FALSE
         ),
         selectInput(
