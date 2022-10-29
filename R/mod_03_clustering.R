@@ -44,7 +44,7 @@ mod_03_clustering_ui <- function(id) {
                 label = NULL,
                 min = 10,
                 max = 12000,
-                value = 1000,
+                value = 2000,
                 step = 10
               ),
               tippy::tippy_this(
@@ -224,7 +224,7 @@ mod_03_clustering_ui <- function(id) {
                 width = 4,
                 plotOutput(
                   outputId = ns("heatmap_main"),
-                  height = "500px",
+                  height = "100%",
                   width = "100%",
                   brush = ns("ht_brush")
                 ),
@@ -234,6 +234,8 @@ mod_03_clustering_ui <- function(id) {
               ),
               column(
                 width = 8,
+                # align = "right",
+                p("Broaden your browser window if there is overlap.-->"),
                 checkboxInput(
                   inputId = ns("cluster_enrichment"),
                   label = strong("Show enrichment"),
@@ -464,24 +466,28 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     # HEATMAP -----------
     # Information on interactivity
     # https://jokergoo.github.io/2020/05/15/interactive-complexheatmap/
-    output$heatmap_main <- renderPlot({
-      req(!is.null(heatmap_data()))
-      req(input$select_factors_heatmap)
-      #      req(input$selected_genes)
+    output$heatmap_main <- renderPlot(
+      {
+        req(!is.null(heatmap_data()))
+        req(input$select_factors_heatmap)
+        #      req(input$selected_genes)
 
-      shinybusy::show_modal_spinner(
-        spin = "orbit",
-        text = "Creating Heatmap",
-        color = "#000000"
-      )
+        shinybusy::show_modal_spinner(
+          spin = "orbit",
+          text = "Creating Heatmap",
+          color = "#000000"
+        )
 
-      shiny_env$ht <- heatmap_main_object()
+        shiny_env$ht <- heatmap_main_object()
 
-      # Use heatmap position in multiple components
-      shiny_env$ht_pos_main <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht)
-      shinybusy::remove_modal_spinner()
-      return(shiny_env$ht)
-    })
+        # Use heatmap position in multiple components
+        shiny_env$ht_pos_main <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht)
+        shinybusy::remove_modal_spinner()
+        return(shiny_env$ht)
+      },
+      width = 240, # this avoids the heatmap being redraw
+      height = 600
+    )
 
     heatmap_main_object <- reactive({
       req(!is.null(heatmap_data()))
@@ -626,6 +632,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       },
       # adjust height of the zoomed in heatmap dynamically based on selection
       height = reactive(height_sub_heatmap())
+      # width = 500 # this avoids the heatmap being redraw
     )
 
 

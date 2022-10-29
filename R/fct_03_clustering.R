@@ -348,7 +348,9 @@ heatmap_main <- function(data,
     heat <- heat + ComplexHeatmap::rowAnnotation(
       mark = ComplexHeatmap::anno_mark(
         at = ix,
-        labels = ids[ix]
+        labels = ids[ix],
+        link_width = ggplot2::unit(8, "points"),
+        labels_gp = grid::gpar(fontsize = 9)
       )
     )
   }
