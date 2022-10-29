@@ -44,7 +44,7 @@ mod_03_clustering_ui <- function(id) {
                 label = NULL,
                 min = 10,
                 max = 12000,
-                value = 2000,
+                value = 1000,
                 step = 10
               ),
               tippy::tippy_this(
@@ -147,7 +147,7 @@ mod_03_clustering_ui <- function(id) {
             )
           ),
           fluidRow(
-            column(width = 4, p("Mark Genes:")),
+            column(width = 4, p("Label Genes:")),
             column(
               width = 8,
               htmlOutput(ns("selected_genes_ui"))
@@ -255,7 +255,7 @@ mod_03_clustering_ui <- function(id) {
                 ),
                 plotOutput(
                   outputId = ns("sub_heatmap"),
-                  height = "650px",
+                  height = "100%",
                   width = "100%",
                   click = ns("ht_click")
                 ),
@@ -555,44 +555,80 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       )
     })
 
-    # Subheatmap creation ---------
-    output$sub_heatmap <- renderPlot({
+    # depending on the number of genes selected
+    # change the height of the sub heatmap
+    height_sub_heatmap <- reactive({
       if (is.null(input$ht_brush)) {
-        grid::grid.newpage()
-        grid::grid.text("Select a region on the heatmap to zoom in.
+        return(400)
+      }
 
+      # Get the row ids of selected genes
+      lt <- InteractiveComplexHeatmap::getPositionFromBrush(input$ht_brush)
+      pos1 <- lt[[1]]
+      pos2 <- lt[[2]]
+      pos <- InteractiveComplexHeatmap::selectArea(
+        shiny_env$ht,
+        mark = FALSE,
+        pos1 = pos1,
+        pos2 = pos2,
+        verbose = FALSE,
+        ht_pos = shiny_env$ht_pos_main
+      )
+      row_index <- unlist(pos[1, "row_index"])
+      # convert to height, pxiels
+      height1 <- max(
+        200, # minimum
+        min(
+          30000, # maximum
+          12 * length(row_index)
+        )
+      )
+      return(height1) # max width is 1000
+    })
+
+    # Subheatmap creation ---------
+    output$sub_heatmap <- renderPlot(
+      {
+        if (is.null(input$ht_brush)) {
+          grid::grid.newpage()
+          grid::grid.text("Select a region on the heatmap to zoom in.
         Selection can be adjusted from the sides.
         It can also be dragged around.
         ", 0.5, 0.5)
-      } else {
-        shinybusy::show_modal_spinner(
-          spin = "orbit",
-          text = "Creating sub-heatmap",
-          color = "#000000"
-        )
-        try(
-          submap_return <- heatmap_sub_object_calc()
-        )
+        } else {
+          shinybusy::show_modal_spinner(
+            spin = "orbit",
+            text = "Creating sub-heatmap",
+            color = "#000000"
+          )
+          try(
+            submap_return <- heatmap_sub_object_calc()
+          )
 
-        # Objects used in other components ----------
-        shiny_env$ht_sub_obj <- submap_return$ht_select
-        shiny_env$submap_data <- submap_return$submap_data
-        shiny_env$sub_groups <- submap_return$sub_groups
-        shiny_env$group_colors <- submap_return$group_colors
-        shiny_env$click_data <- submap_return$click_data
+          # Objects used in other components ----------
+          shiny_env$ht_sub_obj <- submap_return$ht_select
+          shiny_env$submap_data <- submap_return$submap_data
+          shiny_env$sub_groups <- submap_return$sub_groups
+          shiny_env$group_colors <- submap_return$group_colors
+          shiny_env$click_data <- submap_return$click_data
 
-        shiny_env$ht_sub <- ComplexHeatmap::draw(
-          shiny_env$ht_sub_obj,
-          annotation_legend_list = submap_return$lgd,
-          annotation_legend_side = "top"
-        )
+          shiny_env$ht_sub <- ComplexHeatmap::draw(
+            shiny_env$ht_sub_obj,
+            annotation_legend_list = submap_return$lgd,
+            annotation_legend_side = "top"
+          )
 
-        shiny_env$ht_pos_sub <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht_sub)
+          shiny_env$ht_pos_sub <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht_sub)
 
-        shinybusy::remove_modal_spinner()
-        return(shiny_env$ht_sub)
-      }
-    })
+          shinybusy::remove_modal_spinner()
+          return(shiny_env$ht_sub)
+        }
+      },
+      # adjust height of the zoomed in heatmap dynamically based on selection
+      height = reactive(height_sub_heatmap())
+    )
+
+
 
     heatmap_sub_object_calc <- reactive({
       try( # tolerates error; otherwise stuck with spinner
