@@ -13,7 +13,7 @@ NULL
 #' Density plot of data standard deviation
 #'
 #' Draw a density plot of the standard deviation in the
-#' data. The function also adds a  vertical red lines for a specified range of 
+#' data. The function also adds a  vertical red lines for a specified range of
 #' genes.
 #'
 #' @param data Data matrix that has been through pre-processing
@@ -22,7 +22,7 @@ NULL
 #' @export
 #' @return Formatted density plot of the standard deviation
 #' distribution.
-#' 
+#'
 #' @family plots
 #' @family clustering
 sd_density <- function(data,
@@ -121,7 +121,7 @@ sd_density <- function(data,
 }
 
 
-#' Heatmap data processing 
+#' Heatmap data processing
 #'
 #' This function prepares the data from pre-processing
 #' to be displayed in a heatmap. It takes in limits for
@@ -135,14 +135,15 @@ sd_density <- function(data,
 #' @param sample_centering TRUE/FALSE subtract mean from sample columns
 #' @param sample_normalize TRUE/FALSE divide by SD in sample columns
 #' @param all_gene_names Data frame of gene names
-#' @param select_gene_id Character string designating desired ID type for 
+#' @param select_gene_id Character string designating desired ID type for
 #'   heatmap labels (User_ID, ensembl_ID, symbol)
 #'
 #' @export
 #' @return Subsetted data matrix ([n_genes_min:n_genes_max, ]) with
 #'   gene IDs as the select_gene_id
-#'   
+#'
 #' @family clustering
+#' @family heatmaps
 process_heatmap_data <- function(data,
                                  n_genes_max,
                                  gene_centering,
@@ -202,30 +203,32 @@ process_heatmap_data <- function(data,
 #' Uses the package ComplexHeatmaps to draw a heatmap of the
 #' processed data that has been prepared for the heatmap. The
 #' returned heatmap visualizes the processed expression of the
-#' gene range provided in [process_heatmap_data].
+#' gene range provided in \code{\link{process_heatmap_data}()}.
 #'
 #' @param data Data matrix returned from \code{\link{process_heatmap_data}()}
-#' @param cluster_meth Integer indicating which clustering method to use 1 for 
-#'   hierarchical and 2 for kmeans. 
-#' @param heatmap_cutoff Z score max to filter data
-#' @param sample_info Experiment design information from load data
+#' @param cluster_meth Integer indicating which clustering method to use 1 for
+#'   hierarchical and 2 for kmeans.
+#' @param heatmap_cutoff Numeric value for Z score max to filter data
+#' @param sample_info Matrix of experiment design information from load data
 #' @param select_factors_heatmap Factor group for annotation legend
-#' @param dist_funs List of distance functions to use in heatmap 
+#' @param dist_funs List of distance functions to use in heatmap
 #' @param dist_function The selected distance function to use
 #' @param hclust_function Type of clustering to perform
 #' @param sample_clustering TRUE/FALSE Specify whether to cluster columns
 #' @param heatmap_color_select Vector of colors for heatmap scale
 #' @param row_dend TRUE/FALSE Hide row dendrogram,
 #' @param k_clusters Number of clusters to use for k-means
-#' @param re_run Re-run k-means with a different seed
-#' @param selected_genes Character list of genes to label on the heatmap 
+#' @param re_run Integer for a seed to Re-run k-means with
+#' @param selected_genes Character list of genes to label on the heatmap
 #'
 #' @export
 #' @return Heatmap of the processed data.
-#' 
+#'
 #' @family clustering
-#' @family plots 
-#' @seealso \code{\link{dist_functions}()} for available distance functions 
+#' @family heatmaps
+#' @seealso \code{\link{dist_functions}()} for available distance functions,
+#'  \code{\link{hcluster_functions}()} for available functions for hierarchical
+#'  clustering
 heatmap_main <- function(data,
                          cluster_meth,
                          heatmap_cutoff,
@@ -377,8 +380,8 @@ heatmap_main <- function(data,
 
 #' Draw a dendogram of data samples
 #'
-#' Create a clustered tree of the samples in the dataset based on hierarchical 
-#'   clustering 
+#' Create a clustered tree of the samples in the dataset based on hierarchical
+#'   clustering
 #'
 #' @param tree_data Data that has been through pre-processing
 #' @param gene_centering TRUE/FALSE subtract mean from gene rows
@@ -392,9 +395,9 @@ heatmap_main <- function(data,
 #'
 #' @export
 #' @return Dendogram plot of dataset samples
-#' 
-#' @family plots 
-#' @family clustering 
+#'
+#' @family plots
+#' @family clustering
 draw_sample_tree <- function(tree_data,
                              gene_centering,
                              gene_normalize,
@@ -446,10 +449,14 @@ draw_sample_tree <- function(tree_data,
 #' creates an elbow plot to guide the selection of the
 #' number of clusters to create
 #'
-#' @param heatmap_data Processed heatmap data
+#' @param heatmap_data Matrix of processed heatmap data from
+#'   \code{\link{process_heatmap_data}()}
 #'
 #' @export
-#' @return Formatted elbow plot for the data
+#' @return \code{ggplot2} object of formatted elbow plot
+#'
+#' @family plots
+#' @family clustering
 k_means_elbow <- function(heatmap_data) {
   k.max <- 20
 
@@ -503,13 +510,17 @@ k_means_elbow <- function(heatmap_data) {
 #' Use the heatmap data to make an annotation for the
 #' submap that will also show the legend
 #'
-#' @param data Heatmap data
-#' @param sample_info Experiment design file from load data
-#' @param select_factors_heatmap Factor to group by in the samples
+#' @param data Matrix of heatmap data
+#' @param sample_info Matrix of experiment design information from load data
+#' @param select_factors_heatmap Factor to group by in the samples.
+#'   "All factors" will use all of the sample information.
 #'
 #' @export
 #' @return A list containing a ComplexHeatmap annotation object,
 #'  a ComplexHeatmap legend, list of groups, and list of group colors.
+#'
+#' @family clustering
+#' @family heatmaps
 sub_heat_ann <- function(data,
                          sample_info,
                          select_factors_heatmap) {
@@ -562,17 +573,21 @@ sub_heat_ann <- function(data,
 #' information for their click.
 #'
 #' @param click Click input from subheatmap
-#' @param ht_sub Drawn subheatmap
+#' @param ht_sub Heatmap object of drawn subheatmap object
 #' @param ht_sub_obj Heatmap object with mapping info
-#' @param ht_pos_sub Position information from submap
+#' @param ht_pos_sub DataFrame object of position information from submap
 #' @param sub_groups Vector of group labels from submap
-#' @param group_colors Colors for the group annotation
-#' @param cluster_meth Type of clustering being performed
+#' @param group_colors Vector of colors for the group annotation
+#' @param cluster_meth Integer indicating which clustering method to use 1 for
+#'   hierarchical and 2 for kmeans.
 #' @param click_data Data matrix to get the data value from
 #'
 #' @export
 #' @return HTML code to produce a table with information
 #'  about the selected cell.
+#'
+#' @family clustering
+#' @family heatmaps
 cluster_heat_click_info <- function(click,
                                     ht_sub,
                                     ht_sub_obj,
@@ -637,15 +652,20 @@ Sample: @{sample},  Group: @{group_name} <span style='background-color:@{group_c
 #' @param ht_brush Brush input from the main heatmap
 #' @param ht Main heatmap object
 #' @param ht_pos_main Position of brush on main heatmap
-#' @param heatmap_data Data for the heatmap
-#' @param sample_info Experiment design file
+#' @param heatmap_data Matrix of data for the heatmap from
+#'   \code{\link{process_heatmap_data}()}
+#' @param sample_info Matrix of experiment design file information
 #' @param select_factors_heatmap Group design to label by
-#' @param cluster_meth Type of clustering being performed
+#' @param cluster_meth Integer indicating which clustering method to use 1 for
+#'   hierarchical and 2 for kmeans.
 #'
 #' @export
 #' @return A list containing a Heatmap from the brush selection
 #'  of the main heatmap, the submap data matrix, the groups for
 #'  the submap, the submap legend, and data for the click info.
+#'
+#' @family heatmaps
+#' @family clustering
 heat_sub <- function(ht_brush,
                      ht,
                      ht_pos_main,
@@ -765,13 +785,15 @@ heat_sub <- function(ht_brush,
 #' heatmap data to demonstrate the correlation
 #' between samples.
 #'
-#' @param data Heatmap data
-#' @param label_pcc Label with correlation coefficient when TRUE
-#' @param heat_cols Heat colors to use in the correlation matrix
+#' @param data Heatmap data from \code{\link{process_heatmap_data}()}
+#' @param label_pcc TRUE/FALSE  t0 Label with correlation coefficient
+#' @param heat_cols Vector of colors to use in the correlation matrix
 #' @param text_col Color to make the text labels in the plot
 #'
 #' @export
-#' @return ggplot heatmap of correlation matrix
+#' @return \code{ggplot2} object as heatmap of correlation matrix
+#'
+#' @family plots
 cor_plot <- function(data,
                      label_pcc,
                      heat_cols,
@@ -844,21 +866,4 @@ cor_plot <- function(data,
     legend.title.align = 0.5,
     legend.position = "right"
   )
-}
-
-#' GET RID OF LISTS IN A DATA FRAME
-data_frame_with_list <- function(data_object) {
-  set_lists_to_chars <- function(x) {
-    if (class(x) == "list") {
-      y <- paste(unlist(x[1]), sep = "", collapse = ", ")
-    } else {
-      y <- x
-    }
-    return(y)
-  }
-  new_frame <- data.frame(
-    lapply(data_object, set_lists_to_chars),
-    stringsAsFactors = F
-  )
-  return(new_frame)
 }

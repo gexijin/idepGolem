@@ -27,9 +27,9 @@ heatmap_main(
 \item{cluster_meth}{Integer indicating which clustering method to use 1 for 
 hierarchical and 2 for kmeans.}
 
-\item{heatmap_cutoff}{Z score max to filter data}
+\item{heatmap_cutoff}{Numeric value for Z score max to filter data}
 
-\item{sample_info}{Experiment design information from load data}
+\item{sample_info}{Matrix of experiment design information from load data}
 
 \item{select_factors_heatmap}{Factor group for annotation legend}
 
@@ -47,7 +47,7 @@ hierarchical and 2 for kmeans.}
 
 \item{k_clusters}{Number of clusters to use for k-means}
 
-\item{re_run}{Re-run k-means with a different seed}
+\item{re_run}{Integer for a seed to Re-run k-means with}
 
 \item{selected_genes}{Character list of genes to label on the heatmap}
 }
@@ -58,19 +58,27 @@ Heatmap of the processed data.
 Uses the package ComplexHeatmaps to draw a heatmap of the
 processed data that has been prepared for the heatmap. The
 returned heatmap visualizes the processed expression of the
-gene range provided in [process_heatmap_data].
+gene range provided in \code{\link{process_heatmap_data}()}.
 }
 \seealso{
-\code{\link{dist_functions}()} for available distance functions
+\code{\link{dist_functions}()} for available distance functions, 
+ \code{\link{hcluster_functions}()} for available functions for hierarchical 
+ clustering
 
 Other clustering: 
+\code{\link{cluster_heat_click_info}()},
 \code{\link{draw_sample_tree}()},
+\code{\link{heat_sub}()},
+\code{\link{k_means_elbow}()},
 \code{\link{process_heatmap_data}()},
-\code{\link{sd_density}()}
+\code{\link{sd_density}()},
+\code{\link{sub_heat_ann}()}
 
-Other plots: 
-\code{\link{draw_sample_tree}()},
-\code{\link{sd_density}()}
+Other heatmaps: 
+\code{\link{cluster_heat_click_info}()},
+\code{\link{heat_sub}()},
+\code{\link{process_heatmap_data}()},
+\code{\link{sub_heat_ann}()}
 }
 \concept{clustering}
-\concept{plots}
+\concept{heatmaps}

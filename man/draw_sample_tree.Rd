@@ -44,13 +44,18 @@ Create a clustered tree of the samples in the dataset based on hierarchical
 }
 \seealso{
 Other plots: 
-\code{\link{heatmap_main}()},
+\code{\link{cor_plot}()},
+\code{\link{k_means_elbow}()},
 \code{\link{sd_density}()}
 
 Other clustering: 
+\code{\link{cluster_heat_click_info}()},
+\code{\link{heat_sub}()},
 \code{\link{heatmap_main}()},
+\code{\link{k_means_elbow}()},
 \code{\link{process_heatmap_data}()},
-\code{\link{sd_density}()}
+\code{\link{sd_density}()},
+\code{\link{sub_heat_ann}()}
 }
 \concept{clustering}
 \concept{plots}
