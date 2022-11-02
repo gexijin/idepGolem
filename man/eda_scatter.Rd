@@ -7,7 +7,7 @@
 eda_scatter(processed_data, plot_xaxis, plot_yaxis)
 }
 \arguments{
-\item{processed_data}{Data that has gone through the pre-processing}
+\item{processed_data}{Matrix of data that has gone through the pre-processing}
 
 \item{plot_xaxis}{Sample to plot on the x-axis}
 
