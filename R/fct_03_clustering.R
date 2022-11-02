@@ -894,10 +894,10 @@ prep_download <- function(heatmap,
 
     return(data)
 
-    # hierarchical clustering - NOT CURRENTLY USED 
-    # this code adds clusters to hierarchical clustering, but will not be 
-    # implemented at this time for simplicity, the function just returns the 
-    # heatmap data for heirarchical 
+    # hierarchical clustering - NOT CURRENTLY USED
+    # this code adds clusters to hierarchical clustering, but will not be
+    # implemented at this time for simplicity, the function just returns the
+    # heatmap data for heirarchical
     # must add num_clust back into parameters if used in future
   } else if (FALSE) {
     if (num_clust > dim(heatmap_data)[1]) {
