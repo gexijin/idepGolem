@@ -102,41 +102,75 @@ mod_12_heatmap_server <- function(id,
       label = "Above"
     )
 
-
-    output$sub_heatmap <- renderPlot({
+    # depending on the number of genes selected
+    # change the height of the sub heatmap
+    height_sub_heatmap <- reactive({
       if (is.null(input$ht_brush)) {
-        grid::grid.newpage()
-        grid::grid.text("Select a region on the heatmap to zoom in.
+        return(400)
+      }
+
+      # Get the row ids of selected genes
+      lt <- InteractiveComplexHeatmap::getPositionFromBrush(input$ht_brush)
+      pos1 <- lt[[1]]
+      pos2 <- lt[[2]]
+      pos <- InteractiveComplexHeatmap::selectArea(
+        shiny_env$ht,
+        mark = FALSE,
+        pos1 = pos1,
+        pos2 = pos2,
+        verbose = FALSE,
+        ht_pos = shiny_env$ht_pos_main
+      )
+      row_index <- unlist(pos[1, "row_index"])
+      # convert to height, pxiels
+      height1 <- max(
+        400, # minimum
+        min(
+          30000, # maximum
+          12 * length(row_index)
+        )
+      )
+      return(height1) # max width is 1000
+    })
+
+
+    output$sub_heatmap <- renderPlot(
+      {
+        if (is.null(input$ht_brush)) {
+          grid::grid.newpage()
+          grid::grid.text("Select a region on the heatmap to zoom in.
 
         Selection can be adjusted from the sides.
         It can also be dragged around.", 0.5, 0.5)
-      } else {
-        shinybusy::show_modal_spinner(
-          spin = "orbit",
-          text = "Creating Heatmap",
-          color = "#000000"
-        )
-        shinybusy::remove_modal_spinner()
-        heat_return <- sub_heatmap_calc()
+        } else {
+          shinybusy::show_modal_spinner(
+            spin = "orbit",
+            text = "Creating Heatmap",
+            color = "#000000"
+          )
+          shinybusy::remove_modal_spinner()
+          heat_return <- sub_heatmap_calc()
 
 
-        shiny_env$ht_select <- heat_return$ht_select
-        shiny_env$submap_data <- heat_return$submap_data
-        shiny_env$group_colors <- heat_return$group_colors
-        shiny_env$column_groups <- heat_return$column_groups
-        shiny_env$bar <- heat_return$bar
+          shiny_env$ht_select <- heat_return$ht_select
+          shiny_env$submap_data <- heat_return$submap_data
+          shiny_env$group_colors <- heat_return$group_colors
+          shiny_env$column_groups <- heat_return$column_groups
+          shiny_env$bar <- heat_return$bar
 
-        shiny_env$ht_sub <- ComplexHeatmap::draw(
-          shiny_env$ht_select,
-          annotation_legend_side = "top",
-          heatmap_legend_side = "top"
-        )
+          shiny_env$ht_sub <- ComplexHeatmap::draw(
+            shiny_env$ht_select,
+            annotation_legend_side = "top",
+            heatmap_legend_side = "top"
+          )
 
-        shiny_env$ht_pos_sub <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht_sub)
+          shiny_env$ht_pos_sub <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht_sub)
 
-        return(shiny_env$ht_sub)
-      }
-    })
+          return(shiny_env$ht_sub)
+        }
+      },
+      height = reactive(height_sub_heatmap())
+    )
 
     sub_heatmap_calc <- reactive({
       try(

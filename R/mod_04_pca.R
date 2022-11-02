@@ -189,10 +189,19 @@ mod_04_pca_ui <- function(id) {
           id = ns("PCA_panels"),
           tabPanel(
             title = "PCA",
+            h5("This plot is interactive. Hover over the plot to see more details."),
             plotly::plotlyOutput(
+              outputId = ns("interactive_pca_plot_obj"),
+              width = "100%",
+              height = "600px"
+            ),
+            ottoPlots::mod_download_figure_ui(ns("download_interactive_pca")),
+            br(),
+            h5("\n Non-Interactive Plot"),
+            plotOutput(
               outputId = ns("pca_plot_obj"),
               width = "100%",
-              height = "700px"
+              height = "600px"
             ),
             ottoPlots::mod_download_figure_ui(ns("download_pca")),
             br(),
@@ -303,16 +312,39 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
         ggplot2_theme = pre_process$ggplot2_theme()
       )
     })
-    output$pca_plot_obj <- plotly::renderPlotly({
+    output$interactive_pca_plot_obj <- plotly::renderPlotly({
       plotly::ggplotly(pca_plot())
+    })
+    output$pca_plot_obj <- renderPlot({
+      req(pca_plot())
+      print(pca_plot())
     })
 
     # Download Button
+    download_interactive_pca <- ottoPlots::mod_download_figure_server(
+      id = "download_interactive_pca",
+      filename = "pca_plot",
+      figure = reactive({
+        pca_plot()
+      }),
+      label = "",
+      width = get_plot_width(
+        client_data = session$clientData,
+        plot_name = "pca_plot_obj",
+        tab = id
+      ),
+      height = get_plot_height(
+        client_data = session$clientData,
+        plot_name = "pca_plot_obj",
+        tab = id
+      )
+    )
     download_pca <- ottoPlots::mod_download_figure_server(
       id = "download_pca",
       filename = "pca_plot",
       figure = reactive({
-        pca_plot()
+        # pca_plot()
+        print(plotly::ggplotly(pca_plot()))
       }),
       label = "",
       width = get_plot_width(

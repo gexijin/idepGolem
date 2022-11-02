@@ -129,12 +129,15 @@ find_overlap <- function(pathway_table,
                          sub_pathway_files,
                          use_filtered_background,
                          select_org,
-                         reduced = FALSE) {
+                         reduced = FALSE,
+                         max_terms = 15,
+                         sort_by_fold = "FALSE") {
   max_pval_filter <- 0.3
   max_genes_background <- 30000
   min_genes_background <- 1000
-  max_terms <- 15
+  #  max_terms <- 15
   min_fdr <- .05
+  min_overlap <- 5
   min_word_overlap <- 0.5 # % of overlapping words for reduandant pathway
   if (reduced) {
     reduced <- .9
@@ -214,11 +217,7 @@ find_overlap <- function(pathway_table,
 
   pathway_table$fdr <- stats::p.adjust(pathway_table$pval, method = "fdr")
 
-  pathway_table <- pathway_table[order(pathway_table$fdr), ]
 
-  if (dim(pathway_table)[1] > max_terms) {
-    pathway_table <- pathway_table[1:max_terms, ]
-  }
 
   if (min(pathway_table$fdr) > min_fdr) {
     pathway_table <- error_msg
@@ -237,6 +236,31 @@ find_overlap <- function(pathway_table,
         gene_sets
       )
     )
+
+    if (sort_by_fold) {
+      pathway_table <- pathway_table[order(
+        pathway_table$fold,
+        decreasing = TRUE
+      ), ]
+      # if sorting by fold enriched, require at least 5 genes overlap.
+      pathway_table <- pathway_table[pathway_table$overlap >= min_overlap, ]
+    } else {
+      pathway_table <- pathway_table[order(pathway_table$fdr), ]
+    }
+
+    if (!is.numeric(max_terms)) {
+      max_terms <- 15
+    }
+    if (max_terms > 100) {
+      max_terms <- 100
+    }
+    if (max_terms < 1) {
+      max_terms <- 1
+    }
+    if (dim(pathway_table)[1] > max_terms) {
+      pathway_table <- pathway_table[1:max_terms, ]
+    }
+
     pathway_table$n <- as.numeric(pathway_table$n)
     pathway_table$fdr <- formatC(pathway_table$fdr, format = "e", digits = 2)
     colnames(pathway_table) <- c(

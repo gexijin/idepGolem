@@ -53,7 +53,7 @@ Ge, S.X., Son, E.W. & Yao, R. iDEP: an integrated web application for differenti
 
 This html document contains what parameters values were selected on the IDEP interface of the "PCA" tab. It also includes the plots generated from those selections.
 
-## Pre_process Summary
+## Pre-Process Summary
 `r params$pre_processed_descr`
 
 ## All PCA inputs
@@ -86,7 +86,7 @@ pc_factor_correlation(
 ```
 
 ## Principal Component Analysis 3D
-```{r}
+```{r fig.show='hide'}
 PCA_plot_3d(
   data = params$pre_processed_data,
   sample_info = params$sample_info,
@@ -97,6 +97,7 @@ PCA_plot_3d(
   selected_shape = params$shape
 )
 ```
+Plot not included on this report.
 
 ## T-SNE
 ```{r}
