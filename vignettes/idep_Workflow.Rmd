@@ -215,13 +215,6 @@ heat_map <- heatmap_main(
   re_run = 5, 
   selected_genes = NULL
 )
-
-heatmap_clusters <- prep_download(
-  heatmap = heat_map, 
-  heatmap_data = heatmap_data, 
-  cluster_meth = 1, 
-  num_clust = 5
-)
 ```
 
 
