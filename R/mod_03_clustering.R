@@ -18,7 +18,7 @@ mod_03_clustering_ui <- function(id) {
         width = 3,
         # Select Clustering Method ----------
         conditionalPanel(
-          condition = "input.cluster_panels == 'Hierarchical' |
+          condition = "input.cluster_panels == 'Heatmap' |
             input.cluster_panels == 'sample_tab'",
           radioButtons(
             inputId = ns("cluster_meth"),
@@ -31,8 +31,9 @@ mod_03_clustering_ui <- function(id) {
           ),
           ns = ns
         ),
+        HTML('<hr style="height:1px;border:none;color:#333;background-color:#333;" />'),
         conditionalPanel(
-          condition = "input.cluster_panels == 'Hierarchical' |
+          condition = "input.cluster_panels == 'Heatmap' |
           input.cluster_panels == 'Gene SD Distribution' ",
           fluidRow(
             column(width = 6, p("Top Genes:")),
@@ -43,15 +44,24 @@ mod_03_clustering_ui <- function(id) {
                 label = NULL,
                 min = 10,
                 max = 12000,
-                value = 1000,
+                value = 2000,
                 step = 10
+              ),
+              tippy::tippy_this(
+                ns("n_genes"),
+                "Genes are ranked by standard deviations across samples
+                based on the transformed data.
+                By showing the patterns of the genes with most varability,
+                this give us a big picture view of the general pattern of
+                gene expression.",
+                theme = "light-border"
               )
             )
           ),
           ns = ns
         ),
         conditionalPanel(
-          condition = "(input.cluster_panels == 'Hierarchical' |
+          condition = "(input.cluster_panels == 'Heatmap' |
             input.cluster_panels == 'sample_tab') &&  input.cluster_meth == 2",
 
           # k- means slidebar -----------
@@ -61,7 +71,7 @@ mod_03_clustering_ui <- function(id) {
             label = "Number of Clusters:",
             min = 2,
             max = 20,
-            value = 4,
+            value = 6,
             step = 1
           ),
 
@@ -72,7 +82,7 @@ mod_03_clustering_ui <- function(id) {
           ),
           tippy::tippy_this(
             ns("k_means_re_run"),
-            "Re-run the k-Means algorithm",
+            "Re-run the k-Means algorithm using different seeds for random number generator.",
             theme = "light-border"
           ),
           # Elbow plot pop-up
@@ -93,10 +103,10 @@ mod_03_clustering_ui <- function(id) {
           ns = ns
         ),
 
-        # Clustering methods for hierarchical ----------
+        # Clustering methods for Heatmap ----------
         conditionalPanel(
           condition = "input.cluster_meth == 1 &&
-            (input.cluster_panels == 'Hierarchical' |
+            (input.cluster_panels == 'Heatmap' |
             input.cluster_panels == 'sample_tab')",
           fluidRow(
             column(width = 4, p("Distance")),
@@ -128,7 +138,7 @@ mod_03_clustering_ui <- function(id) {
           ns = ns
         ),
         conditionalPanel(
-          condition = "input.cluster_panels == 'Hierarchical' ",
+          condition = "input.cluster_panels == 'Heatmap' ",
           fluidRow(
             column(width = 4, p("Samples color")),
             column(
@@ -137,7 +147,7 @@ mod_03_clustering_ui <- function(id) {
             )
           ),
           fluidRow(
-            column(width = 4, p("Mark Genes:")),
+            column(width = 4, p("Label Genes:")),
             column(
               width = 8,
               htmlOutput(ns("selected_genes_ui"))
@@ -218,59 +228,66 @@ mod_03_clustering_ui <- function(id) {
           id = ns("cluster_panels"),
           # Heatmap panel ----------
           tabPanel(
-            title = "Hierarchical",
+            title = "Heatmap",
             br(),
             fluidRow(
               column(
                 width = 4,
                 plotOutput(
                   outputId = ns("heatmap_main"),
-                  height = "500px",
+                  height = "100%",
                   width = "100%",
                   brush = ns("ht_brush")
                 ),
-                fluidRow(
-                  column(
-                    width = 6,
-                    ottoPlots::mod_download_figure_ui(
-                      ns("dl_heatmap_main")
-                    )
-                  ),
-                  column(
-                    width = 6,
-                    ottoPlots::mod_download_figure_ui(
-                      ns("dl_heatmap_sub")
-                    )
-                  )
-                ),
-                uiOutput(
-                  outputId = ns("ht_click_content")
-                ),
-                checkboxInput(
-                  inputId = ns("cluster_enrichment"),
-                  label = HTML(GetoptLong::qq("GO enrichment for selected genes &#8595 &#8595;")),
-                  value = TRUE
+                ottoPlots::mod_download_figure_ui(
+                  ns("dl_heatmap_main")
                 )
               ),
               column(
                 width = 8,
+                # align = "right",
+                p("Broaden your browser window if there is overlap.-->"),
+                checkboxInput(
+                  inputId = ns("cluster_enrichment"),
+                  label = strong("Show enrichment"),
+                  value = FALSE
+                ),
+                tippy::tippy_this(
+                  ns("cluster_enrichment"),
+                  "Conducts GO enrichment on the selected genes.
+                  For hierarchical clustering, users need to select a
+                  region to zoom in first.
+                  When k-means is used, enrichment analyses are
+                  conducted on all clusters, regardless of your selection.",
+                  theme = "light-border"
+                ),
+                conditionalPanel(
+                  condition = "input.cluster_enrichment == 1 ",
+                  mod_11_enrichment_ui(ns("enrichment_table_cluster")),
+                  ns = ns
+                ),
                 plotOutput(
                   outputId = ns("sub_heatmap"),
-                  height = "650px",
+                  height = "100%",
                   width = "100%",
                   click = ns("ht_click")
+                ),
+                br(),
+                fluidRow(
+                  column(
+                    width = 3,
+                    ottoPlots::mod_download_figure_ui(
+                      ns("dl_heatmap_sub")
+                    )
+                  ),
+                  column(
+                    width = 9,
+                    uiOutput(
+                      outputId = ns("ht_click_content")
+                    )
+                  )
                 )
               )
-            ),
-            conditionalPanel(
-              condition = "input.cluster_enrichment == 1 ",
-              # Line break ---------
-              HTML(
-                '<hr style="height:1px;border:none;
-            color:#333;background-color:#333;" />'
-              ),
-              mod_11_enrichment_ui(ns("enrichment_table_cluster")),
-              ns = ns
             )
           ),
 
@@ -476,24 +493,28 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     # HEATMAP -----------
     # Information on interactivity
     # https://jokergoo.github.io/2020/05/15/interactive-complexheatmap/
-    output$heatmap_main <- renderPlot({
-      req(!is.null(heatmap_data()))
-      req(input$select_factors_heatmap)
-      #      req(input$selected_genes)
+    output$heatmap_main <- renderPlot(
+      {
+        req(!is.null(heatmap_data()))
+        req(input$select_factors_heatmap)
+        #      req(input$selected_genes)
 
-      shinybusy::show_modal_spinner(
-        spin = "orbit",
-        text = "Creating Heatmap",
-        color = "#000000"
-      )
+        shinybusy::show_modal_spinner(
+          spin = "orbit",
+          text = "Creating Heatmap",
+          color = "#000000"
+        )
 
-      shiny_env$ht <- heatmap_main_object()
+        shiny_env$ht <- heatmap_main_object()
 
-      # Use heatmap position in multiple components
-      shiny_env$ht_pos_main <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht)
-      shinybusy::remove_modal_spinner()
-      return(shiny_env$ht)
-    })
+        # Use heatmap position in multiple components
+        shiny_env$ht_pos_main <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht)
+        shinybusy::remove_modal_spinner()
+        return(shiny_env$ht)
+      },
+      width = 240, # this avoids the heatmap being redraw
+      height = 600
+    )
 
     heatmap_main_object <- reactive({
       req(!is.null(heatmap_data()))
@@ -531,8 +552,9 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       }),
       width = 6,
       height = 16,
-      label = "Top"
+      label = NULL
     )
+
 
     # Heatmap Click Value ---------
     output$ht_click_content <- renderUI({
@@ -542,7 +564,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         !is.null(shiny_env$ht_sub) &&
         !is.null(input$ht_brush)
       ) {
-        p <- '<br><p style="color:red;text-align:right;">Click on the sub-heatmap &#10230;</p>'
+        p <- '<br><p style="color:red;text-align:left;">Click on the sub-heatmap for more info</p>'
         html <- GetoptLong::qq(p)
         return(HTML(html))
       }
@@ -566,44 +588,81 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       )
     })
 
-    # Subheatmap creation ---------
-    output$sub_heatmap <- renderPlot({
+    # depending on the number of genes selected
+    # change the height of the sub heatmap
+    height_sub_heatmap <- reactive({
       if (is.null(input$ht_brush)) {
-        grid::grid.newpage()
-        grid::grid.text("Select a region on the heatmap to zoom in.
+        return(400)
+      }
 
+      # Get the row ids of selected genes
+      lt <- InteractiveComplexHeatmap::getPositionFromBrush(input$ht_brush)
+      pos1 <- lt[[1]]
+      pos2 <- lt[[2]]
+      pos <- InteractiveComplexHeatmap::selectArea(
+        shiny_env$ht,
+        mark = FALSE,
+        pos1 = pos1,
+        pos2 = pos2,
+        verbose = FALSE,
+        ht_pos = shiny_env$ht_pos_main
+      )
+      row_index <- unlist(pos[1, "row_index"])
+      # convert to height, pxiels
+      height1 <- max(
+        400, # minimum
+        min(
+          30000, # maximum
+          12 * length(row_index)
+        )
+      )
+      return(height1) # max width is 1000
+    })
+
+    # Subheatmap creation ---------
+    output$sub_heatmap <- renderPlot(
+      {
+        if (is.null(input$ht_brush)) {
+          grid::grid.newpage()
+          grid::grid.text("Select a region on the heatmap to zoom in.
         Selection can be adjusted from the sides.
         It can also be dragged around.
         ", 0.5, 0.5)
-      } else {
-        shinybusy::show_modal_spinner(
-          spin = "orbit",
-          text = "Creating sub-heatmap",
-          color = "#000000"
-        )
-        try(
-          submap_return <- heatmap_sub_object_calc()
-        )
+        } else {
+          shinybusy::show_modal_spinner(
+            spin = "orbit",
+            text = "Creating sub-heatmap",
+            color = "#000000"
+          )
+          try(
+            submap_return <- heatmap_sub_object_calc()
+          )
 
-        # Objects used in other components ----------
-        shiny_env$ht_sub_obj <- submap_return$ht_select
-        shiny_env$submap_data <- submap_return$submap_data
-        shiny_env$sub_groups <- submap_return$sub_groups
-        shiny_env$group_colors <- submap_return$group_colors
-        shiny_env$click_data <- submap_return$click_data
+          # Objects used in other components ----------
+          shiny_env$ht_sub_obj <- submap_return$ht_select
+          shiny_env$submap_data <- submap_return$submap_data
+          shiny_env$sub_groups <- submap_return$sub_groups
+          shiny_env$group_colors <- submap_return$group_colors
+          shiny_env$click_data <- submap_return$click_data
 
-        shiny_env$ht_sub <- ComplexHeatmap::draw(
-          shiny_env$ht_sub_obj,
-          annotation_legend_list = submap_return$lgd,
-          annotation_legend_side = "top"
-        )
+          shiny_env$ht_sub <- ComplexHeatmap::draw(
+            shiny_env$ht_sub_obj,
+            annotation_legend_list = submap_return$lgd,
+            annotation_legend_side = "top"
+          )
 
-        shiny_env$ht_pos_sub <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht_sub)
+          shiny_env$ht_pos_sub <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht_sub)
 
-        shinybusy::remove_modal_spinner()
-        return(shiny_env$ht_sub)
-      }
-    })
+          shinybusy::remove_modal_spinner()
+          return(shiny_env$ht_sub)
+        }
+      },
+      # adjust height of the zoomed in heatmap dynamically based on selection
+      height = reactive(height_sub_heatmap())
+      # width = 500 # this avoids the heatmap being redraw
+    )
+
+
 
     heatmap_sub_object_calc <- reactive({
       try( # tolerates error; otherwise stuck with spinner
@@ -653,7 +712,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       }),
       width = 8,
       height = 12,
-      label = "Right"
+      label = NULL
     )
 
     # gene lists for enrichment analysis
@@ -714,7 +773,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           )
 
           # Only keep the gene names and scrap the data
-          gene_lists[[paste0("Cluster ", i)]] <-
+          gene_lists[[paste0("", i)]] <-
             dplyr::select_if(gene_names, is.character)
         }
       }

@@ -69,6 +69,20 @@ mod_11_enrichment_ui <- function(id) {
         )
       )
     ),
+    fluidRow(
+      column(
+        width = 4,
+        align = "left",
+        # not that pathways are still ranked by FDR
+        numericInput(
+          inputId = ns("top_pathways"),
+          label = "Top pathways",
+          min = 1,
+          max = 30,
+          value = 10
+        )
+      )
+    ),
     tabsetPanel(
       id = ns("subtab"),
       tabPanel(
@@ -319,6 +333,7 @@ mod_11_enrichment_server <- function(id,
       shinyjs::toggle(id = "sort_by", condition = input$customize_button)
       shinyjs::toggle(id = "filtered_background", condition = input$customize_button)
       shinyjs::toggle(id = "remove_redudant", condition = input$customize_button)
+      shinyjs::toggle(id = "top_pathways", condition = input$customize_button)
     })
     # GMT choices for enrichment ----------
     output$select_go_selector <- renderUI({
@@ -361,6 +376,13 @@ mod_11_enrichment_server <- function(id,
           selected <- choices[1]
         }
       }
+      choices_name <- choices
+      ix <- which(nchar(choices) == 1) # "1" <- "Cluster 1"
+      choices_name[ix] <- paste("Cluster ", choices[ix])
+      if (min(nchar(choices)) == 1) {
+        choices <- setNames(choices, choices_name)
+      }
+
       selectInput(
         inputId = ns("select_cluster"),
         label = NULL,
@@ -412,7 +434,9 @@ mod_11_enrichment_server <- function(id,
             select_org = select_org(),
             sub_pathway_files = gene_sets$pathway_files,
             use_filtered_background = input$filtered_background,
-            reduced = input$remove_redudant
+            reduced = input$remove_redudant,
+            max_terms = input$top_pathways,
+            sort_by_fold = (input$sort_by == "Fold")
           )
         }
       })
@@ -645,7 +669,7 @@ mod_11_enrichment_server <- function(id,
       enrichment_tree_plot(
         go_table = enrichment_dataframe_for_tree(),
         group = input$select_cluster,
-        right_margin = 45
+        right_margin = 30
       )
     })
 
@@ -698,9 +722,9 @@ mod_11_enrichment_server <- function(id,
 
         res <- enrichment_dataframe()
         colnames(res) <- gsub("\\.", " ", colnames(res))
-        if (input$sort_by == "Fold") {
-          res <- res[order(res$group, -res$"Fold enriched"), ]
-        }
+        #        if (input$sort_by == "Fold") {
+        #          res <- res[order(res$group, -res$"Fold enriched"), ]
+        #        }
         # if only one group remove group column
         if (length(unique(res$group)) == 1) {
           res <- res[, -1]
@@ -708,9 +732,12 @@ mod_11_enrichment_server <- function(id,
           # if multiple groups clean up
           res$group[duplicated(res$group)] <- ""
         }
-
+        # 2.1e-03  --> 2.1e-3
+        res$FDR <- gsub("e-0", "e-", res$FDR)
+        res$FDR <- gsub("e", "E", res$FDR)
         res$"nGenes" <- as.character(res$"nGenes")
         res$"Fold enriched" <- as.character(round(res$"Fold enriched", 1))
+
         res$"Pathway size" <- as.character(
           res$"Pathway size"
         )
@@ -724,9 +751,13 @@ mod_11_enrichment_server <- function(id,
 
         # remove pathway size
         colnames(res) <- gsub("Pathway size", "PathwaySize", colnames(res))
+        colnames(res) <- gsub("Fold enriched", "Fold", colnames(res))
+        colnames(res) <- gsub("FDR", "Adj.Pval", colnames(res))
+        colnames(res) <- gsub("group", "Grp.", colnames(res))
         res <- subset(res, select = -PathwaySize)
 
         colnames(res)[ncol(res)] <- "Pathway (Click for more info)"
+        res <- subset(res, select = -nGenes)
         return(res)
       },
       digits = -1,

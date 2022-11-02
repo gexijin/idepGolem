@@ -883,7 +883,7 @@ generate_descr <- function(missing_value,
       "3" = "Regularized log"
     )
     descr <- paste0(
-      "Read counts data was uploaded to iDEP v2.0 (citation). ",
+      "Read counts data was uploaded to iDEP v1.0 (citation). ",
       "The data was filtered to include genes with more than ", min_counts,
       " counts in ", n_min_samples_count, ifelse(n_min_samples_count > 1, " libraries", " library"), ". The data was transformed with ", part_2,
       ".  Missing values were imputed using ", missing_value, "."
@@ -897,7 +897,7 @@ generate_descr <- function(missing_value,
     )
 
     descr <- paste0(
-      "Normalized expression values were uploaded to iDEP v2.0 (citation). ",
+      "Normalized expression values were uploaded to iDEP v1.0 (citation). ",
       "The data was filtered to include genes with above ", low_filter_fpkm,
       " levels in ", n_min_samples_fpkm, ifelse(n_min_samples_fpkm > 1, " libraries", " library"), ". The data was ", part_2,
       ".  Missing values were imputed using ", missing_value, "."
@@ -911,7 +911,7 @@ generate_descr <- function(missing_value,
     )
     descr <- paste0(
       "Log Fold Change ", part_2,
-      "data was uploaded to iDEP v2.0 (citation).",
+      "data was uploaded to iDEP v1.0 (citation).",
       "Missing values were imputed using ", missing_value, "."
     )
   }

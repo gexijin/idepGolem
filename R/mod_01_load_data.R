@@ -125,7 +125,7 @@ mod_01_load_data_ui <- function(id) {
         uiOutput(ns("design_file_ui")),
         checkboxInput(
           inputId = ns("customize_button"),
-          label = "Show Options",
+          label = strong("More Options"),
           value = FALSE
         ),
         selectInput(
@@ -172,7 +172,7 @@ mod_01_load_data_ui <- function(id) {
         ),
         selectInput(
           inputId = ns("ggplot2_theme"),
-          label = "ggplot2 scheme:",
+          label = "ggplot2 theme:",
           choices = c(
             "default", # no change
             "gray",
@@ -208,8 +208,6 @@ mod_01_load_data_ui <- function(id) {
           which is used as a central id type in pathway databases.",
           theme = "light-border"
         ),
-        # Table output for species loading progress -----------
-        tableOutput(ns("species_match")),
         fluidRow(
           column(
             width = 4,
@@ -239,7 +237,11 @@ mod_01_load_data_ui <- function(id) {
               target = "_blank"
             )
           )
-        )
+        ),
+        # Table output for species loading progress -----------
+        br(),
+        br(),
+        tableOutput(ns("species_match"))
       ),
 
 
@@ -301,13 +303,11 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     welcome_modal <- shiny::modalDialog(
       title = "Welcome to iDEP!",
       tags$p(
-        "We hope that you find our application useful. If iDEP is used,
+        "If iDEP is used,
       even for preliminrary analysis, please cite: ",
-        "Ge, Son & Yao, iDEP: an integrated web application for
-      differential expression and pathway analysis of RNA-Seq data,
-      BMC Bioinformatics 19:1-24, 2018.",
+        "Ge, Son & Yao, iDEP,",
         a(
-          "Link",
+          " BMC Bioinformatics 19:1-24, 2018.",
           href = "https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-018-2486-6",
           target = "_blank"
         )
@@ -315,6 +315,11 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       tags$h5("By citing the iDEP paper, you will help this service remain
       available in the future.",
         style = "color:#6B1518"
+      ),
+      tags$h5(
+        "If this server is busy, please use a mirror sever ",
+        a("http://ge-lab.org/idepg/", href = "http://149.165.154.220/idepg/"),
+        " hosted by NSF-funded JetStream2."
       ),
       tags$h4("How-to videos coming soon!"),
       easyClose = TRUE,

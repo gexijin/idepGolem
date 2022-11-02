@@ -15,7 +15,9 @@ find_overlap(
   sub_pathway_files,
   use_filtered_background,
   select_org,
-  reduced = FALSE
+  reduced = FALSE,
+  max_terms = 15,
+  sort_by_fold = "FALSE"
 )
 }
 \arguments{

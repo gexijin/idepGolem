@@ -19,9 +19,9 @@ app_ui <- function(request) {
         warning = "#ffc107",
         bg = "#fbfbfb",
         fg = "#0D223E",
-        base_font = bslib::font_google("Fira Sans"),
-        heading_font = bslib::font_google("Roboto Slab"),
-        font_scale = 0.8,
+        base_font = bslib::font_google("Merriweather"),
+        heading_font = bslib::font_google("Merriweather"),
+        font_scale = 0.7,
         "navbar-bg" = "#0033A0"
       ),
       id = "navbar",
@@ -63,7 +63,7 @@ golem_add_external_resources <- function() {
     ),
     bundle_resources(
       path = app_sys("app/www"),
-      app_title = "iDEP"
+      app_title = "iDEP 1.0"
     )
     # Add here other external resources
     # for example, you can add shinyalert::useShinyalert()

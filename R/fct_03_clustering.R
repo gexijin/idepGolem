@@ -348,7 +348,9 @@ heatmap_main <- function(data,
     heat <- heat + ComplexHeatmap::rowAnnotation(
       mark = ComplexHeatmap::anno_mark(
         at = ix,
-        labels = ids[ix]
+        labels = ids[ix],
+        link_width = ggplot2::unit(8, "points"),
+        labels_gp = grid::gpar(fontsize = 9)
       )
     )
   }
@@ -605,10 +607,8 @@ cluster_heat_click_info <- function(click,
   html <- GetoptLong::qq("
 <div>
 <pre>
-@{gene}
-Value: @{round(value, 2)} <span style='background-color:@{col};width=50px;'>    </span>
-Sample: @{sample}
-Group: @{group_name} <span style='background-color:@{group_col};width=50px;'>    </span>
+@{gene}  Expression: @{round(value, 2)} <span style='background-color:@{col};width=50px;'>    </span>
+Sample: @{sample},  Group: @{group_name} <span style='background-color:@{group_col};width=50px;'>    </span>
 </pre></div>")
   HTML(html)
 }
