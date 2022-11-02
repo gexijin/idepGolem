@@ -188,12 +188,6 @@ mod_03_clustering_ui <- function(id) {
                 outputId = ns("download_heatmap_data"),
                 label = "Heatmap data"
               )
-            ),
-            column(
-              width = 6,
-              uiOutput(
-                outputId = ns("num_hclust")
-              )
             )
           ),
           ns = ns
@@ -366,22 +360,6 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       shinyjs::toggle(id = "heatmap_cutoff", condition = input$customize_button)
       shinyjs::toggle(id = "gene_normalize", condition = input$customize_button)
       shinyjs::toggle(id = "gene_centering", condition = input$customize_button)
-    })
-
-    output$num_hclust <- renderUI({
-      req(input$cluster_meth == 1)
-      req(input$n_genes)
-
-      clust_max <- input$n_genes / 2
-
-      numericInput(
-        inputId = ns("hclust_num"),
-        label = "Number of clusters",
-        value = 3,
-        min = 1,
-        max = clust_max,
-        step = 1
-      )
     })
 
     # Distance functions -----------
@@ -862,28 +840,10 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       req(!is.null(pre_process$all_gene_names()))
       req(!is.null(heatmap_data()))
 
-      if (input$clust_meth == 1) {
-        if (input$hclust_num > (input$n_genes / 2)) {
-          num_clust <- floor(input$n_genes / 2)
-
-          showNotification(
-            paste0(
-              "The number of clusters is restricted to less than half of the
-            number of genes selected. The number of clusters has been reset to ",
-              num_clust
-            ),
-            type = "warning"
-          )
-        } else {
-          num_hclust <- input$hclust_num
-        }
-      }
-
       data <- prep_download(
         heatmap = heatmap_main_object(),
         heatmap_data = heatmap_data(),
-        cluster_meth = input$cluster_meth,
-        num_clust = num_clust
+        cluster_meth = input$cluster_meth
       )
 
       merged_data <- merge_data(
