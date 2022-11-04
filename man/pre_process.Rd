@@ -71,12 +71,16 @@ generally includes missing value imputation, data filtering, and data
 transformations.
 }
 \seealso{
-\code{\link[edgeR]{cpm}()} for information on calculating counts per
-  million, \code{\link[DESeq2]{vst}()} for information on variance
-  stabilizing transformation, \code{\link[DESeq2]{rlog}()} for
-  information on the regularized log transformation
+\itemize{
+\item \code{\link[edgeR]{cpm}()} for information on calculating counts per
+million
+\item \code{\link[DESeq2]{vst}()} for information on variance
+stabilizing transformation
+\item \code{\link[DESeq2]{rlog}()} for
+information on the regularized log transformation
+}
 
-Other preprocess: 
+Other preprocess functions: 
 \code{\link{eda_boxplot}()},
 \code{\link{eda_density}()},
 \code{\link{eda_scatter}()},
@@ -84,4 +88,4 @@ Other preprocess:
 \code{\link{mean_sd_plot}()},
 \code{\link{total_counts_ggplot}()}
 }
-\concept{preprocess}
+\concept{preprocess functions}

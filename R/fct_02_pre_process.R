@@ -49,12 +49,15 @@ NULL
 #' the raw counts, a data type warning, the size of the original data,
 #' and p-values.
 #'
-#' @family preprocess
-#' @seealso \code{\link[edgeR]{cpm}()} for information on calculating counts per
-#'   million, \code{\link[DESeq2]{vst}()} for information on variance
-#'   stabilizing transformation, \code{\link[DESeq2]{rlog}()} for
+#' @family preprocess functions
+#' @seealso
+#' * \code{\link[edgeR]{cpm}()} for information on calculating counts per
+#'   million
+#' * \code{\link[DESeq2]{vst}()} for information on variance
+#'   stabilizing transformation
+#' * \code{\link[DESeq2]{rlog}()} for
 #'   information on the regularized log transformation
-#'
+#' @md
 #'
 pre_process <- function(data,
                         missing_value = c("geneMedian", "treatAsZero", "geneMedianInGroup"),
@@ -267,7 +270,7 @@ pre_process <- function(data,
 #' @export
 #' @return A barplot as a \code{ggplot} object
 #'
-#' @family preprocess
+#' @family preprocess functions
 #' @family plots
 #'
 #'
@@ -366,7 +369,7 @@ total_counts_ggplot <- function(counts_data,
 #' @return A scatterplot a \code{ggplot} object
 #'
 #' @family plots
-#' @family preprocess
+#' @family preprocess functions
 eda_scatter <- function(processed_data,
                         plot_xaxis,
                         plot_yaxis) {
@@ -419,7 +422,7 @@ eda_scatter <- function(processed_data,
 #'  \code{ggplot} object.
 #'
 #' @family plots
-#' @family preprocess
+#' @family preprocess functions
 #'
 eda_boxplot <- function(processed_data,
                         sample_info) {
@@ -505,7 +508,7 @@ eda_boxplot <- function(processed_data,
 #' @return A density plot as a \code{ggplot} object
 #'
 #' @family plots
-#' @family preprocess
+#' @family preprocess functions
 eda_density <- function(processed_data,
                         sample_info) {
   counts <- as.data.frame(processed_data)
@@ -610,7 +613,7 @@ eda_density <- function(processed_data,
 #'
 #' @seealso \code{\link{merge_data}()}
 #' @family plots
-#' @family preprocess
+#' @family preprocess functions
 #'
 individual_plots <- function(individual_data,
                              sample_info,
@@ -834,7 +837,7 @@ counts_bias_message <- function(raw_counts,
 #'  deviation of the processed data
 #'
 #' @family plots
-#' @family preprocess
+#' @family preprocess functions
 mean_sd_plot <- function(processed_data,
                          rank,
                          heat_cols) {

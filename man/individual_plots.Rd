@@ -16,24 +16,24 @@ individual_plots(
 \arguments{
 \item{individual_data}{Data that has been merged with the gene info}
 
-\item{sample_info}{Matrix of experiment design information for 
+\item{sample_info}{Matrix of experiment design information for
 grouping samples}
 
-\item{gene_plot_box}{TRUE/FALSE for individual sample plot or grouped 
+\item{gene_plot_box}{TRUE/FALSE for individual sample plot or grouped
 data plot}
 
-\item{use_sd}{TRUE/FALSE for standard error or standard deviation bars on 
+\item{use_sd}{TRUE/FALSE for standard error or standard deviation bars on
 bar plot}
 
-\item{lab_rotate}{Numeric value indicating what angle to rotate 
+\item{lab_rotate}{Numeric value indicating what angle to rotate
 the x-axis labels}
 
 \item{select_gene}{List of gene(s) to be plotted}
 }
 \value{
-A \code{ggplot} object. For \code{gene_plot_box = TRUE} the return 
- will be a lineplot for the expression of each individual sample for the 
- selected gene. If \code{gene_plot_box = FALSE} the return will be a barplot 
+A \code{ggplot} object. For \code{gene_plot_box = TRUE} the return
+ will be a lineplot for the expression of each individual sample for the
+ selected gene. If \code{gene_plot_box = FALSE} the return will be a barplot
  for the groups provided in the sample information.
 }
 \description{
@@ -52,7 +52,7 @@ Other plots:
 \code{\link{mean_sd_plot}()},
 \code{\link{total_counts_ggplot}()}
 
-Other preprocess: 
+Other preprocess functions: 
 \code{\link{eda_boxplot}()},
 \code{\link{eda_density}()},
 \code{\link{eda_scatter}()},
@@ -61,4 +61,4 @@ Other preprocess:
 \code{\link{total_counts_ggplot}()}
 }
 \concept{plots}
-\concept{preprocess}
+\concept{preprocess functions}

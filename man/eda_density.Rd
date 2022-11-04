@@ -7,7 +7,7 @@
 eda_density(processed_data, sample_info)
 }
 \arguments{
-\item{processed_data}{Matrix of gene data that has gone through 
+\item{processed_data}{Matrix of gene data that has gone through
 \code{\link{pre_process}()}}
 
 \item{sample_info}{Sample_info from the experiment file}
@@ -28,7 +28,7 @@ Other plots:
 \code{\link{mean_sd_plot}()},
 \code{\link{total_counts_ggplot}()}
 
-Other preprocess: 
+Other preprocess functions: 
 \code{\link{eda_boxplot}()},
 \code{\link{eda_scatter}()},
 \code{\link{individual_plots}()},
@@ -37,4 +37,4 @@ Other preprocess:
 \code{\link{total_counts_ggplot}()}
 }
 \concept{plots}
-\concept{preprocess}
+\concept{preprocess functions}

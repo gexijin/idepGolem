@@ -30,7 +30,7 @@ Other plots:
 \code{\link{mean_sd_plot}()},
 \code{\link{total_counts_ggplot}()}
 
-Other preprocess: 
+Other preprocess functions: 
 \code{\link{eda_boxplot}()},
 \code{\link{eda_density}()},
 \code{\link{individual_plots}()},
@@ -39,4 +39,4 @@ Other preprocess:
 \code{\link{total_counts_ggplot}()}
 }
 \concept{plots}
-\concept{preprocess}
+\concept{preprocess functions}

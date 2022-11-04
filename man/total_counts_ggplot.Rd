@@ -25,7 +25,7 @@ of genes mapped to each sample in millions. This function is only used for
 read counts data.
 }
 \seealso{
-Other preprocess: 
+Other preprocess functions: 
 \code{\link{eda_boxplot}()},
 \code{\link{eda_density}()},
 \code{\link{eda_scatter}()},
@@ -41,4 +41,4 @@ Other plots:
 \code{\link{mean_sd_plot}()}
 }
 \concept{plots}
-\concept{preprocess}
+\concept{preprocess functions}

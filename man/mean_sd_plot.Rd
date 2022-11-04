@@ -7,7 +7,7 @@
 mean_sd_plot(processed_data, rank, heat_cols)
 }
 \arguments{
-\item{processed_data}{Matrix of data that has gone through 
+\item{processed_data}{Matrix of data that has gone through
 \code{\link{pre_process}()}}
 
 \item{rank}{TRUE/FALSE whether to use the rank of the mean or not}
@@ -32,7 +32,7 @@ Other plots:
 \code{\link{individual_plots}()},
 \code{\link{total_counts_ggplot}()}
 
-Other preprocess: 
+Other preprocess functions: 
 \code{\link{eda_boxplot}()},
 \code{\link{eda_density}()},
 \code{\link{eda_scatter}()},
@@ -41,4 +41,4 @@ Other preprocess:
 \code{\link{total_counts_ggplot}()}
 }
 \concept{plots}
-\concept{preprocess}
+\concept{preprocess functions}
