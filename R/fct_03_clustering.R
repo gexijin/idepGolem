@@ -868,3 +868,99 @@ cor_plot <- function(data,
     legend.position = "right"
   )
 }
+
+
+#' GET RID OF LISTS IN A DATA FRAME
+data_frame_with_list <- function(data_object) {
+  set_lists_to_chars <- function(x) {
+    if (class(x) == "list") {
+      y <- paste(unlist(x[1]), sep = "", collapse = ", ")
+    } else {
+      y <- x
+    }
+    return(y)
+  }
+  new_frame <- data.frame(
+    lapply(data_object, set_lists_to_chars),
+    stringsAsFactors = F
+  )
+  return(new_frame)
+}
+
+
+#' Prep heatmap data for download
+#'
+#' Prep heatmap data for download or additional analysis by merging gene ids
+#' with the clusters from kmean clustering or hierarchical clustering.
+#'
+#' @param heatmap Heatmap object from the \code{\link{heatmap_main}()} function.
+#' @param heatmap_data Matrix of heatmap data from the
+#'   \code{\link{process_heatmap_data}()} function
+#' @param cluster_meth Integer designating the clustering method used. 1 for
+#'   hierarchical and 2 for kmeans
+#'
+#' @return A dataframe with the heatmap data and associated clusters.
+#' @export
+prep_download <- function(heatmap,
+                          heatmap_data,
+                          cluster_meth = c(1, 2)) {
+  # kmeans clustering
+  if (cluster_meth == 2) {
+    row_ord <- ComplexHeatmap::row_order(heatmap)
+
+    for (i in 1:length(row_ord)) {
+      if (i == 1) {
+        clusts <- data.frame(
+          "cluster" = rep(names(row_ord[i]), length(row_ord[[i]])),
+          "row_order" = row_ord[[i]]
+        )
+      } else {
+        tem <- data.frame(
+          "cluster" = rep(names(row_ord[i]), length(row_ord[[i]])),
+          "row_order" = row_ord[[i]]
+        )
+        clusts <- rbind(clusts, tem)
+      }
+    }
+
+    rownames(clusts) <- rownames(heatmap_data[clusts$row_order, ])
+    clusts <- clusts |>
+      dplyr::select(-c(row_order))
+
+    data <- merge(heatmap_data, clusts, by = "row.names", all = TRUE)
+    rownames(data) <- data$Row.names
+    data <- data |>
+      dplyr::select(-c(Row.names))
+
+    return(data)
+
+    # hierarchical clustering - NOT CURRENTLY USED
+    # this code adds clusters to hierarchical clustering, but will not be
+    # implemented at this time for simplicity, the function just returns the
+    # heatmap data for heirarchical
+    # must add num_clust back into parameters if used in future
+  } else if (FALSE) {
+    if (num_clust > dim(heatmap_data)[1]) {
+      stop(
+        paste0(
+          "The number of clusters must be between 1 and ",
+          dim(heatmap_data)[1]
+        )
+      )
+    }
+
+    hclust <- as.hclust(ComplexHeatmap::row_dend(heatmap))
+    clusters <- as.data.frame(cutree(hclust, num_clust))
+    colnames(clusters) <- "cluster"
+
+    data <- merge(heatmap_data, clusters, by = "row.names", all = TRUE)
+    rownames(data) <- data$Row.names
+    data <- data |>
+      dplyr::select(-c(Row.names))
+
+    return(data)
+  } else {
+    return(heatmap_data)
+  }
+}
+
