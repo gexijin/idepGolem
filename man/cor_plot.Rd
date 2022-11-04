@@ -7,19 +7,26 @@
 cor_plot(data, label_pcc, heat_cols, text_col)
 }
 \arguments{
-\item{data}{Heatmap data}
+\item{data}{Heatmap data from \code{\link{process_heatmap_data}()}}
 
-\item{label_pcc}{Label with correlation coefficient when TRUE}
+\item{label_pcc}{TRUE/FALSE  t0 Label with correlation coefficient}
 
-\item{heat_cols}{Heat colors to use in the correlation matrix}
+\item{heat_cols}{Vector of colors to use in the correlation matrix}
 
 \item{text_col}{Color to make the text labels in the plot}
 }
 \value{
-ggplot heatmap of correlation matrix
+\code{ggplot2} object as heatmap of correlation matrix
 }
 \description{
 Creates a correlation matrix heatmap from the
 heatmap data to demonstrate the correlation
 between samples.
 }
+\seealso{
+Other plots: 
+\code{\link{draw_sample_tree}()},
+\code{\link{k_means_elbow}()},
+\code{\link{sd_density}()}
+}
+\concept{plots}

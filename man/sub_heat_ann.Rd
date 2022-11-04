@@ -7,11 +7,12 @@
 sub_heat_ann(data, sample_info, select_factors_heatmap)
 }
 \arguments{
-\item{data}{Heatmap data}
+\item{data}{Matrix of heatmap data}
 
-\item{sample_info}{Experiment design file from load data}
+\item{sample_info}{Matrix of experiment design information from load data}
 
-\item{select_factors_heatmap}{Factor to group by in the samples}
+\item{select_factors_heatmap}{Factor to group by in the samples.
+"All factors" will use all of the sample information.}
 }
 \value{
 A list containing a ComplexHeatmap annotation object,
@@ -21,3 +22,21 @@ A list containing a ComplexHeatmap annotation object,
 Use the heatmap data to make an annotation for the
 submap that will also show the legend
 }
+\seealso{
+Other clustering functions: 
+\code{\link{cluster_heat_click_info}()},
+\code{\link{draw_sample_tree}()},
+\code{\link{heat_sub}()},
+\code{\link{heatmap_main}()},
+\code{\link{k_means_elbow}()},
+\code{\link{process_heatmap_data}()},
+\code{\link{sd_density}()}
+
+Other heatmaps: 
+\code{\link{cluster_heat_click_info}()},
+\code{\link{heat_sub}()},
+\code{\link{heatmap_main}()},
+\code{\link{process_heatmap_data}()}
+}
+\concept{clustering functions}
+\concept{heatmaps}

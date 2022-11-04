@@ -7,15 +7,33 @@
 sd_density(data, n_genes_max)
 }
 \arguments{
-\item{data}{Data that has been through pre-processing}
+\item{data}{Data matrix that has been through pre-processing}
 
-\item{n_genes_max}{Upper limit of gene range}
+\item{n_genes_max}{Integer for the upper limit of gene range}
 }
 \value{
 Formatted density plot of the standard deviation
 distribution.
 }
 \description{
-Draw a denisty plot of the standard deviation in the
-data. Add vertical red lines for a range of genes.
+Draw a density plot of the standard deviation in the
+data. The function also adds a  vertical red lines for a specified range of
+genes.
 }
+\seealso{
+Other plots: 
+\code{\link{cor_plot}()},
+\code{\link{draw_sample_tree}()},
+\code{\link{k_means_elbow}()}
+
+Other clustering functions: 
+\code{\link{cluster_heat_click_info}()},
+\code{\link{draw_sample_tree}()},
+\code{\link{heat_sub}()},
+\code{\link{heatmap_main}()},
+\code{\link{k_means_elbow}()},
+\code{\link{process_heatmap_data}()},
+\code{\link{sub_heat_ann}()}
+}
+\concept{clustering functions}
+\concept{plots}

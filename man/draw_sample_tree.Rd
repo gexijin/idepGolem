@@ -27,11 +27,11 @@ draw_sample_tree(
 
 \item{sample_normalize}{TRUE/FALSE divide by SD in sample columns}
 
-\item{hclust_funs}{Clustering functions defined in idep}
+\item{hclust_funs}{Clustering functions defined in idep, \code{\link{hcluster_functions}()}}
 
 \item{hclust_function}{String of chosen clustering method}
 
-\item{dist_funs}{Distance functions defined in idep}
+\item{dist_funs}{Distance functions defined in idep \code{\link{dist_functions}()}}
 
 \item{dist_function}{Selected distance function}
 }
@@ -39,5 +39,23 @@ draw_sample_tree(
 Dendogram plot of dataset samples
 }
 \description{
-Create a clustered tree of the samples in the dataset.
+Create a clustered tree of the samples in the dataset based on hierarchical
+  clustering
 }
+\seealso{
+Other plots: 
+\code{\link{cor_plot}()},
+\code{\link{k_means_elbow}()},
+\code{\link{sd_density}()}
+
+Other clustering functions: 
+\code{\link{cluster_heat_click_info}()},
+\code{\link{heat_sub}()},
+\code{\link{heatmap_main}()},
+\code{\link{k_means_elbow}()},
+\code{\link{process_heatmap_data}()},
+\code{\link{sd_density}()},
+\code{\link{sub_heat_ann}()}
+}
+\concept{clustering functions}
+\concept{plots}
