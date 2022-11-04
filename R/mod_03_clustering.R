@@ -181,9 +181,14 @@ mod_03_clustering_ui <- function(id) {
             min = 2,
             step = 1
           ),
-          downloadButton(
-            outputId = ns("download_heatmap_data"),
-            label = "Heatmap data"
+          fluidRow(
+            column(
+              width = 6,
+              downloadButton(
+                outputId = ns("download_heatmap_data"),
+                label = "Heatmap data"
+              )
+            )
           ),
           ns = ns
         ),
@@ -835,9 +840,15 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       req(!is.null(pre_process$all_gene_names()))
       req(!is.null(heatmap_data()))
 
+      data <- prep_download(
+        heatmap = heatmap_main_object(),
+        heatmap_data = heatmap_data(),
+        cluster_meth = input$cluster_meth
+      )
+
       merged_data <- merge_data(
         pre_process$all_gene_names(),
-        heatmap_data(),
+        data,
         merge_ID = pre_process$select_gene_id()
       )
     })
