@@ -363,9 +363,9 @@ total_counts_ggplot <- function(counts_data,
 #' @param plot_yaxis Character string indicating sample to plot on the y axis
 #'
 #' @export
-#' @return A scatterplot a \code{ggplot} object 
-#' 
-#' @family plots 
+#' @return A scatterplot a \code{ggplot} object
+#'
+#' @family plots
 #' @family preprocess
 eda_scatter <- function(processed_data,
                         plot_xaxis,
@@ -410,17 +410,17 @@ eda_scatter <- function(processed_data,
 #' a boxplot of number of sequences mapped to each
 #' tissue sample.
 #'
-#' @param processed_data Matrix of data that has gone through 
+#' @param processed_data Matrix of data that has gone through
 #'  \code{\link{pre_process}()}
-#' @param sample_info Matrix of experiment design information 
+#' @param sample_info Matrix of experiment design information
 #'
 #' @export
-#' @return Boxplot of the distribution of counts for each sample as a 
+#' @return Boxplot of the distribution of counts for each sample as a
 #'  \code{ggplot} object.
-#'  
-#' @family plots 
+#'
+#' @family plots
 #' @family preprocess
-#'  
+#'
 eda_boxplot <- function(processed_data,
                         sample_info) {
   counts <- as.data.frame(processed_data)
@@ -497,14 +497,14 @@ eda_boxplot <- function(processed_data,
 #' and creates a density plot for the distribution of sequences
 #' that are mapped to each sample.
 #'
-#' @param processed_data Matrix of gene data that has gone through 
+#' @param processed_data Matrix of gene data that has gone through
 #'   \code{\link{pre_process}()}
 #' @param sample_info Sample_info from the experiment file
 #'
 #' @export
-#' @return A density plot as a \code{ggplot} object 
-#' 
-#' @family plots 
+#' @return A density plot as a \code{ggplot} object
+#'
+#' @family plots
 #' @family preprocess
 eda_density <- function(processed_data,
                         sample_info) {
@@ -591,27 +591,27 @@ eda_density <- function(processed_data,
 #' grouped data or a lineplot from the individual sample.
 #'
 #' @param individual_data Data that has been merged with the gene info
-#' @param sample_info Matrix of experiment design information for 
+#' @param sample_info Matrix of experiment design information for
 #'   grouping samples
 #' @param select_gene List of gene(s) to be plotted
-#' @param gene_plot_box TRUE/FALSE for individual sample plot or grouped 
+#' @param gene_plot_box TRUE/FALSE for individual sample plot or grouped
 #'   data plot
-#' @param use_sd TRUE/FALSE for standard error or standard deviation bars on 
+#' @param use_sd TRUE/FALSE for standard error or standard deviation bars on
 #'   bar plot
-#' @param lab_rotate Numeric value indicating what angle to rotate 
-#'   the x-axis labels 
+#' @param lab_rotate Numeric value indicating what angle to rotate
+#'   the x-axis labels
 #'
 #' @export
-#' 
-#' @return A \code{ggplot} object. For \code{gene_plot_box = TRUE} the return 
-#'  will be a lineplot for the expression of each individual sample for the 
-#'  selected gene. If \code{gene_plot_box = FALSE} the return will be a barplot 
+#'
+#' @return A \code{ggplot} object. For \code{gene_plot_box = TRUE} the return
+#'  will be a lineplot for the expression of each individual sample for the
+#'  selected gene. If \code{gene_plot_box = FALSE} the return will be a barplot
 #'  for the groups provided in the sample information.
-#' 
-#' @seealso \code{\link{merge_data}()} 
-#' @family plots 
+#'
+#' @seealso \code{\link{merge_data}()}
+#' @family plots
 #' @family preprocess
-#' 
+#'
 individual_plots <- function(individual_data,
                              sample_info,
                              selected_gene,
@@ -824,7 +824,7 @@ counts_bias_message <- function(raw_counts,
 #' Option to make the X-axis the rank of the mean which
 #' does a better job showing the spread of the data.
 #'
-#' @param processed_data Matrix of data that has gone through 
+#' @param processed_data Matrix of data that has gone through
 #'  \code{\link{pre_process}()}
 #' @param rank TRUE/FALSE whether to use the rank of the mean or not
 #' @param heat_cols Heat color to use with black in the plot
@@ -832,9 +832,9 @@ counts_bias_message <- function(raw_counts,
 #' @export
 #' @return A formatted \code{ggplot} hexplot of the mean and standard
 #'  deviation of the processed data
-#'  
-#' @family plots 
-#' @family preprocess 
+#'
+#' @family plots
+#' @family preprocess
 mean_sd_plot <- function(processed_data,
                          rank,
                          heat_cols) {
