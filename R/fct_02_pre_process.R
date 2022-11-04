@@ -360,7 +360,7 @@ total_counts_ggplot <- function(counts_data,
 #' @param processed_data Matrix of data that has gone through
 #'  \code{\link{prep_process}()}
 #' @param plot_xaxis Character string indicating sample to plot on the x-axis
-#' @param plot_yaxis Character string indicating Sample to plot on the y axis
+#' @param plot_yaxis Character string indicating sample to plot on the y axis
 #'
 #' @export
 #' @return A scatterplot a \code{ggplot} object 
@@ -608,7 +608,7 @@ eda_density <- function(processed_data,
 #'  selected gene. If \code{gene_plot_box = FALSE} the return will be a barplot 
 #'  for the groups provided in the sample information.
 #' 
-#' @section \code{\link{merge_data}()} 
+#' @seealso \code{\link{merge_data}()} 
 #' @family plots 
 #' @family preprocess
 #' 
@@ -734,7 +734,7 @@ individual_plots <- function(individual_data,
 #' Creates a message about the size of the counts
 #' data and the amount of IDs that were converted.
 #'
-#' @param data_size Data size matrix from processing function
+#' @param data_size Data size matrix from \code{\link{pre_process}()}
 #' @param all_gene_names Data frame with all gene names
 #' @param n_matched Count of matched IDs after processing
 #'
@@ -765,8 +765,8 @@ conversion_counts_message <- function(data_size,
 #' UI to present to the user regarding the sequencing
 #' depth bias.
 #'
-#' @param raw_counts Raw counts data from the processing function
-#' @param sample_info Experiment file information about each sample
+#' @param raw_counts Matrix of faw counts data from \code{\link{pre_process}()}
+#' @param sample_info Matrix of experiment information about each sample
 #'
 #' @export
 #' @return Message for the UI

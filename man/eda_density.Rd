@@ -25,12 +25,14 @@ Other plots:
 \code{\link{eda_boxplot}()},
 \code{\link{eda_scatter}()},
 \code{\link{individual_plots}()},
+\code{\link{mean_sd_plot}()},
 \code{\link{total_counts_ggplot}()}
 
 Other preprocess: 
 \code{\link{eda_boxplot}()},
 \code{\link{eda_scatter}()},
 \code{\link{individual_plots}()},
+\code{\link{mean_sd_plot}()},
 \code{\link{pre_process}()},
 \code{\link{total_counts_ggplot}()}
 }

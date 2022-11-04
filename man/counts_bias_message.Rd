@@ -7,9 +7,9 @@
 counts_bias_message(raw_counts, data_file_format, sample_info)
 }
 \arguments{
-\item{raw_counts}{Raw counts data from the processing function}
+\item{raw_counts}{Matrix of faw counts data from \code{\link{pre_process}()}}
 
-\item{sample_info}{Experiment file information about each sample}
+\item{sample_info}{Matrix of experiment information about each sample}
 }
 \value{
 Message for the UI

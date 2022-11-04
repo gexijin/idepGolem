@@ -12,7 +12,7 @@ eda_scatter(processed_data, plot_xaxis, plot_yaxis)
 
 \item{plot_xaxis}{Character string indicating sample to plot on the x-axis}
 
-\item{plot_yaxis}{Character string indicating Sample to plot on the y axis}
+\item{plot_yaxis}{Character string indicating sample to plot on the y axis}
 }
 \value{
 A scatterplot a \code{ggplot} object
@@ -27,12 +27,14 @@ Other plots:
 \code{\link{eda_boxplot}()},
 \code{\link{eda_density}()},
 \code{\link{individual_plots}()},
+\code{\link{mean_sd_plot}()},
 \code{\link{total_counts_ggplot}()}
 
 Other preprocess: 
 \code{\link{eda_boxplot}()},
 \code{\link{eda_density}()},
 \code{\link{individual_plots}()},
+\code{\link{mean_sd_plot}()},
 \code{\link{pre_process}()},
 \code{\link{total_counts_ggplot}()}
 }

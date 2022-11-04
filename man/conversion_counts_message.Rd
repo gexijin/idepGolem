@@ -7,7 +7,7 @@
 conversion_counts_message(data_size, all_gene_names, n_matched)
 }
 \arguments{
-\item{data_size}{Data size matrix from processing function}
+\item{data_size}{Data size matrix from \code{\link{pre_process}()}}
 
 \item{all_gene_names}{Data frame with all gene names}
 
