@@ -21,14 +21,14 @@ heat_sub(
 
 \item{ht_pos_main}{Position of brush on main heatmap}
 
-\item{heatmap_data}{Matrix of data for the heatmap from 
+\item{heatmap_data}{Matrix of data for the heatmap from
 \code{\link{process_heatmap_data}()}}
 
 \item{sample_info}{Matrix of experiment design file information}
 
 \item{select_factors_heatmap}{Group design to label by}
 
-\item{cluster_meth}{Integer indicating which clustering method to use 1 for 
+\item{cluster_meth}{Integer indicating which clustering method to use 1 for
 hierarchical and 2 for kmeans.}
 }
 \value{
@@ -47,7 +47,7 @@ Other heatmaps:
 \code{\link{process_heatmap_data}()},
 \code{\link{sub_heat_ann}()}
 
-Other clustering: 
+Other clustering functions: 
 \code{\link{cluster_heat_click_info}()},
 \code{\link{draw_sample_tree}()},
 \code{\link{heatmap_main}()},
@@ -56,5 +56,5 @@ Other clustering:
 \code{\link{sd_density}()},
 \code{\link{sub_heat_ann}()}
 }
-\concept{clustering}
+\concept{clustering functions}
 \concept{heatmaps}

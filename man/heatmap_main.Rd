@@ -24,7 +24,7 @@ heatmap_main(
 \arguments{
 \item{data}{Data matrix returned from \code{\link{process_heatmap_data}()}}
 
-\item{cluster_meth}{Integer indicating which clustering method to use 1 for 
+\item{cluster_meth}{Integer indicating which clustering method to use 1 for
 hierarchical and 2 for kmeans.}
 
 \item{heatmap_cutoff}{Numeric value for Z score max to filter data}
@@ -61,11 +61,12 @@ returned heatmap visualizes the processed expression of the
 gene range provided in \code{\link{process_heatmap_data}()}.
 }
 \seealso{
-\code{\link{dist_functions}()} for available distance functions, 
- \code{\link{hcluster_functions}()} for available functions for hierarchical 
- clustering
+\itemize{
+\item \code{\link{dist_functions}()} for available distance functions,
+\item \code{\link{hcluster_functions}()} for available functions for hierarchical
+}
 
-Other clustering: 
+Other clustering functions: 
 \code{\link{cluster_heat_click_info}()},
 \code{\link{draw_sample_tree}()},
 \code{\link{heat_sub}()},
@@ -80,5 +81,5 @@ Other heatmaps:
 \code{\link{process_heatmap_data}()},
 \code{\link{sub_heat_ann}()}
 }
-\concept{clustering}
+\concept{clustering functions}
 \concept{heatmaps}

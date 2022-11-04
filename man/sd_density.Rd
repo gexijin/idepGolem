@@ -17,7 +17,7 @@ distribution.
 }
 \description{
 Draw a density plot of the standard deviation in the
-data. The function also adds a  vertical red lines for a specified range of 
+data. The function also adds a  vertical red lines for a specified range of
 genes.
 }
 \seealso{
@@ -26,7 +26,7 @@ Other plots:
 \code{\link{draw_sample_tree}()},
 \code{\link{k_means_elbow}()}
 
-Other clustering: 
+Other clustering functions: 
 \code{\link{cluster_heat_click_info}()},
 \code{\link{draw_sample_tree}()},
 \code{\link{heat_sub}()},
@@ -35,5 +35,5 @@ Other clustering:
 \code{\link{process_heatmap_data}()},
 \code{\link{sub_heat_ann}()}
 }
-\concept{clustering}
+\concept{clustering functions}
 \concept{plots}

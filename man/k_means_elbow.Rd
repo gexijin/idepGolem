@@ -7,7 +7,7 @@
 k_means_elbow(heatmap_data)
 }
 \arguments{
-\item{heatmap_data}{Matrix of processed heatmap data from 
+\item{heatmap_data}{Matrix of processed heatmap data from
 \code{\link{process_heatmap_data}()}}
 }
 \value{
@@ -24,7 +24,7 @@ Other plots:
 \code{\link{draw_sample_tree}()},
 \code{\link{sd_density}()}
 
-Other clustering: 
+Other clustering functions: 
 \code{\link{cluster_heat_click_info}()},
 \code{\link{draw_sample_tree}()},
 \code{\link{heat_sub}()},
@@ -33,5 +33,5 @@ Other clustering:
 \code{\link{sd_density}()},
 \code{\link{sub_heat_ann}()}
 }
-\concept{clustering}
+\concept{clustering functions}
 \concept{plots}

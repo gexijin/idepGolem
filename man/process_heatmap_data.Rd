@@ -30,7 +30,7 @@ process_heatmap_data(
 
 \item{all_gene_names}{Data frame of gene names}
 
-\item{select_gene_id}{Character string designating desired ID type for 
+\item{select_gene_id}{Character string designating desired ID type for
 heatmap labels (User_ID, ensembl_ID, symbol)}
 }
 \value{
@@ -44,7 +44,7 @@ what genes to subset, what centering and standardizing
 to perform, and what gene ID label to use.
 }
 \seealso{
-Other clustering: 
+Other clustering functions: 
 \code{\link{cluster_heat_click_info}()},
 \code{\link{draw_sample_tree}()},
 \code{\link{heat_sub}()},
@@ -59,5 +59,5 @@ Other heatmaps:
 \code{\link{heatmap_main}()},
 \code{\link{sub_heat_ann}()}
 }
-\concept{clustering}
+\concept{clustering functions}
 \concept{heatmaps}

@@ -28,7 +28,7 @@ cluster_heat_click_info(
 
 \item{group_colors}{Vector of colors for the group annotation}
 
-\item{cluster_meth}{Integer indicating which clustering method to use 1 for 
+\item{cluster_meth}{Integer indicating which clustering method to use 1 for
 hierarchical and 2 for kmeans.}
 
 \item{click_data}{Data matrix to get the data value from}
@@ -42,7 +42,7 @@ Create a text output to tell the user the cell
 information for their click.
 }
 \seealso{
-Other clustering: 
+Other clustering functions: 
 \code{\link{draw_sample_tree}()},
 \code{\link{heat_sub}()},
 \code{\link{heatmap_main}()},
@@ -57,5 +57,5 @@ Other heatmaps:
 \code{\link{process_heatmap_data}()},
 \code{\link{sub_heat_ann}()}
 }
-\concept{clustering}
+\concept{clustering functions}
 \concept{heatmaps}

@@ -24,7 +24,7 @@ NULL
 #' distribution.
 #'
 #' @family plots
-#' @family clustering
+#' @family clustering functions
 sd_density <- function(data,
                        n_genes_max) {
   n_genes_min <- 5
@@ -142,7 +142,7 @@ sd_density <- function(data,
 #' @return Subsetted data matrix ([n_genes_min:n_genes_max, ]) with
 #'   gene IDs as the select_gene_id
 #'
-#' @family clustering
+#' @family clustering functions
 #' @family heatmaps
 process_heatmap_data <- function(data,
                                  n_genes_max,
@@ -224,11 +224,12 @@ process_heatmap_data <- function(data,
 #' @export
 #' @return Heatmap of the processed data.
 #'
-#' @family clustering
+#' @family clustering functions
 #' @family heatmaps
-#' @seealso \code{\link{dist_functions}()} for available distance functions,
-#'  \code{\link{hcluster_functions}()} for available functions for hierarchical
-#'  clustering
+#' @seealso 
+#' * \code{\link{dist_functions}()} for available distance functions,
+#' *  \code{\link{hcluster_functions}()} for available functions for hierarchical
+#' @md
 heatmap_main <- function(data,
                          cluster_meth,
                          heatmap_cutoff,
@@ -397,7 +398,7 @@ heatmap_main <- function(data,
 #' @return Dendogram plot of dataset samples
 #'
 #' @family plots
-#' @family clustering
+#' @family clustering functions
 draw_sample_tree <- function(tree_data,
                              gene_centering,
                              gene_normalize,
@@ -456,7 +457,7 @@ draw_sample_tree <- function(tree_data,
 #' @return \code{ggplot2} object of formatted elbow plot
 #'
 #' @family plots
-#' @family clustering
+#' @family clustering functions
 k_means_elbow <- function(heatmap_data) {
   k.max <- 20
 
@@ -519,7 +520,7 @@ k_means_elbow <- function(heatmap_data) {
 #' @return A list containing a ComplexHeatmap annotation object,
 #'  a ComplexHeatmap legend, list of groups, and list of group colors.
 #'
-#' @family clustering
+#' @family clustering functions
 #' @family heatmaps
 sub_heat_ann <- function(data,
                          sample_info,
@@ -586,7 +587,7 @@ sub_heat_ann <- function(data,
 #' @return HTML code to produce a table with information
 #'  about the selected cell.
 #'
-#' @family clustering
+#' @family clustering functions 
 #' @family heatmaps
 cluster_heat_click_info <- function(click,
                                     ht_sub,
@@ -665,7 +666,7 @@ Sample: @{sample},  Group: @{group_name} <span style='background-color:@{group_c
 #'  the submap, the submap legend, and data for the click info.
 #'
 #' @family heatmaps
-#' @family clustering
+#' @family clustering functions
 heat_sub <- function(ht_brush,
                      ht,
                      ht_pos_main,

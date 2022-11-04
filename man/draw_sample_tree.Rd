@@ -39,7 +39,7 @@ draw_sample_tree(
 Dendogram plot of dataset samples
 }
 \description{
-Create a clustered tree of the samples in the dataset based on hierarchical 
+Create a clustered tree of the samples in the dataset based on hierarchical
   clustering
 }
 \seealso{
@@ -48,7 +48,7 @@ Other plots:
 \code{\link{k_means_elbow}()},
 \code{\link{sd_density}()}
 
-Other clustering: 
+Other clustering functions: 
 \code{\link{cluster_heat_click_info}()},
 \code{\link{heat_sub}()},
 \code{\link{heatmap_main}()},
@@ -57,5 +57,5 @@ Other clustering:
 \code{\link{sd_density}()},
 \code{\link{sub_heat_ann}()}
 }
-\concept{clustering}
+\concept{clustering functions}
 \concept{plots}
