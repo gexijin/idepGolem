@@ -6,8 +6,8 @@
 \usage{
 pre_process(
   data,
-  missing_value,
-  data_file_format,
+  missing_value = c("geneMedian", "treatAsZero", "geneMedianInGroup"),
+  data_file_format = c(1, 2, 3),
   low_filter_fpkm,
   n_min_samples_fpkm,
   log_transform_fpkm,
@@ -20,29 +20,44 @@ pre_process(
 )
 }
 \arguments{
-\item{data}{Data that has already gone through the convert_data fcn}
+\item{data}{Matrix of data that has already gone through
+\code{\link{convert_data}()}}
 
-\item{missing_value}{Method to deal with missing data}
+\item{missing_value}{String indicating method to deal with missing data. This
+should be one of "geneMedian", "treatAsZero", or "geneMedianInGroup"}
 
-\item{data_file_format}{Type of data being examined}
+\item{data_file_format}{Integer indicating the data format. This should be
+one of 1 for read counts data, 2 for normalized expression, or 3 for
+fold changes and adjusted P-values}
 
-\item{low_filter_fpkm}{Low count filter for the fpkm data}
+\item{low_filter_fpkm}{Integer for low count filter if
+\code{data_file_format} is normalized expression, \code{NULL} otherwise}
 
-\item{n_min_samples_fpkm}{Min samples for fpkm data}
+\item{n_min_samples_fpkm}{Integer for minimum samples if
+\code{data_file_format} is normalized expression, \code{NULL} otherwise}
 
-\item{log_transform_fpkm}{Type of transformation for fpkm data}
+\item{log_transform_fpkm}{TRUE/FALSE if a log transformation should be
+applied to normalized expression data}
 
-\item{log_start_fpkm}{Value added to log transformation for fpkm}
+\item{log_start_fpkm}{Integer added to log transformation if
+\code{data_file_format} is normalized expression, \code{NULL} otherwise}
 
-\item{min_counts}{Low count filter for count data}
+\item{min_counts}{Numeric value for minimum count if
+\code{data_file_format} is read counts}
 
-\item{n_min_samples_count}{Min sample for count data}
+\item{n_min_samples_count}{Integer for minimum libraries with
+\code{min_counts} if \code{data_file_format} is read counts}
 
-\item{counts_transform}{Type of transformation for counts data}
+\item{counts_transform}{Integer to indicate which transformation to make if
+\code{data_file_format} is read counts. This should be one of 1 for
+log2(CPM+c) (EdgeR), 2 for variance stabilizing transformation (VST), or 3
+for regulatized log (rlog)}
 
-\item{counts_log_start}{Value added to log for counts data}
+\item{counts_log_start}{Integer added to log if \code{counts_transform} is
+log2(CPM + 2)}
 
-\item{no_fdr}{Fold changes only data with no p values}
+\item{no_fdr}{TRUE/FALSE to indicate fold-changes-only data with no p values
+if \code{data_file_format} is fold changes}
 }
 \value{
 A list containing the transformed data, the mean kurtosis,
@@ -51,7 +66,26 @@ and p-values.
 }
 \description{
 This function takes in user defined values to
-process the data for the EDA that occurs on the second page.
-All the filtering and transformation that the app does will
-occur on this page.
+process the data for the EDA. Processing steps depend on data format, but
+generally includes missing value imputation, data filtering, and data
+transformations.
 }
+\seealso{
+\itemize{
+\item \code{\link[edgeR]{cpm}()} for information on calculating counts per
+million
+\item \code{\link[DESeq2]{vst}()} for information on variance
+stabilizing transformation
+\item \code{\link[DESeq2]{rlog}()} for
+information on the regularized log transformation
+}
+
+Other preprocess functions: 
+\code{\link{eda_boxplot}()},
+\code{\link{eda_density}()},
+\code{\link{eda_scatter}()},
+\code{\link{individual_plots}()},
+\code{\link{mean_sd_plot}()},
+\code{\link{total_counts_ggplot}()}
+}
+\concept{preprocess functions}

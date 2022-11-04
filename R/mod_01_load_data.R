@@ -67,7 +67,7 @@ mod_01_load_data_ui <- function(id) {
           ns = ns
         ),
 
-        # Buttons for data file format ----------
+        # Dropdown for data file format ----------
         strong("2. Choose data type"),
         fluidRow(
           column(

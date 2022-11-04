@@ -12,30 +12,56 @@ NULL
 #' @title Pre-Process the data
 #'
 #' @description This function takes in user defined values to
-#' process the data for the EDA that occurs on the second page.
-#' All the filtering and transformation that the app does will
-#' occur on this page.
+#' process the data for the EDA. Processing steps depend on data format, but
+#' generally includes missing value imputation, data filtering, and data
+#' transformations.
 #'
-#' @param data Data that has already gone through the convert_data fcn
-#' @param missing_value Method to deal with missing data
-#' @param data_file_format Type of data being examined
-#' @param low_filter_fpkm Low count filter for the fpkm data
-#' @param n_min_samples_fpkm Min samples for fpkm data
-#' @param log_transform_fpkm Type of transformation for fpkm data
-#' @param log_start_fpkm Value added to log transformation for fpkm
-#' @param min_counts Low count filter for count data
-#' @param n_min_samples_count Min sample for count data
-#' @param counts_transform Type of transformation for counts data
-#' @param counts_log_start Value added to log for counts data
-#' @param no_fdr Fold changes only data with no p values
+#' @param data Matrix of data that has already gone through
+#'   \code{\link{convert_data}()}
+#' @param missing_value String indicating method to deal with missing data. This
+#'   should be one of "geneMedian", "treatAsZero", or "geneMedianInGroup"
+#' @param data_file_format Integer indicating the data format. This should be
+#'   one of 1 for read counts data, 2 for normalized expression, or 3 for
+#'   fold changes and adjusted P-values
+#' @param low_filter_fpkm Integer for low count filter if
+#'   \code{data_file_format} is normalized expression, \code{NULL} otherwise
+#' @param n_min_samples_fpkm Integer for minimum samples if
+#'   \code{data_file_format} is normalized expression, \code{NULL} otherwise
+#' @param log_transform_fpkm TRUE/FALSE if a log transformation should be
+#'   applied to normalized expression data
+#' @param log_start_fpkm Integer added to log transformation if
+#'   \code{data_file_format} is normalized expression, \code{NULL} otherwise
+#' @param min_counts Numeric value for minimum count if
+#'   \code{data_file_format} is read counts
+#' @param n_min_samples_count Integer for minimum libraries with
+#'   \code{min_counts} if \code{data_file_format} is read counts
+#' @param counts_transform Integer to indicate which transformation to make if
+#'   \code{data_file_format} is read counts. This should be one of 1 for
+#'   log2(CPM+c) (EdgeR), 2 for variance stabilizing transformation (VST), or 3
+#'   for regulatized log (rlog)
+#' @param counts_log_start Integer added to log if \code{counts_transform} is
+#'   log2(CPM + 2)
+#' @param no_fdr TRUE/FALSE to indicate fold-changes-only data with no p values
+#'   if \code{data_file_format} is fold changes
 #'
 #' @export
 #' @return A list containing the transformed data, the mean kurtosis,
 #' the raw counts, a data type warning, the size of the original data,
 #' and p-values.
+#'
+#' @family preprocess functions
+#' @seealso
+#' * \code{\link[edgeR]{cpm}()} for information on calculating counts per
+#'   million
+#' * \code{\link[DESeq2]{vst}()} for information on variance
+#'   stabilizing transformation
+#' * \code{\link[DESeq2]{rlog}()} for
+#'   information on the regularized log transformation
+#' @md
+#'
 pre_process <- function(data,
-                        missing_value,
-                        data_file_format,
+                        missing_value = c("geneMedian", "treatAsZero", "geneMedianInGroup"),
+                        data_file_format = c(1, 2, 3),
                         low_filter_fpkm,
                         n_min_samples_fpkm,
                         log_transform_fpkm,
@@ -230,16 +256,24 @@ pre_process <- function(data,
 
 #' Creates a barplot of the count data
 #'
-#' This function takes in the rount count data
-#' and creates a formatted gg barplot that shows the number
-#' of genes mapped to each sample in millions.
+#' This function takes in either raw count or processed data and creates a
+#' formatted barplot as a \code{ggplot} object that shows the number
+#' of genes mapped to each sample in millions. This function is only used for
+#' read counts data.
 #'
-#' @param counts_data Raw counts from gene expression data
-#' @param sample_info Experiment file information for grouping
+#' @param counts_data Matrix of raw counts from gene expression data
+#' @param sample_info Matrix of experiment design information for grouping
 #'  samples
+#' @param type String designating the type of data to be used in the title.
+#'  Commonly either "Raw" or "Transformed"
 #'
 #' @export
-#' @return formatted ggbarplot
+#' @return A barplot as a \code{ggplot} object
+#'
+#' @family preprocess functions
+#' @family plots
+#'
+#'
 total_counts_ggplot <- function(counts_data,
                                 sample_info,
                                 type = "") {
@@ -324,14 +358,18 @@ total_counts_ggplot <- function(counts_data,
 #'
 #' This function takes the data after it has been pre-processed and
 #' creates a scatterplot of the counts for two samples that are
-#' selected by the user.
+#' indicated by the user.
 #'
-#' @param processed_data Data that has gone through the pre-processing
-#' @param plot_xaxis Sample to plot on the x-axis
-#' @param plot_yaxis Sample to plot on the y axis
+#' @param processed_data Matrix of data that has gone through
+#'  \code{\link{prep_process}()}
+#' @param plot_xaxis Character string indicating sample to plot on the x-axis
+#' @param plot_yaxis Character string indicating sample to plot on the y axis
 #'
 #' @export
-#' @return Returns a formatted gg scatterplot
+#' @return A scatterplot a \code{ggplot} object
+#'
+#' @family plots
+#' @family preprocess functions
 eda_scatter <- function(processed_data,
                         plot_xaxis,
                         plot_yaxis) {
@@ -375,12 +413,17 @@ eda_scatter <- function(processed_data,
 #' a boxplot of number of sequences mapped to each
 #' tissue sample.
 #'
-#' @param processed_data Data that has gone through the pre-processing
-#' @param sample_info Sample_info from the experiment file
+#' @param processed_data Matrix of data that has gone through
+#'  \code{\link{pre_process}()}
+#' @param sample_info Matrix of experiment design information
 #'
 #' @export
-#' @return Formatted gg boxplot of the distribution of counts for each
-#'  sample
+#' @return Boxplot of the distribution of counts for each sample as a
+#'  \code{ggplot} object.
+#'
+#' @family plots
+#' @family preprocess functions
+#'
 eda_boxplot <- function(processed_data,
                         sample_info) {
   counts <- as.data.frame(processed_data)
@@ -457,11 +500,15 @@ eda_boxplot <- function(processed_data,
 #' and creates a density plot for the distribution of sequences
 #' that are mapped to each sample.
 #'
-#' @param processed_data Data that has gone through the pre-processing
+#' @param processed_data Matrix of gene data that has gone through
+#'   \code{\link{pre_process}()}
 #' @param sample_info Sample_info from the experiment file
 #'
 #' @export
-#' @return Returns a formatted gg density plot
+#' @return A density plot as a \code{ggplot} object
+#'
+#' @family plots
+#' @family preprocess functions
 eda_density <- function(processed_data,
                         sample_info) {
   counts <- as.data.frame(processed_data)
@@ -546,18 +593,28 @@ eda_density <- function(processed_data,
 #' this function will either return a barplot from the
 #' grouped data or a lineplot from the individual sample.
 #'
-#' @param merged_data Data that has been merged with the gene info
-#' @param sample_info Experiment file information for grouping samples
-#' @param select_dene Gene(s) to be plotted
-#' @param gene_plot_box T/F for individual sample plot or grouped data plot
-#' @param use_sd T/F for standard error or standard deviation bars on bar plot
-#' @param select_org Species the expression data is from
+#' @param individual_data Data that has been merged with the gene info
+#' @param sample_info Matrix of experiment design information for
+#'   grouping samples
+#' @param select_gene List of gene(s) to be plotted
+#' @param gene_plot_box TRUE/FALSE for individual sample plot or grouped
+#'   data plot
+#' @param use_sd TRUE/FALSE for standard error or standard deviation bars on
+#'   bar plot
+#' @param lab_rotate Numeric value indicating what angle to rotate
+#'   the x-axis labels
 #'
 #' @export
-#' @return A formatted ggplot. For gene_plot_box = TRUE the return will be a
-#'  lineplot for the expression of each individual sample for the selected gene.
-#'  If gene_plot_box = FALSE the return will be a barplot for the groups provided
-#'  in the sample information.
+#'
+#' @return A \code{ggplot} object. For \code{gene_plot_box = TRUE} the return
+#'  will be a lineplot for the expression of each individual sample for the
+#'  selected gene. If \code{gene_plot_box = FALSE} the return will be a barplot
+#'  for the groups provided in the sample information.
+#'
+#' @seealso \code{\link{merge_data}()}
+#' @family plots
+#' @family preprocess functions
+#'
 individual_plots <- function(individual_data,
                              sample_info,
                              selected_gene,
@@ -680,7 +737,7 @@ individual_plots <- function(individual_data,
 #' Creates a message about the size of the counts
 #' data and the amount of IDs that were converted.
 #'
-#' @param data_size Data size matrix from processing function
+#' @param data_size Data size matrix from \code{\link{pre_process}()}
 #' @param all_gene_names Data frame with all gene names
 #' @param n_matched Count of matched IDs after processing
 #'
@@ -711,8 +768,8 @@ conversion_counts_message <- function(data_size,
 #' UI to present to the user regarding the sequencing
 #' depth bias.
 #'
-#' @param raw_counts Raw counts data from the processing function
-#' @param sample_info Experiment file information about each sample
+#' @param raw_counts Matrix of faw counts data from \code{\link{pre_process}()}
+#' @param sample_info Matrix of experiment information about each sample
 #'
 #' @export
 #' @return Message for the UI
@@ -770,13 +827,17 @@ counts_bias_message <- function(raw_counts,
 #' Option to make the X-axis the rank of the mean which
 #' does a better job showing the spread of the data.
 #'
-#' @param processed_data Data that has gone through the pre-processing
+#' @param processed_data Matrix of data that has gone through
+#'  \code{\link{pre_process}()}
 #' @param rank TRUE/FALSE whether to use the rank of the mean or not
 #' @param heat_cols Heat color to use with black in the plot
 #'
 #' @export
-#' @return A formatted ggplot hexplot of the mean and standard
+#' @return A formatted \code{ggplot} hexplot of the mean and standard
 #'  deviation of the processed data
+#'
+#' @family plots
+#' @family preprocess functions
 mean_sd_plot <- function(processed_data,
                          rank,
                          heat_cols) {

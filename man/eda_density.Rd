@@ -7,15 +7,34 @@
 eda_density(processed_data, sample_info)
 }
 \arguments{
-\item{processed_data}{Data that has gone through the pre-processing}
+\item{processed_data}{Matrix of gene data that has gone through
+\code{\link{pre_process}()}}
 
 \item{sample_info}{Sample_info from the experiment file}
 }
 \value{
-Returns a formatted gg density plot
+A density plot as a \code{ggplot} object
 }
 \description{
 This function takes in the processed data and sample info
 and creates a density plot for the distribution of sequences
 that are mapped to each sample.
 }
+\seealso{
+Other plots: 
+\code{\link{eda_boxplot}()},
+\code{\link{eda_scatter}()},
+\code{\link{individual_plots}()},
+\code{\link{mean_sd_plot}()},
+\code{\link{total_counts_ggplot}()}
+
+Other preprocess functions: 
+\code{\link{eda_boxplot}()},
+\code{\link{eda_scatter}()},
+\code{\link{individual_plots}()},
+\code{\link{mean_sd_plot}()},
+\code{\link{pre_process}()},
+\code{\link{total_counts_ggplot}()}
+}
+\concept{plots}
+\concept{preprocess functions}

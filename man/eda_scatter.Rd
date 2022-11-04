@@ -7,17 +7,36 @@
 eda_scatter(processed_data, plot_xaxis, plot_yaxis)
 }
 \arguments{
-\item{processed_data}{Data that has gone through the pre-processing}
+\item{processed_data}{Matrix of data that has gone through
+\code{\link{prep_process}()}}
 
-\item{plot_xaxis}{Sample to plot on the x-axis}
+\item{plot_xaxis}{Character string indicating sample to plot on the x-axis}
 
-\item{plot_yaxis}{Sample to plot on the y axis}
+\item{plot_yaxis}{Character string indicating sample to plot on the y axis}
 }
 \value{
-Returns a formatted gg scatterplot
+A scatterplot a \code{ggplot} object
 }
 \description{
 This function takes the data after it has been pre-processed and
 creates a scatterplot of the counts for two samples that are
-selected by the user.
+indicated by the user.
 }
+\seealso{
+Other plots: 
+\code{\link{eda_boxplot}()},
+\code{\link{eda_density}()},
+\code{\link{individual_plots}()},
+\code{\link{mean_sd_plot}()},
+\code{\link{total_counts_ggplot}()}
+
+Other preprocess functions: 
+\code{\link{eda_boxplot}()},
+\code{\link{eda_density}()},
+\code{\link{individual_plots}()},
+\code{\link{mean_sd_plot}()},
+\code{\link{pre_process}()},
+\code{\link{total_counts_ggplot}()}
+}
+\concept{plots}
+\concept{preprocess functions}
