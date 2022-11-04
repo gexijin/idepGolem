@@ -7,16 +7,33 @@
 eda_boxplot(processed_data, sample_info)
 }
 \arguments{
-\item{processed_data}{Data that has gone through the pre-processing}
+\item{processed_data}{Matrix of data that has gone through 
+\code{\link{pre_process}()}}
 
-\item{sample_info}{Sample_info from the experiment file}
+\item{sample_info}{Matrix of experiment design information}
 }
 \value{
-Formatted gg boxplot of the distribution of counts for each
- sample
+Boxplot of the distribution of counts for each sample as a 
+ \code{ggplot} object.
 }
 \description{
 This function takes the processed data and creates
 a boxplot of number of sequences mapped to each
 tissue sample.
 }
+\seealso{
+Other plots: 
+\code{\link{eda_density}()},
+\code{\link{eda_scatter}()},
+\code{\link{individual_plots}()},
+\code{\link{total_counts_ggplot}()}
+
+Other preprocess: 
+\code{\link{eda_density}()},
+\code{\link{eda_scatter}()},
+\code{\link{individual_plots}()},
+\code{\link{pre_process}()},
+\code{\link{total_counts_ggplot}()}
+}
+\concept{plots}
+\concept{preprocess}

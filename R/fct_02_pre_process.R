@@ -254,7 +254,7 @@ pre_process <- function(data,
 #' Creates a barplot of the count data
 #'
 #' This function takes in either raw count or processed data and creates a
-#' formatted barplot as a \code{ggplot2} object that shows the number
+#' formatted barplot as a \code{ggplot} object that shows the number
 #' of genes mapped to each sample in millions. This function is only used for
 #' read counts data.
 #'
@@ -265,7 +265,7 @@ pre_process <- function(data,
 #'  Commonly either "Raw" or "Transformed"
 #'
 #' @export
-#' @return A barplot as a \code{ggplot2} object
+#' @return A barplot as a \code{ggplot} object
 #'
 #' @family preprocess
 #' @family plots
@@ -357,12 +357,13 @@ total_counts_ggplot <- function(counts_data,
 #' creates a scatterplot of the counts for two samples that are
 #' indicated by the user.
 #'
-#' @param processed_data Matrix of data that has gone through the pre-processing
+#' @param processed_data Matrix of data that has gone through
+#'  \code{\link{prep_process}()}
 #' @param plot_xaxis Character string indicating sample to plot on the x-axis
 #' @param plot_yaxis Character string indicating Sample to plot on the y axis
 #'
 #' @export
-#' @return A scatterplot a \code{ggplot2} object 
+#' @return A scatterplot a \code{ggplot} object 
 #' 
 #' @family plots 
 #' @family preprocess
@@ -409,12 +410,13 @@ eda_scatter <- function(processed_data,
 #' a boxplot of number of sequences mapped to each
 #' tissue sample.
 #'
-#' @param processed_data Matrix of data that has gone through the pre-processing
+#' @param processed_data Matrix of data that has gone through 
+#'  \code{\link{pre_process}()}
 #' @param sample_info Matrix of experiment design information 
 #'
 #' @export
 #' @return Boxplot of the distribution of counts for each sample as a 
-#'  \code{ggplot2} object.
+#'  \code{ggplot} object.
 #'  
 #' @family plots 
 #' @family preprocess
@@ -495,11 +497,15 @@ eda_boxplot <- function(processed_data,
 #' and creates a density plot for the distribution of sequences
 #' that are mapped to each sample.
 #'
-#' @param processed_data Data that has gone through the pre-processing
+#' @param processed_data Matrix of gene data that has gone through 
+#'   \code{\link{pre_process}()}
 #' @param sample_info Sample_info from the experiment file
 #'
 #' @export
-#' @return Returns a formatted gg density plot
+#' @return A density plot as a \code{ggplot} object 
+#' 
+#' @family plots 
+#' @family preprocess
 eda_density <- function(processed_data,
                         sample_info) {
   counts <- as.data.frame(processed_data)
@@ -584,18 +590,28 @@ eda_density <- function(processed_data,
 #' this function will either return a barplot from the
 #' grouped data or a lineplot from the individual sample.
 #'
-#' @param merged_data Data that has been merged with the gene info
-#' @param sample_info Experiment file information for grouping samples
-#' @param select_dene Gene(s) to be plotted
-#' @param gene_plot_box T/F for individual sample plot or grouped data plot
-#' @param use_sd T/F for standard error or standard deviation bars on bar plot
-#' @param select_org Species the expression data is from
+#' @param individual_data Data that has been merged with the gene info
+#' @param sample_info Matrix of experiment design information for 
+#'   grouping samples
+#' @param select_gene List of gene(s) to be plotted
+#' @param gene_plot_box TRUE/FALSE for individual sample plot or grouped 
+#'   data plot
+#' @param use_sd TRUE/FALSE for standard error or standard deviation bars on 
+#'   bar plot
+#' @param lab_rotate Numeric value indicating what angle to rotate 
+#'   the x-axis labels 
 #'
 #' @export
-#' @return A formatted ggplot. For gene_plot_box = TRUE the return will be a
-#'  lineplot for the expression of each individual sample for the selected gene.
-#'  If gene_plot_box = FALSE the return will be a barplot for the groups provided
-#'  in the sample information.
+#' 
+#' @return A \code{ggplot} object. For \code{gene_plot_box = TRUE} the return 
+#'  will be a lineplot for the expression of each individual sample for the 
+#'  selected gene. If \code{gene_plot_box = FALSE} the return will be a barplot 
+#'  for the groups provided in the sample information.
+#' 
+#' @section \code{\link{merge_data}()} 
+#' @family plots 
+#' @family preprocess
+#' 
 individual_plots <- function(individual_data,
                              sample_info,
                              selected_gene,
@@ -808,13 +824,17 @@ counts_bias_message <- function(raw_counts,
 #' Option to make the X-axis the rank of the mean which
 #' does a better job showing the spread of the data.
 #'
-#' @param processed_data Data that has gone through the pre-processing
+#' @param processed_data Matrix of data that has gone through 
+#'  \code{\link{pre_process}()}
 #' @param rank TRUE/FALSE whether to use the rank of the mean or not
 #' @param heat_cols Heat color to use with black in the plot
 #'
 #' @export
-#' @return A formatted ggplot hexplot of the mean and standard
+#' @return A formatted \code{ggplot} hexplot of the mean and standard
 #'  deviation of the processed data
+#'  
+#' @family plots 
+#' @family preprocess 
 mean_sd_plot <- function(processed_data,
                          rank,
                          heat_cols) {

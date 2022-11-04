@@ -14,20 +14,24 @@ individual_plots(
 )
 }
 \arguments{
-\item{sample_info}{Experiment file information for grouping samples}
+\item{individual_data}{Data that has been merged with the gene info}
 
-\item{gene_plot_box}{T/F for individual sample plot or grouped data plot}
+\item{sample_info}{Matrix of experiment design information for 
+grouping samples}
 
-\item{use_sd}{T/F for standard error or standard deviation bars on bar plot}
+\item{gene_plot_box}{TRUE/FALSE for individual sample plot or grouped 
+data plot}
 
-\item{merged_data}{Data that has been merged with the gene info}
+\item{use_sd}{TRUE/FALSE for standard error or standard deviation bars on 
+bar plot}
 
-\item{select_dene}{Gene(s) to be plotted}
+\item{lab_rotate}{Numeric value indicating what angle to rotate the axis of 
+the x-axis labels}
 
-\item{select_org}{Species the expression data is from}
+\item{select_gene}{List of gene(s) to be plotted}
 }
 \value{
-A formatted ggplot. For gene_plot_box = TRUE the return will be a
+A \code{ggplot} object. For gene_plot_box = TRUE the return will be a
  lineplot for the expression of each individual sample for the selected gene.
  If gene_plot_box = FALSE the return will be a barplot for the groups provided
  in the sample information.
@@ -38,3 +42,19 @@ plots on individual gene names. Depening on the selections
 this function will either return a barplot from the
 grouped data or a lineplot from the individual sample.
 }
+\seealso{
+Other plots: 
+\code{\link{eda_boxplot}()},
+\code{\link{eda_density}()},
+\code{\link{eda_scatter}()},
+\code{\link{total_counts_ggplot}()}
+
+Other preprocess: 
+\code{\link{eda_boxplot}()},
+\code{\link{eda_density}()},
+\code{\link{eda_scatter}()},
+\code{\link{pre_process}()},
+\code{\link{total_counts_ggplot}()}
+}
+\concept{plots}
+\concept{preprocess}
