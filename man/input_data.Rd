@@ -38,3 +38,8 @@ sample info to present in the data preview table and the
 sample info table. The data undergoes very basic filtering
 and transformation before entering the table.
 }
+\seealso{
+Other load data functions: 
+\code{\link{gene_info}()}
+}
+\concept{load data functions}

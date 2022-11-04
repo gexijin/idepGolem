@@ -13,16 +13,19 @@ NULL
 #' This function retrieves detailed gene information from the
 #' database for the matched species.
 #'
-#' @param converted Return value from the convert_id function. Contains
+#' @param converted List returned \code{\link{convert_id}()}. Contains
 #'  information about the gene IDs for the matched species.
 #' @param select_org The user selected organism for the expression data.
 #'  Default is "BestMatch."
-#' @param idep_data Read data files from the database.
+#' @param idep_data Data files from the database obtained with
+#'  \code{\link{get_idep_data}()}
 #'
 #' @export
 #' @return A data frame containing information on all ensembl IDs for the
 #'  matched species. Usually a very large data frame due to the amount
 #'  of IDs that the data base contains.
+#'  
+#' @family load data functions
 gene_info <- function(converted,
                       select_org,
                       idep_data) {
@@ -115,6 +118,7 @@ gene_info <- function(converted,
 #' and the sample information. If there is no experiment file it
 #' only returns the expression data.
 #'
+#' @family load data functions
 input_data <- function(expression_file,
                        experiment_file,
                        go_button,
