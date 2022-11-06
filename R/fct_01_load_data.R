@@ -15,8 +15,8 @@ NULL
 #'
 #' @param converted List returned \code{\link{convert_id}()}. Contains
 #'  information about the gene IDs for the matched species.
-#' @param select_org The user selected organism for the expression data.
-#'  Default is "BestMatch."
+#' @param select_org String indicating selected organism for the expression
+#'  data.Default is "BestMatch."
 #' @param idep_data Data files from the database obtained with
 #'  \code{\link{get_idep_data}()}
 #'
@@ -24,7 +24,7 @@ NULL
 #' @return A data frame containing information on all ensembl IDs for the
 #'  matched species. Usually a very large data frame due to the amount
 #'  of IDs that the data base contains.
-#'  
+#'
 #' @family load data functions
 gene_info <- function(converted,
                       select_org,
@@ -103,15 +103,14 @@ gene_info <- function(converted,
 #' sample info table. The data undergoes very basic filtering
 #' and transformation before entering the table.
 #'
-#' @param expression_file The data path for the expression file, should be
+#' @param expression_file Data file path for the expression file, should be
 #'  accessed with \code{expression_file$datapath}
-#' @param experiment_file The data path for the experiment file, should be
+#' @param experiment_file Data file path for the experiment file, should be
 #'  accessed with \code{experiment_file$datapath}
-#' @param go_button TRUE/FALSE that tells the app to
-#' load the demo data files
-#' @param demo_data_file Expression demo data path (idep_data$demo_data_file)
+#' @param go_button TRUE/FALSE to load the demo data files
+#' @param demo_data_file Expression demo data path \code{idep_data$demo_data_file}
 #' @param demo_metadata_file Experiment demo data path
-#'  (idep_data$demo_metadata_file)
+#'  \code{idep_data$demo_metadata_file}
 #'
 #' @export
 #' @return This returns a list that contains the expression data
@@ -292,7 +291,8 @@ input_data <- function(expression_file,
 #' It returns the data exactly the same except for the changed
 #' ids.
 #'
-#' @param converted Data from convert_id function containing converted ids
+#' @param converted Data from \code{\link{convert_id}()} function containing
+#'  converted ids
 #' @param no_id_conversion TRUE/FALSE for converting data ids or not
 #' @param data Data from the input expression file
 #' @param multiple_map String to designate how to handle values when multiple
@@ -301,6 +301,8 @@ input_data <- function(expression_file,
 #'
 #' @export
 #' @return Returns original data with rownames converted to ensembl
+#'
+#' @family load data functions
 convert_data <- function(converted,
                          data,
                          no_id_conversion,
@@ -383,14 +385,19 @@ convert_data <- function(converted,
 #' This function will create a data frame with all the matched
 #' gene names from the database.
 #'
-#' @param mapped_ids Matched IDs from the convert_data functions
-#' @param all_gene_info Gene information matched species in idep database
+#' @param mapped_ids Matched IDs from \code{\link{convet_id}()}
+#' @param all_gene_info Gene information matched species in idep database from
+#'  \code{\link{gene_info}()}
+#'
+#'
 #' @export
 #' @return Data frame containing all the matched ID names from idep
 #' database. Three columns denotes a recognized species for which
 #' idep had gene names for. Two columns means the IDs were converted
 #' to ensembl format, but no species was found for the gene names.
 #' One means no conversion occurred.
+#'
+#' @family load data functions
 get_all_gene_names <- function(mapped_ids,
                                all_gene_info) {
 
