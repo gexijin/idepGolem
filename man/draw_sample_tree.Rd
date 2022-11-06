@@ -45,8 +45,14 @@ Create a clustered tree of the samples in the dataset based on hierarchical
 \seealso{
 Other plots: 
 \code{\link{cor_plot}()},
+\code{\link{eda_boxplot}()},
+\code{\link{eda_density}()},
+\code{\link{eda_scatter}()},
+\code{\link{individual_plots}()},
 \code{\link{k_means_elbow}()},
-\code{\link{sd_density}()}
+\code{\link{mean_sd_plot}()},
+\code{\link{sd_density}()},
+\code{\link{total_counts_ggplot}()}
 
 Other clustering functions: 
 \code{\link{cluster_heat_click_info}()},

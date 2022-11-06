@@ -53,3 +53,16 @@ Formatted PCA plot using PCAtools package
 \description{
 Draw a PCA plot using PCAtools package
 }
+\seealso{
+Other PCA functions: 
+\code{\link{MDS_plot}()},
+\code{\link{PCA_Scree}()},
+\code{\link{PCA_plot_3d}()},
+\code{\link{PCA_plot}()},
+\code{\link{PCAtools_eigencorplot}()},
+\code{\link{get_plot_height}()},
+\code{\link{get_plot_width}()},
+\code{\link{pc_factor_correlation}()},
+\code{\link{t_SNE_plot}()}
+}
+\concept{PCA functions}

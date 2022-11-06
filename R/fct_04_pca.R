@@ -11,20 +11,21 @@ NULL
 
 
 
-#' Principal Component Analysis
+#' Principal component analysis plot 
 #'
-#' Draw a PCA plot where user selects which PCs on axes
+#' Draw a PCA plot with designated PCA components on axis 
 #'
-#' @param data Data that has been through pre-processing
-#' @param sample_info Matrix array with experiment info
-#' @param PCAx PC on x axis
-#' @param PCAy PC on y axis
-#' @param selected_color color
-#' @param selected_shape shape
+#' @param data Matrix of gene data that has been through pre-processing
+#' @param sample_info Matrix of sample information from experiment design file 
+#' @param PCAx Integer designating the PC to be plotted on the x axis
+#' @param PCAy Integer designating the PC to be plotted on on the y axis
+#' @param selected_color String designating factor to color points by 
+#' @param selected_shape String designating factor to add shape to points by 
 #'
 #' @export
 #' @return Formatted PCA plot
 #'
+#' @family PCA functions 
 PCA_plot <- function(data,
                      sample_info,
                      PCAx = 1,
@@ -151,21 +152,24 @@ PCA_plot <- function(data,
 
 
 
-#' Principal Component Analysis
+#' Principal component analysis 3D plot 
 #'
-#' Draw a PCA plot where user selects which PCs on axes
+#' Draw a 3D PCA plot with designated PCA components on axis
 #'
-#' @param data Data that has been through pre-processing
-#' @param sample_info Matrix array with experiment info
-#' @param PCAx PC on x axis
-#' @param PCAy PC on y axis
-#' @param PCAz PC on z axis
-#' @param selected_color color
-#' @param selected_shape shape
+#' @param data Matrix of gene data that has been through pre-processing
+#' @param sample_info Matrix of sample information from experiment design file
+#' @param PCAx Integer designating the PC to be plotted on the x axis
+#' @param PCAy Integer designating the PC to be plotted on the y axis
+#' @param PCAz Integer designating the PC to be plotted on the z axis
+#' @param selected_color String designating factor to color points by 
+#' @param selected_shape String designating factor to add shape to points by 
 #'
 #' @export
 #' @return Formatted PCA plot
 #'
+#' @family PCA functions 
+#' 
+#' 
 PCA_plot_3d <- function(data,
                         sample_info,
                         PCAx = 1,
@@ -254,20 +258,19 @@ PCA_plot_3d <- function(data,
   return(plot_PCA)
 }
 
-#' TSNE FUNCTION
+#' t-SNE plot 
 #'
-#' Draw a t-sne plot where user selects which PCs on axes
+#' Draw a t-distributed stochastic neighbor embedding (t-SNE) plot 
 #'
-#'
-#' @param data Data that has been through pre-processing
-#' @param sample_info Matrix array with experiment info
-#' @param selected_color color
-#' @param selected_shape shape
+#' @param data Matrix of gene data that has been through pre-processing
+#' @param sample_info Matrix of sample information from experiment design file
+#' @param selected_color String designating factor to color points by 
+#' @param selected_shape String designating factor to add shape to points by 
 #'
 #' @export
-#' @return Formatted T-sne plot
+#' @return Formatted t-SNE plot
 #'
-#'
+#' @family PCA functions
 t_SNE_plot <- function(data,
                        sample_info,
                        selected_color,
@@ -364,18 +367,20 @@ t_SNE_plot <- function(data,
   return(plot_t_SNE)
 }
 
-#' MDS FUNCTION
+#' MDS plot
 #'
-#' Draw a MDS plot
+#' Draw a multidimensional scaling (MDS) plot
 #'
-#'
-#' @param data Data that has been through pre-processing
-#' @param sample_info Matrix array with experiment info
-#' @param selected_color color
-#' @param selected_shape shape
+#' 
+#' @param data Matrix of gene data that has been through pre-processing
+#' @param sample_info Matrix of sample information from experiment design file
+#' @param selected_color String designating factor to color points by 
+#' @param selected_shape String designating factor to add shape to points by 
 #'
 #' @export
 #' @return Formatted PCA plot
+#' 
+#' @family PCA functions
 #'
 MDS_plot <- function(data,
                      sample_info,
@@ -489,7 +494,9 @@ MDS_plot <- function(data,
 #'
 #' @export
 #' @return text with correlation
-#'
+#' 
+#' @family PCA functions 
+#' 
 pc_factor_correlation <- function(data,
                                   sample_info) {
   x <- data
@@ -558,7 +565,9 @@ pc_factor_correlation <- function(data,
 #'
 #' @export
 #' @return Formatted PCA plot using PCAtools package
-#'
+#' 
+#' @family PCA functions 
+#' 
 PCA_biplot <- function(data,
                        sample_info,
                        select_gene_id = "symbol",
@@ -622,6 +631,9 @@ PCA_biplot <- function(data,
 #'
 #' @export
 #' @return Formatted Scree plot using PCAtools package
+#' 
+#' @family PCA functions 
+#' 
 PCA_Scree <- function(processed_data) {
   suppressWarnings(
     pca_obj <- PCAtools::pca(mat = processed_data, removeVar = 0.1)
@@ -666,8 +678,12 @@ PCA_Scree <- function(processed_data) {
 #'
 #' @param data Data that has been through pre-processing
 #' @param sample_info Design Matrix
+#' 
 #' @return Formatted plot generated with PCAtools package
 #' @export
+#' 
+#' @family PCA functions 
+#' 
 PCAtools_eigencorplot <- function(processed_data,
                                   sample_info) {
   # missing design
@@ -702,8 +718,12 @@ PCAtools_eigencorplot <- function(processed_data,
 #' @param client_data session info from shiny
 #' @param plot_name Name of plot object
 #' @param tab Tab name
+#' 
 #' @return string with dimension info
 #' @export
+#' 
+#' @family PCA functions 
+#' 
 get_plot_width <- function(client_data,
                            plot_name,
                            tab) {
@@ -732,8 +752,11 @@ get_plot_width <- function(client_data,
 #' @param client_data session info from shiny
 #' @param plot_name Name of plot object
 #' @param tab Tab name
+#' 
 #' @return height in inches of plot
 #' @export
+#' 
+#' @family PCA functions
 get_plot_height <- function(client_data,
                             plot_name,
                             tab) {

@@ -2,7 +2,7 @@
 % Please edit documentation in R/fct_04_pca.R
 \name{PCA_plot}
 \alias{PCA_plot}
-\title{Principal Component Analysis}
+\title{Principal component analysis plot}
 \usage{
 PCA_plot(
   data,
@@ -14,21 +14,34 @@ PCA_plot(
 )
 }
 \arguments{
-\item{data}{Data that has been through pre-processing}
+\item{data}{Matrix of gene data that has been through pre-processing}
 
-\item{sample_info}{Matrix array with experiment info}
+\item{sample_info}{Matrix of sample information from experiment design file}
 
-\item{PCAx}{PC on x axis}
+\item{PCAx}{Integer designating the PC to be plotted on the x axis}
 
-\item{PCAy}{PC on y axis}
+\item{PCAy}{Integer designating the PC to be plotted on on the y axis}
 
-\item{selected_color}{color}
+\item{selected_color}{String designating factor to color points by}
 
-\item{selected_shape}{shape}
+\item{selected_shape}{String designating factor to add shape to points by}
 }
 \value{
 Formatted PCA plot
 }
 \description{
-Draw a PCA plot where user selects which PCs on axes
+Draw a PCA plot with designated PCA components on axis
 }
+\seealso{
+Other PCA functions: 
+\code{\link{MDS_plot}()},
+\code{\link{PCA_Scree}()},
+\code{\link{PCA_biplot}()},
+\code{\link{PCA_plot_3d}()},
+\code{\link{PCAtools_eigencorplot}()},
+\code{\link{get_plot_height}()},
+\code{\link{get_plot_width}()},
+\code{\link{pc_factor_correlation}()},
+\code{\link{t_SNE_plot}()}
+}
+\concept{PCA functions}

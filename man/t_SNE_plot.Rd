@@ -2,22 +2,35 @@
 % Please edit documentation in R/fct_04_pca.R
 \name{t_SNE_plot}
 \alias{t_SNE_plot}
-\title{TSNE FUNCTION}
+\title{t-SNE plot}
 \usage{
 t_SNE_plot(data, sample_info, selected_color, selected_shape)
 }
 \arguments{
-\item{data}{Data that has been through pre-processing}
+\item{data}{Matrix of gene data that has been through pre-processing}
 
-\item{sample_info}{Matrix array with experiment info}
+\item{sample_info}{Matrix of sample information from experiment design file}
 
-\item{selected_color}{color}
+\item{selected_color}{String designating factor to color points by}
 
-\item{selected_shape}{shape}
+\item{selected_shape}{String designating factor to add shape to points by}
 }
 \value{
-Formatted T-sne plot
+Formatted t-SNE plot
 }
 \description{
-Draw a t-sne plot where user selects which PCs on axes
+Draw a t-distributed stochastic neighbor embedding (t-SNE) plot
 }
+\seealso{
+Other PCA functions: 
+\code{\link{MDS_plot}()},
+\code{\link{PCA_Scree}()},
+\code{\link{PCA_biplot}()},
+\code{\link{PCA_plot_3d}()},
+\code{\link{PCA_plot}()},
+\code{\link{PCAtools_eigencorplot}()},
+\code{\link{get_plot_height}()},
+\code{\link{get_plot_width}()},
+\code{\link{pc_factor_correlation}()}
+}
+\concept{PCA functions}
