@@ -18,6 +18,8 @@ NULL
 #'
 #' @export
 #' @return The altered comparison string, see the description for example.
+#' 
+#' @family DEG functions
 change_names <- function(comparison) {
   # check to see if work needs to be done
   # if no work needs to be done return input
@@ -51,17 +53,22 @@ change_names <- function(comparison) {
 #' checkboxes for the user to create their experiment
 #' design from.
 #'
-#' @param sample_info Experiment file information for grouping
-#' @param data_file_format Type of data being examined
-#' @param counts_deg_method Method of DEG being performed (See
-#'  DEG UI for options)
-#'
+#' @param sample_info Matrix of experiment design information for grouping
+#' @param data_file_format Integer indicating the data format. This should be
+#'   one of 1 for read counts data, 2 for normalized expression, or 3 for
+#'   fold changes and adjusted P-values
+#' @param counts_deg_method Integer indicating method of DEG analysis being 
+#'   performed. This should be one of 1 for limma-trend, 2 for limma-voom, and 
+#'   3 for DESeq2
+#'  
 #' @export
 #' @return A list containing a string title and a vector of
 #'  comparisons to choose from.
+#'  
+#' @family DEG functions 
 list_factors_ui <- function(sample_info,
-                            data_file_format,
-                            counts_deg_method) {
+                            data_file_format = c(1, 2, 3),
+                            counts_deg_method = c(1, 2, 3)) {
   if (is.null(sample_info)) {
     return(
       HTML(
@@ -93,13 +100,15 @@ list_factors_ui <- function(sample_info,
 #' effect. Returns a vector that turns into a checkbox for
 #' the User.
 #'
-#' @param sample_info Experiment file information for grouping
+#' @param sample_info Matrix of experiment design information for grouping
 #' @param select_factors_model The selected factors for the model
 #'  expression
 #'
 #' @export
 #' @return This function returns a vector of choices for a batch
 #'  effect or paired samples.
+#'  
+#' @family DEG functions 
 list_block_factors_ui <- function(sample_info,
                                   select_factors_model) {
   if (is.null(sample_info)) {
@@ -126,15 +135,17 @@ list_block_factors_ui <- function(sample_info,
 #' is no selected factor then it defaults to comparisons that
 #' can be created from the processed data.
 #'
-#' @param sample_info Experiment file information for grouping
+#' @param sample_info Matrix of experiment design information for grouping
 #' @param select_factors_model The selected factors for the model
 #'  expression
-#' @param processed_data Data that has been through the pre-processing
-#'  function
+#' @param processed_data Matrix of gene data that has been through the 
+#'  \code{\link{pre_process}()}
 #'
 #' @export
 #' @return Returns a list containing a vector of choices and a
 #'  title for the UI element.
+#'
+#' @family DEG functions 
 list_model_comparisons_ui <- function(sample_info,
                                       select_factors_model,
                                       processed_data) {
@@ -225,7 +236,7 @@ list_model_comparisons_ui <- function(sample_info,
 #' model factors to create interaction terms to be used in the
 #' DEG process.
 #'
-#' @param sample_info Experiment file information for grouping
+#' @param sample_info Matrix of experiment design information for grouping
 #' @param select_factors_model The selected factors for the model
 #'  expression
 #'
@@ -233,6 +244,8 @@ list_model_comparisons_ui <- function(sample_info,
 #' @return Returns a character string of an interaction term
 #'  between the selected factors. Used in a checkbox for the
 #'  User to create a model expression
+#'  
+#' @family DEG functions
 list_interaction_terms_ui <- function(sample_info,
                                       select_factors_model) {
   if (is.null(sample_info) | is.null(select_factors_model)) {
@@ -257,7 +270,7 @@ list_interaction_terms_ui <- function(sample_info,
 #' Use the model design selections to create a string of the
 #' model design being used for the DEG analysis.
 #'
-#' @param sample_info Experiment file information for grouping
+#' @param sample_info Matrix of experiment design information for grouping
 #' @param select_factors_model The selected factors for the model
 #'  expression
 #' @param select_block_factors_model The selected factors for
@@ -268,6 +281,8 @@ list_interaction_terms_ui <- function(sample_info,
 #' @export
 #' @return Returns a string of the model design being used for
 #'  the DEG analysis
+#'  
+#' @family DEG functions 
 experiment_design_txt <- function(sample_info,
                                   select_factors_model,
                                   select_block_factors_model,
@@ -304,12 +319,15 @@ experiment_design_txt <- function(sample_info,
 #' choices for the reference level to use for the factor in
 #' the DEG analysis.
 #'
-#' @param sample_info Experiment file information for grouping
+#' @param sample_info Matrix of experiment design information for grouping
 #' @param select_factors_model The selected factors for the model
 #'  expression
-#' @param data_file_format Type of gene data being examined
-#' @param counts_deg_method The method or package being used for
-#'  the DEG analysis
+#' @param data_file_format Integer indicating the data format. This should be
+#'   one of 1 for read counts data, 2 for normalized expression, or 3 for
+#'   fold changes and adjusted P-values
+#' @param counts_deg_method Integer indicating method of DEG analysis being 
+#'   performed. This should be one of 1 for limma-trend, 2 for limma-voom, and 
+#'   3 for DESeq2
 #'
 #' @export
 #' @return A list the same length as the vector of selected factors.
@@ -317,8 +335,8 @@ experiment_design_txt <- function(sample_info,
 #'  use for the reference level.
 select_reference_levels_ui <- function(sample_info,
                                        select_factors_model,
-                                       data_file_format,
-                                       counts_deg_method) {
+                                       data_file_format = c(1, 2, 3),
+                                       counts_deg_method = c(1, 2, 3)) {
   if (is.null(sample_info) | is.null(select_factors_model)) {
     return(NULL)
   } else {
@@ -350,10 +368,13 @@ select_reference_levels_ui <- function(sample_info,
 #' with the specified model design. Core function for the
 #' DEG panel of iDEP.
 #'
-#' @param data_file_format Type of gene data being examined
-#' @param counts_deg_method The method or package being used for
-#'  the DEG analysis
-#' @param raw_counts The matrix of counts before processing for
+#' @param data_file_format Integer indicating the data format. This should be
+#'   one of 1 for read counts data, 2 for normalized expression, or 3 for
+#'   fold changes and adjusted P-values
+#' @param counts_deg_method Integer indicating method of DEG analysis being 
+#'   performed. This should be one of 1 for limma-trend, 2 for limma-voom, and 
+#'   3 for DESeq2
+#' @param raw_counts Matrix of  raw counts before processing for
 #'  gene expression data
 #' @param limma_p_val Significant p-value to use for expressed
 #'  genes
@@ -370,16 +391,17 @@ select_reference_levels_ui <- function(sample_info,
 #'  batch effect
 #' @param factor_reference_levels Vector of reference levels to
 #'  use for the selected factors
-#' @param processed_data Data that has been through the pre-processing
+#' @param processed_data Matrix of gene data that has been through the 
+#'  \code{\link{pre_process}()}
 #' @param counts_log_start The constant added to the log transformation
 #'  from pre-processing
 #' @param p_vals The vector of p-vals calculated in pre-process for
 #'  significant expression
-#' @param threshold_wald_test whether to use threshold-based Wald test
+#' @param threshold_wald_test TRUE/FALSE to use threshold-based Wald test
 #' to test null hypothesis that the absolute value of fold-change is
-#' bigger than a value
-#' @param independent_filtering whether or not to conduct independent
-#' filtering in DESeq2 results function.
+#' bigger than a value. Default is FALSE 
+#' @param independent_filtering TRUE/FALSE to conduct independent
+#' filtering in DESeq2 results function. Default is true.
 #'
 #' @export
 #' @return List with the results of the DEG analysis. When the function
@@ -394,8 +416,8 @@ select_reference_levels_ui <- function(sample_info,
 #'  for each comparison. Each entry is a data frame with two columns. One
 #'  column is the calculated fold change for the comparison and the other
 #'  is the adjusted p-value for the fold change calculation.
-limma_value <- function(data_file_format,
-                        counts_deg_method,
+limma_value <- function(data_file_format = c(1, 2, 3),
+                        counts_deg_method = c(1, 2, 3),
                         raw_counts,
                         limma_p_val,
                         limma_fc,
@@ -536,7 +558,7 @@ limma_value <- function(data_file_format,
 #' Used in the limma_value function to perform DEG analysis using the
 #' DESeq2 package. It is not recommended to use this function on its own.
 #'
-#' @param raw_counts The matrix of counts before processing for
+#' @param raw_counts Matrix of raw counts before processing for
 #'  gene expression data
 #' @param max_p_limma Significant p-value to use for the fold-change
 #'  values
@@ -549,10 +571,11 @@ limma_value <- function(data_file_format,
 #' @param block_factor The selected factors for batch effect
 #' @param reference_levels Vector of reference levels to use for the
 #'  selected factors
-#' @param threshold_wald_test whether to use threshold-based Wald test
-#' to test null hypothesis that the absolute value of fold-change is
-#' bigger than a value.
-#' @param independent_filtering If yes(default), conduct independent filtering
+#' @param threshold_wald_test TRUE/FALSE to use threshold-based Wald test
+#'  to test null hypothesis that the absolute value of fold-change is bigger than 
+#'  a value.. Default is FALSE. 
+#' @param independent_filtering TRUE/FALSE to conduct independent filtering. 
+#'  Default is TRUE. 
 #'
 #' @export
 #' @return The return value is the results of the DEG analysis. These
