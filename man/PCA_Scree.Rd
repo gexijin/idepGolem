@@ -13,7 +13,8 @@ PCA_Scree(processed_data)
 Formatted Scree plot using PCAtools package
 }
 \description{
-Draw a Scree plot with Horn's and Elbow suggestion for cutoffs using PCAtools package
+Draw a Scree plot with Horn's and Elbow suggestion for cutoffs using 
+PCAtools package
 }
 \seealso{
 Other PCA functions: 

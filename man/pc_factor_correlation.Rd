@@ -7,9 +7,10 @@
 pc_factor_correlation(data, sample_info)
 }
 \arguments{
-\item{data}{Data that has been through pre-processing}
+\item{data}{Matrix of gene data that has been through 
+\code{\link{pre_process}()}}
 
-\item{sample_info}{Matrix array with experiment info}
+\item{sample_info}{Matrix of sample information from experiment design file}
 }
 \value{
 text with correlation

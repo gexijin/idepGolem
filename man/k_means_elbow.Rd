@@ -20,6 +20,7 @@ number of clusters to create
 }
 \seealso{
 Other plots: 
+\code{\link{PCA_plot}()},
 \code{\link{cor_plot}()},
 \code{\link{draw_sample_tree}()},
 \code{\link{eda_boxplot}()},
@@ -28,6 +29,7 @@ Other plots:
 \code{\link{individual_plots}()},
 \code{\link{mean_sd_plot}()},
 \code{\link{sd_density}()},
+\code{\link{t_SNE_plot}()},
 \code{\link{total_counts_ggplot}()}
 
 Other clustering functions: 

@@ -14,7 +14,8 @@ PCA_plot(
 )
 }
 \arguments{
-\item{data}{Matrix of gene data that has been through pre-processing}
+\item{data}{Matrix of gene data that has been through 
+\code{\link{pre_process}()}}
 
 \item{sample_info}{Matrix of sample information from experiment design file}
 
@@ -22,17 +23,23 @@ PCA_plot(
 
 \item{PCAy}{Integer designating the PC to be plotted on on the y axis}
 
-\item{selected_color}{String designating factor to color points by}
+\item{selected_color}{String designating factor to color points by. Should be 
+one of the design factors from the design file or "Names" as default which 
+automatically detects groups from gene data file}
 
-\item{selected_shape}{String designating factor to add shape to points by}
+\item{selected_shape}{String designating factor to shape points by. 
+Should be one of the design factors from the design file or "Names" as 
+default which automatically detects groups from gene data file}
 }
 \value{
-Formatted PCA plot
+A \code{ggplot} object as a PCA plot
 }
 \description{
 Draw a PCA plot with designated PCA components on axis
 }
 \seealso{
+\code{\link{PCA_plot_3d}()} for three-dimensional version
+
 Other PCA functions: 
 \code{\link{MDS_plot}()},
 \code{\link{PCA_Scree}()},
@@ -43,5 +50,19 @@ Other PCA functions:
 \code{\link{get_plot_width}()},
 \code{\link{pc_factor_correlation}()},
 \code{\link{t_SNE_plot}()}
+
+Other plots: 
+\code{\link{cor_plot}()},
+\code{\link{draw_sample_tree}()},
+\code{\link{eda_boxplot}()},
+\code{\link{eda_density}()},
+\code{\link{eda_scatter}()},
+\code{\link{individual_plots}()},
+\code{\link{k_means_elbow}()},
+\code{\link{mean_sd_plot}()},
+\code{\link{sd_density}()},
+\code{\link{t_SNE_plot}()},
+\code{\link{total_counts_ggplot}()}
 }
 \concept{PCA functions}
+\concept{plots}

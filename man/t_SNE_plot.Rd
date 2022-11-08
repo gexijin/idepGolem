@@ -4,16 +4,26 @@
 \alias{t_SNE_plot}
 \title{t-SNE plot}
 \usage{
-t_SNE_plot(data, sample_info, selected_color, selected_shape)
+t_SNE_plot(
+  data,
+  sample_info,
+  selected_color = "Names",
+  selected_shape = "Names"
+)
 }
 \arguments{
-\item{data}{Matrix of gene data that has been through pre-processing}
+\item{data}{Matrix of gene data that has been through 
+\code{\link{pre_process}()}}
 
 \item{sample_info}{Matrix of sample information from experiment design file}
 
-\item{selected_color}{String designating factor to color points by}
+\item{selected_color}{String designating factor to color points by. Should be 
+one of the design factors from the design file or "Names" as default which 
+automatically detects groups from gene data file}
 
-\item{selected_shape}{String designating factor to add shape to points by}
+\item{selected_shape}{String designating factor to shape points by. 
+Should be one of the design factors from the design file or "Names" as 
+default which automatically detects groups from gene data file}
 }
 \value{
 Formatted t-SNE plot
@@ -32,5 +42,19 @@ Other PCA functions:
 \code{\link{get_plot_height}()},
 \code{\link{get_plot_width}()},
 \code{\link{pc_factor_correlation}()}
+
+Other plots: 
+\code{\link{PCA_plot}()},
+\code{\link{cor_plot}()},
+\code{\link{draw_sample_tree}()},
+\code{\link{eda_boxplot}()},
+\code{\link{eda_density}()},
+\code{\link{eda_scatter}()},
+\code{\link{individual_plots}()},
+\code{\link{k_means_elbow}()},
+\code{\link{mean_sd_plot}()},
+\code{\link{sd_density}()},
+\code{\link{total_counts_ggplot}()}
 }
 \concept{PCA functions}
+\concept{plots}

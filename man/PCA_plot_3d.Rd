@@ -15,7 +15,8 @@ PCA_plot_3d(
 )
 }
 \arguments{
-\item{data}{Matrix of gene data that has been through pre-processing}
+\item{data}{Matrix of gene data that has been through 
+\code{\link{pre_process}()}}
 
 \item{sample_info}{Matrix of sample information from experiment design file}
 
@@ -25,9 +26,13 @@ PCA_plot_3d(
 
 \item{PCAz}{Integer designating the PC to be plotted on the z axis}
 
-\item{selected_color}{String designating factor to color points by}
+\item{selected_color}{String designating factor to color points by. Should be 
+one of the design factors from the design file or "Names" as default which 
+automatically detects groups from gene data file}
 
-\item{selected_shape}{String designating factor to add shape to points by}
+\item{selected_shape}{String designating factor to shape points by. 
+Should be one of the design factors from the design file or "Names" as 
+default which automatically detects groups from gene data file}
 }
 \value{
 Formatted PCA plot
@@ -36,6 +41,8 @@ Formatted PCA plot
 Draw a 3D PCA plot with designated PCA components on axis
 }
 \seealso{
+\code{\link{PCA_plot}()}
+
 Other PCA functions: 
 \code{\link{MDS_plot}()},
 \code{\link{PCA_Scree}()},

@@ -7,13 +7,18 @@
 MDS_plot(data, sample_info, selected_shape, selected_color)
 }
 \arguments{
-\item{data}{Matrix of gene data that has been through pre-processing}
+\item{data}{Matrix of gene data that has been through 
+\code{\link{pre_process}()}}
 
 \item{sample_info}{Matrix of sample information from experiment design file}
 
-\item{selected_shape}{String designating factor to add shape to points by}
+\item{selected_shape}{String designating factor to shape points by. 
+Should be one of the design factors from the design file or "Names" as 
+default which automatically detects groups from gene data file}
 
-\item{selected_color}{String designating factor to color points by}
+\item{selected_color}{String designating factor to color points by. Should be 
+one of the design factors from the design file or "Names" as default which 
+automatically detects groups from gene data file}
 }
 \value{
 Formatted PCA plot
