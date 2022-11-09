@@ -4,15 +4,22 @@
 \alias{list_factors_ui}
 \title{Create choices and title for model factors}
 \usage{
-list_factors_ui(sample_info, data_file_format, counts_deg_method)
+list_factors_ui(
+  sample_info,
+  data_file_format = c(1, 2, 3),
+  counts_deg_method = c(1, 2, 3)
+)
 }
 \arguments{
-\item{sample_info}{Experiment file information for grouping}
+\item{sample_info}{Matrix of experiment design information for grouping}
 
-\item{data_file_format}{Type of data being examined}
+\item{data_file_format}{Integer indicating the data format. This should be
+one of 1 for read counts data, 2 for normalized expression, or 3 for
+fold changes and adjusted P-values}
 
-\item{counts_deg_method}{Method of DEG being performed (See
-DEG UI for options)}
+\item{counts_deg_method}{Integer indicating method of DEG analysis being 
+performed. This should be one of 1 for limma-trend, 2 for limma-voom, and 
+3 for DESeq2}
 }
 \value{
 A list containing a string title and a vector of
@@ -26,3 +33,14 @@ DEG method. The list of options will become
 checkboxes for the user to create their experiment
 design from.
 }
+\seealso{
+Other DEG functions: 
+\code{\link{change_names}()},
+\code{\link{experiment_design_txt}()},
+\code{\link{limma_value}()},
+\code{\link{list_block_factors_ui}()},
+\code{\link{list_interaction_terms_ui}()},
+\code{\link{list_model_comparisons_ui}()},
+\code{\link{select_reference_levels_ui}()}
+}
+\concept{DEG functions}

@@ -5,8 +5,8 @@
 \title{DEG analysis function}
 \usage{
 limma_value(
-  data_file_format,
-  counts_deg_method,
+  data_file_format = c(1, 2, 3),
+  counts_deg_method = c(1, 2, 3),
   raw_counts,
   limma_p_val,
   limma_fc,
@@ -24,51 +24,57 @@ limma_value(
 )
 }
 \arguments{
-\item{data_file_format}{Type of gene data being examined}
+\item{data_file_format}{Integer indicating the data format. This should be
+one of 1 for read counts data, 2 for normalized expression, or 3 for
+fold changes and adjusted P-values}
 
-\item{counts_deg_method}{The method or package being used for
-the DEG analysis}
+\item{counts_deg_method}{Integer indicating method of DEG analysis being 
+performed. This should be one of 1 for limma-trend, 2 for limma-voom, and 
+3 for DESeq2}
 
-\item{raw_counts}{The matrix of counts before processing for
+\item{raw_counts}{Matrix of raw counts before processing for
 gene expression data}
 
-\item{limma_p_val}{Significant p-value to use for expressed
+\item{limma_p_val}{Numeric value for significant p-value to use for expressed
 genes}
 
-\item{limma_fc}{Minimum fold-change cutoff for the DEG
+\item{limma_fc}{Numeric value for minimum fold-change cutoff for the DEG
 analysis}
 
 \item{select_model_comprions}{Selected comparisons to analyze
 in the DEG analysis}
 
-\item{sample_info}{Experiment file information for grouping}
+\item{sample_info}{Matrix of experiment design information for grouping}
 
-\item{select_factors_model}{The selected factors for the model
-expression}
+\item{select_factors_model}{Vector of strings indicating the selected factors 
+for the model expression, see \code{\link{list_factors_ui}()} for options}
 
-\item{select_interactions}{The interaction terms being used in
-the model design}
+\item{select_interactions}{Vector of strings indicating selected the 
+interaction terms being used in the model design, see 
+\code{\link{list_interaction_terms_ui}()} for options}
 
-\item{select_block_factors_model}{The selected factors for
-batch effect}
+\item{select_block_factors_model}{Vector of strings indicating selected 
+factors for batch effect, see \code{\link{list_block_factors_ui}()} for 
+options}
 
 \item{factor_reference_levels}{Vector of reference levels to
 use for the selected factors}
 
-\item{processed_data}{Data that has been through the pre-processing}
+\item{processed_data}{Matrix of gene data that has been through the 
+\code{\link{pre_process}()}}
 
-\item{counts_log_start}{The constant added to the log transformation
+\item{counts_log_start}{Integer for constant added to the log transformation
 from pre-processing}
 
-\item{p_vals}{The vector of p-vals calculated in pre-process for
-significant expression}
+\item{p_vals}{Vector of p-values calculated in \code{\link{pre_process}()} 
+for significant expression}
 
-\item{threshold_wald_test}{whether to use threshold-based Wald test
+\item{threshold_wald_test}{TRUE/FALSE to use threshold-based Wald test
 to test null hypothesis that the absolute value of fold-change is
-bigger than a value}
+bigger than a value. Default is FALSE}
 
-\item{independent_filtering}{whether or not to conduct independent
-filtering in DESeq2 results function.}
+\item{independent_filtering}{TRUE/FALSE to conduct independent
+filtering in DESeq2 results function. Default is true.}
 }
 \value{
 List with the results of the DEG analysis. When the function
@@ -89,3 +95,14 @@ Use the limma or DESeq2 package to perform DEG analysis
 with the specified model design. Core function for the
 DEG panel of iDEP.
 }
+\seealso{
+Other DEG functions: 
+\code{\link{change_names}()},
+\code{\link{experiment_design_txt}()},
+\code{\link{list_block_factors_ui}()},
+\code{\link{list_factors_ui}()},
+\code{\link{list_interaction_terms_ui}()},
+\code{\link{list_model_comparisons_ui}()},
+\code{\link{select_reference_levels_ui}()}
+}
+\concept{DEG functions}

@@ -34,11 +34,15 @@ Other preprocess functions:
 \code{\link{pre_process}()}
 
 Other plots: 
+\code{\link{cor_plot}()},
+\code{\link{draw_sample_tree}()},
 \code{\link{eda_boxplot}()},
 \code{\link{eda_density}()},
 \code{\link{eda_scatter}()},
 \code{\link{individual_plots}()},
-\code{\link{mean_sd_plot}()}
+\code{\link{k_means_elbow}()},
+\code{\link{mean_sd_plot}()},
+\code{\link{sd_density}()}
 }
 \concept{plots}
 \concept{preprocess functions}

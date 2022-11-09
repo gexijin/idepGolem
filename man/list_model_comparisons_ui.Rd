@@ -7,13 +7,13 @@
 list_model_comparisons_ui(sample_info, select_factors_model, processed_data)
 }
 \arguments{
-\item{sample_info}{Experiment file information for grouping}
+\item{sample_info}{Matrix of experiment design information for grouping}
 
-\item{select_factors_model}{The selected factors for the model
-expression}
+\item{select_factors_model}{Vector of strings indicating the selected factors
+for the model expression, see \code{\link{list_factors_ui}()} for options}
 
-\item{processed_data}{Data that has been through the pre-processing
-function}
+\item{processed_data}{Matrix of gene data that has been through the 
+\code{\link{pre_process}()}}
 }
 \value{
 Returns a list containing a vector of choices and a
@@ -26,3 +26,14 @@ Changes with the input of select_factors_model. If there
 is no selected factor then it defaults to comparisons that
 can be created from the processed data.
 }
+\seealso{
+Other DEG functions: 
+\code{\link{change_names}()},
+\code{\link{experiment_design_txt}()},
+\code{\link{limma_value}()},
+\code{\link{list_block_factors_ui}()},
+\code{\link{list_factors_ui}()},
+\code{\link{list_interaction_terms_ui}()},
+\code{\link{select_reference_levels_ui}()}
+}
+\concept{DEG functions}

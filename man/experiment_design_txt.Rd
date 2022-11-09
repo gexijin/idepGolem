@@ -12,16 +12,18 @@ experiment_design_txt(
 )
 }
 \arguments{
-\item{sample_info}{Experiment file information for grouping}
+\item{sample_info}{Matrix of experiment design information for grouping}
 
-\item{select_factors_model}{The selected factors for the model
-expression}
+\item{select_factors_model}{Vector of strings indicating the selected factors
+for the model expression, see \code{\link{list_factors_ui}()} for options}
 
-\item{select_block_factors_model}{The selected factors for
-batch effect}
+\item{select_block_factors_model}{Vector of strings indicating selected 
+factors for batch effect, see \code{\link{list_block_factors_ui}()} for 
+options}
 
-\item{select_interactions}{The interaction terms being used in
-the model design}
+\item{select_interactions}{Vector of strings indicating selected the 
+interaction terms being used in the model design, see 
+\code{\link{list_interaction_terms_ui}()} for options}
 }
 \value{
 Returns a string of the model design being used for
@@ -31,3 +33,14 @@ Returns a string of the model design being used for
 Use the model design selections to create a string of the
 model design being used for the DEG analysis.
 }
+\seealso{
+Other DEG functions: 
+\code{\link{change_names}()},
+\code{\link{limma_value}()},
+\code{\link{list_block_factors_ui}()},
+\code{\link{list_factors_ui}()},
+\code{\link{list_interaction_terms_ui}()},
+\code{\link{list_model_comparisons_ui}()},
+\code{\link{select_reference_levels_ui}()}
+}
+\concept{DEG functions}

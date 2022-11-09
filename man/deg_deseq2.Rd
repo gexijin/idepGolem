@@ -18,7 +18,7 @@ deg_deseq2(
 )
 }
 \arguments{
-\item{raw_counts}{The matrix of counts before processing for
+\item{raw_counts}{Matrix of raw counts before processing for
 gene expression data}
 
 \item{max_p_limma}{Significant p-value to use for the fold-change
@@ -39,11 +39,12 @@ from the model design}
 \item{reference_levels}{Vector of reference levels to use for the
 selected factors}
 
-\item{threshold_wald_test}{whether to use threshold-based Wald test
-to test null hypothesis that the absolute value of fold-change is
-bigger than a value.}
+\item{threshold_wald_test}{TRUE/FALSE to use threshold-based Wald test
+to test null hypothesis that the absolute value of fold-change is bigger than 
+a value.. Default is FALSE.}
 
-\item{independent_filtering}{If yes(default), conduct independent filtering}
+\item{independent_filtering}{TRUE/FALSE to conduct independent filtering. 
+Default is TRUE.}
 }
 \value{
 The return value is the results of the DEG analysis. These

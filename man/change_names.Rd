@@ -7,7 +7,7 @@
 change_names(comparison)
 }
 \arguments{
-\item{comparison}{Comparison to change the name for}
+\item{comparison}{String of comparison to change the name for}
 }
 \value{
 The altered comparison string, see the description for example.
@@ -15,3 +15,14 @@ The altered comparison string, see the description for example.
 \description{
 Change comparison names in limma from "KO_ko-WT_ko" to    "KO-WT_for_ko"
 }
+\seealso{
+Other DEG functions: 
+\code{\link{experiment_design_txt}()},
+\code{\link{limma_value}()},
+\code{\link{list_block_factors_ui}()},
+\code{\link{list_factors_ui}()},
+\code{\link{list_interaction_terms_ui}()},
+\code{\link{list_model_comparisons_ui}()},
+\code{\link{select_reference_levels_ui}()}
+}
+\concept{DEG functions}

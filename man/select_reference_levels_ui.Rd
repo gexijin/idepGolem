@@ -2,25 +2,28 @@
 % Please edit documentation in R/fct_05_deg.R
 \name{select_reference_levels_ui}
 \alias{select_reference_levels_ui}
-\title{Refernce levels for selected factor}
+\title{Reference levels for selected factor}
 \usage{
 select_reference_levels_ui(
   sample_info,
   select_factors_model,
-  data_file_format,
-  counts_deg_method
+  data_file_format = c(1, 2, 3),
+  counts_deg_method = c(1, 2, 3)
 )
 }
 \arguments{
-\item{sample_info}{Experiment file information for grouping}
+\item{sample_info}{Matrix of experiment design information for grouping}
 
-\item{select_factors_model}{The selected factors for the model
-expression}
+\item{select_factors_model}{Vector of strings indicating the selected factors 
+for the model expression, see \code{\link{list_factors_ui}()} for options}
 
-\item{data_file_format}{Type of gene data being examined}
+\item{data_file_format}{Integer indicating the data format. This should be
+one of 1 for read counts data, 2 for normalized expression, or 3 for
+fold changes and adjusted P-values}
 
-\item{counts_deg_method}{The method or package being used for
-the DEG analysis}
+\item{counts_deg_method}{Integer indicating method of DEG analysis being 
+performed. This should be one of 1 for limma-trend, 2 for limma-voom, and 
+3 for DESeq2}
 }
 \value{
 A list the same length as the vector of selected factors.
@@ -32,3 +35,14 @@ This function uses a vector of selected factors to create
 choices for the reference level to use for the factor in
 the DEG analysis.
 }
+\seealso{
+Other DEG functions: 
+\code{\link{change_names}()},
+\code{\link{experiment_design_txt}()},
+\code{\link{limma_value}()},
+\code{\link{list_block_factors_ui}()},
+\code{\link{list_factors_ui}()},
+\code{\link{list_interaction_terms_ui}()},
+\code{\link{list_model_comparisons_ui}()}
+}
+\concept{DEG functions}

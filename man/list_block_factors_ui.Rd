@@ -7,10 +7,10 @@
 list_block_factors_ui(sample_info, select_factors_model)
 }
 \arguments{
-\item{sample_info}{Experiment file information for grouping}
+\item{sample_info}{Matrix of experiment design information for grouping}
 
-\item{select_factors_model}{The selected factors for the model
-expression}
+\item{select_factors_model}{Vector of strings indicating the selected factors
+for the model expression, see \code{\link{list_factors_ui}()} for options}
 }
 \value{
 This function returns a vector of choices for a batch
@@ -22,3 +22,14 @@ factors for the model to create a selection for the batch
 effect. Returns a vector that turns into a checkbox for
 the User.
 }
+\seealso{
+Other DEG functions: 
+\code{\link{change_names}()},
+\code{\link{experiment_design_txt}()},
+\code{\link{limma_value}()},
+\code{\link{list_factors_ui}()},
+\code{\link{list_interaction_terms_ui}()},
+\code{\link{list_model_comparisons_ui}()},
+\code{\link{select_reference_levels_ui}()}
+}
+\concept{DEG functions}

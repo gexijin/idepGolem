@@ -14,7 +14,7 @@ NULL
 #'
 #' Change comparison names in limma from "KO_ko-WT_ko" to    "KO-WT_for_ko"
 #'
-#' @param comparison Comparison to change the name for
+#' @param comparison String of comparison to change the name for
 #'
 #' @export
 #' @return The altered comparison string, see the description for example.
@@ -101,8 +101,8 @@ list_factors_ui <- function(sample_info,
 #' the User.
 #'
 #' @param sample_info Matrix of experiment design information for grouping
-#' @param select_factors_model The selected factors for the model
-#'  expression
+#' @param select_factors_model Vector of strings indicating the selected factors
+#'  for the model expression, see \code{\link{list_factors_ui}()} for options
 #'
 #' @export
 #' @return This function returns a vector of choices for a batch
@@ -136,8 +136,8 @@ list_block_factors_ui <- function(sample_info,
 #' can be created from the processed data.
 #'
 #' @param sample_info Matrix of experiment design information for grouping
-#' @param select_factors_model The selected factors for the model
-#'  expression
+#' @param select_factors_model Vector of strings indicating the selected factors
+#'  for the model expression, see \code{\link{list_factors_ui}()} for options
 #' @param processed_data Matrix of gene data that has been through the 
 #'  \code{\link{pre_process}()}
 #'
@@ -237,8 +237,8 @@ list_model_comparisons_ui <- function(sample_info,
 #' DEG process.
 #'
 #' @param sample_info Matrix of experiment design information for grouping
-#' @param select_factors_model The selected factors for the model
-#'  expression
+#' @param select_factors_model Vector of strings indicating the selected factors
+#'  for the model expression, see \code{\link{list_factors_ui}()} for options
 #'
 #' @export
 #' @return Returns a character string of an interaction term
@@ -271,12 +271,14 @@ list_interaction_terms_ui <- function(sample_info,
 #' model design being used for the DEG analysis.
 #'
 #' @param sample_info Matrix of experiment design information for grouping
-#' @param select_factors_model The selected factors for the model
-#'  expression
-#' @param select_block_factors_model The selected factors for
-#'  batch effect
-#' @param select_interactions The interaction terms being used in
-#'  the model design
+#' @param select_factors_model Vector of strings indicating the selected factors
+#'  for the model expression, see \code{\link{list_factors_ui}()} for options
+#' @param select_block_factors_model Vector of strings indicating selected 
+#'  factors for batch effect, see \code{\link{list_block_factors_ui}()} for 
+#'  options 
+#' @param select_interactions Vector of strings indicating selected the 
+#'  interaction terms being used in the model design, see 
+#'  \code{\link{list_interaction_terms_ui}()} for options  
 #'
 #' @export
 #' @return Returns a string of the model design being used for
@@ -313,15 +315,15 @@ experiment_design_txt <- function(sample_info,
   }
 }
 
-#' Refernce levels for selected factor
+#' Reference levels for selected factor
 #'
 #' This function uses a vector of selected factors to create
 #' choices for the reference level to use for the factor in
 #' the DEG analysis.
 #'
 #' @param sample_info Matrix of experiment design information for grouping
-#' @param select_factors_model The selected factors for the model
-#'  expression
+#' @param select_factors_model Vector of strings indicating the selected factors 
+#'  for the model expression, see \code{\link{list_factors_ui}()} for options
 #' @param data_file_format Integer indicating the data format. This should be
 #'   one of 1 for read counts data, 2 for normalized expression, or 3 for
 #'   fold changes and adjusted P-values
@@ -333,6 +335,9 @@ experiment_design_txt <- function(sample_info,
 #' @return A list the same length as the vector of selected factors.
 #'  Each entry in the list corresponds to the choice of group to
 #'  use for the reference level.
+#'  
+#' @family DEG functions
+#' 
 select_reference_levels_ui <- function(sample_info,
                                        select_factors_model,
                                        data_file_format = c(1, 2, 3),
@@ -374,29 +379,31 @@ select_reference_levels_ui <- function(sample_info,
 #' @param counts_deg_method Integer indicating method of DEG analysis being 
 #'   performed. This should be one of 1 for limma-trend, 2 for limma-voom, and 
 #'   3 for DESeq2
-#' @param raw_counts Matrix of  raw counts before processing for
+#' @param raw_counts Matrix of raw counts before processing for
 #'  gene expression data
-#' @param limma_p_val Significant p-value to use for expressed
+#' @param limma_p_val Numeric value for significant p-value to use for expressed
 #'  genes
-#' @param limma_fc Minimum fold-change cutoff for the DEG
+#' @param limma_fc Numeric value for minimum fold-change cutoff for the DEG
 #'  analysis
 #' @param select_model_comprions Selected comparisons to analyze
 #'  in the DEG analysis
-#' @param sample_info Experiment file information for grouping
-#' @param select_factors_model The selected factors for the model
-#'  expression
-#' @param select_interactions The interaction terms being used in
-#'  the model design
-#' @param select_block_factors_model The selected factors for
-#'  batch effect
+#' @param sample_info Matrix of experiment design information for grouping
+#' @param select_factors_model Vector of strings indicating the selected factors 
+#'  for the model expression, see \code{\link{list_factors_ui}()} for options
+#' @param select_interactions Vector of strings indicating selected the 
+#'  interaction terms being used in the model design, see 
+#'  \code{\link{list_interaction_terms_ui}()} for options
+#' @param select_block_factors_model Vector of strings indicating selected 
+#'  factors for batch effect, see \code{\link{list_block_factors_ui}()} for 
+#'  options
 #' @param factor_reference_levels Vector of reference levels to
 #'  use for the selected factors
 #' @param processed_data Matrix of gene data that has been through the 
 #'  \code{\link{pre_process}()}
-#' @param counts_log_start The constant added to the log transformation
+#' @param counts_log_start Integer for constant added to the log transformation
 #'  from pre-processing
-#' @param p_vals The vector of p-vals calculated in pre-process for
-#'  significant expression
+#' @param p_vals  Vector of p-values calculated in \code{\link{pre_process}()} 
+#'  for significant expression
 #' @param threshold_wald_test TRUE/FALSE to use threshold-based Wald test
 #' to test null hypothesis that the absolute value of fold-change is
 #' bigger than a value. Default is FALSE 
@@ -416,6 +423,9 @@ select_reference_levels_ui <- function(sample_info,
 #'  for each comparison. Each entry is a data frame with two columns. One
 #'  column is the calculated fold change for the comparison and the other
 #'  is the adjusted p-value for the fold change calculation.
+#'  
+#' @family DEG functions 
+#' 
 limma_value <- function(data_file_format = c(1, 2, 3),
                         counts_deg_method = c(1, 2, 3),
                         raw_counts,

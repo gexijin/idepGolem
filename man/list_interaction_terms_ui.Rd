@@ -7,10 +7,10 @@
 list_interaction_terms_ui(sample_info, select_factors_model)
 }
 \arguments{
-\item{sample_info}{Experiment file information for grouping}
+\item{sample_info}{Matrix of experiment design information for grouping}
 
-\item{select_factors_model}{The selected factors for the model
-expression}
+\item{select_factors_model}{Vector of strings indicating the selected factors
+for the model expression, see \code{\link{list_factors_ui}()} for options}
 }
 \value{
 Returns a character string of an interaction term
@@ -22,3 +22,14 @@ This functions uses the sample info file and the selected
 model factors to create interaction terms to be used in the
 DEG process.
 }
+\seealso{
+Other DEG functions: 
+\code{\link{change_names}()},
+\code{\link{experiment_design_txt}()},
+\code{\link{limma_value}()},
+\code{\link{list_block_factors_ui}()},
+\code{\link{list_factors_ui}()},
+\code{\link{list_model_comparisons_ui}()},
+\code{\link{select_reference_levels_ui}()}
+}
+\concept{DEG functions}
