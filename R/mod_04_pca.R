@@ -355,8 +355,7 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       id = "download_pca",
       filename = "pca_plot",
       figure = reactive({
-        # pca_plot()
-        print(plotly::ggplotly(pca_plot()))
+      pca_plot()
       }),
       label = "",
       width = get_plot_width(
