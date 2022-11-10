@@ -287,7 +287,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     deg_env <- new.env()
 
     output$submit_ui <- renderUI({
-      req(model_comparisons())
+      #req(model_comparisons()) # this is stopping LCF data from getting through DEG1
       tagList(
         actionButton(
           inputId = ns("submit_model_button"),
