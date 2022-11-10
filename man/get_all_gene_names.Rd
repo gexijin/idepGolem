@@ -7,9 +7,10 @@
 get_all_gene_names(mapped_ids, all_gene_info)
 }
 \arguments{
-\item{mapped_ids}{Matched IDs from the convert_data functions}
+\item{mapped_ids}{Matched IDs from \code{\link{convet_id}()}}
 
-\item{all_gene_info}{Gene information matched species in idep database}
+\item{all_gene_info}{Gene information matched species in idep database from 
+\code{\link{gene_info}()}}
 }
 \value{
 Data frame containing all the matched ID names from idep
@@ -22,3 +23,10 @@ One means no conversion occurred.
 This function will create a data frame with all the matched
 gene names from the database.
 }
+\seealso{
+Other load data functions: 
+\code{\link{convert_data}()},
+\code{\link{gene_info}()},
+\code{\link{input_data}()}
+}
+\concept{load data functions}

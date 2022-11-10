@@ -7,16 +7,38 @@
 total_counts_ggplot(counts_data, sample_info, type = "")
 }
 \arguments{
-\item{counts_data}{Raw counts from gene expression data}
+\item{counts_data}{Matrix of raw counts from gene expression data}
 
-\item{sample_info}{Experiment file information for grouping
+\item{sample_info}{Matrix of experiment design information for grouping
 samples}
+
+\item{type}{String designating the type of data to be used in the title.
+Commonly either "Raw" or "Transformed"}
 }
 \value{
-formatted ggbarplot
+A barplot as a \code{ggplot} object
 }
 \description{
-This function takes in the rount count data
-and creates a formatted gg barplot that shows the number
-of genes mapped to each sample in millions.
+This function takes in either raw count or processed data and creates a
+formatted barplot as a \code{ggplot} object that shows the number
+of genes mapped to each sample in millions. This function is only used for
+read counts data.
 }
+\seealso{
+Other preprocess functions: 
+\code{\link{eda_boxplot}()},
+\code{\link{eda_density}()},
+\code{\link{eda_scatter}()},
+\code{\link{individual_plots}()},
+\code{\link{mean_sd_plot}()},
+\code{\link{pre_process}()}
+
+Other plots: 
+\code{\link{eda_boxplot}()},
+\code{\link{eda_density}()},
+\code{\link{eda_scatter}()},
+\code{\link{individual_plots}()},
+\code{\link{mean_sd_plot}()}
+}
+\concept{plots}
+\concept{preprocess functions}

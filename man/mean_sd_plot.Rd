@@ -7,14 +7,15 @@
 mean_sd_plot(processed_data, rank, heat_cols)
 }
 \arguments{
-\item{processed_data}{Data that has gone through the pre-processing}
+\item{processed_data}{Matrix of data that has gone through
+\code{\link{pre_process}()}}
 
 \item{rank}{TRUE/FALSE whether to use the rank of the mean or not}
 
 \item{heat_cols}{Heat color to use with black in the plot}
 }
 \value{
-A formatted ggplot hexplot of the mean and standard
+A formatted \code{ggplot} hexplot of the mean and standard
  deviation of the processed data
 }
 \description{
@@ -23,3 +24,21 @@ Y-axis across the mean of the counts data on the X-axis.
 Option to make the X-axis the rank of the mean which
 does a better job showing the spread of the data.
 }
+\seealso{
+Other plots: 
+\code{\link{eda_boxplot}()},
+\code{\link{eda_density}()},
+\code{\link{eda_scatter}()},
+\code{\link{individual_plots}()},
+\code{\link{total_counts_ggplot}()}
+
+Other preprocess functions: 
+\code{\link{eda_boxplot}()},
+\code{\link{eda_density}()},
+\code{\link{eda_scatter}()},
+\code{\link{individual_plots}()},
+\code{\link{pre_process}()},
+\code{\link{total_counts_ggplot}()}
+}
+\concept{plots}
+\concept{preprocess functions}

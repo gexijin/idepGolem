@@ -18,17 +18,18 @@ cluster_heat_click_info(
 \arguments{
 \item{click}{Click input from subheatmap}
 
-\item{ht_sub}{Drawn subheatmap}
+\item{ht_sub}{Heatmap object of drawn subheatmap object}
 
 \item{ht_sub_obj}{Heatmap object with mapping info}
 
-\item{ht_pos_sub}{Position information from submap}
+\item{ht_pos_sub}{DataFrame object of position information from submap}
 
 \item{sub_groups}{Vector of group labels from submap}
 
-\item{group_colors}{Colors for the group annotation}
+\item{group_colors}{Vector of colors for the group annotation}
 
-\item{cluster_meth}{Type of clustering being performed}
+\item{cluster_meth}{Integer indicating which clustering method to use 1 for
+hierarchical and 2 for kmeans.}
 
 \item{click_data}{Data matrix to get the data value from}
 }
@@ -40,3 +41,21 @@ HTML code to produce a table with information
 Create a text output to tell the user the cell
 information for their click.
 }
+\seealso{
+Other clustering functions: 
+\code{\link{draw_sample_tree}()},
+\code{\link{heat_sub}()},
+\code{\link{heatmap_main}()},
+\code{\link{k_means_elbow}()},
+\code{\link{process_heatmap_data}()},
+\code{\link{sd_density}()},
+\code{\link{sub_heat_ann}()}
+
+Other heatmaps: 
+\code{\link{heat_sub}()},
+\code{\link{heatmap_main}()},
+\code{\link{process_heatmap_data}()},
+\code{\link{sub_heat_ann}()}
+}
+\concept{clustering functions}
+\concept{heatmaps}

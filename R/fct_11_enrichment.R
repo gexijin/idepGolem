@@ -95,7 +95,8 @@ enrichment_tree_plot <- function(go_table,
     dendextend::set("leaves_cex", leaf_size) |>
     # up or down genes
     dendextend::set("leaves_col", leaf_colors[leaf_type]) |>
-    plot(horiz = TRUE)
+    dendextend::flatten.dendrogram() |>
+    plot(horiz = TRUE, axes = FALSE)
 
   # Add legend using a second layer
   par(lend = 1)
@@ -105,7 +106,7 @@ enrichment_tree_plot <- function(go_table,
     col = leaf_colors,
     legend = levels(leaf_type),
     bty = "n",
-    horiz = T
+    horiz = TRUE
   )
 
   return(recordPlot())
