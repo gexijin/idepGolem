@@ -9,7 +9,7 @@ get_all_gene_names(mapped_ids, all_gene_info)
 \arguments{
 \item{mapped_ids}{Matched IDs from \code{\link{convet_id}()}}
 
-\item{all_gene_info}{Gene information matched species in idep database from 
+\item{all_gene_info}{Gene information matched species in idep database from
 \code{\link{gene_info}()}}
 }
 \value{

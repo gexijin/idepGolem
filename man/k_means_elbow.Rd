@@ -22,7 +22,13 @@ number of clusters to create
 Other plots: 
 \code{\link{cor_plot}()},
 \code{\link{draw_sample_tree}()},
-\code{\link{sd_density}()}
+\code{\link{eda_boxplot}()},
+\code{\link{eda_density}()},
+\code{\link{eda_scatter}()},
+\code{\link{individual_plots}()},
+\code{\link{mean_sd_plot}()},
+\code{\link{sd_density}()},
+\code{\link{total_counts_ggplot}()}
 
 Other clustering functions: 
 \code{\link{cluster_heat_click_info}()},

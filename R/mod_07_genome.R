@@ -160,7 +160,8 @@ mod_07_genome_ui <- function(id) {
               outputId = ns("genome_plot"),
               height = "700px",
               width = "100%"
-            )
+            ),
+            ottoPlots::mod_download_figure_ui(ns("dl_genome_plot"))
           ),
           tabPanel(
             "(PREDA) Significant Loci",
@@ -321,8 +322,7 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data) {
       )
     })
 
-    # Using PREDA to identify significant genomic regions
-    output$genome_plot <- renderPlot({
+    genome_plot_object <- reactive({
       req(!is.null(genome_plot_data()))
 
       get_genome_plot(
@@ -330,7 +330,26 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data) {
         regions_p_val_cutoff = input$regions_p_val_cutoff,
         statistic_cutoff = input$statistic_cutoff
       )
+
+      p <- recordPlot()
+      return(p)
     })
+
+    # Using PREDA to identify significant genomic regions
+    output$genome_plot <- renderPlot({
+      req(genome_plot_object())
+      print(genome_plot_object())
+    })
+
+
+    dl_genome_plot <- ottoPlots::mod_download_figure_server(
+      id = "dl_genome_plot",
+      filename = "genome_plot",
+      figure = reactive({
+        genome_plot_object()
+      }),
+      label = ""
+    )
 
     output$chr_regions <- DT::renderDataTable({
       req(!is.null(genome_plot_data()))
