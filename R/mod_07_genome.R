@@ -371,7 +371,8 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data) {
     )
 
     sig_loci_data <- reactive({
-      req(!is.null(genome_plot_data()))
+      req(genome_plot_data())
+      req(genome_plot_data() != -1)
 
       region_data <- genome_plot_data()$Regions[, c(8, 1:6, 9)]
       colnames(region_data)[1] <- "RegionID"
@@ -403,6 +404,7 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data) {
 
     chr_regions_data <- reactive({
       req(!is.null(genome_plot_data()))
+      req(genome_plot_data() != -1)
 
       genes <- genome_plot_data()$Genes[, -c(5, 10, 12)]
       genes$Fold <- round(genes$Fold, 3)
