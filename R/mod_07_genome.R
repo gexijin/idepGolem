@@ -128,7 +128,8 @@ mod_07_genome_ui <- function(id) {
             ),
             p("Select a region to zoom in. Mouse over the points to
             see more information on the gene. Enriched regions are
-            highlighted by blue or red line segments paralell to the chromosomes.")
+            highlighted by blue or red line segments paralell to the chromosomes."),
+            p("Use camera icon in figure to download image.")
           ),
           tabPanel(
             "PREDA (5 Mins)",
@@ -165,11 +166,29 @@ mod_07_genome_ui <- function(id) {
           ),
           tabPanel(
             "(PREDA) Significant Loci",
-            DT::dataTableOutput(outputId = ns("chr_regions"))
+            DT::dataTableOutput(outputId = ns("chr_regions")),
+            fluidRow(
+              column(
+                width = 3,
+                downloadButton(
+                  outputId = ns("dl_sig_data"),
+                  label = "Significiant loci"
+                )
+              )
+            )
           ),
           tabPanel(
             "(PREDA) Genes",
-            DT::dataTableOutput(outputId = ns("genes_chr_regions"))
+            DT::dataTableOutput(outputId = ns("genes_chr_regions")),
+            fluidRow(
+              column(
+                width = 3,
+                downloadButton(
+                  outputId = ns("dl_chr_regions"),
+                  label = "Chromosomes regions"
+                )
+              )
+            )
           ),
           tabPanel(
             "Info",
@@ -351,14 +370,20 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data) {
       label = ""
     )
 
-    output$chr_regions <- DT::renderDataTable({
+    sig_loci_data <- reactive({
       req(!is.null(genome_plot_data()))
 
       region_data <- genome_plot_data()$Regions[, c(8, 1:6, 9)]
       colnames(region_data)[1] <- "RegionID"
 
+      return(region_data)
+    })
+
+    output$chr_regions <- DT::renderDataTable({
+      req(sig_loci_data())
+
       DT::datatable(
-        region_data,
+        sig_loci_data(),
         options = list(
           pageLength = 20,
           scrollX = "400px"
@@ -367,15 +392,30 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data) {
       )
     })
 
-    output$genes_chr_regions <- DT::renderDataTable({
+    output$dl_sig_data <- downloadHandler(
+      filename = function() {
+        "significant_loci.csv"
+      },
+      content = function(file) {
+        write.csv(sig_loci_data(), file, row.names = FALSE)
+      }
+    )
+
+    chr_regions_data <- reactive({
       req(!is.null(genome_plot_data()))
 
       genes <- genome_plot_data()$Genes[, -c(5, 10, 12)]
       genes$Fold <- round(genes$Fold, 3)
       colnames(genes)[2] <- "Dir"
 
+      return(genes)
+    })
+
+    output$genes_chr_regions <- DT::renderDataTable({
+      req(chr_regions_data())
+
       DT::datatable(
-        genes,
+        chr_regions_data(),
         options = list(
           pageLength = 20,
           scrollX = "400px"
@@ -383,6 +423,15 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data) {
         rownames = FALSE
       )
     })
+
+    output$dl_chr_regions <- downloadHandler(
+      filename = function() {
+        "chromosome_regions.csv"
+      },
+      content = function(file) {
+        write.csv(chr_regions_data(), file, row.names = FALSE)
+      }
+    )
   })
 }
 
