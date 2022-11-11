@@ -14,7 +14,7 @@ PCA_plot(
 )
 }
 \arguments{
-\item{data}{Matrix of gene data that has been through 
+\item{data}{Matrix of gene data that has been through
 \code{\link{pre_process}()}}
 
 \item{sample_info}{Matrix of sample information from experiment design file}
@@ -23,12 +23,12 @@ PCA_plot(
 
 \item{PCAy}{Integer designating the PC to be plotted on on the y axis}
 
-\item{selected_color}{String designating factor to color points by. Should be 
-one of the design factors from the design file or "Names" as default which 
+\item{selected_color}{String designating factor to color points by. Should be
+one of the design factors from the design file or "Names" as default which
 automatically detects groups from gene data file}
 
-\item{selected_shape}{String designating factor to shape points by. 
-Should be one of the design factors from the design file or "Names" as 
+\item{selected_shape}{String designating factor to shape points by.
+Should be one of the design factors from the design file or "Names" as
 default which automatically detects groups from gene data file}
 }
 \value{
@@ -46,8 +46,6 @@ Other PCA functions:
 \code{\link{PCA_biplot}()},
 \code{\link{PCA_plot_3d}()},
 \code{\link{PCAtools_eigencorplot}()},
-\code{\link{get_plot_height}()},
-\code{\link{get_plot_width}()},
 \code{\link{pc_factor_correlation}()},
 \code{\link{t_SNE_plot}()}
 

@@ -12,21 +12,21 @@ t_SNE_plot(
 )
 }
 \arguments{
-\item{data}{Matrix of gene data that has been through 
+\item{data}{Matrix of gene data that has been through
 \code{\link{pre_process}()}}
 
 \item{sample_info}{Matrix of sample information from experiment design file}
 
-\item{selected_color}{String designating factor to color points by. Should be 
-one of the design factors from the design file or "Names" as default which 
+\item{selected_color}{String designating factor to color points by. Should be
+one of the design factors from the design file or "Names" as default which
 automatically detects groups from gene data file}
 
-\item{selected_shape}{String designating factor to shape points by. 
-Should be one of the design factors from the design file or "Names" as 
+\item{selected_shape}{String designating factor to shape points by.
+Should be one of the design factors from the design file or "Names" as
 default which automatically detects groups from gene data file}
 }
 \value{
-Formatted t-SNE plot
+A \code{ggplot} object formatted t-SNE plot
 }
 \description{
 Draw a t-distributed stochastic neighbor embedding (t-SNE) plot
@@ -39,8 +39,6 @@ Other PCA functions:
 \code{\link{PCA_plot_3d}()},
 \code{\link{PCA_plot}()},
 \code{\link{PCAtools_eigencorplot}()},
-\code{\link{get_plot_height}()},
-\code{\link{get_plot_width}()},
 \code{\link{pc_factor_correlation}()}
 
 Other plots: 

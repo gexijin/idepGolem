@@ -9,19 +9,19 @@ PCAtools_eigencorplot(processed_data, sample_info)
 \arguments{
 \item{sample_info}{Matrix of sample information from experiment design file}
 
-\item{data}{Matrix of gene data that has been through 
+\item{data}{Matrix of gene data that has been through
 \code{\link{pre_process}())}}
 }
 \value{
-A \code{ggplot} object as a formatted plot generated with PCAtools 
+A \code{ggplot} object as a formatted plot generated with PCAtools
  package
 }
 \description{
 Generates a plot showing correlations between Principal Components and design factors
 }
 \seealso{
-\code{\link[PCAtools]{pca}()} and 
-  \code{\link[PCAtools]{eigencorplot}()} for specific documentation from the 
+\code{\link[PCAtools]{pca}()} and
+  \code{\link[PCAtools]{eigencorplot}()} for specific documentation from the
   PCAtools package
 
 Other PCA functions: 
@@ -30,8 +30,6 @@ Other PCA functions:
 \code{\link{PCA_biplot}()},
 \code{\link{PCA_plot_3d}()},
 \code{\link{PCA_plot}()},
-\code{\link{get_plot_height}()},
-\code{\link{get_plot_width}()},
 \code{\link{pc_factor_correlation}()},
 \code{\link{t_SNE_plot}()}
 }

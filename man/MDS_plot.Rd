@@ -7,21 +7,21 @@
 MDS_plot(data, sample_info, selected_shape, selected_color)
 }
 \arguments{
-\item{data}{Matrix of gene data that has been through 
+\item{data}{Matrix of gene data that has been through
 \code{\link{pre_process}()}}
 
 \item{sample_info}{Matrix of sample information from experiment design file}
 
-\item{selected_shape}{String designating factor to shape points by. 
-Should be one of the design factors from the design file or "Names" as 
+\item{selected_shape}{String designating factor to shape points by.
+Should be one of the design factors from the design file or "Names" as
 default which automatically detects groups from gene data file}
 
-\item{selected_color}{String designating factor to color points by. Should be 
-one of the design factors from the design file or "Names" as default which 
+\item{selected_color}{String designating factor to color points by. Should be
+one of the design factors from the design file or "Names" as default which
 automatically detects groups from gene data file}
 }
 \value{
-Formatted PCA plot
+A \code{ggplot} object formatted PCA plot
 }
 \description{
 Draw a multidimensional scaling (MDS) plot
@@ -33,8 +33,6 @@ Other PCA functions:
 \code{\link{PCA_plot_3d}()},
 \code{\link{PCA_plot}()},
 \code{\link{PCAtools_eigencorplot}()},
-\code{\link{get_plot_height}()},
-\code{\link{get_plot_width}()},
 \code{\link{pc_factor_correlation}()},
 \code{\link{t_SNE_plot}()}
 }
