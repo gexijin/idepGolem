@@ -24,10 +24,14 @@ indicated by the user.
 }
 \seealso{
 Other plots: 
+\code{\link{cor_plot}()},
+\code{\link{draw_sample_tree}()},
 \code{\link{eda_boxplot}()},
 \code{\link{eda_density}()},
 \code{\link{individual_plots}()},
+\code{\link{k_means_elbow}()},
 \code{\link{mean_sd_plot}()},
+\code{\link{sd_density}()},
 \code{\link{total_counts_ggplot}()}
 
 Other preprocess functions: 

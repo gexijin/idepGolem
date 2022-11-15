@@ -10,7 +10,7 @@ gene_info(converted, select_org, idep_data)
 \item{converted}{List returned \code{\link{convert_id}()}. Contains
 information about the gene IDs for the matched species.}
 
-\item{select_org}{String indicating selected organism for the expression 
+\item{select_org}{String indicating selected organism for the expression
 data.Default is "BestMatch."}
 
 \item{idep_data}{Data files from the database obtained with

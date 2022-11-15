@@ -12,7 +12,7 @@ convert_data(
 )
 }
 \arguments{
-\item{converted}{Data from \code{\link{convert_id}()} function containing 
+\item{converted}{Data from \code{\link{convert_id}()} function containing
 converted ids}
 
 \item{data}{Data from the input expression file}
