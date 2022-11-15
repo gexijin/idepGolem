@@ -226,7 +226,7 @@ process_heatmap_data <- function(data,
 #'
 #' @family clustering functions
 #' @family heatmaps
-#' @seealso 
+#' @seealso
 #' * \code{\link{dist_functions}()} for available distance functions,
 #' *  \code{\link{hcluster_functions}()} for available functions for hierarchical
 #' @md
@@ -587,7 +587,7 @@ sub_heat_ann <- function(data,
 #' @return HTML code to produce a table with information
 #'  about the selected cell.
 #'
-#' @family clustering functions 
+#' @family clustering functions
 #' @family heatmaps
 cluster_heat_click_info <- function(click,
                                     ht_sub,
@@ -963,4 +963,3 @@ prep_download <- function(heatmap,
     return(heatmap_data)
   }
 }
-

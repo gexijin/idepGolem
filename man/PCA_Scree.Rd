@@ -7,11 +7,26 @@
 PCA_Scree(processed_data)
 }
 \arguments{
-\item{data}{Data that has been through pre-processing}
+\item{data}{Matrix of gene data that has been through
+\code{\link{pre_process}()}}
 }
 \value{
-Formatted Scree plot using PCAtools package
+A \code{ggplot} object formatted as a Scree plot
 }
 \description{
-Draw a Scree plot with Horn's and Elbow suggestion for cutoffs using PCAtools package
+Draw a Scree plot with Horn's and Elbow suggestion for cutoffs using
+PCAtools package
 }
+\seealso{
+\code{\link[PCAtools]{screeplot}()} for PCAtools documentation
+
+Other PCA functions: 
+\code{\link{MDS_plot}()},
+\code{\link{PCA_biplot}()},
+\code{\link{PCA_plot_3d}()},
+\code{\link{PCA_plot}()},
+\code{\link{PCAtools_eigencorplot}()},
+\code{\link{pc_factor_correlation}()},
+\code{\link{t_SNE_plot}()}
+}
+\concept{PCA functions}

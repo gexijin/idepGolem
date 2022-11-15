@@ -128,7 +128,8 @@ mod_07_genome_ui <- function(id) {
             ),
             p("Select a region to zoom in. Mouse over the points to
             see more information on the gene. Enriched regions are
-            highlighted by blue or red line segments paralell to the chromosomes.")
+            highlighted by blue or red line segments paralell to the chromosomes."),
+            p("Use camera icon in figure to download image.")
           ),
           tabPanel(
             "PREDA (5 Mins)",
@@ -160,15 +161,34 @@ mod_07_genome_ui <- function(id) {
               outputId = ns("genome_plot"),
               height = "700px",
               width = "100%"
-            )
+            ),
+            ottoPlots::mod_download_figure_ui(ns("dl_genome_plot"))
           ),
           tabPanel(
             "(PREDA) Significant Loci",
-            DT::dataTableOutput(outputId = ns("chr_regions"))
+            DT::dataTableOutput(outputId = ns("chr_regions")),
+            fluidRow(
+              column(
+                width = 3,
+                downloadButton(
+                  outputId = ns("dl_sig_data"),
+                  label = "Significiant loci"
+                )
+              )
+            )
           ),
           tabPanel(
             "(PREDA) Genes",
-            DT::dataTableOutput(outputId = ns("genes_chr_regions"))
+            DT::dataTableOutput(outputId = ns("genes_chr_regions")),
+            fluidRow(
+              column(
+                width = 3,
+                downloadButton(
+                  outputId = ns("dl_chr_regions"),
+                  label = "Chromosomes regions"
+                )
+              )
+            )
           ),
           tabPanel(
             "Info",
@@ -321,8 +341,7 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data) {
       )
     })
 
-    # Using PREDA to identify significant genomic regions
-    output$genome_plot <- renderPlot({
+    genome_plot_object <- reactive({
       req(!is.null(genome_plot_data()))
 
       get_genome_plot(
@@ -330,16 +349,42 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data) {
         regions_p_val_cutoff = input$regions_p_val_cutoff,
         statistic_cutoff = input$statistic_cutoff
       )
+
+      p <- recordPlot()
+      return(p)
     })
 
-    output$chr_regions <- DT::renderDataTable({
-      req(!is.null(genome_plot_data()))
+    # Using PREDA to identify significant genomic regions
+    output$genome_plot <- renderPlot({
+      req(genome_plot_object())
+      print(genome_plot_object())
+    })
+
+
+    dl_genome_plot <- ottoPlots::mod_download_figure_server(
+      id = "dl_genome_plot",
+      filename = "genome_plot",
+      figure = reactive({
+        genome_plot_object()
+      }),
+      label = ""
+    )
+
+    sig_loci_data <- reactive({
+      req(genome_plot_data())
+      req(genome_plot_data() != -1)
 
       region_data <- genome_plot_data()$Regions[, c(8, 1:6, 9)]
       colnames(region_data)[1] <- "RegionID"
 
+      return(region_data)
+    })
+
+    output$chr_regions <- DT::renderDataTable({
+      req(sig_loci_data())
+
       DT::datatable(
-        region_data,
+        sig_loci_data(),
         options = list(
           pageLength = 20,
           scrollX = "400px"
@@ -348,15 +393,31 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data) {
       )
     })
 
-    output$genes_chr_regions <- DT::renderDataTable({
+    output$dl_sig_data <- downloadHandler(
+      filename = function() {
+        "significant_loci.csv"
+      },
+      content = function(file) {
+        write.csv(sig_loci_data(), file, row.names = FALSE)
+      }
+    )
+
+    chr_regions_data <- reactive({
       req(!is.null(genome_plot_data()))
+      req(genome_plot_data() != -1)
 
       genes <- genome_plot_data()$Genes[, -c(5, 10, 12)]
       genes$Fold <- round(genes$Fold, 3)
       colnames(genes)[2] <- "Dir"
 
+      return(genes)
+    })
+
+    output$genes_chr_regions <- DT::renderDataTable({
+      req(chr_regions_data())
+
       DT::datatable(
-        genes,
+        chr_regions_data(),
         options = list(
           pageLength = 20,
           scrollX = "400px"
@@ -364,6 +425,15 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data) {
         rownames = FALSE
       )
     })
+
+    output$dl_chr_regions <- downloadHandler(
+      filename = function() {
+        "chromosome_regions.csv"
+      },
+      content = function(file) {
+        write.csv(chr_regions_data(), file, row.names = FALSE)
+      }
+    )
   })
 }
 

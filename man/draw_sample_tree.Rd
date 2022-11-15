@@ -44,6 +44,7 @@ Create a clustered tree of the samples in the dataset based on hierarchical
 }
 \seealso{
 Other plots: 
+\code{\link{PCA_plot}()},
 \code{\link{cor_plot}()},
 \code{\link{eda_boxplot}()},
 \code{\link{eda_density}()},
@@ -52,6 +53,9 @@ Other plots:
 \code{\link{k_means_elbow}()},
 \code{\link{mean_sd_plot}()},
 \code{\link{sd_density}()},
+
+\code{\link{t_SNE_plot}()},
+
 \code{\link{total_counts_ggplot}()}
 
 Other clustering functions: 

@@ -9,22 +9,89 @@
 #' @name fct_05_pca.R
 NULL
 
-
-
-#' Principal Component Analysis
-#'
-#' Draw a PCA plot where user selects which PCs on axes
-#'
+#' Prepare PC data
 #' @param data Data that has been through pre-processing
 #' @param sample_info Matrix array with experiment info
-#' @param PCAx PC on x axis
-#' @param PCAy PC on y axis
-#' @param selected_color color
-#' @param selected_shape shape
+#' 
+#' @export
+#' @return pca data ready for plotting
+get_pc <- function(data,
+                   sample_info
+){
+
+  #subset data if more than 100 columns
+  if (ncol(data) > 100) {
+    part <- 1:100
+    data <- data[, part]
+  }
+  
+  pca.object <- prcomp(t(data))
+  
+  # 5 pc's or number of columns if <5
+  npc <- min(5, ncol(data))
+  pcaData <- as.data.frame(pca.object$x[, 1:npc])
+  
+  groups <- detect_groups(sample_names = colnames(data), sample_info = sample_info)
+  # Missing design clause
+  if (is.null(sample_info)) {
+    pcaData <- cbind(pcaData, detect_groups(colnames(data), sample_info))
+  } else {
+    pcaData <- cbind(pcaData, detect_groups(colnames(data), sample_info), sample_info)
+  }
+  # dim(pcaData)[2]
+  colnames(pcaData)[npc + 1] <- "Names"
+  
+  # return data frame
+  return(pcaData)
+}
+
+#' Get variance percentages
+#' @param data Data
+#' @export
+#' @return importance of each pc
+get_pc_variance <- function (
+    data
+){
+  #subset data if more than 100 columns
+  if (ncol(data) > 100) {
+    part <- 1:100
+    data <- data[, part]
+  }
+  #pca
+  pca.object <- prcomp(t(data))
+  
+  #var proportions vector
+  prop_var <- summary(pca.object)$importance[2,] * 100 
+
+  return(prop_var |> round(1))
+
+}
+
+
+
+#' Principal component analysis plot
+#'
+#' Draw a PCA plot with designated PCA components on axis
+#'
+#' @param data Matrix of gene data that has been through
+#'  \code{\link{pre_process}()}
+#' @param sample_info Matrix of sample information from experiment design file
+#' @param PCAx Integer designating the PC to be plotted on the x axis
+#' @param PCAy Integer designating the PC to be plotted on on the y axis
+#' @param selected_color String designating factor to color points by. Should be
+#'  one of the design factors from the design file or "Names" as default which
+#'  automatically detects groups from gene data file
+#' @param selected_shape String designating factor to shape points by.
+#'  Should be one of the design factors from the design file or "Names" as
+#'  default which automatically detects groups from gene data file
 #'
 #' @export
-#' @return Formatted PCA plot
+#' @return A \code{ggplot} object as a PCA plot
 #'
+#' @seealso \code{\link{PCA_plot_3d}()} for three-dimensional version
+#'
+#' @family PCA functions
+#' @family plots
 PCA_plot <- function(data,
                      sample_info,
                      PCAx = 1,
@@ -39,38 +106,29 @@ PCA_plot <- function(data,
   if (is.null(selected_shape)) {
     selected_shape <- "Names"
   }
-  counts <- data
   memo <- ""
 
-  if (ncol(counts) > 100) {
+  if (ncol(data) > 100) {
     part <- 1:100
-    counts <- counts[, part]
+    data <- data[, part]
     memo <- paste("(only showing 100 samples)")
   }
 
-  if (ncol(counts) < 31) {
+  if (ncol(data) < 31) {
     x_axis_labels <- 16
   } else {
     x_axis_labels <- 12
   }
 
-  x <- data
-  y <- sample_info
-  pca.object <- prcomp(t(x))
 
-  # 5 pc's or number of columns if <5
-  npc <- min(5, ncol(data))
-  pcaData <- as.data.frame(pca.object$x[, 1:npc])
 
+  #get groups
   groups <- detect_groups(sample_names = colnames(data), sample_info = sample_info)
-  # Missing design clause
-  if (is.null(sample_info)) {
-    pcaData <- cbind(pcaData, detect_groups(colnames(data), sample_info))
-  } else {
-    pcaData <- cbind(pcaData, detect_groups(colnames(x), y), sample_info)
-  }
-  # dim(pcaData)[2]
-  colnames(pcaData)[npc + 1] <- "Names"
+
+  #get data
+  pcaData <- get_pc(data, sample_info)
+  
+  #hide legend for large or no groups levels
   if (nlevels(groups) <= 1 | nlevels(groups) > 20) {
     group_fill <- NULL
     legend <- "none"
@@ -79,7 +137,8 @@ PCA_plot <- function(data,
     legend <- "right"
   }
 
-  if (ncol(counts) < 31) {
+  #adjust axis label size
+  if (ncol(data) < 31) {
     x_axis_labels <- 16
   } else {
     x_axis_labels <- 12
@@ -88,7 +147,7 @@ PCA_plot <- function(data,
 
   # Set point & text size based on number of sample
   point_size <- 6
-  if (ncol(x) >= 40) {
+  if (ncol(data) >= 40) {
     point_size <- 3
   }
 
@@ -103,7 +162,12 @@ PCA_plot <- function(data,
     )
   ) +
     # Preferred shapes
-    ggplot2::scale_shape_manual(values = c(15, 16, 17, 18, 3, 4, 7, 8, 9, 10, 11, 12, 13, 14, 0, 1, 2, 5, 6, 19, 20, 30:100)) +
+    ggplot2::scale_shape_manual(
+      values = c(
+        15, 16, 17, 18, 3, 4, 7, 8, 9, 10, 11, 12, 13, 14,
+        0, 1, 2, 5, 6, 19, 20, 30:100
+      )
+    ) +
     ggplot2::geom_point(size = point_size) +
     ggplot2::theme_light() +
     ggplot2::theme(
@@ -136,12 +200,12 @@ PCA_plot <- function(data,
       x = "Dimension 1"
     ) #+
   # removed - causes plot legend to be missing shapes
-  # ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(shape = 15)))
+  # ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(shape = 15)))9
 
 
   # selected principal components
   PCAxy <- c(as.integer(PCAx), as.integer(PCAy))
-  percentVar <- round(100 * summary(pca.object)$importance[2, PCAxy], 0)
+  percentVar <- get_pc_variance(data)[PCAxy] #round(100 * summary(pca.object)$importance[2, PCAxy], 0)
   plot_PCA <- plot_PCA + ggplot2::xlab(paste0("PC", PCAx, ": ", percentVar[1], "% Variance"))
   plot_PCA <- plot_PCA + ggplot2::ylab(paste0("PC", PCAy, ": ", percentVar[2], "% Variance"))
   return(plot_PCA)
@@ -151,20 +215,28 @@ PCA_plot <- function(data,
 
 
 
-#' Principal Component Analysis
+#' Principal component analysis 3D plot
 #'
-#' Draw a PCA plot where user selects which PCs on axes
+#' Draw a 3D PCA plot with designated PCA components on axis
 #'
-#' @param data Data that has been through pre-processing
-#' @param sample_info Matrix array with experiment info
-#' @param PCAx PC on x axis
-#' @param PCAy PC on y axis
-#' @param PCAz PC on z axis
-#' @param selected_color color
-#' @param selected_shape shape
+#' @param data Matrix of gene data that has been through
+#'  \code{\link{pre_process}()}
+#' @param sample_info Matrix of sample information from experiment design file
+#' @param PCAx Integer designating the PC to be plotted on the x axis
+#' @param PCAy Integer designating the PC to be plotted on the y axis
+#' @param PCAz Integer designating the PC to be plotted on the z axis
+#' @param selected_color String designating factor to color points by. Should be
+#'  one of the design factors from the design file or "Names" as default which
+#'  automatically detects groups from gene data file
+#' @param selected_shape String designating factor to shape points by.
+#'  Should be one of the design factors from the design file or "Names" as
+#'  default which automatically detects groups from gene data file
 #'
 #' @export
 #' @return Formatted PCA plot
+#'
+#' @family PCA functions
+#' @seealso \code{\link{PCA_plot}()}
 #'
 PCA_plot_3d <- function(data,
                         sample_info,
@@ -254,24 +326,30 @@ PCA_plot_3d <- function(data,
   return(plot_PCA)
 }
 
-#' TSNE FUNCTION
+#' t-SNE plot
 #'
-#' Draw a t-sne plot where user selects which PCs on axes
+#' Draw a t-distributed stochastic neighbor embedding (t-SNE) plot
 #'
-#'
-#' @param data Data that has been through pre-processing
-#' @param sample_info Matrix array with experiment info
-#' @param selected_color color
-#' @param selected_shape shape
+#' @param data Matrix of gene data that has been through
+#'  \code{\link{pre_process}()}
+#' @param sample_info Matrix of sample information from experiment design file
+#' @param selected_color String designating factor to color points by. Should be
+#'  one of the design factors from the design file or "Names" as default which
+#'  automatically detects groups from gene data file
+#' @param selected_shape String designating factor to shape points by.
+#'  Should be one of the design factors from the design file or "Names" as
+#'  default which automatically detects groups from gene data file
 #'
 #' @export
-#' @return Formatted T-sne plot
+#' @return A \code{ggplot} object formatted t-SNE plot
 #'
+#' @family PCA functions
+#' @family plots
 #'
 t_SNE_plot <- function(data,
                        sample_info,
-                       selected_color,
-                       selected_shape) {
+                       selected_color = "Names",
+                       selected_shape = "Names") {
 
   # no design file
   if (is.null(selected_color)) {
@@ -364,18 +442,25 @@ t_SNE_plot <- function(data,
   return(plot_t_SNE)
 }
 
-#' MDS FUNCTION
+#' MDS plot
 #'
-#' Draw a MDS plot
+#' Draw a multidimensional scaling (MDS) plot
 #'
 #'
-#' @param data Data that has been through pre-processing
-#' @param sample_info Matrix array with experiment info
-#' @param selected_color color
-#' @param selected_shape shape
+#' @param data Matrix of gene data that has been through
+#'  \code{\link{pre_process}()}
+#' @param sample_info Matrix of sample information from experiment design file
+#' @param selected_color String designating factor to color points by. Should be
+#'  one of the design factors from the design file or "Names" as default which
+#'  automatically detects groups from gene data file
+#' @param selected_shape String designating factor to shape points by.
+#'  Should be one of the design factors from the design file or "Names" as
+#'  default which automatically detects groups from gene data file
 #'
 #' @export
-#' @return Formatted PCA plot
+#' @return A \code{ggplot} object formatted PCA plot
+#'
+#' @family PCA functions
 #'
 MDS_plot <- function(data,
                      sample_info,
@@ -481,14 +566,17 @@ MDS_plot <- function(data,
 
 #' Correlations Between Principle Components and Factors
 #'
-#' Desc
+#' This function calculates the correlation between the principle components
+#'  and factors and return the result in a formatted string.
 #'
-#'
-#' @param data Data that has been through pre-processing
-#' @param sample_info Matrix array with experiment info
+#' @param data Matrix of gene data that has been through
+#'  \code{\link{pre_process}()}
+#' @param sample_info  Matrix of sample information from experiment design file
 #'
 #' @export
-#' @return text with correlation
+#' @return A string
+#'
+#' @family PCA functions
 #'
 pc_factor_correlation <- function(data,
                                   sample_info) {
@@ -542,22 +630,33 @@ pc_factor_correlation <- function(data,
 #'
 #' Draw a PCA plot using PCAtools package
 #'
-#' @param data Data that has been through pre-processing
-#' @param sample_info Matrix array with experiment info
-#' @param select_gene_id gene name option
-#' @param all_gene_names gene names
-#' @param selected_x x axis selection eg "PC1"
-#' @param selected_y y axis selection
-#' @param encircle draw shapes in plot
-#' @param encircleFill fill shapes in plot
-#' @param showLoadings draw gene vectors onto plot
-#' @param pointlabs show column names on points
-#' @param point_size point size
-#' @param ui_color color
-#' @param ui_shape shape
+#' @param data Matrix of gene data that has been through
+#'  \code{\link{pre_process}()}
+#' @param sample_info Matrix of sample information from experiment design file
+#' @param select_gene_id String indicating which gene id to use, default is
+#'  "symbol"
+#' @param all_gene_names Dataframe of gene names from
+#'  \code{\link{get_all_gene_names}}
+#' @param selected_x String indicating x axis selection, eg "PC1"
+#' @param selected_y String indicating y axis selection, eg "PC2"
+#' @param encircle TRUE/FALSE to draw shapes in plot, default is true
+#' @param encircleFill TRUE/FALSE to fill shapes in plot, default is TRUE
+#' @param showLoadings TRUE/FALSE to draw gene vectors onto plot, default is
+#'  TRUE
+#' @param pointlabs TRUE/FALSE to show column names on points, default is TRUE
+#' @param point_size Positive number value to control point size
+#' @param ui_color String designating factor to color points by.
+#'  Should be one of the design factors from the design file
+#' @param ui_shape String designating factor to shape points by.
+#'  Should be one of the design factors from the design file
 #'
 #' @export
-#' @return Formatted PCA plot using PCAtools package
+#' @return A \code{ggplot} object formatted as a PCA plot using PCAtools package
+#'
+#' @family PCA functions
+#'
+#' @seealso \code{\link[PCAtools]{pca}()} and \code{\link[PCAtools]{biplot}()}
+#'  for the original functions from the PCAtools package
 #'
 PCA_biplot <- function(data,
                        sample_info,
@@ -616,12 +715,19 @@ PCA_biplot <- function(data,
 
 #' Principal Component Analysis with PCAtools package
 #'
-#' Draw a Scree plot with Horn's and Elbow suggestion for cutoffs using PCAtools package
+#' Draw a Scree plot with Horn's and Elbow suggestion for cutoffs using
+#' PCAtools package
 #'
-#' @param data Data that has been through pre-processing
+#' @param data Matrix of gene data that has been through
+#'  \code{\link{pre_process}()}
 #'
 #' @export
-#' @return Formatted Scree plot using PCAtools package
+#' @return A \code{ggplot} object formatted as a Scree plot
+#'
+#' @family PCA functions
+#'
+#' @seealso \code{\link[PCAtools]{screeplot}()} for PCAtools documentation
+#'
 PCA_Scree <- function(processed_data) {
   suppressWarnings(
     pca_obj <- PCAtools::pca(mat = processed_data, removeVar = 0.1)
@@ -664,10 +770,19 @@ PCA_Scree <- function(processed_data) {
 #'
 #' Generates a plot showing correlations between Principal Components and design factors
 #'
-#' @param data Data that has been through pre-processing
-#' @param sample_info Design Matrix
-#' @return Formatted plot generated with PCAtools package
+#' @param data Matrix of gene data that has been through
+#'  \code{\link{pre_process}())}
+#' @param sample_info Matrix of sample information from experiment design file
+#'
+#' @return A \code{ggplot} object as a formatted plot generated with PCAtools
+#'  package
 #' @export
+#'
+#' @family PCA functions
+#' @seealso \code{\link[PCAtools]{pca}()} and
+#'   \code{\link[PCAtools]{eigencorplot}()} for specific documentation from the
+#'   PCAtools package
+#'
 PCAtools_eigencorplot <- function(processed_data,
                                   sample_info) {
   # missing design
@@ -702,8 +817,10 @@ PCAtools_eigencorplot <- function(processed_data,
 #' @param client_data session info from shiny
 #' @param plot_name Name of plot object
 #' @param tab Tab name
+#'
 #' @return string with dimension info
 #' @export
+#'
 get_plot_width <- function(client_data,
                            plot_name,
                            tab) {
@@ -732,8 +849,10 @@ get_plot_width <- function(client_data,
 #' @param client_data session info from shiny
 #' @param plot_name Name of plot object
 #' @param tab Tab name
+#'
 #' @return height in inches of plot
 #' @export
+#'
 get_plot_height <- function(client_data,
                             plot_name,
                             tab) {
