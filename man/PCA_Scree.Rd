@@ -7,7 +7,7 @@
 PCA_Scree(processed_data)
 }
 \arguments{
-\item{data}{Matrix of gene data that has been through 
+\item{data}{Matrix of gene data that has been through
 \code{\link{pre_process}()}}
 }
 \value{

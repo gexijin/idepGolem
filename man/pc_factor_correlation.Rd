@@ -16,7 +16,7 @@ pc_factor_correlation(data, sample_info)
 A string
 }
 \description{
-This function calculates the correlation between the principle components 
+This function calculates the correlation between the principle components
  and factors and return the result in a formatted string.
 }
 \seealso{
