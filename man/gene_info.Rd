@@ -7,13 +7,14 @@
 gene_info(converted, select_org, idep_data)
 }
 \arguments{
-\item{converted}{Return value from the convert_id function. Contains
+\item{converted}{List returned \code{\link{convert_id}()}. Contains
 information about the gene IDs for the matched species.}
 
-\item{select_org}{The user selected organism for the expression data.
-Default is "BestMatch."}
+\item{select_org}{String indicating selected organism for the expression
+data.Default is "BestMatch."}
 
-\item{idep_data}{Read data files from the database.}
+\item{idep_data}{Data files from the database obtained with
+\code{\link{get_idep_data}()}}
 }
 \value{
 A data frame containing information on all ensembl IDs for the
@@ -24,3 +25,10 @@ A data frame containing information on all ensembl IDs for the
 This function retrieves detailed gene information from the
 database for the matched species.
 }
+\seealso{
+Other load data functions: 
+\code{\link{convert_data}()},
+\code{\link{get_all_gene_names}()},
+\code{\link{input_data}()}
+}
+\concept{load data functions}

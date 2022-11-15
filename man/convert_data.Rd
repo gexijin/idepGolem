@@ -12,7 +12,8 @@ convert_data(
 )
 }
 \arguments{
-\item{converted}{Data from convert_id function containing converted ids}
+\item{converted}{Data from \code{\link{convert_id}()} function containing
+converted ids}
 
 \item{data}{Data from the input expression file}
 
@@ -31,3 +32,10 @@ expression data and swap the rownames to the converted ids.
 It returns the data exactly the same except for the changed
 ids.
 }
+\seealso{
+Other load data functions: 
+\code{\link{gene_info}()},
+\code{\link{get_all_gene_names}()},
+\code{\link{input_data}()}
+}
+\concept{load data functions}
