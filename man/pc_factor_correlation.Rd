@@ -7,13 +7,26 @@
 pc_factor_correlation(data, sample_info)
 }
 \arguments{
-\item{data}{Data that has been through pre-processing}
+\item{data}{Matrix of gene data that has been through
+\code{\link{pre_process}()}}
 
-\item{sample_info}{Matrix array with experiment info}
+\item{sample_info}{Matrix of sample information from experiment design file}
 }
 \value{
-text with correlation
+A string
 }
 \description{
-Desc
+This function calculates the correlation between the principle components
+ and factors and return the result in a formatted string.
 }
+\seealso{
+Other PCA functions: 
+\code{\link{MDS_plot}()},
+\code{\link{PCA_Scree}()},
+\code{\link{PCA_biplot}()},
+\code{\link{PCA_plot_3d}()},
+\code{\link{PCA_plot}()},
+\code{\link{PCAtools_eigencorplot}()},
+\code{\link{t_SNE_plot}()}
+}
+\concept{PCA functions}

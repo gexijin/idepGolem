@@ -2,7 +2,7 @@
 % Please edit documentation in R/fct_04_pca.R
 \name{PCA_plot_3d}
 \alias{PCA_plot_3d}
-\title{Principal Component Analysis}
+\title{Principal component analysis 3D plot}
 \usage{
 PCA_plot_3d(
   data,
@@ -15,23 +15,41 @@ PCA_plot_3d(
 )
 }
 \arguments{
-\item{data}{Data that has been through pre-processing}
+\item{data}{Matrix of gene data that has been through
+\code{\link{pre_process}()}}
 
-\item{sample_info}{Matrix array with experiment info}
+\item{sample_info}{Matrix of sample information from experiment design file}
 
-\item{PCAx}{PC on x axis}
+\item{PCAx}{Integer designating the PC to be plotted on the x axis}
 
-\item{PCAy}{PC on y axis}
+\item{PCAy}{Integer designating the PC to be plotted on the y axis}
 
-\item{PCAz}{PC on z axis}
+\item{PCAz}{Integer designating the PC to be plotted on the z axis}
 
-\item{selected_color}{color}
+\item{selected_color}{String designating factor to color points by. Should be
+one of the design factors from the design file or "Names" as default which
+automatically detects groups from gene data file}
 
-\item{selected_shape}{shape}
+\item{selected_shape}{String designating factor to shape points by.
+Should be one of the design factors from the design file or "Names" as
+default which automatically detects groups from gene data file}
 }
 \value{
 Formatted PCA plot
 }
 \description{
-Draw a PCA plot where user selects which PCs on axes
+Draw a 3D PCA plot with designated PCA components on axis
 }
+\seealso{
+\code{\link{PCA_plot}()}
+
+Other PCA functions: 
+\code{\link{MDS_plot}()},
+\code{\link{PCA_Scree}()},
+\code{\link{PCA_biplot}()},
+\code{\link{PCA_plot}()},
+\code{\link{PCAtools_eigencorplot}()},
+\code{\link{pc_factor_correlation}()},
+\code{\link{t_SNE_plot}()}
+}
+\concept{PCA functions}

@@ -2,22 +2,38 @@
 % Please edit documentation in R/fct_04_pca.R
 \name{MDS_plot}
 \alias{MDS_plot}
-\title{MDS FUNCTION}
+\title{MDS plot}
 \usage{
 MDS_plot(data, sample_info, selected_shape, selected_color)
 }
 \arguments{
-\item{data}{Data that has been through pre-processing}
+\item{data}{Matrix of gene data that has been through
+\code{\link{pre_process}()}}
 
-\item{sample_info}{Matrix array with experiment info}
+\item{sample_info}{Matrix of sample information from experiment design file}
 
-\item{selected_shape}{shape}
+\item{selected_shape}{String designating factor to shape points by.
+Should be one of the design factors from the design file or "Names" as
+default which automatically detects groups from gene data file}
 
-\item{selected_color}{color}
+\item{selected_color}{String designating factor to color points by. Should be
+one of the design factors from the design file or "Names" as default which
+automatically detects groups from gene data file}
 }
 \value{
-Formatted PCA plot
+A \code{ggplot} object formatted PCA plot
 }
 \description{
-Draw a MDS plot
+Draw a multidimensional scaling (MDS) plot
 }
+\seealso{
+Other PCA functions: 
+\code{\link{PCA_Scree}()},
+\code{\link{PCA_biplot}()},
+\code{\link{PCA_plot_3d}()},
+\code{\link{PCA_plot}()},
+\code{\link{PCAtools_eigencorplot}()},
+\code{\link{pc_factor_correlation}()},
+\code{\link{t_SNE_plot}()}
+}
+\concept{PCA functions}

@@ -21,35 +21,55 @@ PCA_biplot(
 )
 }
 \arguments{
-\item{data}{Data that has been through pre-processing}
+\item{data}{Matrix of gene data that has been through
+\code{\link{pre_process}()}}
 
-\item{sample_info}{Matrix array with experiment info}
+\item{sample_info}{Matrix of sample information from experiment design file}
 
-\item{select_gene_id}{gene name option}
+\item{select_gene_id}{String indicating which gene id to use, default is
+"symbol"}
 
-\item{all_gene_names}{gene names}
+\item{all_gene_names}{Dataframe of gene names from
+\code{\link{get_all_gene_names}}}
 
-\item{selected_x}{x axis selection eg "PC1"}
+\item{selected_x}{String indicating x axis selection, eg "PC1"}
 
-\item{selected_y}{y axis selection}
+\item{selected_y}{String indicating y axis selection, eg "PC2"}
 
-\item{encircle}{draw shapes in plot}
+\item{encircle}{TRUE/FALSE to draw shapes in plot, default is true}
 
-\item{encircleFill}{fill shapes in plot}
+\item{encircleFill}{TRUE/FALSE to fill shapes in plot, default is TRUE}
 
-\item{showLoadings}{draw gene vectors onto plot}
+\item{showLoadings}{TRUE/FALSE to draw gene vectors onto plot, default is
+TRUE}
 
-\item{pointlabs}{show column names on points}
+\item{pointlabs}{TRUE/FALSE to show column names on points, default is TRUE}
 
-\item{point_size}{point size}
+\item{point_size}{Positive number value to control point size}
 
-\item{ui_color}{color}
+\item{ui_color}{String designating factor to color points by.
+Should be one of the design factors from the design file}
 
-\item{ui_shape}{shape}
+\item{ui_shape}{String designating factor to shape points by.
+Should be one of the design factors from the design file}
 }
 \value{
-Formatted PCA plot using PCAtools package
+A \code{ggplot} object formatted as a PCA plot using PCAtools package
 }
 \description{
 Draw a PCA plot using PCAtools package
 }
+\seealso{
+\code{\link[PCAtools]{pca}()} and \code{\link[PCAtools]{biplot}()}
+ for the original functions from the PCAtools package
+
+Other PCA functions: 
+\code{\link{MDS_plot}()},
+\code{\link{PCA_Scree}()},
+\code{\link{PCA_plot_3d}()},
+\code{\link{PCA_plot}()},
+\code{\link{PCAtools_eigencorplot}()},
+\code{\link{pc_factor_correlation}()},
+\code{\link{t_SNE_plot}()}
+}
+\concept{PCA functions}

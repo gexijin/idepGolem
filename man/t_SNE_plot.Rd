@@ -2,22 +2,57 @@
 % Please edit documentation in R/fct_04_pca.R
 \name{t_SNE_plot}
 \alias{t_SNE_plot}
-\title{TSNE FUNCTION}
+\title{t-SNE plot}
 \usage{
-t_SNE_plot(data, sample_info, selected_color, selected_shape)
+t_SNE_plot(
+  data,
+  sample_info,
+  selected_color = "Names",
+  selected_shape = "Names"
+)
 }
 \arguments{
-\item{data}{Data that has been through pre-processing}
+\item{data}{Matrix of gene data that has been through
+\code{\link{pre_process}()}}
 
-\item{sample_info}{Matrix array with experiment info}
+\item{sample_info}{Matrix of sample information from experiment design file}
 
-\item{selected_color}{color}
+\item{selected_color}{String designating factor to color points by. Should be
+one of the design factors from the design file or "Names" as default which
+automatically detects groups from gene data file}
 
-\item{selected_shape}{shape}
+\item{selected_shape}{String designating factor to shape points by.
+Should be one of the design factors from the design file or "Names" as
+default which automatically detects groups from gene data file}
 }
 \value{
-Formatted T-sne plot
+A \code{ggplot} object formatted t-SNE plot
 }
 \description{
-Draw a t-sne plot where user selects which PCs on axes
+Draw a t-distributed stochastic neighbor embedding (t-SNE) plot
 }
+\seealso{
+Other PCA functions: 
+\code{\link{MDS_plot}()},
+\code{\link{PCA_Scree}()},
+\code{\link{PCA_biplot}()},
+\code{\link{PCA_plot_3d}()},
+\code{\link{PCA_plot}()},
+\code{\link{PCAtools_eigencorplot}()},
+\code{\link{pc_factor_correlation}()}
+
+Other plots: 
+\code{\link{PCA_plot}()},
+\code{\link{cor_plot}()},
+\code{\link{draw_sample_tree}()},
+\code{\link{eda_boxplot}()},
+\code{\link{eda_density}()},
+\code{\link{eda_scatter}()},
+\code{\link{individual_plots}()},
+\code{\link{k_means_elbow}()},
+\code{\link{mean_sd_plot}()},
+\code{\link{sd_density}()},
+\code{\link{total_counts_ggplot}()}
+}
+\concept{PCA functions}
+\concept{plots}
