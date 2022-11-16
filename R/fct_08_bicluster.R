@@ -16,8 +16,8 @@ NULL
 #' @param data Matrix of gene data that has been through the
 #'  \code{\link{pre_process}()}
 #' @param n_genes Number of most variable genes to include in the analysis
-#' @param biclust_method String indicating the method of biclustering to perform. 
-#'  Should be one of "biclust::BCCC()", "QUBIC::BCQU()", "runibic::BCUnibic()", 
+#' @param biclust_method String indicating the method of biclustering to perform.
+#'  Should be one of "biclust::BCCC()", "QUBIC::BCQU()", "runibic::BCUnibic()",
 #'  "biclust::BCXmotifs()", "biclust::BCPlaid()", "biclust::BCSpectral()",
 #'  "biclust::BCBimax()", "biclust::BCQuest()"
 #'
@@ -118,12 +118,11 @@ bicluster_summary_message <- function(biclustering,
 
 #' Table of biclustering data
 #'
-#' This function processes results from the biclustering functions to be 
-#' displayed in a table. 
-#' 
-#' @param res The \code{res} object returned in the list output from 
+#' This function processes results from the biclustering functions to be
+#' displayed in a table.
+#'
+#' @param res The \code{res} object returned in the list output from
 #'  \code{\link{get_biclustering}()}
-#' @param biclust_data Matrix of data returned from 
 #'  \code{\link[biclust]{bicluster}()}
 #' @param select_org String indicating selected organism for the expression
 #'  data.
@@ -131,7 +130,7 @@ bicluster_summary_message <- function(biclustering,
 #'  \code{\link{gene_info}()}
 #'
 #' @export
-#' @returns A dataframe of results 
+#' @returns A dataframe of results
 #'
 #' @family bicluster functions
 #'
