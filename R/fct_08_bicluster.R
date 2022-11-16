@@ -123,6 +123,7 @@ bicluster_summary_message <- function(biclustering,
 #'
 #' @param res The \code{res} object returned in the list output from
 #'  \code{\link{get_biclustering}()}
+#' @param biclust_data Matrix of data returned from
 #'  \code{\link[biclust]{bicluster}()}
 #' @param select_org String indicating selected organism for the expression
 #'  data.
