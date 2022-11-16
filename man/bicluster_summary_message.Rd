@@ -7,9 +7,10 @@
 bicluster_summary_message(biclustering, select_bicluster)
 }
 \arguments{
-\item{biclustering}{Return list from \code{get_biclustering} function}
+\item{biclustering}{Return list from
+\code{\link{get_biclustering}()}}
 
-\item{select_bicluster}{Selected cluster to return information on}
+\item{select_bicluster}{Number of selected cluster to return information on}
 }
 \value{
 A character string message with the requested summary information.
@@ -18,3 +19,9 @@ A character string message with the requested summary information.
 Give the summary of the identified clusters from the \code{get_biclustering}
 function which gives the number of clusters found and the samples used.
 }
+\seealso{
+Other bicluster functions: 
+\code{\link{get_biclust_table_data}()},
+\code{\link{get_biclustering}()}
+}
+\concept{bicluster functions}
