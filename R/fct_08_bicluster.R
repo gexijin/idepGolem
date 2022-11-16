@@ -8,17 +8,18 @@
 #' @name fct_08_bicluster.R
 NULL
 
-#' Run biclustering
+#' Get bicuster information
 #'
 #' Utilize the biclust package to run biclustering on the processed data for a
 #' selected number of genes.
 #'
-#' @param data Data matrix that has been through the pre-processing function
+#' @param data Matrix of gene data that has been through the
+#'  \code{\link{pre_process}()}
 #' @param n_genes Number of most variable genes to include in the analysis
-#' @param biclust_method Method of biclustering to perform (biclust::BCCC(),
-#'  QUBIC::BCQU(), runibic::BCUnibic(), biclust::BCXmotifs(),
-#'  biclust::BCPlaid(), biclust::BCSpectral(), biclust::BCBimax(),
-#'  biclust::BCQuest())
+#' @param biclust_method String indicating the method of biclustering to perform. 
+#'  Should be one of "biclust::BCCC()", "QUBIC::BCQU()", "runibic::BCUnibic()", 
+#'  "biclust::BCXmotifs()", "biclust::BCPlaid()", "biclust::BCSpectral()",
+#'  "biclust::BCBimax()", "biclust::BCQuest()"
 #'
 #' @export
 #' @return A list containing two object. \code{data} is the submatrix from the
@@ -28,6 +29,22 @@ NULL
 #'  from using the \code{biclust} function with the selected method. For
 #'  information on this function visit
 #'  https://www.rdocumentation.org/packages/biclust/versions/2.0.3/topics/biclust.
+#'
+#'
+#' @family bicluster functions
+#'
+#' @seealso
+#' * \code{\link[biclust]{BCCC}()}, \code{\link[biclust]{BCXmotifs}()},
+#'  \code{\link[biclust]{BCPlaid}()}, \code{\link[biclust]{BCXmotifs}()},
+#'  \code{\link[biclust]{BCPlaid}()}, \code{\link[biclust]{BCSpectral}()},
+#'  \code{\link[biclust]{BCBimax}()}, \code{\link[biclust]{BCquest}()} for
+#'  specific function documentation from the biclust package
+#' * \code{\link[QUBIC]{BCQU}()}, \code{\link[QUBIC]{BCQU}()} for specific
+#'  function documentation from the QUBIC package
+#' * \code{\link[runibic]{BCUnibic}()}, \code{\link[runibic]{BCUnibic}()}
+#'  for specific function documentation from the runibic package
+#'
+#' @md
 get_biclustering <- function(data,
                              n_genes,
                              biclust_method) {
@@ -62,11 +79,15 @@ get_biclustering <- function(data,
 #' Give the summary of the identified clusters from the \code{get_biclustering}
 #' function which gives the number of clusters found and the samples used.
 #'
-#' @param biclustering Return list from \code{get_biclustering} function
-#' @param select_bicluster Selected cluster to return information on
+#' @param biclustering Return list from
+#'  \code{\link{get_biclustering}()}
+#' @param select_bicluster Number of selected cluster to return information on
 #'
 #' @export
 #' @return A character string message with the requested summary information.
+#'
+#' @family bicluster functions
+#'
 bicluster_summary_message <- function(biclustering,
                                       select_bicluster) {
   res <- biclustering$res
@@ -96,6 +117,24 @@ bicluster_summary_message <- function(biclustering,
 }
 
 #' Table of biclustering data
+#'
+#' This function processes results from the biclustering functions to be 
+#' displayed in a table. 
+#' 
+#' @param res The \code{res} object returned in the list output from 
+#'  \code{\link{get_biclustering}()}
+#' @param biclust_data Matrix of data returned from 
+#'  \code{\link[biclust]{bicluster}()}
+#' @param select_org String indicating selected organism for the expression
+#'  data.
+#' @param all_gene_info Gene information matched species in iDEP database from
+#'  \code{\link{gene_info}()}
+#'
+#' @export
+#' @returns A dataframe of results 
+#'
+#' @family bicluster functions
+#'
 get_biclust_table_data <- function(res,
                                    biclust_data,
                                    select_org,

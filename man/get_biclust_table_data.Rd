@@ -6,6 +6,29 @@
 \usage{
 get_biclust_table_data(res, biclust_data, select_org, all_gene_info)
 }
-\description{
-Table of biclustering data
+\arguments{
+\item{res}{The \code{res} object returned in the list output from 
+\code{\link{get_biclustering}()}}
+
+\item{biclust_data}{Matrix of data returned from 
+\code{\link[biclust]{bicluster}()}}
+
+\item{select_org}{String indicating selected organism for the expression
+data.}
+
+\item{all_gene_info}{Gene information matched species in iDEP database from
+\code{\link{gene_info}()}}
 }
+\value{
+A dataframe of results
+}
+\description{
+This function processes results from the biclustering functions to be 
+displayed in a table.
+}
+\seealso{
+Other bicluster functions: 
+\code{\link{bicluster_summary_message}()},
+\code{\link{get_biclustering}()}
+}
+\concept{bicluster functions}

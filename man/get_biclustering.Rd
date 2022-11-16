@@ -2,30 +2,49 @@
 % Please edit documentation in R/fct_08_bicluster.R
 \name{get_biclustering}
 \alias{get_biclustering}
-\title{Run biclustering}
+\title{Get bicuster information}
 \usage{
 get_biclustering(data, n_genes, biclust_method)
 }
 \arguments{
-\item{data}{Data matrix that has been through the pre-processing function}
+\item{data}{Matrix of gene data that has been through the
+\code{\link{pre_process}()}}
 
 \item{n_genes}{Number of most variable genes to include in the analysis}
 
-\item{biclust_method}{Method of biclustering to perform (biclust::BCCC(),
-QUBIC::BCQU(), runibic::BCUnibic(), biclust::BCXmotifs(),
-biclust::BCPlaid(), biclust::BCSpectral(), biclust::BCBimax(),
-biclust::BCQuest())}
+\item{biclust_method}{String indicating the method of biclustering to perform.
+Should be one of "biclust::BCCC()", "QUBIC::BCQU()", "runibic::BCUnibic()",
+"biclust::BCXmotifs()", "biclust::BCPlaid()", "biclust::BCSpectral()",
+"biclust::BCBimax()", "biclust::BCQuest()"}
 }
 \value{
 A list containing two object. \code{data} is the submatrix from the
- processed data with the biclust function \code{discetize} performed on it.
- For information on this function visit
- https://rdrr.io/cran/biclust/man/discretize.html. \code{res} is the return
- from using the \code{biclust} function with the selected method. For
- information on this function visit
- https://www.rdocumentation.org/packages/biclust/versions/2.0.3/topics/biclust.
+processed data with the biclust function \code{discetize} performed on it.
+For information on this function visit
+https://rdrr.io/cran/biclust/man/discretize.html. \code{res} is the return
+from using the \code{biclust} function with the selected method. For
+information on this function visit
+https://www.rdocumentation.org/packages/biclust/versions/2.0.3/topics/biclust.
 }
 \description{
 Utilize the biclust package to run biclustering on the processed data for a
 selected number of genes.
 }
+\seealso{
+\itemize{
+\item \code{\link[biclust]{BCCC}()}, \code{\link[biclust]{BCXmotifs}()},
+\code{\link[biclust]{BCPlaid}()}, \code{\link[biclust]{BCXmotifs}()},
+\code{\link[biclust]{BCPlaid}()}, \code{\link[biclust]{BCSpectral}()},
+\code{\link[biclust]{BCBimax}()}, \code{\link[biclust]{BCquest}()} for
+specific function documentation from the biclust package
+\item \code{\link[QUBIC]{BCQU}()}, \code{\link[QUBIC]{BCQU}()} for specific
+function documentation from the QUBIC package
+\item \code{\link[runibic]{BCUnibic}()}, \code{\link[runibic]{BCUnibic}()}
+for specific function documentation from the runibic package
+}
+
+Other bicluster functions: 
+\code{\link{bicluster_summary_message}()},
+\code{\link{get_biclust_table_data}()}
+}
+\concept{bicluster functions}
