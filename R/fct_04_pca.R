@@ -12,25 +12,24 @@ NULL
 #' Prepare PC data
 #' @param data Data that has been through pre-processing
 #' @param sample_info Matrix array with experiment info
-#' 
+#'
 #' @export
 #' @return pca data ready for plotting
 get_pc <- function(data,
-                   sample_info
-){
+                   sample_info) {
 
-  #subset data if more than 100 columns
+  # subset data if more than 100 columns
   if (ncol(data) > 100) {
     part <- 1:100
     data <- data[, part]
   }
-  
+
   pca.object <- prcomp(t(data))
-  
+
   # 5 pc's or number of columns if <5
   npc <- min(5, ncol(data))
   pcaData <- as.data.frame(pca.object$x[, 1:npc])
-  
+
   groups <- detect_groups(sample_names = colnames(data), sample_info = sample_info)
   # Missing design clause
   if (is.null(sample_info)) {
@@ -40,7 +39,7 @@ get_pc <- function(data,
   }
   # dim(pcaData)[2]
   colnames(pcaData)[npc + 1] <- "Names"
-  
+
   # return data frame
   return(pcaData)
 }
@@ -49,22 +48,19 @@ get_pc <- function(data,
 #' @param data Data
 #' @export
 #' @return importance of each pc
-get_pc_variance <- function (
-    data
-){
-  #subset data if more than 100 columns
+get_pc_variance <- function(data) {
+  # subset data if more than 100 columns
   if (ncol(data) > 100) {
     part <- 1:100
     data <- data[, part]
   }
-  #pca
+  # pca
   pca.object <- prcomp(t(data))
-  
-  #var proportions vector
-  prop_var <- summary(pca.object)$importance[2,] * 100 
+
+  # var proportions vector
+  prop_var <- summary(pca.object)$importance[2, ] * 100
 
   return(prop_var |> round(1))
-
 }
 
 
@@ -122,13 +118,13 @@ PCA_plot <- function(data,
 
 
 
-  #get groups
+  # get groups
   groups <- detect_groups(sample_names = colnames(data), sample_info = sample_info)
 
-  #get data
+  # get data
   pcaData <- get_pc(data, sample_info)
-  
-  #hide legend for large or no groups levels
+
+  # hide legend for large or no groups levels
   if (nlevels(groups) <= 1 | nlevels(groups) > 20) {
     group_fill <- NULL
     legend <- "none"
@@ -137,7 +133,7 @@ PCA_plot <- function(data,
     legend <- "right"
   }
 
-  #adjust axis label size
+  # adjust axis label size
   if (ncol(data) < 31) {
     x_axis_labels <- 16
   } else {
@@ -205,7 +201,7 @@ PCA_plot <- function(data,
 
   # selected principal components
   PCAxy <- c(as.integer(PCAx), as.integer(PCAy))
-  percentVar <- get_pc_variance(data)[PCAxy] #round(100 * summary(pca.object)$importance[2, PCAxy], 0)
+  percentVar <- get_pc_variance(data)[PCAxy] # round(100 * summary(pca.object)$importance[2, PCAxy], 0)
   plot_PCA <- plot_PCA + ggplot2::xlab(paste0("PC", PCAx, ": ", percentVar[1], "% Variance"))
   plot_PCA <- plot_PCA + ggplot2::ylab(paste0("PC", PCAy, ": ", percentVar[2], "% Variance"))
   return(plot_PCA)

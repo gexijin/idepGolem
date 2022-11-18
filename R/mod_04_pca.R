@@ -176,7 +176,7 @@ mod_04_pca_ui <- function(id) {
               outputId = ns("report"),
               label = "Generate Report"
             )
-          ), 
+          ),
           column(4,
             offset = 0,
             downloadButton(
@@ -355,7 +355,7 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       id = "download_pca",
       filename = "pca_plot",
       figure = reactive({
-      pca_plot()
+        pca_plot()
       }),
       label = "",
       width = get_plot_width(

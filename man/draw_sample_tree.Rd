@@ -53,9 +53,7 @@ Other plots:
 \code{\link{k_means_elbow}()},
 \code{\link{mean_sd_plot}()},
 \code{\link{sd_density}()},
-
 \code{\link{t_SNE_plot}()},
-
 \code{\link{total_counts_ggplot}()}
 
 Other clustering functions: 
