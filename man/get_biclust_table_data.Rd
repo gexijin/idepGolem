@@ -7,10 +7,10 @@
 get_biclust_table_data(res, biclust_data, select_org, all_gene_info)
 }
 \arguments{
-\item{res}{The \code{res} object returned in the list output from 
+\item{res}{The \code{res} object returned in the list output from
 \code{\link{get_biclustering}()}}
 
-\item{biclust_data}{Matrix of data returned from 
+\item{biclust_data}{Matrix of data returned from
 \code{\link[biclust]{bicluster}()}}
 
 \item{select_org}{String indicating selected organism for the expression
@@ -23,7 +23,7 @@ data.}
 A dataframe of results
 }
 \description{
-This function processes results from the biclustering functions to be 
+This function processes results from the biclustering functions to be
 displayed in a table.
 }
 \seealso{
