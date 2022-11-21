@@ -229,12 +229,27 @@ mod_03_clustering_ui <- function(id) {
                 width = 4,
                 plotOutput(
                   outputId = ns("heatmap_main"),
-                  height = "100%",
+                  height = "450px",
                   width = "100%",
                   brush = ns("ht_brush")
                 ),
-                ottoPlots::mod_download_figure_ui(
-                  ns("dl_heatmap_main")
+                fluidRow(
+                  column(
+                    width = 6,
+                    ottoPlots::mod_download_figure_ui(
+                      ns("dl_heatmap_main")
+                    )
+                  ),
+                  column(
+                    width = 6,
+                    ottoPlots::mod_download_figure_ui(
+                      ns("dl_heatmap_sub")
+                    )
+                  )
+                ),
+                br(),
+                uiOutput(
+                  outputId = ns("ht_click_content")
                 )
               ),
               column(
@@ -265,21 +280,6 @@ mod_03_clustering_ui <- function(id) {
                   height = "100%",
                   width = "100%",
                   click = ns("ht_click")
-                ),
-                br(),
-                fluidRow(
-                  column(
-                    width = 3,
-                    ottoPlots::mod_download_figure_ui(
-                      ns("dl_heatmap_sub")
-                    )
-                  ),
-                  column(
-                    width = 9,
-                    uiOutput(
-                      outputId = ns("ht_click_content")
-                    )
-                  )
                 )
               )
             )
@@ -490,8 +490,8 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         shinybusy::remove_modal_spinner()
         return(shiny_env$ht)
       },
-      width = 240, # this avoids the heatmap being redraw
-      height = 600
+      width = 240 # , # this avoids the heatmap being redraw
+      # height = 600
     )
 
     heatmap_main_object <- reactive({
@@ -530,7 +530,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       }),
       width = 6,
       height = 16,
-      label = NULL
+      label = "Above"
     )
 
 
@@ -690,7 +690,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       }),
       width = 8,
       height = 12,
-      label = NULL
+      label = "Right"
     )
 
     # gene lists for enrichment analysis

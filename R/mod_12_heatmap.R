@@ -65,18 +65,21 @@ mod_12_heatmap_server <- function(id,
     # Interactive heatmap environment
     shiny_env <- new.env()
 
-    output$main_heatmap <- renderPlot({
-      req(!is.null(data()))
-      withProgress(message = "Creating Heatmap", {
-        incProgress(0.2)
-        # Assign heatmap to be used in multiple components
-        shiny_env$ht <- main_heatmap_object()
+    output$main_heatmap <- renderPlot(
+      {
+        req(!is.null(data()))
+        withProgress(message = "Creating Heatmap", {
+          incProgress(0.2)
+          # Assign heatmap to be used in multiple components
+          shiny_env$ht <- main_heatmap_object()
 
-        # Use heatmap position in multiple components
-        shiny_env$ht_pos_main <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht)
-      })
-      return(shiny_env$ht)
-    })
+          # Use heatmap position in multiple components
+          shiny_env$ht_pos_main <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht)
+        })
+        return(shiny_env$ht)
+      },
+      width = 250
+    )
 
     main_heatmap_object <- reactive({
       req(!is.null(data()))
