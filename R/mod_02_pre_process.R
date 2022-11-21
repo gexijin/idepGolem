@@ -253,14 +253,6 @@ mod_02_pre_process_ui <- function(id) {
               id = ns("dl_raw_counts_gg")
             ),
             br(),
-            plotOutput(
-              outputId = ns("processed_counts_gg"),
-              width = "100%",
-              height = "500px"
-            ),
-            ottoPlots::mod_download_figure_ui(
-              id = ns("dl_processed_counts_gg")
-            ),
             h5(
               "Figure width can be adjusted by changing
              the width of browser window."
@@ -546,27 +538,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       }),
       label = ""
     )
-    # Raw Counts barplot ------------
-    processed_counts <- reactive({
-      req(!is.null(processed_data()$data))
 
-      total_counts_ggplot(
-        counts_data = processed_data()$data,
-        sample_info = load_data$sample_info(),
-        type = "Transformed"
-      )
-    })
-    output$processed_counts_gg <- renderPlot({
-      print(processed_counts())
-    })
-    dl_processed_counts_gg <- ottoPlots::mod_download_figure_server(
-      id = "dl_processed_counts_gg",
-      filename = "processed_counts_barplot",
-      figure = reactive({
-        processed_counts()
-      }),
-      label = ""
-    )
 
     # Scatter eda plot ----------
     scatter <- reactive({
