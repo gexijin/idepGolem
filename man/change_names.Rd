@@ -17,12 +17,16 @@ Change comparison names in limma from "KO_ko-WT_ko" to    "KO-WT_for_ko"
 }
 \seealso{
 Other DEG functions: 
+\code{\link{deg_information}()},
 \code{\link{experiment_design_txt}()},
 \code{\link{limma_value}()},
 \code{\link{list_block_factors_ui}()},
 \code{\link{list_factors_ui}()},
 \code{\link{list_interaction_terms_ui}()},
 \code{\link{list_model_comparisons_ui}()},
+\code{\link{mod_label_server}()},
+\code{\link{mod_label_ui}()},
+\code{\link{plot_deg_scatter}()},
 \code{\link{select_reference_levels_ui}()}
 }
 \concept{DEG functions}

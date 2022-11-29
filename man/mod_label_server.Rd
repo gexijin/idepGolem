@@ -7,15 +7,15 @@
 mod_label_server(id, data_list, method = c("volcano", "ma"))
 }
 \arguments{
-\item{id}{Namespace ID}
+\item{id}{String designating namespace ID}
 
 \item{data_list}{List of gene data from \code{volcano_data()}}
 
 \item{method}{String designating if the results are for the volcano plot or
-ma plot}
+ma plot. Should be one of "volcano" or "ma"}
 }
 \value{
-A shiny module.
+A shiny server function.
 }
 \description{
 This component contains the pop-up modal and data processing to customize
@@ -23,3 +23,24 @@ This component contains the pop-up modal and data processing to customize
  not label genes, label specific genes, label top n genes by a certain value,
  or label genes above certain threshold.
 }
+\seealso{
+\code{\link{mod_label_ui}()}
+
+Other shiny modules: 
+\code{\link{mod_label_ui}()}
+
+Other DEG functions: 
+\code{\link{change_names}()},
+\code{\link{deg_information}()},
+\code{\link{experiment_design_txt}()},
+\code{\link{limma_value}()},
+\code{\link{list_block_factors_ui}()},
+\code{\link{list_factors_ui}()},
+\code{\link{list_interaction_terms_ui}()},
+\code{\link{list_model_comparisons_ui}()},
+\code{\link{mod_label_ui}()},
+\code{\link{plot_deg_scatter}()},
+\code{\link{select_reference_levels_ui}()}
+}
+\concept{DEG functions}
+\concept{shiny modules}

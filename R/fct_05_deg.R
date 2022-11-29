@@ -2765,23 +2765,26 @@ plot_ma <- function(data,
 #' @param select_contrast Comparison from DEG analysis to filter
 #'  for the significant genes
 #' @param comparisons The comparisons vector from the results list
-#'  of the limma_value function
-#' @param top_genes top_genes list from results list of the
-#'  limma_value function
-#' @param limma_p_val Significant p-value to use to in determining
-#'  the expressed genes
-#' @param limma_fc Minimum fold change value to use in determining
-#'  the expressed genes
+#'  of \code{\link{limma_value}()}
+#' @param top_genes top_genes list from results list of 
+#'  \code{\link{limma_value}()}
+#' @param limma_p_val Numeric value indicating significant p-value to use to in 
+#'  determining the expressed genes
+#' @param limma_fc Numeric value indicating the minimum fold change value to use 
+#'  in determining the expressed genes
 #' @param contrast_samples Samples that are included in the selected
 #'  comparison
-#' @param processed_data Data matrix that has gone through
-#'  pre-processing
+#' @param processed_data Matrix of gene data that has been through
+#'  \code{\link{pre_process}()}
 #' @param sample_info Experiment file information for grouping
 #'
 #' @export
 #' @return A formatted ggplot with the X-axis as the mean expression
 #'  of one contrast group and the Y-axis as the mean expression of
 #'  the other contrast group.
+#'  
+#' @family plots 
+#' @family DEG functions 
 plot_deg_scatter <- function(select_contrast,
                              comparisons,
                              top_genes,
@@ -2885,16 +2888,19 @@ plot_deg_scatter <- function(select_contrast,
 }
 
 
+#' Information on results from DEG analysis 
 #' returns results from DEG analysis
 #'
 #'
-#' @param limma_value Results from DESeq2 or limma
-#' @param gene_names Gene IDs
-#' @param processed_data  Processed data
-#' @param no_id_conversion If true, gene ids will not be mapped to Ensembl
+#' @param limma_value List of results from \code{\link{limma_value}()}
+#' @param gene_names List of gene IDs
+#' @param processed_data  Processed gene data from \code{\link{pre_process}()}
+#' @param no_id_conversion TRUE/FALSE. If true, gene ids will not be mapped to Ensembl
 #'
 #' @export
-#' @return A list. deg_data and limma$results
+#' @return Dataframe of DEG analysis results
+#' 
+#' @family DEG functions
 deg_information <- function(limma_value,
                             gene_names,
                             processed_data,
@@ -2968,9 +2974,14 @@ deg_information <- function(limma_value,
 #' This component contains an action button to activate the pop-up modal to
 #' customize how genes are labeled on the volcano or ma plot.
 #'
-#' @param id Namespace ID
+#' @param id String designating the namespace ID
 #'
-#' @return Shiny module
+#' @return A shiny UI function
+#' 
+#' @seealso \code{\link{mod_label_server}()}
+#' @family shiny modules 
+#' @family DEG functions
+#' 
 #' @export
 mod_label_ui <- function(id) {
   ns <- shiny::NS(id)
@@ -2984,18 +2995,22 @@ mod_label_ui <- function(id) {
 
 #' Server component to customize gene labels
 #'
-#' This component contains the pop-up modal and data processing to customize
+#'  This component contains the pop-up modal and data processing to customize
 #'  how genes are labeled on the volcano or ma plot. Users have the option to
 #'  not label genes, label specific genes, label top n genes by a certain value,
 #'  or label genes above certain threshold.
 #'
-#' @param id Namespace ID
+#' @param id String designating namespace ID
 #' @param data_list List of gene data from \code{volcano_data()}
 #' @param method String designating if the results are for the volcano plot or
-#'   ma plot
+#'   ma plot. Should be one of "volcano" or "ma"
 #'
-#' @return A shiny module.
+#' @return A shiny server function.
 #' @export
+#' 
+#' @seealso \code{\link{mod_label_ui}()}
+#' @family shiny modules
+#' @family DEG functions
 mod_label_server <- function(id, data_list, method = c("volcano", "ma")) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns

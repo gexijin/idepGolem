@@ -20,22 +20,22 @@ plot_deg_scatter(
 for the significant genes}
 
 \item{comparisons}{The comparisons vector from the results list
-of the limma_value function}
+of \code{\link{limma_value}()}}
 
-\item{top_genes}{top_genes list from results list of the
-limma_value function}
+\item{top_genes}{top_genes list from results list of 
+\code{\link{limma_value}()}}
 
-\item{limma_p_val}{Significant p-value to use to in determining
-the expressed genes}
+\item{limma_p_val}{Numeric value indicating significant p-value to use to in 
+determining the expressed genes}
 
-\item{limma_fc}{Minimum fold change value to use in determining
-the expressed genes}
+\item{limma_fc}{Numeric value indicating the minimum fold change value to use 
+in determining the expressed genes}
 
 \item{contrast_samples}{Samples that are included in the selected
 comparison}
 
-\item{processed_data}{Data matrix that has gone through
-pre-processing}
+\item{processed_data}{Matrix of gene data that has been through
+\code{\link{pre_process}()}}
 
 \item{sample_info}{Experiment file information for grouping}
 }
@@ -50,3 +50,33 @@ in the two groups for the selected contrast. For the selected
 contrast, the mean expression is calculated for a gene in both
 group of samples in the contrast and plotted in a scatter plot.
 }
+\seealso{
+Other plots: 
+\code{\link{PCA_plot}()},
+\code{\link{cor_plot}()},
+\code{\link{draw_sample_tree}()},
+\code{\link{eda_boxplot}()},
+\code{\link{eda_density}()},
+\code{\link{eda_scatter}()},
+\code{\link{individual_plots}()},
+\code{\link{k_means_elbow}()},
+\code{\link{mean_sd_plot}()},
+\code{\link{sd_density}()},
+\code{\link{t_SNE_plot}()},
+\code{\link{total_counts_ggplot}()}
+
+Other DEG functions: 
+\code{\link{change_names}()},
+\code{\link{deg_information}()},
+\code{\link{experiment_design_txt}()},
+\code{\link{limma_value}()},
+\code{\link{list_block_factors_ui}()},
+\code{\link{list_factors_ui}()},
+\code{\link{list_interaction_terms_ui}()},
+\code{\link{list_model_comparisons_ui}()},
+\code{\link{mod_label_server}()},
+\code{\link{mod_label_ui}()},
+\code{\link{select_reference_levels_ui}()}
+}
+\concept{DEG functions}
+\concept{plots}

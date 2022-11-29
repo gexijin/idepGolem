@@ -2,7 +2,8 @@
 % Please edit documentation in R/fct_05_deg.R
 \name{deg_information}
 \alias{deg_information}
-\title{returns results from DEG analysis}
+\title{Information on results from DEG analysis 
+returns results from DEG analysis}
 \usage{
 deg_information(
   limma_value,
@@ -12,17 +13,33 @@ deg_information(
 )
 }
 \arguments{
-\item{limma_value}{Results from DESeq2 or limma}
+\item{limma_value}{List of results from \code{\link{limma_value}()}}
 
-\item{gene_names}{Gene IDs}
+\item{gene_names}{List of gene IDs}
 
-\item{processed_data}{Processed data}
+\item{processed_data}{Processed gene data from \code{\link{pre_process}()}}
 
-\item{no_id_conversion}{If true, gene ids will not be mapped to Ensembl}
+\item{no_id_conversion}{TRUE/FALSE. If true, gene ids will not be mapped to Ensembl}
 }
 \value{
-A list. deg_data and limma$results
+Dataframe of DEG analysis results
 }
 \description{
+Information on results from DEG analysis 
 returns results from DEG analysis
 }
+\seealso{
+Other DEG functions: 
+\code{\link{change_names}()},
+\code{\link{experiment_design_txt}()},
+\code{\link{limma_value}()},
+\code{\link{list_block_factors_ui}()},
+\code{\link{list_factors_ui}()},
+\code{\link{list_interaction_terms_ui}()},
+\code{\link{list_model_comparisons_ui}()},
+\code{\link{mod_label_server}()},
+\code{\link{mod_label_ui}()},
+\code{\link{plot_deg_scatter}()},
+\code{\link{select_reference_levels_ui}()}
+}
+\concept{DEG functions}
