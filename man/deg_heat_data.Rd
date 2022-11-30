@@ -7,15 +7,15 @@
 deg_heat_data(limma, select_contrast, processed_data, contrast_samples)
 }
 \arguments{
-\item{limma}{Return results list from the limma_value function}
+\item{limma}{List of results from \code{\link{limma_value}()}}
 
-\item{select_contrast}{Comparison from DEG analysis to filter
-for the significant genes}
+\item{select_contrast}{String indicating specific comparison from DEG 
+analysis to filter for the significant genes}
 
-\item{processed_data}{Data that has been through the pre-processing}
+\item{processed_data}{Matrix of gene data that has been through the 
+\code{\link{pre_process}()}}
 
-\item{contrast_samples}{Columns that are in the group of the
-selected comparison}
+\item{contrast_samples}{Samples that are included in the selected comparison}
 }
 \value{
 Submatrix of the processed data with only the significantly
@@ -28,3 +28,22 @@ the genes that had a significant fold change. The samples will
 also be subsetted to only contain samples that pertain to the
 selected comparison or contrast.
 }
+\seealso{
+Other DEG functions: 
+\code{\link{change_names}()},
+\code{\link{deg_information}()},
+\code{\link{experiment_design_txt}()},
+\code{\link{limma_value}()},
+\code{\link{list_block_factors_ui}()},
+\code{\link{list_factors_ui}()},
+\code{\link{list_interaction_terms_ui}()},
+\code{\link{list_model_comparisons_ui}()},
+\code{\link{mod_label_server}()},
+\code{\link{mod_label_ui}()},
+\code{\link{plot_deg_scatter}()},
+\code{\link{plot_ma}()},
+\code{\link{plot_volcano}()},
+\code{\link{select_reference_levels_ui}()},
+\code{\link{volcano_data}()}
+}
+\concept{DEG functions}

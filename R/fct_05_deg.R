@@ -2380,15 +2380,17 @@ prep_venn <- function(limma,
 #' Plot a venn diagram that illustrates the number of significantly
 #' expressed genes that overlap for multiple comparisons.
 #'
-#' @param limma limma Returned list of results from the limma_value
-#'  function
+#' @param limma Returned list of results from \code{\link{limma_value}()}
 #' @param up_down_regulated Split the comparisons into either
 #'  up or down regulated
 #' @param select_comparisons_venn The comparisons to plot on the
 #'  venn diagram
 #'
 #' @export
-#' @return A formatted venn diagram plot of the selected comparisons.
+#' @return A formatted venn diagram plot of the selected comparisons
+#' 
+#' @family plots 
+#' @family DEG functions
 plot_venn <- function(results) {
   if (dim(results)[2] > 5) {
     results <- results[, 1:5]
@@ -2404,13 +2406,18 @@ plot_venn <- function(results) {
 }
 
 #' Plot upset graph
+#' 
+#' This function creates an upset plot as alternative to a venn diagram when 
+#' there are a lot of comparisons. 
 #'
-#' @param results Dataframe from \code{venn_data()}
+#' @param results Dataframe from \code{\link{venn_data}()}
 #'
-#' @return A \code{ggplot2} object
+#' @return A \code{ggplot} object
 #'
 #' @export
-#'
+#' @family plots 
+#' @family DEG functions 
+#' @seealso \code{\link{venn_data}()} for data prep
 plot_upset <- function(results) {
 
   # get the groups of data by category
