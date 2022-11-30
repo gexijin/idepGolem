@@ -7,7 +7,7 @@
 plot_volcano(data, anotate_genes = NULL, plot_colors)
 }
 \arguments{
-\item{data}{Dataframe of processed data from \code{volcano_data()}.}
+\item{data}{Dataframe of processed data from \code{\linke{volcano_data}()}.}
 
 \item{anotate_genes}{List of gene names to anotate. Default is NULL.}
 
@@ -23,3 +23,41 @@ Use the results from limma-value to create a volcano plot to
 illustrate the significantly expressed genes. Up and down
 regulated genes are colored on the ggplot.
 }
+\seealso{
+\code{\link{volcano_data}()} for data prep
+
+Other DEG functions: 
+\code{\link{change_names}()},
+\code{\link{deg_heat_data}()},
+\code{\link{deg_information}()},
+\code{\link{experiment_design_txt}()},
+\code{\link{limma_value}()},
+\code{\link{list_block_factors_ui}()},
+\code{\link{list_factors_ui}()},
+\code{\link{list_interaction_terms_ui}()},
+\code{\link{list_model_comparisons_ui}()},
+\code{\link{mod_label_server}()},
+\code{\link{mod_label_ui}()},
+\code{\link{plot_deg_scatter}()},
+\code{\link{plot_ma}()},
+\code{\link{select_reference_levels_ui}()},
+\code{\link{volcano_data}()}
+
+Other plots: 
+\code{\link{PCA_plot}()},
+\code{\link{cor_plot}()},
+\code{\link{draw_sample_tree}()},
+\code{\link{eda_boxplot}()},
+\code{\link{eda_density}()},
+\code{\link{eda_scatter}()},
+\code{\link{individual_plots}()},
+\code{\link{k_means_elbow}()},
+\code{\link{mean_sd_plot}()},
+\code{\link{plot_deg_scatter}()},
+\code{\link{plot_ma}()},
+\code{\link{sd_density}()},
+\code{\link{t_SNE_plot}()},
+\code{\link{total_counts_ggplot}()}
+}
+\concept{DEG functions}
+\concept{plots}

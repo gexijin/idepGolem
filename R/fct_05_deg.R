@@ -2465,17 +2465,19 @@ plot_upset <- function(results) {
 #' also be subsetted to only contain samples that pertain to the
 #' selected comparison or contrast.
 #'
-#' @param limma Return results list from the limma_value function
-#' @param select_contrast Comparison from DEG analysis to filter
-#'  for the significant genes
-#' @param processed_data Data that has been through the pre-processing
-#' @param contrast_samples Columns that are in the group of the
-#'  selected comparison
+#' @param limma List of results from \code{\link{limma_value}()}
+#' @param select_contrast String indicating specific comparison from DEG 
+#'  analysis to filter for the significant genes
+#' @param processed_data Matrix of gene data that has been through the 
+#'  \code{\link{pre_process}()}
+#' @param contrast_samples Samples that are included in the selected comparison
 #'
 #' @export
 #' @return Submatrix of the processed data with only the significantly
 #'  expressed genes and the columns that are in the selected contrast
 #'  group.
+#'  
+#' @family DEG functions
 deg_heat_data <- function(limma,
                           select_contrast,
                           processed_data,
@@ -2541,25 +2543,27 @@ deg_heat_data <- function(limma,
 
 #' Data processing for volcano and ma plot
 #'
-#' @param select_contrast Comparison from DEG analysis to filter
-#'  for the significant genes
-#' @param comparisons The comparisons vector from the results list
-#'  of the limma_value function
-#' @param top_genes top_genes list from results list of the
-#'  limma_value function
-#' @param limma_p_val Significant p-value to use to in determining
-#'  the expressed genes
-#' @param limma_fc Minimum fold change value to use in determining
-#'  the expressed genes
+#' @param select_contrast String indicating specific comparison from DEG 
+#'  analysis to filter for the significant genes
+#' @param comparisons Vector of the comparisons from the results list of 
+#'  \code{\link{limma_value}()}
+#' @param top_genes List of top genes from results list of 
+#'  \code{\link{limma_value}()}
+#' @param limma_p_val Numeric value indicating significant p-value to use to in
+#'  determining the differently expressed genes
+#' @param limma_fc Numeric value indicating the minimum fold change value to use 
+#' in determining the differently expressed genes
 #' @param processed_data Data matrix that has gone through
-#'  pre-processing
+#'  \code{\link{pre_process}()}
 #' @param contrast_samples Samples that are included in the selected
 #'  comparison
 #'
-#' @return A list containing processed data for volcano plot in
-#'  \code{plot_volcano()} & \code{plot_ma()} and list of differently expressed
-#'  genes for labeling
+#' @return A list containing processed data for use in
+#'  \code{\link{plot_volcano}()} & \code{\link{plot_ma}()} and list of 
+#'  differently expressed genes for labeling
 #' @export
+#' 
+#' @family DEG functions
 #'
 volcano_data <- function(select_contrast,
                          comparisons,
@@ -2626,11 +2630,15 @@ volcano_data <- function(select_contrast,
 #' @param plot_colors List containing three colors to differentiate between
 #'  the up-regulated, down-regulated, and other genes
 #' @param anotate_genes List of gene names to anotate. Default is NULL.
-#' @param data Dataframe of processed data from \code{volcano_data()}.
+#' @param data Dataframe of processed data from \code{\linke{volcano_data}()}.
 #'
 #' @export
 #' @return ggplot with the fold value as the X-axis and the log 10
 #'  value of the adjusted p-value as the Y-axis.
+#'  
+#' @family DEG functions 
+#' @family plots
+#' @seealso \code{\link{volcano_data}()} for data prep
 plot_volcano <- function(data,
                          anotate_genes = NULL,
                          plot_colors) {
@@ -2690,7 +2698,7 @@ plot_volcano <- function(data,
 #' Draw a ggplot of the overal mean expression for each gene
 #' and the calculated fold change for the selected comparison.
 #'
-#' @param data Dataframe of processed data from \code{volcano_data()}
+#' @param data Dataframe of processed data from \code{\link{volcano_data}()}
 #' @param anotate_genes List containing the gene names to be labeled on the
 #'   plot. Default is NULL.
 #' @param plot_colors List containing three colors to differentiate between
@@ -2699,6 +2707,10 @@ plot_volcano <- function(data,
 #' @export
 #' @return A ggplot with the X-axis the mean expression value and
 #'  the Y-axis the calculated fold-change from the DEG analysis.
+#'  
+#' @family DEG functions 
+#' @family plots
+#' @seealso \code{\link{volcano_data}()} for data prep
 plot_ma <- function(data,
                     plot_colors,
                     anotate_genes = NULL) {
@@ -2762,11 +2774,11 @@ plot_ma <- function(data,
 #' contrast, the mean expression is calculated for a gene in both
 #' group of samples in the contrast and plotted in a scatter plot.
 #'
-#' @param select_contrast Comparison from DEG analysis to filter
-#'  for the significant genes
-#' @param comparisons The comparisons vector from the results list
+#' @param select_contrast String indicating specific comparison from DEG 
+#'   analysis to filter for the significant genes
+#' @param comparisons Vector of the comparisons from the results list
 #'  of \code{\link{limma_value}()}
-#' @param top_genes top_genes list from results list of 
+#' @param top_genes List of top genes from results list of 
 #'  \code{\link{limma_value}()}
 #' @param limma_p_val Numeric value indicating significant p-value to use to in 
 #'  determining the expressed genes
@@ -2776,7 +2788,7 @@ plot_ma <- function(data,
 #'  comparison
 #' @param processed_data Matrix of gene data that has been through
 #'  \code{\link{pre_process}()}
-#' @param sample_info Experiment file information for grouping
+#' @param sample_info Matrix of experiment design information for grouping
 #'
 #' @export
 #' @return A formatted ggplot with the X-axis as the mean expression

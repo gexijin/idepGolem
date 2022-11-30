@@ -15,32 +15,51 @@ volcano_data(
 )
 }
 \arguments{
-\item{select_contrast}{Comparison from DEG analysis to filter
-for the significant genes}
+\item{select_contrast}{String indicating specific comparison from DEG 
+analysis to filter for the significant genes}
 
-\item{comparisons}{The comparisons vector from the results list
-of the limma_value function}
+\item{comparisons}{Vector of the comparisons from the results list of 
+\code{\link{limma_value}()}}
 
-\item{top_genes}{top_genes list from results list of the
-limma_value function}
+\item{top_genes}{List of top genes from results list of 
+\code{\link{limma_value}()}}
 
-\item{limma_p_val}{Significant p-value to use to in determining
-the expressed genes}
+\item{limma_p_val}{Numeric value indicating significant p-value to use to in
+determining the differently expressed genes}
 
-\item{limma_fc}{Minimum fold change value to use in determining
-the expressed genes}
+\item{limma_fc}{Numeric value indicating the minimum fold change value to use 
+in determining the differently expressed genes}
 
 \item{processed_data}{Data matrix that has gone through
-pre-processing}
+\code{\link{pre_process}()}}
 
 \item{contrast_samples}{Samples that are included in the selected
 comparison}
 }
 \value{
-A list containing processed data for volcano plot in
- \code{plot_volcano()} & \code{plot_ma()} and list of differently expressed
- genes for labeling
+A list containing processed data for use in
+ \code{\link{plot_volcano}()} & \code{\link{plot_ma}()} and list of 
+ differently expressed genes for labeling
 }
 \description{
 Data processing for volcano and ma plot
 }
+\seealso{
+Other DEG functions: 
+\code{\link{change_names}()},
+\code{\link{deg_heat_data}()},
+\code{\link{deg_information}()},
+\code{\link{experiment_design_txt}()},
+\code{\link{limma_value}()},
+\code{\link{list_block_factors_ui}()},
+\code{\link{list_factors_ui}()},
+\code{\link{list_interaction_terms_ui}()},
+\code{\link{list_model_comparisons_ui}()},
+\code{\link{mod_label_server}()},
+\code{\link{mod_label_ui}()},
+\code{\link{plot_deg_scatter}()},
+\code{\link{plot_ma}()},
+\code{\link{plot_volcano}()},
+\code{\link{select_reference_levels_ui}()}
+}
+\concept{DEG functions}

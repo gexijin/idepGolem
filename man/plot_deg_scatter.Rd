@@ -16,13 +16,13 @@ plot_deg_scatter(
 )
 }
 \arguments{
-\item{select_contrast}{Comparison from DEG analysis to filter
-for the significant genes}
+\item{select_contrast}{String indicating specific comparison from DEG 
+analysis to filter for the significant genes}
 
-\item{comparisons}{The comparisons vector from the results list
+\item{comparisons}{Vector of the comparisons from the results list
 of \code{\link{limma_value}()}}
 
-\item{top_genes}{top_genes list from results list of 
+\item{top_genes}{List of top genes from results list of 
 \code{\link{limma_value}()}}
 
 \item{limma_p_val}{Numeric value indicating significant p-value to use to in 
@@ -37,7 +37,7 @@ comparison}
 \item{processed_data}{Matrix of gene data that has been through
 \code{\link{pre_process}()}}
 
-\item{sample_info}{Experiment file information for grouping}
+\item{sample_info}{Matrix of experiment design information for grouping}
 }
 \value{
 A formatted ggplot with the X-axis as the mean expression
@@ -61,12 +61,15 @@ Other plots:
 \code{\link{individual_plots}()},
 \code{\link{k_means_elbow}()},
 \code{\link{mean_sd_plot}()},
+\code{\link{plot_ma}()},
+\code{\link{plot_volcano}()},
 \code{\link{sd_density}()},
 \code{\link{t_SNE_plot}()},
 \code{\link{total_counts_ggplot}()}
 
 Other DEG functions: 
 \code{\link{change_names}()},
+\code{\link{deg_heat_data}()},
 \code{\link{deg_information}()},
 \code{\link{experiment_design_txt}()},
 \code{\link{limma_value}()},
@@ -76,7 +79,10 @@ Other DEG functions:
 \code{\link{list_model_comparisons_ui}()},
 \code{\link{mod_label_server}()},
 \code{\link{mod_label_ui}()},
-\code{\link{select_reference_levels_ui}()}
+\code{\link{plot_ma}()},
+\code{\link{plot_volcano}()},
+\code{\link{select_reference_levels_ui}()},
+\code{\link{volcano_data}()}
 }
 \concept{DEG functions}
 \concept{plots}

@@ -31,6 +31,7 @@ Other shiny modules:
 
 Other DEG functions: 
 \code{\link{change_names}()},
+\code{\link{deg_heat_data}()},
 \code{\link{deg_information}()},
 \code{\link{experiment_design_txt}()},
 \code{\link{limma_value}()},
@@ -40,7 +41,10 @@ Other DEG functions:
 \code{\link{list_model_comparisons_ui}()},
 \code{\link{mod_label_ui}()},
 \code{\link{plot_deg_scatter}()},
-\code{\link{select_reference_levels_ui}()}
+\code{\link{plot_ma}()},
+\code{\link{plot_volcano}()},
+\code{\link{select_reference_levels_ui}()},
+\code{\link{volcano_data}()}
 }
 \concept{DEG functions}
 \concept{shiny modules}

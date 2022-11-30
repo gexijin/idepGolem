@@ -31,6 +31,8 @@ Other plots:
 \code{\link{k_means_elbow}()},
 \code{\link{mean_sd_plot}()},
 \code{\link{plot_deg_scatter}()},
+\code{\link{plot_ma}()},
+\code{\link{plot_volcano}()},
 \code{\link{sd_density}()},
 \code{\link{t_SNE_plot}()},
 \code{\link{total_counts_ggplot}()}
