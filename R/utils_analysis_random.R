@@ -1021,7 +1021,6 @@ hyperText <- function(textVector, urlVector) {
 #' @export
 #' @return ggplot2 object
 refine_ggplot2 <- function(p, gridline, ggplot2_theme = "light") {
-
   # apply theme based on selection
   p <- switch(ggplot2_theme,
     "linedraw" = p + ggplot2::theme_linedraw(),

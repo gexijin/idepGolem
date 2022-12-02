@@ -374,7 +374,6 @@ find_contrast_samples <- function(select_contrast,
   # Has design file and chose factors
   if (!is.null(sample_info) & !is.null(select_factors_model) &
     length(select_model_comprions) > 0) {
-
     # Strings like: "groups: mutant vs. control"
     comparisons <- gsub(".*: ", "", select_model_comprions)
     comparisons <- gsub(" vs\\. ", "-", comparisons)

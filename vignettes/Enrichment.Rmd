@@ -15,8 +15,7 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup}
-# library(idepGolem)
-devtools::load_all()
+library(idepGolem)
 ```
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
@@ -24,6 +23,7 @@ devtools::load_all()
 idep_data <- get_idep_data()
 
 DATABASE <- Sys.getenv("GE_DATABASE")[1]
+DATABASE <- "F:/IDEP_DATABASE/"
 YOUR_DATA_PATH <- paste0(DATABASE, "data_go/BcellGSE71176_p53.csv")
 YOUR_EXPERIMENT_PATH <- paste0(DATABASE, "data_go/BcellGSE71176_p53_sampleInfo.csv")
 
@@ -57,7 +57,8 @@ all_gene_info <- gene_info(
 converted_data <- convert_data(
   converted = converted,
   no_id_conversion = FALSE,
-  data = load_data$data
+  data = load_data$data, 
+  multiple_map = "median"
 )
 
 gene_names <- get_all_gene_names(

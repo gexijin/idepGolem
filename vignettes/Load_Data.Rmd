@@ -16,8 +16,7 @@ options(rmarkdown.html_vignette.check_title = FALSE)
 ```
 
 ```{r setup}
-# library(idepGolem)
-devtools::load_all()
+library(idepGolem)
 ```
 
 This instruction will document how to load gene data and create the data objects that will be used in the rest of iDEP's functions. This corresponds to the functions that are utilized in the "Load Data" tab of the iDEP webpage. 
@@ -29,7 +28,7 @@ To begin working with iDEP the first step is to identify your working directory 
 ```{r Create Data Paths}
 idep_data <- get_idep_data()
 
-# replace DATABASE personal folder location that contains gene expression and 
+# replace DATABASE personal folder location that contains gene expression and
 # design .csv files
 DATABASE <- Sys.getenv("GE_DATABASE")[1]
 DATABASE <- "F:/IDEP_DATABASE/"
@@ -93,7 +92,7 @@ print(converted$species_matched[1, ])
 
 2.  **`gene_info`**
 
-    Gathering the information on the converted ensembl IDs is the next step. The `converted` results are passed into the `gene_info` function to retrieve gene name information that is stored in `idep_data` as well. If `select_org` is `"BestMatch"`, the function will use the matched species from converted to retrieve the gene data. If a species code is provided, it will use that species directly. `gene_info` will then read a gene data file from the `idep_data` and return the resulting data frame. This data will be used to map to more informative gene names in the coming functions.
+    The next step includes gathering the information on the converted ensembl IDs. The `converted` results are passed into the `gene_info` function to retrieve gene name information that is stored in `idep_data` as well. If `select_org` is `"BestMatch"`, the function will use the matched species from converted to retrieve the gene data. If a species code is provided, it will use that species directly. `gene_info` will then read a gene data file from the `idep_data` and return the resulting data frame. This data will be used to map to more informative gene names in the coming functions.
 
 ```{r}
 all_gene_info <- gene_info(
@@ -111,7 +110,7 @@ all_gene_info <- gene_info(
 converted_data <- convert_data(
   converted = converted,
   no_id_conversion = FALSE,
-  data = load_data$data, 
+  data = load_data$data,
   multiple_map = "median"
 )
 ```
