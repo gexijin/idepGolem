@@ -57,7 +57,7 @@ all_gene_info <- gene_info(
 converted_data <- convert_data(
   converted = converted,
   no_id_conversion = FALSE,
-  data = load_data$data, 
+  data = load_data$data,
   multiple_map = "median"
 )
 

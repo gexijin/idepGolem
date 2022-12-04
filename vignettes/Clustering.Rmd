@@ -59,7 +59,7 @@ all_gene_info <- gene_info(
 converted_data <- convert_data(
   converted = converted,
   no_id_conversion = FALSE,
-  data = load_data$data, 
+  data = load_data$data,
   multiple_map = "median"
 )
 
@@ -198,7 +198,7 @@ ht <- heatmap_main(
   cluster_meth = "1",
   heatmap_cutoff = 4,
   sample_info = as.data.frame(load_data$sample_info),
-  #select_factors_heatmap = "Sample_Name",
+  # select_factors_heatmap = "Sample_Name",
   select_factors_heatmap = "All factors",
   dist_funs = dist_functions(),
   dist_function = "1",
@@ -207,7 +207,7 @@ ht <- heatmap_main(
   row_dend = TRUE,
   sample_clustering = TRUE,
   k_clusters = NULL,
-  re_run = FALSE, 
+  re_run = FALSE,
   selected_genes = NULL
 )
 ```

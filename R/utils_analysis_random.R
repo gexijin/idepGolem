@@ -508,7 +508,7 @@ add_legend <- function(...) {
   legend(...)
 }
 
-#' Wrapping long text by adding \n
+#' Wrapping long text by adding 
 #' "Mitotic DNA damage checkpoint"  --> "Mitotic DNA damage\ncheckpoint"
 #' https://stackoverflow.com/questions/7367138/text-wrap-for-plot-titles
 wrap_strings <- function(vector_of_strings,

@@ -6,3 +6,5 @@ dev_history.R
 $run_dev.*
 ^app\.R$
 ^rsconnect$
+^doc$
+^Meta$

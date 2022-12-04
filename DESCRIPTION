@@ -92,7 +92,8 @@ biocViews:
     KEGGREST,
     GO.db,
     preprocessCore,
-    SummarizedExperiment
+    SummarizedExperiment, 
+    reactome.db
 Remotes:
     github::espors/ottoPlots,
     url::https://bioconductor.org/packages/3.10/bioc/src/contrib/PGSEA_1.60.0.tar.gz,
