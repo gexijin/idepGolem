@@ -17,6 +17,8 @@ if (nchar(DATAPATH) == 0) {
   DATAPATH <- "../../data/data104b/"
 }
 
+DATAPATH <- "F:/IDEP_DATABASE/"
+
 #' connect_convert_db connects to the convertIDs.db and returns the
 #' objects.
 #'
@@ -58,7 +60,6 @@ connect_convert_db <- function(datapath = DATAPATH) {
 #' 12. id_index: idtype and index
 #' 13. species_choice: list of species for populating selection.
 get_idep_data <- function(datapath = DATAPATH) {
-
   # if prepared RData files exists, return the objects.
   # file is prepared with this command
   #  saveRDS(get_idep_data(), file="prepared_data.RData", compress=FALSE)
@@ -292,7 +293,6 @@ convert_id <- function(query,
 
   # if best match species--------------------------------------------------
   if (select_org == idep_data$species_choice[[1]]) {
-
     # First send a query to determine the species
     # nested SQL to determine the number of query
     # genes matched to species, idType combinations
