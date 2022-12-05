@@ -77,3 +77,4 @@ Use the pathway table element from the list returned from from the
 \code{\link{read_pathway_sets}()}to calculate adjusted p-values. Adjusted 
 p-values determine the enriched pathways from the selected query.
 }
+\concept{pathway functions}

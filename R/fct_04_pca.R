@@ -17,7 +17,6 @@ NULL
 #' @return pca data ready for plotting
 get_pc <- function(data,
                    sample_info) {
-
   # subset data if more than 100 columns
   if (ncol(data) > 100) {
     part <- 1:100
@@ -94,7 +93,6 @@ PCA_plot <- function(data,
                      PCAy = 2,
                      selected_color = "Names",
                      selected_shape = "Names") {
-
   # no design file
   if (is.null(selected_color)) {
     selected_color <- "Names"
@@ -241,7 +239,6 @@ PCA_plot_3d <- function(data,
                         PCAz = 3,
                         selected_color = "Names",
                         selected_shape = "Names") {
-
   # no design file
   if (is.null(selected_color)) {
     selected_color <- "Names"
@@ -346,7 +343,6 @@ t_SNE_plot <- function(data,
                        sample_info,
                        selected_color = "Names",
                        selected_shape = "Names") {
-
   # no design file
   if (is.null(selected_color)) {
     selected_color <- "Names"
@@ -462,7 +458,6 @@ MDS_plot <- function(data,
                      sample_info,
                      selected_shape,
                      selected_color) {
-
   # no design file
   if (is.null(selected_color)) {
     selected_color <- "Names"

@@ -10,7 +10,7 @@
 NULL
 
 
-#' Create a pull down menu 
+#' Create a pull down menu
 #'
 #' @param funs List of functions
 #'
