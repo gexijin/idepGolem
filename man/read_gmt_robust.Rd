@@ -3,11 +3,17 @@
 \name{read_gmt_robust}
 \alias{read_gmt_robust}
 \title{Read gene sets GMT file
-This functions cleans and converts to upper case}
+This functions cleans and converts file information to upper case}
 \usage{
 read_gmt_robust(in_file)
 }
+\arguments{
+\item{in_file}{String designating file path for GMT file}
+}
+\value{
+GMT file information
+}
 \description{
 Read gene sets GMT file
-This functions cleans and converts to upper case
+This functions cleans and converts file information to upper case
 }

@@ -25,6 +25,9 @@ expressed genes}
 
 \item{max_size}{Maximum size for a pathway gene set}
 }
+\value{
+A dataframe
+}
 \description{
 For a species not in the iDEP database, calculate the overlap
  for pathway analysis.
