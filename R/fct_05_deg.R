@@ -409,7 +409,8 @@ limma_value <- function(data_file_format,
                         counts_log_start,
                         p_vals,
                         threshold_wald_test = FALSE,
-                        independent_filtering = TRUE) {
+                        independent_filtering = TRUE,
+                        descr = "") {
   # read counts data -----------------------------------------------------------
   if (data_file_format == 1) {
 
@@ -426,7 +427,8 @@ limma_value <- function(data_file_format,
           block_factor = select_block_factors_model,
           reference_levels = factor_reference_levels,
           threshold_wald_test = threshold_wald_test,
-          independent_filtering = independent_filtering
+          independent_filtering = independent_filtering,
+          descr = descr
         )
       )
       # limma-voom 2 or limma-trend 1 --------------------
@@ -443,7 +445,8 @@ limma_value <- function(data_file_format,
           selected_comparisons = select_model_comprions,
           sample_info = sample_info,
           model_factors = c(select_factors_model, select_interactions),
-          block_factor = select_block_factors_model
+          block_factor = select_block_factors_model,
+          descr = descr
         )
       )
     }
@@ -462,7 +465,8 @@ limma_value <- function(data_file_format,
         selected_comparisons = select_model_comprions,
         sample_info = sample_info,
         model_factors = c(select_factors_model, select_interactions),
-        block_factor = select_block_factors_model
+        block_factor = select_block_factors_model,
+        descr = descr
       )
     )
 
@@ -570,7 +574,8 @@ deg_deseq2 <- function(raw_counts,
                        block_factor = NULL,
                        reference_levels = NULL,
                        threshold_wald_test = FALSE,
-                       independent_filtering = TRUE) {
+                       independent_filtering = TRUE,
+                       descr = "") {
   # Local parameters---------------------------------------------
   max_samples <- 500
   max_comparisons <- 500
@@ -1133,7 +1138,12 @@ deg_deseq2 <- function(raw_counts,
     comparisons = comparison_names,
     exp_type = exp_type,
     expr = expr,
-    top_genes = top_genes
+    top_genes = top_genes,
+    description = paste0(descr, 
+                         " Genes are classified as differly expressed based on having a p-value below ",
+                         max_p_limma, 
+                         " and log fold change above ",
+                         min_fc_limma, ".")
   ))
 }
 

@@ -312,7 +312,9 @@ limma <- limma_value(
   factor_reference_levels = reference_level,
   processed_data = processed_data$data,
   counts_log_start = 4,
-  p_vals = processed_data$p_vals
+  p_vals = processed_data$p_vals,
+  descr = processed_data$descr
+  
 )
 ```
 

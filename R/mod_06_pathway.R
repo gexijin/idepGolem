@@ -885,7 +885,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           sig_pathways = input$sig_pathways,
           pathway_method = input$pathway_method,
           pathway_list_data = pathway_list_data(),
-          date = Sys.Date()
+          date = Sys.Date(),
+          descr = deg$limma()[["description"]] 
         )
 
         req(params)

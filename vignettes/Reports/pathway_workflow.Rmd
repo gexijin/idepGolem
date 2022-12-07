@@ -25,20 +25,12 @@ params:
   n_pathway_show:
   contrast_samples:
   sig_pathways:
-  #heatmap_color_select:
   pathway_method:
-  #gage_pathway_data:
-  #selected_pathway_data:
   pathway_list_data:
-  #network_data:
-  #pgsea_plot_data:
-  # fgsea_pathway_data:
-  # pgsea_plot_data:
-  # pgsea_plot_all_samples_data:
-  # gene_info:
   date:
     label: "Date: "
     value: !r Sys.Date()
+  descr:
   printcode:
     label: "Display Code"
     value: TRUE
@@ -65,6 +57,9 @@ This html document contains what parameters values were selected on the IDEP int
 
 
 # Summary
+
+`r params$descr`
+
 
 The comparison selected was **`r params$select_contrast`** using **`r params$go`** genesets. **`r params$n_pathway_show`** pathways with between **`r params$min_set_size`** and **`r params$max_set_size`** genes were included. Absolute fold values were `r ifelse(params$absolute_fold, 'not', '')`  used. Pathways were found using the **`r switch(as.character(params$pathway_method), "1" = "GAGE", "2" = "PGSEA", "3" = "GSEA (Pre-Ranked)", "4" = "PGSEA with all samples", "5" = "ReactomePA" )`** method. Pathway p values cutoff is set to **`r params$pathway_p_val_cutoff`**.
 
