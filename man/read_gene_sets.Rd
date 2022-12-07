@@ -7,17 +7,18 @@
 read_gene_sets(converted, all_gene_names, go, select_org, idep_data, my_range)
 }
 \arguments{
-\item{converted}{Return value from the \code{convert_id} function,
-contains information about the gene IDs for the matched species}
+\item{converted}{List of converted gene information  from
+\code{\link{convert_id}()}}
 
-\item{all_gene_names}{Data frame with all gene names}
+\item{all_gene_names}{Data frame of gene names from 
+\code{\link{get_all_gene_names}()}}
 
-\item{go}{Portion of the database to use for the pathway analysis}
+\item{go}{String designating the section of the database to query for pathway
+analysis. See \code{\link{gmt_category}()} for choices.}
 
-\item{select_org}{The user selected organism for the expression data,
-default is "BestMatch"}
+\item{select_org}{String designating with organism is being analyzed}
 
-\item{idep_data}{Read data files from the database}
+\item{idep_data}{List of data returned from \code{\link{get_idep_data}()}}
 
 \item{my_range}{Vector of the (min_set_size, max_set_size)}
 }

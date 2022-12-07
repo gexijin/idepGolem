@@ -412,7 +412,6 @@ limma_value <- function(data_file_format,
                         independent_filtering = TRUE) {
   # read counts data -----------------------------------------------------------
   if (data_file_format == 1) {
-
     # DESeq2----------------------------
     if (counts_deg_method == 3) {
       return(
@@ -939,7 +938,6 @@ deg_deseq2 <- function(raw_counts,
 
     # Group comparison using sample names
     if (is.null(model_factors)) {
-
       # whether testing the null hypothesis FC = 0, or |FC| > 2
       if (!threshold_wald_test) {
         selected <- DESeq2::results(dds,
@@ -2379,7 +2377,6 @@ plot_venn <- function(results) {
 #' @export
 #'
 plot_upset <- function(results) {
-
   # get the groups of data by category
   data <- results |>
     tidyr::as_tibble() |>
@@ -2867,7 +2864,6 @@ deg_information <- function(limma_value,
                             processed_data,
                             no_id_conversion = FALSE) {
   if (no_id_conversion) {
-
     # get the first comparison level
     degs_data <- limma_value$top_genes[[1]]
     degs_data$User_ID <- rownames(degs_data)
@@ -2892,7 +2888,6 @@ deg_information <- function(limma_value,
     degs_data <- degs_data |>
       dplyr::relocate(User_ID)
   } else {
-
     # get the first comparison level
     degs_data <- limma_value$top_genes[[1]]
     colnames(degs_data) <- c(

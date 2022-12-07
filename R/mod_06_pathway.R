@@ -495,7 +495,9 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
 
       withProgress(message = "Reading pathway database", {
         incProgress(0.2)
-        if (pre_process$select_org() == "NEW" && !is.null(pre_process$gmt_file())) {
+        if (
+          pre_process$select_org() == "NEW" && !is.null(pre_process$gmt_file())
+        ) {
           in_file <- pre_process$gmt_file()
           in_file <- in_file$datapath
           gene_sets <- read_gmt_robust(in_file)

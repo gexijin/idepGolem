@@ -17,7 +17,7 @@ if (nchar(DATAPATH) == 0) {
   DATAPATH <- "../../data/data104b/"
 }
 
-#' connect_convert_db connects to the convertIDs.db and returns the
+#' Connect to the convertIDs database and return the
 #' objects.
 #'
 #' Create a database connection with the DBI package.
@@ -57,13 +57,14 @@ connect_convert_db <- function(datapath = DATAPATH) {
 #' 11. go_level_2_terms: mapping of GO levels to terms
 #' 12. id_index: idtype and index
 #' 13. species_choice: list of species for populating selection.
+#'
 get_idep_data <- function(datapath = DATAPATH) {
-
   # if prepared RData files exists, return the objects.
   # file is prepared with this command
   #  saveRDS(get_idep_data(), file="prepared_data.RData", compress=FALSE)
   # then this file needs to be copied to /data_go/
-  # BE CAREFUL: the RDS file is not checked. It should be updated if the files change.
+  # BE CAREFUL: the RDS file is not checked. It should be updated if the files
+  # change.
   if (file.exists(paste0(datapath, "data_go/prepared_data.RData"))) {
     return(readRDS(paste0(datapath, "data_go/prepared_data.RData")))
   }
@@ -239,13 +240,10 @@ find_species_by_id_name <- function(species_id, org_info) {
 
 
 
-#' convert_id This function takes gene IDs and converts them to ensembl data.
-#'
-#' FUNCTION_DESCRIPTION
+#'  Convert gene IDs to ensembl data.
 #'
 #' @param query A character vector of gene IDs
-#' @param idep_data A instance of the output from get_idep_data
-#'  (link to documentation)
+#' @param idep_data A instance of the output from \code{\link{get_idep_data}()}
 #' @param select_org A character of the species that wants to be looked up,
 #'  default to \code{"BestMatch"}
 #' @param max_sample_ids The number of gene ids used to determine species
@@ -292,7 +290,6 @@ convert_id <- function(query,
 
   # if best match species--------------------------------------------------
   if (select_org == idep_data$species_choice[[1]]) {
-
     # First send a query to determine the species
     # nested SQL to determine the number of query
     # genes matched to species, idType combinations
@@ -443,14 +440,13 @@ convert_id <- function(query,
 #' to perform enrichment analysis on the provided
 #' query.
 #'
-#' @param all_gene_names_query Subsetted rows of the
-#'   all_gene_names data frame to query the database with
-#' @param converted Conversion information from the original
-#'   IDs returned from the convert_id() function
-#' @param go Section of the database to query for pathway
-#'   analysis
-#' @param select_org Input for what organism the IDs are
-#'   pertaining to
+#' @param all_gene_names_query Subsetted data frame of genes names from
+#'  \code{\link{get_all_gene_names}()} to query database with.
+#' @param converted List of conversion information on the original
+#'   IDs returned from the \code{\link{convert_id}()}.
+#' @param go String designating the section of the database to query for pathway
+#'   analysis. See \code{\link{gmt_category}()} for choices.
+#' @param select_org String designating what organism is being analyzed.
 #' @param gmt_file For NEW species the gmt file to use
 #'   for the pathway analysis
 #' @param idep_data Data built in to idep
@@ -625,23 +621,29 @@ read_pathway_sets <- function(all_gene_names_query,
 #' gene IDs and performs pathway analysis for the query
 #' with the filtered background.
 #'
-#' @param processed_data The data matrix that has been through
-#'   the pre-processing function
-#' @param gene_info The gene info from the converted IDs and
-#'   the function gene_info()
-#' @param sub_query Query that the pathway analysis is being
-#'   performed for
-#' @param go Section of the database to query for pathway
-#'   analysis
-#' @param pathway_table Table from the initial querying for the
-#'  sub-query
-#' @param idep_data Data built in to idep
-#' @param sub_pathway_files The subset of GMT files that contain
-#'   information for the matched species
+#' @param processed_data Matrix of gene data that has been through
+#'   \code{\link{pre_process}()}
+#' @param gene_info Dataframe of converted IDs information from the function
+#'   \code{\link{gene_info}()}
+#' @param sub_query Vector of IDs that the enrichment
+#'   analysis should be performed on. This list is also returned from
+#'   \code{\link{read_pathway_sets}()}.
+#' @param go String designating the section of the database to query for pathway
+#'   analysis. See \code{\link{gmt_category}()} for choices.
+#' @param pathway_table Data frame of results from
+#'  \code{\link{read_pathway_sets}()}. If this data frame is NULL or 0 rows
+#'  there this function will return no significant enrichment.
+#' @param idep_data List of data returned from \code{\link{get_idep_data}()}
+#' @param sub_pathway_files String designating file location for GMT files in
+#'   the database that contain information for the matched species. This string
+#'   is returned from \code{\link{read_pathway_sets}()}.
 #'
 #' @export
 #' @return Pathway gene set table for the background genes. Used
 #'   in find_overlap to calculate pvals for the filtered background
+#'
+#' @seealso This function is used internally in \code{\link{find_overlap}()}
+#'
 background_pathway_sets <- function(processed_data,
                                     gene_info,
                                     sub_query,
@@ -729,12 +731,14 @@ background_pathway_sets <- function(processed_data,
 #' database to query that contain genes from the converted
 #' IDs.
 #'
-#' @param converted Conversion information from the original IDs returned
-#'   from the convert_id() function
-#' @param converted_data Data matrix with the converted ensembl_IDs
-#' @param select_org Input for what organism the IDs are pertaining to
-#' @param gmt_file Inputed gene set pathway file for NEW species
-#' @param idep_data Data built in to idep
+#' @param converted List of converted gene information  from
+#'   \code{\link{convert_id}()}
+#' @param converted_data Data matrix element with the converted ensembl_IDs from
+#'   the list returned from \code{\link{convert_data}()}
+#' @param select_org String designating the organism being analyzed
+#' @param gmt_file For NEW species the gmt file to use
+#'   for the pathway analysis, otherwise \code{NULL}
+#' @param idep_data List of data returned from \code{\link{get_idep_data}()}
 #'
 #' @export
 #' @return A character vector of names of the section of data to perform
@@ -813,13 +817,14 @@ gmt_category <- function(converted,
 #' a list with each entry a vector of IDs corresponding to
 #' a description of a pathway in the database.
 #'
-#' @param converted Return value from the \code{convert_id} function,
-#'  contains information about the gene IDs for the matched species
-#' @param all_gene_names Data frame with all gene names
-#' @param go Portion of the database to use for the pathway analysis
-#' @param select_org The user selected organism for the expression data,
-#'  default is "BestMatch"
-#' @param idep_data Read data files from the database
+#' @param converted List of converted gene information  from
+#'   \code{\link{convert_id}()}
+#' @param all_gene_names Data frame of gene names from
+#'   \code{\link{get_all_gene_names}()}
+#' @param go String designating the section of the database to query for pathway
+#'   analysis. See \code{\link{gmt_category}()} for choices.
+#' @param select_org String designating with organism is being analyzed
+#' @param idep_data List of data returned from \code{\link{get_idep_data}()}
 #' @param my_range Vector of the (min_set_size, max_set_size)
 #'
 #' @export
@@ -924,12 +929,13 @@ read_gene_sets <- function(converted,
 #' ID type to entrez type.
 #'
 #' @param query Vector of IDs to convert
-#' @param species Species to map the IDs for
-#' @param org_info org_info file from the \code{get_idep_data}
-#'  function
+#' @param species String designating the organism being analyzed
+#' @param org_info org_info file from the list returned from
+#'   \code{link{get_idep_data}()}
+#'
 #'
 #' @export
-#' @return The qeuried genes with converted IDs.
+#' @return The queried genes with converted IDs.
 convert_ensembl_to_entrez <- function(query,
                                       species,
                                       org_info) {
@@ -976,21 +982,25 @@ convert_ensembl_to_entrez <- function(query,
 #'
 #' From a pathway description find the KEGG ID.
 #'
-#' @param pathway_description Description for a pathway in the
-#'  iDEP database
-#' @param Species Species that the pathway is for
-#' @param GO Portion of the database to query ("KEGG")
-#' @param select_org The organism that the gene data is for
+#' @param pathway_description String providing description of a pathway in the
+#'  iDEP database, see the results from \code{\link{read_gene_Sets}()} for
+#'  options
+#' @param Species String designating the organism being analyzed
+#' @param GO String designating the portion of the database to query,
+#'   for this function, it should be "KEGG"
+#' @param select_org String designating the organism being analyzed
 #' @param gmt_files GMT files from the iDEP database
 #' @param org_info Organism information files from the iDEP
 #'  database
-#' @param idep_data Background idep_data
+#' @param idep_data List of data from \code{\link{get_idep_data}()}
 #'
 #' @export
 #' @return Return the KEGG ID for the pathway.
+#'
+#' @seealso This function is used internally in \code{\link{kegg_pathway}()}
 kegg_pathway_id <- function(pathway_description,
                             Species,
-                            GO,
+                            GO = "KEGG",
                             select_org,
                             gmt_files,
                             org_info,

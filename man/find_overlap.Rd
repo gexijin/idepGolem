@@ -21,43 +21,51 @@ find_overlap(
 )
 }
 \arguments{
-\item{pathway_table}{Results from the read_pathway_sets
-query. If NULL or 0 rows there is no significant
-enrichment}
+\item{pathway_table}{Data frame of results from
+\code{\link{read_pathway_sets}()}. If this data frame is NULL or 0 rows
+there this function will return no significant enrichment.}
 
-\item{query_set}{The vector of IDs that the enrichment
-analysis is being performed on}
+\item{query_set}{Vector of IDs that the enrichment
+analysis should be performed on. This list is also returned from
+\code{\link{read_pathway_sets}()}.}
 
 \item{total_genes}{Length of the query set subtracted from
 the total number of genes in the database. Could change
 within the function if the background set changes to the
-filtered genes.}
+filtered genes.This number is also return from
+\code{\link{read_pathway_sets}()}.}
 
-\item{processed_data}{Data that has been filtered and
-transformed in the pre_process function}
+\item{processed_data}{Matrix of gene data that has been through
+\code{\link{pre_process}()}}
 
-\item{gene_info}{The gene info from the converted IDs and
-the function gene_info()}
+\item{gene_info}{The gene info from the converted IDs from
+\code{\link{gene_info}()}}
 
-\item{go}{Section of the database to query for pathway
-analysis}
+\item{go}{String designating the section of the database to query for pathway
+analysis. See \code{\link{gmt_category}()} for choices.}
 
-\item{idep_data}{Data built in to idep}
+\item{idep_data}{List of data returned from \code{\link{get_idep_data}()}}
 
-\item{sub_pathway_files}{GMT files in the database that
-contain information for the matched species}
+\item{sub_pathway_files}{String designating file location for GMT files in
+the database that contain information for the matched species. This string
+is returned from \code{\link{read_pathway_sets}()}.}
 
-\item{use_filtered_background}{T/F Use the genes that
-passed the pre_process filter as the backgrounf}
+\item{use_filtered_background}{TRUE/FALSE to indicate the use of the genes
+that passed the pre_process filter as the background}
 
-\item{select_org}{Input for what organism the IDs are
-pertaining to}
+\item{select_org}{String designating which organism is being analyzed.}
 
-\item{reduced}{T/F Remove gene sets that are redudant
-from the final result}
+\item{reduced}{TRUE/FALSE to indicate if function should remove gene sets
+that are redundant from the final result}
+
+\item{max_terms}{Integer indicating how many pathways to return. Must be a
+number between 1 and 100. The default is 15.}
+
+\item{sort_by_fold}{TRUE/FALSE indicating if the returned table should be
+sorted by LFC.}
 }
 \value{
-If there is significant enrichment, the data frame
+A data frame. If there is significant enrichment, the data frame
   that is returned has a pathway for each row with the
   total genes in the database mapping to it as well as the
   number of genes in the query that map to it. It also
@@ -65,7 +73,8 @@ If there is significant enrichment, the data frame
   specific IDs included in the pathway from the query.
 }
 \description{
-Use the pathway table from the read_pathway_sets function
-to calculate adjusted p-values. Adjusted p-values determine
-the enriched pathways from the selected qeury.
+Use the pathway table element from the list returned from from the
+\code{\link{read_pathway_sets}()}to calculate adjusted p-values. Adjusted
+p-values determine the enriched pathways from the selected query.
 }
+\concept{pathway functions}

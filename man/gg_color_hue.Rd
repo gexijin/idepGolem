@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils_analysis_random.R
 \name{gg_color_hue}
 \alias{gg_color_hue}
-\title{ggplot colors function}
+\title{\code{ggplot} colors}
 \usage{
 gg_color_hue(n)
 }
@@ -13,6 +13,5 @@ gg_color_hue(n)
 Vector of hex color codes for a plot.
 }
 \description{
-This function will return the colors that
-the ggplot2 package uses for plots.
+Create a vector of hex colors to be used in \code{ggplot}s
 }

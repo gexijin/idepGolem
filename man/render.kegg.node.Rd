@@ -15,6 +15,21 @@ render.kegg.node(
   cex = 0.25
 )
 }
+\arguments{
+\item{plot.data}{Plot data}
+
+\item{cols.ts}{Columns}
+
+\item{img}{Image}
+
+\item{same.layer}{TRUE/FALSE}
+
+\item{type}{Type}
+
+\item{text.col}{String designating text color}
+
+\item{cex}{Size of text}
+}
 \description{
 PATHVIEW SOURCE FUNCTION
 https://rdrr.io/bioc/pathview/src/R/render.kegg.node.R

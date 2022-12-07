@@ -2,12 +2,13 @@
 % Please edit documentation in R/utils_analysis_random.R
 \name{dist_functions}
 \alias{dist_functions}
-\title{dist_functions}
+\title{List of distance functions for hierarchical clustering}
 \usage{
 dist_functions()
 }
 \value{
-a distance function
+A list of distance functions for hierarchical clustering including 
+ pearson, euclidian, and absolute pearson
 }
 \description{
 Distance functions for clustering

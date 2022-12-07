@@ -400,7 +400,6 @@ convert_data <- function(converted,
 #' @family load data functions
 get_all_gene_names <- function(mapped_ids,
                                all_gene_info) {
-
   # not converted
   if (is.null(dim(mapped_ids))) {
     return(data.frame(

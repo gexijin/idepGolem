@@ -15,25 +15,28 @@ background_pathway_sets(
 )
 }
 \arguments{
-\item{processed_data}{The data matrix that has been through
-the pre-processing function}
+\item{processed_data}{Matrix of gene data that has been through 
+\code{\link{pre_process}()}}
 
-\item{gene_info}{The gene info from the converted IDs and
-the function gene_info()}
+\item{gene_info}{Dataframe of converted IDs information from the function 
+\code{\link{gene_info}()}}
 
-\item{sub_query}{Query that the pathway analysis is being
-performed for}
+\item{sub_query}{Vector of IDs that the enrichment
+analysis should be performed on. This list is also returned from
+\code{\link{read_pathway_sets}()}.}
 
-\item{go}{Section of the database to query for pathway
-analysis}
+\item{go}{String designating the section of the database to query for pathway
+analysis. See \code{\link{gmt_category}()} for choices.}
 
-\item{pathway_table}{Table from the initial querying for the
-sub-query}
+\item{pathway_table}{Data frame of results from
+\code{\link{read_pathway_sets}()}. If this data frame is NULL or 0 rows
+there this function will return no significant enrichment.}
 
-\item{idep_data}{Data built in to idep}
+\item{idep_data}{List of data returned from \code{\link{get_idep_data}()}}
 
-\item{sub_pathway_files}{The subset of GMT files that contain
-information for the matched species}
+\item{sub_pathway_files}{String designating file location for GMT files in
+the database that contain information for the matched species. This string
+is returned from \code{\link{read_pathway_sets}()}.}
 }
 \value{
 Pathway gene set table for the background genes. Used
@@ -43,4 +46,7 @@ Pathway gene set table for the background genes. Used
 This function reads the pathway sets for the filtered
 gene IDs and performs pathway analysis for the query
 with the filtered background.
+}
+\seealso{
+This function is used internally in \code{\link{find_overlap}()}
 }

@@ -7,16 +7,18 @@
 gmt_category(converted, converted_data, select_org, gmt_file, idep_data)
 }
 \arguments{
-\item{converted}{Conversion information from the original IDs returned
-from the convert_id() function}
+\item{converted}{List of converted gene information  from
+\code{\link{convert_id}()}}
 
-\item{converted_data}{Data matrix with the converted ensembl_IDs}
+\item{converted_data}{Data matrix element with the converted ensembl_IDs from 
+the list returned from \code{\link{convert_data}()}}
 
-\item{select_org}{Input for what organism the IDs are pertaining to}
+\item{select_org}{String designating the organism being analyzed}
 
-\item{gmt_file}{Inputed gene set pathway file for NEW species}
+\item{gmt_file}{For NEW species the gmt file to use
+for the pathway analysis, otherwise \code{NULL}}
 
-\item{idep_data}{Data built in to idep}
+\item{idep_data}{List of data returned from \code{\link{get_idep_data}()}}
 }
 \value{
 A character vector of names of the section of data to perform

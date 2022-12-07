@@ -2,15 +2,15 @@
 % Please edit documentation in R/utils_analysis_random.R
 \name{proper}
 \alias{proper}
-\title{proper}
+\title{Capitalize first letter}
 \usage{
 proper(x)
 }
 \arguments{
-\item{x}{string}
+\item{x}{A string}
 }
 \value{
-cleaned string
+Cleaned string
 }
 \description{
 This function converts gene set names to a more readable format

@@ -16,7 +16,6 @@ mod_01_load_data_ui <- function(id) {
       ##################################################################
       #       Load Data sidebar panel ----
       ##################################################################
-
       sidebarPanel(
         # alternative UI output message for once expression data is loaded
         uiOutput(ns("load_data_alt")),

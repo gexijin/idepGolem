@@ -24,7 +24,9 @@ NULL
 #' @param min_fdr Significant p-value to determine significantly
 #'  expressed genes
 #' @param min_size Minimum size for a pathway gene set
-#' @param max_size Maximum size for a pathway gene set
+#' @param max_size Maximum size for a pathway gene set.
+#'
+#' @return A dataframe
 #'
 #' @export
 find_overlap_gmt <- function(query,
@@ -34,7 +36,7 @@ find_overlap_gmt <- function(query,
                              max_size = 10000) {
   total_elements <- 30000 # why 3000?
   min_overlap <- 1 # nolint
-  max_terms <- 10 # max number of enriched terms should be user input ????
+  max_terms <- 10
   no_sig <- as.data.frame("No significant enrichment found!")
   query <- clean_gene_set(gene_set = query) # convert to upper case, unique()
   query_length <- length(query)
@@ -83,42 +85,50 @@ find_overlap_gmt <- function(query,
 
 #' Find overlap for pathway analysis
 #'
-#' Use the pathway table from the read_pathway_sets function
-#' to calculate adjusted p-values. Adjusted p-values determine
-#' the enriched pathways from the selected qeury.
+#' Use the pathway table element from the list returned from from the
+#' \code{\link{read_pathway_sets}()}to calculate adjusted p-values. Adjusted
+#' p-values determine the enriched pathways from the selected query.
 #'
-#' @param pathway_table Results from the read_pathway_sets
-#'   query. If NULL or 0 rows there is no significant
-#'   enrichment
-#' @param query_set The vector of IDs that the enrichment
-#'   analysis is being performed on
+#' @param pathway_table Data frame of results from
+#'  \code{\link{read_pathway_sets}()}. If this data frame is NULL or 0 rows
+#'  there this function will return no significant enrichment.
+#' @param query_set Vector of IDs that the enrichment
+#'   analysis should be performed on. This list is also returned from
+#'   \code{\link{read_pathway_sets}()}.
 #' @param total_genes Length of the query set subtracted from
 #'   the total number of genes in the database. Could change
 #'   within the function if the background set changes to the
-#'   filtered genes.
-#' @param processed_data Data that has been filtered and
-#'   transformed in the pre_process function
-#' @param gene_info The gene info from the converted IDs and
-#'   the function gene_info()
-#' @param go Section of the database to query for pathway
-#'   analysis
-#' @param idep_data Data built in to idep
-#' @param sub_pathway_files GMT files in the database that
-#'   contain information for the matched species
-#' @param use_filtered_background T/F Use the genes that
-#'   passed the pre_process filter as the backgrounf
-#' @param select_org Input for what organism the IDs are
-#'   pertaining to
-#' @param reduced T/F Remove gene sets that are redudant
-#'   from the final result
+#'   filtered genes.This number is also return from
+#'   \code{\link{read_pathway_sets}()}.
+#' @param processed_data Matrix of gene data that has been through
+#'   \code{\link{pre_process}()}
+#' @param gene_info The gene info from the converted IDs from
+#'   \code{\link{gene_info}()}
+#' @param go String designating the section of the database to query for pathway
+#'   analysis. See \code{\link{gmt_category}()} for choices.
+#' @param idep_data List of data returned from \code{\link{get_idep_data}()}
+#' @param sub_pathway_files String designating file location for GMT files in
+#'   the database that contain information for the matched species. This string
+#'   is returned from \code{\link{read_pathway_sets}()}.
+#' @param use_filtered_background TRUE/FALSE to indicate the use of the genes
+#'   that passed the pre_process filter as the background
+#' @param select_org String designating which organism is being analyzed.
+#' @param reduced TRUE/FALSE to indicate if function should remove gene sets
+#'   that are redundant from the final result
+#' @param max_terms Integer indicating how many pathways to return. Must be a
+#'   number between 1 and 100. The default is 15.
+#' @param sort_by_fold TRUE/FALSE indicating if the returned table should be
+#'  sorted by LFC.
 #'
 #' @export
-#' @return If there is significant enrichment, the data frame
+#' @return A data frame. If there is significant enrichment, the data frame
 #'   that is returned has a pathway for each row with the
 #'   total genes in the database mapping to it as well as the
 #'   number of genes in the query that map to it. It also
 #'   contains a column for the p-value and a list of the
 #'   specific IDs included in the pathway from the query.
+#'
+#' @family pathway functions
 find_overlap <- function(pathway_table,
                          query_set,
                          total_genes,
@@ -181,7 +191,7 @@ find_overlap <- function(pathway_table,
   )
 
   # remove some with p > 0.3
-  #  pathway_table <- subset(pathway_table, pathway_table$pval < max_pval_filter)
+  # pathway_table <- subset(pathway_table, pathway_table$pval < max_pval_filter)
 
   # Background genes -----------
   if (!is.null(use_filtered_background)) {
@@ -314,20 +324,26 @@ find_overlap <- function(pathway_table,
 #' contrast. Can be used to subset the data to only include
 #' the samples that correspond to the chosen comparison.
 #'
-#' @param select_contrast Comparison from DEG analysis to filter
-#'  for the significant genes
-#' @param all_sample_names The column names of the processed data
-#' @param sample_info Experiment file information for grouping
+#' @param select_contrast String designating the comparison from DEG analysis to
+#'  filter for the significant genes. See the 'comparison' element from the list
+#'  returned from \code{\link{limma_value}()} for options.
+#' @param all_sample_names List of the column names of the processed gene data
+#' @param sample_info Matrix of experiment design information for grouping
 #'  samples
-#' @param select_factors_model The selected factors for the model
-#'  expression
-#' @param select_model_comprions Selected comparisons to analyze
-#'  in the DEG analysis
+#' @param select_factors_model List designating the selected factors for the
+#'  model expression. Example, c("P53", "Treatment"). See
+#'  \code{\link{list_factors_ui}()} for specific options.
+#' @param select_model_comprions String designating selected comparisons to
+#'  analyze in the DEG analysis
 #' @param reference_levels Vector of reference levels to use for the
-#'  selected factors
-#' @param counts_deg_method Method of DEG being performed (See
-#'  DEG UI for options)
-#' @param data_file_format Type of data being examined
+#'  selected factors. Should be in the form of "p53: NULL vs. WT". See
+#'  \code{\link{list_model_comparisons_ui}()} for specific options.
+#' @param counts_deg_method Integer indicating method of DEG analysis being
+#'   performed. This should be one of 1 for limma-trend, 2 for limma-voom, and
+#'   3 for DESeq2.
+#' @param data_file_format Integer indicating the data format. This should be
+#'   one of 1 for read counts data, 2 for normalized expression, or 3 for
+#'   fold changes and adjusted P-values
 #'
 #' @export
 #' @return A numeric vector that can be used to index the processed
@@ -374,7 +390,6 @@ find_contrast_samples <- function(select_contrast,
   # Has design file and chose factors
   if (!is.null(sample_info) & !is.null(select_factors_model) &
     length(select_model_comprions) > 0) {
-
     # Strings like: "groups: mutant vs. control"
     comparisons <- gsub(".*: ", "", select_model_comprions)
     comparisons <- gsub(" vs\\. ", "-", comparisons)
@@ -483,12 +498,18 @@ find_contrast_samples <- function(select_contrast,
 }
 
 #' Read gene sets GMT file
-#' This functions cleans and converts to upper case
+#' This functions cleans and converts file information to upper case
+#'
+#' @param in_file String designating file path for GMT file
+#'
+#' @return GMT file information
+#'
 #' @export
 read_gmt_robust <- function(in_file) {
   # Read in the first file
   x <- scan(in_file, what = "", sep = "\n")
-  # GMT files saved by Excel has a lot of empty cells "\t\t\t\t" "\t." means one or more tab
+  # GMT files saved by Excel has a lot of empty cells "\t\t\t\t" "\t." means one
+  # or more tab
   # Remove white space
   x <- gsub(" ", "", x)
   # Convert to upper case
@@ -505,7 +526,8 @@ read_gmt_robust <- function(in_file) {
   for (i in 1:length(y)) {
     y[[i]] <- clean_gene_set(y[[i]])
   }
-  # Check the distribution of the size of gene lists sapply(y, length) hold a vector of sizes
+  # Check the distribution of the size of gene lists sapply(y, length) hold a
+  # vector of sizes
   if (max(sapply(y, length)) < 5) {
     cat("Warning! Gene sets have very small number of genes!\n Please double check format.")
   }
@@ -515,7 +537,17 @@ read_gmt_robust <- function(in_file) {
   return(y)
 }
 
-# retrieve detailed info on genes
+
+#' Retrieve detailed gene information
+#'
+#' @param converted List of converted gene information  from
+#'   \code{\link{convert_id}()}
+#' @param select_org String designating the organism being analyzed.
+#' @param gene_info_files List of gene files from the 'gene_info_files' element
+#'   of the result list from \code{\link{get_idep_data}()}.
+#'
+#' @return A data frame
+#' @export
 get_gene_info <- function(converted,
                           select_org,
                           gene_info_files) {
