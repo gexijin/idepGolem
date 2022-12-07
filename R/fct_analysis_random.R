@@ -24,7 +24,7 @@ NULL
 #' @param min_fdr Significant p-value to determine significantly
 #'  expressed genes
 #' @param min_size Minimum size for a pathway gene set
-#' @param max_size Maximum size for a pathway gene set
+#' @param max_size Maximum size for a pathway gene set.
 #'
 #' @return A dataframe
 #'
@@ -36,7 +36,7 @@ find_overlap_gmt <- function(query,
                              max_size = 10000) {
   total_elements <- 30000 # why 3000?
   min_overlap <- 1 # nolint
-  max_terms <- 10 # max number of enriched terms should be user input ????
+  max_terms <- 10 
   no_sig <- as.data.frame("No significant enrichment found!")
   query <- clean_gene_set(gene_set = query) # convert to upper case, unique()
   query_length <- length(query)
@@ -102,11 +102,11 @@ find_overlap_gmt <- function(query,
 #'   \code{\link{read_pathway_sets}()}.
 #' @param processed_data Matrix of gene data that has been through
 #'   \code{\link{pre_process}()}
-#' @param gene_info The gene info from the converted IDs and
-#'   the \code{\link{gene_info}()}
+#' @param gene_info The gene info from the converted IDs from
+#'   \code{\link{gene_info}()}
 #' @param go String designating the section of the database to query for pathway
 #'   analysis. See \code{\link{gmt_category}()} for choices.
-#' @param idep_data Data returned from \code{\link{get_idep_data}()}
+#' @param idep_data List of data returned from \code{\link{get_idep_data}()}
 #' @param sub_pathway_files String designating file location for GMT files in
 #'   the database that contain information for the matched species. This string
 #'   is returned from \code{\link{read_pathway_sets}()}.
