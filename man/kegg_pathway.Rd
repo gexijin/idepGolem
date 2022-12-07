@@ -26,8 +26,9 @@ function}
 \item{sig_pathways}{Description of the pathway for which to
 obtain the gene expression data}
 
-\item{select_contrast}{Comparison from DEG analysis to
-use the top genes from in the pathway analysis}
+\item{select_contrast}{String designating the comparison from DEG analysis to
+filter for the significant genes. See the 'comparison' element from the list
+returned from \code{\link{limma_value}()} for options.}
 
 \item{limma}{Results list from the \code{limma_value}
 function}

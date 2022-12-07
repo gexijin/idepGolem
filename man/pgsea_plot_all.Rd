@@ -15,18 +15,21 @@ pgsea_plot_all(
 )
 }
 \arguments{
-\item{go}{Portion of the database to use for the pathway analysis}
+\item{go}{String designating the section of the database to query for 
+pathway analysis. See \code{\link{gmt_category}()} for choices.}
 
 \item{my_range}{Vector of the (min_set_size, max_set_size)}
 
-\item{data}{Data that has been through the pre-processing}
+\item{data}{Matrix of gene data that has been through the 
+\code{\link{pre_process}()}}
 
-\item{select_contrast}{Comparison from DEG analysis to
-use the top genes from in the pathway analysis}
+\item{select_contrast}{String designating the comparison from DEG analysis to
+filter for the significant genes. See the 'comparison' element from the list
+returned from \code{\link{limma_value}()} for options.}
 
 \item{gene_sets}{List of vectors with each vector being the
 set of genes that correspond to a particular pathway in
-the database (from read_gene_sets function)}
+the database. See list returned from \code{\link{read_gene_sets}()}}
 
 \item{pathway_p_val_cutoff}{Significant p-value to determine
 enriched pathways}
@@ -42,5 +45,14 @@ A data frame with the results of the pathway analysis.
 }
 \description{
 Run pathway analysis with the PGSEA package using the results
-from the limma_value function on all samples.
+from the \code{\link{limma_value}()} on all samples.
 }
+\seealso{
+Other pathway functions: 
+\code{\link{fgsea_data}()},
+\code{\link{gage_data}()},
+\code{\link{pgsea_data}()},
+\code{\link{plot_pgsea}()},
+\code{\link{reactome_data}()}
+}
+\concept{pathway functions}

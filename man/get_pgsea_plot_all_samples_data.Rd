@@ -16,8 +16,9 @@ get_pgsea_plot_all_samples_data(
 \arguments{
 \item{data}{Data that has been through the pre-processing}
 
-\item{select_contrast}{Comparison from DEG analysis to
-use the top genes from in the pathway analysis}
+\item{select_contrast}{String designating the comparison from DEG analysis to
+filter for the significant genes. See the 'comparison' element from the list
+returned from \code{\link{limma_value}()} for options.}
 
 \item{gene_sets}{List of vectors with each vector being the
 set of genes that correspond to a particular pathway in

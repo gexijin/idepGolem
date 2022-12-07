@@ -17,21 +17,22 @@ reactome_data(
 )
 }
 \arguments{
-\item{select_contrast}{Comparison from DEG analysis to
-use the top genes from in the pathway analysis}
+\item{select_contrast}{String designating the comparison from DEG analysis to
+filter for the significant genes. See the 'comparison' element from the list
+returned from \code{\link{limma_value}()} for options.}
 
 \item{my_range}{Vector of the (min_set_size, max_set_size)}
 
-\item{limma}{Results list from the \code{limma_value}
-function}
+\item{limma}{Results list from the \code{\link{limma_value}()}}
 
 \item{gene_p_val_cutoff}{Significant p-value to filter
 the top genes fold change by}
 
-\item{converted}{Return value from the convert_id function, contains
-information about the gene IDs for the matched species}
+\item{converted}{Return value from the \code{\link{convert_id}()} function, 
+contains information about the gene IDs for the matched species}
 
-\item{idep_data}{Read data files from the database}
+\item{idep_data}{List of data files from the database, returned from 
+\code{\link{get_idep_data}()}}
 
 \item{pathway_p_val_cutoff}{Significant p-value to determine
 enriched pathways}
@@ -39,7 +40,7 @@ enriched pathways}
 \item{n_pathway_show}{Number of pathways to return in final
 result}
 
-\item{absolute_fold}{Use the absolute value of the fold
+\item{absolute_fold}{TRUE/FALSE to use the absolute value of the fold
 change}
 }
 \value{
@@ -52,3 +53,12 @@ A data frame with the results of the pathway analysis.
 Run pathway analysis with the reactome package using the results
 from the limma_value function.
 }
+\seealso{
+Other pathway functions: 
+\code{\link{fgsea_data}()},
+\code{\link{gage_data}()},
+\code{\link{pgsea_data}()},
+\code{\link{pgsea_plot_all}()},
+\code{\link{plot_pgsea}()}
+}
+\concept{pathway functions}

@@ -16,14 +16,15 @@ plot_pgsea(
 \arguments{
 \item{my_range}{Vector of the (min_set_size, max_set_size)}
 
-\item{processed_data}{Data that has been through the pre-processing}
+\item{processed_data}{Matrix of gene data that has been through 
+\code{\link{pre_process}()}}
 
 \item{contrast_samples}{Sample columns that correspond to the
 selected comparison}
 
 \item{gene_sets}{List of vectors with each vector being the
 set of genes that correspond to a particular pathway in
-the database (from read_gene_sets function)}
+the database. See list returned from \code{\link{read_gene_sets}()}}
 
 \item{pathway_p_val_cutoff}{Significant p-value to determine
 enriched pathways}
@@ -39,3 +40,12 @@ Create a heatmap from the pathway analysis using the PGSEA
 package. The heatmap shows the expression in each group for
 each significantly enriched pathway.
 }
+\seealso{
+Other pathway functions: 
+\code{\link{fgsea_data}()},
+\code{\link{gage_data}()},
+\code{\link{pgsea_data}()},
+\code{\link{pgsea_plot_all}()},
+\code{\link{reactome_data}()}
+}
+\concept{pathway functions}
