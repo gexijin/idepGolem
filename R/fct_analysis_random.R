@@ -36,7 +36,7 @@ find_overlap_gmt <- function(query,
                              max_size = 10000) {
   total_elements <- 30000 # why 3000?
   min_overlap <- 1 # nolint
-  max_terms <- 10 
+  max_terms <- 10
   no_sig <- as.data.frame("No significant enrichment found!")
   query <- clean_gene_set(gene_set = query) # convert to upper case, unique()
   query_length <- length(query)

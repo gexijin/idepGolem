@@ -10,15 +10,15 @@
 #' @name utils_analysis_random.R
 NULL
 
-#' List of method functions for hierarchical clustering 
+#' List of method functions for hierarchical clustering
 #'
 #'
-#' @description Returns a list of functions for hierarchical clustering 
-#' including average linkage, ward.d, ward.d2, single linkage, mcquitty, 
-#' median, and centroid. 
+#' @description Returns a list of functions for hierarchical clustering
+#' including average linkage, ward.d, ward.d2, single linkage, mcquitty,
+#' median, and centroid.
 #'
 #' @export
-#' @return  A list of functions 
+#' @return  A list of functions
 #'
 #'
 hcluster_functions <- function() {
@@ -58,13 +58,13 @@ hcluster_functions <- function() {
 }
 
 
-#' List of distance functions for hierarchical clustering 
+#' List of distance functions for hierarchical clustering
 #'
 #'
 #' @description Distance functions for clustering
 #'
 #' @export
-#' @return A list of distance functions for hierarchical clustering including 
+#' @return A list of distance functions for hierarchical clustering including
 #'  pearson, euclidian, and absolute pearson
 #'
 #'
@@ -93,11 +93,11 @@ dist_functions <- function() {
 #'
 #' @param num_set Vector of values
 #'
-#' @return A numeric value indicating the difference 
-#' 
+#' @return A numeric value indicating the difference
+#'
 #' @examples
 #' dynamic_range(1:10)
-#' 
+#'
 dynamic_range <- function(num_set) {
   # Given a set of numbers,
   # find the difference between 2nd largest and 2nd smallest
@@ -111,18 +111,18 @@ dynamic_range <- function(num_set) {
 }
 
 
-#' Detect groups by sample names 
+#' Detect groups by sample names
 #'
-#' Detects groups from column names in sample info file so that they can be used 
-#' for things such as coloring plots or building the model for DEG analysis. 
+#' Detects groups from column names in sample info file so that they can be used
+#' for things such as coloring plots or building the model for DEG analysis.
 #'
 #' @param sample_names Vector of column headings from data file or design file
-#' @param sample_info Matrix of the experiment design information 
+#' @param sample_info Matrix of the experiment design information
 #'
 #' @export
-#' @return A character vector with the groups 
+#' @return A character vector with the groups
 #' @note This function is mainly called internally in other idepGolem functions.
-#'  
+#'
 detect_groups <- function(sample_names, sample_info = NULL) {
   # sample_names are col names parsing samples by either the name
   # or using a data frame of sample infos.
@@ -168,17 +168,17 @@ detect_groups <- function(sample_names, sample_info = NULL) {
 }
 
 
-#' Data cleaning on gene sets 
+#' Data cleaning on gene sets
 #'
-#' Clean up a set of genes by removing duplicates, spaces, and other control characters from 
+#' Clean up a set of genes by removing duplicates, spaces, and other control characters from
 #' gene names
 #'
-#' @param gene_set Vector of genes to be cleans. 
+#' @param gene_set Vector of genes to be cleans.
 #'
 #' @export
 #' @return Vector of cleaned genes.
-#' 
-#' @note This function is called internally in other idepGolem functions. 
+#'
+#' @note This function is called internally in other idepGolem functions.
 clean_gene_set <- function(gene_set) {
   # remove duplicate; upper case; remove special characters
   gene_set <- unique(toupper(gsub("\n| ", "", gene_set)))
@@ -188,7 +188,7 @@ clean_gene_set <- function(gene_set) {
 }
 
 
-#' Clean gene query 
+#' Clean gene query
 #'
 #' Clean and prepare a gene query by adding tabs and new lines after each gene
 #'
@@ -196,8 +196,8 @@ clean_gene_set <- function(gene_set) {
 #'
 #' @export
 #' @return Vector of cleaned gene list
-#' 
-#' @note This function is called internally in other idepGolem functions. 
+#'
+#' @note This function is called internally in other idepGolem functions.
 clean_query <- function(query_input) {
   return(clean_gene_set(unlist(strsplit(
     x = toupper(query_input),
@@ -206,7 +206,7 @@ clean_query <- function(query_input) {
 }
 
 
-#' Read .gmt file 
+#' Read .gmt file
 #'
 #' This functions cleans and converts gene names to upper case in  a .gmt file
 #'
@@ -214,7 +214,7 @@ clean_query <- function(query_input) {
 #'
 #' @return Data frame with data from gmt file
 #' @export
-#' 
+#'
 read_gmt <- function(file_path) { # size restriction
   # Read in the first file
   gmt_data <- scan(file = file_path, what = "", sep = "\n")
@@ -257,13 +257,13 @@ read_gmt <- function(file_path) { # size restriction
 #'
 #' @param x A string
 #'
-#' @return Cleaned string 
+#' @return Cleaned string
 #' @examples
 #' proper("GOBP_mmu_mgi_GO:0000183_chromatin_silencing_at_rDNA")
 proper <- function(x) paste0(toupper(substr(x, 1, 1)), substring(x, 2))
 
 
-#' Extract a word 
+#' Extract a word
 #'
 #' @param word_list word list
 #'
@@ -282,7 +282,7 @@ extract_word <- function(word_list) {
 
 
 #' Check object state
-#' 
+#'
 #' check_object_state an Utility function to simplify checking object states.
 #'
 #'
@@ -299,7 +299,7 @@ extract_word <- function(word_list) {
 #' @return A list is returned, with the following elements:
 #'  \code{bool} is either true or false depending on \code{check_exp} evaluation
 #'  \code{content} either message and depended on \code{check_exp} evaluation
-#'  
+#'
 #' @export
 #' @examples
 #' check <- check_object_state(
@@ -314,7 +314,7 @@ extract_word <- function(word_list) {
 #'   false_message = "this doesn't have 0 elements"
 #' )
 #' # This will not return check and check$content will be false_message
-#' 
+#'
 check_object_state <- function(check_exp,
                                true_message,
                                false_message = "") {
@@ -332,7 +332,7 @@ check_object_state <- function(check_exp,
   }
 }
 
-#' \code{ggplot} colors 
+#' \code{ggplot} colors
 #'
 #' Create a vector of hex colors to be used in \code{ggplot}s
 #'
@@ -427,9 +427,9 @@ rowname_id_swap <- function(data_matrix,
 #'
 #' @param all_gene_names All matched gene names from idep data
 #' @param data Data matrix with rownames to merge with gene names
-#' @param merge_ID String designating the type gene id such as "User_ID", 
-#'  "ensembl_ID", "symbol" 
-#'  
+#' @param merge_ID String designating the type gene id such as "User_ID",
+#'  "ensembl_ID", "symbol"
+#'
 #'
 #' @export
 #' @return Data frame with all gene name information.
@@ -495,8 +495,8 @@ merge_data <- function(all_gene_names,
 }
 
 
-#' Add a legend 
-#' 
+#' Add a legend
+#'
 #' Add a sample legends to the main heatmap
 #' @note https://stackoverflow.com/questions/3932038/plot-a-legend-outside-of-the-plotting-area-in-base-graphics
 add_legend <- function(...) {
@@ -512,7 +512,7 @@ add_legend <- function(...) {
 }
 
 #' Wrapping long text by adding a new line character
-#' 
+#'
 #' https://stackoverflow.com/questions/7367138/text-wrap-for-plot-titles
 wrap_strings <- function(vector_of_strings,
                          width = 30) {
@@ -525,9 +525,9 @@ wrap_strings <- function(vector_of_strings,
 
 
 #' Replace underscore
-#' Find any instances of "_" and replace them with a space 
+#' Find any instances of "_" and replace them with a space
 #' @param x String
-#' 
+#'
 extract_under <- function(x) {
   words <- unlist(strsplit(x, "_"))
   if (length(words) <= 4) {
@@ -552,15 +552,15 @@ loose_rock_proper <- function(x) {
   return(gsub("(?<=\\b)([a-z])", "\\U\\1", tolower(x), perl = TRUE))
 }
 
-#' Pathview function 
+#' Pathview function
 #' https://rdrr.io/bioc/pathview/src/R/colorpanel2.R
-#' 
-#' @param n Number of HEX color values to return 
-#' @param low String designating the low color 
+#'
+#' @param n Number of HEX color values to return
+#' @param low String designating the low color
 #' @param mid String designating the mid color
-#' @param high String designating the high color 
-#' 
-#' @return A list the length of \code{n} with HEX color values. 
+#' @param high String designating the high color
+#'
+#' @return A list the length of \code{n} with HEX color values.
 colorpanel2 <- function(n,
                         low,
                         mid,
@@ -608,15 +608,15 @@ colorpanel2 <- function(n,
 
 #' PATHVIEW SOURCE FUNCTION
 #' https://rdrr.io/bioc/pathview/src/R/render.kegg.node.R
-#' 
-#' @param plot.data Plot data 
-#' @param cols.ts Columns 
+#'
+#' @param plot.data Plot data
+#' @param cols.ts Columns
 #' @param img Image
 #' @param same.layer TRUE/FALSE
 #' @param type Type
-#' @param text.col String designating text color 
-#' @param cex Size of text 
-#' 
+#' @param text.col String designating text color
+#' @param cex Size of text
+#'
 render.kegg.node <- function(plot.data,
                              cols.ts,
                              img,
@@ -751,7 +751,7 @@ pathview.stamp <- function(x = NULL,
 #'  in the heatmap
 #' @export
 #' @return A drawn ComplexHeatmap.
-#' 
+#'
 basic_heatmap <- function(data,
                           heatmap_color_select) {
   # Number of genes to show
@@ -1043,12 +1043,12 @@ hyperText <- function(textVector, urlVector) {
 #'
 #'
 #' @param p \code{ggplot} object
-#' @param gridline TRUE/FALSE to indicate adding gridlines 
-#' @param ggplot2_theme String to indicate which \code{ggplot} theme to use. 
+#' @param gridline TRUE/FALSE to indicate adding gridlines
+#' @param ggplot2_theme String to indicate which \code{ggplot} theme to use.
 #'  Should be one of "linedraw", "classic", "gray", "light", "dark", or "bw"
 #'
 #' @export
-#' @return Formatted \code{ggplot} object 
+#' @return Formatted \code{ggplot} object
 refine_ggplot2 <- function(p, gridline, ggplot2_theme = "light") {
   # apply theme based on selection
   p <- switch(ggplot2_theme,
@@ -1069,13 +1069,13 @@ refine_ggplot2 <- function(p, gridline, ggplot2_theme = "light") {
   return(p)
 }
 
-#' Remove list in a data frame 
-#' 
+#' Remove list in a data frame
+#'
 #' Remove any list elements in a data frame
-#' 
-#' @param data_object 
-#' 
-#' @return Data frame 
+#'
+#' @param data_object
+#'
+#' @return Data frame
 data_frame_with_list <- function(data_object) {
   set_lists_to_chars <- function(x) {
     if (class(x) == "list") {
