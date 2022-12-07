@@ -7,7 +7,7 @@
 kegg_pathway_id(
   pathway_description,
   Species,
-  GO,
+  GO = "KEGG",
   select_org,
   gmt_files,
   org_info,
@@ -15,25 +15,30 @@ kegg_pathway_id(
 )
 }
 \arguments{
-\item{pathway_description}{Description for a pathway in the
-iDEP database}
+\item{pathway_description}{String providing description of a pathway in the
+iDEP database, see the results from \code{\link{read_gene_Sets}()} for 
+options}
 
-\item{Species}{Species that the pathway is for}
+\item{Species}{String designating the organism being analyzed}
 
-\item{GO}{Portion of the database to query ("KEGG")}
+\item{GO}{String designating the portion of the database to query, 
+for this function, it should be "KEGG"}
 
-\item{select_org}{The organism that the gene data is for}
+\item{select_org}{String designating the organism being analyzed}
 
 \item{gmt_files}{GMT files from the iDEP database}
 
 \item{org_info}{Organism information files from the iDEP
 database}
 
-\item{idep_data}{Background idep_data}
+\item{idep_data}{List of data from \code{\link{get_idep_data}()}}
 }
 \value{
 Return the KEGG ID for the pathway.
 }
 \description{
 From a pathway description find the KEGG ID.
+}
+\seealso{
+This function is used internally in \code{\link{kegg_pathway}()}
 }

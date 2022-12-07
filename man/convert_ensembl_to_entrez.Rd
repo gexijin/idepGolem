@@ -9,13 +9,13 @@ convert_ensembl_to_entrez(query, species, org_info)
 \arguments{
 \item{query}{Vector of IDs to convert}
 
-\item{species}{Species to map the IDs for}
+\item{species}{String designating the organism being analyzed}
 
-\item{org_info}{org_info file from the \code{get_idep_data}
-function}
+\item{org_info}{org_info file from the list returned from 
+\code{link{get_idep_data}()}}
 }
 \value{
-The qeuried genes with converted IDs.
+The queried genes with converted IDs.
 }
 \description{
 Convert an ID qeury for a species from the ensembl

@@ -7,12 +7,12 @@
 get_gene_info(converted, select_org, gene_info_files)
 }
 \arguments{
-\item{converted}{List of converted gene information  from 
+\item{converted}{List of converted gene information  from
 \code{\link{convert_id}()}}
 
 \item{select_org}{String designating the organism being analyzed.}
 
-\item{gene_info_files}{List of gene files from the 'gene_info_files' element 
+\item{gene_info_files}{List of gene files from the 'gene_info_files' element
 of the result list from \code{\link{get_idep_data}()}.}
 }
 \value{

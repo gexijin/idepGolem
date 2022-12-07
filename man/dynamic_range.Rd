@@ -10,11 +10,12 @@ dynamic_range(num_set)
 \item{num_set}{Vector of values}
 }
 \value{
-distance between 2nd largest and 2nd smallest value
+A numeric value indicating the difference
 }
 \description{
 Find the difference between 2nd largest and 2nd smallest number in set
 }
 \examples{
-# ADD_EXAMPLES_HERE
+dynamic_range(1:10)
+
 }

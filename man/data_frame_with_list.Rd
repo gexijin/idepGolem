@@ -8,8 +8,12 @@ data_frame_with_list(data_object)
 
 data_frame_with_list(data_object)
 }
+\arguments{
+\item{data_object}{}
+}
+\value{
+Data frame
+}
 \description{
-GET RID OF LISTS IN A DATA FRAME
-
-GET RID OF LISTS IN A DATA FRAME
+Remove any list elements in a data frame
 }

@@ -2,13 +2,15 @@
 % Please edit documentation in R/utils_analysis_random.R
 \name{hcluster_functions}
 \alias{hcluster_functions}
-\title{hcluster_functions}
+\title{List of method functions for hierarchical clustering}
 \usage{
 hcluster_functions()
 }
 \value{
-one of the functions
+A list of functions
 }
 \description{
-This is list of functions for hierarchical clustering
+Returns a list of functions for hierarchical clustering 
+including average linkage, ward.d, ward.d2, single linkage, mcquitty, 
+median, and centroid.
 }

@@ -2,19 +2,19 @@
 % Please edit documentation in R/utils_analysis_random.R
 \name{clean_query}
 \alias{clean_query}
-\title{clean_query}
+\title{Clean gene query}
 \usage{
 clean_query(query_input)
 }
 \arguments{
-\item{query_input}{string with list of genes}
+\item{query_input}{Vector with list of genes}
 }
 \value{
-string of cleaned gene list
+Vector of cleaned gene list
 }
 \description{
-adds tabs and new lines after each gene
+Clean and prepare a gene query by adding tabs and new lines after each gene
 }
-\examples{
-# ADD_EXAMPLES_HERE
+\note{
+This function is called internally in other idepGolem functions.
 }

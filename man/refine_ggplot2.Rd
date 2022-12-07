@@ -7,12 +7,15 @@
 refine_ggplot2(p, gridline, ggplot2_theme = "light")
 }
 \arguments{
-\item{p}{ggplot2 object}
+\item{p}{\code{ggplot} object}
 
-\item{gridline}{TRUE of FALSE}
+\item{gridline}{TRUE/FALSE to indicate adding gridlines}
+
+\item{ggplot2_theme}{String to indicate which \code{ggplot} theme to use. 
+Should be one of "linedraw", "classic", "gray", "light", "dark", or "bw"}
 }
 \value{
-ggplot2 object
+Formatted \code{ggplot} object
 }
 \description{
 Change ggplot2 plots

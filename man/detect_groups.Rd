@@ -2,21 +2,22 @@
 % Please edit documentation in R/utils_analysis_random.R
 \name{detect_groups}
 \alias{detect_groups}
-\title{detect_groups}
+\title{Detect groups by sample names}
 \usage{
 detect_groups(sample_names, sample_info = NULL)
 }
 \arguments{
-\item{sample_names}{column headings from data file or design file}
+\item{sample_names}{Vector of column headings from data file or design file}
 
-\item{sample_info}{Experiment design matrix}
+\item{sample_info}{Matrix of the experiment design information}
 }
 \value{
-char vector
+A character vector with the groups
 }
 \description{
-Detects groups from column names in sample_info file.
+Detects groups from column names in sample info file so that they can be used 
+for things such as coloring plots or building the model for DEG analysis.
 }
-\examples{
-# ADD_EXAMPLES_HERE
+\note{
+This function is mainly called internally in other idepGolem functions.
 }

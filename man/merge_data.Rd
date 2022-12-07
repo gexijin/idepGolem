@@ -10,13 +10,16 @@ merge_data(all_gene_names, data, merge_ID)
 \item{all_gene_names}{All matched gene names from idep data}
 
 \item{data}{Data matrix with rownames to merge with gene names}
+
+\item{merge_ID}{String designating the type gene id such as "User_ID", 
+"ensembl_ID", "symbol"}
 }
 \value{
-Inputted data with all gene name information.
+Data frame with all gene name information.
 }
 \description{
 This function takes in the gene info data and merges it
-with the data that has gone through the processing fcn.
+with the data that has gone through the processing function.
 The returned data contains the gene names as well as the
 ensembl id in the first two columns.
 }

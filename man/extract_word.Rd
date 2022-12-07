@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils_analysis_random.R
 \name{extract_word}
 \alias{extract_word}
-\title{extract_word}
+\title{Extract a word}
 \usage{
 extract_word(word_list)
 }
@@ -13,7 +13,7 @@ extract_word(word_list)
 extracted words
 }
 \description{
-finds words in list
+Extract a word
 }
 \examples{
 # ADD_EXAMPLES_HERE

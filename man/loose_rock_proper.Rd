@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils_analysis_random.R
 \name{loose_rock_proper}
 \alias{loose_rock_proper}
-\title{Capitalizes all words in string}
+\title{Capitalizes the first letter in all words of a string}
 \usage{
 loose_rock_proper(x)
 }
@@ -10,10 +10,10 @@ loose_rock_proper(x)
 \item{x}{String}
 }
 \value{
-a capitalized string (all words)
+String with capitalized letters
 
 #examples
-loose_rock_proper("i saw a dEaD parrot")
+loose_rock_proper("i saw a ParRot")
 }
 \description{
 from: https://github.com/averissimo/loose.rock/blob/master/R/string.R

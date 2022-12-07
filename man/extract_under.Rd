@@ -2,10 +2,15 @@
 % Please edit documentation in R/utils_analysis_random.R
 \name{extract_under}
 \alias{extract_under}
-\title{EXTRAT UNDERSCORE}
+\title{Replace underscore
+Find any instances of "_" and replace them with a space}
 \usage{
 extract_under(x)
 }
+\arguments{
+\item{x}{String}
+}
 \description{
-EXTRAT UNDERSCORE
+Replace underscore
+Find any instances of "_" and replace them with a space
 }

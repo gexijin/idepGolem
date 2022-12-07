@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils_analysis_random.R
 \name{check_object_state}
 \alias{check_object_state}
-\title{check_object_state an Utility function to simplify checking object states.}
+\title{Check object state}
 \usage{
 check_object_state(check_exp, true_message, false_message = "")
 }
@@ -18,13 +18,14 @@ default to blank string}
 \value{
 A list is returned, with the following elements:
  \code{bool} is either true or false depending on \code{check_exp} evaluation
-
  \code{content} either message and depended on \code{check_exp} evaluation
 }
 \description{
-This function is a booling utility function,
-which helps evaluates the state of objects,
-and helps with sending messages from server to UI logic of shiny app.
+check_object_state an Utility function to simplify checking object states.
+}
+\details{
+A utility function to evaluates the state of objects, and sends messages from
+server to UI of a shiny app.
 }
 \examples{
 check <- check_object_state(
@@ -39,4 +40,5 @@ check <- check_object_state(
   false_message = "this doesn't have 0 elements"
 )
 # This will not return check and check$content will be false_message
+
 }

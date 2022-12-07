@@ -17,7 +17,7 @@ find_contrast_samples(
 }
 \arguments{
 \item{select_contrast}{String designating the comparison from DEG analysis to
-filter for the significant genes. See the 'comparison' element from the list 
+filter for the significant genes. See the 'comparison' element from the list
 returned from \code{\link{limma_value}()} for options.}
 
 \item{all_sample_names}{List of the column names of the processed gene data}
@@ -26,18 +26,18 @@ returned from \code{\link{limma_value}()} for options.}
 samples}
 
 \item{select_factors_model}{List designating the selected factors for the
-model expression. Example, c("P53", "Treatment"). See 
+model expression. Example, c("P53", "Treatment"). See
 \code{\link{list_factors_ui}()} for specific options.}
 
 \item{select_model_comprions}{String designating selected comparisons to
 analyze in the DEG analysis}
 
 \item{reference_levels}{Vector of reference levels to use for the
-selected factors. Should be in the form of "p53: NULL vs. WT". See 
+selected factors. Should be in the form of "p53: NULL vs. WT". See
 \code{\link{list_model_comparisons_ui}()} for specific options.}
 
-\item{counts_deg_method}{Integer indicating method of DEG analysis being 
-performed. This should be one of 1 for limma-trend, 2 for limma-voom, and 
+\item{counts_deg_method}{Integer indicating method of DEG analysis being
+performed. This should be one of 1 for limma-trend, 2 for limma-voom, and
 3 for DESeq2.}
 
 \item{data_file_format}{Integer indicating the data format. This should be

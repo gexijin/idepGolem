@@ -2,19 +2,20 @@
 % Please edit documentation in R/utils_analysis_random.R
 \name{clean_gene_set}
 \alias{clean_gene_set}
-\title{clean_gene_set}
+\title{Data cleaning on gene sets}
 \usage{
 clean_gene_set(gene_set)
 }
 \arguments{
-\item{gene_set}{Gene Set}
+\item{gene_set}{Vector of genes to be cleans.}
 }
 \value{
-cleaned gene set
+Vector of cleaned genes.
 }
 \description{
-Clean up gene sets. Remove spaces and other control characters from gene names
+Clean up a set of genes by removing duplicates, spaces, and other control characters from 
+gene names
 }
-\examples{
-# ADD_EXAMPLES_HERE
+\note{
+This function is called internally in other idepGolem functions.
 }

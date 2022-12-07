@@ -21,8 +21,8 @@ find_overlap(
 )
 }
 \arguments{
-\item{pathway_table}{Data frame of results from 
-\code{\link{read_pathway_sets}()}. If this data frame is NULL or 0 rows 
+\item{pathway_table}{Data frame of results from
+\code{\link{read_pathway_sets}()}. If this data frame is NULL or 0 rows
 there this function will return no significant enrichment.}
 
 \item{query_set}{Vector of IDs that the enrichment
@@ -32,36 +32,36 @@ analysis should be performed on. This list is also returned from
 \item{total_genes}{Length of the query set subtracted from
 the total number of genes in the database. Could change
 within the function if the background set changes to the
-filtered genes.This number is also return from 
+filtered genes.This number is also return from
 \code{\link{read_pathway_sets}()}.}
 
-\item{processed_data}{Matrix of gene data that has been through 
+\item{processed_data}{Matrix of gene data that has been through
 \code{\link{pre_process}()}}
 
-\item{gene_info}{The gene info from the converted IDs and
-the \code{\link{gene_info}()}}
+\item{gene_info}{The gene info from the converted IDs from
+\code{\link{gene_info}()}}
 
 \item{go}{String designating the section of the database to query for pathway
 analysis. See \code{\link{gmt_category}()} for choices.}
 
-\item{idep_data}{Data returned from \code{\link{get_idep_data}()}}
+\item{idep_data}{List of data returned from \code{\link{get_idep_data}()}}
 
-\item{sub_pathway_files}{String designating file location for GMT files in 
-the database that contain information for the matched species. This string 
+\item{sub_pathway_files}{String designating file location for GMT files in
+the database that contain information for the matched species. This string
 is returned from \code{\link{read_pathway_sets}()}.}
 
-\item{use_filtered_background}{TRUE/FALSE to indicate the use of the genes 
+\item{use_filtered_background}{TRUE/FALSE to indicate the use of the genes
 that passed the pre_process filter as the background}
 
 \item{select_org}{String designating which organism is being analyzed.}
 
-\item{reduced}{TRUE/FALSE to indicate if function should remove gene sets 
+\item{reduced}{TRUE/FALSE to indicate if function should remove gene sets
 that are redundant from the final result}
 
-\item{max_terms}{Integer indicating how many pathways to return. Must be a 
+\item{max_terms}{Integer indicating how many pathways to return. Must be a
 number between 1 and 100. The default is 15.}
 
-\item{sort_by_fold}{TRUE/FALSE indicating if the returned table should be 
+\item{sort_by_fold}{TRUE/FALSE indicating if the returned table should be
 sorted by LFC.}
 }
 \value{
@@ -73,8 +73,8 @@ A data frame. If there is significant enrichment, the data frame
   specific IDs included in the pathway from the query.
 }
 \description{
-Use the pathway table element from the list returned from from the 
-\code{\link{read_pathway_sets}()}to calculate adjusted p-values. Adjusted 
+Use the pathway table element from the list returned from from the
+\code{\link{read_pathway_sets}()}to calculate adjusted p-values. Adjusted
 p-values determine the enriched pathways from the selected query.
 }
 \concept{pathway functions}
