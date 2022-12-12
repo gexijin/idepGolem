@@ -10,13 +10,9 @@
 NULL
 
 
-#' make_pull_down_menu makes it easy to make pull down menu
+#' Create a pull down menu
 #'
-#'
-#' @description This makes pull down menu
-#'
-#'
-#' @param funs
+#' @param funs List of functions
 #'
 #'
 #' @return names of a set

@@ -2,16 +2,16 @@
 % Please edit documentation in R/utils_ui.R
 \name{make_pull_down_menu}
 \alias{make_pull_down_menu}
-\title{make_pull_down_menu makes it easy to make pull down menu}
+\title{Create a pull down menu}
 \usage{
 make_pull_down_menu(funs)
 }
 \arguments{
-\item{funs}{}
+\item{funs}{List of functions}
 }
 \value{
 names of a set
 }
 \description{
-This makes pull down menu
+Create a pull down menu
 }

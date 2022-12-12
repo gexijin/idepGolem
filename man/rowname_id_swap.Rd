@@ -11,8 +11,8 @@ rowname_id_swap(data_matrix, all_gene_names, select_gene_id)
 
 \item{all_gene_names}{Data frame of gene names}
 
-\item{select_gene_id}{Desired ID type for rownames
-(User_ID, ensembl_ID, symbol)}
+\item{select_gene_id}{String designating the desired ID type for rownames
+("User_ID", "ensembl_ID", "symbol")}
 }
 \value{
 Data matrix with changed rownames

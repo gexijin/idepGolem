@@ -2,12 +2,24 @@
 % Please edit documentation in R/utils_analysis_random.R
 \name{colorpanel2}
 \alias{colorpanel2}
-\title{PATHVIEW FUNCTION
+\title{Pathview function 
 https://rdrr.io/bioc/pathview/src/R/colorpanel2.R}
 \usage{
 colorpanel2(n, low, mid, high)
 }
+\arguments{
+\item{n}{Number of HEX color values to return}
+
+\item{low}{String designating the low color}
+
+\item{mid}{String designating the mid color}
+
+\item{high}{String designating the high color}
+}
+\value{
+A list the length of \code{n} with HEX color values.
+}
 \description{
-PATHVIEW FUNCTION
+Pathview function 
 https://rdrr.io/bioc/pathview/src/R/colorpanel2.R
 }

@@ -512,7 +512,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
             counts_log_start = pre_process$counts_log_start(),
             p_vals = pre_process$p_vals(),
             threshold_wald_test = threshold_wald_test,
-            independent_filtering = independent_filtering
+            independent_filtering = independent_filtering,
+            descr = pre_process$descr()
           )
 
           updateTabsetPanel(

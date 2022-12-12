@@ -7,7 +7,7 @@
 basic_heatmap(data, heatmap_color_select)
 }
 \arguments{
-\item{data}{A basic data matrix}
+\item{data}{Matrix of data}
 
 \item{heatmap_color_select}{Vector of colors to use for the fill
 in the heatmap}
