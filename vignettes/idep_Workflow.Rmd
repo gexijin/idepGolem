@@ -11,14 +11,14 @@ vignette: >
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  echo = TRUE, #Change to TRUE to see code
-  fig.height=5.5, 
-  fig.width=7.5
+  echo = TRUE, # Change to TRUE to see code
+  fig.height = 5.5,
+  fig.width = 7.5
 )
 ```
 
 ```{r setup}
-#library(idepGolem)
+# library(idepGolem)
 ```
 
 
@@ -66,7 +66,7 @@ all_gene_info <- gene_info(
 converted_data <- convert_data(
   converted = converted,
   no_id_conversion = FALSE,
-  data = load_data$data, 
+  data = load_data$data,
   multiple_map = "mean"
 )
 
@@ -143,17 +143,17 @@ merged_data <- merge_data(
 PCA_plot(
   data = processed_data$data,
   sample_info = load_data$sample_info,
-  PCAx = 1, 
-  PCAy = 2, 
+  PCAx = 1,
+  PCAy = 2,
   selected_color = colnames(load_data$sample_info)[[1]],
   selected_shape = colnames(load_data$sample_info)[[1]]
 )
 t_SNE_plot(
-  data= processed_data$data,
+  data = processed_data$data,
   sample_info = load_data$sample_info,
   selected_color = colnames(load_data$sample_info)[[1]],
   selected_shape = colnames(load_data$sample_info)[[1]]
-  )
+)
 pc_factor_correlation(
   data = processed_data$data,
   sample_info = load_data$sample_info
@@ -173,18 +173,18 @@ PCA_biplot(
   sample_info = load_data$sample_info,
   select_gene_id = "symbol",
   all_gene_names = gene_names
-  )
+)
 PCA_Scree(processed_data = processed_data$data)
- 
+
 PCAtools_eigencorplot(
   processed_data = processed_data$data,
   sample_info = load_data$sample_info
-      )
+)
 ```
 
 # Clustering 
 ```{r}
-n_genes <- 20 
+n_genes <- 20
 dist_funs <- dist_functions()
 hclust_funs <- hcluster_functions()
 
@@ -200,19 +200,19 @@ heatmap_data <- process_heatmap_data(
 )
 
 heat_map <- heatmap_main(
-  data = heatmap_data, 
-  cluster_meth = 1, 
+  data = heatmap_data,
+  cluster_meth = 1,
   heatmap_cutoff = 3,
-  sample_info = as.data.frame(load_data$sample_info), 
-  select_factors_heatmap = "All factors", 
-  dist_function = 1, 
+  sample_info = as.data.frame(load_data$sample_info),
+  select_factors_heatmap = "All factors",
+  dist_function = 1,
   dist_funs = dist_funs,
-  hclust_function = "average", 
-  sample_clustering = F, 
-  heatmap_color_select = c("red", "white", "blue"), 
-  row_dend = T, 
-  k_clusters = 5, 
-  re_run = 5, 
+  hclust_function = "average",
+  sample_clustering = F,
+  heatmap_color_select = c("red", "white", "blue"),
+  row_dend = T,
+  k_clusters = 5,
+  re_run = 5,
   selected_genes = NULL
 )
 ```
@@ -249,8 +249,8 @@ pathway_info
 
 ```{r}
 list_factors <- list_factors_ui(
-  sample_info = load_data$sample_info, 
-  data_file_format = "1", 
+  sample_info = load_data$sample_info,
+  data_file_format = "1",
   counts_deg_method = "3"
 )
 
@@ -259,15 +259,15 @@ list_factors$choices
 factors <- c(list_factors$choices[[1]], list_factors$choices[[2]])
 
 block_factors <- list_block_factors_ui(
-  sample_info = load_data$sample_info, 
+  sample_info = load_data$sample_info,
   select_factors_model = factors
 )
 
 block_factors
 
 list_model_comparisons <- list_model_comparisons_ui(
-  load_data$sample_info, 
-  factors, 
+  load_data$sample_info,
+  factors,
   load_data$data
 )
 
@@ -276,23 +276,23 @@ list_model_comparisons$choices
 model_comparisons <- list_model_comparisons$choices$`p53: NULL vs. WT`
 
 interaction_terms <- list_interaction_terms_ui(
-  sample_info = load_data$sample_info, 
+  sample_info = load_data$sample_info,
   select_factors_model = factors
 )
 
 interaction_terms
 
 list_reference_levels <- select_reference_levels_ui(
-  sample_info = load_data$sample_info, 
-  select_factors_model = factors, 
-  data_file_format = "1", 
+  sample_info = load_data$sample_info,
+  select_factors_model = factors,
+  data_file_format = "1",
   counts_deg_method = "3"
 )
 
 list_reference_levels
 
 reference_level <- c(
-  paste0(names(list_reference_levels)[1], ":", list_reference_levels[1][[1]][[1]]), 
+  paste0(names(list_reference_levels)[1], ":", list_reference_levels[1][[1]][[1]]),
   paste0(names(list_reference_levels)[2], ":", list_reference_levels[2][[1]][[1]])
 )
 ```
@@ -314,7 +314,6 @@ limma <- limma_value(
   counts_log_start = 4,
   p_vals = processed_data$p_vals,
   descr = processed_data$descr
-  
 )
 ```
 
@@ -322,14 +321,14 @@ limma <- limma_value(
 ```{r}
 
 contrast_samples <- find_contrast_samples(
-  select_contrast = limma$comparisons[[1]], 
-	all_sample_names = colnames(processed_data$data),
-	sample_info = load_data$sample_info,
-	select_factors_model = factors,
-	select_model_comprions = model_comparisons, 
+  select_contrast = limma$comparisons[[1]],
+  all_sample_names = colnames(processed_data$data),
+  sample_info = load_data$sample_info,
+  select_factors_model = factors,
+  select_model_comprions = model_comparisons,
   reference_levels = reference_level,
-	counts_deg_method = "3",
-	data_file_format = "1"
+  counts_deg_method = "3",
+  data_file_format = "1"
 )
 
 deg_heat <- deg_heat_data(
@@ -342,16 +341,16 @@ deg_heat <- deg_heat_data(
 up_reg_data <- pathway_info
 up_reg_data <- as.data.frame(up_reg_data)
 up_reg_data$direction <- rep("Up", nrow(up_reg_data))
-#up_reg_data
+# up_reg_data
 down_reg_data <- deg_heat$genes[deg_heat$bar == -1, ]
 down_reg_data <- as.data.frame(down_reg_data)
 down_reg_data$direction <- rep("Down", nrow(down_reg_data))
-#down_reg_data
+# down_reg_data
 
 main_heat_deg <- deg_heatmap(
   data = deg_heat$genes,
   bar = deg_heat$bar,
-  heatmap_color_select = c("green", "black", "red"), 
+  heatmap_color_select = c("green", "black", "red"),
   cluster_rows = TRUE
 )
 ComplexHeatmap::draw(main_heat_deg)
@@ -363,8 +362,8 @@ volcano_data <- volcano_data(
   comparisons = limma$comparisons,
   top_genes = limma$top_genes,
   limma_p_val = .1,
-  limma_fc = 2, 
-  processed_data = processed_data$data, 
+  limma_fc = 2,
+  processed_data = processed_data$data,
   contrast_samples = contrast_samples
 )
 
@@ -374,7 +373,7 @@ vol_labels <- volcano_data$data |>
   dplyr::pull(Row.names)
 
 plot_volcano(
-  data = volcano_data$data, 
+  data = volcano_data$data,
   anotate_genes = vol_labels,
   plot_colors = c("red", "grey", "blue")
 )
@@ -385,8 +384,8 @@ ma_labels <- volcano_data$data |>
   dplyr::pull(Row.names)
 
 plot_ma(
-  data = volcano_data$data, 
-  plot_colors = c("red", "grey", "blue"), 
+  data = volcano_data$data,
+  plot_colors = c("red", "grey", "blue"),
   anotate_genes = ma_labels
 )
 ```
@@ -418,14 +417,14 @@ gage <- gage_data(
 gage[, 2]
 
 contrast_samples_pgsea <- find_contrast_samples(
-  select_contrast = limma$comparisons[[2]], 
-	all_sample_names = colnames(processed_data$data),
-	sample_info = load_data$sample_info,
-	select_factors_model = factors,
-	select_model_comprions = model_comparisons, 
+  select_contrast = limma$comparisons[[2]],
+  all_sample_names = colnames(processed_data$data),
+  sample_info = load_data$sample_info,
+  select_factors_model = factors,
+  select_model_comprions = model_comparisons,
   reference_levels = reference_level,
-	counts_deg_method = "3",
-	data_file_format = "1"
+  counts_deg_method = "3",
+  data_file_format = "1"
 )
 
 plot_pgsea(
@@ -510,7 +509,7 @@ pathway_list_data <- get_pathway_list_data(
 )
 
 enrichment_tree_plot(
-  go_table = pathway_list_data, 
+  go_table = pathway_list_data,
   group = "All Groups"
 )
 
@@ -544,7 +543,7 @@ chromosome_plotly(
   label_gene_symbol = FALSE,
   ma_window_size = 6,
   ma_window_steps = 2,
-  ch_region_p_val = .01, 
+  ch_region_p_val = .01,
   hide_chr = TRUE,
   hide_patches = TRUE
 )
@@ -573,14 +572,14 @@ get_genome_plot(
 
 # Bicluster Functions
 ```{r}
-#"BCCC()" biclust
-#"BCQU()" QUBIC
-#"BCUnibic()" runibic
-#"BCXmotifs()" biclust
-#"BCPlaid()" biclust
-#"BCSpectral()" biclust
-#"BCBimax()" biclust
-#"BCQuest()" biclust
+# "BCCC()" biclust
+# "BCQU()" QUBIC
+# "BCUnibic()" runibic
+# "BCXmotifs()" biclust
+# "BCPlaid()" biclust
+# "BCSpectral()" biclust
+# "BCBimax()" biclust
+# "BCQuest()" biclust
 biclustering <- get_biclustering(
   data = processed_data$data,
   n_genes = 1000,

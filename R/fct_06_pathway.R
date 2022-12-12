@@ -13,7 +13,7 @@ NULL
 #' Run pathway analysis with the gage package using the results
 #' from the limma_value function.
 #'
-#' @param select_go String designating the section of the database to query for 
+#' @param select_go String designating the section of the database to query for
 #'   pathway analysis. See \code{\link{gmt_category}()} for choices.
 #' @param select_contrast String designating the comparison from DEG analysis to
 #'  filter for the significant genes. See the 'comparison' element from the list
@@ -38,7 +38,7 @@ NULL
 #'  The data frame has five columns for the direction of the
 #'  regulation, the pathway description, the stat value, the
 #'  number of overlapping genes, and the p-value.
-#'  
+#'
 #' @family pathway functions
 gage_data <- function(select_go,
                       select_contrast,
@@ -128,7 +128,7 @@ gage_data <- function(select_go,
 #' Run pathway analysis with the PGSEA package using the results
 #' from the limma_value function.
 #'
-#' @param processed_data Matrix of gene data that has been through 
+#' @param processed_data Matrix of gene data that has been through
 #'   \code{\link{pre_process}()}
 #' @param gene_sets List of vectors with each vector being the
 #'  set of genes that correspond to a particular pathway in
@@ -141,8 +141,8 @@ gage_data <- function(select_go,
 #' @export
 #' @return A list with a data frame and a numeric value that is used
 #'  in the \code{\link{plot_pgsea}()} to create a heatmap.
-#' 
-#' @family pathway functions 
+#'
+#' @family pathway functions
 pgsea_data <- function(processed_data,
                        gene_sets,
                        my_range,
@@ -239,7 +239,7 @@ pgsea_data <- function(processed_data,
 #' each significantly enriched pathway.
 #'
 #' @param my_range Vector of the (min_set_size, max_set_size)
-#' @param processed_data Matrix of gene data that has been through 
+#' @param processed_data Matrix of gene data that has been through
 #'   \code{\link{pre_process}()}
 #' @param contrast_samples Sample columns that correspond to the
 #'  selected comparison
@@ -253,8 +253,8 @@ pgsea_data <- function(processed_data,
 #' @export
 #' @return A heatmap plot with the rows as the significant
 #'  pathways and the columns corresponding to the samples.
-#'  
-#' @family pathway functions 
+#'
+#' @family pathway functions
 plot_pgsea <- function(my_range,
                        processed_data,
                        contrast_samples,
@@ -308,7 +308,7 @@ plot_pgsea <- function(my_range,
 #'  the top genes fold change by
 #' @param gene_sets List of vectors with each vector being the
 #'  set of genes that correspond to a particular pathway in
-#'  the database. See results list from 
+#'  the database. See results list from
 #'  \code{\link{read_gene_sets}()}.
 #' @param absolute_fold TRUE/FALSE to use the absolute value of the fold
 #'  change
@@ -322,7 +322,7 @@ plot_pgsea <- function(my_range,
 #'  The data frame has five columns for the direction of the
 #'  regulation, the pathway description, the stat value, the
 #'  number of overlapping genes, and the p-value.
-#' 
+#'
 #' @family pathway functions
 fgsea_data <- function(select_contrast,
                        my_range,
@@ -424,9 +424,9 @@ fgsea_data <- function(select_contrast,
 #' @param limma Results list from the \code{\link{limma_value}()}
 #' @param gene_p_val_cutoff Significant p-value to filter
 #'  the top genes fold change by
-#' @param converted Return value from the \code{\link{convert_id}()} function, 
+#' @param converted Return value from the \code{\link{convert_id}()} function,
 #'  contains information about the gene IDs for the matched species
-#' @param idep_data List of data files from the database, returned from 
+#' @param idep_data List of data files from the database, returned from
 #'  \code{\link{get_idep_data}()}
 #' @param pathway_p_val_cutoff Significant p-value to determine
 #'  enriched pathways
@@ -440,9 +440,9 @@ fgsea_data <- function(select_contrast,
 #'  The data frame has five columns for the direction of the
 #'  regulation, the pathway description, the stat value, the
 #'  number of overlapping genes, and the p-value.
-#'  
-#' @family pathway functions 
-#' 
+#'
+#' @family pathway functions
+#'
 reactome_data <- function(select_contrast,
                           my_range,
                           limma,
@@ -565,10 +565,10 @@ reactome_data <- function(select_contrast,
 #' Run pathway analysis with the PGSEA package using the results
 #' from the \code{\link{limma_value}()} on all samples.
 #'
-#' @param go  String designating the section of the database to query for 
+#' @param go  String designating the section of the database to query for
 #'   pathway analysis. See \code{\link{gmt_category}()} for choices.
 #' @param my_range Vector of the (min_set_size, max_set_size)
-#' @param data Matrix of gene data that has been through the 
+#' @param data Matrix of gene data that has been through the
 #'   \code{\link{pre_process}()}
 #' @param select_contrast String designating the comparison from DEG analysis to
 #'  filter for the significant genes. See the 'comparison' element from the list
@@ -586,8 +586,8 @@ reactome_data <- function(select_contrast,
 #'  The data frame has five columns for the direction of the
 #'  regulation, the pathway description, the stat value, the
 #'  number of overlapping genes, and the p-value.
-#'  
-#' @family pathway functions 
+#'
+#' @family pathway functions
 pgsea_plot_all <- function(go,
                            my_range,
                            data,
@@ -627,22 +627,23 @@ pgsea_plot_all <- function(go,
 #' Data from PGSEA plot
 #'
 #' Get the data matrix that is plotted in the heatmap created by
-#' the \code{\link{plot_pgsea}()}. 
+#' the \code{\link{plot_pgsea}()}.
 #'
 #' @param my_range Vector of the (min_set_size, max_set_size)
-#' @param data Matrix of gene data that has been through 
+#' @param data Matrix of gene data that has been through
 #'  \code{\link{pre_process}()}
 #' @param select_contrast String designating the comparison from DEG analysis to
 #'  filter for the significant genes. See the 'comparison' element from the list
 #'  returned from \code{\link{limma_value}()} for options.
 #' @param gene_sets List of vectors with each vector being the
 #'  set of genes that correspond to a particular pathway in
-#'  the database. See list returned from \code{\link{read_gene_sets}()} 
+#'  the database. See list returned from \code{\link{read_gene_sets}()}
 #' @param sample_info Matrix of experiment design information for grouping
 #' @param select_factors_model The selected factors for the model
 #'  expression
-#' @param select_model_comprions Selected comparisons to analyze
-#'  in the DEG analysis
+#' @param select_model_comprions String designating selected comparisons to
+#'  analyze in the DEG analysis. See \code{\link{list_model_comparisons_ui}()}
+#'  for options
 #' @param pathway_p_val_cutoff Significant p-value to determine
 #'  enriched pathways
 #' @param n_pathway_show Number of pathways to return in final
@@ -652,6 +653,8 @@ pgsea_plot_all <- function(go,
 #' @return Data matrix with the rownames the descriptions of pathways
 #'  and the matrix the returned expression calculation from the PGSEA
 #'  package.
+#'
+#' @family pathway functions
 get_pgsea_plot_data <- function(my_range,
                                 data,
                                 select_contrast,
@@ -721,13 +724,14 @@ get_pgsea_plot_data <- function(my_range,
 #' Get the data matrix that is plotted in the heatmap created by
 #' the pgsea_plot_all function.
 #'
-#' @param data Data that has been through the pre-processing
+#' @param data Matrix of gene data that has been through
+#'  \code{\link{pre_process}()}
 #' @param select_contrast String designating the comparison from DEG analysis to
 #'  filter for the significant genes. See the 'comparison' element from the list
 #'  returned from \code{\link{limma_value}()} for options.
 #' @param gene_sets List of vectors with each vector being the
 #'  set of genes that correspond to a particular pathway in
-#'  the database (from read_gene_sets function)
+#'  the database. See list returned from \code{\link{read_gene_sets}()}
 #' @param my_range Vector of the (min_set_size, max_set_size)
 #' @param pathway_p_val_cutoff Significant p-value to determine
 #'  enriched pathways
@@ -738,6 +742,8 @@ get_pgsea_plot_data <- function(my_range,
 #' @return Data matrix with the rownames the descriptions of pathways
 #'  and the matrix the returned expression calculation from the PGSEA
 #'  package.
+#'
+#' @family pathway functions
 get_pgsea_plot_all_samples_data <- function(data,
                                             select_contrast,
                                             gene_sets,
@@ -777,18 +783,22 @@ get_pgsea_plot_all_samples_data <- function(data,
 #'  obtain the gene expression data
 #' @param gene_sets List of vectors with each vector being the
 #'  set of genes that correspond to a particular pathway in
-#'  the database (from read_gene_sets function)
-#' @param contrast_samples Sample columns that correspond to the
+#'  the database. See list returned from
+#'  \code{\link{read_gene_sets}()}
+#' @param contrast_samples Vector of sample columns that correspond to the
 #'  selected comparison
-#' @param data Data that has been through the pre-processing
-#' @param select_org The organism that the gene data is for
+#' @param data Matrix of gene data that has been through
+#'  \code{\link{pre_process}()}
+#' @param select_org String designating the organism being analyzed
 #' @param all_gene_names Matrix of all the matched and converted
-#'  gene IDs
+#'  gene IDs from \code{\link{get_all_gene_names}()}
 #'
 #' @export
 #' @return Sub-data matrix from the processed data. Only contains
 #'  genes from the selected pathway and samples that correspond to
 #'  the comparison being analyzed.
+#'
+#' @family pathway functions
 pathway_select_data <- function(sig_pathways,
                                 gene_sets,
                                 contrast_samples,
@@ -818,27 +828,29 @@ pathway_select_data <- function(sig_pathways,
 #' values. Also add a column that contains the gene sets for the
 #' pathway.
 #'
-#' @param pathway_method What method is being used for the pathway
-#'  analysis
-#' @param gage_pathway_data Return matrix from \code{gage_data}
-#'  function
-#' @param fgsea_pathway_data Return matrix from \code{fgsea_data}
-#'  function
-#' @param pgsea_plot_data Return matrix from \code{get_pgsea_plot_data}
-#'  function
-#' @param pgsea_plot_all_samples_data Return matrix from
-#'  \code{get_pgsea_plot_all_samples_data} function
-#' @param go Portion of the database to use for the pathway analysis
-#' @param select_org Organism that the gene data is for
-#' @param gene_info Return from \code{gene_info} function, all gene
-#'  info from the database query with the User gene IDs
+#' @param pathway_method Integer indicating which pathway method to use. Should
+#'  be one of 1 for "GAGE", 2 = "PGSEA", 3 for "GSEA (preranded fgsea)", 4
+#'  for "PGSEA w/ all samples", and 5 for "ReactomePA".
+#' @param gage_pathway_data Matrix returned from \code{\link{gage_data}()}
+#' @param fgsea_pathway_data Matrix returned from \code{\link{fgsea_data}()}
+#' @param pgsea_plot_data Matrix returned from
+#'  \code{\link{get_pgsea_plot_data}()}
+#' @param pgsea_plot_all_samples_data Matrix returned from
+#'  \code{\link{get_pgsea_plot_all_samples_data}()}
+#' @param go String designating the section of the database to query for
+#'   pathway analysis. See \code{\link{gmt_category}()} for choices.
+#' @param select_org String designating which organism is being analyzed
+#' @param gene_info Matrix returned from \code{\link{gene_info}()} function, all
+#'  gene info from the database query with the User gene IDs
 #' @param gene_sets List of vectors with each vector being the
 #'  set of genes that correspond to a particular pathway in
-#'  the database (from read_gene_sets function)
+#'  the database \code{\link{read_gene_sets function}()}
 #'
 #' @export
 #' @return A data frame with the pathway analysis statistics and
 #'  the gene sets for each significantly enriched pathway.
+#'
+#' @family pathway functions
 get_pathway_list_data <- function(pathway_method,
                                   gage_pathway_data,
                                   fgsea_pathway_data,
@@ -953,29 +965,32 @@ get_pathway_list_data <- function(pathway_method,
 
 #' Use KEGG to create a pathway diagram
 #'
-#' In the databse, use the KEGG information to create an image
+#' In the database, use the KEGG information to create an image
 #' that is a diagram of the pathway that is being enriched.
 #'
-#' @param go Portion of the database to use for the pathway analysis
-#' @param gage_pathway_data Return matrix from \code{gage_data}
-#'  function
+#' @param go String designating the section of the database to query for
+#'   pathway analysis. See \code{\link{gmt_category}()} for choices.
+#' @param gage_pathway_data Matrix returned from \code{\link{gage_data}()}
 #' @param sig_pathways Description of the pathway for which to
 #'  obtain the gene expression data
 #' @param select_contrast String designating the comparison from DEG analysis to
 #'  filter for the significant genes. See the 'comparison' element from the list
 #'  returned from \code{\link{limma_value}()} for options.
-#' @param limma Results list from the \code{limma_value}
-#'  function
-#' @param converted Return value from the convert_id function, contains
+#' @param limma Results list from \code{\link{limma_value}()}
+#' @param converted Return value from the \code{\link{convert_id}()}, contains
 #'  information about the gene IDs for the matched species
-#' @param idep_data Read data files from the database
+#' @param idep_data Read data files from \code{\link{get_idep_data}()}
 #' @param select_org The organism that the gene data is for
-#' @param low_color Color value for the low-ly expressed genes
-#' @param high_color Color vlaue for the high-ly expressed genes
+#' @param low_color String designating color value for the low-ly expressed
+#'  genes
+#' @param high_color String designating color value for the high-ly expressed
+#'  genes
 #'
 #' @export
 #' @return Make an image and return the path to the image to be
 #'  rendered in the server.
+#'
+#' @family pathway functions
 kegg_pathway <- function(go,
                          gage_pathway_data,
                          sig_pathways,

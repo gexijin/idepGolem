@@ -7,7 +7,7 @@
 dist_functions()
 }
 \value{
-A list of distance functions for hierarchical clustering including 
+A list of distance functions for hierarchical clustering including
  pearson, euclidian, and absolute pearson
 }
 \description{

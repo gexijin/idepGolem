@@ -13,7 +13,7 @@ clean_gene_set(gene_set)
 Vector of cleaned genes.
 }
 \description{
-Clean up a set of genes by removing duplicates, spaces, and other control characters from 
+Clean up a set of genes by removing duplicates, spaces, and other control characters from
 gene names
 }
 \note{

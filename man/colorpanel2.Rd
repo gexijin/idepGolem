@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils_analysis_random.R
 \name{colorpanel2}
 \alias{colorpanel2}
-\title{Pathview function 
+\title{Pathview function
 https://rdrr.io/bioc/pathview/src/R/colorpanel2.R}
 \usage{
 colorpanel2(n, low, mid, high)
@@ -20,6 +20,6 @@ colorpanel2(n, low, mid, high)
 A list the length of \code{n} with HEX color values.
 }
 \description{
-Pathview function 
+Pathview function
 https://rdrr.io/bioc/pathview/src/R/colorpanel2.R
 }

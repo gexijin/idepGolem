@@ -50,10 +50,11 @@ This html document contains what parameters values were selected on the IDEP int
 <!-- # ALL SELECTED PARAMETERS -->
 
 ```{r echo=FALSE}
-for (i in 1:length(params)){
+for (i in 1:length(params)) {
   # exclude loaded data & sample info
-  if(names(params)[i] != "sample_info" && names(params)[i] != "pre_processed_data" && names(params)[i] != "all_gene_names")
-    cat(paste0(names(params)[i], ": ", params[[i]], "\n") )
+  if (names(params)[i] != "sample_info" && names(params)[i] != "pre_processed_data" && names(params)[i] != "all_gene_names") {
+    cat(paste0(names(params)[i], ": ", params[[i]], "\n"))
+  }
 }
 ```
 
@@ -87,7 +88,7 @@ The following plots were generated using IDEP, including only the top `r params$
 heatmap_data <- process_heatmap_data(
   data = params$pre_processed_data,
   n_genes_max = params$n_genes,
-  #n_genes_min = 50,
+  # n_genes_min = 50,
   gene_centering = params$gene_centering,
   gene_normalize = params$gene_normalize,
   sample_centering = TRUE,
@@ -133,20 +134,19 @@ sd_density(
 
 `r ifelse(as.character(params$dist_function) == "1","## Tree (Hierarchical)","")`
 ```{r}
-if(params$dist_function == 1){
- draw_sample_tree(
-  tree_data = params$pre_processed_data,
-  gene_centering = params$gene_centering,
-  gene_normalize = params$gene_normalize,
-  sample_centering = FALSE,
-  sample_normalize = FALSE,
-  hclust_funs = hcluster_functions(),
-  hclust_function = params$hclust_function,
-  dist_funs = dist_functions(),
-  dist_function = params$dist_function
-)
+if (params$dist_function == 1) {
+  draw_sample_tree(
+    tree_data = params$pre_processed_data,
+    gene_centering = params$gene_centering,
+    gene_normalize = params$gene_normalize,
+    sample_centering = FALSE,
+    sample_normalize = FALSE,
+    hclust_funs = hcluster_functions(),
+    hclust_function = params$hclust_function,
+    dist_funs = dist_functions(),
+    dist_function = params$dist_function
+  )
 }
-
 ```
 
 

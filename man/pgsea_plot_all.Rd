@@ -50,7 +50,13 @@ from the \code{\link{limma_value}()} on all samples.
 \seealso{
 Other pathway functions: 
 \code{\link{fgsea_data}()},
+\code{\link{find_overlap}()},
 \code{\link{gage_data}()},
+\code{\link{get_pathway_list_data}()},
+\code{\link{get_pgsea_plot_all_samples_data}()},
+\code{\link{get_pgsea_plot_data}()},
+\code{\link{kegg_pathway}()},
+\code{\link{pathway_select_data}()},
 \code{\link{pgsea_data}()},
 \code{\link{plot_pgsea}()},
 \code{\link{reactome_data}()}

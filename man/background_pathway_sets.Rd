@@ -15,10 +15,10 @@ background_pathway_sets(
 )
 }
 \arguments{
-\item{processed_data}{Matrix of gene data that has been through 
+\item{processed_data}{Matrix of gene data that has been through
 \code{\link{pre_process}()}}
 
-\item{gene_info}{Dataframe of converted IDs information from the function 
+\item{gene_info}{Dataframe of converted IDs information from the function
 \code{\link{gene_info}()}}
 
 \item{sub_query}{Vector of IDs that the enrichment

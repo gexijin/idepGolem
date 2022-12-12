@@ -14,7 +14,8 @@ deg_deseq2(
   block_factor = NULL,
   reference_levels = NULL,
   threshold_wald_test = FALSE,
-  independent_filtering = TRUE
+  independent_filtering = TRUE,
+  descr = ""
 )
 }
 \arguments{

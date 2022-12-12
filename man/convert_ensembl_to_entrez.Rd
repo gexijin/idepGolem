@@ -11,7 +11,7 @@ convert_ensembl_to_entrez(query, species, org_info)
 
 \item{species}{String designating the organism being analyzed}
 
-\item{org_info}{org_info file from the list returned from 
+\item{org_info}{org_info file from the list returned from
 \code{link{get_idep_data}()}}
 }
 \value{

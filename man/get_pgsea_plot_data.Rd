@@ -35,8 +35,9 @@ the database. See list returned from \code{\link{read_gene_sets}()}}
 \item{select_factors_model}{The selected factors for the model
 expression}
 
-\item{select_model_comprions}{Selected comparisons to analyze
-in the DEG analysis}
+\item{select_model_comprions}{String designating selected comparisons to 
+analyze in the DEG analysis. See \code{\link{list_model_comparisons_ui}()}
+for options}
 
 \item{pathway_p_val_cutoff}{Significant p-value to determine
 enriched pathways}
@@ -53,3 +54,18 @@ Data matrix with the rownames the descriptions of pathways
 Get the data matrix that is plotted in the heatmap created by
 the \code{\link{plot_pgsea}()}.
 }
+\seealso{
+Other pathway functions: 
+\code{\link{fgsea_data}()},
+\code{\link{find_overlap}()},
+\code{\link{gage_data}()},
+\code{\link{get_pathway_list_data}()},
+\code{\link{get_pgsea_plot_all_samples_data}()},
+\code{\link{kegg_pathway}()},
+\code{\link{pathway_select_data}()},
+\code{\link{pgsea_data}()},
+\code{\link{pgsea_plot_all}()},
+\code{\link{plot_pgsea}()},
+\code{\link{reactome_data}()}
+}
+\concept{pathway functions}

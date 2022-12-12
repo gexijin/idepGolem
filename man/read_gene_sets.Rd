@@ -10,7 +10,7 @@ read_gene_sets(converted, all_gene_names, go, select_org, idep_data, my_range)
 \item{converted}{List of converted gene information  from
 \code{\link{convert_id}()}}
 
-\item{all_gene_names}{Data frame of gene names from 
+\item{all_gene_names}{Data frame of gene names from
 \code{\link{get_all_gene_names}()}}
 
 \item{go}{String designating the section of the database to query for pathway

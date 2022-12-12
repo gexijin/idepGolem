@@ -18,10 +18,10 @@ kegg_pathway(
 )
 }
 \arguments{
-\item{go}{Portion of the database to use for the pathway analysis}
+\item{go}{String designating the section of the database to query for 
+pathway analysis. See \code{\link{gmt_category}()} for choices.}
 
-\item{gage_pathway_data}{Return matrix from \code{gage_data}
-function}
+\item{gage_pathway_data}{Matrix returned from \code{\link{gage_data}()}}
 
 \item{sig_pathways}{Description of the pathway for which to
 obtain the gene expression data}
@@ -30,25 +30,41 @@ obtain the gene expression data}
 filter for the significant genes. See the 'comparison' element from the list
 returned from \code{\link{limma_value}()} for options.}
 
-\item{limma}{Results list from the \code{limma_value}
-function}
+\item{limma}{Results list from \code{\link{limma_value}()}}
 
-\item{converted}{Return value from the convert_id function, contains
+\item{converted}{Return value from the \code{\link{convert_id}()}, contains
 information about the gene IDs for the matched species}
 
-\item{idep_data}{Read data files from the database}
+\item{idep_data}{Read data files from \code{\link{get_idep_data}()}}
 
 \item{select_org}{The organism that the gene data is for}
 
-\item{low_color}{Color value for the low-ly expressed genes}
+\item{low_color}{String designating color value for the low-ly expressed 
+genes}
 
-\item{high_color}{Color vlaue for the high-ly expressed genes}
+\item{high_color}{String designating color value for the high-ly expressed 
+genes}
 }
 \value{
 Make an image and return the path to the image to be
  rendered in the server.
 }
 \description{
-In the databse, use the KEGG information to create an image
+In the database, use the KEGG information to create an image
 that is a diagram of the pathway that is being enriched.
 }
+\seealso{
+Other pathway functions: 
+\code{\link{fgsea_data}()},
+\code{\link{find_overlap}()},
+\code{\link{gage_data}()},
+\code{\link{get_pathway_list_data}()},
+\code{\link{get_pgsea_plot_all_samples_data}()},
+\code{\link{get_pgsea_plot_data}()},
+\code{\link{pathway_select_data}()},
+\code{\link{pgsea_data}()},
+\code{\link{pgsea_plot_all}()},
+\code{\link{plot_pgsea}()},
+\code{\link{reactome_data}()}
+}
+\concept{pathway functions}

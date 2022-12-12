@@ -1137,11 +1137,13 @@ deg_deseq2 <- function(raw_counts,
     exp_type = exp_type,
     expr = expr,
     top_genes = top_genes,
-    description = paste0(descr, 
-                         " Genes are classified as differly expressed based on having a p-value below ",
-                         max_p_limma, 
-                         " and log fold change above ",
-                         min_fc_limma, ".")
+    description = paste0(
+      descr,
+      " Genes are classified as differly expressed based on having a p-value below ",
+      max_p_limma,
+      " and log fold change above ",
+      min_fc_limma, "."
+    )
   ))
 }
 

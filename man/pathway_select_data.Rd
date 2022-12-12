@@ -19,17 +19,19 @@ obtain the gene expression data}
 
 \item{gene_sets}{List of vectors with each vector being the
 set of genes that correspond to a particular pathway in
-the database (from read_gene_sets function)}
+the database. See list returned from 
+\code{\link{read_gene_sets}()}}
 
-\item{contrast_samples}{Sample columns that correspond to the
+\item{contrast_samples}{Vector of sample columns that correspond to the
 selected comparison}
 
-\item{data}{Data that has been through the pre-processing}
+\item{data}{Matrix of gene data that has been through 
+\code{\link{pre_process}()}}
 
-\item{select_org}{The organism that the gene data is for}
+\item{select_org}{String designating the organism being analyzed}
 
 \item{all_gene_names}{Matrix of all the matched and converted
-gene IDs}
+gene IDs from \code{\link{get_all_gene_names}()}}
 }
 \value{
 Sub-data matrix from the processed data. Only contains
@@ -41,3 +43,18 @@ Return a data matrix that is a subset of the processed data and
 only contains genes that are in the gene set of the desired
 pathway.
 }
+\seealso{
+Other pathway functions: 
+\code{\link{fgsea_data}()},
+\code{\link{find_overlap}()},
+\code{\link{gage_data}()},
+\code{\link{get_pathway_list_data}()},
+\code{\link{get_pgsea_plot_all_samples_data}()},
+\code{\link{get_pgsea_plot_data}()},
+\code{\link{kegg_pathway}()},
+\code{\link{pgsea_data}()},
+\code{\link{pgsea_plot_all}()},
+\code{\link{plot_pgsea}()},
+\code{\link{reactome_data}()}
+}
+\concept{pathway functions}

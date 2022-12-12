@@ -10,7 +10,7 @@ hcluster_functions()
 A list of functions
 }
 \description{
-Returns a list of functions for hierarchical clustering 
-including average linkage, ward.d, ward.d2, single linkage, mcquitty, 
+Returns a list of functions for hierarchical clustering
+including average linkage, ward.d, ward.d2, single linkage, mcquitty,
 median, and centroid.
 }

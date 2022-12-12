@@ -20,7 +20,8 @@ limma_value(
   counts_log_start,
   p_vals,
   threshold_wald_test = FALSE,
-  independent_filtering = TRUE
+  independent_filtering = TRUE,
+  descr = ""
 )
 }
 \arguments{

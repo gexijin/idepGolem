@@ -11,7 +11,7 @@ merge_data(all_gene_names, data, merge_ID)
 
 \item{data}{Data matrix with rownames to merge with gene names}
 
-\item{merge_ID}{String designating the type gene id such as "User_ID", 
+\item{merge_ID}{String designating the type gene id such as "User_ID",
 "ensembl_ID", "symbol"}
 }
 \value{

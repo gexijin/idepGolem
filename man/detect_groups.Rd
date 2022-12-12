@@ -15,7 +15,7 @@ detect_groups(sample_names, sample_info = NULL)
 A character vector with the groups
 }
 \description{
-Detects groups from column names in sample info file so that they can be used 
+Detects groups from column names in sample info file so that they can be used
 for things such as coloring plots or building the model for DEG analysis.
 }
 \note{
