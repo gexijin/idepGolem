@@ -16,12 +16,12 @@ kegg_pathway_id(
 }
 \arguments{
 \item{pathway_description}{String providing description of a pathway in the
-iDEP database, see the results from \code{\link{read_gene_Sets}()} for 
+iDEP database, see the results from \code{\link{read_gene_Sets}()} for
 options}
 
 \item{Species}{String designating the organism being analyzed}
 
-\item{GO}{String designating the portion of the database to query, 
+\item{GO}{String designating the portion of the database to query,
 for this function, it should be "KEGG"}
 
 \item{select_org}{String designating the organism being analyzed}

@@ -10,7 +10,7 @@ gmt_category(converted, converted_data, select_org, gmt_file, idep_data)
 \item{converted}{List of converted gene information  from
 \code{\link{convert_id}()}}
 
-\item{converted_data}{Data matrix element with the converted ensembl_IDs from 
+\item{converted_data}{Data matrix element with the converted ensembl_IDs from
 the list returned from \code{\link{convert_data}()}}
 
 \item{select_org}{String designating the organism being analyzed}

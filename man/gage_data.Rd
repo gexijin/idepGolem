@@ -18,26 +18,27 @@ gage_data(
 )
 }
 \arguments{
-\item{select_go}{The portion of the database to use for
-pathway analysis}
+\item{select_go}{String designating the section of the database to query for 
+pathway analysis. See \code{\link{gmt_category}()} for choices.}
 
-\item{select_contrast}{Comparison from DEG analysis to
-use the top genes from in the pathway analysis}
+\item{select_contrast}{String designating the comparison from DEG analysis to
+filter for the significant genes. See the 'comparison' element from the list
+returned from \code{\link{limma_value}()} for options.}
 
 \item{min_set_size}{Minimum gene set size for a pathway}
 
 \item{max_set_size}{Maximum gene set size for a pathway}
 
-\item{limma}{Results list from the limma_value function}
+\item{limma}{Results list from the \code{\link{limma_value}()}}
 
 \item{gene_p_val_cutoff}{Significant p-value to filter
 the top genes fold change by}
 
 \item{gene_sets}{List of vectors with each vector being the
 set of genes that correspond to a particular pathway in
-the database (from read_gene_sets function)}
+the database. See list returned from \code{\link{read_gene_sets}()}}
 
-\item{absolute_fold}{Use the absolute value of the fold
+\item{absolute_fold}{TRUE/FALSE to use the absolute value of the fold
 change}
 
 \item{pathway_p_val_cutoff}{Significant p-value to determine
@@ -56,3 +57,18 @@ A data frame with the results of the pathway analysis.
 Run pathway analysis with the gage package using the results
 from the limma_value function.
 }
+\seealso{
+Other pathway functions: 
+\code{\link{fgsea_data}()},
+\code{\link{find_overlap}()},
+\code{\link{get_pathway_list_data}()},
+\code{\link{get_pgsea_plot_all_samples_data}()},
+\code{\link{get_pgsea_plot_data}()},
+\code{\link{kegg_pathway}()},
+\code{\link{pathway_select_data}()},
+\code{\link{pgsea_data}()},
+\code{\link{pgsea_plot_all}()},
+\code{\link{plot_pgsea}()},
+\code{\link{reactome_data}()}
+}
+\concept{pathway functions}

@@ -21,7 +21,7 @@ read_pathway_sets(
 \item{converted}{List of conversion information on the original
 IDs returned from the \code{\link{convert_id}()}.}
 
-\item{go}{String designating the section of the database to query for pathway 
+\item{go}{String designating the section of the database to query for pathway
 analysis. See \code{\link{gmt_category}()} for choices.}
 
 \item{select_org}{String designating what organism is being analyzed.}

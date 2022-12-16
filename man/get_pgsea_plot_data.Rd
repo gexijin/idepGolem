@@ -19,22 +19,25 @@ get_pgsea_plot_data(
 \arguments{
 \item{my_range}{Vector of the (min_set_size, max_set_size)}
 
-\item{data}{Data that has been through the pre-processing}
+\item{data}{Matrix of gene data that has been through 
+\code{\link{pre_process}()}}
 
-\item{select_contrast}{Comparison from DEG analysis to
-use the top genes from in the pathway analysis}
+\item{select_contrast}{String designating the comparison from DEG analysis to
+filter for the significant genes. See the 'comparison' element from the list
+returned from \code{\link{limma_value}()} for options.}
 
 \item{gene_sets}{List of vectors with each vector being the
 set of genes that correspond to a particular pathway in
-the database (from read_gene_sets function)}
+the database. See list returned from \code{\link{read_gene_sets}()}}
 
-\item{sample_info}{Experiment file information for grouping}
+\item{sample_info}{Matrix of experiment design information for grouping}
 
 \item{select_factors_model}{The selected factors for the model
 expression}
 
-\item{select_model_comprions}{Selected comparisons to analyze
-in the DEG analysis}
+\item{select_model_comprions}{String designating selected comparisons to 
+analyze in the DEG analysis. See \code{\link{list_model_comparisons_ui}()}
+for options}
 
 \item{pathway_p_val_cutoff}{Significant p-value to determine
 enriched pathways}
@@ -49,5 +52,20 @@ Data matrix with the rownames the descriptions of pathways
 }
 \description{
 Get the data matrix that is plotted in the heatmap created by
-the plot_pgsea function.
+the \code{\link{plot_pgsea}()}.
 }
+\seealso{
+Other pathway functions: 
+\code{\link{fgsea_data}()},
+\code{\link{find_overlap}()},
+\code{\link{gage_data}()},
+\code{\link{get_pathway_list_data}()},
+\code{\link{get_pgsea_plot_all_samples_data}()},
+\code{\link{kegg_pathway}()},
+\code{\link{pathway_select_data}()},
+\code{\link{pgsea_data}()},
+\code{\link{pgsea_plot_all}()},
+\code{\link{plot_pgsea}()},
+\code{\link{reactome_data}()}
+}
+\concept{pathway functions}

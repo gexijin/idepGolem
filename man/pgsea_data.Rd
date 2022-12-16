@@ -13,11 +13,12 @@ pgsea_data(
 )
 }
 \arguments{
-\item{processed_data}{Data that has been through the pre-processing}
+\item{processed_data}{Matrix of gene data that has been through 
+\code{\link{pre_process}()}}
 
 \item{gene_sets}{List of vectors with each vector being the
 set of genes that correspond to a particular pathway in
-the database (from read_gene_sets function)}
+the database. See returned list from \code{\link{read_gene_sets}()}}
 
 \item{my_range}{Vector of the (min_set_size, max_set_size)}
 
@@ -28,9 +29,24 @@ enriched pathways}
 }
 \value{
 A list with a data frame and a numeric value that is used
- in the plot_pgsea function to create a heatmap.
+ in the \code{\link{plot_pgsea}()} to create a heatmap.
 }
 \description{
 Run pathway analysis with the PGSEA package using the results
 from the limma_value function.
 }
+\seealso{
+Other pathway functions: 
+\code{\link{fgsea_data}()},
+\code{\link{find_overlap}()},
+\code{\link{gage_data}()},
+\code{\link{get_pathway_list_data}()},
+\code{\link{get_pgsea_plot_all_samples_data}()},
+\code{\link{get_pgsea_plot_data}()},
+\code{\link{kegg_pathway}()},
+\code{\link{pathway_select_data}()},
+\code{\link{pgsea_plot_all}()},
+\code{\link{plot_pgsea}()},
+\code{\link{reactome_data}()}
+}
+\concept{pathway functions}

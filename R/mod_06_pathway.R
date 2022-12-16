@@ -888,7 +888,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           pathway_method = input$pathway_method,
           pathway_list_data = pathway_list_data(),
           date = Sys.Date(),
-          descr = deg$limma()[["description"]] 
+          descr = deg$limma()[["description"]]
         )
 
         req(params)

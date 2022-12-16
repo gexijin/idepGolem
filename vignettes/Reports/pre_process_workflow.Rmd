@@ -60,11 +60,11 @@ This html document contains what parameters values were selected on the IDEP int
 <!--ALL SELECTED PARAMETERS-->
 
 ```{r, include=FALSE}
-for (i in 1:length(params)){
+for (i in 1:length(params)) {
   # exclude loaded data & sample info
-  if(names(params)[i] != "sample_info" && names(params)[i] != "loaded_data")
-    cat(paste0(names(params)[i], ": ", params[[i]], "\n")
-   )
+  if (names(params)[i] != "sample_info" && names(params)[i] != "loaded_data") {
+    cat(paste0(names(params)[i], ": ", params[[i]], "\n"))
+  }
 }
 ```
 
@@ -77,7 +77,7 @@ for (i in 1:length(params)){
 <!-- "EdgeR: log2(CPM+c)" = 1 -->
 
 ```{r, include = FALSE}
-#devtools::load_all()
+# devtools::load_all()
 library(idepGolem)
 ```
 
@@ -104,13 +104,12 @@ processed_data <- idepGolem::pre_process(
 ```
 
 ```{r }
-if (params$data_file_format == 1){
+if (params$data_file_format == 1) {
   idepGolem::total_counts_ggplot(
     counts_data = processed_data$raw_counts,
     sample_info = params$sample_info
-  )  
+  )
 }
-
 ```
 
 ```{r fig.height=5.5, fig.width=7.5 }
@@ -118,7 +117,6 @@ idepGolem::eda_scatter(
   processed_data = processed_data$data,
   plot_xaxis = params$scatter_x,
   plot_yaxis = params$scatter_y
-  
 )
 ```
 
