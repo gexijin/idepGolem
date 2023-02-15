@@ -120,13 +120,13 @@ mod_10_doc_ui <- function(id) {
       ),
       h3("Contact us"),
       p(
-        "Please email",
+        "Please email Jenny",
         a(
-          " Jenny",
+          " gelabinfo@gmail.com",
           href = "mailto:gelabinfo@gmail.com?Subject=iDEP"
         ),
-        " (recommended) or ",
-        a("Dr. Ge",
+        " (recommended) or Dr. Ge",
+        a("xijin.ge@sdstate.edu",
           href = "mailto:xijin.ge@sdstate.edu?Subject=iDEP"
         ),
         " (unreliable). Follow us on ",
