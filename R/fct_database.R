@@ -16,6 +16,7 @@ DATAPATH <- Sys.getenv("IDEP_DATABASE")[1]
 if (nchar(DATAPATH) == 0) {
   DATAPATH <- "../../data/data104b/"
 }
+DATAPATH <- "C:/work/iDEP_data/data107/"
 
 #' Connect to the convertIDs database and return the
 #' objects.
@@ -29,7 +30,29 @@ if (nchar(DATAPATH) == 0) {
 connect_convert_db <- function(datapath = DATAPATH) {
   return(DBI::dbConnect(
     drv = RSQLite::dbDriver("SQLite"),
-    dbname = paste0(datapath, "convertIDs.db"),
+    dbname = paste0(datapath, "orgInfo.db"),
+    flags = RSQLite::SQLITE_RO
+  ))
+}
+
+
+#' Connect to the convertIDs database for the species and return the
+#' objects.
+#'
+#' Create a database connection with the DBI package.
+#'
+#' @param datapath Folder path to the data file
+#' @param select_org The slected species
+#' @param idep_data  Data object that includes org_info
+#'
+#' @export
+#' @return Database connection.
+connect_convert_db_org <- function(datapath = DATAPATH, select_org, idep_data) {
+  ix <- which(idep_data$org_info$id == select_org)
+  db_file <- idep_data$org_info[ix, "file"]
+  return(DBI::dbConnect(
+    drv = RSQLite::dbDriver("SQLite"),
+    dbname = paste0(datapath, "db/", db_file),
     flags = RSQLite::SQLITE_RO
   ))
 }
@@ -59,36 +82,12 @@ connect_convert_db <- function(datapath = DATAPATH) {
 #' 13. species_choice: list of species for populating selection.
 #'
 get_idep_data <- function(datapath = DATAPATH) {
-  # if prepared RData files exists, return the objects.
-  # file is prepared with this command
-  #  saveRDS(get_idep_data(), file="prepared_data.RData", compress=FALSE)
-  # then this file needs to be copied to /data_go/
-  # BE CAREFUL: the RDS file is not checked. It should be updated if the files
-  # change.
-  if (file.exists(paste0(datapath, "data_go/prepared_data.RData"))) {
-    return(readRDS(paste0(datapath, "data_go/prepared_data.RData")))
-  }
-  # Code below will not be executed if RData file exists.
 
-  kegg_species_id <- read.csv(paste0(datapath, "data_go/KEGG_Species_ID.csv"))
+  # double check if this is neccesary, as it is available in orgInfo
+  # kegg_species_id <- read.csv(paste0(datapath, "data_go/KEGG_Species_ID.csv"))
 
-  gmt_files <- list.files(
-    path = paste0(datapath, "pathwayDB"),
-    pattern = ".*\\.db"
-  )
-  gmt_files <- paste(datapath,
-    "pathwayDB/", gmt_files,
-    sep = ""
-  )
 
-  gene_info_files <- list.files(
-    path = paste0(datapath, "geneInfo"),
-    pattern = ".*GeneInfo\\.csv"
-  )
-  gene_info_files <- paste(datapath,
-    "geneInfo/", gene_info_files,
-    sep = ""
-  )
+  conn_db <- connect_convert_db()
 
   # demo_data_info.csv file
   # columns: ID, expression, design, type, name
@@ -116,42 +115,11 @@ get_idep_data <- function(datapath = DATAPATH) {
     demo_file_info$design[ix]
   )
 
-  conn_db <- connect_convert_db()
-
-  quotes <- DBI::dbGetQuery(
-    conn = conn_db,
-    statement = "select * from quotes"
-  )
-  quotes <- paste0(
-    "\"", quotes$quotes,
-    "\"", " -- ", quotes$author, ".       "
-  )
-
-  string_species_go_data <- read.csv(paste0(
-    datapath,
-    "data_go/STRING11_species.csv"
-  ))
-
   org_info <- DBI::dbGetQuery(
-    con = conn_db,
-    statement = "select distinct * from orgInfo"
+    conn = conn_db,
+    statement = "select * from orgInfo;"
   )
-  org_info <- org_info[order(org_info$name), ]
-
   annotated_species_count <- sort(table(org_info$group))
-
-  go_levels <- DBI::dbGetQuery(
-    conn = conn_db,
-    statement = "select distinct id, level from GO
-         WHERE GO = 'biological_process'"
-  )
-
-  go_level_2_terms <- go_levels[which(go_levels$level %in% c(2, 3)), 1]
-
-  id_index <- DBI::dbGetQuery(
-    conn = conn_db,
-    statement = "select distinct * from idIndex"
-  )
 
   species_choice <- setNames(as.list(org_info$id), org_info$name2)
   species_choice <- append(
@@ -174,21 +142,41 @@ get_idep_data <- function(datapath = DATAPATH) {
   ]
   species_choice <- species_choice[c(top_choices, other_choices)]
 
+  # GO levels
+  go_levels <- DBI::dbGetQuery(
+    conn = conn_db,
+    statement = "select distinct id, level from GO
+         WHERE GO = 'biological_process'"
+  )
+  go_level_2_terms <- go_levels[which(go_levels$level %in% c(2, 3)), 1]
+
+  quotes <- DBI::dbGetQuery(
+    conn = conn_db,
+    statement = "select quotes from quotes;"
+  )
+  quotes <- quotes[, 1]
 
   DBI::dbDisconnect(conn = conn_db)
 
+
+  # id_index <- DBI::dbGetQuery(
+  #  conn = conn_db,
+  #  statement = "select distinct * from idIndex"
+  # )
+
+
   return(list(
-    kegg_species_id = kegg_species_id,
-    gmt_files = gmt_files,
-    gene_info_files = gene_info_files,
+#    kegg_species_id = kegg_species_id,
+#    gmt_files = gmt_files,
+#    gene_info_files = gene_info_files,
     demo_file_info = demo_file_info,
     quotes = quotes,
-    string_species_go_data = string_species_go_data,
+#    string_species_go_data = string_species_go_data,
     org_info = org_info,
     annotated_species_count = annotated_species_count,
     go_levels = go_levels,
     go_level_2_terms = go_level_2_terms,
-    id_index = id_index,
+#    id_index = id_index,
     species_choice = species_choice
   ))
 }
@@ -286,7 +274,10 @@ convert_id <- function(query,
     )
   }
 
-  conn_db <- connect_convert_db()
+  conn_db <- connect_convert_db_org(
+    select_org = select_org,
+    idep_data = idep_data
+  )
 
   # if best match species--------------------------------------------------
   if (select_org == idep_data$species_choice[[1]]) {

@@ -20,7 +20,7 @@ mod_01_load_data_ui <- function(id) {
         # alternative UI output message for once expression data is loaded
         uiOutput(ns("load_data_alt")),
         # Species Match Drop Down ------------
-        strong("1. Optional: Select or search for species"),
+        strong("1. Required: Select or search for species"),
         fluidRow(
           column(
             width = 9,
@@ -370,7 +370,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         # Expression data file input
         fileInput(
           inputId = ns("expression_file"),
-          label = strong("3. Upload expression data (CSV or text), or use a demo file"),
+          label = strong("3. Expression data (CSV or text), or use a demo file"),
           accept = c(
             "text/csv",
             "text/comma-separated-values",
@@ -456,7 +456,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       tagList(
         fileInput(
           inputId = ns("experiment_file"),
-          label = strong("4. Optional: Upload an experiment design file(CSV or text)"),
+          label = strong("4. Optional: experiment design (CSV or text)"),
           accept = c(
             "text/csv",
             "text/comma-separated-values",
@@ -603,7 +603,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           select_org = input$select_org,
           max_sample_ids = 200
         )
-
+browser()
         all_gene_info <- gene_info(
           converted = converted,
           select_org = input$select_org,

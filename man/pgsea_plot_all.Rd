@@ -15,12 +15,12 @@ pgsea_plot_all(
 )
 }
 \arguments{
-\item{go}{String designating the section of the database to query for 
+\item{go}{String designating the section of the database to query for
 pathway analysis. See \code{\link{gmt_category}()} for choices.}
 
 \item{my_range}{Vector of the (min_set_size, max_set_size)}
 
-\item{data}{Matrix of gene data that has been through the 
+\item{data}{Matrix of gene data that has been through the
 \code{\link{pre_process}()}}
 
 \item{select_contrast}{String designating the comparison from DEG analysis to

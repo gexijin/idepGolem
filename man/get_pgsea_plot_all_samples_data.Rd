@@ -14,7 +14,7 @@ get_pgsea_plot_all_samples_data(
 )
 }
 \arguments{
-\item{data}{Matrix of gene data that has been through 
+\item{data}{Matrix of gene data that has been through
 \code{\link{pre_process}()}}
 
 \item{select_contrast}{String designating the comparison from DEG analysis to
