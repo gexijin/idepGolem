@@ -490,30 +490,21 @@ read_pathway_sets <- function(all_gene_names_query,
     return(id_not_recognized)
   }
 
-  ix <- grep(converted$species[1, 1], idep_data$gmt_files)
-  total_genes <- converted$species[1, 7]
-
-  # If selected species is not the default "bestMatch", use that species directly
-  if (select_org != "BestMatch") {
-    ix <- grep(
-      find_species_by_id(select_org, idep_data$org_info)[1, 1],
-      idep_data$gmt_files
-    )
-    total_genes <- idep_data$org_info[which(
-      idep_data$org_info$id == as.numeric(select_org)
-    ), 7]
-  }
+  pathway <- connect_convert_db_org(
+    select_org = select_org,
+    idep_data = idep_data
+  )
+  # does the db file has a categories table?
+  ix <- grep(
+    pattern = "pathway",
+    x = DBI::dbListTables(pathway)
+  )
 
   if (length(ix) == 0) {
     return(id_not_recognized)
   }
 
-  pathway_files <- idep_data$gmt_files[ix]
-  pathway <- DBI::dbConnect(
-    drv = RSQLite::dbDriver("SQLite"),
-    dbname = pathway_files,
-    flags = RSQLite::SQLITE_RO
-  )
+
 
   if (is.null(go)) {
     go <- "GOBP"
@@ -601,8 +592,8 @@ read_pathway_sets <- function(all_gene_names_query,
   return(list(
     pathway_table = pathway_merge,
     query_set = query_set,
-    total_genes = total_genes,
-    pathway_files = pathway_files
+    total_genes = total_genes
+#    pathway_files = pathway_files
   ))
 }
 
@@ -628,6 +619,7 @@ read_pathway_sets <- function(all_gene_names_query,
 #' @param sub_pathway_files String designating file location for GMT files in
 #'   the database that contain information for the matched species. This string
 #'   is returned from \code{\link{read_pathway_sets}()}.
+#' @param select_org Species selected.
 #'
 #' @export
 #' @return Pathway gene set table for the background genes. Used
@@ -641,6 +633,7 @@ background_pathway_sets <- function(processed_data,
                                     go,
                                     pathway_table,
                                     idep_data,
+                                    select_org,
                                     sub_pathway_files) {
   query_set <- rownames(processed_data)
 
@@ -653,10 +646,9 @@ background_pathway_sets <- function(processed_data,
   #    }
   #  }
 
-  pathway <- DBI::dbConnect(
-    drv = RSQLite::dbDriver("SQLite"),
-    dbname = sub_pathway_files,
-    flags = RSQLite::SQLITE_RO
+  pathway <- connect_convert_db_org(
+    select_org = select_org,
+    idep_data = idep_data
   )
 
   if (length(intersect(query_set, sub_query)) == 0) {
@@ -755,31 +747,26 @@ gmt_category <- function(converted,
     return(id_not_recognized)
   }
 
-  ix <- grep(converted$species[1, 1], idep_data$gmt_files)
+  conn_db <- connect_convert_db_org(
+    select_org = select_org,
+    idep_data = idep_data
+  )
+
+  # does the db file has a categories table?
+  ix <- grep(
+    pattern = "categories",
+    x = DBI::dbListTables(conn_db)
+  )
 
   if (length(ix) == 0) {
     return(id_not_recognized)
   }
 
-  # If selected species is not the default "bestMatch", use that species directly
-  if (select_org != idep_data$species_choice[[1]]) {
-    ix <- grep(
-      find_species_by_id(select_org, idep_data$org_info)[1, 1],
-      idep_data$gmt_files
-    )
-    if (length(ix) == 0) {
-      return(id_not_recognized)
-    }
-  }
-
-  pathway <- DBI::dbConnect(
-    drv = RSQLite::dbDriver("SQLite"),
-    dbname = idep_data$gmt_files[ix],
-    flags = RSQLite::SQLITE_RO
-  )
 
   # Generate a list of geneset categories such as "GOBP", "KEGG" from file
-  gene_set_category <- DBI::dbGetQuery(pathway, "select distinct * from categories")
+  gene_set_category <- DBI::dbGetQuery(conn_db, "select distinct * from categories")
+  DBI::dbDisconnect(conn_db)
+
   gene_set_category <- sort(gene_set_category[, 1])
   category_choices <- setNames(as.list(gene_set_category), gene_set_category)
 
@@ -795,8 +782,6 @@ gmt_category <- function(converted,
   names(category_choices)[match("GOCC", category_choices)] <- "GO Cellular Component"
   names(category_choices)[match("GOMF", category_choices)] <- "GO Molecular Function"
   category_choices <- append(setNames("All", "All available gene sets"), category_choices)
-
-  DBI::dbDisconnect(pathway)
 
   return(category_choices)
 }
@@ -837,23 +822,20 @@ read_gene_sets <- function(converted,
   if (is.null(query_set) || length(query_set) == 0) {
     return(id_not_recognized)
   }
-  ix <- grep(converted$species[1, 1], idep_data$gmt_files)
+
+  pathway <- connect_convert_db_org(
+    select_org = select_org,
+    idep_data = idep_data
+  )
+  # does the db file has a categories table?
+  ix <- grep(
+    pattern = "pathway",
+    x = DBI::dbListTables(pathway)
+  )
+
   if (length(ix) == 0) {
     return(id_not_recognized)
   }
-
-  # If selected species is not the default "bestMatch", use that species directly
-  if (select_org != "BestMatch") {
-    ix <- grep(find_species_by_id(select_org)[1, 1], idep_data$gmt_files)
-    if (length(ix) == 0) {
-      return(id_not_recognized)
-    }
-  }
-  pathway <- DBI::dbConnect(
-    drv = RSQLite::dbDriver("SQLite"),
-    dbname = idep_data$gmt_files[ix],
-    flags = RSQLite::SQLITE_RO
-  )
 
   if (is.null(go)) {
     go <- "GOBP"
@@ -906,6 +888,7 @@ read_gene_sets <- function(converted,
   ix <- match(pathway_ids[, 1], pathway_info[, 1])
   names(gene_sets) <- pathway_info[ix, 2]
   DBI::dbDisconnect(pathway)
+
   return(
     list(
       gene_lists = gene_sets,
@@ -923,20 +906,26 @@ read_gene_sets <- function(converted,
 #' @param species String designating the organism being analyzed
 #' @param org_info org_info file from the list returned from
 #'   \code{link{get_idep_data}()}
+#' @param idep_data  Data object with species info for connecting to database
 #'
 #'
 #' @export
 #' @return The queried genes with converted IDs.
 convert_ensembl_to_entrez <- function(query,
                                       species,
-                                      org_info) {
+                                      org_info,
+                                      idep_data) {
   query_set <- clean_gene_set(
     unlist(strsplit(toupper(names(query)), "\t| |\n|\\, "))
   )
+
   # Note uses species Identifying
   species_id <- org_info$id[which(org_info$ensembl_dataset == species)]
   # idType 6 for entrez gene ID
-  convert <- connect_convert_db()
+  convert <- connect_convert_db_org(
+    select_org = species_id,
+    idep_data = idep_data
+  )
 
   id_type_entrez <- DBI::dbGetQuery(
     convert,

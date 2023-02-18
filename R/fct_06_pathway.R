@@ -497,7 +497,8 @@ reactome_data <- function(select_contrast,
   fold <- convert_ensembl_to_entrez(
     query = fold,
     species = species,
-    org_info = idep_data$org_info
+    org_info = idep_data$org_info,
+    idep_data = idep_data
   )
 
 
@@ -1707,29 +1708,36 @@ kegg_pathway <- function(go,
 
 
   colnames(top_1) <- c("Fold", "FDR")
-  Species <- converted$species[1, 1]
+  species <- converted$species[1, 1]
 
   fold <- top_1[, 1]
   names(fold) <- rownames(top_1)
   fold <- convert_ensembl_to_entrez(
-    fold,
-    Species,
-    idep_data$org_info
+    query = fold,
+    species = species,
+    org_info = idep_data$org_info,
+    idep_data = idep_data
   )
+
+
   kegg_species_id <- idep_data$kegg_species_id
 
   kegg_species <- as.character(
-    kegg_species_id[which(kegg_species_id[, 1] == Species), 3]
+    kegg_species_id[which(kegg_species_id[, 1] == species), 3]
+  )
+
+  # look up KEGG species ID "hsa", "mmu"
+  kegg_species <- as.character(
+    idep_data$org_info$KEGG[which(idep_data$org_info$ensembl_dataset == species)]
   )
 
   if (nchar(kegg_species) <= 2) {
     return(blank)
   }
 
-
   path_id <- kegg_pathway_id(
     sig_pathways,
-    Species,
+    species,
     "KEGG",
     select_org,
     idep_data$gmt_files,

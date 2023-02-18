@@ -4,7 +4,7 @@
 \alias{convert_ensembl_to_entrez}
 \title{Convert IDs from ensembl to entrez}
 \usage{
-convert_ensembl_to_entrez(query, species, org_info)
+convert_ensembl_to_entrez(query, species, org_info, idep_data)
 }
 \arguments{
 \item{query}{Vector of IDs to convert}
@@ -13,6 +13,8 @@ convert_ensembl_to_entrez(query, species, org_info)
 
 \item{org_info}{org_info file from the list returned from
 \code{link{get_idep_data}()}}
+
+\item{idep_data}{Data object with species info for connecting to database}
 }
 \value{
 The queried genes with converted IDs.

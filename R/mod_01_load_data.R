@@ -456,7 +456,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       tagList(
         fileInput(
           inputId = ns("experiment_file"),
-          label = strong("4. Optional: experiment design (CSV or text)"),
+          label = strong("Optional: experiment design (CSV or text)"),
           accept = c(
             "text/csv",
             "text/comma-separated-values",
@@ -603,7 +603,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           select_org = input$select_org,
           max_sample_ids = 200
         )
-browser()
+
         all_gene_info <- gene_info(
           converted = converted,
           select_org = input$select_org,

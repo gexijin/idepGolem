@@ -46,28 +46,23 @@ gene_info <- function(converted,
     return(check)
   }
 
-  ix <- grep(
-    pattern = converted$species[1, 1],
-    x = idep_data$gene_info_files
+  conn_db <- connect_convert_db_org(
+    select_org = select_org,
+    idep_data = idep_data
   )
+
+  # does the db file has a geneInfo table?
+  ix <- grep(
+    pattern = "geneInfo",
+    x = DBI::dbListTables(conn_db)
+  )
+
   check <- check_object_state(
     check_exp = (length(ix) == 0),
     true_message = as.data.frame("No matching gene info file found")
   )
   if (check$bool) {
     return(check)
-  }
-
-  # If selected species is not the default "bestMatch",
-  # use that species directly
-  if (select_org != idep_data$species_choice[[1]]) {
-    ix <- grep(
-      pattern = find_species_by_id(
-        species_id = select_org,
-        org_info = idep_data$org_info
-      )[1, 1],
-      x = idep_data$gene_info_files
-    )
   }
 
   check <- check_object_state(
@@ -77,14 +72,20 @@ gene_info <- function(converted,
   if (check$bool) {
     return(check)
   } else {
-    gene_info_csv <- read.csv(as.character(idep_data$gene_info_files[ix]))
-    gene_info_csv[, 1] <- toupper(gene_info_csv[, 1])
+    query_statement <- "select * from geneInfo;"
+    gene_info_csv <- DBI::dbGetQuery(conn_db, query_statement)
+    DBI::dbDisconnect(conn_db)
+
+# This is removed to make it faster. Make sure the original database
+# is upper case, and there is no extra space character in Symbol
+#    gene_info_csv[, 1] <- toupper(gene_info_csv[, 1])
     # remove the two spaces in gene symbol
-    gene_info_csv$symbol <- gsub(
-      " ",
-      "",
-      gene_info_csv$symbol
-    )
+ #   gene_info_csv$symbol <- gsub(
+ #     " ",
+ #     "",
+ #     gene_info_csv$symbol
+  #  )
+
   }
 
   set <- match(gene_info_csv$ensembl_gene_id, query_set)

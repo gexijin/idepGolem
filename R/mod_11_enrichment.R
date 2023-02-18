@@ -407,6 +407,7 @@ mod_11_enrichment_server <- function(id,
     pathway_table <- reactive({
       req(!is.null(gene_lists()))
       withProgress(message = "Enrichment Analysis", {
+        incProgress(0.6)
         pathway_info <- list()
         # disregard user selection use clusters for enrichment
         for (i in 1:length(gene_lists())) {

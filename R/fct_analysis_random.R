@@ -207,6 +207,7 @@ find_overlap <- function(pathway_table,
         go = go,
         pathway_table = pathway_table,
         idep_data = idep_data,
+        select_org = select_org,
         sub_pathway_files = sub_pathway_files
       )
 
