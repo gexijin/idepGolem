@@ -50,11 +50,12 @@ connect_convert_db <- function(datapath = DATAPATH) {
 connect_convert_db_org <- function(datapath = DATAPATH, select_org, idep_data) {
   ix <- which(idep_data$org_info$id == select_org)
   db_file <- idep_data$org_info[ix, "file"]
-  return(DBI::dbConnect(
+  return(try(
+    DBI::dbConnect(
     drv = RSQLite::dbDriver("SQLite"),
     dbname = paste0(datapath, "db/", db_file),
     flags = RSQLite::SQLITE_RO
-  ))
+  )))
 }
 
 
@@ -126,12 +127,15 @@ get_idep_data <- function(datapath = DATAPATH) {
     setNames("NEW", "**NEW SPECIES**"),
     species_choice
   )
-  species_choice <- append(
-    setNames("BestMatch", "Best matching species"),
-    species_choice
-  )
+
+  #species_choice <- append(
+  #  setNames("BestMatch", "Best matching species"),
+  #  species_choice
+  #)
   top_choices <- c(
-    "Best matching species", "**NEW SPECIES**", "Human", "Mouse", "Rat", "Cow",
+    #"Best matching species", 
+    #"**NEW SPECIES**", 
+    "Human", "Mouse", "Rat", "Cow",
     "Zebrafish", "Pig", "Chicken", "Macaque", "Dog", "Drosophila melanogaster",
     "Caenorhabditis elegans", "Saccharomyces cerevisiae",
     "Arabidopsis thaliana", "Zea mays", "Glycine max",
@@ -278,6 +282,12 @@ convert_id <- function(query,
     select_org = select_org,
     idep_data = idep_data
   )
+
+  # if database connection error
+  # see ? try
+  if(inherits(conn_db, "try-error")) {
+    return(NULL)
+  }
 
   # if best match species--------------------------------------------------
   if (select_org == idep_data$species_choice[[1]]) {
@@ -494,6 +504,12 @@ read_pathway_sets <- function(all_gene_names_query,
     select_org = select_org,
     idep_data = idep_data
   )
+
+  # if database connection error
+  if(inherits(pathway, "try-error")) {
+    return(id_not_recognized)
+  }
+
   # does the db file has a categories table?
   ix <- grep(
     pattern = "pathway",
@@ -650,6 +666,10 @@ background_pathway_sets <- function(processed_data,
     select_org = select_org,
     idep_data = idep_data
   )
+  # if database connection error
+  if(inherits(pathway, "try-error")) {
+    return(NULL)
+  }
 
   if (length(intersect(query_set, sub_query)) == 0) {
     # If none of the selected genes are in background genes
@@ -752,6 +772,11 @@ gmt_category <- function(converted,
     idep_data = idep_data
   )
 
+  # if database connection error
+  if(inherits(conn_db, "try-error")) {
+    return(id_not_recognized)
+  }
+
   # does the db file has a categories table?
   ix <- grep(
     pattern = "categories",
@@ -827,6 +852,12 @@ read_gene_sets <- function(converted,
     select_org = select_org,
     idep_data = idep_data
   )
+
+  # if database connection error
+  if(inherits(pathway, "try-error")) {
+    return(id_not_recognized)
+  }
+
   # does the db file has a categories table?
   ix <- grep(
     pattern = "pathway",
@@ -926,7 +957,10 @@ convert_ensembl_to_entrez <- function(query,
     select_org = species_id,
     idep_data = idep_data
   )
-
+  # if database connection error
+  if(inherits(pathway, "try-error")) {
+    return(NULL)
+  }
   id_type_entrez <- DBI::dbGetQuery(
     convert,
     paste(

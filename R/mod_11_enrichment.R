@@ -19,7 +19,6 @@ column_selection <- list(
 mod_11_enrichment_ui <- function(id) {
   ns <- NS(id)
   library(shinyBS)
-
   tagList(
     fluidRow(
       column(
@@ -407,11 +406,11 @@ mod_11_enrichment_server <- function(id,
     pathway_table <- reactive({
       req(!is.null(gene_lists()))
       withProgress(message = "Enrichment Analysis", {
-        incProgress(0.6)
+        incProgress(0.2)
         pathway_info <- list()
         # disregard user selection use clusters for enrichment
         for (i in 1:length(gene_lists())) {
-          incProgress(1 / length(gene_lists()))
+          incProgress(0.2 + length(gene_lists()) / 20)
           gene_names_query <- gene_lists()[[i]]
           req(!is.null(input$select_go))
           gene_sets <- read_pathway_sets(

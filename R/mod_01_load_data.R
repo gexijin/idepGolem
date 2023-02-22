@@ -650,6 +650,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     output$species_match <- renderTable(
       {
         req(!is.null(input$go_button))
+        req(input$select_org)
         if (is.null(input$expression_file) && input$go_button == 0) {
           return(NULL)
         }

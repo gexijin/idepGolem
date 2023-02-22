@@ -51,6 +51,12 @@ gene_info <- function(converted,
     idep_data = idep_data
   )
 
+  # if database connection error
+  # see ? try
+  if(inherits(conn_db, "try-error")) {
+    return(check)
+  }
+
   # does the db file has a geneInfo table?
   ix <- grep(
     pattern = "geneInfo",
