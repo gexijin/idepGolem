@@ -11,7 +11,7 @@ app_ui <- function(request) {
     # Your application UI logic
 
     navbarPage(
-      "iDEP 1.0",
+      "iDEP 1.1",
       theme = bslib::bs_theme(
         version = 5,
         primary = "#0033A0",
