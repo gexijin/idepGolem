@@ -13,7 +13,7 @@ pgsea_data(
 )
 }
 \arguments{
-\item{processed_data}{Matrix of gene data that has been through 
+\item{processed_data}{Matrix of gene data that has been through
 \code{\link{pre_process}()}}
 
 \item{gene_sets}{List of vectors with each vector being the

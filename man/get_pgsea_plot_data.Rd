@@ -19,7 +19,7 @@ get_pgsea_plot_data(
 \arguments{
 \item{my_range}{Vector of the (min_set_size, max_set_size)}
 
-\item{data}{Matrix of gene data that has been through 
+\item{data}{Matrix of gene data that has been through
 \code{\link{pre_process}()}}
 
 \item{select_contrast}{String designating the comparison from DEG analysis to
@@ -35,7 +35,7 @@ the database. See list returned from \code{\link{read_gene_sets}()}}
 \item{select_factors_model}{The selected factors for the model
 expression}
 
-\item{select_model_comprions}{String designating selected comparisons to 
+\item{select_model_comprions}{String designating selected comparisons to
 analyze in the DEG analysis. See \code{\link{list_model_comparisons_ui}()}
 for options}
 

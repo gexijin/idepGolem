@@ -29,7 +29,7 @@ the top genes fold change by}
 
 \item{gene_sets}{List of vectors with each vector being the
 set of genes that correspond to a particular pathway in
-the database. See results list from 
+the database. See results list from
 \code{\link{read_gene_sets}()}.}
 
 \item{absolute_fold}{TRUE/FALSE to use the absolute value of the fold

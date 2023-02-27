@@ -28,10 +28,10 @@ returned from \code{\link{limma_value}()} for options.}
 \item{gene_p_val_cutoff}{Significant p-value to filter
 the top genes fold change by}
 
-\item{converted}{Return value from the \code{\link{convert_id}()} function, 
+\item{converted}{Return value from the \code{\link{convert_id}()} function,
 contains information about the gene IDs for the matched species}
 
-\item{idep_data}{List of data files from the database, returned from 
+\item{idep_data}{List of data files from the database, returned from
 \code{\link{get_idep_data}()}}
 
 \item{pathway_p_val_cutoff}{Significant p-value to determine

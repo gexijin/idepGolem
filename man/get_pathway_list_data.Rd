@@ -18,20 +18,20 @@ get_pathway_list_data(
 }
 \arguments{
 \item{pathway_method}{Integer indicating which pathway method to use. Should
-be one of 1 for "GAGE", 2 = "PGSEA", 3 for "GSEA (preranded fgsea)", 4 
+be one of 1 for "GAGE", 2 = "PGSEA", 3 for "GSEA (preranded fgsea)", 4
 for "PGSEA w/ all samples", and 5 for "ReactomePA".}
 
 \item{gage_pathway_data}{Matrix returned from \code{\link{gage_data}()}}
 
 \item{fgsea_pathway_data}{Matrix returned from \code{\link{fgsea_data}()}}
 
-\item{pgsea_plot_data}{Matrix returned from 
+\item{pgsea_plot_data}{Matrix returned from
 \code{\link{get_pgsea_plot_data}()}}
 
 \item{pgsea_plot_all_samples_data}{Matrix returned from
 \code{\link{get_pgsea_plot_all_samples_data}()}}
 
-\item{go}{String designating the section of the database to query for 
+\item{go}{String designating the section of the database to query for
 pathway analysis. See \code{\link{gmt_category}()} for choices.}
 
 \item{select_org}{String designating which organism is being analyzed}

@@ -18,7 +18,7 @@ gage_data(
 )
 }
 \arguments{
-\item{select_go}{String designating the section of the database to query for 
+\item{select_go}{String designating the section of the database to query for
 pathway analysis. See \code{\link{gmt_category}()} for choices.}
 
 \item{select_contrast}{String designating the comparison from DEG analysis to
