@@ -207,6 +207,16 @@ mod_01_load_data_ui <- function(id) {
           which is used as a central id type in pathway databases.",
           theme = "light-border"
         ),
+        checkboxInput(
+          inputId = ns("show_pathway_id"),
+          label = "Show pathway IDs in results",
+          value = FALSE
+        ),
+        tippy::tippy_this(
+          ns("show_pathway_id"),
+          "If selected, pathway IDs, such as Path:mmu04115 and GO:0042770,  will be appended to pathway name.",
+          theme = "light-border"
+        ),
         fluidRow(
           column(
             width = 4,

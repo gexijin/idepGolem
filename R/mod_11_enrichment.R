@@ -80,7 +80,23 @@ mod_11_enrichment_ui <- function(id) {
           max = 30,
           value = 10
         )
+      ),
+      column(
+        width = 4,
+        align = "left",
+        checkboxInput(
+          inputId = ns("show_pathway_id"),
+          label = "Show pathway IDs",
+          value = FALSE
+        ),
+        tippy::tippy_this(
+          ns("show_pathway_id"),
+          "If selected, pathway IDs, such as Path:mmu04115 and GO:0042770,  will be appended to pathway name.",
+          theme = "light-border"
+        )
       )
+
+
     ),
     tabsetPanel(
       id = ns("subtab"),
@@ -333,6 +349,7 @@ mod_11_enrichment_server <- function(id,
       shinyjs::toggle(id = "filtered_background", condition = input$customize_button)
       shinyjs::toggle(id = "remove_redudant", condition = input$customize_button)
       shinyjs::toggle(id = "top_pathways", condition = input$customize_button)
+      shinyjs::toggle(id = "show_pathway_id", condition = input$customize_button)
     })
     # GMT choices for enrichment ----------
     output$select_go_selector <- renderUI({
@@ -440,6 +457,22 @@ mod_11_enrichment_server <- function(id,
           )
         }
       })
+      # remove pathway ID 
+      # Path:hsa00270 Cysteine and methionine metabolism 
+      #           --> Cysteine and methionine metabolism
+                                    # result is not NULL
+      # pathway_info is a list of data frames: Selection, Upregulated, Downregulated, etc
+      if(!input$show_pathway_id) {
+        for(i in 1:length(pathway_info)) {
+          if (!is.null(pathway_info[[i]])) {
+            pathway_info[[i]]$Pathway <- sub(
+              "^\\S+\\s",
+              "",
+              pathway_info[[i]]$Pathway
+            )
+          }
+        }
+      }
       return(pathway_info)
     })
 

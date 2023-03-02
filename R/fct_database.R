@@ -30,7 +30,7 @@ if (nchar(DATAPATH) == 0) {
 connect_convert_db <- function(datapath = DATAPATH) {
   return(DBI::dbConnect(
     drv = RSQLite::dbDriver("SQLite"),
-    dbname = paste0(datapath, "orgInfo.db"),
+    dbname = paste0(datapath, "demo/orgInfo.db"),
     flags = RSQLite::SQLITE_RO
   ))
 }
@@ -84,27 +84,23 @@ connect_convert_db_org <- function(datapath = DATAPATH, select_org, idep_data) {
 #'
 get_idep_data <- function(datapath = DATAPATH) {
 
-  # double check if this is neccesary, as it is available in orgInfo
-  # kegg_species_id <- read.csv(paste0(datapath, "data_go/KEGG_Species_ID.csv"))
-
-
   conn_db <- connect_convert_db()
 
   # demo_data_info.csv file
   # columns: ID, expression, design, type, name
   # ID column must be unique
   # The type column 1- read counts, 2- normalized , 3 LFC&Pval
-  # The files must be available in the data_go folder of the database.
+  # The files must be available in the demo folder of the database.
   # Leave blank if design file is missing
   # Default file have smallest ID, within the same type.
 
   demo_file_info <- read.csv(
-    paste0(datapath, "data_go/demo_data_info.csv")
+    paste0(datapath, "demo/demo_data_info.csv")
   )
   # add path for expression matrix
   demo_file_info$expression <- paste0(
     datapath,
-    "data_go/",
+    "demo/",
     demo_file_info$expression
   )
 
@@ -112,7 +108,7 @@ get_idep_data <- function(datapath = DATAPATH) {
   ix <- which(nchar(demo_file_info$design) > 2)
   demo_file_info$design[ix] <- paste0(
     datapath,
-    "data_go/",
+    "demo/",
     demo_file_info$design[ix]
   )
 
@@ -453,7 +449,7 @@ convert_id <- function(query,
 #' @param idep_data Data built in to idep
 #' @param gene_info The gene info from the converted IDs and
 #'   the function gene_info()
-#'
+#' 
 #' @export
 #' @return This function returns a list with values that are
 #'   used in the find_overlap function. The list contains
@@ -827,7 +823,7 @@ gmt_category <- function(converted,
 #' @param select_org String designating with organism is being analyzed
 #' @param idep_data List of data returned from \code{\link{get_idep_data}()}
 #' @param my_range Vector of the (min_set_size, max_set_size)
-#'
+#' 
 #' @export
 #' @return A list with each entry a list of gene IDs that correspond to
 #'  a pathway.
@@ -916,9 +912,10 @@ read_gene_sets <- function(converted,
       sep = ""
     )
   )
+  DBI::dbDisconnect(pathway)
+
   ix <- match(pathway_ids[, 1], pathway_info[, 1])
   names(gene_sets) <- pathway_info[ix, 2]
-  DBI::dbDisconnect(pathway)
 
   return(
     list(
@@ -958,7 +955,7 @@ convert_ensembl_to_entrez <- function(query,
     idep_data = idep_data
   )
   # if database connection error
-  if(inherits(pathway, "try-error")) {
+  if(inherits(convert, "try-error")) {
     return(NULL)
   }
   id_type_entrez <- DBI::dbGetQuery(

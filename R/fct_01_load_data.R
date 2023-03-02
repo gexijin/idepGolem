@@ -205,7 +205,7 @@ input_data <- function(expression_file,
         sample_info_demo <- t(read.csv(
           demo_metadata_file,
           row.names = 1,
-          header = T,
+          header = TRUE,
           colClasses = "character"
         ))
       }
