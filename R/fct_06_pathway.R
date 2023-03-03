@@ -1761,15 +1761,22 @@ kegg_pathway <- function(go,
     return(blank)
   }
 
-  path_id <- kegg_pathway_id(
-    sig_pathways,
-    species,
-    "KEGG",
-    select_org,
-    idep_data$gmt_files,
-    idep_data$org_info,
-    idep_data
-  )
+  # find pathway id
+  # "Path:hsa04110 Cell cycle" --> "hsa04110"
+  path_id <- gsub(" .*", "", sig_pathways)
+  path_id <- gsub("Path:", "", path_id)
+  
+  if(0){
+    path_id <- kegg_pathway_id(
+      sig_pathways,
+      species,
+      "KEGG",
+      select_org,
+      idep_data$gmt_files,
+      idep_data$org_info,
+      idep_data
+    )
+  }
 
   # Kegg pathway id not found.
   if (is.null(path_id)) {
