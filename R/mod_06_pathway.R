@@ -99,11 +99,6 @@ mod_06_pathway_ui <- function(id) {
           type = "text/css",
           "#pathway-n_pathway_show { width:100%;   margin-top:-12px}"
         ),
-        checkboxInput(
-          inputId = ns("absolute_fold"),
-          label = "Use absolute values of fold changes for GSEA and GAGE",
-          value = FALSE
-        ),
         numericInput(
           inputId = ns("gene_p_val_cutoff"),
           label = "Remove genes with big FDR before pathway analysis:",
@@ -115,6 +110,21 @@ mod_06_pathway_ui <- function(id) {
         tags$style(
           type = "text/css",
           "#pathway-gene_p_val_cutoff { width:100%;   margin-top:-12px}"
+        ),
+        checkboxInput(
+          inputId = ns("absolute_fold"),
+          label = "Use absolute values of fold changes for GSEA and GAGE",
+          value = FALSE
+        ),
+        checkboxInput(
+          inputId = ns("show_pathway_id"),
+          label = "Show pathway IDs in results",
+          value = FALSE
+        ),
+        tippy::tippy_this(
+          ns("show_pathway_id"),
+          "If selected, pathway IDs, such as Path:mmu04115 and GO:0042770,  will be appended to pathway name.",
+          theme = "light-border"
         ),
         h6("* Warning! The many combinations can lead to false positives in pathway analyses."),
         # Download report button
@@ -546,6 +556,11 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         if (ncol(res) > 1) {
           # add URL
           ix <- match(res[, 2], gene_sets()$pathway_info$description)
+
+          # remove pathway ID
+          if (!input$show_pathway_id) {
+            res[, 2] <- remove_pathway_id(res[, 2], input$select_go)
+          }
           res[, 2] <- hyperText(
             res[, 2],
             gene_sets()$pathway_info$memo[ix]
@@ -590,7 +605,9 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
             contrast_samples = contrast_samples(),
             gene_sets = gene_sets()$gene_lists,
             pathway_p_val_cutoff = input$pathway_p_val_cutoff,
-            n_pathway_show = input$n_pathway_show
+            n_pathway_show = input$n_pathway_show,
+            select_go = input$select_go,
+            show_pathway_id = input$show_pathway_id
           )
         })
       },
@@ -645,6 +662,10 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         if (ncol(res) > 1) {
           # add URL
           ix <- match(res[, 2], gene_sets()$pathway_info$description)
+          # remove pathway ID
+          if (!input$show_pathway_id) {
+            res[, 2] <- remove_pathway_id(res[, 2], input$select_go)
+          }
           res[, 2] <- hyperText(
             res[, 2],
             gene_sets()$pathway_info$memo[ix]
@@ -696,7 +717,9 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
             select_contrast = input$select_contrast,
             gene_sets = gene_sets()$gene_lists,
             pathway_p_val_cutoff = input$pathway_p_val_cutoff,
-            n_pathway_show = input$n_pathway_show
+            n_pathway_show = input$n_pathway_show,
+            select_go = input$select_go,
+            show_pathway_id = input$show_pathway_id
           )
         })
       },
