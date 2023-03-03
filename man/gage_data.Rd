@@ -69,6 +69,7 @@ Other pathway functions:
 \code{\link{pgsea_data}()},
 \code{\link{pgsea_plot_all}()},
 \code{\link{plot_pgsea}()},
-\code{\link{reactome_data}()}
+\code{\link{reactome_data}()},
+\code{\link{remove_pathway_id}()}
 }
 \concept{pathway functions}

@@ -1782,3 +1782,34 @@ kegg_pathway <- function(go,
     alt = "KEGG pathway image."
   )
 }
+
+
+
+#' Remove Pathway ID from pathway name 
+#' Only for GO and KEGG pathways
+#'
+#' Path:hsa00270 Cysteine and methionine metabolism 
+#'           --> Cysteine and methionine metabolism
+#'
+#' @param strings a vector of strings
+#' @param select_go   GOBP, GOCC, GOMP or KEGG or something else
+#'
+#' @export
+#' @return a vector of strings
+#'
+#' @family pathway functions
+remove_pathway_id <- function(strings, select_go) {
+    if (is.null(strings)) {
+      return(NULL)
+    } else {
+      if (select_go %in% c("GOBP", "GOCC", "GOMF", "KEGG")) {
+        strings <- sub(
+          "^\\S+\\s",
+          "",
+          strings
+        )
+        strings <- proper(strings)
+      }
+      return(strings)
+    }
+}

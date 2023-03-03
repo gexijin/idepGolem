@@ -457,20 +457,17 @@ mod_11_enrichment_server <- function(id,
           )
         }
       })
-      # remove pathway ID 
+      # remove pathway ID for GO and KEGG
       # Path:hsa00270 Cysteine and methionine metabolism 
       #           --> Cysteine and methionine metabolism
                                     # result is not NULL
       # pathway_info is a list of data frames: Selection, Upregulated, Downregulated, etc
-      if(!input$show_pathway_id) {
-        for(i in 1:length(pathway_info)) {
-          if (!is.null(pathway_info[[i]])) {
-            pathway_info[[i]]$Pathway <- sub(
-              "^\\S+\\s",
-              "",
-              pathway_info[[i]]$Pathway
-            )
-          }
+      if (!input$show_pathway_id) {
+        for (i in 1:length(pathway_info)) {
+          pathway_info[[i]]$Pathway <- remove_pathway_id(
+            strings = pathway_info[[i]]$Pathway,
+            select_go = input$select_go
+          )
         }
       }
       return(pathway_info)
