@@ -294,6 +294,7 @@ convert_id <- function(query,
 
   result <- DBI::dbGetQuery(conn_db, query_statement)
 
+  DBI::dbDisconnect(conn_db)
   if (nrow(result) == 0) {
     return(NULL)
   }
@@ -435,25 +436,12 @@ read_pathway_sets <- function(all_gene_names_query,
     return(id_not_recognized)
   }
 
-
-
   if (is.null(go)) {
     go <- "GOBP"
   }
 
-  sql_query <- paste(
-    "SELECT DISTINCT gene, pathwayID FROM pathway WHERE gene IN ('",
-    paste(query_set, collapse = "', '"), "')",
-    sep = ""
-  )
+  sql_query <- build_pathway_query(go, query_set)
 
-  if (go != "All") {
-    sql_query <- paste(
-      "SELECT DISTINCT gene,pathwayID FROM pathway WHERE category='", go, "'",
-      " AND gene IN ('", paste(query_set, collapse = "', '"), "')",
-      sep = ""
-    )
-  }
   result <- DBI::dbGetQuery(pathway, sql_query)
 
   if (dim(result)[1] == 0) {
@@ -598,24 +586,10 @@ background_pathway_sets <- function(processed_data,
   # Make sure the background set includes the query set
   query_set <- unique(c(query_set, sub_query))
 
-
-  sql_query <- "SELECT DISTINCT gene,pathwayID FROM pathway "
-  if (go != "All") {
-    sql_query <- paste0(sql_query, " WHERE category ='", go, "'")
+  if (is.null(go)) {
+    go <- "GOBP"
   }
-
-  sql_query <- paste0(
-    sql_query, " AND pathwayID IN ('",
-    paste(pathway_table$pathway_id, collapse = "', '"), "')"
-  )
-
-  sql_query <- paste(
-    sql_query,
-    " AND gene IN ('",
-    paste(query_set, collapse = "', '"), "')",
-    sep = ""
-  )
-
+  sql_query <- build_pathway_query(go, query_set)
 
   results <- DBI::dbGetQuery(pathway, sql_query)
 
@@ -782,29 +756,14 @@ read_gene_sets <- function(converted,
   if (length(ix) == 0) {
     return(id_not_recognized)
   }
-
   if (is.null(go)) {
     go <- "GOBP"
   }
 
-  sql_query <- "SELECT DISTINCT gene, pathwayID FROM pathway WHERE "
-
-  # faster if category is first
-  if (go != "All") {
-    sql_query <- paste0(sql_query, "  category ='", go, "' AND ")
-  }
-
-  # Get Gene sets
-  sql_query <- paste(
-    sql_query,
-    " gene IN ('",
-    paste(query_set, collapse = "', '"),
-    "')",
-    sep = ""
-  )
-
+  sql_query <- build_pathway_query(go, query_set)
 
   result <- DBI::dbGetQuery(pathway, sql_query)
+
   if (dim(result)[1] == 0) {
     return(list(x = as.data.frame("No matching species or gene ID file!")))
   }
@@ -906,4 +865,34 @@ convert_ensembl_to_entrez <- function(query,
   tem <- query[ix]
   names(tem) <- result$id
   return(tem)
+}
+
+
+#' Create SQL query statement for reading pathway db
+#'
+#' Convert an ID qeury for a species from the ensembl
+#' ID type to entrez type.
+#'
+#' @param go  Pathway category "KEGG", "GOBP"
+#' @param query_set  List of genes
+#' @export
+#' @return The SQL SELECT statement
+build_pathway_query <- function(go, query_set) {
+
+  sql_query <- "SELECT DISTINCT gene, pathwayID FROM pathway WHERE "
+
+  # faster if category is first
+  if (go != "All") {
+    sql_query <- paste0(sql_query, " category = '", go, "' AND ")
+  }
+
+  # Get Gene sets
+  sql_query <- paste(
+    sql_query,
+    " gene IN ('",
+    paste(query_set, collapse = "', '"),
+    "')",
+    sep = ""
+  )
+  return(sql_query)
 }

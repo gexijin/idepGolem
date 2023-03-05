@@ -439,7 +439,6 @@ mod_11_enrichment_server <- function(id,
             idep_data = idep_data,
             gene_info = gene_info()
           )
-
           pathway_info[[names(gene_lists())[i]]] <- find_overlap(
             pathway_table = gene_sets$pathway_table,
             query_set = gene_sets$query_set,
