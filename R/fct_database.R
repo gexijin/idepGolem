@@ -16,6 +16,10 @@ DATAPATH <- Sys.getenv("IDEP_DATABASE")[1]
 if (nchar(DATAPATH) == 0) {
   DATAPATH <- "../../data/data107/"
 }
+
+#sometimes people forget to include the last "/"
+DATAPATH <- paste0(DATAPATH, "/")
+
 #DATAPATH <- "C:/work/iDEP_data/data107/"
 
 #' Connect to the convertIDs database and return the
