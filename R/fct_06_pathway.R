@@ -289,7 +289,7 @@ plot_pgsea <- function(my_range,
        # remove pathway ID if selected so
       if (!show_pathway_id) {
         row.names(result$pg_data) <- remove_pathway_id_second(
-          strings = row.names(result$pg_data), 
+          strings = row.names(result$pg_data),
           select_go = select_go
         )
       }

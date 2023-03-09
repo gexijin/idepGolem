@@ -461,7 +461,7 @@ mod_11_enrichment_server <- function(id,
       #           --> Cysteine and methionine metabolism
                                     # result is not NULL
       # pathway_info is a list of data frames: Selection, Upregulated, Downregulated, etc
-      if (!input$show_pathway_id) {
+      if (!input$show_pathway_id && select_org() > 0) {
         for (i in 1:length(pathway_info)) {
           pathway_info[[i]]$Pathway <- remove_pathway_id(
             strings = pathway_info[[i]]$Pathway,

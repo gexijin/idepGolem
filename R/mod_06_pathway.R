@@ -557,8 +557,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           # add URL
           ix <- match(res[, 2], gene_sets()$pathway_info$description)
 
-          # remove pathway ID
-          if (!input$show_pathway_id) {
+          # remove pathway ID  only in Ensembl species
+          if (!input$show_pathway_id && pre_process$select_org() > 0) {
             res[, 2] <- remove_pathway_id(res[, 2], input$select_go)
           }
           res[, 2] <- hyperText(
@@ -599,6 +599,11 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         req(input$pathway_method == 2)
         withProgress(message = "Running PGSEA...", {
           incProgress(0.2)
+
+          # only remove pathway ID for Ensembl species
+          show_pathway_id <- pre_process$select_org() > 0 &&
+            input$show_pathway_id
+
           plot_pgsea(
             my_range = c(input$min_set_size, input$max_set_size),
             processed_data = pre_process$data(),
@@ -607,7 +612,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
             pathway_p_val_cutoff = input$pathway_p_val_cutoff,
             n_pathway_show = input$n_pathway_show,
             select_go = input$select_go,
-            show_pathway_id = input$show_pathway_id
+            show_pathway_id = show_pathway_id
           )
         })
       },
@@ -662,8 +667,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         if (ncol(res) > 1) {
           # add URL
           ix <- match(res[, 2], gene_sets()$pathway_info$description)
-          # remove pathway ID
-          if (!input$show_pathway_id) {
+          # remove pathway ID, but only in Ensembl species
+          if (!input$show_pathway_id && pre_process$select_org()) {
             res[, 2] <- remove_pathway_id(res[, 2], input$select_go)
           }
           res[, 2] <- hyperText(
@@ -710,6 +715,11 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         req(input$pathway_method == 4)
         withProgress(message = "Running PGSEA on all samples ...", {
           incProgress(0.2)
+
+          # only remove pathway ID for Ensembl species
+          show_pathway_id <- pre_process$select_org() > 0 &&
+            input$show_pathway_id
+
           pgsea_plot_all(
             go = input$select_go,
             my_range = c(input$min_set_size, input$max_set_size),
@@ -719,7 +729,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
             pathway_p_val_cutoff = input$pathway_p_val_cutoff,
             n_pathway_show = input$n_pathway_show,
             select_go = input$select_go,
-            show_pathway_id = input$show_pathway_id
+            show_pathway_id = show_pathway_id
           )
         })
       },
