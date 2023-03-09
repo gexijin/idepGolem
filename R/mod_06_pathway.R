@@ -601,8 +601,11 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           incProgress(0.2)
 
           # only remove pathway ID for Ensembl species
-          show_pathway_id <- pre_process$select_org() > 0 &&
-            input$show_pathway_id
+          show_pathway_id <- input$show_pathway_id
+          # always show pathway ID for STRING species
+          if (pre_process$select_org() < 0) {
+            show_pathway_id <- TRUE
+          }
 
           plot_pgsea(
             my_range = c(input$min_set_size, input$max_set_size),
@@ -717,8 +720,11 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           incProgress(0.2)
 
           # only remove pathway ID for Ensembl species
-          show_pathway_id <- pre_process$select_org() > 0 &&
-            input$show_pathway_id
+          show_pathway_id <- input$show_pathway_id
+          # always show pathway ID for STRING species
+          if (pre_process$select_org() < 0) {
+            show_pathway_id <- TRUE
+          }
 
           pgsea_plot_all(
             go = input$select_go,
