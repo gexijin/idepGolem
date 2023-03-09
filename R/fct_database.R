@@ -888,8 +888,8 @@ convert_ensembl_to_entrez <- function(query,
   result <- DBI::dbGetQuery(
     convert,
     paste0(
-      "select  id,ens from mapping where species = '", species_id, "'",
-      " AND  idType ='", id_type_entrez, "' ",
+      "select  id,ens from mapping where ",
+      " idType ='", id_type_entrez, "' ",
       " AND ens IN ('", paste(query_set, collapse = "', '"), "')"
     )
   )

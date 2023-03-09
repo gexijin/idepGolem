@@ -872,6 +872,7 @@ pathway_select_data <- function(sig_pathways,
 #' @param gene_sets List of vectors with each vector being the
 #'  set of genes that correspond to a particular pathway in
 #'  the database \code{\link{read_gene_sets function}()}
+#' @param show_pathway_id whether to show pathway id or remove it
 #'
 #' @export
 #' @return A data frame with the pathway analysis statistics and
@@ -886,7 +887,8 @@ get_pathway_list_data <- function(pathway_method,
                                   go,
                                   select_org,
                                   gene_info,
-                                  gene_sets) {
+                                  gene_sets,
+                                  show_pathway_id) {
   pathways <- NULL
   if (pathway_method == 1) {
     if (!is.null(gage_pathway_data)) {
@@ -985,6 +987,14 @@ get_pathway_list_data <- function(pathway_method,
       }
       pathways$Genes[[i]] <- c(genes)
     }
+  }
+
+    # remove pathway ID if selected so
+  if (!show_pathway_id) {
+    pathways$Pathways <- remove_pathway_id(
+      strings = pathways$Pathways,
+      select_go = go
+    )
   }
 
   return(pathways)

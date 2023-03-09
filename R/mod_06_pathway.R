@@ -849,6 +849,13 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
 
     # List of pathways with details
     pathway_list_data <- reactive({
+      # only remove pathway ID for Ensembl species
+      show_pathway_id <- input$show_pathway_id
+      # always show pathway ID for STRING species
+      if (pre_process$select_org() < 0) {
+        show_pathway_id <- TRUE
+      }
+
       get_pathway_list_data(
         pathway_method = input$pathway_method,
         gage_pathway_data = gage_pathway_data(),
@@ -858,7 +865,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         go = input$select_go,
         select_org = pre_process$select_org(),
         gene_info = pre_process$all_gene_info(),
-        gene_sets = gene_sets()$gene_lists
+        gene_sets = gene_sets()$gene_lists,
+        show_pathway_id = show_pathway_id
       )
     })
 
