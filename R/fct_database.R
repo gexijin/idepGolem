@@ -474,7 +474,7 @@ read_pathway_sets <- function(all_gene_names_query,
     )
 
     # if duplicates pathway_info, remove
-    # sorted so that some GO categories are repeated, keep the one with URL
+    # sorted so that if some GO categories are repeated, keep the one with URL
     pathway_info <- pathway_info[
       order(
         pathway_info$id,
@@ -498,7 +498,8 @@ read_pathway_sets <- function(all_gene_names_query,
       function(x) result[which(result$pathwayID == x), 1]
     )
     names(gene_sets) <- pathway_merge$description
-
+    # note this might cause errors if length differs.
+    # which could happen if 
     pathway_merge$gene_sets <- gene_sets
   }
 
@@ -815,7 +816,7 @@ read_gene_sets <- function(converted,
   DBI::dbDisconnect(pathway)
 
   # if duplicates pathway_info, remove
-  # sorted so that some GO categories are repeated, keep the one with URL
+  # sorted so that keep the one with URL
   pathway_info <- pathway_info[
     order(
       pathway_info$id,
