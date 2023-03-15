@@ -18,7 +18,7 @@ kegg_pathway(
 )
 }
 \arguments{
-\item{go}{String designating the section of the database to query for 
+\item{go}{String designating the section of the database to query for
 pathway analysis. See \code{\link{gmt_category}()} for choices.}
 
 \item{gage_pathway_data}{Matrix returned from \code{\link{gage_data}()}}
@@ -39,10 +39,10 @@ information about the gene IDs for the matched species}
 
 \item{select_org}{The organism that the gene data is for}
 
-\item{low_color}{String designating color value for the low-ly expressed 
+\item{low_color}{String designating color value for the low-ly expressed
 genes}
 
-\item{high_color}{String designating color value for the high-ly expressed 
+\item{high_color}{String designating color value for the high-ly expressed
 genes}
 }
 \value{

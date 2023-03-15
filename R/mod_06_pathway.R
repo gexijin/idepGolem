@@ -300,7 +300,7 @@ mod_06_pathway_ui <- function(id) {
           ),
           tabPanel(
             title = "Info",
-            includeHTML("inst/app/www/pathway.html")
+            includeHTML(app_sys("app/www/pathway.html"))
           )
         )
       )

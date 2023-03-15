@@ -16,7 +16,7 @@ plot_pgsea(
 \arguments{
 \item{my_range}{Vector of the (min_set_size, max_set_size)}
 
-\item{processed_data}{Matrix of gene data that has been through 
+\item{processed_data}{Matrix of gene data that has been through
 \code{\link{pre_process}()}}
 
 \item{contrast_samples}{Sample columns that correspond to the

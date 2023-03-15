@@ -19,13 +19,13 @@ obtain the gene expression data}
 
 \item{gene_sets}{List of vectors with each vector being the
 set of genes that correspond to a particular pathway in
-the database. See list returned from 
+the database. See list returned from
 \code{\link{read_gene_sets}()}}
 
 \item{contrast_samples}{Vector of sample columns that correspond to the
 selected comparison}
 
-\item{data}{Matrix of gene data that has been through 
+\item{data}{Matrix of gene data that has been through
 \code{\link{pre_process}()}}
 
 \item{select_org}{String designating the organism being analyzed}

@@ -34,9 +34,9 @@ On Linux and Mac you need these build tools:
 You need devtools(for Windows you also need RTOOLS)
 
 ```{R}
-> devtools::install_github("https://github.com/espors/idepGolem")
+> devtools::install_github("https://github.com/gexijin/idepGolem")
 # OR you can do the following
-$ git clone https://github.com/espors/idepGolem.git
+$ git clone https://github.com/gexiin/idepGolem.git
 $ cd idepGolem
 > devtools::install()
 ```
