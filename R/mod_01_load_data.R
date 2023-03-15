@@ -729,7 +729,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           )
         ),
         htmlOutput(ns("file_format")),
-        includeHTML("inst/app/www/messages.html"),
+        includeHTML(app_sys("app/www/messages.html")),
         br(),
         img(
           src = "www/flowchart.png",
@@ -750,7 +750,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     output$format_help_ui <- renderUI({
       req(input$data_format_help != 0)
 
-      includeHTML("inst/app/www/format.html")
+      includeHTML(app_sys("app/www/format.html"))
     })
 
 

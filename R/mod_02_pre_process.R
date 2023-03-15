@@ -424,7 +424,7 @@ mod_02_pre_process_ui <- function(id) {
           ),
           tabPanel(
             title = "Info",
-            includeHTML("inst/app/www/help_preprocess.htm")
+            includeHTML(app_sys("app/www/help_preprocess.htm"))
           ),
         )
       )
