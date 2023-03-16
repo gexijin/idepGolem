@@ -19,13 +19,15 @@
 ## to change the name in the app_sys() function in app_config.R /!\
 ## 
 golem::fill_desc(
-  pkg_name = "idepGolem", # The Name of the package containing the App 
-  pkg_title = "PKG_TITLE", # The Title of the package containing the App 
-  pkg_description = "PKG_DESC.", # The Description of the package containing the App 
-  author_first_name = "AUTHOR_FIRST", # Your First Name
-  author_last_name = "AUTHOR_LAST", # Your Last Name
-  author_email = "AUTHOR@MAIL.COM", # Your Email
-  repo_url = NULL # The URL of the GitHub Repo (optional) 
+  pkg_title = "iDEP: an integrated web application for differential 
+       expression and pathway analysis of RNA-Seq data", # The Title of the package containing the App 
+  pkg_description = "Combining comprehensive analytic functionalities with massive annotation databases, 
+  iDEP (http://ge-lab.org/idep/) enables biologists to easily translate transcriptomic and proteomic 
+  data into actionable insights..", # The Description of the package containing the App 
+  author_first_name = "Xijin", # Your First Name
+  author_last_name = "Ge", # Your Last Name
+  author_email = "Xijin.Ge@SDState.edu", # Your Email
+  repo_url = "https://github.com/gexijin/idepGolem" # The URL of the GitHub Repo (optional) 
 )     
 
 ## Set {golem} options ----
