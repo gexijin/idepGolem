@@ -292,7 +292,7 @@ convert_id <- function(query,
 
   # if species is selected ---------------------------------------------------
   query_statement <- paste0(
-    "select distinct id,ens,idType from mapping where id IN ",
+    "select id,ens,idType from mapping where id IN ",
     query_string
   )
 
@@ -609,9 +609,25 @@ background_pathway_sets <- function(processed_data,
   if (is.null(go)) {
     go <- "GOBP"
   }
-  sql_query <- build_pathway_query(go, query_set)
+
+  # this is slow when gene lists are big
+  #sql_query <- build_pathway_query(go, query_set)
+  #results <- DBI::dbGetQuery(pathway, sql_query)
+
+  # retrieve all pathways for the category
+  sql_query <- "SELECT gene, pathwayID FROM pathway "
+  if (go != "All") {
+    sql_query <- paste0(sql_query, " WHERE category = '", go, "'")
+  }
+
+  # since there are so many genes, this takes a long time
+  # we are not using the genes, just query all the pathways for the category
+  #sql_query <- build_pathway_query(go, query_set)
 
   results <- DBI::dbGetQuery(pathway, sql_query)
+
+  # only keep genes in the query_set, this is faster than query using SQL
+  results <- results[results$gene %in% query_set, ]
 
   if (dim(results)[1] == 0) {
     return(list(
@@ -923,7 +939,7 @@ convert_ensembl_to_entrez <- function(query,
 #' @return The SQL SELECT statement
 build_pathway_query <- function(go, query_set) {
 
-  sql_query <- "SELECT DISTINCT gene, pathwayID FROM pathway WHERE "
+  sql_query <- "SELECT gene, pathwayID FROM pathway WHERE "
 
   # faster if category is first
   if (go != "All") {
