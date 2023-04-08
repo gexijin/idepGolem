@@ -345,7 +345,7 @@ fgsea_data <- function(select_contrast,
                        absolute_fold,
                        pathway_p_val_cutoff,
                        n_pathway_show) {
-  nPerm <- 50000 # number of permutations
+  nPerm <- 10000 # number of permutations
 
   no_sig <- as.data.frame("No significant pathway found.")
   if (length(limma$top_genes) == 0) {

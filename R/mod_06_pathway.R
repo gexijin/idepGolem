@@ -13,12 +13,25 @@ mod_06_pathway_ui <- function(id) {
     title = "Pathway",
     sidebarLayout(
       sidebarPanel(
+#        actionButton(
+#          inputId = ns("submit_pathway_button"),
+#          label = "Submit",
+#          style = "float:right"
+#        ),
+#        tippy::tippy_this(
+#          ns("submit_pathway_button"),
+#         "Run pathway analysis",
+#          theme = "light-border"
+#        ),
+#        tags$style(
+#          "#pathway-submit_pathway_button{font-size: 16px;color: red}"
+#        ),
         htmlOutput(
           outputId = ns("list_comparisons_pathway")
         ),
         tags$style(
           type = "text/css",
-          "#pathway-list_comparisons_pathway { width:100%;   margin-top:-12px}"
+          "#pathway-list_comparisons_pathway { width:100%; margin-top:-5px}"
         ),
         selectInput(
           inputId = ns("pathway_method"),
@@ -331,7 +344,10 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     # GMT choices for enrichment ----------
     output$select_go_selector <- renderUI({
       req(!is.null(pre_process$gmt_choices()))
-      req(input$pathway_method != 5)
+
+      #This make it reactive: every time method changes, it reset to KEGG.
+      #req(input$pathway_method != 5)
+
       # if there is KEGG, use KEGG as default
       selected <- "GOBP"
       if ("KEGG" %in% pre_process$gmt_choices()) {
@@ -526,6 +542,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       return(gene_sets)
     })
 
+    #gage_pathway_data <- eventReactive(input$submit_pathway_button, {
     gage_pathway_data <- reactive({
       req(input$pathway_method == 1)
       req(!is.null(deg$limma()))
