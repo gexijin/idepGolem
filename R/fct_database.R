@@ -791,6 +791,7 @@ read_gene_sets <- function(converted,
     go <- "GOBP"
   }
 
+  # retrieve all pathways for the category
   sql_query <- "SELECT  gene, pathwayID FROM pathway "
   if (go != "All") {
     sql_query <- paste0(sql_query, " WHERE category = '", go, "'")
@@ -799,9 +800,8 @@ read_gene_sets <- function(converted,
   # since there are so many genes, this takes a long time
   # we are not using the genes, just query all the pathways for the category
   #sql_query <- build_pathway_query(go, query_set)
-#start_time <- Sys.time()
+
   result <- DBI::dbGetQuery(pathway, sql_query)
-#Sys.time() - start_time
 
   # only keep genes in the query_set, this is faster than query using SQL
   result <- result[result$gene %in% query_set, ]
@@ -835,7 +835,8 @@ read_gene_sets <- function(converted,
       sep = ""
     )
   )
-  ix <- match(pathway_ids[, 1], pathway_info[, 1])
+  # add pathway name to gene sets
+  ix <- match(names(gene_sets), pathway_info[, 1])
   names(gene_sets) <- pathway_info[ix, 2]
   DBI::dbDisconnect(pathway)
   return(
