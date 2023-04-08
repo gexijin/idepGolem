@@ -671,7 +671,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           # add URL
           ix <- match(res[, 2], gene_sets()$pathway_info$description)
           # remove pathway ID, but only in Ensembl species
-          if (!input$show_pathway_id && pre_process$select_org()) {
+          if (!input$show_pathway_id && pre_process$select_org() > 0) {
             res[, 2] <- remove_pathway_id(res[, 2], input$select_go)
           }
           res[, 2] <- hyperText(
