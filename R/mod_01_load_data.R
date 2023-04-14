@@ -20,30 +20,32 @@ mod_01_load_data_ui <- function(id) {
         # alternative UI output message for once expression data is loaded
         uiOutput(ns("load_data_alt")),
         # Species Match Drop Down ------------
-        strong("1. Required: Select or search for species"),
+        strong("1. Required: What species?"),
+        conditionalPanel(
+          condition = "false",
+          selectInput(
+            inputId = ns("select_org"),
+            label = NULL,
+            choices = " ",
+            multiple = FALSE,
+            selectize = TRUE
+          )
+        ),
+
         fluidRow(
           column(
-            width = 9,
-            selectInput(
-              inputId = ns("select_org"),
-              label = NULL,
-              choices = " ",
-              multiple = FALSE,
-              selectize = TRUE
-            )
-          ),
-          column(
-            width = 3,
+            width = 6,
+            align = "center",
             # Species list and genome assemblies ----------
             actionButton(
               inputId = ns("genome_assembl_button"),
-              label = "Info"
+              label = "Search & select"
             )
           ),
-          tippy::tippy_this(
-            ns("genome_assembl_button"),
-            "List of annotated species.",
-            theme = "light-border"
+
+          column(
+            width = 6,
+            textOutput(ns("selected_species"))
           )
         ),
 
@@ -327,17 +329,40 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         shiny::modalDialog(
           size = "l",
           p("Search annotated species by common or scientific names,
-          or NCBI taxonomy id. If your species cannot be found here,
+          or NCBI taxonomy id. Click on a row to select. 
+          Use annotation in STRING-db as a last resort.  
+           If your species cannot be found here,
           you can still use iDEP without pathway analysis."),
+          easyClose = TRUE,
           DT::renderDataTable({
-            df <- idep_data$org_info[, c("ensembl_dataset", "name", "totalGenes")]
-            colnames(df) <- c("Ensembl/STRING-db ID", "Name (Assembly)", "Total Genes")
+            df <- idep_data$org_info[, 
+              c("ensembl_dataset", "name", "academicName", "taxon_id", "group")
+            ]
+            colnames(df) <- c(
+              "Ensembl/STRING-db ID",
+              "Name (Assembly)",
+              "Academic Name",
+              "Taxonomy ID",
+              "Source"
+            )
             row.names(df) <- NULL
             DT::datatable(
               df,
+              selection = "single",
               options = list(
+                lengthChange = FALSE,
                 pageLength = 20,
                 scrollY = "400px"
+              ),
+              callback = DT::JS(
+                paste0(
+                 "table.on('click', 'tr', function() {
+                    var data = table.row(this).data();
+                    if (data) {
+                      Shiny.setInputValue('", id, "-clicked_row', data[0]);
+                    }
+                  });"
+                )
               ),
               rownames = FALSE
             )
@@ -345,6 +370,34 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         )
       )
     })
+
+  observeEvent(input$clicked_row, {
+    # find species ID from ensembl_dataset
+    selected <- find_species_id_by_ensembl(
+      input$clicked_row, 
+      idep_data$org_info
+    )
+    # assign name
+    selected <- setNames(
+      selected,
+      find_species_by_id_name(selected, idep_data$org_info)
+    )
+
+    updateSelectizeInput(
+      session = session,
+      inputId = "select_org",
+      choices = selected,
+      selected = selected,
+      server = TRUE
+    )
+    output$selected_species <- renderText({
+      paste0(
+        #"Selected: ",
+        find_species_by_id_name(selected, idep_data$org_info)
+      )
+    })
+
+  })
 
 
     # UI elements for load demo action button, demo data drop down, and -----
@@ -464,16 +517,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     })
 
 
-    # Provide species list for dropdown selection -----------
-    observe({
-      updateSelectizeInput(
-        session = session,
-        inputId = "select_org",
-        choices = idep_data$species_choice,
-        selected = idep_data$species_choice[1],
-        server = TRUE
-      )
-    })
+
 
     # Show messages when on the Network tab or button is clicked ----
     observe({

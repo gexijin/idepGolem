@@ -141,11 +141,15 @@ get_idep_data <- function(datapath = DATAPATH) {
     "Arabidopsis thaliana", "Zea mays", "Glycine max",
     "Oryza sativa Indica Group", "Oryza sativa Japonica Group", "Vitis vinifera"
   )
+
   other_choices <- names(species_choice)[
     !(names(species_choice) %in% top_choices)
   ]
   species_choice <- species_choice[c(top_choices, other_choices)]
-
+  #org_info <- org_info[order(org_info$group), ]
+  ix <- match(org_info$name2, top_choices)
+  org_info <- org_info[order(ix), ]
+  org_info <- org_info[order(org_info$group == "STRINGv11.5"), ]
   # GO levels
   go_levels <- DBI::dbGetQuery(
     conn = conn_db,
@@ -230,7 +234,20 @@ find_species_by_id_name <- function(species_id, org_info) {
   return(org_info[which(org_info$id == species_id), 3])
 }
 
-
+#' Find a species id by ensembl dataset name
+#'
+#' Find a species in the iDEP database with an
+#' ID.
+#'
+#' @param species_id Species ID to search the database with
+#' @param org_info iDEP data org_info file
+#'
+#' @export
+#' @return Only return the species name with this function.
+find_species_id_by_ensembl <- function(ensembl_dataset, org_info) {
+  # find species name use id
+  return(org_info[which(org_info$ensembl_dataset == ensembl_dataset), "id"])
+}
 
 #'  Convert gene IDs to ensembl data.
 #'
