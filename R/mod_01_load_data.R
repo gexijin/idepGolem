@@ -685,30 +685,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     })
 
     # Species match table ----------
-    output$species_match <- renderTable(
-      {
-        req(!is.null(input$go_button))
-        req(input$select_org)
-        if (is.null(input$expression_file) && input$go_button == 0) {
-          return(NULL)
-        }
-        isolate({
-          if (is.null(conversion_info()$converted)) {
-            return(as.data.frame("ID not recognized."))
-          }
-          tem <- conversion_info()$converted$species_match
-          if (nrow(tem) > 50) { # show only 50
-            tem <- tem[1:50, , drop = FALSE]
-          }
-          if (is.null(tem)) {
-            as.data.frame("ID not recognized.")
-          } else {
-            data.frame(
-              "Species(genes matched)" = tem[, 1],
-              check.names = FALSE
-            )
-          }
-        })
+    output$species_match <- renderTable({
+      species_match_data()
       },
       digits = -1,
       spacing = "s",
@@ -718,24 +696,51 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       hover = TRUE
     )
 
+    species_match_data <- reactive({
+      req(!is.null(input$go_button))
+      req(input$select_org)
+      if (is.null(input$expression_file) && input$go_button == 0) {
+        return(NULL)
+      }
+      isolate({
+        if (is.null(conversion_info()$converted)) {
+          return(as.data.frame("ID not recognized."))
+        }
+        tem <- conversion_info()$converted$species_match
+        if (nrow(tem) > 50) { # show only 50
+          tem <- tem[1:50, , drop = FALSE]
+        }
+        if (is.null(tem)) {
+          as.data.frame("ID not recognized.")
+        } else {
+          data.frame(
+            "Species(genes matched)" = tem[, 1],
+            check.names = FALSE
+          )
+        }
+      })
+    })
     # Species match message ----------
     observe({
       req(
         tab() == "Load Data" &&
-          !is.null(conversion_info()$converted) &&
-          input$select_org == idep_data$species_choice[[1]] # species not selected
+          #!is.null(conversion_info()$converted)
+          species_match_data()[1,1] == "ID not recognized."
       )
 
-      tem <- conversion_info()$converted$species_match
-      showNotification(
-        ui = paste0("Matched species is '", tem[1, ], ".' If that is not your
-                    species, please click Reset and use the dropdown to select
-                    the correct species first."),
-        id = "species_match",
-        duration = NULL,
-        type = "warning"
-      )
+
+      showModal(modalDialog(
+        title = "Please double check the selected species",
+        tags$p("None of the gene IDs are recognzied. Possible causes: 1. Wrong species is selected. 
+        2. Correct species is selected but we cannot map your gene IDs to Ensembl gene IDs. 
+        3. Your species is not included in our database.  
+        You can still run many analyses except pathway and enrichment."),
+        size = "s",
+        easyClose = TRUE
+      ))
     })
+
+
 
 
     # Remove message if the tab changes --------
