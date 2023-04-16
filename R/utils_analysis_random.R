@@ -1073,21 +1073,26 @@ refine_ggplot2 <- function(p, gridline, ggplot2_theme = "light") {
 #'
 #' Remove any list elements in a data frame
 #'
-#' @param data_object
+#' @param data_object, a data frame with some columns contain lists.
 #'
 #' @return Data frame
 data_frame_with_list <- function(data_object) {
+  # collapse lists into concatenated strings.
   set_lists_to_chars <- function(x) {
-    if (class(x) == "list") {
-      y <- paste(unlist(x[1]), sep = "", collapse = ", ")
+    if (class(x[1]) == "list") { # x is a list of lists
+       y <- sapply( # sapply returns a vector
+        x,
+        function(x1) { # collapse each row into a string.
+          paste0(unlist(x1), collapse = ", ")
+        }
+      )
     } else {
       y <- x
     }
     return(y)
   }
-  new_frame <- data.frame(
-    lapply(data_object, set_lists_to_chars),
-    stringsAsFactors = F
-  )
+  new_frame <- data_object |>
+    dplyr::mutate(dplyr::across(dplyr::everything(), set_lists_to_chars))
+  row.names(new_frame) <- NULL
   return(new_frame)
 }

@@ -9,7 +9,7 @@ data_frame_with_list(data_object)
 data_frame_with_list(data_object)
 }
 \arguments{
-\item{data_object}{}
+\item{data_object, }{a data frame with some columns contain lists.}
 }
 \value{
 Data frame
