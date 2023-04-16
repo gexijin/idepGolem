@@ -178,6 +178,10 @@ mod_05_deg_1_ui <- function(id) {
           ),
           tabPanel(
             title = "R Code",
+            verbatimTextOutput(
+              ns("deg_code")
+            ),
+            br(),
             downloadButton(
               outputId = ns("dl_deg_code"),
               label = "Code"
@@ -186,9 +190,6 @@ mod_05_deg_1_ui <- function(id) {
               ns("dl_deg_code"),
               "Download .R file of DEG code",
               theme = "light-border"
-            ),
-            verbatimTextOutput(
-              ns("deg_code")
             )
           )
         )

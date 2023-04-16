@@ -1081,7 +1081,7 @@ data_frame_with_list <- function(data_object) {
   set_lists_to_chars <- function(x) {
     if (class(x[1]) == "list") { # x is a list of lists
        y <- sapply( # sapply returns a vector
-        x,
+        x, # one element (list)
         function(x1) { # collapse each row into a string.
           paste0(unlist(x1), collapse = ", ")
         }
