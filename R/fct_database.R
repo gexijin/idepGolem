@@ -22,6 +22,12 @@ DATAPATH <- paste0(DATAPATH, "/")
 
 #DATAPATH <- "C:/work/iDEP_data/data107/"
 
+org_info_file <- paste0(DATAPATH, "demo/orgInfo.db")
+if(!file.exists(org_info_file)) {
+  DATAPATH <- "./"
+}
+
+
 #' Connect to the convertIDs database and return the
 #' objects.
 #'
@@ -32,9 +38,24 @@ DATAPATH <- paste0(DATAPATH, "/")
 #' @export
 #' @return Database connection.
 connect_convert_db <- function(datapath = DATAPATH) {
+
+  if (!file.exists(org_info_file)) {
+    # download org_info and demo files to current folder
+    url <- "http://bioinformatics.sdstate.edu/data/data107/"
+    file_name <- "data107.tar.gz"
+    options(timeout = 300)
+    download.file(
+      url = paste0(url, file_name),
+      destfile = file_name,
+      mode = "wb",
+      quiet = FALSE
+    )
+    untar(file_name)
+  }
+
   return(DBI::dbConnect(
     drv = RSQLite::dbDriver("SQLite"),
-    dbname = paste0(datapath, "demo/orgInfo.db"),
+    dbname = org_info_file,
     flags = RSQLite::SQLITE_RO
   ))
 }
