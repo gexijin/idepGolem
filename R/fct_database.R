@@ -10,11 +10,11 @@
 #' @name fct_database.R
 NULL
 
-
+db_ver <- "data107"
 # if environmental variable is not set, use relative path
 DATAPATH <- Sys.getenv("IDEP_DATABASE")[1]
 if (nchar(DATAPATH) == 0) {
-  DATAPATH <- "../../data/data107/"
+  DATAPATH <- paste0("../../data/", db_ver, "/")
 }
 
 #sometimes people forget to include the last "/"
@@ -24,7 +24,8 @@ DATAPATH <- paste0(DATAPATH, "/")
 
 org_info_file <- paste0(DATAPATH, "demo/orgInfo.db")
 if(!file.exists(org_info_file)) {
-  DATAPATH <- "./"
+  DATAPATH <- paste0("./", db_ver, "/")
+  org_info_file <- paste0(DATAPATH, "demo/orgInfo.db")
 }
 
 
@@ -38,19 +39,18 @@ if(!file.exists(org_info_file)) {
 #' @export
 #' @return Database connection.
 connect_convert_db <- function(datapath = DATAPATH) {
-
   if (!file.exists(org_info_file)) {
     # download org_info and demo files to current folder
-    url <- "http://bioinformatics.sdstate.edu/data/data107/"
-    file_name <- "data107.tar.gz"
+    url <- "http://bioinformatics.sdstate.edu/data/"
+    file_name <- paste0(db_ver, ".tar.gz")
     options(timeout = 300)
     download.file(
-      url = paste0(url, file_name),
+      url = paste0(url, db_ver, "/", file_name),
       destfile = file_name,
       mode = "wb",
       quiet = FALSE
     )
-    untar(file_name)
+    untar(file_name) # untar and unzip the files
   }
 
   return(DBI::dbConnect(

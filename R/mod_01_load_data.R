@@ -21,6 +21,7 @@ mod_01_load_data_ui <- function(id) {
         uiOutput(ns("load_data_alt")),
         # Species Match Drop Down ------------
         strong("1. Required: What species?"),
+        br(), br(),
         conditionalPanel(
           condition = "false",
           selectInput(
@@ -48,7 +49,14 @@ mod_01_load_data_ui <- function(id) {
             textOutput(ns("selected_species"))
           )
         ),
+    tags$head(tags$style("#load_data-selected_species{color: red;
+                                 font-size: 15px;
+                                 font-style: italic;
+                                 }"
+                         )
+              ),
 
+        br(),
         # Conditional .GMT file input bar ----------
         conditionalPanel(
           condition = 'input.select_org == "NEW"',
