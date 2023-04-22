@@ -28,6 +28,8 @@ if(!file.exists(org_info_file)) {
   org_info_file <- paste0(DATAPATH, "demo/orgInfo.db")
 }
 
+db_url <- "http://bioinformatics.sdstate.edu/data/"
+
 
 #' Connect to the convertIDs database and return the
 #' objects.
@@ -41,16 +43,18 @@ if(!file.exists(org_info_file)) {
 connect_convert_db <- function(datapath = DATAPATH) {
   if (!file.exists(org_info_file)) {
     # download org_info and demo files to current folder
-    url <- "http://bioinformatics.sdstate.edu/data/"
-    file_name <- paste0(db_ver, ".tar.gz")
-    options(timeout = 300)
-    download.file(
-      url = paste0(url, db_ver, "/", file_name),
-      destfile = file_name,
-      mode = "wb",
-      quiet = FALSE
-    )
-    untar(file_name) # untar and unzip the files
+    withProgress(message = "Download demo data and species database", {
+      incProgress(0.2)
+      file_name <- paste0(db_ver, ".tar.gz")
+      options(timeout = 300)
+      download.file(
+        url = paste0(db_url, db_ver, "/", file_name),
+        destfile = file_name,
+        mode = "wb",
+        quiet = FALSE
+      )
+      untar(file_name) # untar and unzip the files
+    })
   }
 
   return(DBI::dbConnect(

@@ -11,6 +11,19 @@ mod_01_load_data_ui <- function(id) {
   ns <- shiny::NS(id)
   tabPanel(
     title = "Load Data",
+    # move notifications and progress bar to the center of screen
+    tags$head(
+      tags$style(
+        HTML(".shiny-notification {
+              width: 400px;
+              position:fixed;
+              top: calc(30%);
+              left: calc(30%);
+              }
+              "
+            )
+        )
+    ),
     sidebarLayout(
 
       ##################################################################
@@ -690,6 +703,32 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
     observeEvent(input$reset_app, {
       session$reload()
+    })
+
+    # download database for selected species
+    observeEvent(input$select_org, {
+      ix <- which(idep_data$org_info$id == input$select_org)
+      db_file <- idep_data$org_info[ix, "file"]
+      dbname <- paste0(DATAPATH, "db/", db_file)
+      if (!file.exists(dbname)) {
+        withProgress(message = "Download pathway DB for the selected species (5 minutes)", {
+          incProgress(0.2)
+          # download org_info and demo files to current folder
+          options(timeout = 300)
+          download.file(
+            url = paste0(db_url, db_ver, "/db/", db_file, ".gz"),
+            destfile = paste0(dbname, ".gz"),
+            mode = "wb",
+            quiet = FALSE
+          )
+          incProgress(0.7)
+          R.utils::gunzip(
+            paste0(dbname, ".gz"), 
+            remove = TRUE
+          ) # untar and unzip the files
+        })
+
+      }
     })
 
     # Species match table ----------
