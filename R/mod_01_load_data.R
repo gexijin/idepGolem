@@ -820,7 +820,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           )
         ),
         htmlOutput(ns("file_format")),
-        includeHTML(app_sys("app/www/messages.html")),
+        #includeHTML(app_sys("app/www/messages.html")),
         br(),
         img(
           src = "www/flowchart.png",
