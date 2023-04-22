@@ -35,11 +35,46 @@ https://cran.r-project.org/doc/manuals/r-patched/R-admin.html#Installing-package
   installation of package ‘/tmp/RtmpCpiUsZ/file2326c2a50656f/PGSEA_1.60.0.tar.gz’ had non-zero exit status
 ```
 
-For some Linux OS igraph package may not install correctly look at this [issue](https://github.com/igraph/rigraph/issues/275)
-and then retry the above commands.
+### Linux (tested with Ubuntu v. 22)
+1. Install R version 4.30  following [instructions](https://cloud.r-project.org/bin/linux/ubuntu/). 
+2. Install [cMake](https://cmake.org/install/), required by the R package nloptr.
+```
+wget https://github.com/Kitware/CMake/releases/download/v3.26.3/cmake-3.26.3.tar.gz
+tar -xzvf cmake-3.26.3.tar.gz
+cd cmake-3.26.3
+./bootstrap
+make 
+make install
+```
+3. Install [libproj-dev](), required by the ggalt package.
+```
+sudo apt update
+sudo apt install libproj-dev
+```
+4. Install other Linux packages
+```
+sudo apt install -y \
+libcurl4-openssl-dev \
+libxml2-dev \
+libxml2  \
+libssl-dev \
+libudunits2-dev \
+libmariadbclient-dev \
+libpng-dev
+```
+5. Start R and run these:
+```{R}
+install.packages("devtools")
+devtools::install_github(
+  "https://github.com/gexijin/idepGolem/tree/data107",
+  upgrade =  "never"
+)
+```
 
-How to run the app locally in the browser use the following command
 
+## Run iDEP locally
+
+From the R console:
 ```{R}
 > idepGolem::run_app() 
 Loading required package: shiny
