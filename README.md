@@ -17,11 +17,11 @@ Most of modern laptop can run iDEP locally. Minimum storage 10GB. Minimum Memory
 2. [Enable WSL2](https://learn.microsoft.com/en-us/windows/wsl/install-manual)
 3. Start a Command Prompt on Windows. Press the Windows key + R keys on your keyboard. Type cmd, and then click OK. For other methods see [here](https://www.howtogeek.com/235101/10-ways-to-open-the-command-prompt-in-windows-10/).
 4. Pull the iDEP Docker image from the Command Prompt
-```
+```console
 docker pull gexijin/idep:latest
 ```
 5. Run docker container from Command Prompt
-```
+```console
 docker run --pull -d --name idep -p 3838:3838 gexijin/idep:latest 
 ```
 6. You can now use iDEP locally by starting your web browser and enter localhost:3838 in the web address.
@@ -64,19 +64,36 @@ install.packages("golem")
 5. Open the downloaded reporsitory from R. The Shiny app can be started by running the ```run_dev.R``` script. If R packages are missing, install them and try again. The app is devided into 11 Shiny Modules.
 
 
-### Linux: Docker container (~10 minutes)
-1. Install Docker Desktop follow instructions [here](https://docs.docker.com/engine/install/). Many Linux systems have Docker installed by default. On Ubuntu, I used the following scripts.
+### MacOS: Docker container (~10 minutes on MacBook Air)
+1. Download Docker Desktop follow instructions [here](https://www.docker.com/products/docker-desktop/). Make sure you choose the correct version based on your CPU type. For MacBook Air, I chose ```Apple Chip```. If you use an Mac computer that uses Intel CPU, choose the ```Intel Chip```.
+2. Install Docker Desktop. First double-click the downloaded Docker.dmg file in the Downloads folder. Drag the Docker icon into the Application folder from the pop-up window. From Lunch pad, or the Application folder, click on the Docker icon. Click ```Open``` when asked. Accept the Terms and the Docker engine is running.
+3. Start a Terminal window by clicking the Launchpad, and type ```terminal``` in the search field. Then click the Terminal app. 
+4. Pull the iDEP Docker image using this command in the Terminal window.
+```console
+docker pull gexijin/idep:latest
 ```
+5. Run docker container from Linux command line.
+```console
+docker run --pull -d --name idep -p 3838:3838 gexijin/idep:latest 
+```
+6. You can now use iDEP locally by starting your web browser and enter localhost:3838 in the web address.
+
+Note that the Docker container needs to be kept running as a webserver. If you restart your computer or accidentally closed the Command Prompt window, you need to re-run Step 5. 
+
+
+### Linux: Docker container (~10 minutes)
+1. Install Docker Engine follow instructions [here](https://docs.docker.com/engine/install/). Many Linux systems have Docker installed by default. On Ubuntu, I used the following scripts.
+```console
 cd
 curl -fsSL https://get.docker.com -o install_docker.sh
 sudo sh install_docker.sh
 ```
 2. Pull the iDEP Docker image from the Linux command line.
-```
+```console
 docker pull gexijin/idep:latest
 ```
 3. Run docker container from Linux command line.
-```
+```console
 docker run --pull -d --name idep -p 3838:3838 gexijin/idep:latest 
 ```
 4. You can now use iDEP locally by starting your web browser and enter localhost:3838 in the web address. If the is an internal server, replace the localhost with the IP address and make sure that the port 3838 is open.
