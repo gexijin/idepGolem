@@ -10,18 +10,18 @@ After being installed as an R package, iDEP can be started from R using the ```i
 A faster alterative is to use the [iDEP Docker image](https://hub.docker.com/repository/docker/gexijin/idep/general) on DockerHub. The only requirement is install Docker software on Linux, and Docker Desktop on Windows or MacOS.
 
 ### System requirements
-Most of modern laptop can run iDEP locally. Minimum storage 10GB. Minimum Memory 2GB. 
+Most of modern laptop can run iDEP locally. Minimum storage 10GB. Minimum Memory 4GB. 
 
 ### Windows: Docker Desktop (~20 minutes, recommended)
 1. Install [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/)
 2. Start Windows PowerShell as an **Administrator**. From Windows search bar, type **PowerShell** to find the Windows PowerShell app. And then select **Run as an Administrator**. See [here](https://www.howtogeek.com/742916/how-to-open-windows-powershell-as-an-admin-in-windows-10/) for detailed steps. 
 3. [Enable WSL2](https://learn.microsoft.com/en-us/windows/wsl/install-manual)
 4. Start the Docker app. From Windows search bar, type **Docker**, and then select Run. Accept the terms when asked. The Docker engine is now running in the background.
-5. Pull the iDEP Docker image from the Command Prompt
+5. Pull the iDEP Docker image from PowerShell command line.
 ```console
 docker pull gexijin/idep:latest
 ```
-5. Run docker container from Command Prompt
+5. Run docker container from PowerShell.
 ```console
 docker run --pull -d --name idep -p 3838:3838 gexijin/idep:latest 
 ```
