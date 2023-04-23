@@ -4,7 +4,7 @@
 
 iDEP is an bioinformatics tool for analyzing gene expression data graphically, interactively and reproducibly. Hosted at [http://bioinformatics.sdstate.edu](<http:://bioinformatics.sdstate.edu/idep11/>), iDEP is developed as an R package based on the [Golem framework](https://thinkr-open.github.io/golem/).
 
-## Run iDEP locally by installing the R package or using a Docker container
+## Run iDEP locally as an R package or via a Docker container
 After redesigning our database, the new iDEP can be easily run on your laptop or a local server. Please note that iDEP is being updated frequently. If you run locally, please upgrade to our most recent version on a monthly basis. 
 After being installed as an R package, iDEP can be started from R using the ```iDEP::run_app()``` command. This method is time-consuming as it requires the installation of all of the 355 dependent R packages, which takes about an hour on Windows 10. It can take much more time for Mac or Linux users, as many of these R packages require trouble-shooting. 
 A faster alterative is to use the [iDEP Docker image](https://hub.docker.com/repository/docker/gexijin/idep/general) on DockerHub. The only requirement is install Docker software on Linux, and Docker Desktop on Windows or MacOS.
