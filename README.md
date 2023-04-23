@@ -14,9 +14,10 @@ Most of modern laptop can run iDEP locally. Minimum storage 10GB. Minimum Memory
 
 ### Windows: Docker Desktop (~20 minutes, recommended)
 1. Install [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/)
-2. [Enable WSL2](https://learn.microsoft.com/en-us/windows/wsl/install-manual)
-3. Start a Command Prompt on Windows. Press the Windows key + R keys on your keyboard. Type cmd, and then click OK. For other methods see [here](https://www.howtogeek.com/235101/10-ways-to-open-the-command-prompt-in-windows-10/).
-4. Pull the iDEP Docker image from the Command Prompt
+2. Start Windows PowerShell as an **Administrator**. From Windows search bar, type **PowerShell** to find the Windows PowerShell app. And then select **Run as an Administrator**. See [here](https://www.howtogeek.com/742916/how-to-open-windows-powershell-as-an-admin-in-windows-10/) for detailed steps. 
+3. [Enable WSL2](https://learn.microsoft.com/en-us/windows/wsl/install-manual)
+4. Start the Docker app. From Windows search bar, type **Docker**, and then select Run. Accept the terms when asked. The Docker engine is now running in the background.
+5. Pull the iDEP Docker image from the Command Prompt
 ```console
 docker pull gexijin/idep:latest
 ```
