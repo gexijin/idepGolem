@@ -6,8 +6,10 @@ This is the Shiny app of [iDEP](<http:://bioinformatics.sdstate.edu/idep11/>), d
 iDEP is a online analytics tool that enables uers to analyze gene expression data graphically, interactively and reproducibly. 
 
 
-## Installation
-
+## Local Installation
+After redesigning our database, the new iDEP can be easily run on your laptop or a local server. Please note that iDEP is being updated frequently. If you run locally, please upgrade to our most recent version on a monthly basis. 
+iDEP can be installed as an R package and be started from R using the iDEP::run_app() command. This method is time-consuming as it requires the installation of all of the 355 dependent R packages. This is takes about an hour on Windows 10. But for Mac or Linux users, many of these R packages require the installation of Linux packages such as libssl2, etc. 
+An easeir method is to use the [iDEP Docker image](https://hub.docker.com/repository/docker/gexijin/idep/general) hosted on DockerHub.
 ### Windows. Method 1. installation of R package
 This takes about one hour. See below for running on Windows using Docker Desktop.
 1. Install a [recent version of R](https://cloud.r-project.org/) such as R 4.30. 
