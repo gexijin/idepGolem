@@ -28,6 +28,7 @@ if(!file.exists(org_info_file)) {
   org_info_file <- paste0(DATAPATH, "demo/orgInfo.db")
 }
 
+
 db_url <- "http://bioinformatics.sdstate.edu/data/"
 
 

@@ -36,8 +36,10 @@ Note that the Docker container needs to be kept running as a webserver. If you r
 3. Start R and run these commands. It takes about an hour to install the 355 dependencies! If there are issues with the installation of some of the individual packages, you need to resolve the issues and try to install them.
 
 ```{R}
+
 install.packages("devtools")
 devtools::install_github("https://github.com/gexijin/idepGolem")
+
 ```
 You might get the following warnings, which can be ignored.
 
