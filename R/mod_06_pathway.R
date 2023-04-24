@@ -13,12 +13,25 @@ mod_06_pathway_ui <- function(id) {
     title = "Pathway",
     sidebarLayout(
       sidebarPanel(
+#        actionButton(
+#          inputId = ns("submit_pathway_button"),
+#          label = "Submit",
+#          style = "float:right"
+#        ),
+#        tippy::tippy_this(
+#          ns("submit_pathway_button"),
+#         "Run pathway analysis",
+#          theme = "light-border"
+#        ),
+#        tags$style(
+#          "#pathway-submit_pathway_button{font-size: 16px;color: red}"
+#        ),
         htmlOutput(
           outputId = ns("list_comparisons_pathway")
         ),
         tags$style(
           type = "text/css",
-          "#pathway-list_comparisons_pathway { width:100%;   margin-top:-12px}"
+          "#pathway-list_comparisons_pathway { width:100%; margin-top:-5px}"
         ),
         selectInput(
           inputId = ns("pathway_method"),
@@ -99,11 +112,6 @@ mod_06_pathway_ui <- function(id) {
           type = "text/css",
           "#pathway-n_pathway_show { width:100%;   margin-top:-12px}"
         ),
-        checkboxInput(
-          inputId = ns("absolute_fold"),
-          label = "Use absolute values of fold changes for GSEA and GAGE",
-          value = FALSE
-        ),
         numericInput(
           inputId = ns("gene_p_val_cutoff"),
           label = "Remove genes with big FDR before pathway analysis:",
@@ -115,6 +123,21 @@ mod_06_pathway_ui <- function(id) {
         tags$style(
           type = "text/css",
           "#pathway-gene_p_val_cutoff { width:100%;   margin-top:-12px}"
+        ),
+        checkboxInput(
+          inputId = ns("absolute_fold"),
+          label = "Use absolute values of fold changes for GSEA and GAGE",
+          value = FALSE
+        ),
+        checkboxInput(
+          inputId = ns("show_pathway_id"),
+          label = "Show pathway IDs in results",
+          value = FALSE
+        ),
+        tippy::tippy_this(
+          ns("show_pathway_id"),
+          "If selected, pathway IDs, such as Path:mmu04115 and GO:0042770,  will be appended to pathway name.",
+          theme = "light-border"
         ),
         h6("* Warning! The many combinations can lead to false positives in pathway analyses."),
         # Download report button
@@ -321,7 +344,10 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     # GMT choices for enrichment ----------
     output$select_go_selector <- renderUI({
       req(!is.null(pre_process$gmt_choices()))
-      req(input$pathway_method != 5)
+
+      #This make it reactive: every time method changes, it reset to KEGG.
+      #req(input$pathway_method != 5)
+
       # if there is KEGG, use KEGG as default
       selected <- "GOBP"
       if ("KEGG" %in% pre_process$gmt_choices()) {
@@ -516,6 +542,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       return(gene_sets)
     })
 
+    #gage_pathway_data <- eventReactive(input$submit_pathway_button, {
     gage_pathway_data <- reactive({
       req(input$pathway_method == 1)
       req(!is.null(deg$limma()))
@@ -546,6 +573,11 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         if (ncol(res) > 1) {
           # add URL
           ix <- match(res[, 2], gene_sets()$pathway_info$description)
+
+          # remove pathway ID  only in Ensembl species
+          if (!input$show_pathway_id && pre_process$select_org() > 0) {
+            res[, 2] <- remove_pathway_id(res[, 2], input$select_go)
+          }
           res[, 2] <- hyperText(
             res[, 2],
             gene_sets()$pathway_info$memo[ix]
@@ -584,13 +616,23 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         req(input$pathway_method == 2)
         withProgress(message = "Running PGSEA...", {
           incProgress(0.2)
+
+          # only remove pathway ID for Ensembl species
+          show_pathway_id <- input$show_pathway_id
+          # always show pathway ID for STRING species
+          if (pre_process$select_org() < 0) {
+            show_pathway_id <- TRUE
+          }
+
           plot_pgsea(
             my_range = c(input$min_set_size, input$max_set_size),
             processed_data = pre_process$data(),
             contrast_samples = contrast_samples(),
             gene_sets = gene_sets()$gene_lists,
             pathway_p_val_cutoff = input$pathway_p_val_cutoff,
-            n_pathway_show = input$n_pathway_show
+            n_pathway_show = input$n_pathway_show,
+            select_go = input$select_go,
+            show_pathway_id = show_pathway_id
           )
         })
       },
@@ -645,6 +687,10 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         if (ncol(res) > 1) {
           # add URL
           ix <- match(res[, 2], gene_sets()$pathway_info$description)
+          # remove pathway ID, but only in Ensembl species
+          if (!input$show_pathway_id && pre_process$select_org() > 0) {
+            res[, 2] <- remove_pathway_id(res[, 2], input$select_go)
+          }
           res[, 2] <- hyperText(
             res[, 2],
             gene_sets()$pathway_info$memo[ix]
@@ -689,6 +735,14 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         req(input$pathway_method == 4)
         withProgress(message = "Running PGSEA on all samples ...", {
           incProgress(0.2)
+
+          # only remove pathway ID for Ensembl species
+          show_pathway_id <- input$show_pathway_id
+          # always show pathway ID for STRING species
+          if (pre_process$select_org() < 0) {
+            show_pathway_id <- TRUE
+          }
+
           pgsea_plot_all(
             go = input$select_go,
             my_range = c(input$min_set_size, input$max_set_size),
@@ -696,7 +750,9 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
             select_contrast = input$select_contrast,
             gene_sets = gene_sets()$gene_lists,
             pathway_p_val_cutoff = input$pathway_p_val_cutoff,
-            n_pathway_show = input$n_pathway_show
+            n_pathway_show = input$n_pathway_show,
+            select_go = input$select_go,
+            show_pathway_id = show_pathway_id
           )
         })
       },
@@ -810,6 +866,13 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
 
     # List of pathways with details
     pathway_list_data <- reactive({
+      # only remove pathway ID for Ensembl species
+      show_pathway_id <- input$show_pathway_id
+      # always show pathway ID for STRING species
+      if (pre_process$select_org() < 0) {
+        show_pathway_id <- TRUE
+      }
+
       get_pathway_list_data(
         pathway_method = input$pathway_method,
         gage_pathway_data = gage_pathway_data(),
@@ -819,7 +882,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         go = input$select_go,
         select_org = pre_process$select_org(),
         gene_info = pre_process$all_gene_info(),
-        gene_sets = gene_sets()$gene_lists
+        gene_sets = gene_sets()$gene_lists,
+        show_pathway_id = show_pathway_id
       )
     })
 

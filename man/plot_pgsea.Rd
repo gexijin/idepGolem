@@ -10,7 +10,9 @@ plot_pgsea(
   contrast_samples,
   gene_sets,
   pathway_p_val_cutoff,
-  n_pathway_show
+  n_pathway_show,
+  select_go,
+  show_pathway_id
 )
 }
 \arguments{
@@ -30,6 +32,10 @@ the database. See list returned from \code{\link{read_gene_sets}()}}
 enriched pathways}
 
 \item{n_pathway_show}{Number of significant pathways to show}
+
+\item{select_go}{pathway category.}
+
+\item{show_pathway_id}{Whether to show pathway id for GO and KEGG pathways}
 }
 \value{
 A heatmap plot with the rows as the significant
@@ -52,6 +58,8 @@ Other pathway functions:
 \code{\link{pathway_select_data}()},
 \code{\link{pgsea_data}()},
 \code{\link{pgsea_plot_all}()},
-\code{\link{reactome_data}()}
+\code{\link{reactome_data}()},
+\code{\link{remove_pathway_id_second}()},
+\code{\link{remove_pathway_id}()}
 }
 \concept{pathway functions}

@@ -249,6 +249,8 @@ pgsea_data <- function(processed_data,
 #' @param pathway_p_val_cutoff Significant p-value to determine
 #'  enriched pathways
 #' @param n_pathway_show Number of significant pathways to show
+#' @param select_go pathway category.
+#' @param show_pathway_id Whether to show pathway id for GO and KEGG pathways
 #'
 #' @export
 #' @return A heatmap plot with the rows as the significant
@@ -260,7 +262,9 @@ plot_pgsea <- function(my_range,
                        contrast_samples,
                        gene_sets,
                        pathway_p_val_cutoff,
-                       n_pathway_show) {
+                       n_pathway_show,
+                       select_go,
+                       show_pathway_id) {
   genes <- processed_data[, contrast_samples]
   if (length(gene_sets) == 0) {
     return(
@@ -281,6 +285,15 @@ plot_pgsea <- function(my_range,
         NULL
       )
     } else {
+
+       # remove pathway ID if selected so
+      if (!show_pathway_id) {
+        row.names(result$pg_data) <- remove_pathway_id_second(
+          strings = row.names(result$pg_data),
+          select_go = select_go
+        )
+      }
+
       PGSEA::smcPlot(
         result$pg_data,
         factor(subtype),
@@ -332,7 +345,7 @@ fgsea_data <- function(select_contrast,
                        absolute_fold,
                        pathway_p_val_cutoff,
                        n_pathway_show) {
-  nPerm <- 50000 # number of permutations
+  nPerm <- 10000 # number of permutations
 
   no_sig <- as.data.frame("No significant pathway found.")
   if (length(limma$top_genes) == 0) {
@@ -497,7 +510,8 @@ reactome_data <- function(select_contrast,
   fold <- convert_ensembl_to_entrez(
     query = fold,
     species = species,
-    org_info = idep_data$org_info
+    org_info = idep_data$org_info,
+    idep_data = idep_data
   )
 
 
@@ -580,7 +594,9 @@ reactome_data <- function(select_contrast,
 #'  enriched pathways
 #' @param n_pathway_show Number of pathways to return in final
 #'  result
-#'
+#' @param select_go pathway category.
+#' @param show_pathway_id Whether to show pathway id for GO and KEGG pathways
+#' 
 #' @export
 #' @return A data frame with the results of the pathway analysis.
 #'  The data frame has five columns for the direction of the
@@ -594,7 +610,9 @@ pgsea_plot_all <- function(go,
                            select_contrast,
                            gene_sets,
                            pathway_p_val_cutoff,
-                           n_pathway_show) {
+                           n_pathway_show,
+                           select_go,
+                           show_pathway_id) {
   if (length(gene_sets) == 0) {
     plot.new()
     text(0, 1, "No gene sets!")
@@ -611,6 +629,15 @@ pgsea_plot_all <- function(go,
       plot.new()
       text(0.5, 1, "No significant pathway found!")
     } else {
+
+       # remove pathway ID if selected so
+      if (!show_pathway_id) {
+        row.names(result$pg_data) <- remove_pathway_id_second(
+          strings = row.names(result$pg_data), 
+          select_go = select_go
+        )
+      }
+
       PGSEA::smcPlot(
         result$pg_data,
         factor(subtype),
@@ -845,6 +872,7 @@ pathway_select_data <- function(sig_pathways,
 #' @param gene_sets List of vectors with each vector being the
 #'  set of genes that correspond to a particular pathway in
 #'  the database \code{\link{read_gene_sets function}()}
+#' @param show_pathway_id whether to show pathway id or remove it
 #'
 #' @export
 #' @return A data frame with the pathway analysis statistics and
@@ -859,7 +887,8 @@ get_pathway_list_data <- function(pathway_method,
                                   go,
                                   select_org,
                                   gene_info,
-                                  gene_sets) {
+                                  gene_sets,
+                                  show_pathway_id) {
   pathways <- NULL
   if (pathway_method == 1) {
     if (!is.null(gage_pathway_data)) {
@@ -958,6 +987,14 @@ get_pathway_list_data <- function(pathway_method,
       }
       pathways$Genes[[i]] <- c(genes)
     }
+  }
+
+    # remove pathway ID if selected so
+  if (!show_pathway_id) {
+    pathways$Pathways <- remove_pathway_id(
+      strings = pathways$Pathways,
+      select_go = go
+    )
   }
 
   return(pathways)
@@ -1707,35 +1744,49 @@ kegg_pathway <- function(go,
 
 
   colnames(top_1) <- c("Fold", "FDR")
-  Species <- converted$species[1, 1]
+  species <- converted$species[1, 1]
 
   fold <- top_1[, 1]
   names(fold) <- rownames(top_1)
   fold <- convert_ensembl_to_entrez(
-    fold,
-    Species,
-    idep_data$org_info
+    query = fold,
+    species = species,
+    org_info = idep_data$org_info,
+    idep_data = idep_data
   )
+
+
   kegg_species_id <- idep_data$kegg_species_id
 
   kegg_species <- as.character(
-    kegg_species_id[which(kegg_species_id[, 1] == Species), 3]
+    kegg_species_id[which(kegg_species_id[, 1] == species), 3]
+  )
+
+  # look up KEGG species ID "hsa", "mmu"
+  kegg_species <- as.character(
+    idep_data$org_info$KEGG[which(idep_data$org_info$ensembl_dataset == species)]
   )
 
   if (nchar(kegg_species) <= 2) {
     return(blank)
   }
 
-
-  path_id <- kegg_pathway_id(
-    sig_pathways,
-    Species,
-    "KEGG",
-    select_org,
-    idep_data$gmt_files,
-    idep_data$org_info,
-    idep_data
-  )
+  # find pathway id
+  # "Path:hsa04110 Cell cycle" --> "hsa04110"
+  path_id <- gsub(" .*", "", sig_pathways)
+  path_id <- gsub("Path:", "", path_id)
+  
+  if(0){
+    path_id <- kegg_pathway_id(
+      sig_pathways,
+      species,
+      "KEGG",
+      select_org,
+      idep_data$gmt_files,
+      idep_data$org_info,
+      idep_data
+    )
+  }
 
   # Kegg pathway id not found.
   if (is.null(path_id)) {
@@ -1773,4 +1824,73 @@ kegg_pathway <- function(go,
     height = "100%",
     alt = "KEGG pathway image."
   )
+}
+
+
+
+#' Remove Pathway ID from pathway name 
+#' Only for GO and KEGG pathways
+#'
+#' Path:hsa00270 Cysteine and methionine metabolism 
+#'           --> Cysteine and methionine metabolism
+#'
+#' @param strings a vector of strings
+#' @param select_go   GOBP, GOCC, GOMP or KEGG or something else
+#'
+#' @export
+#' @return a vector of strings
+#'
+#' @family pathway functions
+remove_pathway_id <- function(strings, select_go) {
+    if (is.null(strings)) {
+      return(NULL)
+    } else {
+      if (select_go %in% c("GOBP", "GOCC", "GOMF", "KEGG")) {
+        strings <- sub(
+          "^\\S+\\s",
+          "",
+          strings
+        )
+        strings <- proper(strings)
+      }
+      return(strings)
+    }
+}
+
+#' Remove Pathway ID from pathway name in PGSEA
+#' Only for GO and KEGG pathways
+#'
+#' 5.40e-05 Path:hsa04110 Cell cycle
+#'     --> 5.40e-05 Cell cycle
+#'
+#' @param strings a vector of strings
+#' @param select_go   GOBP, GOCC, GOMP or KEGG or something else
+#'
+#' @export
+#' @return a vector of strings
+#'
+#' @family pathway functions
+remove_pathway_id_second <- function(strings, select_go) {
+    if (is.null(strings)) {
+      return(NULL)
+    } else {
+      if (select_go %in% c("GOBP", "GOCC", "GOMF", "KEGG")) {
+        FDRs <- gsub(" .*", "", strings)
+
+        # remove FDR
+        strings <- remove_pathway_id(
+          strings = strings,
+          select_go = select_go
+        )
+
+        # remove pathway ID
+        strings <- remove_pathway_id(
+          strings = strings,
+          select_go = select_go
+        )
+        # add FDR back
+        strings <- paste(FDRs, strings)
+      }
+      return(strings)
+    }
 }

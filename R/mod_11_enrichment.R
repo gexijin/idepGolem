@@ -19,7 +19,6 @@ column_selection <- list(
 mod_11_enrichment_ui <- function(id) {
   ns <- NS(id)
   library(shinyBS)
-
   tagList(
     fluidRow(
       column(
@@ -81,7 +80,23 @@ mod_11_enrichment_ui <- function(id) {
           max = 30,
           value = 10
         )
+      ),
+      column(
+        width = 4,
+        align = "left",
+        checkboxInput(
+          inputId = ns("show_pathway_id"),
+          label = "Show pathway IDs",
+          value = FALSE
+        ),
+        tippy::tippy_this(
+          ns("show_pathway_id"),
+          "If selected, pathway IDs, such as Path:mmu04115 and GO:0042770,  will be appended to pathway name.",
+          theme = "light-border"
+        )
       )
+
+
     ),
     tabsetPanel(
       id = ns("subtab"),
@@ -334,6 +349,7 @@ mod_11_enrichment_server <- function(id,
       shinyjs::toggle(id = "filtered_background", condition = input$customize_button)
       shinyjs::toggle(id = "remove_redudant", condition = input$customize_button)
       shinyjs::toggle(id = "top_pathways", condition = input$customize_button)
+      shinyjs::toggle(id = "show_pathway_id", condition = input$customize_button)
     })
     # GMT choices for enrichment ----------
     output$select_go_selector <- renderUI({
@@ -407,10 +423,11 @@ mod_11_enrichment_server <- function(id,
     pathway_table <- reactive({
       req(!is.null(gene_lists()))
       withProgress(message = "Enrichment Analysis", {
+        incProgress(0.2)
         pathway_info <- list()
         # disregard user selection use clusters for enrichment
         for (i in 1:length(gene_lists())) {
-          incProgress(1 / length(gene_lists()))
+          incProgress(0.2 + length(gene_lists()) / 20)
           gene_names_query <- gene_lists()[[i]]
           req(!is.null(input$select_go))
           gene_sets <- read_pathway_sets(
@@ -422,7 +439,6 @@ mod_11_enrichment_server <- function(id,
             idep_data = idep_data,
             gene_info = gene_info()
           )
-
           pathway_info[[names(gene_lists())[i]]] <- find_overlap(
             pathway_table = gene_sets$pathway_table,
             query_set = gene_sets$query_set,
@@ -440,6 +456,19 @@ mod_11_enrichment_server <- function(id,
           )
         }
       })
+      # remove pathway ID for GO and KEGG
+      # Path:hsa00270 Cysteine and methionine metabolism 
+      #           --> Cysteine and methionine metabolism
+                                    # result is not NULL
+      # pathway_info is a list of data frames: Selection, Upregulated, Downregulated, etc
+      if (!input$show_pathway_id && select_org() > 0) {
+        for (i in 1:length(pathway_info)) {
+          pathway_info[[i]]$Pathway <- remove_pathway_id(
+            strings = pathway_info[[i]]$Pathway,
+            select_go = input$select_go
+          )
+        }
+      }
       return(pathway_info)
     })
 

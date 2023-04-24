@@ -13,7 +13,8 @@ get_pathway_list_data(
   go,
   select_org,
   gene_info,
-  gene_sets
+  gene_sets,
+  show_pathway_id
 )
 }
 \arguments{
@@ -42,6 +43,8 @@ gene info from the database query with the User gene IDs}
 \item{gene_sets}{List of vectors with each vector being the
 set of genes that correspond to a particular pathway in
 the database \code{\link{read_gene_sets function}()}}
+
+\item{show_pathway_id}{whether to show pathway id or remove it}
 }
 \value{
 A data frame with the pathway analysis statistics and
@@ -64,6 +67,8 @@ Other pathway functions:
 \code{\link{pgsea_data}()},
 \code{\link{pgsea_plot_all}()},
 \code{\link{plot_pgsea}()},
-\code{\link{reactome_data}()}
+\code{\link{reactome_data}()},
+\code{\link{remove_pathway_id_second}()},
+\code{\link{remove_pathway_id}()}
 }
 \concept{pathway functions}

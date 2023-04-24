@@ -10,15 +10,27 @@
 #' @name fct_database.R
 NULL
 
-
+db_ver <- "data107"
 # if environmental variable is not set, use relative path
 DATAPATH <- Sys.getenv("IDEP_DATABASE")[1]
 if (nchar(DATAPATH) == 0) {
-  DATAPATH <- "../../data/data104b/"
+  DATAPATH <- paste0("../../data/", db_ver, "/")
 }
 
 #sometimes people forget to include the last "/"
 DATAPATH <- paste0(DATAPATH, "/")
+
+#DATAPATH <- "C:/work/iDEP_data/data107/"
+
+org_info_file <- paste0(DATAPATH, "demo/orgInfo.db")
+if(!file.exists(org_info_file)) {
+  DATAPATH <- paste0("./", db_ver, "/")
+  org_info_file <- paste0(DATAPATH, "demo/orgInfo.db")
+}
+
+
+db_url <- "http://bioinformatics.sdstate.edu/data/"
+
 
 #' Connect to the convertIDs database and return the
 #' objects.
@@ -30,11 +42,50 @@ DATAPATH <- paste0(DATAPATH, "/")
 #' @export
 #' @return Database connection.
 connect_convert_db <- function(datapath = DATAPATH) {
+  if (!file.exists(org_info_file)) {
+    # download org_info and demo files to current folder
+    withProgress(message = "Download demo data and species database", {
+      incProgress(0.2)
+      file_name <- paste0(db_ver, ".tar.gz")
+      options(timeout = 300)
+      download.file(
+        url = paste0(db_url, db_ver, "/", file_name),
+        destfile = file_name,
+        mode = "wb",
+        quiet = FALSE
+      )
+      untar(file_name) # untar and unzip the files
+    })
+  }
+
   return(DBI::dbConnect(
     drv = RSQLite::dbDriver("SQLite"),
-    dbname = paste0(datapath, "convertIDs.db"),
+    dbname = org_info_file,
     flags = RSQLite::SQLITE_RO
   ))
+}
+
+
+#' Connect to the convertIDs database for the species and return the
+#' objects.
+#'
+#' Create a database connection with the DBI package.
+#'
+#' @param datapath Folder path to the data file
+#' @param select_org The slected species
+#' @param idep_data  Data object that includes org_info
+#'
+#' @export
+#' @return Database connection.
+connect_convert_db_org <- function(datapath = DATAPATH, select_org, idep_data) {
+  ix <- which(idep_data$org_info$id == select_org)
+  db_file <- idep_data$org_info[ix, "file"]
+  return(try(
+    DBI::dbConnect(
+    drv = RSQLite::dbDriver("SQLite"),
+    dbname = paste0(datapath, "db/", db_file),
+    flags = RSQLite::SQLITE_RO
+  )))
 }
 
 
@@ -62,52 +113,24 @@ connect_convert_db <- function(datapath = DATAPATH) {
 #' 13. species_choice: list of species for populating selection.
 #'
 get_idep_data <- function(datapath = DATAPATH) {
-  # if prepared RData files exists, return the objects.
-  # file is prepared with this command
-  #  saveRDS(get_idep_data(), file="prepared_data.RData", compress=FALSE)
-  # then this file needs to be copied to /data_go/
-  # BE CAREFUL: the RDS file is not checked. It should be updated if the files
-  # change.
-  if (file.exists(paste0(datapath, "data_go/prepared_data.RData"))) {
-    return(readRDS(paste0(datapath, "data_go/prepared_data.RData")))
-  }
-  # Code below will not be executed if RData file exists.
 
-  kegg_species_id <- read.csv(paste0(datapath, "data_go/KEGG_Species_ID.csv"))
-
-  gmt_files <- list.files(
-    path = paste0(datapath, "pathwayDB"),
-    pattern = ".*\\.db"
-  )
-  gmt_files <- paste(datapath,
-    "pathwayDB/", gmt_files,
-    sep = ""
-  )
-
-  gene_info_files <- list.files(
-    path = paste0(datapath, "geneInfo"),
-    pattern = ".*GeneInfo\\.csv"
-  )
-  gene_info_files <- paste(datapath,
-    "geneInfo/", gene_info_files,
-    sep = ""
-  )
+  conn_db <- connect_convert_db()
 
   # demo_data_info.csv file
   # columns: ID, expression, design, type, name
   # ID column must be unique
   # The type column 1- read counts, 2- normalized , 3 LFC&Pval
-  # The files must be available in the data_go folder of the database.
+  # The files must be available in the demo folder of the database.
   # Leave blank if design file is missing
   # Default file have smallest ID, within the same type.
 
   demo_file_info <- read.csv(
-    paste0(datapath, "data_go/demo_data_info.csv")
+    paste0(datapath, "demo/demo_data_info.csv")
   )
   # add path for expression matrix
   demo_file_info$expression <- paste0(
     datapath,
-    "data_go/",
+    "demo/",
     demo_file_info$expression
   )
 
@@ -115,83 +138,79 @@ get_idep_data <- function(datapath = DATAPATH) {
   ix <- which(nchar(demo_file_info$design) > 2)
   demo_file_info$design[ix] <- paste0(
     datapath,
-    "data_go/",
+    "demo/",
     demo_file_info$design[ix]
   )
 
-  conn_db <- connect_convert_db()
-
-  quotes <- DBI::dbGetQuery(
-    conn = conn_db,
-    statement = "select * from quotes"
-  )
-  quotes <- paste0(
-    "\"", quotes$quotes,
-    "\"", " -- ", quotes$author, ".       "
-  )
-
-  string_species_go_data <- read.csv(paste0(
-    datapath,
-    "data_go/STRING11_species.csv"
-  ))
-
   org_info <- DBI::dbGetQuery(
-    con = conn_db,
-    statement = "select distinct * from orgInfo"
+    conn = conn_db,
+    statement = "select * from orgInfo;"
   )
-  org_info <- org_info[order(org_info$name), ]
-
   annotated_species_count <- sort(table(org_info$group))
-
-  go_levels <- DBI::dbGetQuery(
-    conn = conn_db,
-    statement = "select distinct id, level from GO
-         WHERE GO = 'biological_process'"
-  )
-
-  go_level_2_terms <- go_levels[which(go_levels$level %in% c(2, 3)), 1]
-
-  id_index <- DBI::dbGetQuery(
-    conn = conn_db,
-    statement = "select distinct * from idIndex"
-  )
 
   species_choice <- setNames(as.list(org_info$id), org_info$name2)
   species_choice <- append(
     setNames("NEW", "**NEW SPECIES**"),
     species_choice
   )
-  species_choice <- append(
-    setNames("BestMatch", "Best matching species"),
-    species_choice
-  )
+
+  #species_choice <- append(
+  #  setNames("BestMatch", "Best matching species"),
+  #  species_choice
+  #)
   top_choices <- c(
-    "Best matching species", "**NEW SPECIES**", "Human", "Mouse", "Rat", "Cow",
+    #"Best matching species", 
+    #"**NEW SPECIES**", 
+    "Human", "Mouse", "Rat", "Cow",
     "Zebrafish", "Pig", "Chicken", "Macaque", "Dog", "Drosophila melanogaster",
     "Caenorhabditis elegans", "Saccharomyces cerevisiae",
     "Arabidopsis thaliana", "Zea mays", "Glycine max",
     "Oryza sativa Indica Group", "Oryza sativa Japonica Group", "Vitis vinifera"
   )
+
   other_choices <- names(species_choice)[
     !(names(species_choice) %in% top_choices)
   ]
   species_choice <- species_choice[c(top_choices, other_choices)]
+  #org_info <- org_info[order(org_info$group), ]
+  ix <- match(org_info$name2, top_choices)
+  org_info <- org_info[order(ix), ]
+  org_info <- org_info[order(org_info$group == "STRINGv11.5"), ]
+  # GO levels
+  go_levels <- DBI::dbGetQuery(
+    conn = conn_db,
+    statement = "select distinct id, level from GO
+         WHERE GO = 'biological_process'"
+  )
+  go_level_2_terms <- go_levels[which(go_levels$level %in% c(2, 3)), 1]
 
+  quotes <- DBI::dbGetQuery(
+    conn = conn_db,
+    statement = "select quotes from quotes;"
+  )
+  quotes <- quotes[, 1]
 
   DBI::dbDisconnect(conn = conn_db)
 
+
+  # id_index <- DBI::dbGetQuery(
+  #  conn = conn_db,
+  #  statement = "select distinct * from idIndex"
+  # )
+
+
   return(list(
-    kegg_species_id = kegg_species_id,
-    gmt_files = gmt_files,
-    gene_info_files = gene_info_files,
+#    kegg_species_id = kegg_species_id,
+#    gmt_files = gmt_files,
+#    gene_info_files = gene_info_files,
     demo_file_info = demo_file_info,
     quotes = quotes,
-    string_species_go_data = string_species_go_data,
+#    string_species_go_data = string_species_go_data,
     org_info = org_info,
     annotated_species_count = annotated_species_count,
     go_levels = go_levels,
     go_level_2_terms = go_level_2_terms,
-    id_index = id_index,
+#    id_index = id_index,
     species_choice = species_choice
   ))
 }
@@ -241,7 +260,20 @@ find_species_by_id_name <- function(species_id, org_info) {
   return(org_info[which(org_info$id == species_id), 3])
 }
 
-
+#' Find a species id by ensembl dataset name
+#'
+#' Find a species in the iDEP database with an
+#' ID.
+#'
+#' @param species_id Species ID to search the database with
+#' @param org_info iDEP data org_info file
+#'
+#' @export
+#' @return Only return the species name with this function.
+find_species_id_by_ensembl <- function(ensembl_dataset, org_info) {
+  # find species name use id
+  return(org_info[which(org_info$ensembl_dataset == ensembl_dataset), "id"])
+}
 
 #'  Convert gene IDs to ensembl data.
 #'
@@ -289,121 +321,50 @@ convert_id <- function(query,
     )
   }
 
-  conn_db <- connect_convert_db()
+  conn_db <- connect_convert_db_org(
+    select_org = select_org,
+    idep_data = idep_data
+  )
 
-  # if best match species--------------------------------------------------
-  if (select_org == idep_data$species_choice[[1]]) {
-    # First send a query to determine the species
-    # nested SQL to determine the number of query
-    # genes matched to species, idType combinations
-    query_species <- paste0(
-      "SELECT species, idType, COUNT(species)
-      as freq FROM
-      (SELECT DISTINCT id, species, idType
-        FROM mapping WHERE id IN ",
-      test_query_string,
-      ")  GROUP BY species,idType"
-    )
+  # if database connection error
+  # see ? try
+  if(inherits(conn_db, "try-error")) {
+    return(NULL)
+  }
 
-    matched <- DBI::dbGetQuery(conn_db, query_species)
-    if (dim(matched)[1] == 0) {
-      return(NULL)
-    }
 
-    # for each species only keep the idType with most genes
-    matched <- matched[order(-matched$freq), ]
-    matched <- matched[!duplicated(matched$species), ]
+  # if species is selected ---------------------------------------------------
+  query_statement <- paste0(
+    "select id,ens,idType from mapping where id IN ",
+    query_string
+  )
 
-    sorted <- matched$freq
-    names(sorted) <- paste(matched$species, matched$idType)
-    sorted <- sort(sorted, decreasing = TRUE)
+  result <- DBI::dbGetQuery(conn_db, query_statement)
 
-    # Try to use Ensembl instead of STRING-db genome annotation
-    if (length(sorted) > 1) { # if more than 1 species matched
-      if (sorted[1] <= sorted[2] * 1.1 # if the #1 species and #2 are close
-      && as.numeric(gsub(" .*", "", names(sorted[1]))) < 0 # STRINGdb
-      && as.numeric(gsub(" .*", "", names(sorted[2]))) > 0 # ensembl
-      ) { # swap 1 and 2
-        tem <- sorted[2]
-        sorted[2] <- sorted[1]
-        names(sorted)[2] <- names(sorted)[1]
-        sorted[1] <- tem
-        names(sorted)[1] <- names(tem)
-      }
-    }
-    recognized <- names(sorted[1])
+  DBI::dbDisconnect(conn_db)
+  if (nrow(result) == 0) {
+    return(NULL)
+  }
 
-    matched <- sorted
-    matched <- as.data.frame(matched)
-    colnames(matched) <- "Freq"
+  # resolve multiple ID types, get the most matched
+  best_id_type <- as.integer(
+    names(
+      sort(
+        table(result$idType),
+        decreasing = TRUE
+      )
+    )[1]
+  )
+  result <- result[result$idType == best_id_type, ]
 
-    # add species name "Mouse"
-    matched$name <- sapply(
-      X = as.numeric(gsub(" .*", "", row.names(matched))),
-      FUN = find_species_by_id_name,
+  matched <- as.data.frame(paste(
+    "Selected:",
+    find_species_by_id_name(
+      species_id = select_org,
       org_info = idep_data$org_info
     )
+  ))
 
-    # Bind species and % matched genes such as "Mouse(93)"
-    matched$name <- paste0(matched$name,
-      " (", round(matched$Freq / n_sample_ids * 100, 0), "%)",
-      sep = ""
-    )
-    matched <- matched[, "name", drop = FALSE]
-
-    if (length(sorted) == 1) { # if only  one species matched # nolint
-      matched <- matched[, 1, drop = FALSE]
-    } else { # if more than one species matched
-      # remove duplicated
-      dup_species <- duplicated(gsub(" .*", "", row.names(matched)))
-      matched <- matched[!dup_species, , drop = FALSE]
-    }
-
-    query_statement <- paste0(
-      "select distinct id,ens,species,idType from mapping where ",
-      " species = '", gsub(" .*", "", recognized), "'",
-      " AND idType = '", gsub(".* ", "", recognized), "'",
-      " AND id IN ", query_string
-    )
-
-    result <- DBI::dbGetQuery(conn_db, query_statement)
-    if (dim(result)[1] == 0) {
-      return(NULL)
-    }
-  } else {
-    # if species is selected ---------------------------------------------------
-    query_statement <- paste0(
-      "select distinct id,ens,species,idType from mapping where species = '",
-      select_org,
-      "' AND id IN ",
-      query_string
-    )
-
-    result <- DBI::dbGetQuery(conn_db, query_statement)
-
-    if (nrow(result) == 0) {
-      return(NULL)
-    }
-
-    # resolve multiple ID types, get the most matched
-    best_id_type <- as.integer(
-      names(
-        sort(
-          table(result$idType),
-          decreasing = TRUE
-        )
-      )[1]
-    )
-    result <- result[result$idType == best_id_type, ]
-
-    matched <- as.data.frame(paste(
-      "Selected:",
-      find_species_by_id_name(
-        species_id = select_org,
-        org_info = idep_data$org_info
-      )
-    ))
-  }
 
   # Needs review---------------------------------------
   # one to many, keep one ensembl id, randomly
@@ -414,17 +375,17 @@ convert_id <- function(query,
   # remove duplicates in ensembl_gene_id
   # result <- result[which(!duplicated(result[, 2])), ]
 
-  colnames(matched) <- c("Matched Species (/%genes)")
+  colnames(matched) <- c("Matched Species")
+
   conversion_table <- result[, 1:2]
   colnames(conversion_table) <- c("User_input", "ensembl_gene_id")
-  conversion_table$Species <- sapply(
-    X = result[, 3],
-    FUN = find_species_by_id_name,
+  conversion_table$Species <- find_species_by_id_name(
+    species_id = as.integer(select_org),
     org_info = idep_data$org_info
   )
 
   species <- find_species_by_id(
-    species_id = result$species[1],
+    species_id = as.integer(select_org),
     org_info = idep_data$org_info
   )
 
@@ -432,7 +393,7 @@ convert_id <- function(query,
     origninal_ids = query_set,
     ids = unique(result[, 2]),
     species = species,
-    species_matched = matched,
+    species_match = matched,
     conversion_table = conversion_table
   ))
 }
@@ -455,7 +416,7 @@ convert_id <- function(query,
 #' @param idep_data Data built in to idep
 #' @param gene_info The gene info from the converted IDs and
 #'   the function gene_info()
-#'
+#' 
 #' @export
 #' @return This function returns a list with values that are
 #'   used in the find_overlap function. The list contains
@@ -502,48 +463,32 @@ read_pathway_sets <- function(all_gene_names_query,
     return(id_not_recognized)
   }
 
-  ix <- grep(converted$species[1, 1], idep_data$gmt_files)
-  total_genes <- converted$species[1, 7]
+  pathway <- connect_convert_db_org(
+    select_org = select_org,
+    idep_data = idep_data
+  )
 
-  # If selected species is not the default "bestMatch", use that species directly
-  if (select_org != "BestMatch") {
-    ix <- grep(
-      find_species_by_id(select_org, idep_data$org_info)[1, 1],
-      idep_data$gmt_files
-    )
-    total_genes <- idep_data$org_info[which(
-      idep_data$org_info$id == as.numeric(select_org)
-    ), 7]
+  # if database connection error
+  if(inherits(pathway, "try-error")) {
+    return(id_not_recognized)
   }
+
+  # does the db file has a categories table?
+  ix <- grep(
+    pattern = "pathway",
+    x = DBI::dbListTables(pathway)
+  )
 
   if (length(ix) == 0) {
     return(id_not_recognized)
   }
 
-  pathway_files <- idep_data$gmt_files[ix]
-  pathway <- DBI::dbConnect(
-    drv = RSQLite::dbDriver("SQLite"),
-    dbname = pathway_files,
-    flags = RSQLite::SQLITE_RO
-  )
-
   if (is.null(go)) {
     go <- "GOBP"
   }
 
-  sql_query <- paste(
-    "SELECT DISTINCT gene, pathwayID FROM pathway WHERE gene IN ('",
-    paste(query_set, collapse = "', '"), "')",
-    sep = ""
-  )
+  sql_query <- build_pathway_query(go, query_set)
 
-  if (go != "All") {
-    sql_query <- paste(
-      "SELECT DISTINCT gene,pathwayID FROM pathway WHERE category='", go, "'",
-      " AND gene IN ('", paste(query_set, collapse = "', '"), "')",
-      sep = ""
-    )
-  }
   result <- DBI::dbGetQuery(pathway, sql_query)
 
   if (dim(result)[1] == 0) {
@@ -561,11 +506,7 @@ read_pathway_sets <- function(all_gene_names_query,
   if (dim(pathway_ids)[1] == 0) {
     return(pathway_table <- NULL)
   } else {
-    # Convert pathways into lists
-    gene_sets <- lapply(
-      pathway_ids[, 1],
-      function(x) result[which(result$pathwayID == x), 1]
-    )
+
     pathway_info <- DBI::dbGetQuery(
       pathway,
       paste(
@@ -574,14 +515,34 @@ read_pathway_sets <- function(all_gene_names_query,
         sep = ""
       )
     )
-    ix <- match(pathway_ids[, 1], pathway_info[, 1])
+
+    # if duplicates pathway_info, remove
+    # sorted so that if some GO categories are repeated, keep the one with URL
+    pathway_info <- pathway_info[
+      order(
+        pathway_info$id,
+        pathway_info$memo,
+        decreasing = TRUE
+      ),
+    ]
+    pathway_info <- pathway_info[!duplicated(pathway_info$id), ]
+
     pathway_merge <- merge(
       x = pathway_ids,
       y = pathway_info,
       by.x = "pathway_id",
-      by.y = "id"
+      by.y = "id",
+      all = TRUE
     )
-    names(gene_sets) <- pathway_info[ix, 1]
+
+    # Convert pathways into lists
+    gene_sets <- lapply(
+      pathway_merge$pathway_id,
+      function(x) result[which(result$pathwayID == x), 1]
+    )
+    names(gene_sets) <- pathway_merge$description
+    # note this might cause errors if length differs.
+    # which could happen if 
     pathway_merge$gene_sets <- gene_sets
   }
 
@@ -613,8 +574,8 @@ read_pathway_sets <- function(all_gene_names_query,
   return(list(
     pathway_table = pathway_merge,
     query_set = query_set,
-    total_genes = total_genes,
-    pathway_files = pathway_files
+    total_genes = total_genes
+#    pathway_files = pathway_files
   ))
 }
 
@@ -640,6 +601,7 @@ read_pathway_sets <- function(all_gene_names_query,
 #' @param sub_pathway_files String designating file location for GMT files in
 #'   the database that contain information for the matched species. This string
 #'   is returned from \code{\link{read_pathway_sets}()}.
+#' @param select_org Species selected.
 #'
 #' @export
 #' @return Pathway gene set table for the background genes. Used
@@ -653,6 +615,7 @@ background_pathway_sets <- function(processed_data,
                                     go,
                                     pathway_table,
                                     idep_data,
+                                    select_org,
                                     sub_pathway_files) {
   query_set <- rownames(processed_data)
 
@@ -665,11 +628,14 @@ background_pathway_sets <- function(processed_data,
   #    }
   #  }
 
-  pathway <- DBI::dbConnect(
-    drv = RSQLite::dbDriver("SQLite"),
-    dbname = sub_pathway_files,
-    flags = RSQLite::SQLITE_RO
+  pathway <- connect_convert_db_org(
+    select_org = select_org,
+    idep_data = idep_data
   )
+  # if database connection error
+  if(inherits(pathway, "try-error")) {
+    return(NULL)
+  }
 
   if (length(intersect(query_set, sub_query)) == 0) {
     # If none of the selected genes are in background genes
@@ -683,26 +649,28 @@ background_pathway_sets <- function(processed_data,
   # Make sure the background set includes the query set
   query_set <- unique(c(query_set, sub_query))
 
-
-  sql_query <- "SELECT DISTINCT gene,pathwayID FROM pathway "
-  if (go != "All") {
-    sql_query <- paste0(sql_query, " WHERE category ='", go, "'")
+  if (is.null(go)) {
+    go <- "GOBP"
   }
 
-  sql_query <- paste0(
-    sql_query, " AND pathwayID IN ('",
-    paste(pathway_table$pathway_id, collapse = "', '"), "')"
-  )
+  # this is slow when gene lists are big
+  #sql_query <- build_pathway_query(go, query_set)
+  #results <- DBI::dbGetQuery(pathway, sql_query)
 
-  sql_query <- paste(
-    sql_query,
-    " AND gene IN ('",
-    paste(query_set, collapse = "', '"), "')",
-    sep = ""
-  )
+  # retrieve all pathways for the category
+  sql_query <- "SELECT gene, pathwayID FROM pathway "
+  if (go != "All") {
+    sql_query <- paste0(sql_query, " WHERE category = '", go, "'")
+  }
 
+  # since there are so many genes, this takes a long time
+  # we are not using the genes, just query all the pathways for the category
+  #sql_query <- build_pathway_query(go, query_set)
 
   results <- DBI::dbGetQuery(pathway, sql_query)
+
+  # only keep genes in the query_set, this is faster than query using SQL
+  results <- results[results$gene %in% query_set, ]
 
   if (dim(results)[1] == 0) {
     return(list(
@@ -767,36 +735,40 @@ gmt_category <- function(converted,
     return(id_not_recognized)
   }
 
-  ix <- grep(converted$species[1, 1], idep_data$gmt_files)
+  conn_db <- connect_convert_db_org(
+    select_org = select_org,
+    idep_data = idep_data
+  )
+
+  # if database connection error
+  if(inherits(conn_db, "try-error")) {
+    return(id_not_recognized)
+  }
+
+  # does the db file has a categories table?
+  ix <- grep(
+    pattern = "categories",
+    x = DBI::dbListTables(conn_db)
+  )
 
   if (length(ix) == 0) {
     return(id_not_recognized)
   }
 
-  # If selected species is not the default "bestMatch", use that species directly
-  if (select_org != idep_data$species_choice[[1]]) {
-    ix <- grep(
-      find_species_by_id(select_org, idep_data$org_info)[1, 1],
-      idep_data$gmt_files
-    )
-    if (length(ix) == 0) {
-      return(id_not_recognized)
-    }
-  }
-
-  pathway <- DBI::dbConnect(
-    drv = RSQLite::dbDriver("SQLite"),
-    dbname = idep_data$gmt_files[ix],
-    flags = RSQLite::SQLITE_RO
-  )
 
   # Generate a list of geneset categories such as "GOBP", "KEGG" from file
-  gene_set_category <- DBI::dbGetQuery(pathway, "select distinct * from categories")
+  gene_set_category <- DBI::dbGetQuery(conn_db, "select distinct * from categories")
+  DBI::dbDisconnect(conn_db)
+
   gene_set_category <- sort(gene_set_category[, 1])
   category_choices <- setNames(as.list(gene_set_category), gene_set_category)
 
   # Set order of popular elements
   top_choices <- c("GOBP", "GOCC", "GOMF", "KEGG")
+
+  # if KEGG or others are not in the list, remove
+  top_choices <- top_choices[top_choices %in% gene_set_category]
+
   other_choices <- names(category_choices)[
     !(names(category_choices) %in% top_choices)
   ]
@@ -807,8 +779,6 @@ gmt_category <- function(converted,
   names(category_choices)[match("GOCC", category_choices)] <- "GO Cellular Component"
   names(category_choices)[match("GOMF", category_choices)] <- "GO Molecular Function"
   category_choices <- append(setNames("All", "All available gene sets"), category_choices)
-
-  DBI::dbDisconnect(pathway)
 
   return(category_choices)
 }
@@ -829,7 +799,7 @@ gmt_category <- function(converted,
 #' @param select_org String designating with organism is being analyzed
 #' @param idep_data List of data returned from \code{\link{get_idep_data}()}
 #' @param my_range Vector of the (min_set_size, max_set_size)
-#'
+#' 
 #' @export
 #' @return A list with each entry a list of gene IDs that correspond to
 #'  a pathway.
@@ -849,46 +819,52 @@ read_gene_sets <- function(converted,
   if (is.null(query_set) || length(query_set) == 0) {
     return(id_not_recognized)
   }
-  ix <- grep(converted$species[1, 1], idep_data$gmt_files)
-  if (length(ix) == 0) {
+
+  pathway <- connect_convert_db_org(
+    select_org = select_org,
+    idep_data = idep_data
+  )
+
+# for testing
+#pathway <- DBI::dbConnect(
+#    drv = RSQLite::dbDriver("SQLite"),
+#    dbname = "C:/work/iDEP_data/data104b/pathwayDB/Human__hsapiens_gene_ensembl.db",
+#    flags = RSQLite::SQLITE_RO
+#  )
+# browser()
+  # if database connection error
+  if(inherits(pathway, "try-error")) {
     return(id_not_recognized)
   }
 
-  # If selected species is not the default "bestMatch", use that species directly
-  if (select_org != "BestMatch") {
-    ix <- grep(find_species_by_id(select_org)[1, 1], idep_data$gmt_files)
-    if (length(ix) == 0) {
-      return(id_not_recognized)
-    }
-  }
-  pathway <- DBI::dbConnect(
-    drv = RSQLite::dbDriver("SQLite"),
-    dbname = idep_data$gmt_files[ix],
-    flags = RSQLite::SQLITE_RO
+  # does the db file has a categories table?
+  ix <- grep(
+    pattern = "pathway",
+    x = DBI::dbListTables(pathway)
   )
 
+  if (length(ix) == 0) {
+    return(id_not_recognized)
+  }
   if (is.null(go)) {
     go <- "GOBP"
   }
 
-  sql_query <- "SELECT DISTINCT gene, pathwayID FROM pathway WHERE "
-
-  # faster if category is first
+  # retrieve all pathways for the category
+  sql_query <- "SELECT  gene, pathwayID FROM pathway "
   if (go != "All") {
-    sql_query <- paste0(sql_query, "  category ='", go, "' AND ")
+    sql_query <- paste0(sql_query, " WHERE category = '", go, "'")
   }
 
-  # Get Gene sets
-  sql_query <- paste(
-    sql_query,
-    " gene IN ('",
-    paste(query_set, collapse = "', '"),
-    "')",
-    sep = ""
-  )
-
+  # since there are so many genes, this takes a long time
+  # we are not using the genes, just query all the pathways for the category
+  #sql_query <- build_pathway_query(go, query_set)
 
   result <- DBI::dbGetQuery(pathway, sql_query)
+
+  # only keep genes in the query_set, this is faster than query using SQL
+  result <- result[result$gene %in% query_set, ]
+
   if (dim(result)[1] == 0) {
     return(list(x = as.data.frame("No matching species or gene ID file!")))
   }
@@ -904,8 +880,11 @@ read_gene_sets <- function(converted,
     gene_sets <- NULL
   }
 
-  # Convert pathways into lists like those generated by readGMT
-  gene_sets <- lapply(pathway_ids[, 1], function(x) result[which(result$pathwayID == x), 1])
+  # filter pathways
+  result <- result[result$pathwayID %in% pathway_ids[, 1], ]
+  # convert into lists using the split funciton.
+  gene_sets <- split(result$gene, result$pathwayID)
+
   pathway_info <- DBI::dbGetQuery(
     pathway,
     paste(
@@ -915,7 +894,8 @@ read_gene_sets <- function(converted,
       sep = ""
     )
   )
-  ix <- match(pathway_ids[, 1], pathway_info[, 1])
+  # add pathway name to gene sets
+  ix <- match(names(gene_sets), pathway_info[, 1])
   names(gene_sets) <- pathway_info[ix, 2]
   DBI::dbDisconnect(pathway)
   return(
@@ -935,21 +915,30 @@ read_gene_sets <- function(converted,
 #' @param species String designating the organism being analyzed
 #' @param org_info org_info file from the list returned from
 #'   \code{link{get_idep_data}()}
+#' @param idep_data  Data object with species info for connecting to database
 #'
 #'
 #' @export
 #' @return The queried genes with converted IDs.
 convert_ensembl_to_entrez <- function(query,
                                       species,
-                                      org_info) {
+                                      org_info,
+                                      idep_data) {
   query_set <- clean_gene_set(
     unlist(strsplit(toupper(names(query)), "\t| |\n|\\, "))
   )
+
   # Note uses species Identifying
   species_id <- org_info$id[which(org_info$ensembl_dataset == species)]
   # idType 6 for entrez gene ID
-  convert <- connect_convert_db()
-
+  convert <- connect_convert_db_org(
+    select_org = species_id,
+    idep_data = idep_data
+  )
+  # if database connection error
+  if(inherits(convert, "try-error")) {
+    return(NULL)
+  }
   id_type_entrez <- DBI::dbGetQuery(
     convert,
     paste(
@@ -964,8 +953,8 @@ convert_ensembl_to_entrez <- function(query,
   result <- DBI::dbGetQuery(
     convert,
     paste0(
-      "select  id,ens from mapping where species = '", species_id, "'",
-      " AND  idType ='", id_type_entrez, "' ",
+      "select  id,ens from mapping where ",
+      " idType ='", id_type_entrez, "' ",
       " AND ens IN ('", paste(query_set, collapse = "', '"), "')"
     )
   )
@@ -981,73 +970,32 @@ convert_ensembl_to_entrez <- function(query,
   return(tem)
 }
 
-#' Find pathway IDs for a KEGG description
+
+#' Create SQL query statement for reading pathway db
 #'
-#' From a pathway description find the KEGG ID.
+#' Convert an ID qeury for a species from the ensembl
+#' ID type to entrez type.
 #'
-#' @param pathway_description String providing description of a pathway in the
-#'  iDEP database, see the results from \code{\link{read_gene_Sets}()} for
-#'  options
-#' @param Species String designating the organism being analyzed
-#' @param GO String designating the portion of the database to query,
-#'   for this function, it should be "KEGG"
-#' @param select_org String designating the organism being analyzed
-#' @param gmt_files GMT files from the iDEP database
-#' @param org_info Organism information files from the iDEP
-#'  database
-#' @param idep_data List of data from \code{\link{get_idep_data}()}
-#'
+#' @param go  Pathway category "KEGG", "GOBP"
+#' @param query_set  List of genes
 #' @export
-#' @return Return the KEGG ID for the pathway.
-#'
-#' @seealso This function is used internally in \code{\link{kegg_pathway}()}
-kegg_pathway_id <- function(pathway_description,
-                            Species,
-                            GO = "KEGG",
-                            select_org,
-                            gmt_files,
-                            org_info,
-                            idep_data) {
-  ix <- grep(Species, gmt_files)
+#' @return The SQL SELECT statement
+build_pathway_query <- function(go, query_set) {
 
-  if (length(ix) == 0) {
-    return(NULL)
+  sql_query <- "SELECT gene, pathwayID FROM pathway WHERE "
+
+  # faster if category is first
+  if (go != "All") {
+    sql_query <- paste0(sql_query, " category = '", go, "' AND ")
   }
 
-  # If selected species is not the default "bestMatch", use that species directly
-  if (select_org != "BestMatch") {
-    ix <- grep(find_species_by_id(select_org)[1, 1], gmt_files)
-    if (length(ix) == 0) {
-      return(NULL)
-    }
-    total_genes <- org_info[which(org_info$id == as.numeric(select_org)), 7]
-  }
-  pathway <- DBI::dbConnect(
-    drv = RSQLite::dbDriver("SQLite"),
-    dbname = idep_data$gmt_files[ix],
-    flags = RSQLite::SQLITE_RO
+  # Get Gene sets
+  sql_query <- paste(
+    sql_query,
+    " gene IN ('",
+    paste(query_set, collapse = "', '"),
+    "')",
+    sep = ""
   )
-
-  # change Parkinson's disease to Parkinson\'s disease    otherwise SQL
-  pathway_description <- gsub("\'", "\'\'", pathway_description)
-
-  pathway_info <- DBI::dbGetQuery(
-    pathway,
-    paste(
-      " select * from pathwayInfo where description =  '",
-      pathway_description,
-      "' AND name LIKE '",
-      GO,
-      "%'",
-      sep = ""
-    )
-  )
-  DBI::dbDisconnect(pathway)
-
-  if (dim(pathway_info)[1] != 1) {
-    return(NULL)
-  }
-  tem <- gsub(".*:", "", pathway_info[1, 2])
-
-  return(gsub("_.*", "", tem))
+  return(sql_query)
 }

@@ -255,7 +255,7 @@ mod_03_clustering_ui <- function(id) {
               column(
                 width = 8,
                 # align = "right",
-                p("Broaden your browser window if there is overlap.-->"),
+                p("Broaden your browser window if there is overlap -->"),
                 checkboxInput(
                   inputId = ns("cluster_enrichment"),
                   label = strong("Show enrichment"),

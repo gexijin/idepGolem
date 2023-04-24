@@ -85,7 +85,8 @@ Imports:
     WGCNA,
     shinyBS,
     ggupset,
-    purrr
+    purrr,
+    R.utils
 biocViews: 
     Biobase,
     limma,

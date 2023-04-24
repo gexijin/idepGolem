@@ -11,7 +11,9 @@ pgsea_plot_all(
   select_contrast,
   gene_sets,
   pathway_p_val_cutoff,
-  n_pathway_show
+  n_pathway_show,
+  select_go,
+  show_pathway_id
 )
 }
 \arguments{
@@ -36,6 +38,10 @@ enriched pathways}
 
 \item{n_pathway_show}{Number of pathways to return in final
 result}
+
+\item{select_go}{pathway category.}
+
+\item{show_pathway_id}{Whether to show pathway id for GO and KEGG pathways}
 }
 \value{
 A data frame with the results of the pathway analysis.
@@ -59,6 +65,8 @@ Other pathway functions:
 \code{\link{pathway_select_data}()},
 \code{\link{pgsea_data}()},
 \code{\link{plot_pgsea}()},
-\code{\link{reactome_data}()}
+\code{\link{reactome_data}()},
+\code{\link{remove_pathway_id_second}()},
+\code{\link{remove_pathway_id}()}
 }
 \concept{pathway functions}

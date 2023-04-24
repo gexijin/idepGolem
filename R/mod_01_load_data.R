@@ -11,6 +11,19 @@ mod_01_load_data_ui <- function(id) {
   ns <- shiny::NS(id)
   tabPanel(
     title = "Load Data",
+    # move notifications and progress bar to the center of screen
+    tags$head(
+      tags$style(
+        HTML(".shiny-notification {
+              width: 400px;
+              position:fixed;
+              top: calc(30%);
+              left: calc(30%);
+              }
+              "
+            )
+        )
+    ),
     sidebarLayout(
 
       ##################################################################
@@ -20,33 +33,43 @@ mod_01_load_data_ui <- function(id) {
         # alternative UI output message for once expression data is loaded
         uiOutput(ns("load_data_alt")),
         # Species Match Drop Down ------------
-        strong("1. Optional: Select or search for species"),
-        fluidRow(
-          column(
-            width = 9,
-            selectInput(
-              inputId = ns("select_org"),
-              label = NULL,
-              choices = " ",
-              multiple = FALSE,
-              selectize = TRUE
-            )
-          ),
-          column(
-            width = 3,
-            # Species list and genome assemblies ----------
-            actionButton(
-              inputId = ns("genome_assembl_button"),
-              label = "Info"
-            )
-          ),
-          tippy::tippy_this(
-            ns("genome_assembl_button"),
-            "List of annotated species.",
-            theme = "light-border"
+        strong("1. Required: What species?"),
+        br(), br(),
+        conditionalPanel(
+          condition = "false",
+          selectInput(
+            inputId = ns("select_org"),
+            label = NULL,
+            choices = " ",
+            multiple = FALSE,
+            selectize = TRUE
           )
         ),
 
+        fluidRow(
+          column(
+            width = 6,
+            align = "center",
+            # Species list and genome assemblies ----------
+            actionButton(
+              inputId = ns("genome_assembl_button"),
+              label = "Search & select"
+            )
+          ),
+
+          column(
+            width = 6,
+            textOutput(ns("selected_species"))
+          )
+        ),
+    tags$head(tags$style("#load_data-selected_species{color: red;
+                                 font-size: 15px;
+                                 font-style: italic;
+                                 }"
+                         )
+              ),
+
+        br(),
         # Conditional .GMT file input bar ----------
         conditionalPanel(
           condition = 'input.select_org == "NEW"',
@@ -315,12 +338,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       available in the future.",
         style = "color:#6B1518"
       ),
-      tags$h5(
-        "If this server is busy, please use a mirror sever ",
-        a("http://ge-lab.org/idepg/", href = "http://149.165.154.220/idepg/"),
-        " hosted by NSF-funded JetStream2."
-      ),
-      tags$h4("How-to videos coming soon!"),
       easyClose = TRUE,
       size = "l"
     )
@@ -333,17 +350,40 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         shiny::modalDialog(
           size = "l",
           p("Search annotated species by common or scientific names,
-          or NCBI taxonomy id. If your species cannot be found here,
+          or NCBI taxonomy id. Click on a row to select. 
+          Use annotation in STRING-db as a last resort.  
+           If your species cannot be found here,
           you can still use iDEP without pathway analysis."),
+          easyClose = TRUE,
           DT::renderDataTable({
-            df <- idep_data$org_info[, c("ensembl_dataset", "name", "totalGenes")]
-            colnames(df) <- c("Ensembl/STRING-db ID", "Name (Assembly)", "Total Genes")
+            df <- idep_data$org_info[, 
+              c("ensembl_dataset", "name", "academicName", "taxon_id", "group")
+            ]
+            colnames(df) <- c(
+              "Ensembl/STRING-db ID",
+              "Name (Assembly)",
+              "Academic Name",
+              "Taxonomy ID",
+              "Source"
+            )
             row.names(df) <- NULL
             DT::datatable(
               df,
+              selection = "single",
               options = list(
+                lengthChange = FALSE,
                 pageLength = 20,
                 scrollY = "400px"
+              ),
+              callback = DT::JS(
+                paste0(
+                 "table.on('click', 'tr', function() {
+                    var data = table.row(this).data();
+                    if (data) {
+                      Shiny.setInputValue('", id, "-clicked_row', data[0]);
+                    }
+                  });"
+                )
               ),
               rownames = FALSE
             )
@@ -351,6 +391,34 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         )
       )
     })
+
+  observeEvent(input$clicked_row, {
+    # find species ID from ensembl_dataset
+    selected <- find_species_id_by_ensembl(
+      input$clicked_row, 
+      idep_data$org_info
+    )
+    # assign name
+    selected <- setNames(
+      selected,
+      find_species_by_id_name(selected, idep_data$org_info)
+    )
+
+    updateSelectizeInput(
+      session = session,
+      inputId = "select_org",
+      choices = selected,
+      selected = selected,
+      server = TRUE
+    )
+    output$selected_species <- renderText({
+      paste0(
+        #"Selected: ",
+        find_species_by_id_name(selected, idep_data$org_info)
+      )
+    })
+
+  })
 
 
     # UI elements for load demo action button, demo data drop down, and -----
@@ -370,7 +438,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         # Expression data file input
         fileInput(
           inputId = ns("expression_file"),
-          label = strong("3. Upload expression data (CSV or text), or use a demo file"),
+          label = strong("3. Expression data (CSV or text), or use a demo file"),
           accept = c(
             "text/csv",
             "text/comma-separated-values",
@@ -456,7 +524,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       tagList(
         fileInput(
           inputId = ns("experiment_file"),
-          label = strong("4. Optional: Upload an experiment design file(CSV or text)"),
+          label = strong("Optional: experiment design (CSV or text)"),
           accept = c(
             "text/csv",
             "text/comma-separated-values",
@@ -470,16 +538,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     })
 
 
-    # Provide species list for dropdown selection -----------
-    observe({
-      updateSelectizeInput(
-        session = session,
-        inputId = "select_org",
-        choices = idep_data$species_choice,
-        selected = idep_data$species_choice[1],
-        server = TRUE
-      )
-    })
+
 
     # Show messages when on the Network tab or button is clicked ----
     observe({
@@ -646,30 +705,35 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       session$reload()
     })
 
-    # Species match table ----------
-    output$species_match <- renderTable(
-      {
-        req(!is.null(input$go_button))
-        if (is.null(input$expression_file) && input$go_button == 0) {
-          return(NULL)
-        }
-        isolate({
-          if (is.null(conversion_info()$converted)) {
-            return(as.data.frame("ID not recognized."))
-          }
-          tem <- conversion_info()$converted$species_match
-          if (nrow(tem) > 50) { # show only 50
-            tem <- tem[1:50, , drop = FALSE]
-          }
-          if (is.null(tem)) {
-            as.data.frame("ID not recognized.")
-          } else {
-            data.frame(
-              "Species(genes matched)" = tem[, 1],
-              check.names = FALSE
-            )
-          }
+    # download database for selected species
+    observeEvent(input$select_org, {
+      ix <- which(idep_data$org_info$id == input$select_org)
+      db_file <- idep_data$org_info[ix, "file"]
+      dbname <- paste0(DATAPATH, "db/", db_file)
+      if (!file.exists(dbname)) {
+        withProgress(message = "Download pathway DB for the selected species (5 minutes)", {
+          incProgress(0.2)
+          # download org_info and demo files to current folder
+          options(timeout = 300)
+          download.file(
+            url = paste0(db_url, db_ver, "/db/", db_file, ".gz"),
+            destfile = paste0(dbname, ".gz"),
+            mode = "wb",
+            quiet = FALSE
+          )
+          incProgress(0.7)
+          R.utils::gunzip(
+            paste0(dbname, ".gz"), 
+            remove = TRUE
+          ) # untar and unzip the files
         })
+
+      }
+    })
+
+    # Species match table ----------
+    output$species_match <- renderTable({
+      species_match_data()
       },
       digits = -1,
       spacing = "s",
@@ -679,24 +743,51 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       hover = TRUE
     )
 
+    species_match_data <- reactive({
+      req(!is.null(input$go_button))
+      req(input$select_org)
+      if (is.null(input$expression_file) && input$go_button == 0) {
+        return(NULL)
+      }
+      isolate({
+        if (is.null(conversion_info()$converted)) {
+          return(as.data.frame("ID not recognized."))
+        }
+        tem <- conversion_info()$converted$species_match
+        if (nrow(tem) > 50) { # show only 50
+          tem <- tem[1:50, , drop = FALSE]
+        }
+        if (is.null(tem)) {
+          as.data.frame("ID not recognized.")
+        } else {
+          data.frame(
+            "Species(genes matched)" = tem[, 1],
+            check.names = FALSE
+          )
+        }
+      })
+    })
     # Species match message ----------
     observe({
       req(
         tab() == "Load Data" &&
-          !is.null(conversion_info()$converted) &&
-          input$select_org == idep_data$species_choice[[1]] # species not selected
+          #!is.null(conversion_info()$converted)
+          species_match_data()[1,1] == "ID not recognized."
       )
 
-      tem <- conversion_info()$converted$species_match
-      showNotification(
-        ui = paste0("Matched species is '", tem[1, ], ".' If that is not your
-                    species, please click Reset and use the dropdown to select
-                    the correct species first."),
-        id = "species_match",
-        duration = NULL,
-        type = "warning"
-      )
+
+      showModal(modalDialog(
+        title = "Please double check the selected species",
+        tags$p("None of the gene IDs are recognzied. Possible causes: 1. Wrong species is selected. 
+        2. Correct species is selected but we cannot map your gene IDs to Ensembl gene IDs. 
+        3. Your species is not included in our database.  
+        You can still run many analyses except pathway and enrichment."),
+        size = "s",
+        easyClose = TRUE
+      ))
     })
+
+
 
 
     # Remove message if the tab changes --------
