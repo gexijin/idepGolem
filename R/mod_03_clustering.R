@@ -912,7 +912,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           # "C:/Users/bdere/Documents/GitHub/idepGolem"
           wd <- getwd()
 
-          markdown_location <- paste0(wd, "/vignettes/Reports/clustering_workflow.Rmd")
+          markdown_location <- app_sys("app/www/RMD/clustering_workflow.Rmd")
           file.copy(from = markdown_location, to = tempReport, overwrite = TRUE)
 
           # Set up parameters to pass to Rmd document
