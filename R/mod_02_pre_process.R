@@ -826,7 +826,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
           # "C:/Users/bdere/Documents/GitHub/idepGolem"
           wd <- getwd()
 
-          markdown_location <- paste0(wd, "/vignettes/Reports/pre_process_workflow.Rmd")
+          markdown_location <- app_sys("app/www/RMD/pre_process_workflow.Rmd")
           file.copy(from = markdown_location, to = tempReport, overwrite = TRUE)
 
           # Set up parameters to pass to Rmd document
