@@ -30,7 +30,7 @@ docker run --pull -d --name idep -p 3838:3838 gexijin/idep:latest
 
 Note that the Docker container needs to be kept running as a webserver. If you restart your computer or accidentally closed the Command Prompt window, you need to re-run Step 5. 
 
-### Windows: installation as an R package (~1 hour)
+### Windows: R package (~1 hour)
 1. Install a [recent version of R](https://cloud.r-project.org/) such as R 4.30. 
 2. Optional: Install IDE such as [RStudio](https://posit.co/download/rstudio-desktop/) or [VS Code](https://code.visualstudio.com/).
 3. Start R and run these commands. It takes about an hour to install the 355 dependencies! If there are issues with the installation of some of the individual packages, you need to resolve the issues and try to install them.
@@ -67,6 +67,7 @@ install.packages("golem")
 
 
 ### MacOS: Docker container (~10 minutes on MacBook Air)
+See [video](https://youtu.be/u8Gdog4VAGc) for more details. You do not need to understand what is Docker.
 1. Download Docker Desktop follow instructions [here](https://www.docker.com/products/docker-desktop/). Make sure you choose the correct version based on your CPU type. For MacBook Air, I chose ```Apple Chip```. If you use an Mac computer that uses Intel CPU, choose the ```Intel Chip```.
 2. Install Docker Desktop. First double-click the downloaded Docker.dmg file in the Downloads folder. Drag the Docker icon into the Application folder from the pop-up window. From Lunch pad, or the Application folder, click on the Docker icon. Click ```Open``` when asked. Accept the Terms and the Docker engine is running.
 3. Start a Terminal window by clicking the Launchpad, and type ```terminal``` in the search field. Then click the Terminal app. 
@@ -82,7 +83,7 @@ docker run --pull -d --name idep -p 3838:3838 gexijin/idep:latest
 
 Note that the Docker container needs to be kept running as a webserver. If you restart your computer or accidentally closed the Command Prompt window, you need to re-run Step 5. 
 
-
+Alternatively, you can also install iDEP as an R package or copy the iDEP code locally. The method is the same as above in the Windows section.
 ### Linux: Docker container (~10 minutes)
 1. Install Docker Engine follow instructions [here](https://docs.docker.com/engine/install/). Many Linux systems have Docker installed by default. On Ubuntu, I used the following scripts.
 ```console
