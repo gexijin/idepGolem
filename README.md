@@ -38,7 +38,8 @@ Note that the Docker container needs to be kept running as a webserver. If you r
 ```{R}
 
 install.packages("devtools")
-devtools::install_github("https://github.com/gexijin/idepGolem")
+devtools::install_github("https://github.com/gexijin/idepGolem", upgrade =  "never")
+)
 
 ```
 You might get the following warnings, which can be ignored.
@@ -55,7 +56,7 @@ A version of this package for your version of R might be available elsewhere,
 ```{R}
 idepGolem::run_app()
 ```
-
+The benefit of this approach is that you always have the most recent version from GitHub. The next time you install iDEP, it will take much less time as the dependencies have been installed. 
 ### Windows: Developer mode (~1 hour)
 This method enables users to customize the iDEP by changing the source code. We also welcome contributions by submitting Pull Requests.
 1. Install a [recent version of R](https://cloud.r-project.org/) such as R 4.30. 
@@ -66,6 +67,7 @@ This method enables users to customize the iDEP by changing the source code. We 
 install.packages("golem")
 ```
 5. Open the downloaded reporsitory from R. The Shiny app can be started by running the ```run_dev.R``` script. If R packages are missing, install them and try again. The app is devided into 11 Shiny Modules.
+
 
 
 ### MacOS: Docker container (~10 minutes on MacBook Air)
