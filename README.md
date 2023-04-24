@@ -18,11 +18,7 @@ You do not need to understand Docker, just follow this detailed [video](https://
 2. Start Windows PowerShell as an **Administrator**. From Windows search bar, type **PowerShell** to find the Windows PowerShell app. And then select **Run as an Administrator**. See [here](https://www.howtogeek.com/742916/how-to-open-windows-powershell-as-an-admin-in-windows-10/) for detailed steps. 
 3. [Enable WSL2](https://learn.microsoft.com/en-us/windows/wsl/install-manual)
 4. Start the Docker app. From Windows search bar, type **Docker**, and then select Run. Accept the terms when asked. The Docker engine is now running in the background.
-5. Pull the iDEP Docker image from PowerShell command line.
-```console
-docker pull gexijin/idep:latest
-```
-5. Run docker container from PowerShell.
+5. Pull Docker image from Dockerhub and run docker container from PowerShell.
 ```console
 docker run --pull always -d --name idep -p 3838:3838 gexijin/idep:latest 
 ```
@@ -41,11 +37,8 @@ After stopping it, you can restart it by Step 5, which also pulls the latest Doc
 3. Start R and run these commands. It takes about an hour to install the 355 dependencies! If there are issues with the installation of some of the individual packages, you need to resolve the issues and try to install them.
 
 ```{R}
-
 install.packages("devtools")
-devtools::install_github("https://github.com/gexijin/idepGolem", upgrade =  "never")
-)
-
+devtools::install_github("https://github.com/gexijin/idepGolem", upgrade = "never")
 ```
 You might get the following warnings, which can be ignored.
 
@@ -55,13 +48,14 @@ package ‘KEGG.db’ is not available for this version of R
 A version of this package for your version of R might be available elsewhere,
 2: In i.p(...) : installation of package ‘GO.db’ had non-zero exit status
 3: In i.p(...) :
-  installation of package ‘/tmp/RtmpCpiUsZ/file2326c2a50656f/PGSEA_1.60.0.tar.gz’ had non-zero exit status
+installation of package ‘/tmp/RtmpCpiUsZ/file2326c2a50656f/PGSEA_1.60.0.tar.gz’ had non-zero exit status
 ```
 4. Start the iDEP from R
 ```{R}
 idepGolem::run_app()
 ```
 The benefit of this approach is that you always have the most recent version from GitHub. The next time you install iDEP, it will take much less time as the dependencies have been installed. 
+
 ### Windows: Developer mode (~1 hour)
 This method enables users to customize the iDEP by changing the source code. We also welcome contributions by submitting Pull Requests.
 1. Install a [recent version of R](https://cloud.r-project.org/) such as R 4.30. 
@@ -71,33 +65,34 @@ This method enables users to customize the iDEP by changing the source code. We 
 ```{R}
 install.packages("golem")
 ```
-5. Open the downloaded reporsitory from R. The Shiny app can be started by running the ```run_dev.R``` script. If R packages are missing, install them and try again. The app is devided into 11 Shiny Modules.
-
-
+5. Optional: Install all dependencies. We pretend that we want to install the idepGolem package. This take about an hour.
+```{R}
+install.packages("devtools")
+devtools::install_github("https://github.com/gexijin/idepGolem", upgrade = "never")
+remove.packages("idepGolem")
+```
+6. Open the downloaded reporsitory from R. The Shiny app can be started by running the ```run_dev.R``` script. If some R packages are missing, install them and try again. The app is devided into 11 Shiny Modules.
 
 ### MacOS: Docker container (~10 minutes on MacBook Air)
 See [video](https://youtu.be/u8Gdog4VAGc) for more details. You do not need to understand what is Docker.
 1. Download Docker Desktop follow instructions [here](https://www.docker.com/products/docker-desktop/). Make sure you choose the correct version based on your CPU type. For MacBook Air, I chose ```Apple Chip```. If you use an Mac computer that uses Intel CPU, choose the ```Intel Chip```.
 2. Install Docker Desktop. First double-click the downloaded Docker.dmg file in the Downloads folder. Drag the Docker icon into the Application folder from the pop-up window. From Lunch pad, or the Application folder, click on the Docker icon. Click ```Open``` when asked. Accept the Terms and the Docker engine is running.
 3. Start a Terminal window by clicking the Launchpad, and type ```terminal``` in the search field. Then click the Terminal app. 
-4. Pull the iDEP Docker image using this command in the Terminal window.
-```console
-docker pull gexijin/idep:latest
-```
-5. Run docker container from Linux command line.
+4. Pull the Docker image from DockerHub and start the container.  
 ```console
 docker run --pull always -d --name idep -p 3838:3838 gexijin/idep:latest 
 ```
-6. You can now use iDEP locally by starting your web browser and enter localhost:3838 in the web address.
+5. You can now use iDEP locally by starting your web browser and enter localhost:3838 in the web address.
 
 Note that the Docker engine is now running in the backgroup, acting as a webserver. It works even if you restart your computer. To stop it, run these from Windows PowerShell: 
 ```console
 docker stop idep 
 docker rm idep
 ```
-After stopping it, you can restart it by Step 5, which also pulls the latest Docker image from DockerHub. We update it frequently, make sure you upgrade your image at least on a monthly basis.
+After stopping it, you can restart it by Step 4, which also pulls the latest Docker image from DockerHub. We update it frequently, make sure you upgrade your image at least on a monthly basis.
 
 Alternatively, you can also install iDEP as an R package or copy the iDEP code locally. The method is the same as above in the Windows section.
+
 ### Linux: Docker container (~10 minutes)
 1. Install Docker Engine follow instructions [here](https://docs.docker.com/engine/install/). Many Linux systems have Docker installed by default. On Ubuntu, I used the following scripts.
 ```console
@@ -105,20 +100,16 @@ cd
 curl -fsSL https://get.docker.com -o install_docker.sh
 sudo sh install_docker.sh
 ```
-2. Pull the iDEP Docker image from the Linux command line.
-```console
-sudo docker pull gexijin/idep:latest
-```
-3. Run docker container from Linux command line.
+2. Pull the iDEP Docker image from DockerHub and start the container.
 ```console
 sudo docker run --pull always -d --name idep -p 3838:3838 gexijin/idep:latest 
 ```
-4. You can now use iDEP locally by starting your web browser and enter localhost:3838 in the web address. If the is an internal server, replace the localhost with the IP address and make sure that the port 3838 is open.
+3. You can now use iDEP locally by starting your web browser and enter localhost:3838 as the web address. If this is an server, replace the localhost with the IP address and make sure that the port 3838 is open.
 
-Note that the Docker engine is now running in the backgroup, acting as a webserver. It works even if you restart your computer. To stop it, run these from Windows PowerShell: 
+Note that the Docker engine is now running in the backgroup, acting as a webserver. To stop it, run these from Windows PowerShell: 
 ```console
 docker stop idep 
 docker rm idep
 ```
-After stopping it, you can restart it by Step 3, which also pulls the latest Docker image from DockerHub. We update it frequently, make sure you upgrade your image at least on a monthly basis.
+After stopping it, you can restart it by Step 2, which also pulls the latest Docker image from DockerHub. We update it frequently, make sure you upgrade your image at least on a monthly basis.
 
