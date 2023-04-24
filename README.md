@@ -24,11 +24,16 @@ docker pull gexijin/idep:latest
 ```
 5. Run docker container from PowerShell.
 ```console
-docker run --pull -d --name idep -p 3838:3838 gexijin/idep:latest 
+docker run --pull always -d --name idep -p 3838:3838 gexijin/idep:latest 
 ```
 6. You can now use iDEP locally by starting your web browser and enter localhost:3838 in the web address.
 
-Note that the Docker container needs to be kept running as a webserver. If you restart your computer or accidentally closed the Command Prompt window, you need to re-run Step 5. 
+Note that the Docker engine is now running in the backgroup, acting as a webserver. It works even if you restart your computer. To stop it, run these from Windows PowerShell: 
+```console
+docker stop idep 
+docker rm idep
+```
+After stopping it, you can restart it by Step 5, which also pulls the latest Docker image from DockerHub. We update it frequently, make sure you upgrade your image at least on a monthly basis.
 
 ### Windows: R package (~1 hour)
 1. Install a [recent version of R](https://cloud.r-project.org/) such as R 4.30. 
@@ -81,11 +86,16 @@ docker pull gexijin/idep:latest
 ```
 5. Run docker container from Linux command line.
 ```console
-docker run --pull -d --name idep -p 3838:3838 gexijin/idep:latest 
+docker run --pull always -d --name idep -p 3838:3838 gexijin/idep:latest 
 ```
 6. You can now use iDEP locally by starting your web browser and enter localhost:3838 in the web address.
 
-Note that the Docker container needs to be kept running as a webserver. If you restart your computer or accidentally closed the Command Prompt window, you need to re-run Step 5. 
+Note that the Docker engine is now running in the backgroup, acting as a webserver. It works even if you restart your computer. To stop it, run these from Windows PowerShell: 
+```console
+docker stop idep 
+docker rm idep
+```
+After stopping it, you can restart it by Step 5, which also pulls the latest Docker image from DockerHub. We update it frequently, make sure you upgrade your image at least on a monthly basis.
 
 Alternatively, you can also install iDEP as an R package or copy the iDEP code locally. The method is the same as above in the Windows section.
 ### Linux: Docker container (~10 minutes)
@@ -97,12 +107,18 @@ sudo sh install_docker.sh
 ```
 2. Pull the iDEP Docker image from the Linux command line.
 ```console
-docker pull gexijin/idep:latest
+sudo docker pull gexijin/idep:latest
 ```
 3. Run docker container from Linux command line.
 ```console
-docker run --pull -d --name idep -p 3838:3838 gexijin/idep:latest 
+sudo docker run --pull always -d --name idep -p 3838:3838 gexijin/idep:latest 
 ```
 4. You can now use iDEP locally by starting your web browser and enter localhost:3838 in the web address. If the is an internal server, replace the localhost with the IP address and make sure that the port 3838 is open.
 
+Note that the Docker engine is now running in the backgroup, acting as a webserver. It works even if you restart your computer. To stop it, run these from Windows PowerShell: 
+```console
+docker stop idep 
+docker rm idep
+```
+After stopping it, you can restart it by Step 3, which also pulls the latest Docker image from DockerHub. We update it frequently, make sure you upgrade your image at least on a monthly basis.
 
