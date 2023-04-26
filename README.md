@@ -2,7 +2,7 @@
 
 ## Description
 
-iDEP is an bioinformatics tool for analyzing gene expression data graphically, interactively, and reproducibly. The input file is a gene-level expression matrix derived from RNA-Seq, microarray, proteomics, or other methods. Hosted at [http://bioinformatics.sdstate.edu](<http:://bioinformatics.sdstate.edu/idep11/>), iDEP is developed as an R package based on the [Golem framework](https://thinkr-open.github.io/golem/), by a small team led by Dr. [Steven Ge](https://twitter.com/StevenXGe).
+iDEP is a bioinformatics platform for analyzing gene expression data graphically, interactively, and reproducibly. The input file is a gene-level expression matrix derived from RNA-Seq, microarray, proteomics, or other methods. Hosted at [http://bioinformatics.sdstate.edu](<http:://bioinformatics.sdstate.edu/idep11/>), iDEP is developed as an R package based on the [Golem framework](https://thinkr-open.github.io/golem/), by a small team led by Dr. [Steven Ge](https://twitter.com/StevenXGe).
 
 ## License
 (CC BY-NC 3.0) Non-commercial use. For local installation at private institutions, please [contact us](https://www.sdstate.edu/directory/xijin-ge).
