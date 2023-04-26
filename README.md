@@ -1,11 +1,11 @@
-# iDEP (integrated Differential Expression & Pathway analysis)
+# integrated Differential Expression & Pathway analysis (iDEP)
 
 ## Description
 
-iDEP is an bioinformatics tool for analyzing gene expression data graphically, interactively and reproducibly. The input file is a expression matrix (RNA-Seq read counts, FPKM, microarray etc. Hosted at [http://bioinformatics.sdstate.edu](<http:://bioinformatics.sdstate.edu/idep11/>), iDEP is developed as an R package based on the [Golem framework](https://thinkr-open.github.io/golem/).
+iDEP is an bioinformatics tool for analyzing gene expression data graphically, interactively, and reproducibly. The input file is a expression matrix derived from RNA-Seq, microarray, proteomics, or other studies. Hosted at [http://bioinformatics.sdstate.edu](<http:://bioinformatics.sdstate.edu/idep11/>), iDEP is developed as an R package based on the [Golem framework](https://thinkr-open.github.io/golem/) by a small team led by Dr. [Steven Ge](https://www.sdstate.edu/directory/xijin-ge). Follow him on [Twitter](https://twitter.com/StevenXGe) for iDEP updates & server status.
 
 ## License
-(CC BY-NC 3.0) Non-commercial use.
+(CC BY-NC 3.0) Non-commercial use. For local installation at private institutions, please [contact us](https://www.sdstate.edu/directory/xijin-ge).
 
 ## Run iDEP locally as an R package or via a Docker container
 Following the redesign of our database, the updated iDEP can now be effortlessly executed on a laptop or local server. Please be aware that iDEP undergoes frequent updates; if you are running the software locally, we recommend updating to the most recent version on a monthly basis.
