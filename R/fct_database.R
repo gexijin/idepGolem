@@ -55,6 +55,7 @@ connect_convert_db <- function(datapath = DATAPATH) {
         quiet = FALSE
       )
       untar(file_name) # untar and unzip the files
+      file.remove(file_name) # delete the tar file to save storage
     })
   }
 
