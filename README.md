@@ -1,8 +1,8 @@
-# integrated Differential Expression & Pathway analysis (iDEP)
+## Integrated Differential Expression & Pathway analysis (iDEP)
 
 ## Description
 
-iDEP is an bioinformatics tool for analyzing gene expression data graphically, interactively, and reproducibly. The input file is a expression matrix derived from RNA-Seq, microarray, proteomics, or other studies. Hosted at [http://bioinformatics.sdstate.edu](<http:://bioinformatics.sdstate.edu/idep11/>), iDEP is developed as an R package based on the [Golem framework](https://thinkr-open.github.io/golem/) by a small team led by Dr. [Steven Ge](https://www.sdstate.edu/directory/xijin-ge). Follow him on [Twitter](https://twitter.com/StevenXGe) for iDEP updates & server status.
+iDEP is an bioinformatics tool for analyzing gene expression data graphically, interactively, and reproducibly. The input file is a gene-level expression matrix derived from RNA-Seq, microarray, proteomics, or other methods. Hosted at [http://bioinformatics.sdstate.edu](<http:://bioinformatics.sdstate.edu/idep11/>), iDEP is developed as an R package based on the [Golem framework](https://thinkr-open.github.io/golem/), by a small team led by Dr. [Steven Ge](https://twitter.com/StevenXGe).
 
 ## License
 (CC BY-NC 3.0) Non-commercial use. For local installation at private institutions, please [contact us](https://www.sdstate.edu/directory/xijin-ge).
@@ -14,13 +14,13 @@ Once installed as an R package, iDEP can be initiated from R using the ```iDEP::
 
 A more efficient alternative is to utilize the [iDEP Docker image](https://hub.docker.com/repository/docker/gexijin/idep/general) available on DockerHub. The only prerequisite is to install the Docker software on Linux or Docker Desktop on Windows or MacOS.
 
-Please note that local installation is intended for non-profit organizations only.
+Please note that local installation is free for non-profit organizations only.
 
 ### System requirements
 Most of modern laptop can run iDEP locally, if it has more than 10GB storage and 4GB of memory. 
 
 ### Windows: Docker Desktop (~20 minutes, recommended)
-You do not need to understand Docker, just follow this detailed [video](https://youtu.be/EJiNG9uUq5g).
+Just follow this detailed [video](https://youtu.be/EJiNG9uUq5g). No prior experience with Docker is needed. 
 1. Install [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/).
 2. Start Windows PowerShell as an **Administrator**. From Windows search bar, type **PowerShell** to find the Windows PowerShell app. And then select **Run as an Administrator**. For details, see [here](https://www.howtogeek.com/742916/how-to-open-windows-powershell-as-an-admin-in-windows-10/). 
 3. Enable [Windows Subsystem for Linux 2 (WSL2).](https://learn.microsoft.com/en-us/windows/wsl/install-manual)
@@ -39,7 +39,7 @@ docker rm idep
 After stopping it, you can restart it by repeating Step 5, which also pulls the latest Docker image from DockerHub. Make sure you update your image at least on a monthly basis.
 
 ### Windows: iDEP as an R package (~1 hour)
-1. Install a [recent version of R](https://cloud.r-project.org/). If your R is a few years old, uninstall it, and manually delete all exist the R packages from the hard drive.
+1. Install a [recent version of R](https://cloud.r-project.org/). If your R is a few years old, uninstall it, and manually delete the folder that contains all existing R packages.
 2. Optional: Install IDE such as [RStudio](https://posit.co/download/rstudio-desktop/) or [VS Code](https://code.visualstudio.com/).
 3. Start R and run these commands. It takes about an hour to install the 355 dependencies! If there are issues with the installation of some of the individual packages, you need to resolve the issues and try to install them.
 
@@ -63,7 +63,7 @@ idepGolem::run_app()
 The benefit of this approach is that you always have the most recent version from GitHub. The next time you install iDEP, it will take much less time as the dependencies have been installed. 
 
 ### Windows: Developer mode (~1 hour)
-This method enables users to customize iDEP by changing the source code. We also welcome contributions through Pull Requests on GitHub.
+With this method, users can customize iDEP by changing the source code. We also welcome contributions through Pull Requests on GitHub.
 1. Install a [recent version of R](https://cloud.r-project.org/), such as R 4.30. 
 2. Optional: Install IDE such as [RStudio](https://posit.co/download/rstudio-desktop/) or [VS Code](https://code.visualstudio.com/).
 3. Obtain a copy of the source code. This can be done manually by downloading an zip file by clicking on the green Code button above. Alternatively, you can fork this repository, install GitHub Desktop, and clone this repository locally using an URL(https://github.com/gexijin/idepGolem.git). 
@@ -116,5 +116,5 @@ Note that the Docker engine is now running in the backgroup, acting as a webserv
 sudo docker stop idep 
 sudo docker rm idep
 ```
-After stopping it, you can restart it by Step 2, which also pulls the latest iDEP image from DockerHub. We update it frequently, make sure you upgrade your image at least on a monthly basis.
+After stopping it, you can restart it by repeating Step 2, which also pulls the latest iDEP image from DockerHub. We update it frequently, make sure you upgrade your image at least on a monthly basis.
 
