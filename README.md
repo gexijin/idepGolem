@@ -7,7 +7,7 @@ iDEP is an bioinformatics tool for analyzing gene expression data graphically, i
 ## License
 (CC BY-NC 3.0) Non-commercial use. For local installation at private institutions, please [contact us](https://www.sdstate.edu/directory/xijin-ge).
 
-## Run iDEP locally as an R package or via a Docker container
+## Run iDEP locally on [Windows](https://github.com/gexijin/idepGolem/master#windows-docker-desktop-20-minutes-recommended), [MacOS](https://github.com/gexijin/idepGolem/master#macos-docker-container-10-minutes-on-macbook-air), or [Linux](https://github.com/gexijin/idepGolem/master#linux-docker-container-10-minutes)
 Following the redesign of our database, the updated iDEP can now be effortlessly executed on a laptop or local server. Please be aware that iDEP undergoes frequent updates; if you are running the software locally, we recommend updating to the most recent version on a monthly basis.
 
 Once installed as an R package, iDEP can be initiated from R using the ```iDEP::run_app()``` command. However, this approach can be time-consuming, as it necessitates the installation of all 355 dependent R packages. This process takes approximately an hour on Windows 10, and potentially even longer for Mac or Linux users due to potential troubleshooting requirements for many of the R packages.
