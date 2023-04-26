@@ -375,7 +375,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
               selection = "single",
               options = list(
                 lengthChange = FALSE,
-                pageLength = 20,
+                pageLength = 10,
                 scrollY = "400px"
               ),
               callback = DT::JS(
