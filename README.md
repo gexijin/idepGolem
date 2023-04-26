@@ -26,6 +26,7 @@ Just follow this detailed [video](https://youtu.be/EJiNG9uUq5g). No prior experi
 3. Enable [Windows Subsystem for Linux 2 (WSL2).](https://learn.microsoft.com/en-us/windows/wsl/install-manual)
 4. Start the Docker app. From Windows search bar, type **Docker**, and then select **Run as an Administrator**. Accept the terms when asked. The Docker engine is now running in the background.
 5. Pull the iDEP Docker image from DockerHub and start a container from PowerShell.
+
 ```console
 docker run --pull always -d --name idep -p 3838:3838 gexijin/idep:latest 
 ```
