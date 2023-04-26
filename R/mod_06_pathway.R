@@ -379,7 +379,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     # If data is uploaded, but DEG1 is not run
     observe({
       req(!is.null(pre_process$data()) && is.null(deg$limma()) && (
-        tab() == "DEG1" || tab() == "DEG2" ||
+        tab() == "DEG2" ||
           tab() == "Pathway" || tab() == "Genome"
       ))
 

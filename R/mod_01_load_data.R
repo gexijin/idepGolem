@@ -99,16 +99,19 @@ mod_01_load_data_ui <- function(id) {
               label = NULL,
               choices = list(
                 "Read counts data (recommended)" = 1,
-                "Normalized expression values (RNA-seq FPKM, microarray, etc.)" = 2,
-                "Fold-changes and adjusted P-values from CuffDiff or any other
-                program" = 3
+                "Normalized Expression data" = 2,
+                "Fold-changes & adjusted P-values" = 3
               ),
               selected = 1,
               selectize = FALSE
             ),
             tippy::tippy_this(
               ns("data_file_format"),
-              "Read counts data can be analyzed using DESeq2.  ",
+              "We recommend uploading Read Counts Data, which can be analyzed using DESeq2.
+              Choose Normalized Expression Data if your data is derived from 
+              RNA-Seq(FPKM, RPKM, TPM), DNA microarray, proteomics data, etc. 
+              Select Fold Change and Adjusted P-value, if you have already conducted D.E.G. analysis.
+                ",
               theme = "light-border"
             )
           ),

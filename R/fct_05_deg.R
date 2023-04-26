@@ -444,8 +444,7 @@ limma_value <- function(data_file_format,
           selected_comparisons = select_model_comprions,
           sample_info = sample_info,
           model_factors = c(select_factors_model, select_interactions),
-          block_factor = select_block_factors_model,
-          descr = descr
+          block_factor = select_block_factors_model
         )
       )
     }
@@ -464,8 +463,7 @@ limma_value <- function(data_file_format,
         selected_comparisons = select_model_comprions,
         sample_info = sample_info,
         model_factors = c(select_factors_model, select_interactions),
-        block_factor = select_block_factors_model,
-        descr = descr
+        block_factor = select_block_factors_model
       )
     )
 
