@@ -10,26 +10,6 @@
 #' @name fct_database.R
 NULL
 
-db_ver <- "data107"
-# if environmental variable is not set, use relative path
-DATAPATH <- Sys.getenv("IDEP_DATABASE")[1]
-if (nchar(DATAPATH) == 0) {
-  DATAPATH <- paste0("../../data/", db_ver, "/")
-}
-
-#sometimes people forget to include the last "/"
-DATAPATH <- paste0(DATAPATH, "/")
-
-#DATAPATH <- "C:/work/iDEP_data/data107/"
-
-org_info_file <- paste0(DATAPATH, "demo/orgInfo.db")
-if(!file.exists(org_info_file)) {
-  DATAPATH <- paste0("./", db_ver, "/")
-  org_info_file <- paste0(DATAPATH, "demo/orgInfo.db")
-}
-
-
-db_url <- "http://bioinformatics.sdstate.edu/data/"
 
 
 #' Connect to the convertIDs database and return the
