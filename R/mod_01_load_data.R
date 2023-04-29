@@ -35,15 +35,13 @@ mod_01_load_data_ui <- function(id) {
         # Species Match Drop Down ------------
         strong("1. Required: What species?"),
         br(), br(),
-        conditionalPanel(
-          condition = "false",
-          selectInput(
-            inputId = ns("select_org"),
-            label = NULL,
-            choices = " ",
-            multiple = FALSE,
-            selectize = TRUE
-          )
+        selectInput(
+          inputId = ns("select_org"),
+          label = NULL,
+          choices = setNames(99, "Human"), # Human is selected by default
+          multiple = FALSE,
+          selectize = TRUE,
+          selected = setNames(99, "Human")
         ),
 
         fluidRow(
@@ -395,33 +393,34 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       )
     })
 
-  observeEvent(input$clicked_row, {
-    # find species ID from ensembl_dataset
-    selected <- find_species_id_by_ensembl(
-      input$clicked_row, 
-      idep_data$org_info
-    )
-    # assign name
-    selected <- setNames(
-      selected,
-      find_species_by_id_name(selected, idep_data$org_info)
-    )
-
-    updateSelectizeInput(
-      session = session,
-      inputId = "select_org",
-      choices = selected,
-      selected = selected,
-      server = TRUE
-    )
-    output$selected_species <- renderText({
-      paste0(
-        #"Selected: ",
+    shinyjs::hideElement(id = "select_org")
+    observeEvent(input$clicked_row, {
+      # find species ID from ensembl_dataset
+      selected <- find_species_id_by_ensembl(
+        input$clicked_row, 
+        idep_data$org_info
+      )
+      # assign name
+      selected <- setNames(
+        selected,
         find_species_by_id_name(selected, idep_data$org_info)
       )
-    })
 
-  })
+      updateSelectizeInput(
+        session = session,
+        inputId = "select_org",
+        choices = selected,
+        selected = selected,
+        server = TRUE
+      )
+      output$selected_species <- renderText({
+        paste0(
+          #"Selected: ",
+          find_species_by_id_name(selected, idep_data$org_info)
+        )
+      })
+
+    })
 
 
     # UI elements for load demo action button, demo data drop down, and -----
@@ -478,7 +477,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             width = 5,
             actionButton(
               inputId = ns("go_button"),
-              label = "Load demo"
+              label = "Load Demo"
             ),
             tags$head(tags$style(
               "#load_data-go_button{color: red;}"
@@ -499,7 +498,16 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         is.null(input$go_button) || input$go_button == 0 && is.null(input$expression_file)
 
       ) {
-        p("iDEP: integrated Differential Expression and Pathway analysis")
+        tagList(
+          p(
+            "First time here? Just click ",
+            tags$span("Load Demo", id = "load-demo"),
+            " below to see some magic in other tabs."
+          ),
+          tags$script("
+            document.getElementById('load-demo').style.color = 'red';
+          ")
+        )
       } else {
         # reset message and action button
         tagList(
