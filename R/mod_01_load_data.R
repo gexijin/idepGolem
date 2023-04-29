@@ -502,7 +502,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           p(
             "First time here? Just click ",
             tags$span("Load Demo", id = "load-demo"),
-            " below to see some magic in other tabs."
+            " below to see some magic!"
           ),
           tags$script("
             document.getElementById('load-demo').style.color = 'red';
