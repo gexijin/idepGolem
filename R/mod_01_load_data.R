@@ -722,7 +722,12 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       db_file <- idep_data$org_info[ix, "file"]
       dbname <- paste0(DATAPATH, "db/", db_file)
       if (!file.exists(dbname)) {
-        withProgress(message = "Download pathway DB for the selected species (5 minutes)", {
+        withProgress(
+          message = paste(
+            "Download database for",
+            idep_data$org_info[ix, "name2"],
+           "(~5 minutes)"
+           ), {
           incProgress(0.2)
           # download org_info and demo files to current folder
           options(timeout = 300)
