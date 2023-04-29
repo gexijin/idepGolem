@@ -259,7 +259,7 @@ mod_03_clustering_ui <- function(id) {
                 checkboxInput(
                   inputId = ns("cluster_enrichment"),
                   label = strong("Show enrichment"),
-                  value = FALSE
+                  value = TRUE
                 ),
                 tippy::tippy_this(
                   ns("cluster_enrichment"),
