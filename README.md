@@ -30,7 +30,7 @@ Just follow this detailed [video](https://youtu.be/EJiNG9uUq5g). No prior experi
 ```console
 docker run --pull always -d --name idep -p 3838:3838 gexijin/idep:latest 
 ```
-6. You can now use iDEP locally by starting your web browser and enter ***localhost:3838** in the address bar.
+6. You can now use iDEP locally by starting your web browser and enter **localhost:3838** in the address bar.
 
 Note that the Docker engine is now running in the backgroup, acting as a webserver. It works even if you restart your computer. To stop it, run these from Windows PowerShell: 
 ```console
