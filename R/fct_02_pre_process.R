@@ -401,7 +401,9 @@ eda_scatter <- function(processed_data,
         face = "bold",
         hjust = .5
       )
-    )
+    ) +
+    ggpubr::stat_cor(label.x.npc = "left", label.y.npc = "top",
+      p.accuracy = 0.01, r.accuracy = 0.01)
 
   return(scatter)
 }
