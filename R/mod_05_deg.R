@@ -210,7 +210,8 @@ mod_05_deg_2_ui <- function(id) {
             Interaction terms start with \"I:\""),
         conditionalPanel(
           condition = "input.step_2 == 'Volcano Plot' |
-            input.step_2 == 'MA Plot'",
+            input.step_2 == 'MA Plot' |
+            input.step_2 == 'Scatter Plot'",
           selectInput(
             inputId = ns("plot_color_select"),
             label = "Color scale",
@@ -897,6 +898,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       label = ""
     )
 
+    ## scatter plot-----------
     output$scatter_plot <- renderPlot({
       req(!is.null(deg$limma$top_genes))
 
@@ -908,7 +910,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         limma_fc = input$limma_fc,
         contrast_samples = contrast_samples(),
         processed_data = pre_process$data(),
-        sample_info = pre_process$sample_info()
+        sample_info = pre_process$sample_info(),
+        plot_colors = plot_colors[[input$plot_color_select]]
       )
       refine_ggplot2(
         p = p,
