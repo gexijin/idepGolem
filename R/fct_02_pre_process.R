@@ -678,15 +678,30 @@ individual_plots <- function(individual_data,
       dplyr::summarise(Mean = mean(value), SD = sd(value), N = dplyr::n())
 
     summarized$SE <- summarized$SD / sqrt(summarized$N)
-
+  
     gene_bar <- ggplot2::ggplot(
       summarized,
       ggplot2::aes(x = symbol, y = Mean, fill = groups)
     ) +
-      ggplot2::geom_bar(stat = "identity", position = ggplot2::position_dodge()) +
+      ggplot2::geom_bar(
+        stat = "identity",
+        position = ggplot2::position_dodge()
+        ) +
       ggplot2::labs(
         title = "Expression Level",
         y = "Grouped Transformed Expression"
+      ) +
+      ggplot2::geom_dotplot(
+        data = plot_data,
+        ggplot2::aes(
+          y = value,
+          groups = groups
+        ),
+        fill = "black",
+        position = ggplot2::position_dodge(),
+        binaxis='y', 
+        stackdir='center', 
+        dotsize=1
       ) +
       ggplot2::theme_light() +
       ggplot2::theme(

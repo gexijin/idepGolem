@@ -2821,6 +2821,11 @@ plot_deg_scatter <- function(select_contrast,
     rownames(genes_1) <- rownames(genes)
     genes_1 <- merge(genes_1, top_1, by = "row.names")
 
+<<<<<<< Updated upstream
+=======
+    colors <- c("green", "red")
+
+>>>>>>> Stashed changes
     return(
       ggplot2::ggplot(genes_1, ggplot2::aes(x = average_1, y = average_2)) +
       ggplot2::geom_point(ggplot2::aes(color = upOrDown)) +
