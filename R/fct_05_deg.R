@@ -2751,6 +2751,8 @@ plot_ma <- function(data,
 #' @param processed_data Data matrix that has gone through
 #'  pre-processing
 #' @param sample_info Experiment file information for grouping
+#' @param plot_colors List containing three colors to differentiate between
+#'   the up-regulated, down-regulated, and other genes
 #'
 #' @export
 #' @return A formatted ggplot with the X-axis as the mean expression
@@ -2763,7 +2765,8 @@ plot_deg_scatter <- function(select_contrast,
                              limma_fc,
                              contrast_samples,
                              processed_data,
-                             sample_info) {
+                             sample_info,
+                             plot_colors) { ##J Addition
   if (grepl("I:", select_contrast)) {
     grid::grid.newpage()
     return(
@@ -2818,42 +2821,45 @@ plot_deg_scatter <- function(select_contrast,
     rownames(genes_1) <- rownames(genes)
     genes_1 <- merge(genes_1, top_1, by = "row.names")
 
-    colors <- gg_color_hue(2)
+<<<<<<< Updated upstream
+=======
+    colors <- c("green", "red")
 
+>>>>>>> Stashed changes
     return(
       ggplot2::ggplot(genes_1, ggplot2::aes(x = average_1, y = average_2)) +
-        ggplot2::geom_point(ggplot2::aes(color = upOrDown)) +
-        ggplot2::scale_color_manual(values = c(colors[1], "grey45", colors[2])) +
-        ggplot2::theme_light() +
-        ggplot2::theme(
-          legend.position = "right",
-          axis.title.x = ggplot2::element_text(
-            color = "black",
-            size = 14
-          ),
-          axis.title.y = ggplot2::element_text(
-            color = "black",
-            size = 14
-          ),
-          axis.text.x = ggplot2::element_text(
-            size = 16
-          ),
-          axis.text.y = ggplot2::element_text(
-            size = 16
-          ),
-          plot.title = ggplot2::element_text(
-            color = "black",
-            size = 16,
-            face = "bold",
-            hjust = .5
-          )
-        ) +
-        ggplot2::labs(
-          title = "Average Expression in Group",
-          y = paste0("Average Expression: ", unique(g)[2]),
-          x = paste0("Average Expression: ", unique(g)[1]),
-          color = "Regulated"
+      ggplot2::geom_point(ggplot2::aes(color = upOrDown)) +
+      ggplot2::scale_color_manual(values = plot_colors) +
+      ggplot2::theme_light() +
+      ggplot2::theme(
+        legend.position = "right",
+        axis.title.x = ggplot2::element_text(
+          color = "black",
+          size = 14
+        ),
+        axis.title.y = ggplot2::element_text(
+          color = "black",
+          size = 14
+        ),
+        axis.text.x = ggplot2::element_text(
+          size = 16
+        ),
+        axis.text.y = ggplot2::element_text(
+          size = 16
+        ),
+        plot.title = ggplot2::element_text(
+          color = "black",
+          size = 16,
+          face = "bold",
+          hjust = .5
         )
+      ) +
+      ggplot2::labs(
+        title = "Average Expression in Group",
+        y = paste0("Average Expression: ", unique(g)[2]),
+        x = paste0("Average Expression: ", unique(g)[1]),
+        color = "Regulated"
+      )
     )
   }
 }
