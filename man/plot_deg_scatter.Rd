@@ -12,7 +12,8 @@ plot_deg_scatter(
   limma_fc,
   contrast_samples,
   processed_data,
-  sample_info
+  sample_info,
+  plot_colors
 )
 }
 \arguments{
@@ -38,6 +39,9 @@ comparison}
 pre-processing}
 
 \item{sample_info}{Experiment file information for grouping}
+
+\item{plot_colors}{List containing three colors to differentiate between
+the up-regulated, down-regulated, and other genes}
 }
 \value{
 A formatted ggplot with the X-axis as the mean expression
