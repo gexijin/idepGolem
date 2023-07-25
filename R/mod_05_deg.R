@@ -265,7 +265,8 @@ mod_05_deg_2_ui <- function(id) {
               outputId = ns("scatter_plot"),
               height = "500px",
               width = "100%"
-            )
+            ),
+            ottoPlots::mod_download_figure_ui(ns("download_scatter"))
           ),
           tabPanel(
             title = "Enrichment",
@@ -899,7 +900,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     )
 
     ## scatter plot-----------
-    output$scatter_plot <- renderPlot({
+    scatter_plot <- reactive({
       req(!is.null(deg$limma$top_genes))
 
       p <- plot_deg_scatter(
@@ -919,6 +920,19 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         ggplot2_theme = pre_process$ggplot2_theme()
       )
     })
+
+    output$scatter_plot <- renderPlot({
+      print(scatter_plot())
+    })
+
+    download_scatter <- ottoPlots::mod_download_figure_server(
+      "download_scatter",
+      filename = "scatter_plot",
+      figure = reactive({
+        scatter_plot()
+      }),
+      label = ""
+    )
 
     # Split up and down genes into two data bases ---------
     up_reg_data <- reactive({

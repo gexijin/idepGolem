@@ -141,7 +141,16 @@ input_data <- function(expression_file,
 
   isolate({
     # Read expression file -----------
-    data <- read.csv(in_file_data, quote = "", comment.char = "")
+    if (
+      substr(in_file_data,
+      nchar(in_file_data) - 4,
+      nchar(in_file_data)) == ".xlsx"
+    ) {
+      data <- readxl::read_excel(in_file_data)
+      data <- data.frame(data)
+    } else {
+      data <- read.csv(in_file_data, quote = "", comment.char = "")
+    }
     # Tab-delimented if not CSV
     if (ncol(data) <= 2) {
       data <- read.table(

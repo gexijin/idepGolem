@@ -65,6 +65,7 @@ usethis::use_package("tippy")
 usethis::use_package("ottoPlots")
 usethis::use_package("ggupset")
 usethis::use_package("purrr")
+usethis::use_package("readxl")
 
 ## Add modules ----
 ## Create a module infrastructure in R/
