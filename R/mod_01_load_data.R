@@ -734,7 +734,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
            ), {
           incProgress(0.2)
           # download org_info and demo files to current folder
-          options(timeout = 300)
+          options(timeout = 3000)
           download.file(
             url = paste0(db_url, db_ver, "/db/", db_file, ".gz"),
             destfile = paste0(dbname, ".gz"),
