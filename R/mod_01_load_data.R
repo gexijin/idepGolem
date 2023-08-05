@@ -33,8 +33,6 @@ mod_01_load_data_ui <- function(id) {
         # alternative UI output message for once expression data is loaded
         uiOutput(ns("load_data_alt")),
         # Species Match Drop Down ------------
-        strong("1. Required: What species?"),
-        br(), br(),
         selectInput(
           inputId = ns("select_org"),
           label = NULL,
@@ -46,7 +44,11 @@ mod_01_load_data_ui <- function(id) {
 
         fluidRow(
           column(
-            width = 6,
+            width = 4, 
+            strong("1. Choose a species"),
+          ),
+          column(
+            width = 4,
             align = "center",
             # Species list and genome assemblies ----------
             actionButton(
@@ -56,7 +58,7 @@ mod_01_load_data_ui <- function(id) {
           ),
 
           column(
-            width = 6,
+            width = 4,
             textOutput(ns("selected_species"))
           )
         ),
@@ -149,7 +151,7 @@ mod_01_load_data_ui <- function(id) {
         uiOutput(ns("design_file_ui")),
         checkboxInput(
           inputId = ns("customize_button"),
-          label = strong("More Options"),
+          label = strong("Settings"),
           value = FALSE
         ),
         selectInput(
@@ -232,6 +234,7 @@ mod_01_load_data_ui <- function(id) {
           which is used as a central id type in pathway databases.",
           theme = "light-border"
         ),
+        br(), br(),
         fluidRow(
           column(
             width = 4,
@@ -263,9 +266,9 @@ mod_01_load_data_ui <- function(id) {
           )
         ),
         # Table output for species loading progress -----------
-        br(),
-        br(),
-        tableOutput(ns("species_match"))
+        #br(),
+        #br(),
+        #tableOutput(ns("species_match"))
       ),
 
 
@@ -414,15 +417,17 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         selected = selected,
         server = TRUE
       )
-      output$selected_species <- renderText({
-        paste0(
-          #"Selected: ",
-          find_species_by_id_name(selected, idep_data$org_info)
-        )
-      })
 
+      selected_species_name(
+        find_species_by_id_name(selected, idep_data$org_info)
+      )
     })
 
+    selected_species_name <- reactiveVal("Human")
+
+    output$selected_species <- renderText({
+      selected_species_name()
+    })
 
     # UI elements for load demo action button, demo data drop down, and -----
     # expression file upload
@@ -441,7 +446,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         # Expression data file input
         fileInput(
           inputId = ns("expression_file"),
-          label = strong("3. Expression data (CSV, xlsx, or text), or use a demo file"),
+          label = strong("3. Expression data (CSV, text, or xlxs)"),
           accept = c(
             "text/csv",
             "text/comma-separated-values",
@@ -454,10 +459,20 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         ),
         fluidRow(
           column(
-            width = 3,
+            width = 5,
             align = "right",
-            # style = "margin-top: 8px;",
-            "Demo files:"
+            actionButton(
+              inputId = ns("go_button"),
+              label = "Load Demo:"
+            ),
+            tags$head(tags$style(
+              "#load_data-go_button{color: red;}"
+            )),
+            tippy::tippy_this(
+              ns("go_button"),
+              "Load the selected demo file",
+              theme = "light-border"
+            )
           ),
           column(
             width = 4,
@@ -472,21 +487,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             tippy::tippy_this(
               ns("select_demo"),
               "Select a demo file then click the \"Load Demo\"",
-              theme = "light-border"
-            )
-          ),
-          column(
-            width = 5,
-            actionButton(
-              inputId = ns("go_button"),
-              label = "Load Demo"
-            ),
-            tags$head(tags$style(
-              "#load_data-go_button{color: red;}"
-            )),
-            tippy::tippy_this(
-              ns("go_button"),
-              "Load the selected demo file",
               theme = "light-border"
             )
           )
@@ -519,11 +519,13 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
               align = "right",
               actionButton(
                 inputId = ns("reset_app_new_data"),
-                label = "Reset to load new data",
+                label = strong("Reset"),
                 align = "right"
               )
             )
-          )
+          ),
+          br(),
+          br()
         )
       }
     })
@@ -537,7 +539,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       tagList(
         fileInput(
           inputId = ns("experiment_file"),
-          label = strong("Optional: experiment design (CSV or text)"),
+          label = strong("4. Optional: experiment design (CSV or text)"),
           accept = c(
             "text/csv",
             "text/comma-separated-values",

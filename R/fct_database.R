@@ -27,7 +27,7 @@ connect_convert_db <- function(datapath = DATAPATH) {
     withProgress(message = "Download demo data and species database", {
       incProgress(0.2)
       file_name <- paste0(db_ver, ".tar.gz")
-      options(timeout = 300)
+      options(timeout = 3000)
       download.file(
         url = paste0(db_url, db_ver, "/", file_name),
         destfile = file_name,
