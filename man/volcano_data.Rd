@@ -11,7 +11,9 @@ volcano_data(
   limma_p_val,
   limma_fc,
   processed_data,
-  contrast_samples
+  contrast_samples,
+  all_gene_names,
+  select_gene_id
 )
 }
 \arguments{
@@ -35,6 +37,10 @@ pre-processing}
 
 \item{contrast_samples}{Samples that are included in the selected
 comparison}
+
+\item{all_gene_names}{Gene symbols, etc.}
+
+\item{select_gene_id}{Selected gene id type, symbol, Ensmembl, etc.}
 }
 \value{
 A list containing processed data for volcano plot in

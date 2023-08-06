@@ -53,7 +53,7 @@ mod_01_load_data_ui <- function(id) {
             # Species list and genome assemblies ----------
             actionButton(
               inputId = ns("genome_assembl_button"),
-              label = "Search & select"
+              label = "Select"
             )
           ),
 

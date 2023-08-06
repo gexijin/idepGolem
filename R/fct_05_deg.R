@@ -2529,6 +2529,8 @@ deg_heat_data <- function(limma,
 #'  pre-processing
 #' @param contrast_samples Samples that are included in the selected
 #'  comparison
+#' @param all_gene_names  Gene symbols, etc.
+#' @param select_gene_id Selected gene id type, symbol, Ensmembl, etc.
 #'
 #' @return A list containing processed data for volcano plot in
 #'  \code{plot_volcano()} & \code{plot_ma()} and list of differently expressed
@@ -2541,7 +2543,9 @@ volcano_data <- function(select_contrast,
                          limma_p_val,
                          limma_fc,
                          processed_data,
-                         contrast_samples) {
+                         contrast_samples,
+                         all_gene_names,
+                         select_gene_id) {
   if (is.null(select_contrast) || is.null(comparisons) ||
     length(top_genes) == 0) {
     return(NULL)
@@ -2580,6 +2584,24 @@ volcano_data <- function(select_contrast,
   rownames(average_data) <- rownames(processed_data)
 
   genes <- merge(average_data, top_1, by = "row.names")
+
+  # swap gene symbols
+  if (ncol(all_gene_names) == 3) {
+    genes2 <- genes # a temp data. 
+    row.names(genes2) <- genes2$Row.names
+    genes2 <- rowname_id_swap(
+      data_matrix = genes2,
+      all_gene_names = all_gene_names,
+      select_gene_id = select_gene_id
+    )
+
+    # just make sure gene orders are not switched
+    if(abs(cor(genes2[, 1], genes[, 2]) - 1) < 1e-10) {
+      genes$Row.names <- row.names(genes2)
+    }
+    
+  }
+
 
   anotate_genes <- genes |>
     dplyr::filter(upOrDown != "None")
@@ -3010,7 +3032,7 @@ mod_label_server <- function(id, data_list, method = c("volcano", "ma")) {
               "Label top n genes" = 3,
               "Label genes above a certain threshold" = 4
             ),
-            selected = 1
+            selected = 3
           ),
           conditionalPanel(
             condition = "input.gene_label_type == 2",

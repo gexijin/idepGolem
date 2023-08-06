@@ -822,7 +822,9 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         limma_p_val = input$limma_p_val,
         limma_fc = input$limma_fc,
         processed_data = pre_process$data(),
-        contrast_samples = contrast_samples()
+        contrast_samples = contrast_samples(),
+        all_gene_names = pre_process$all_gene_names(),
+        select_gene_id = load_data$select_gene_id()
       )
     })
 
