@@ -76,7 +76,7 @@ mod_04_pca_ui <- function(id) {
         ),
         # select design elements dynamically
         conditionalPanel(
-          condition = "input.PCA_panels != 'PCAtools Package'",
+          condition = "input.PCA_panels != 'PCAtools'",
           fluidRow(
             column(
               width = 6,
@@ -98,15 +98,17 @@ mod_04_pca_ui <- function(id) {
           fluidRow(
             actionButton(
               inputId = ns("seedTSNE"),
-              label = "Re-calculate from new seed"
+              label = "Re-calculate"
             ),
             tags$br()
           ),
+          br(),
+          br(),
           ns = ns
         ),
         # PCATools plot options
         conditionalPanel(
-          condition = "input.PCA_panels == 'PCAtools Package'",
+          condition = "input.PCA_panels == 'PCAtools'",
           fluidRow(
             column(
               width = 6,
@@ -237,7 +239,7 @@ mod_04_pca_ui <- function(id) {
             ),
           ),
           tabPanel(
-            "PCAtools Package",
+            "PCAtools",
             br(),
             plotOutput(
               outputId = ns("pcatools_biplot"),

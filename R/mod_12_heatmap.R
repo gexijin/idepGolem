@@ -12,7 +12,7 @@ mod_12_heatmap_ui <- function(id) {
   tagList(
     fluidRow(
       column(
-        width = 3,
+        width = 4,
         plotOutput(
           outputId = ns("main_heatmap"),
           height = "450px",
@@ -38,7 +38,7 @@ mod_12_heatmap_ui <- function(id) {
         )
       ),
       column(
-        width = 9,
+        width = 8,
         plotOutput(
           outputId = ns("sub_heatmap"),
           height = "650px",
