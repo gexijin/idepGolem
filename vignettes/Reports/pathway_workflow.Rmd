@@ -85,7 +85,7 @@ for (i in 1:length(params)) {
 
 # Tree
 ```{r echo=FALSE}
-enrichment_tree_plot(
+idepGolem::enrichment_tree_plot(
   go_table = params$pathway_list_data,
   group = "All Groups",
   right_margin = 10
@@ -163,7 +163,7 @@ if (params$pathway_method == 2) {
     gene_sets = params$gene_sets
   )
 
-  enrichment_tree_plot(
+  idepGolem::enrichment_tree_plot(
     go_table = pathway_list_data,
     group = "All Groups" # ,
     # right_margin = 45
