@@ -508,7 +508,7 @@ pathway_list_data <- get_pathway_list_data(
   gene_sets = gene_sets$gene_lists
 )
 
-enrichment_tree_plot(
+idepGolem::enrichment_tree_plot(
   go_table = pathway_list_data,
   group = "All Groups"
 )
