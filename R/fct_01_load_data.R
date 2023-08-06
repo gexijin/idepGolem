@@ -255,6 +255,7 @@ input_data <- function(expression_file,
       toupper(colnames(data)), toupper(colnames(expr))
     )
     matches <- matches[which(!is.na(matches))] # remove NA
+
     validate(need(
       length(unique(matches)) == ncol(data) &&
         nrow(expr) >= 1 && nrow(expr) < 500,
@@ -265,6 +266,7 @@ input_data <- function(expression_file,
     ))
 
     # Check factor levels, change if needed ----------
+    ignored_factors <- c()
     for (i in 1:nrow(expr)) {
       expr[i, ] <- gsub("-", "", expr[i, ])
       expr[i, ] <- gsub("\\.", "", expr[i, ])
@@ -272,6 +274,30 @@ input_data <- function(expression_file,
       expr[i, ] <- gsub(" ", "", expr[i, ])
       # Convert to upper case to avoid mixing
       expr[i, ] <- toupper(expr[i, ])
+      if(length(unique(t(expr[i, ]))) == 1) {
+        ignored_factors <- c(ignored_factors, i)
+      }
+    }
+
+    if(length(ignored_factors) == nrow(expr)) {
+      # ignore design file.
+      matches <- 1
+      showNotification(
+        ui = "Ignoring design file. All rows have one unique levels.",
+        id = "ignore_all_rows",
+        duration = NULL,
+        type = "default"
+      )
+    } else {    
+      # delete the row with only one level
+      ignored_rows <- paste0(row.names(expr)[ignored_factors], collapse = ", ")
+      showNotification(
+        ui = paste("Ignoring rows with one unique levels:", ignored_rows),
+        id = "ignore_some_rows",
+        duration = NULL,
+        type = "default"
+      )
+      expr <- expr[-1 * ignored_factors, ] 
     }
 
     # Factor levels match ---------
