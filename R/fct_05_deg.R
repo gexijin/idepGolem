@@ -2972,7 +2972,7 @@ mod_label_ui <- function(id) {
   tagList(
     actionButton(
       inputId = ns("customize_labels"),
-      label = "Customize gene labels"
+      label = "Label Genes"
     )
   )
 }

@@ -15,10 +15,10 @@ mod_01_load_data_ui <- function(id) {
     tags$head(
       tags$style(
         HTML(".shiny-notification {
-              width: 400px;
+              width: 300px;
               position:fixed;
-              top: calc(30%);
-              left: calc(30%);
+              top: calc(85%);
+              left: calc(0%);
               }
               "
             )

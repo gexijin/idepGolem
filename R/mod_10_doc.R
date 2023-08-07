@@ -93,7 +93,7 @@ mod_10_doc_ui <- function(id) {
       ),
       p(
         "According to Google Scholar, more than",
-        a("450 papers cited iDEP,",
+        a("673 papers cited iDEP,",
           href = "https://scholar.google.com/scholar?oi=bibs&hl=en&cites=6502699637682046008,17999801138713500070,11001860275874506471",
           target = "_blank"
         ),
