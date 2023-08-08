@@ -172,18 +172,18 @@ mod_04_pca_ui <- function(id) {
         ),
         fluidRow(
           column(
-            4,
+            6,
             # Download report button
             downloadButton(
               outputId = ns("report"),
-              label = "Generate Report"
+              label = "Report"
             )
           ),
-          column(4,
+          column(6,
             offset = 0,
             downloadButton(
               outputId = ns("pca_data"),
-              label = "Download PCA data"
+              label = "PCA data"
             )
           ),
           tippy::tippy_this(
@@ -203,7 +203,7 @@ mod_04_pca_ui <- function(id) {
           id = ns("PCA_panels"),
           tabPanel(
             title = "PCA",
-            h5("This plot is interactive. Hover over the plot to see more details."),
+            #h5("This plot is interactive. Hover over the plot to see more details."),
             plotly::plotlyOutput(
               outputId = ns("interactive_pca_plot_obj"),
               width = "100%",

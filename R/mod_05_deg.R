@@ -229,7 +229,7 @@ mod_05_deg_2_ui <- function(id) {
           mod_label_ui(ns("label_ma")),
           ns = ns
         ),
-        width = 2
+        width = 3
       ),
       mainPanel(
         tabsetPanel(

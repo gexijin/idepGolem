@@ -29,6 +29,16 @@ deg_heatmap <- function(data,
   cutoff <- median(unlist(data)) - 3 * sd(unlist(data))
   data[data < cutoff] <- cutoff
 
+  # sometimes one row is all zeroes or the same value, 
+  # this causes error for the complexHeatmap
+  ix <- which(abs(apply(data, 1, sd)) < 1e-20)
+  if(length(ix) > 0) {
+    data <- data[-1 * ix, ]
+    if(!is.null(bar)) {
+      bar <- bar[-1 * ix]
+    }
+  }
+
   # Color scale
   if (min(data) < 0) {
     col_fun <- circlize::colorRamp2(

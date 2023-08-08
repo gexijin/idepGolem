@@ -243,6 +243,7 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
     )
 
     output$module_network <- renderPlot({
+      req(!is.null(input$select_wgcna_module))
       req(!is.null(wgcna()))
       network$network_plot()
     })
