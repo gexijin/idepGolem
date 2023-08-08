@@ -15,10 +15,10 @@ mod_01_load_data_ui <- function(id) {
     tags$head(
       tags$style(
         HTML(".shiny-notification {
-              width: 400px;
+              width: 300px;
               position:fixed;
-              top: calc(30%);
-              left: calc(30%);
+              top: calc(85%);
+              left: calc(0%);
               }
               "
             )
@@ -334,13 +334,18 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       even for preliminrary analysis, please cite: ",
         "Ge, Son & Yao, iDEP,",
         a(
-          " BMC Bioinformatics 19:1-24, 2018.",
+          " BMC Bioinformatics 19:1-24, 2018, ",
           href = "https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-018-2486-6",
+          target = "_blank"
+        ),
+        "  which has been cited ",
+        a("673 times.",
+          href = "https://scholar.google.com/scholar?oi=bibs&hl=en&cites=6502699637682046008,17999801138713500070,11001860275874506471",
           target = "_blank"
         )
       ),
-      tags$h5("By citing the iDEP paper, you will help this service remain
-      available in the future.",
+      tags$h5("Just including the URL is hard to track. By citing the iDEP paper properly, you will help make this service
+      available in the future. ",
         style = "color:#6B1518"
       ),
       easyClose = TRUE,
@@ -475,7 +480,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             )
           ),
           column(
-            width = 4,
+            width = 7,
             align = "left",
             selectInput(
               inputId = ns("select_demo"),
@@ -827,11 +832,11 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       tagList(
         fluidRow(
           column(
-            width = 5,
-            h3("Welcome to iDEP!")
+            width = 9,
+            h4("iDEP: integrated Differential Expression & Pathway analysis")
           ),
           column(
-            width = 6,
+            width = 3,
             img(
               src = "www/idep_logo.png",
               width = "43",

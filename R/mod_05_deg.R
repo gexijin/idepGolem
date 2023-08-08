@@ -214,7 +214,7 @@ mod_05_deg_2_ui <- function(id) {
             input.step_2 == 'Scatter Plot'",
           selectInput(
             inputId = ns("plot_color_select"),
-            label = "Color scale",
+            label = NULL,
             choices = "Red-Green"
           ),
           ns = ns
@@ -229,7 +229,7 @@ mod_05_deg_2_ui <- function(id) {
           mod_label_ui(ns("label_ma")),
           ns = ns
         ),
-        width = 2
+        width = 3
       ),
       mainPanel(
         tabsetPanel(

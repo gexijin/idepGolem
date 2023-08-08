@@ -129,66 +129,7 @@ mod_07_genome_ui <- function(id) {
             p("Select a region to zoom in. Mouse over the points to
             see more information on the gene. Enriched regions are
             highlighted by blue or red line segments paralell to the chromosomes."),
-            p("Use camera icon in figure to download image.")
-          ),
-          tabPanel(
-            "PREDA (5 Mins)",
-            fluidRow(
-              column(
-                width = 3,
-                numericInput(
-                  inputId = ns("regions_p_val_cutoff"),
-                  label = h5("Min. FDR"),
-                  value = 0.01,
-                  min = 1e-20,
-                  max = 1,
-                  step = .05
-                )
-              ),
-              column(
-                width = 3,
-                numericInput(
-                  inputId = ns("statistic_cutoff"),
-                  label = h5("Min. Statistic"),
-                  min = .2,
-                  max = 1.5,
-                  value = .5,
-                  step = .1
-                )
-              )
-            ),
-            plotOutput(
-              outputId = ns("genome_plot"),
-              height = "700px",
-              width = "100%"
-            ),
-            ottoPlots::mod_download_figure_ui(ns("dl_genome_plot"))
-          ),
-          tabPanel(
-            "(PREDA) Significant Loci",
-            DT::dataTableOutput(outputId = ns("chr_regions")),
-            fluidRow(
-              column(
-                width = 3,
-                downloadButton(
-                  outputId = ns("dl_sig_data"),
-                  label = "Significiant loci"
-                )
-              )
-            )
-          ),
-          tabPanel(
-            "(PREDA) Genes",
-            DT::dataTableOutput(outputId = ns("genes_chr_regions")),
-            fluidRow(
-              column(
-                width = 3,
-                downloadButton(
-                  outputId = ns("dl_chr_regions"),
-                  label = "Chromosomes regions"
-                )
-              )
-            )
+            p("Mouse over the figure to see more options on the top right, including download.")
           ),
           tabPanel(
             "Info",

@@ -75,14 +75,6 @@ mod_09_network_ui <- function(id) {
         tabsetPanel(
           id = ns("network_tabs"),
           tabPanel(
-            "Module Plot",
-            plotOutput(
-              outputId = ns("module_plot"),
-              width = "100%",
-              height = "500px"
-            )
-          ),
-          tabPanel(
             "Network Plot",
             br(),
             fluidRow(
@@ -134,6 +126,14 @@ mod_09_network_ui <- function(id) {
             #              " or ",
             #              a("Cytoscape.", href = "http://www.cytoscape.org/", target = "_blank")
             #            ),
+          ),
+          tabPanel(
+            "Module Plot",
+            plotOutput(
+              outputId = ns("module_plot"),
+              width = "100%",
+              height = "500px"
+            )
           ),
           tabPanel(
             title = "Heatmap",
@@ -237,10 +237,14 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
           all_gene_info = pre_process$all_gene_info(),
           edge_threshold = input$edge_threshold
         )
+
+        
       }
     )
 
     output$module_network <- renderPlot({
+      req(!is.null(input$select_wgcna_module))
+      req(!is.null(wgcna()))
       network$network_plot()
     })
 
