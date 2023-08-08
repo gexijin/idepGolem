@@ -1424,9 +1424,9 @@ deg_limma <- function(processed_data,
 
     expr <- paste0(
       expr,
-      "stats <- limma::topTable(fit, number = Inf, sort.by = \"logFC\")\n",
+      "stats <- limma::topTable(fit, number = Inf, sort.by = \"log2FC\")\n",
       "head(stats)\n",
-      "table(sign(subset(stats, adj.P.Val < FDR & abs(logFC) > log2(FC))$logFC))\n",
+      "table(sign(subset(stats, adj.P.Val < FDR & abs(log2FC) > log2(FC))$log2FC))\n",
       "plotMDS(eset) # MDS plot of original data\n",
       "plotMD(fit, status = results)\n",
       "volcanoplot(fit, names = row.names(eset), highlight = 10)\n"
@@ -1434,7 +1434,7 @@ deg_limma <- function(processed_data,
 
     # only keep FC and FDR columns
     if (dim(top_genes_table)[1] != 0) { # have rows
-      top_genes_table <- top_genes_table[, c("logFC", "adj.P.Val")]
+      top_genes_table <- top_genes_table[, c("log2FC", "adj.P.Val")]
       top_genes[[1]] <- top_genes_table
     }
 
@@ -1966,8 +1966,8 @@ deg_limma <- function(processed_data,
       expr <- paste0(
         expr,
         "\n# Comparison: ", i, " of ", length(comparisons), ":", comparisons[i], "\n",
-        "stats <- limma::topTable(fit_contrast, coef = ", i, ", number = Inf, sort.by = \"logFC\")\n",
-        "table(sign(subset(stats, adj.P.Val < FDR & abs(logFC) > log2(FC))$logFC))\n",
+        "stats <- limma::topTable(fit_contrast, coef = ", i, ", number = Inf, sort.by = \"log2FC\")\n",
+        "table(sign(subset(stats, adj.P.Val < FDR & abs(log2FC) > log2(FC))$log2FC))\n",
         "plotMD(fit_contrast, coef = ", i, ", status = results)\n",
         "volcanoplot(fit_contrast, coef = ", i, ", names = row.names(eset), highlight = 10)\n"
       )
@@ -2924,7 +2924,7 @@ deg_information <- function(limma_value,
     # get the first comparison level
     degs_data <- limma_value$top_genes[[1]]
     colnames(degs_data) <- c(
-      (paste(limma_value$comparisons[[1]], "logFC", sep = "_")),
+      (paste(limma_value$comparisons[[1]], "log2FC", sep = "_")),
       (paste(limma_value$comparisons[[1]], "adjPval", sep = "_"))
     )
     degs_data$ensembl_ID <- rownames(degs_data)
@@ -2934,7 +2934,7 @@ deg_information <- function(limma_value,
       for (i in 2:length(names(limma_value$top_genes))) {
         temp <- limma_value$top_genes[[i]]
         colnames(temp) <- c(
-          (paste(limma_value$comparisons[[i]], "logFC", sep = "_")),
+          (paste(limma_value$comparisons[[i]], "log2FC", sep = "_")),
           (paste(limma_value$comparisons[[i]], "adjPval", sep = "_"))
         )
         temp$ensembl_ID <- rownames(temp)
