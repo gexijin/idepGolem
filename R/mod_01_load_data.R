@@ -475,7 +475,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             )
           ),
           column(
-            width = 4,
+            width = 7,
             align = "left",
             selectInput(
               inputId = ns("select_demo"),
