@@ -15,7 +15,7 @@ mod_10_doc_ui <- function(id) {
       h3(
         "If you find iDEP helpful, please ",
         a(
-          "send us a brief email.",
+          "send us a brief email (gelabinfo@gmail.com).",
           href = "mailto:gelabinfo@gmail.com?Subject=iDEP support letter"
         )
       ),
@@ -104,7 +104,7 @@ mod_10_doc_ui <- function(id) {
         if you used it just for preliminary analysis. Otherwise, this tool might
         just vanish."
       ),
-      h3("Source code and database"),
+      h3("Source code, database, & local installation"),
       p(
         "Source code is available on ",
         a(
@@ -118,6 +118,13 @@ mod_10_doc_ui <- function(id) {
           href = "http://bioinformatics.sdstate.edu/data/"
         )
       ),
+      h3("Privacy policy"),
+      p("User uploaded data files are saved in a temporary folder during your session and automatically deleted. 
+      Our group does not keep a copy of the uploaded data.
+      We monitor web traffic using Google Analytics, which tells us your IP address (approximate location down to the city level),  
+      and how long you are on this site. Error messages are recorded by Shiny server.  
+      By visiting this site, you agree to provide web activity data.
+      "),
       h3("Contact us"),
       p(
         "Please email Jenny",

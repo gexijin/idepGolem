@@ -415,6 +415,23 @@ mod_02_pre_process_ui <- function(id) {
              the width of browser window."
             )
           ),
+
+          # Barplot for rRNA counts ----------
+          tabPanel(
+            title = "Gene type",
+            br(),
+            plotOutput(
+              outputId = ns("rRNA_counts_gg"),
+              width = "100%",
+              height = "500px"
+            ),
+            ottoPlots::mod_download_figure_ui(
+              id = ns("dl_rRNA_counts_gg")
+            ),
+            br(),
+            p("Higher proportions of rRNA indicuate ineffective rRNA-removal.")
+          ),
+
           # Searchable table of transformed converted data ---------
           tabPanel(
             title = "Data",
@@ -539,6 +556,34 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       label = ""
     )
 
+    # Counts barplot ------------
+    rRNA_counts <- reactive({
+      req(!is.null(processed_data()$raw_counts))
+
+      p <- rRNA_counts_ggplot(
+        counts_data = load_data$converted_data(),
+        sample_info = load_data$sample_info(),
+        type = "Raw",
+        all_gene_info = load_data$all_gene_info()
+      )
+      refine_ggplot2(
+        p = p,
+        gridline = load_data$plot_grid_lines(),
+        ggplot2_theme = load_data$ggplot2_theme()
+      )
+    })
+    output$rRNA_counts_gg <- renderPlot({
+      print(rRNA_counts())
+    })
+
+    dl_rRNA_counts_gg <- ottoPlots::mod_download_figure_server(
+      id = "dl_rRNA_counts_gg",
+      filename = "rRNA_counts_barplot",
+      figure = reactive({
+        rRNA_counts()
+      }),
+      label = ""
+    )
 
     # Scatter eda plot ----------
     scatter <- reactive({

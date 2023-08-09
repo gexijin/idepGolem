@@ -44,8 +44,8 @@ mod_03_clustering_ui <- function(id) {
                 label = NULL,
                 min = 10,
                 max = 12000,
-                value = 1000,
-                step = 10
+                value = 2000,
+                step = 100
               ),
               tippy::tippy_this(
                 ns("n_genes"),

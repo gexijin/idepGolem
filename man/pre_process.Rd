@@ -86,6 +86,7 @@ Other preprocess functions:
 \code{\link{eda_scatter}()},
 \code{\link{individual_plots}()},
 \code{\link{mean_sd_plot}()},
+\code{\link{rRNA_counts_ggplot}()},
 \code{\link{total_counts_ggplot}()}
 }
 \concept{preprocess functions}

@@ -54,6 +54,7 @@ Other plots:
 \code{\link{eda_scatter}()},
 \code{\link{k_means_elbow}()},
 \code{\link{mean_sd_plot}()},
+\code{\link{rRNA_counts_ggplot}()},
 \code{\link{sd_density}()},
 \code{\link{t_SNE_plot}()},
 \code{\link{total_counts_ggplot}()}
@@ -64,6 +65,7 @@ Other preprocess functions:
 \code{\link{eda_scatter}()},
 \code{\link{mean_sd_plot}()},
 \code{\link{pre_process}()},
+\code{\link{rRNA_counts_ggplot}()},
 \code{\link{total_counts_ggplot}()}
 }
 \concept{plots}

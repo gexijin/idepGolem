@@ -355,6 +355,111 @@ total_counts_ggplot <- function(counts_data,
   return(plot)
 }
 
+
+
+#' Creates a barplot of the count data by gene type
+#'
+#' This function takes in either raw count or processed data and creates a
+#' formatted barplot as a \code{ggplot} object that shows the number
+#' of genes mapped to each sample in millions. This function is only used for
+#' read counts data.
+#'
+#' @param counts_data Matrix of raw counts from gene expression data
+#' @param sample_info Matrix of experiment design information for grouping
+#'  samples
+#' @param type String designating the type of data to be used in the title.
+#'  Commonly either "Raw" or "Transformed"
+#' @param all_gene_info Gene info, including chr., gene type etc.
+#' @export
+#' @return A barplot as a \code{ggplot} object
+#'
+#' @family preprocess functions
+#' @family plots
+#'
+#'
+rRNA_counts_ggplot <- function(counts_data,
+                                sample_info,
+                                type = "",
+                                all_gene_info) {
+  counts <- counts_data
+  memo <- ""
+
+  if (ncol(counts) > 100) {
+    part <- 1:100
+    counts <- counts[, part]
+    memo <- paste("(only showing 100 samples)")
+  }
+  groups <- as.factor(
+    detect_groups(colnames(counts), sample_info)
+  )
+
+  if (ncol(counts) < 31) {
+    x_axis_labels <- 16
+  } else {
+    x_axis_labels <- 12
+  }
+
+  df <- merge(
+    counts_data,
+    all_gene_info,
+    by.x = "row.names",
+    by.y = "ensembl_gene_id"
+  )
+  df$gene_biotype <- gsub(".*pseudogene", "Pseudogene", df$gene_biotype)
+  df$gene_biotype <- gsub("TEC", "Unknown", df$gene_biotype)
+  df$gene_biotype <- gsub("IG_.*", "IG", df$gene_biotype)
+  df$gene_biotype <- gsub("TR_.*", "TR", df$gene_biotype)
+
+  counts_by_type <- aggregate(
+    df[, colnames(counts_data)],
+    by = list(df$gene_biotype),
+    FUN = sum
+  )
+  colnames(counts_by_type)[1] = "Gene_Type"
+
+  df <- cbind(Gene_Type = counts_by_type[, 1], sweep(counts_by_type[-1], 2, 0.01 * colSums(counts_by_type[-1]), "/"))
+
+  # remove categories less than 0.5%
+  df <- df[which(apply(df[, -1], 1, max) > 0.5), ]
+
+  plot_data <- reshape2::melt(df, id.vars = "Gene_Type")
+
+
+
+  plot <- ggplot2::ggplot(plot_data, ggplot2::aes(x = variable, y = value, fill = Gene_Type)) +
+    ggplot2::geom_bar(stat = "identity") +
+    ggplot2::labs(x = NULL, y = "% Counts", title = "% Counts by gene type (Check for rRNA %)") +
+    ggplot2::scale_fill_brewer(palette = "Set1")
+
+  plot <- plot +
+    ggplot2::geom_bar(stat = "identity") +
+    ggplot2::theme_light() +
+    ggplot2::theme(
+      legend.position = "right",
+      axis.title.x = ggplot2::element_blank(),
+      axis.title.y = ggplot2::element_text(
+        color = "black",
+        size = 14
+      ),
+      axis.text.x = ggplot2::element_text(
+        angle = 90,
+        size = x_axis_labels
+      ),
+      axis.text.y = ggplot2::element_text(
+        size = 16
+      ),
+      plot.title = ggplot2::element_text(
+        color = "black",
+        size = 16,
+        face = "bold",
+        hjust = .5
+      )
+    ) 
+
+  return(plot)
+}
+
+
 #' Scatterplot for EDA on processed data
 #'
 #' This function takes the data after it has been pre-processed and
