@@ -122,7 +122,6 @@ pre_process <- function(data,
     }
   }
 
-  browser()
   # Compute kurtosis ---------
   mean_kurtosis <- mean(apply(data, 2, e1071::kurtosis), na.rm = TRUE)
   raw_counts <- NULL
