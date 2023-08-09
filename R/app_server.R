@@ -10,23 +10,23 @@ app_server <- function(input, output, session) {
   options(warn = -1) # turn off warning
   pdf(file = NULL)
 
-# define where database is located
-db_ver <<- "data107"
-db_url <<- "http://bioinformatics.sdstate.edu/data/"
+  # define where database is located
+  db_ver <<- "data107"
+  db_url <<- "http://bioinformatics.sdstate.edu/data/"
 
-# if environmental variable is not set, use relative path
-DATAPATH <<- Sys.getenv("IDEP_DATABASE")[1]
-# if not defined in the environment, use too levels above
-if (nchar(DATAPATH) == 0) {
-  DATAPATH <<- paste0("../../data/")
-}
-#Add version
-DATAPATH <<- paste0(DATAPATH, "/", db_ver, "/")
-org_info_file <<- paste0(DATAPATH, "demo/orgInfo.db")
-if(!file.exists(org_info_file)) {
-  DATAPATH <<- paste0("./", db_ver, "/")
+  # if environmental variable is not set, use relative path
+  DATAPATH <<- Sys.getenv("IDEP_DATABASE")[1]
+  # if not defined in the environment, use too levels above
+  if (nchar(DATAPATH) == 0) {
+    DATAPATH <<- paste0("../../data/")
+  }
+  #Add version
+  DATAPATH <<- paste0(DATAPATH, "/", db_ver, "/")
   org_info_file <<- paste0(DATAPATH, "demo/orgInfo.db")
-}
+  if(!file.exists(org_info_file)) {
+    DATAPATH <<- paste0("./", db_ver, "/")
+    org_info_file <<- paste0(DATAPATH, "demo/orgInfo.db")
+  }
 
   # load static data files such as list of species, gmt files, etc
   # This could be moved to run_app as global variable, as in global.R
