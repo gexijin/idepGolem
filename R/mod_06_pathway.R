@@ -62,9 +62,9 @@ mod_06_pathway_ui <- function(id) {
             numericInput(
               inputId = ns("min_set_size"),
               label = "Geneset size: Min.",
-              min = 5,
+              min = 2,
               max = 30,
-              value = 15,
+              value = 5,
               step = 1
             )
           ),

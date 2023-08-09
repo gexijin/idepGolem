@@ -812,7 +812,7 @@ read_gene_sets <- function(converted,
 #    dbname = "C:/work/iDEP_data/data104b/pathwayDB/Human__hsapiens_gene_ensembl.db",
 #    flags = RSQLite::SQLITE_RO
 #  )
-# browser()
+
   # if database connection error
   if(inherits(pathway, "try-error")) {
     return(id_not_recognized)
