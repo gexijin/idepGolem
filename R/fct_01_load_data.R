@@ -385,22 +385,27 @@ convert_data <- function(converted,
         "sum" = aggregate(
           . ~ ensembl_gene_id,
           data = merged,
-          FUN = sum
+          FUN = sum_fun,
+          #na.rm = TRUE, # if used, missing values are replaced with NA.
+          na.action = na.pass  # otherwise, missing values --> genes removed
         ),
         "mean" = aggregate(
           . ~ ensembl_gene_id,
           data = merged,
-          FUN = mean
+          FUN = mean_fun,
+          na.action = na.pass
         ),
         "max" = aggregate(
           . ~ ensembl_gene_id,
           data = merged,
-          FUN = max
+          FUN = max_fun,
+          na.action = na.pass
         ),
         "median" = aggregate(
           . ~ ensembl_gene_id,
           data = merged,
-          FUN = median
+          FUN = median_fun,
+          na.action = na.pass
         )
       )
     }
@@ -412,7 +417,7 @@ convert_data <- function(converted,
     merged <- merged[order(-apply(
       merged[, 1:ncol(merged)],
       1,
-      sd
+      function(x) sd(x, na.rm = TRUE)
     )), ]
 
     return(list(
@@ -487,5 +492,78 @@ get_all_gene_names <- function(mapped_ids,
     )
 
     return(all_names)
+  }
+}
+
+#' Calculate sum of vector
+#'
+#' This function refines the sum function to handle missing value, used 
+#' with the aggregate function
+#'
+#' @param x a vector 
+#'
+#' @export
+#' @return a number, or NA if all the numbers are NA
+#'
+sum_fun <- function(x){
+  if(sum(is.na(x)) == length(x)) {
+    return(NA)
+  } else {
+    sum(x, na.rm = TRUE)
+  }
+}
+
+#' Calculate max of vector
+#'
+#' This function refines the max function to handle missing value, used 
+#' with the aggregate function
+#'
+#' @param x a vector 
+#'
+#' @export
+#' @return a number, or NA if all the numbers are NA
+#'
+max_fun <- function(x){
+  if(sum(is.na(x)) == length(x)) {
+    return(NA)
+  } else {
+    max(x, na.rm = TRUE)
+  }
+}
+
+
+#' Calculate mean of vector
+#'
+#' This function refines the mean function to handle missing value, used 
+#' with the aggregate function
+#'
+#' @param x a vector 
+#'
+#' @export
+#' @return a number, or NA if all the numbers are NA
+#'
+mean_fun <- function(x){
+  if(sum(is.na(x)) == length(x)) {
+    return(NA)
+  } else {
+    mean(x, na.rm = TRUE)
+  }
+}
+
+#' Calculate median of vector
+#'
+#' This function refines the median function to handle missing value, used 
+#' with the aggregate function
+#'
+#' @param x a vector 
+#'
+#' @export
+#' @return a number, or NA if all the numbers are NA
+#'
+median_fun <- function(x){
+  if(sum(is.na(x)) == length(x)) {
+    return(NA)
+  } else {
+    median(x, na.rm = TRUE)
   }
 }

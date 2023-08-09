@@ -79,7 +79,7 @@ pre_process <- function(data,
   data <- data[order(-apply(
     data[, 1:dim(data)[2]],
     1,
-    sd
+    function(x) sd(x, na.rm = TRUE)
   )), ]
 
   # Missng values in expression data ----------
@@ -121,6 +121,8 @@ pre_process <- function(data,
       }
     }
   }
+
+  browser()
   # Compute kurtosis ---------
   mean_kurtosis <- mean(apply(data, 2, e1071::kurtosis), na.rm = TRUE)
   raw_counts <- NULL
