@@ -427,7 +427,7 @@ rRNA_counts_ggplot <- function(counts_data,
 
   plot <- ggplot2::ggplot(plot_data, ggplot2::aes(x = variable, y = value, fill = Gene_Type)) +
     ggplot2::geom_bar(stat = "identity") +
-    ggplot2::labs(x = NULL, y = "% Counts", title = "% Counts by gene type") +
+    ggplot2::labs(x = NULL, y = "% Reads", title = "% Reads by gene type") +
     ggplot2::scale_fill_brewer(palette = "Set1")
 
   plot <- plot +
@@ -578,7 +578,7 @@ chr_counts_ggplot <- function(counts_data,
 
   plot <- ggplot2::ggplot(plot_data, ggplot2::aes(x = variable, y = value)) +
     ggplot2::geom_bar(stat = "identity") +
-    ggplot2::labs(x = NULL, y = "% Counts", title = "% Counts by Chromosomes") +
+    ggplot2::labs(x = NULL, y = "% Reads", title = "% Reads by Chromosomes") +
     ggplot2::scale_fill_brewer(palette = "Set1")
 
   if(ncol(counts_data) < 10) {
