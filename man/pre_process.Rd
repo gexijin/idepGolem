@@ -81,6 +81,7 @@ information on the regularized log transformation
 }
 
 Other preprocess functions: 
+\code{\link{chr_counts_ggplot}()},
 \code{\link{eda_boxplot}()},
 \code{\link{eda_density}()},
 \code{\link{eda_scatter}()},

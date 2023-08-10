@@ -24,6 +24,7 @@ tissue sample.
 \seealso{
 Other plots: 
 \code{\link{PCA_plot}()},
+\code{\link{chr_counts_ggplot}()},
 \code{\link{cor_plot}()},
 \code{\link{draw_sample_tree}()},
 \code{\link{eda_density}()},
@@ -37,6 +38,7 @@ Other plots:
 \code{\link{total_counts_ggplot}()}
 
 Other preprocess functions: 
+\code{\link{chr_counts_ggplot}()},
 \code{\link{eda_density}()},
 \code{\link{eda_scatter}()},
 \code{\link{individual_plots}()},

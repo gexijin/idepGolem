@@ -45,6 +45,7 @@ Create a clustered tree of the samples in the dataset based on hierarchical
 \seealso{
 Other plots: 
 \code{\link{PCA_plot}()},
+\code{\link{chr_counts_ggplot}()},
 \code{\link{cor_plot}()},
 \code{\link{eda_boxplot}()},
 \code{\link{eda_density}()},

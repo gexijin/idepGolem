@@ -418,18 +418,36 @@ mod_02_pre_process_ui <- function(id) {
 
           # Barplot for rRNA counts ----------
           tabPanel(
-            title = "Gene type",
+            title = "QC",
             br(),
             plotOutput(
               outputId = ns("rRNA_counts_gg"),
               width = "100%",
               height = "500px"
             ),
-            ottoPlots::mod_download_figure_ui(
-              id = ns("dl_rRNA_counts_gg")
-            ),
             br(),
-            p("Higher proportions of rRNA indicuate ineffective rRNA-removal.")
+            fluidRow(
+              column(
+                2, 
+                ottoPlots::mod_download_figure_ui(
+                  id = ns("dl_rRNA_counts_gg")
+                )
+              ),
+              column(
+                10,
+                align = "right",
+                p("Higher proportions of rRNA indicuate ineffective rRNA-removal.")
+              )
+            ),
+            hr(),
+            plotOutput(
+              outputId = ns("chr_counts_gg"),
+              width = "100%",
+              height = "2000px"
+            ),
+            ottoPlots::mod_download_figure_ui(
+              id = ns("dl_chr_counts_gg")
+            )
           ),
 
           # Searchable table of transformed converted data ---------
@@ -556,21 +574,27 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       label = ""
     )
 
-    # Counts barplot ------------
+    # gene type barplot ------------
     rRNA_counts <- reactive({
       req(!is.null(processed_data()$raw_counts))
-
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Pre-Processing Data",
+        color = "#000000"
+      )
       p <- rRNA_counts_ggplot(
         counts_data = load_data$converted_data(),
         sample_info = load_data$sample_info(),
         type = "Raw",
         all_gene_info = load_data$all_gene_info()
       )
-      refine_ggplot2(
+      p <- refine_ggplot2(
         p = p,
         gridline = load_data$plot_grid_lines(),
         ggplot2_theme = load_data$ggplot2_theme()
       )
+      shinybusy::remove_modal_spinner()
+      return(p)
     })
     output$rRNA_counts_gg <- renderPlot({
       print(rRNA_counts())
@@ -581,6 +605,42 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       filename = "rRNA_counts_barplot",
       figure = reactive({
         rRNA_counts()
+      }),
+      label = ""
+    )
+
+    # chr counts barplot ------------
+    chr_counts <- reactive({
+      req(!is.null(processed_data()$raw_counts))
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Pre-Processing Data",
+        color = "#000000"
+      )
+      p <- chr_counts_ggplot(
+        counts_data = load_data$converted_data(),
+        sample_info = load_data$sample_info(),
+        type = "Raw",
+        all_gene_info = load_data$all_gene_info()
+      )
+      p <- refine_ggplot2(
+        p = p,
+        gridline = load_data$plot_grid_lines(),
+        ggplot2_theme = load_data$ggplot2_theme()
+      )
+      shinybusy::remove_modal_spinner()
+      return(p)
+    })
+    output$chr_counts_gg <- renderPlot({
+      print(chr_counts())
+    },
+    height = 2000)
+
+    dl_chr_counts_gg <- ottoPlots::mod_download_figure_server(
+      id = "dl_chr_counts_gg",
+      filename = "Chr_counts_barplot",
+      figure = reactive({
+        chr_counts()
       }),
       label = ""
     )

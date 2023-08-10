@@ -26,6 +26,7 @@ between samples.
 \seealso{
 Other plots: 
 \code{\link{PCA_plot}()},
+\code{\link{chr_counts_ggplot}()},
 \code{\link{draw_sample_tree}()},
 \code{\link{eda_boxplot}()},
 \code{\link{eda_density}()},
