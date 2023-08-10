@@ -409,7 +409,7 @@ rRNA_counts_ggplot <- function(counts_data,
   df$gene_biotype <- gsub("TEC", "Unknown", df$gene_biotype)
   df$gene_biotype <- gsub("IG_.*", "IG", df$gene_biotype)
   df$gene_biotype <- gsub("TR_.*", "TR", df$gene_biotype)
-
+  df$gene_biotype <- gsub("protein_coding", "Coding", df$gene_biotype)
   counts_by_type <- aggregate(
     df[, colnames(counts_data)],
     by = list(df$gene_biotype),
