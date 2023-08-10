@@ -87,15 +87,14 @@ pc_factor_correlation(
 
 ## Principal Component Analysis 3D
 ```{r fig.show='hide'}
-PCA_plot(
+PCA_plot_3d(
   data = params$pre_processed_data,
   sample_info = params$sample_info,
   PCAx = params$pc_x,
   PCAy = params$pc_y,
   PCAz = params$pc_z,
   selected_color = params$color,
-  selected_shape = params$shape,
-  plot_type = "3d"
+  selected_shape = params$shape
 )
 ```
 Plot not included on this report.

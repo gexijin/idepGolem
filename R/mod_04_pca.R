@@ -320,9 +320,14 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
         selected_shape = input$selectFactors2,
         selected_color = input$selectFactors1
       )
+      refine_ggplot2(
+        p = p,
+        gridline = pre_process$plot_grid_lines(),
+        ggplot2_theme = pre_process$ggplot2_theme()
+      )
     })
     output$interactive_pca_plot_obj <- plotly::renderPlotly({
-      pca_plot()
+      plotly::ggplotly(pca_plot())
     })
     output$pca_plot_obj <- renderPlot({
       req(pca_plot())
@@ -381,15 +386,14 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
     pca_plot_3d <- reactive({
       req(!is.null(pre_process$data()))
 
-      p <- PCA_plot(
+      p <- PCA_plot_3d(
         data = pre_process$data(),
         sample_info = pre_process$sample_info(),
         PCAx = input$PCAx,
         PCAy = input$PCAy,
         PCAz = input$PCAz,
         selected_shape = input$selectFactors2,
-        selected_color = input$selectFactors1,
-        plot_type = "3d"
+        selected_color = input$selectFactors1
       )
     })
     output$pca_plot_obj_3d <- plotly::renderPlotly({

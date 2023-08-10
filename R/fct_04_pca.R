@@ -73,18 +73,17 @@ get_pc_variance <- function(data) {
 #' @param sample_info Matrix of sample information from experiment design file
 #' @param PCAx Integer designating the PC to be plotted on the x axis
 #' @param PCAy Integer designating the PC to be plotted on on the y axis
-#' @param PCAz Integer designating the PC to be plotted on the z axis (only for 3D)
 #' @param selected_color String designating factor to color points by. Should be
 #'  one of the design factors from the design file or "Names" as default which
 #'  automatically detects groups from gene data file
 #' @param selected_shape String designating factor to shape points by.
 #'  Should be one of the design factors from the design file or "Names" as
 #'  default which automatically detects groups from gene data file
-#' @param plot_type String indicating whether to plot in 2D ("2d") or 3D ("3d").
 #'
 #' @export
 #' @return A \code{ggplot} object as a PCA plot
 #'
+#' @seealso \code{\link{PCA_plot_3d}()} for three-dimensional version
 #'
 #' @family PCA functions
 #' @family plots
@@ -92,10 +91,8 @@ PCA_plot <- function(data,
                      sample_info,
                      PCAx = 1,
                      PCAy = 2,
-                     PCAz = NULL,
                      selected_color = "Names",
-                     selected_shape = "Names",
-                     plot_type = "2d") {
+                     selected_shape = "Names") {
   # no design file
   if (is.null(selected_color)) {
     selected_color <- "Names"
@@ -116,6 +113,8 @@ PCA_plot <- function(data,
   } else {
     x_axis_labels <- 12
   }
+
+
 
   # get groups
   groups <- detect_groups(sample_names = colnames(data), sample_info = sample_info)
@@ -139,85 +138,186 @@ PCA_plot <- function(data,
     x_axis_labels <- 12
   }
 
-  if (plot_type == "2d") {
-    # # selected principal components
-    PCAxy <- c(as.integer(PCAx), as.integer(PCAy))
-    percentVar <- get_pc_variance(data)[PCAxy] # round(100 * summary(pca.object)$importance[2, PCAxy], 0)
 
-    plot_PCA <- plotly::plot_ly(pcaData,
-      x = pcaData[, as.integer(PCAx)],
-      y = pcaData[, as.integer(PCAy)],
-      color = pcaData[, selected_color],
-      symbol = pcaData[, selected_shape],
-      text = rownames(pcaData)[1],
-      hovertemplate = paste(
-        "<b>%{text}</b><br><br>",
-        "PC ", PCAy, ":%{y:.3f}<br>",
-        "PC ", PCAx, ":%{x:.3f}<br>",
-        "<extra></extra>"
-      ),
-      type = "scatter",
-      mode = "markers"
-      ) |> plotly::layout(
-      legend = list(title = list(text = paste0(selected_color, " ", selected_shape))),
-      plot_bgcolor = "#e5ecf6",
-      scene = list(
-        xaxis = list(
-          title = paste0("PC", PCAx, ": ", percentVar[1], "% Variance"),
-          automargin = TRUE
-        ),
-        yaxis = list(
-          title = paste0("PC", PCAy, ": ", percentVar[2], "% Variance"),
-          automargin = TRUE
-        )
-      )
-    )
-    return(plot_PCA)
-  } else if (plot_type == "3d") {
-    # selected principal components
-    PCAxyz <- c(as.integer(PCAx), as.integer(PCAy), as.integer(PCAz))
-    percentVar <- get_pc_variance(data)[PCAxyz] 
-    plot_PCA <- plotly::plot_ly(pcaData,
-      x = pcaData[, as.integer(PCAx)],
-      y = pcaData[, as.integer(PCAy)],
-      z = pcaData[, as.integer(PCAz)],
-      color = pcaData[, selected_color],
-      symbol = pcaData[, selected_shape],
-      text = rownames(pcaData)[1],
-      hovertemplate = paste(
-        "<b>%{text}</b><br><br>",
-        "PC ", PCAy, ":%{y:.3f}<br>",
-        "PC ", PCAx, ":%{x:.3f}<br>",
-        "PC ", PCAz, ":%{z:.3f}<br>",
-        "<extra></extra>"
-      ),
-      type = "scatter3d",
-      mode = "markers"
-      ) |> plotly::layout(
-      legend = list(title = list(text = paste0(selected_color, " ", selected_shape))),
-      plot_bgcolor = "#e5ecf6",
-      scene = list(
-        xaxis = list(
-          title = paste0("PC", PCAx, ": ", percentVar[1], "% Variance"),
-          automargin = TRUE
-        ),
-        yaxis = list(
-          title = paste0("PC", PCAy, ": ", percentVar[2], "% Variance"),
-          automargin = TRUE
-        ),
-        zaxis = list(
-          title = paste0("PC", PCAz, ": ", percentVar[3], "% Variance"),
-          automargin = TRUE
-        )
-      )
-    )
-    return(plot_PCA)
-  } else {
-    stop("Invalid plot_type. Choose either '2d' or '3d'.")
+  # Set point & text size based on number of sample
+  point_size <- 6
+  if (ncol(data) >= 40) {
+    point_size <- 3
   }
+
+  plot_PCA <- ggplot2::ggplot(
+    data = pcaData,
+    ggplot2::aes_string(
+      x = paste0("PC", PCAx),
+      y = paste0("PC", PCAy),
+      color = selected_color,
+      shape = selected_shape,
+      group = selected_shape
+    )
+  ) +
+    # Preferred shapes
+    ggplot2::scale_shape_manual(
+      values = c(
+        15, 16, 17, 18, 3, 4, 7, 8, 9, 10, 11, 12, 13, 14,
+        0, 1, 2, 5, 6, 19, 20, 30:100
+      )
+    ) +
+    ggplot2::geom_point(size = point_size) +
+    ggplot2::theme_light() +
+    ggplot2::theme(
+      legend.position = "right", # TODO no legend for large data
+      axis.title.y = ggplot2::element_text(
+        color = "black",
+        size = 14
+      ),
+      axis.title.x = ggplot2::element_text(
+        color = "black",
+        size = 14
+      ),
+      axis.text.x = ggplot2::element_text(
+        angle = 90,
+        size = x_axis_labels
+      ),
+      axis.text.y = ggplot2::element_text(
+        size = 16
+      ),
+      plot.title = ggplot2::element_text(
+        color = "black",
+        size = 16,
+        face = "bold",
+        hjust = .5
+      )
+    ) +
+    ggplot2::labs(
+      title = memo,
+      y = "Dimension 2",
+      x = "Dimension 1"
+    ) #+
+  # removed - causes plot legend to be missing shapes
+  # ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(shape = 15)))9
+
+
+  # selected principal components
+  PCAxy <- c(as.integer(PCAx), as.integer(PCAy))
+  percentVar <- get_pc_variance(data)[PCAxy] # round(100 * summary(pca.object)$importance[2, PCAxy], 0)
+  plot_PCA <- plot_PCA + ggplot2::xlab(paste0("PC", PCAx, ": ", percentVar[1], "% Variance"))
+  plot_PCA <- plot_PCA + ggplot2::ylab(paste0("PC", PCAy, ": ", percentVar[2], "% Variance"))
+  return(plot_PCA)
 }
 
 
+
+
+
+#' Principal component analysis 3D plot
+#'
+#' Draw a 3D PCA plot with designated PCA components on axis
+#'
+#' @param data Matrix of gene data that has been through
+#'  \code{\link{pre_process}()}
+#' @param sample_info Matrix of sample information from experiment design file
+#' @param PCAx Integer designating the PC to be plotted on the x axis
+#' @param PCAy Integer designating the PC to be plotted on the y axis
+#' @param PCAz Integer designating the PC to be plotted on the z axis
+#' @param selected_color String designating factor to color points by. Should be
+#'  one of the design factors from the design file or "Names" as default which
+#'  automatically detects groups from gene data file
+#' @param selected_shape String designating factor to shape points by.
+#'  Should be one of the design factors from the design file or "Names" as
+#'  default which automatically detects groups from gene data file
+#'
+#' @export
+#' @return Formatted PCA plot
+#'
+#' @family PCA functions
+#' @seealso \code{\link{PCA_plot}()}
+#'
+PCA_plot_3d <- function(data,
+                        sample_info,
+                        PCAx = 1,
+                        PCAy = 2,
+                        PCAz = 3,
+                        selected_color = "Names",
+                        selected_shape = "Names") {
+  # no design file
+  if (is.null(selected_color)) {
+    selected_color <- "Names"
+  }
+  if (is.null(selected_shape)) {
+    selected_shape <- "Names"
+  }
+  counts <- data
+  memo <- ""
+
+  if (ncol(counts) > 100) {
+    part <- 1:100
+    counts <- counts[, part]
+    memo <- paste("(only showing 100 samples)")
+  }
+
+  if (ncol(counts) < 31) {
+    x_axis_labels <- 16
+  } else {
+    x_axis_labels <- 12
+  }
+
+  pca.object <- prcomp(t(data))
+
+  # 5 pc's or number of columns if <5
+  npc <- min(5, ncol(data))
+  pcaData <- as.data.frame(pca.object$x[, 1:npc])
+
+  groups <- detect_groups(sample_names = colnames(data), sample_info = sample_info)
+  # Missing design clause
+  if (is.null(sample_info)) {
+    pcaData <- cbind(pcaData, detect_groups(colnames(data), sample_info))
+  } else {
+    pcaData <- cbind(pcaData, detect_groups(colnames(data), sample_info), sample_info)
+  }
+  colnames(pcaData)[npc + 1] <- "Names"
+
+  # selected principal components
+  PCAxyz <- c(as.integer(PCAx), as.integer(PCAy), as.integer(PCAz))
+  percentVar <- round(100 * summary(pca.object)$importance[2, PCAxyz], 0)
+  plot_PCA <- plotly::plot_ly(pcaData,
+    x = pcaData[, as.integer(PCAx)],
+    y = pcaData[, as.integer(PCAy)],
+    z = pcaData[, as.integer(PCAz)],
+    color = pcaData[, selected_color],
+    symbol = pcaData[, selected_shape],
+    text = rownames(pcaData)[1],
+    hovertemplate = paste(
+      "<b>%{text}</b><br><br>",
+      "PC ", PCAy, ":%{y:.3f}<br>",
+      "PC ", PCAx, ":%{x:.3f}<br>",
+      "PC ", PCAz, ":%{z:.3f}<br>",
+      "<extra></extra>"
+    ),
+    type = "scatter3d",
+    mode = "markers",
+    width =
+    )
+  plot_PCA <- plotly::layout(
+    p = plot_PCA,
+    legend = list(title = list(text = paste0(selected_color, " ", selected_shape))),
+    plot_bgcolor = "#e5ecf6",
+    scene = list(
+      xaxis = list(
+        title = paste0("PC", PCAx, ": ", percentVar[1], "% Variance"),
+        automargin = TRUE
+      ),
+      yaxis = list(
+        title = paste0("PC", PCAy, ": ", percentVar[2], "% Variance"),
+        automargin = TRUE
+      ),
+      zaxis = list(
+        title = paste0("PC", PCAz, ": ", percentVar[3], "% Variance"),
+        automargin = TRUE
+      )
+    )
+  )
+  return(plot_PCA)
+}
 
 #' t-SNE plot
 #'
