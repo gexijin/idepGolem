@@ -24,6 +24,7 @@ that are mapped to each sample.
 Other plots: 
 \code{\link{PCA_plot}()},
 \code{\link{chr_counts_ggplot}()},
+\code{\link{chr_normalized_ggplot}()},
 \code{\link{cor_plot}()},
 \code{\link{draw_sample_tree}()},
 \code{\link{eda_boxplot}()},
@@ -38,6 +39,7 @@ Other plots:
 
 Other preprocess functions: 
 \code{\link{chr_counts_ggplot}()},
+\code{\link{chr_normalized_ggplot}()},
 \code{\link{eda_boxplot}()},
 \code{\link{eda_scatter}()},
 \code{\link{individual_plots}()},

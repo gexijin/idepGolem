@@ -51,6 +51,7 @@ Other PCA functions:
 
 Other plots: 
 \code{\link{chr_counts_ggplot}()},
+\code{\link{chr_normalized_ggplot}()},
 \code{\link{cor_plot}()},
 \code{\link{draw_sample_tree}()},
 \code{\link{eda_boxplot}()},
