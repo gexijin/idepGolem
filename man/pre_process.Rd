@@ -81,11 +81,14 @@ information on the regularized log transformation
 }
 
 Other preprocess functions: 
+\code{\link{chr_counts_ggplot}()},
+\code{\link{chr_normalized_ggplot}()},
 \code{\link{eda_boxplot}()},
 \code{\link{eda_density}()},
 \code{\link{eda_scatter}()},
 \code{\link{individual_plots}()},
 \code{\link{mean_sd_plot}()},
+\code{\link{rRNA_counts_ggplot}()},
 \code{\link{total_counts_ggplot}()}
 }
 \concept{preprocess functions}

@@ -25,6 +25,8 @@ indicated by the user.
 \seealso{
 Other plots: 
 \code{\link{PCA_plot}()},
+\code{\link{chr_counts_ggplot}()},
+\code{\link{chr_normalized_ggplot}()},
 \code{\link{cor_plot}()},
 \code{\link{draw_sample_tree}()},
 \code{\link{eda_boxplot}()},
@@ -32,16 +34,20 @@ Other plots:
 \code{\link{individual_plots}()},
 \code{\link{k_means_elbow}()},
 \code{\link{mean_sd_plot}()},
+\code{\link{rRNA_counts_ggplot}()},
 \code{\link{sd_density}()},
 \code{\link{t_SNE_plot}()},
 \code{\link{total_counts_ggplot}()}
 
 Other preprocess functions: 
+\code{\link{chr_counts_ggplot}()},
+\code{\link{chr_normalized_ggplot}()},
 \code{\link{eda_boxplot}()},
 \code{\link{eda_density}()},
 \code{\link{individual_plots}()},
 \code{\link{mean_sd_plot}()},
 \code{\link{pre_process}()},
+\code{\link{rRNA_counts_ggplot}()},
 \code{\link{total_counts_ggplot}()}
 }
 \concept{plots}

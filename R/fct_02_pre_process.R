@@ -355,6 +355,428 @@ total_counts_ggplot <- function(counts_data,
   return(plot)
 }
 
+
+
+#' Creates a barplot of the count data by gene type
+#'
+#' This function takes in either raw count or processed data and creates a
+#' formatted barplot as a \code{ggplot} object that shows the number
+#' of genes mapped to each sample in millions. This function is only used for
+#' read counts data.
+#'
+#' @param counts_data Matrix of raw counts from gene expression data
+#' @param sample_info Matrix of experiment design information for grouping
+#'  samples
+#' @param type String designating the type of data to be used in the title.
+#'  Commonly either "Raw" or "Transformed"
+#' @param all_gene_info Gene info, including chr., gene type etc.
+#' @export
+#' @return A barplot as a \code{ggplot} object
+#'
+#' @family preprocess functions
+#' @family plots
+#'
+#'
+rRNA_counts_ggplot <- function(counts_data,
+                                sample_info,
+                                type = "",
+                                all_gene_info) {
+  counts <- counts_data
+  memo <- ""
+
+  if (ncol(counts) > 100) {
+    part <- 1:100
+    counts <- counts[, part]
+    memo <- paste("(only showing 100 samples)")
+  }
+  groups <- as.factor(
+    detect_groups(colnames(counts), sample_info)
+  )
+
+  if (ncol(counts) < 31) {
+    x_axis_labels <- 16
+  } else {
+    x_axis_labels <- 12
+  }
+
+  df <- merge(
+    counts_data,
+    all_gene_info,
+    by.x = "row.names",
+    by.y = "ensembl_gene_id"
+  )
+  df$gene_biotype <- gsub(".*pseudogene", "Pseudogene", df$gene_biotype)
+  df$gene_biotype <- gsub("TEC", "Unknown", df$gene_biotype)
+  df$gene_biotype <- gsub("IG_.*", "IG", df$gene_biotype)
+  df$gene_biotype <- gsub("TR_.*", "TR", df$gene_biotype)
+  df$gene_biotype <- gsub("protein_coding", "Coding", df$gene_biotype)
+
+  counts_by_type <- aggregate(
+    df[, colnames(counts_data)],
+    by = list(df$gene_biotype),
+    FUN = sum
+  )
+  colnames(counts_by_type)[1] = "Gene_Type"
+
+  df <- cbind(Gene_Type = counts_by_type[, 1], sweep(counts_by_type[-1], 2, 0.01 * colSums(counts_by_type[-1]), "/"))
+
+  # remove categories less than 0.5%
+  df <- df[which(apply(df[, -1], 1, max) > 0.5), ]
+
+  plot_data <- reshape2::melt(df, id.vars = "Gene_Type")
+
+  plot <- ggplot2::ggplot(plot_data, ggplot2::aes(x = variable, y = value, fill = Gene_Type)) +
+    ggplot2::geom_bar(stat = "identity") +
+    ggplot2::labs(x = NULL, y = "% Reads", title = "% Reads by gene type") +
+    ggplot2::scale_fill_brewer(palette = "Set1")
+
+  plot <- plot +
+    ggplot2::geom_bar(stat = "identity") +
+    ggplot2::theme_light() +
+    ggplot2::theme(
+      legend.position = "right",
+      axis.title.x = ggplot2::element_blank(),
+      axis.title.y = ggplot2::element_text(
+        color = "black",
+        size = 14
+      ),
+      axis.text.x = ggplot2::element_text(
+        angle = 90,
+        size = x_axis_labels
+      ),
+      axis.text.y = ggplot2::element_text(
+        size = 16
+      ),
+      plot.title = ggplot2::element_text(
+        color = "black",
+        size = 16,
+        face = "bold",
+        hjust = .5
+      )
+    ) 
+
+  return(plot)
+}
+
+
+
+#' Creates a barplot of the count data by chr
+#'
+#' This function takes in either raw count or processed data and creates a
+#' formatted barplot as a \code{ggplot} object that shows the number
+#' of genes mapped to each sample in millions. This function is only used for
+#' read counts data.
+#'
+#' @param counts_data Matrix of raw counts from gene expression data
+#' @param sample_info Matrix of experiment design information for grouping
+#'  samples
+#' @param type String designating the type of data to be used in the title.
+#'  Commonly either "Raw" or "Transformed"
+#' @param all_gene_info Gene info, including chr., gene type etc.
+#' @export
+#' @return A barplot as a \code{ggplot} object
+#'
+#' @family preprocess functions
+#' @family plots
+#'
+#'
+chr_counts_ggplot <- function(counts_data,
+                                sample_info,
+                                type = "",
+                                all_gene_info) {
+  counts <- counts_data
+  memo <- ""
+
+  if (ncol(counts) > 100) {
+    part <- 1:100
+    counts <- counts[, part]
+    memo <- paste("(only showing 100 samples)")
+  }
+  groups <- as.factor(
+    detect_groups(colnames(counts), sample_info)
+  )
+
+  if (ncol(counts) < 31) {
+    x_axis_labels <- 16
+  } else {
+    x_axis_labels <- 12
+  }
+
+  df <- merge(
+    counts_data,
+    all_gene_info,
+    by.x = "row.names",
+    by.y = "ensembl_gene_id"
+  )
+  colnames(df)[which(colnames(df) == "Row.names")] <- "ensembl_gene_id"
+  # only coding genes?
+  ignore_non_coding = FALSE
+  if (ignore_non_coding) {
+    df <- subset(df, gene_biotype == "protein_coding")
+  }
+
+  # If no chromosomes found. For example if user do not convert gene IDs.
+  if (dim(df)[1] < 5) {
+    return(NULL)
+  }
+
+  # gather info on chrosomes
+  tem <- sort(table(df$chromosome_name), decreasing = TRUE)
+  # ch with less than 100 genes are excluded
+  hide_chr <- TRUE
+  if (hide_chr) {
+    ch <- names(tem[tem >= 5])
+  } else {
+    ch <- names(tem[tem >= 1])
+  }
+
+  if (length(ch) > 50) {
+    # At most 50 ch
+    ch <- ch[1:50]
+  }
+
+  ch <- ch[order(as.numeric(ch))]
+  tem <- ch
+  # The numbers are continous from 1 to length(ch)
+  ch <- 1:(length(ch))
+  # The names are real chr. names
+  names(ch) <- tem
+
+  nchar_cutoff <- 3 * quantile(nchar(tem), .25)
+
+  # remove long chr. patch.., longer than 3 times of the length of the first quantile
+  ch <- ch[nchar(tem) < nchar_cutoff]
+
+  df <- df[which(df$chromosome_name %in% names(ch)), ]
+  df <- droplevels(df)
+  # Numeric encoding
+  df$chNum <- 1
+  df$chNum <- ch[df$chromosome_name]
+  # change order of chr.
+  df$chromosome_name <- factor(df$chromosome_name, levels = names(ch))
+
+  counts_by_chr <- aggregate(
+    df[, colnames(counts_data)],
+    by = list(df$chromosome_name),
+    FUN = sum
+  )
+  colnames(counts_by_chr)[1] = "Chr"
+
+  df <- cbind(
+    Chr = counts_by_chr[, 1], 
+    sweep(
+      counts_by_chr[-1], 
+      2, 
+      0.01 * colSums(counts_by_chr[-1]), "/"
+    )
+  )
+
+  # remove categories less than 0.5%
+  df <- df[which(apply(df[, -1], 1, max) > 0.1), ]
+
+  plot_data <- reshape2::melt(df, id.vars = "Chr")
+
+  plot <- ggplot2::ggplot(plot_data, ggplot2::aes(x = variable, y = value)) +
+    ggplot2::geom_bar(stat = "identity") +
+    ggplot2::labs(x = NULL, y = "% Reads", title = "% Reads by Chromosomes") +
+    ggplot2::scale_fill_brewer(palette = "Set1")
+
+  if(ncol(counts_data) < 10) {
+    plot <- plot + ggplot2::facet_wrap (. ~ Chr)
+  } else if (ncol(counts_data) < 20){
+    plot <- plot + ggplot2::facet_wrap (. ~ Chr, ncol = 3)
+  } else if (ncol(counts_data) < 40){
+    plot <- plot + ggplot2::facet_wrap (. ~ Chr, ncol = 2)
+  } else {
+    plot <- plot + ggplot2::facet_wrap (. ~ Chr, ncol = 1)
+  }
+
+  plot <- plot +
+    ggplot2::geom_bar(stat = "identity") +
+    ggplot2::theme_light() +
+    ggplot2::theme(
+      legend.position = "right",
+      axis.title.x = ggplot2::element_blank(),
+      axis.title.y = ggplot2::element_text(
+        color = "black"
+      ),
+      axis.text.x = ggplot2::element_text(
+        angle = 90,
+        size = x_axis_labels
+      ),
+      plot.title = ggplot2::element_text(
+        color = "black",
+        size = 16,
+        face = "bold",
+        hjust = .5
+      )
+    ) 
+
+  return(plot)
+}
+
+
+
+#' Creates a barplot of the normalized data by chr
+#'
+#' This function takes in either raw count or processed data and creates a
+#' formatted barplot as a \code{ggplot} object that shows the number
+#' of genes mapped to each sample in millions. This function is only used for
+#' read counts data.
+#'
+#' @param counts_data Matrix of raw counts from gene expression data
+#' @param sample_info Matrix of experiment design information for grouping
+#'  samples
+#' @param type String designating the type of data to be used in the title.
+#'  Commonly either "Raw" or "Transformed"
+#' @param all_gene_info Gene info, including chr., gene type etc.
+#' @export
+#' @return A barplot as a \code{ggplot} object
+#'
+#' @family preprocess functions
+#' @family plots
+#'
+#'
+chr_normalized_ggplot <- function(counts_data,
+                                sample_info,
+                                type = "",
+                                all_gene_info) {
+  counts <- counts_data
+  memo <- ""
+
+  if (ncol(counts) > 100) {
+    part <- 1:100
+    counts <- counts[, part]
+    memo <- paste("(only showing 100 samples)")
+  }
+  groups <- as.factor(
+    detect_groups(colnames(counts), sample_info)
+  )
+
+  if (ncol(counts) < 31) {
+    x_axis_labels <- 16
+  } else {
+    x_axis_labels <- 12
+  }
+
+  df <- merge(
+    counts_data,
+    all_gene_info,
+    by.x = "row.names",
+    by.y = "ensembl_gene_id"
+  )
+  colnames(df)[which(colnames(df) == "Row.names")] <- "ensembl_gene_id"
+  # only coding genes?
+  ignore_non_coding = FALSE
+  if (ignore_non_coding) {
+    df <- subset(df, gene_biotype == "protein_coding")
+  }
+
+  # If no chromosomes found. For example if user do not convert gene IDs.
+  if (dim(df)[1] < 5) {
+    return(NULL)
+  }
+
+  # gather info on chrosomes
+  tem <- sort(table(df$chromosome_name), decreasing = TRUE)
+  # ch with less than 100 genes are excluded
+  hide_chr <- TRUE
+  if (hide_chr) {
+    ch <- names(tem[tem >= 5])
+  } else {
+    ch <- names(tem[tem >= 1])
+  }
+
+  if (length(ch) > 50) {
+    # At most 50 ch
+    ch <- ch[1:50]
+  }
+
+  ch <- ch[order(as.numeric(ch))]
+  tem <- ch
+  # The numbers are continous from 1 to length(ch)
+  ch <- 1:(length(ch))
+  # The names are real chr. names
+  names(ch) <- tem
+
+  nchar_cutoff <- 3 * quantile(nchar(tem), .25)
+
+  # remove long chr. patch.., longer than 3 times of the length of the first quantile
+  ch <- ch[nchar(tem) < nchar_cutoff]
+
+  df <- df[which(df$chromosome_name %in% names(ch)), ]
+  df <- droplevels(df)
+  # Numeric encoding
+  df$chNum <- 1
+  df$chNum <- ch[df$chromosome_name]
+  # change order of chr.
+  df$chromosome_name <- factor(df$chromosome_name, levels = names(ch))
+
+  counts_by_chr <- aggregate(
+    df[, colnames(counts_data)],
+    by = list(df$chromosome_name),
+    FUN = function(x) {
+      quantile(x, 0.75, na.rm = TRUE)
+    }
+  )
+  colnames(counts_by_chr)[1] = "Chr"
+
+  df <- cbind(
+    Chr = counts_by_chr[, 1], 
+    sweep(
+      counts_by_chr[-1], 
+      2, 
+      0.01 * colSums(counts_by_chr[-1]), "/"
+    )
+  )
+
+  # remove categories less than 0.5%
+  df <- df[which(apply(df[, -1], 1, max) > 0.1), ]
+
+  plot_data <- reshape2::melt(df, id.vars = "Chr")
+
+  plot <- ggplot2::ggplot(plot_data, ggplot2::aes(x = variable, y = value)) +
+    ggplot2::geom_bar(stat = "identity") +
+    ggplot2::labs(x = NULL, y = "Expression", title = "Normalized expression by chromosomes (75th percentile)") +
+    ggplot2::scale_fill_brewer(palette = "Set1")
+
+  if(ncol(counts_data) < 10) {
+    plot <- plot + ggplot2::facet_wrap (. ~ Chr)
+  } else if (ncol(counts_data) < 20){
+    plot <- plot + ggplot2::facet_wrap (. ~ Chr, ncol = 3)
+  } else if (ncol(counts_data) < 40){
+    plot <- plot + ggplot2::facet_wrap (. ~ Chr, ncol = 2)
+  } else {
+    plot <- plot + ggplot2::facet_wrap (. ~ Chr, ncol = 1)
+  }
+
+  plot <- plot +
+    ggplot2::geom_bar(stat = "identity") +
+    ggplot2::theme_light() +
+    ggplot2::theme(
+      legend.position = "right",
+      axis.title.x = ggplot2::element_blank(),
+      axis.title.y = ggplot2::element_text(
+        color = "black"
+      ),
+      axis.text.x = ggplot2::element_text(
+        angle = 90,
+        size = x_axis_labels
+      ),
+      plot.title = ggplot2::element_text(
+        color = "black",
+        size = 16,
+        face = "bold",
+        hjust = .5
+      )
+    ) 
+
+  return(plot)
+}
+
+
+
+
 #' Scatterplot for EDA on processed data
 #'
 #' This function takes the data after it has been pre-processed and

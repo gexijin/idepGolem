@@ -328,9 +328,10 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     })
 
     welcome_modal <- shiny::modalDialog(
-      title = "Welcome to iDEP!",
+      title = "iDEP: Empower all scientists!",
       tags$p(
-        "If iDEP is used,
+        "Our passion is to enable all scientists, especially busy biologists in small labs, to analyze their own data."),
+      tags$p(" If iDEP is used,
       even for preliminrary analysis, please cite: ",
         "Ge, Son & Yao, iDEP,",
         a(
@@ -344,7 +345,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           target = "_blank"
         )
       ),
-      tags$h5("Just including the URL is hard to track. By citing the iDEP paper properly, you will help make this service
+      tags$h5("By citing the iDEP paper properly, you will help make this service
       available in the future. ",
         style = "color:#6B1518"
       ),
