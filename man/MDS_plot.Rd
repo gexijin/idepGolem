@@ -30,6 +30,7 @@ Draw a multidimensional scaling (MDS) plot
 Other PCA functions: 
 \code{\link{PCA_Scree}()},
 \code{\link{PCA_biplot}()},
+\code{\link{PCA_plot_3d}()},
 \code{\link{PCA_plot}()},
 \code{\link{PCAtools_eigencorplot}()},
 \code{\link{pc_factor_correlation}()},
