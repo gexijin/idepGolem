@@ -28,7 +28,6 @@ Other PCA functions:
 \code{\link{MDS_plot}()},
 \code{\link{PCA_Scree}()},
 \code{\link{PCA_biplot}()},
-\code{\link{PCA_plot_3d}()},
 \code{\link{PCA_plot}()},
 \code{\link{pc_factor_correlation}()},
 \code{\link{t_SNE_plot}()}

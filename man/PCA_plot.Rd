@@ -9,8 +9,10 @@ PCA_plot(
   sample_info,
   PCAx = 1,
   PCAy = 2,
+  PCAz = NULL,
   selected_color = "Names",
-  selected_shape = "Names"
+  selected_shape = "Names",
+  plot_type = "2d"
 )
 }
 \arguments{
@@ -23,6 +25,8 @@ PCA_plot(
 
 \item{PCAy}{Integer designating the PC to be plotted on on the y axis}
 
+\item{PCAz}{Integer designating the PC to be plotted on the z axis (only for 3D)}
+
 \item{selected_color}{String designating factor to color points by. Should be
 one of the design factors from the design file or "Names" as default which
 automatically detects groups from gene data file}
@@ -30,6 +34,8 @@ automatically detects groups from gene data file}
 \item{selected_shape}{String designating factor to shape points by.
 Should be one of the design factors from the design file or "Names" as
 default which automatically detects groups from gene data file}
+
+\item{plot_type}{String indicating whether to plot in 2D ("2d") or 3D ("3d").}
 }
 \value{
 A \code{ggplot} object as a PCA plot
@@ -38,13 +44,10 @@ A \code{ggplot} object as a PCA plot
 Draw a PCA plot with designated PCA components on axis
 }
 \seealso{
-\code{\link{PCA_plot_3d}()} for three-dimensional version
-
 Other PCA functions: 
 \code{\link{MDS_plot}()},
 \code{\link{PCA_Scree}()},
 \code{\link{PCA_biplot}()},
-\code{\link{PCA_plot_3d}()},
 \code{\link{PCAtools_eigencorplot}()},
 \code{\link{pc_factor_correlation}()},
 \code{\link{t_SNE_plot}()}
