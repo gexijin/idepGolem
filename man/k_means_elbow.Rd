@@ -28,6 +28,7 @@ Other plots:
 \code{\link{eda_boxplot}()},
 \code{\link{eda_density}()},
 \code{\link{eda_scatter}()},
+\code{\link{gene_counts_ggplot}()},
 \code{\link{individual_plots}()},
 \code{\link{mean_sd_plot}()},
 \code{\link{rRNA_counts_ggplot}()},

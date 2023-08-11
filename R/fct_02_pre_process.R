@@ -357,6 +357,90 @@ total_counts_ggplot <- function(counts_data,
 
 
 
+#' Creates a barplot of the count of genes by type
+#'
+#' This function takes in either raw count or processed data and creates a
+#' formatted barplot as a \code{ggplot} object that shows the number
+#' of genes mapped to each sample in millions. This function is only used for
+#' read counts data.
+#'
+#' @param counts_data Matrix of raw counts from gene expression data
+#' @param sample_info Matrix of experiment design information for grouping
+#'  samples
+#' @param type String designating the type of data to be used in the title.
+#'  Commonly either "Raw" or "Transformed"
+#' @param all_gene_info Gene info, including chr., gene type etc.
+#' @export
+#' @return A barplot as a \code{ggplot} object
+#'
+#' @family preprocess functions
+#' @family plots
+#'
+#'
+gene_counts_ggplot <- function(counts_data,
+                                sample_info,
+                                type = "",
+                                all_gene_info) {
+  counts <- counts_data
+
+  df <- merge(
+    counts_data,
+    all_gene_info,
+    by.x = "row.names",
+    by.y = "ensembl_gene_id"
+  )
+  df$gene_biotype <- gsub(".*pseudogene", "Pseudogene", df$gene_biotype)
+  df$gene_biotype <- gsub("TEC", "Unknown", df$gene_biotype)
+  df$gene_biotype <- gsub("artifact", "Artifact", df$gene_biotype)
+  df$gene_biotype <- gsub("IG_.*", "IG", df$gene_biotype)
+  df$gene_biotype <- gsub("TR_.*", "TR", df$gene_biotype)
+  df$gene_biotype <- gsub("protein_coding", "Coding", df$gene_biotype)
+
+  counts <- table(df$gene_biotype)
+  # Convert the vector to a dataframe
+  data <- data.frame(
+    category = names(counts),
+    value = as.numeric(counts)
+  )
+  # Order the categories by value
+  data <- data[order(-data$value), ]
+
+  plot <- ggplot2::ggplot(data, ggplot2::aes(x = reorder(category, value), y = value, fill = category)) +
+    ggplot2::geom_bar(stat = "identity") +
+    ggplot2::scale_y_log10(limits = c(1, 2 * max(data$value))) +
+    ggplot2::coord_flip() +
+    ggplot2::labs(x = NULL, y = "Number of genes", title = "Number of genes by type") +       
+    ggplot2::geom_text(ggplot2::aes(label = value), hjust = -0.1, vjust = 0.5) 
+
+  plot <- plot +
+    ggplot2::theme_light() +
+    ggplot2::theme(
+      legend.position = "none",
+      axis.title.y = ggplot2::element_blank(),
+      axis.title.x = ggplot2::element_text(
+        color = "black",
+        size = 16
+      ),
+      axis.text.x = ggplot2::element_text(
+        size = 16
+      ),
+      axis.text.y = ggplot2::element_text(
+        size = 16
+      ),
+      plot.title = ggplot2::element_text(
+        color = "black",
+        size = 16,
+        face = "bold",
+        hjust = .5
+      )
+    ) 
+
+
+  return(plot)
+}
+
+
+
 #' Creates a barplot of the count data by gene type
 #'
 #' This function takes in either raw count or processed data and creates a
@@ -596,9 +680,13 @@ chr_counts_ggplot <- function(counts_data,
     ggplot2::theme_light() +
     ggplot2::theme(
       legend.position = "right",
-      axis.title.x = ggplot2::element_blank(),
       axis.title.y = ggplot2::element_text(
-        color = "black"
+        color = "black",
+        face = "bold",
+        size = 20
+      ),
+      axis.text.y = ggplot2::element_text(
+        size = x_axis_labels
       ),
       axis.text.x = ggplot2::element_text(
         angle = 90,
@@ -609,7 +697,12 @@ chr_counts_ggplot <- function(counts_data,
         size = 16,
         face = "bold",
         hjust = .5
-      )
+      ),
+      strip.text = ggplot2::element_text(
+        size = 16,
+        color = "black",
+        face = "bold"
+        )
     ) 
 
   return(plot)
@@ -737,7 +830,7 @@ chr_normalized_ggplot <- function(counts_data,
 
   plot <- ggplot2::ggplot(plot_data, ggplot2::aes(x = variable, y = value)) +
     ggplot2::geom_bar(stat = "identity") +
-    ggplot2::labs(x = NULL, y = "Expression", title = "Normalized expression by chromosomes (75th percentile)") +
+    ggplot2::labs(x = NULL, y = "Normalized Expression", title = "75th percentile of normalized expression by chromosomes") +
     ggplot2::scale_fill_brewer(palette = "Set1")
 
   if(ncol(counts_data) < 10) {
@@ -755,9 +848,13 @@ chr_normalized_ggplot <- function(counts_data,
     ggplot2::theme_light() +
     ggplot2::theme(
       legend.position = "right",
-      axis.title.x = ggplot2::element_blank(),
       axis.title.y = ggplot2::element_text(
-        color = "black"
+        color = "black",
+        face = "bold",
+        size = 20
+      ),
+      axis.text.y = ggplot2::element_text(
+        size = x_axis_labels
       ),
       axis.text.x = ggplot2::element_text(
         angle = 90,
@@ -768,8 +865,13 @@ chr_normalized_ggplot <- function(counts_data,
         size = 16,
         face = "bold",
         hjust = .5
-      )
-    ) 
+      ),
+      strip.text = ggplot2::element_text(
+        size = 16,
+        color = "black",
+        face = "bold"
+        )
+    )
 
   return(plot)
 }

@@ -370,6 +370,35 @@ mod_02_pre_process_ui <- function(id) {
           # Barplot for rRNA counts ----------
           tabPanel(
             title = "QC",
+
+              plotOutput(
+                outputId = ns("gene_counts_gg"),
+                width = "100%",
+                height = "500px"
+              ),
+              br(),
+              fluidRow(
+                column(
+                  2, 
+                  ottoPlots::mod_download_figure_ui(
+                    id = ns("dl_gene_counts_gg")
+                  )
+                ),
+                column(
+                  10,
+                  align = "right",
+                  p(
+                    "Genes types are based on ",
+                    a(
+                      "ENSEMBL classification.", 
+                      href= "http://useast.ensembl.org/info/genome/genebuild/biotypes.html"),
+                      target = "_blank"
+                  )
+                )
+              ),
+              br(),
+              hr(),
+            
             conditionalPanel(
               condition = "output.data_file_format == 1",
               br(),
@@ -613,6 +642,41 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     )
 
     # gene type barplot ------------
+    gene_counts <- reactive({
+      req(!is.null(processed_data()$raw_counts))
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Plotting counts by gene type",
+        color = "#000000"
+      )
+      p <- gene_counts_ggplot(
+        counts_data = load_data$converted_data(),
+        sample_info = load_data$sample_info(),
+        type = "Raw",
+        all_gene_info = load_data$all_gene_info()
+      )
+      p <- refine_ggplot2(
+        p = p,
+        gridline = load_data$plot_grid_lines(),
+        ggplot2_theme = load_data$ggplot2_theme()
+      )
+      shinybusy::remove_modal_spinner()
+      return(p)
+    })
+    output$gene_counts_gg <- renderPlot({
+      print(gene_counts())
+    })
+
+    dl_gene_counts_gg <- ottoPlots::mod_download_figure_server(
+      id = "dl_gene_counts_gg",
+      filename = "gene_counts_barplot",
+      figure = reactive({
+        gene_counts()
+      }),
+      label = ""
+    )
+
+    # gene type barplot ------------
     rRNA_counts <- reactive({
       req(!is.null(processed_data()$raw_counts))
       shinybusy::show_modal_spinner(
@@ -684,7 +748,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     )
 
 
-    # chr counts barplot ------------
+    # chr normalized barplot ------------
     chr_normalized <- reactive({
       req(!is.null(processed_data()$data))
       shinybusy::show_modal_spinner(
