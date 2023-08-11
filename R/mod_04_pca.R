@@ -327,7 +327,7 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       )
     })
     output$interactive_pca_plot_obj <- plotly::renderPlotly({
-      plotly::ggplotly(pca_plot())
+      plotly::ggplotly(pca_plot(), tooltip = "text")
     })
     output$pca_plot_obj <- renderPlot({
       req(pca_plot())
