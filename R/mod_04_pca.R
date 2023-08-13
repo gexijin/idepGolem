@@ -331,7 +331,17 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       figure = reactive({
         pca_plot()
       }),
-      label = ""
+      label = "",
+      width = get_plot_width(
+        client_data = session$clientData,
+        plot_name = "interactive_pca_plot_obj",
+        tab = id
+      ),
+      height = get_plot_height(
+        client_data = session$clientData,
+        plot_name = "interactive_pca_plot_obj",
+        tab = id
+      )
     )
     # PC Factor Correlation ---------
     output$pc_correlation <- renderText({
