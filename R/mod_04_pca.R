@@ -327,7 +327,10 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       )
     })
     output$interactive_pca_plot_obj <- plotly::renderPlotly({
-      plotly::ggplotly(pca_plot(), tooltip = "text")
+      # remove legend titles for the interactive plot
+      p <- pca_plot() +
+        ggplot2::labs(color = NULL, shape = NULL)
+      plotly::ggplotly(p, tooltip = "text")
     })
     output$pca_plot_obj <- renderPlot({
       req(pca_plot())
@@ -341,17 +344,7 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       figure = reactive({
         pca_plot()
       }),
-      label = "",
-      width = get_plot_width(
-        client_data = session$clientData,
-        plot_name = "pca_plot_obj",
-        tab = id
-      ),
-      height = get_plot_height(
-        client_data = session$clientData,
-        plot_name = "pca_plot_obj",
-        tab = id
-      )
+      label = ""
     )
     download_pca <- ottoPlots::mod_download_figure_server(
       id = "download_pca",
