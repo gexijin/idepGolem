@@ -211,14 +211,6 @@ mod_04_pca_ui <- function(id) {
             ),
             ottoPlots::mod_download_figure_ui(ns("download_interactive_pca")),
             br(),
-            h5("\n Non-Interactive Plot"),
-            plotOutput(
-              outputId = ns("pca_plot_obj"),
-              width = "100%",
-              height = "600px"
-            ),
-            ottoPlots::mod_download_figure_ui(ns("download_pca")),
-            br(),
             br(),
             shiny::textOutput(
               outputId = ns("pc_correlation")
@@ -329,11 +321,6 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
     output$interactive_pca_plot_obj <- plotly::renderPlotly({
       plotly::ggplotly(pca_plot(), tooltip = "text")
     })
-    output$pca_plot_obj <- renderPlot({
-      req(pca_plot())
-      print(pca_plot())
-    })
-
     # Download Button
     download_interactive_pca <- ottoPlots::mod_download_figure_server(
       id = "download_interactive_pca",
@@ -353,25 +340,6 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
         tab = id
       )
     )
-    download_pca <- ottoPlots::mod_download_figure_server(
-      id = "download_pca",
-      filename = "pca_plot",
-      figure = reactive({
-        pca_plot()
-      }),
-      label = "",
-      width = get_plot_width(
-        client_data = session$clientData,
-        plot_name = "pca_plot_obj",
-        tab = id
-      ),
-      height = get_plot_height(
-        client_data = session$clientData,
-        plot_name = "pca_plot_obj",
-        tab = id
-      )
-    )
-
     # PC Factor Correlation ---------
     output$pc_correlation <- renderText({
       req(!is.null(pre_process$data()))

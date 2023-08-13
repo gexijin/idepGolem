@@ -147,13 +147,13 @@ PCA_plot <- function(data,
 
   plot_PCA <- ggplot2::ggplot(
     data = pcaData,
-    mapping = ggplot2::aes(
-      x = pcaData[[paste0("PC", PCAx)]],
-      y = pcaData[[paste0("PC", PCAy)]],
-      color = pcaData[[selected_color]],
-      shape = pcaData[[selected_shape]],
-      group = pcaData[[selected_shape]],
-      text = rownames(pcaData) # This line specifies the tooltip content
+    mapping = ggplot2::aes_string(
+      x = paste0("PC", PCAx),
+      y = paste0("PC", PCAy),
+      color = selected_color,
+      shape = selected_shape,
+      group = selected_shape,
+      text = "rownames(pcaData)" # Add this line to specify the tooltip content
     )
   ) +
     # Preferred shapes
@@ -300,7 +300,7 @@ PCA_plot_3d <- function(data,
     )
   plot_PCA <- plotly::layout(
     p = plot_PCA,
-    legend = list(title = list(text = paste0("selected_color: ",selected_color, " selected_shape: ", selected_shape))),
+    legend = list(title = list(text = "Names")),
     plot_bgcolor = "#e5ecf6",
     scene = list(
       xaxis = list(
