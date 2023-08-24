@@ -258,12 +258,16 @@ mod_06_pathway_ui <- function(id) {
                 )
               )
             ),
-            h6(
-              "Two pathways (nodes) are connected if they share 30% (default, adjustable) or more genes.
-              Green and red represents down- and up-regulated pathways. You can move the nodes by
-              dragging them, zoom in and out by scrolling, and shift the entire network by click on an
-              empty point and drag. Darker nodes are more significantly enriched gene sets. Bigger nodes
-              represent larger gene sets. Thicker edges represent more overlapped genes."
+            conditionalPanel(
+              condition = "input.up_down_reg_deg == 'All Groups'",
+              h6(
+                "Two pathways (nodes) are connected if they share 30% (default, adjustable) or more genes.
+                Green and red represents up- and down-regulated pathways, respectively. You can move the nodes by
+                dragging them, zoom in and out by scrolling, and shift the entire network by click on an
+                empty point and drag. Darker nodes are more significantly enriched gene sets. Bigger nodes
+                represent larger gene sets. Thicker edges represent more overlapped genes."
+              ),
+              ns = ns
             ),
             visNetwork::visNetworkOutput(
               outputId = ns("vis_network_path"),

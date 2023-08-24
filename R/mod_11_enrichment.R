@@ -165,17 +165,21 @@ mod_11_enrichment_ui <- function(id) {
           height = "800px",
           width = "100%"
         ),
-        h6(
-          "Two pathways (nodes) are connected if they
-          share 30% (default, adjustable) or more genes.
-          Green and red represents down- and up-regulated
-           pathways. You can move the nodes by
-          dragging them, zoom in and out by scrolling, and
-          shift the entire network by click on an
-          empty point and drag. Darker nodes are more
-          significantly enriched gene sets. Bigger nodes
-          represent larger gene sets. Thicker edges
-          represent more overlapped genes."
+        conditionalPanel(
+          condition = "input.select_cluster == 'All Groups'",
+          h6(
+            "Two pathways (nodes) are connected if they
+            share 30% (default, adjustable) or more genes.
+            Green and red represents up- and down-regulated
+            pathways. You can move the nodes by
+            dragging them, zoom in and out by scrolling, and
+            shift the entire network by click on an
+            empty point and drag. Darker nodes are more
+            significantly enriched gene sets. Bigger nodes
+            represent larger gene sets. Thicker edges
+            represent more overlapped genes."
+          ),
+          ns = ns
         )
       ),
       tabPanel(
