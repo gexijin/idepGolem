@@ -288,7 +288,7 @@ input_data <- function(expression_file,
         duration = NULL,
         type = "default"
       )
-    } else {    
+    } else if(length(ignored_factors) > 0) {    
       # delete the row with only one level
       ignored_rows <- paste0(row.names(expr)[ignored_factors], collapse = ", ")
       showNotification(
