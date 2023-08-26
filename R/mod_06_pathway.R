@@ -43,7 +43,7 @@ mod_06_pathway_ui <- function(id) {
             "PGSEA w/ all samples" = 4,
             "ReactomePA" = 5
           ),
-          selected = 1
+          selected = 3
         ),
         tags$style(
           type = "text/css",
@@ -91,7 +91,7 @@ mod_06_pathway_ui <- function(id) {
         numericInput(
           inputId = ns("pathway_p_val_cutoff"),
           label = "Pathway signifiance cutoff (FDR)",
-          value = 0.2,
+          value = 0.1,
           min = 1e-20,
           max = 1,
           step = .05
@@ -103,7 +103,7 @@ mod_06_pathway_ui <- function(id) {
         numericInput(
           inputId = ns("n_pathway_show"),
           label = "Number of top pathways to show",
-          value = 30,
+          value = 20,
           min = 5,
           max = 100,
           step = 5

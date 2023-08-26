@@ -452,7 +452,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         # Expression data file input
         fileInput(
           inputId = ns("expression_file"),
-          label = strong("3. Expression data (CSV, text, or xlxs)"),
+          label = strong("3. Expression data (CSV, text, or xlsx)"),
           accept = c(
             "text/csv",
             "text/comma-separated-values",
