@@ -56,6 +56,22 @@ mod_06_pathway_ui <- function(id) {
           type = "text/css",
           "#pathway-select_go { width:100%;   margin-top:-12px}"
         ),
+
+        numericInput(
+          inputId = ns("pathway_p_val_cutoff"),
+          label = "Pathway signifiance cutoff (FDR)",
+          value = 0.1,
+          min = 1e-20,
+          max = 1,
+          step = .05
+        ),
+        tags$style(
+          type = "text/css",
+          "#pathway-pathway_p_val_cutoff { width:100%;   margin-top:-12px}"
+        ),
+
+        checkboxInput(ns("customize_button"), strong("More options")),
+        
         fluidRow(
           column(
             width = 6,
@@ -82,23 +98,11 @@ mod_06_pathway_ui <- function(id) {
         ),
         tags$style(
           type = "text/css",
-          "#pathway-min_set_size { width:100%;   margin-top:-12px}"
+          "#pathway-min_set_size { width:100%;   margin-top:-10px}"
         ),
         tags$style(
           type = "text/css",
-          "#pathway-max_set_size { width:100%;   margin-top:-12px}"
-        ),
-        numericInput(
-          inputId = ns("pathway_p_val_cutoff"),
-          label = "Pathway signifiance cutoff (FDR)",
-          value = 0.1,
-          min = 1e-20,
-          max = 1,
-          step = .05
-        ),
-        tags$style(
-          type = "text/css",
-          "#pathway-pathway_p_val_cutoff { width:100%;   margin-top:-12px}"
+          "#pathway-max_set_size { width:100%;   margin-top:-10px}"
         ),
         numericInput(
           inputId = ns("n_pathway_show"),
@@ -139,7 +143,7 @@ mod_06_pathway_ui <- function(id) {
           "If selected, pathway IDs, such as Path:mmu04115 and GO:0042770,  will be appended to pathway name.",
           theme = "light-border"
         ),
-        h6("* Warning! The many combinations can lead to false positives in pathway analyses."),
+        h6("* P-hacking Warning! If you try the many possible combination, you can find evidence for anything."),
         # Download report button
         downloadButton(
           outputId = ns("report"),
@@ -406,6 +410,17 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       removeNotification("click_submit_DEG1")
     })
 
+    observe({
+      shinyjs::toggle(id = "max_set_size", condition = input$customize_button)
+      shinyjs::toggle(id = "min_set_size", condition = input$customize_button)
+      shinyjs::toggle(id = "n_pathway_show", condition = input$customize_button)
+      shinyjs::toggle(id = "gene_p_val_cutoff", condition = input$customize_button)
+      shinyjs::toggle(id = "absolute_fold", condition = input$customize_button)
+      shinyjs::toggle(id = "show_pathway_id", condition = input$customize_button)
+      shinyjs::toggle(id = "absolute_fold", condition = input$customize_button)
+    })
+
+
     output$list_comparisons_pathway <- renderUI({
       if (is.null(deg$limma()$comparisons)) {
         selectInput(
@@ -418,8 +433,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         selectInput(
           inputId = ns("select_contrast"),
           label =
-            "Select a comparison to examine. \"A-B\" means A vs. B (See heatmap).
-            Interaction terms start with \"I:\"",
+            "Select a comparison:",
           choices = deg$limma()$comparisons
         )
       }
