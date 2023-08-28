@@ -116,7 +116,7 @@ gage_data <- function(select_go,
   colnames(top_1)[2] <- paste("GAGE analysis:", gsub("-", " vs ", select_contrast))
   top_1[which(top_1[, 3] > 0), 1] <- "Up"
   top_1[which(top_1[, 3] < 0), 1] <- "Down"
-  top_1 <- top_1[order(top_1[, 1], -abs(as.numeric(top_1[, 3]))), ]
+  top_1 <- top_1[order(top_1$Direction, as.numeric(top_1$adj.Pval)), ]
   top_1[duplicated(top_1[, 1]), 1] <- ""
   rownames(top_1) <- seq(1, nrow(top_1), 1)
 
@@ -418,7 +418,8 @@ fgsea_data <- function(select_contrast,
   colnames(top_1)[2] <- paste("GSEA analysis:", gsub("-", " vs ", select_contrast))
   top_1[which(as.numeric(top_1[, 3]) > 0), 1] <- "Up"
   top_1[which(as.numeric(top_1[, 3]) < 0), 1] <- "Down"
-  top_1 <- top_1[order(top_1[, 1], -abs(as.numeric(top_1[, 3]))), ]
+  # sort by adj.Pval
+  top_1 <- top_1[order(top_1[, 1], as.numeric(top_1$adj.Pval)), ]
   top_1[duplicated(top_1[, 1]), 1] <- ""
   top_1[, 3] <- as.character(round(as.numeric(top_1[, 3]), 4))
 
