@@ -82,7 +82,8 @@ enrichment_tree_plot <- function(go_table,
   ix <- dend$order
 
   leaf_type <- as.factor(data$Direction[ix])
-  leaf_colors <- gg_color_hue(length(unique(data$Direction)))
+  leaf_colors <- rev(gg_color_hue(length(unique(data$Direction))))
+
   # Leaf size represent P values
   leaf_size <- -log10(as.numeric(data$adj_p_val[ix]))
   leaf_size <- 1.5 * leaf_size / max(leaf_size) + .2
