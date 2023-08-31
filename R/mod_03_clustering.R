@@ -11,6 +11,12 @@ mod_03_clustering_ui <- function(id) {
   ns <- NS(id)
   tabPanel(
     title = "Clustering",
+    # Change the style of radio labels
+    # Note that the name https://groups.google.com/g/shiny-discuss/c/ugNEaHizlck
+    # input IDs should be defined by namespace
+    tags$style(type = "text/css",
+      paste0("#", ns("cluster_meth"), " .radio label { font-weight: bold; color: red;}")
+    ),
     sidebarLayout(
 
       # Heatmap Panel Sidebar ----------

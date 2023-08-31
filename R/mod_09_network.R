@@ -20,7 +20,7 @@ mod_09_network_ui <- function(id) {
             href = "https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-9-559",
             target = "_blank"
           ),
-          "Only useful when  sample size is large(> 15)."
+          "WGCNA requires at least 15 samples to be meaningful."
         ),
         numericInput(
           inputId = ns("n_genes_network"),

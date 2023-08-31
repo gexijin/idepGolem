@@ -73,7 +73,7 @@ list_factors_ui <- function(sample_info,
   } else {
     factors <- colnames(sample_info)
     choices <- setNames(factors, factors)
-    title <- "1. Select main factors (3+ factors are not well tested). Or leave it blank and just choose pairs
+    title <- "1. Select main factors (3+ factors are not tested). Or leave it blank and just choose pairs
               of sample groups below."
     if (data_file_format == 1 & counts_deg_method == 3) {
       title <- "1. Select 6 or less main factors. Or skip this step and just choose

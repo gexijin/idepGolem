@@ -13,29 +13,27 @@ mod_06_pathway_ui <- function(id) {
     title = "Pathway",
     sidebarLayout(
       sidebarPanel(
-#        actionButton(
-#          inputId = ns("submit_pathway_button"),
-#          label = "Submit",
-#          style = "float:right"
-#        ),
-#        tippy::tippy_this(
-#          ns("submit_pathway_button"),
-#         "Run pathway analysis",
-#          theme = "light-border"
-#        ),
-#        tags$style(
-#          "#pathway-submit_pathway_button{font-size: 16px;color: red}"
-#        ),
+        actionButton(
+          inputId = ns("submit_pathway_button"),
+          label = "Submit",
+          style = "float:right"
+        ),
+        tippy::tippy_this(
+          ns("submit_pathway_button"),
+         "Run pathway analysis",
+          theme = "light-border"
+        ),
+        tags$head(tags$style(
+          "#pathway-submit_pathway_button{font-size: 16px;color: red}"
+        )),
+        br(),
+        br(),
         htmlOutput(
           outputId = ns("list_comparisons_pathway")
         ),
-        tags$style(
-          type = "text/css",
-          "#pathway-list_comparisons_pathway { width:100%; margin-top:-5px}"
-        ),
         selectInput(
           inputId = ns("pathway_method"),
-          label = "Select method:",
+          label = "Pathway analysis method:",
           choices = list(
             "GAGE" = 1,
             "GSEA (preranked fgsea)" = 3,
@@ -43,19 +41,28 @@ mod_06_pathway_ui <- function(id) {
             "PGSEA w/ all samples" = 4,
             "ReactomePA" = 5
           ),
-          selected = 1
+          selected = 3
         ),
-        tags$style(
-          type = "text/css",
-          "#pathway-pathway_method { width:100%;   margin-top:-12px}"
-        ),
+
         htmlOutput(
           outputId = ns("select_go_selector")
         ),
+
+        numericInput(
+          inputId = ns("pathway_p_val_cutoff"),
+          label = "Pathway signifiance cutoff (FDR):",
+          value = 0.1,
+          min = 1e-20,
+          max = 1,
+          step = .05
+        ),
         tags$style(
           type = "text/css",
-          "#pathway-select_go { width:100%;   margin-top:-12px}"
+          "#pathway-pathway_p_val_cutoff { width:100%;}"
         ),
+
+        checkboxInput(ns("customize_button"), strong("More options")),
+
         fluidRow(
           column(
             width = 6,
@@ -82,28 +89,16 @@ mod_06_pathway_ui <- function(id) {
         ),
         tags$style(
           type = "text/css",
-          "#pathway-min_set_size { width:100%;   margin-top:-12px}"
+          "#pathway-min_set_size { width:100%;   margin-top:-10px}"
         ),
         tags$style(
           type = "text/css",
-          "#pathway-max_set_size { width:100%;   margin-top:-12px}"
-        ),
-        numericInput(
-          inputId = ns("pathway_p_val_cutoff"),
-          label = "Pathway signifiance cutoff (FDR)",
-          value = 0.2,
-          min = 1e-20,
-          max = 1,
-          step = .05
-        ),
-        tags$style(
-          type = "text/css",
-          "#pathway-pathway_p_val_cutoff { width:100%;   margin-top:-12px}"
+          "#pathway-max_set_size { width:100%;   margin-top:-10px}"
         ),
         numericInput(
           inputId = ns("n_pathway_show"),
           label = "Number of top pathways to show",
-          value = 30,
+          value = 20,
           min = 5,
           max = 100,
           step = 5
@@ -139,7 +134,7 @@ mod_06_pathway_ui <- function(id) {
           "If selected, pathway IDs, such as Path:mmu04115 and GO:0042770,  will be appended to pathway name.",
           theme = "light-border"
         ),
-        h6("* Warning! The many combinations can lead to false positives in pathway analyses."),
+        h6("* P-hacking warning! If you try all the combinations, you can find evidence for anything."),
         # Download report button
         downloadButton(
           outputId = ns("report"),
@@ -156,6 +151,8 @@ mod_06_pathway_ui <- function(id) {
           target = "_blank"
         )
       ),
+
+
       mainPanel(
         tabsetPanel(
           id = ns("pathway_tabs"),
@@ -163,41 +160,17 @@ mod_06_pathway_ui <- function(id) {
             title = "Significant pathways",
             br(),
             conditionalPanel(
-              condition = "input.pathway_method == 1",
-              tableOutput(ns("gage_pathway_table")),
+              condition = "input.submit_pathway_button == 0",
+              br(),
+              br(),
+              h3("Adjust parameters and click the Submit button."),
               ns = ns
             ),
-            conditionalPanel(
-              condition = "input.pathway_method == 2",
-              h5("Red and blue indicates relatively activated
-               and suppressed pathways, respectively.
-              GS just indicates a color scale."),
-              plotOutput(
-                outputId = ns("pgsea_plot"),
-                inline = TRUE
-              ),
-              ns = ns
+            htmlOutput(
+              outputId = ns("main_pathway_result")
             ),
-            conditionalPanel(
-              condition = "input.pathway_method == 3",
-              tableOutput(outputId = ns("fgsea_pathway")),
-              ns = ns
-            ),
-            conditionalPanel(
-              condition = "input.pathway_method == 4",
-              h5("Red and blue indicates activated and suppressed pathways, respectively."),
-              plotOutput(
-                outputId = ns("pgsea_plot_all_samples"),
-                inline = TRUE
-              ),
-              ns = ns
-            ),
-            conditionalPanel(
-              condition = "input.pathway_method == 5",
-              DT::dataTableOutput(outputId = ns("reactome_pa_pathway")),
-              ns = ns
-            )
           ),
+
           tabPanel(
             title = "Tree",
             plotOutput(
@@ -282,6 +255,7 @@ mod_06_pathway_ui <- function(id) {
           ),
           tabPanel(
             title = "KEGG",
+            br(),
             conditionalPanel(
               condition = "(input.pathway_method == 1 | input.pathway_method == 2 |
                             input.pathway_method == 3 | input.pathway_method == 4) &
@@ -359,7 +333,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       }
       selectInput(
         inputId = ns("select_go"),
-        label = "Select Geneset:",
+        label = "Pathway database:",
         choices = pre_process$gmt_choices(),
         selected = selected
       )
@@ -406,6 +380,60 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       removeNotification("click_submit_DEG1")
     })
 
+    observe({
+      shinyjs::toggle(id = "max_set_size", condition = input$customize_button)
+      shinyjs::toggle(id = "min_set_size", condition = input$customize_button)
+      shinyjs::toggle(id = "n_pathway_show", condition = input$customize_button)
+      shinyjs::toggle(id = "gene_p_val_cutoff", condition = input$customize_button)
+      shinyjs::toggle(id = "absolute_fold", condition = input$customize_button)
+      shinyjs::toggle(id = "show_pathway_id", condition = input$customize_button)
+      shinyjs::toggle(id = "absolute_fold", condition = input$customize_button)
+    })
+
+    output$main_pathway_result <- renderUI({
+      req(input$submit_pathway_button)
+
+      isolate({
+
+        # use the switch function to deliver results for different methods
+        switch(
+          as.integer(input$pathway_method),    
+          
+          #1 GAGE
+          tableOutput(ns("gage_pathway_table")),
+
+          #2 PGSEA
+          tagList(
+            h5("Red and blue indicates relatively activated
+              and suppressed pathways, respectively.
+              GS just indicates a color scale."),
+            plotOutput(
+              outputId = ns("pgsea_plot"),
+              inline = TRUE
+            )
+          ),
+
+          #3 FGSEA
+          tableOutput(outputId = ns("fgsea_pathway")),
+
+          #4 PGSEA-All
+          tagList(
+            h5("Red and blue indicates relatively activated
+              and suppressed pathways, respectively.
+              GS just indicates a color scale."),
+            plotOutput(
+              outputId = ns("pgsea_plot_all_samples"),
+              inline = TRUE
+            )
+          ),
+
+          #5 ReactomePA
+          DT::dataTableOutput(outputId = ns("reactome_pa_pathway"))
+
+        )
+      })
+    })
+
     output$list_comparisons_pathway <- renderUI({
       if (is.null(deg$limma()$comparisons)) {
         selectInput(
@@ -418,8 +446,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         selectInput(
           inputId = ns("select_contrast"),
           label =
-            "Select a comparison to examine. \"A-B\" means A vs. B (See heatmap).
-            Interaction terms start with \"I:\"",
+            "Select a comparison:",
           choices = deg$limma()$comparisons
         )
       }
@@ -518,8 +545,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         choices = choices
       )
     })
-
-    gene_sets <- reactive({
+    gene_sets <- eventReactive(input$submit_pathway_button, {
+#    gene_sets <- reactive({
       #      req(tab() == "Pathway")
       req(!is.null(input$select_go))
 
@@ -546,8 +573,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       return(gene_sets)
     })
 
-    #gage_pathway_data <- eventReactive(input$submit_pathway_button, {
-    gage_pathway_data <- reactive({
+    gage_pathway_data <- eventReactive(input$submit_pathway_button, {
+#    gage_pathway_data <- reactive({
       req(input$pathway_method == 1)
       req(!is.null(deg$limma()))
       req(!is.null(gene_sets()))
@@ -571,24 +598,27 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
 
     output$gage_pathway_table <- renderTable(
       {
-        req(!is.null(gage_pathway_data()))
+        input$submit_pathway_button
+        isolate({
+          req(!is.null(gage_pathway_data()))
 
-        res <- gage_pathway_data()
-        if (ncol(res) > 1) {
-          # add URL
-          ix <- match(res[, 2], gene_sets()$pathway_info$description)
+          res <- gage_pathway_data()
+          if (ncol(res) > 1) {
+            # add URL
+            ix <- match(res[, 2], gene_sets()$pathway_info$description)
 
-          # remove pathway ID  only in Ensembl species
-          if (!input$show_pathway_id && pre_process$select_org() > 0) {
-            res[, 2] <- remove_pathway_id(res[, 2], input$select_go)
+            # remove pathway ID  only in Ensembl species
+            if (!input$show_pathway_id && pre_process$select_org() > 0) {
+              res[, 2] <- remove_pathway_id(res[, 2], input$select_go)
+            }
+            res[, 2] <- hyperText(
+              res[, 2],
+              gene_sets()$pathway_info$memo[ix]
+            )
+            res$Genes <- as.character(res$Genes)
           }
-          res[, 2] <- hyperText(
-            res[, 2],
-            gene_sets()$pathway_info$memo[ix]
-          )
-          res$Genes <- as.character(res$Genes)
-        }
-        return(res)
+          return(res)
+        })
       },
       digits = -1,
       spacing = "s",
@@ -617,34 +647,37 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
 
     output$pgsea_plot <- renderPlot(
       {
-        req(input$pathway_method == 2)
-        withProgress(message = "Running PGSEA...", {
-          incProgress(0.2)
+        input$submit_pathway_button
+        isolate({
+          req(input$pathway_method == 2)
+          withProgress(message = "Running PGSEA...", {
+            incProgress(0.2)
 
-          # only remove pathway ID for Ensembl species
-          show_pathway_id <- input$show_pathway_id
-          # always show pathway ID for STRING species
-          if (pre_process$select_org() < 0) {
-            show_pathway_id <- TRUE
-          }
+            # only remove pathway ID for Ensembl species
+            show_pathway_id <- input$show_pathway_id
+            # always show pathway ID for STRING species
+            if (pre_process$select_org() < 0) {
+              show_pathway_id <- TRUE
+            }
 
-          plot_pgsea(
-            my_range = c(input$min_set_size, input$max_set_size),
-            processed_data = pre_process$data(),
-            contrast_samples = contrast_samples(),
-            gene_sets = gene_sets()$gene_lists,
-            pathway_p_val_cutoff = input$pathway_p_val_cutoff,
-            n_pathway_show = input$n_pathway_show,
-            select_go = input$select_go,
-            show_pathway_id = show_pathway_id
-          )
+            plot_pgsea(
+              my_range = c(input$min_set_size, input$max_set_size),
+              processed_data = pre_process$data(),
+              contrast_samples = contrast_samples(),
+              gene_sets = gene_sets()$gene_lists,
+              pathway_p_val_cutoff = input$pathway_p_val_cutoff,
+              n_pathway_show = input$n_pathway_show,
+              select_go = input$select_go,
+              show_pathway_id = show_pathway_id
+            )
+          })
         })
       },
       height = 800,
       width = 800
     )
 
-    pgsea_plot_data <- reactive({
+    pgsea_plot_data <- eventReactive(input$submit_pathway_button, {
       req(input$pathway_method == 2)
       req(!is.null(gene_sets()))
       withProgress(message = "Running PGSEA...", {
@@ -663,7 +696,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       })
     })
 
-    fgsea_pathway_data <- reactive({
+    fgsea_pathway_data <- eventReactive(input$submit_pathway_button, {
+#    fgsea_pathway_data <- reactive({
       req(input$pathway_method == 3)
       req(!is.null(deg$limma()))
       req(!is.null(gene_sets()))
@@ -715,7 +749,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
 
 
 
-    reactome_pa_pathway_data <- reactive({
+    reactome_pa_pathway_data <- eventReactive(input$submit_pathway_button, {
       req(input$pathway_method == 5)
       req(!is.null(deg$limma()))
       withProgress(message = "ReactomePA may take 5 minutes...", {
@@ -736,35 +770,38 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
 
     output$pgsea_plot_all_samples <- renderPlot(
       {
-        req(input$pathway_method == 4)
-        withProgress(message = "Running PGSEA on all samples ...", {
-          incProgress(0.2)
+        input$submit_pathway_button
+        isolate({
+          req(input$pathway_method == 4)
+          withProgress(message = "Running PGSEA on all samples ...", {
+            incProgress(0.2)
 
-          # only remove pathway ID for Ensembl species
-          show_pathway_id <- input$show_pathway_id
-          # always show pathway ID for STRING species
-          if (pre_process$select_org() < 0) {
-            show_pathway_id <- TRUE
-          }
+            # only remove pathway ID for Ensembl species
+            show_pathway_id <- input$show_pathway_id
+            # always show pathway ID for STRING species
+            if (pre_process$select_org() < 0) {
+              show_pathway_id <- TRUE
+            }
 
-          pgsea_plot_all(
-            go = input$select_go,
-            my_range = c(input$min_set_size, input$max_set_size),
-            data = pre_process$data(),
-            select_contrast = input$select_contrast,
-            gene_sets = gene_sets()$gene_lists,
-            pathway_p_val_cutoff = input$pathway_p_val_cutoff,
-            n_pathway_show = input$n_pathway_show,
-            select_go = input$select_go,
-            show_pathway_id = show_pathway_id
-          )
+            pgsea_plot_all(
+              go = input$select_go,
+              my_range = c(input$min_set_size, input$max_set_size),
+              data = pre_process$data(),
+              select_contrast = input$select_contrast,
+              gene_sets = gene_sets()$gene_lists,
+              pathway_p_val_cutoff = input$pathway_p_val_cutoff,
+              n_pathway_show = input$n_pathway_show,
+              select_go = input$select_go,
+              show_pathway_id = show_pathway_id
+            )
+          })
         })
       },
       height = 800,
       width = 800
     )
 
-    pgsea_plot_all_samples_data <- reactive({
+    pgsea_plot_all_samples_data <- eventReactive(input$submit_pathway_button, {
       req(input$pathway_method == 4)
       req(!is.null(gene_sets()))
       withProgress(message = "Running PGSEA on all samples ...", {
