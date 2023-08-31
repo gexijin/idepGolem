@@ -573,8 +573,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       return(gene_sets)
     })
 
-#    gage_pathway_data <- eventReactive(input$submit_pathway_button, {
-    gage_pathway_data <- reactive({
+    gage_pathway_data <- eventReactive(input$submit_pathway_button, {
+#    gage_pathway_data <- reactive({
       req(input$pathway_method == 1)
       req(!is.null(deg$limma()))
       req(!is.null(gene_sets()))
