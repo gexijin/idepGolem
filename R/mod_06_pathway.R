@@ -160,45 +160,17 @@ mod_06_pathway_ui <- function(id) {
             title = "Significant pathways",
             br(),
             conditionalPanel(
-              condition = "input.pathway_method == 1",
-              tableOutput(ns("gage_pathway_table")),
+              condition = "input.submit_pathway_button == 0",
+              br(),
+              br(),
+              h3("Adjust parameters and click the Submit button."),
               ns = ns
             ),
-            conditionalPanel(
-              condition = "input.pathway_method == 2",
-              h5("Red and blue indicates relatively activated
-               and suppressed pathways, respectively.
-              GS just indicates a color scale."),
-              plotOutput(
-                outputId = ns("pgsea_plot"),
-                inline = TRUE
-              ),
-              ns = ns
-            ),
-            conditionalPanel(
-              condition = "input.pathway_method == 3",
-              tableOutput(outputId = ns("fgsea_pathway")),
-              ns = ns
-            ),
-            conditionalPanel(
-              condition = "input.pathway_method == 4",
-              h5("Red and blue indicates activated and suppressed pathways, respectively."),
-              plotOutput(
-                outputId = ns("pgsea_plot_all_samples"),
-                inline = TRUE
-              ),
-              ns = ns
-            ),
-            conditionalPanel(
-              condition = "input.pathway_method == 5",
-              DT::dataTableOutput(outputId = ns("reactome_pa_pathway")),
-              ns = ns
-            ),
-            hr(),
             htmlOutput(
               outputId = ns("main_pathway_result")
             ),
           ),
+
           tabPanel(
             title = "Tree",
             plotOutput(
@@ -421,33 +393,45 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     output$main_pathway_result <- renderUI({
       req(input$submit_pathway_button)
 
-          if(0)(
       isolate({
-        
+
+        # use the switch function to deliver results for different methods
         switch(
           as.integer(input$pathway_method),    
           
           #1 GAGE
           tableOutput(ns("gage_pathway_table")),
-          plotOutput(
-            outputId = ns("pgsea_plot"),
-            inline = TRUE
+
+          #2 PGSEA
+          tagList(
+            h5("Red and blue indicates relatively activated
+              and suppressed pathways, respectively.
+              GS just indicates a color scale."),
+            plotOutput(
+              outputId = ns("pgsea_plot"),
+              inline = TRUE
+            )
           ),
+
+          #3 FGSEA
           tableOutput(outputId = ns("fgsea_pathway")),
-          plotOutput(
-            outputId = ns("pgsea_plot_all_samples"),
-            inline = TRUE
+
+          #4 PGSEA-All
+          tagList(
+            h5("Red and blue indicates relatively activated
+              and suppressed pathways, respectively.
+              GS just indicates a color scale."),
+            plotOutput(
+              outputId = ns("pgsea_plot_all_samples"),
+              inline = TRUE
+            )
           ),
+
+          #5 ReactomePA
           DT::dataTableOutput(outputId = ns("reactome_pa_pathway"))
 
-
         )
-      })  )
-          plotOutput(
-            outputId = ns("pgsea_plot"),
-            inline = TRUE
-          )
-
+      })
     })
 
     output$list_comparisons_pathway <- renderUI({
@@ -589,8 +573,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       return(gene_sets)
     })
 
-    gage_pathway_data <- eventReactive(input$submit_pathway_button, {
-#    gage_pathway_data <- reactive({
+#    gage_pathway_data <- eventReactive(input$submit_pathway_button, {
+    gage_pathway_data <- reactive({
       req(input$pathway_method == 1)
       req(!is.null(deg$limma()))
       req(!is.null(gene_sets()))
@@ -614,24 +598,27 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
 
     output$gage_pathway_table <- renderTable(
       {
-        req(!is.null(gage_pathway_data()))
+        input$submit_pathway_button
+        isolate({
+          req(!is.null(gage_pathway_data()))
 
-        res <- gage_pathway_data()
-        if (ncol(res) > 1) {
-          # add URL
-          ix <- match(res[, 2], gene_sets()$pathway_info$description)
+          res <- gage_pathway_data()
+          if (ncol(res) > 1) {
+            # add URL
+            ix <- match(res[, 2], gene_sets()$pathway_info$description)
 
-          # remove pathway ID  only in Ensembl species
-          if (!input$show_pathway_id && pre_process$select_org() > 0) {
-            res[, 2] <- remove_pathway_id(res[, 2], input$select_go)
+            # remove pathway ID  only in Ensembl species
+            if (!input$show_pathway_id && pre_process$select_org() > 0) {
+              res[, 2] <- remove_pathway_id(res[, 2], input$select_go)
+            }
+            res[, 2] <- hyperText(
+              res[, 2],
+              gene_sets()$pathway_info$memo[ix]
+            )
+            res$Genes <- as.character(res$Genes)
           }
-          res[, 2] <- hyperText(
-            res[, 2],
-            gene_sets()$pathway_info$memo[ix]
-          )
-          res$Genes <- as.character(res$Genes)
-        }
-        return(res)
+          return(res)
+        })
       },
       digits = -1,
       spacing = "s",
