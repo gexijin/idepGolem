@@ -195,11 +195,12 @@ get_network_plot <- function(select_wgcna_module,
 
   # Adding symbols
   probe_to_gene <- NULL
+  dim_all_gene_info <- dim(all_gene_info)
   if (select_org != "NEW" &&
-    !is.null(dim(all_gene_info)) &&
-    dim(all_gene_info)[1] > 1) {
+    !is.null(dim_all_gene_info) &&
+    dim_all_gene_info[1] > 1) {
     # If more than 50% genes has symbol
-    if (sum(is.na(all_gene_info$symbol)) / dim(all_gene_info)[1] < .5) {
+    if (sum(is.na(all_gene_info$symbol)) / dim_all_gene_info[1] < .5) {
       probe_to_gene <- all_gene_info[, c("ensembl_gene_id", "symbol")]
       probe_to_gene$symbol <- gsub(" ", "", probe_to_gene$symbol)
 
