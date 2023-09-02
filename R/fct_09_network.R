@@ -392,3 +392,31 @@ plot_mean_connectivity <- function(wgcna) {
 
   return(connectivity_plot)
 }
+
+#' Mean connectivity plot
+#'
+#' Create a ggplot from the wgcna object to display the mean connectivity.
+#'
+#' @param wgcna List returned from the \code{get_wgcna}
+#' @param select_org Organism the expression data is for
+#' @param all_gene_info Gene info that was found from querying the database
+#' 
+#' @export
+#' @return A formatted ggplot displaying the mean connectivityfor the
+#'  \code{get_wgcna} function return.
+prepare_module_csv <- function(wgcna,
+select_org,
+all_gene_info) {
+   browser()
+  x2 <- merge(wgcna$module_info, wgcna$data, by.y = "row.names", by.x = "sub_gene_names", all.x = TRUE)
+  dim_all_gene_info <- dim(all_gene_info)
+  if (select_org != "NEW" &&
+    !is.null(dim_all_gene_info) &&
+    dim_all_gene_info[1] > 1) {
+      x2 <- merge(x2, all_gene_info, by.x = "sub_gene_names", by.y = "ensembl_gene_id", all.x = T)
+      rownames(x2) <- paste0(x2$symbol, "__", x2$sub_gene_names)
+  }
+  x2 <- x2[order(x2$dynamic_mods), ]
+  colnames(x2)[1:3] <- c("gene id", "Module color", "Module#")
+  return(x2)
+}

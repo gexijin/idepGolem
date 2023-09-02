@@ -64,6 +64,8 @@ mod_09_network_ui <- function(id) {
           "<hr style='height:1px;border:none;color:#333;background-color:#333;' />"
         ),
         htmlOutput(outputId = ns("list_wgcna_modules")),
+        downloadButton(outputId = ns("download_all_WGCNA_module"),"Download all modules"),
+        downloadButton(outputId = ns("download_selected_WGCNA_module"),"Download network for selected module"),
         textOutput(ns("module_statistic")),
         a(
           h5("Questions?", align = "right"),
@@ -201,7 +203,32 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
         )
       })
     })
+    module_csv_data <- reactive({
+      req(!is.null(wgcna()))
 
+      prepare_module_csv(
+        wgcna = wgcna(), select_org = pre_process$select_org(),
+        all_gene_info = pre_process$all_gene_info()
+      )
+    })
+    output$download_all_WGCNA_module <- downloadHandler(
+      filename = function() {
+        "WGCNA_modules.csv"
+      },
+      content = function(file) {
+        write.csv(module_csv_data(), file)
+      }
+    )
+    # output$download_selected_WGCNA_module <- downloadHandler(
+    #   filename <- function() {
+    #     paste0("Module", input$select_wgcna_module, ".txt")
+    #   },
+    #   content <- function(file) {
+    #     file.copy(exportModuleNetwork(), file)
+    #   },
+    #   contentType = "text file"
+    # )
+    
     output$module_plot <- renderPlot({
       req(!is.null(wgcna()))
       get_module_plot(wgcna())
