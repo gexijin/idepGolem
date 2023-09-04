@@ -307,6 +307,278 @@ plot_pgsea <- function(my_range,
   }
 }
 
+#' Heatmap of GSVA pathway analysis
+#'
+#' Create a heatmap from the pathway analysis using the GSVA
+#' package. The heatmap shows the expression in each group for
+#' each significantly enriched pathway.
+#'
+#' @param my_range Vector of the (min_set_size, max_set_size)
+#' @param processed_data Matrix of gene data that has been through
+#'   \code{\link{pre_process}()}
+#' @param contrast_samples Sample columns that correspond to the
+#'  selected comparison
+#' @param gene_sets List of vectors with each vector being the
+#'  set of genes that correspond to a particular pathway in
+#'  the database. See list returned from \code{\link{read_gene_sets}()}
+#' @param pathway_p_val_cutoff Significant p-value to determine
+#'  enriched pathways
+#' @param n_pathway_show Number of significant pathways to show
+#' @param select_go pathway category.
+#' @param show_pathway_id Whether to show pathway id for GO and KEGG pathways
+#'
+#' @export
+#' @return A heatmap plot with the rows as the significant
+#'  pathways and the columns corresponding to the samples.
+#'
+#' @family pathway functions
+plot_gsva <- function(my_range,
+                       processed_data,
+                       contrast_samples,
+                       gene_sets,
+                       pathway_p_val_cutoff,
+                       n_pathway_show,
+                       select_go,
+                       show_pathway_id) {
+  genes <- processed_data[, contrast_samples]
+  if (length(gene_sets) == 0) {
+    return(
+      NULL
+    )
+  } else {
+    subtype <- detect_groups(colnames(genes))
+    result <- gsva_data(
+      processed_data = genes,
+      gene_sets = gene_sets,
+      my_range = my_range,
+      pathway_p_val_cutoff = pathway_p_val_cutoff,
+      n_pathway_show = n_pathway_show
+    )
+
+    if (is.null(result$pg_data)) {
+      return(
+        NULL
+      )
+    } else {
+
+       # remove pathway ID if selected so
+      if (!show_pathway_id) {
+        row.names(result$pg_data) <- remove_pathway_id_second(
+          strings = row.names(result$pg_data),
+          select_go = select_go
+        )
+      }
+
+      PGSEA::smcPlot(
+        result$pg_data,
+        factor(subtype),
+        scale = c(-max(result$pg_data), max(result$pg_data)),
+        show.grid = T,
+        margins = c(3, 1, 13, 38),
+        col = PGSEA::.rwb,
+        cex.lab = 0.5
+      )
+    }
+  }
+}
+
+
+#' Pathway analysis with the GSVA package
+#'
+#' Run pathway analysis with the GSVA package using the results
+#' from the limma_value function.
+#'
+#' @param processed_data Matrix of gene data that has been through
+#'   \code{\link{pre_process}()}
+#' @param gene_sets List of vectors with each vector being the
+#'  set of genes that correspond to a particular pathway in
+#'  the database. See returned list from \code{\link{read_gene_sets}()}
+#' @param my_range Vector of the (min_set_size, max_set_size)
+#' @param pathway_p_val_cutoff Significant p-value to determine
+#'  enriched pathways
+#' @param n_pathway_show Number of significant pathways to show
+#'
+#' @export
+#' @return A list with a data frame and a numeric value that is used
+#'  in the \code{\link{plot_gsva}()} to create a heatmap.
+#'
+#' @family pathway functions
+gsva_data <- function(processed_data,
+                       gene_sets,
+                       my_range,
+                       pathway_p_val_cutoff,
+                       n_pathway_show) {
+  subtype <- detect_groups(colnames(processed_data))
+
+  # Cut off to report in PGSEA. Otherwise NA
+  p_value <- 0.01
+  if (length(gene_sets) == 0) {
+    return(list(pg3 = NULL, best = 1))
+  }
+
+  pg_results <- GSVA::gsva(processed_data, gene_sets, verbose = TRUE, method = "gsva")
+
+  # Remove se/wrts with all missing(non-signficant)
+  pg_results <- pg_results[rowSums(is.na(pg_results)) < ncol(pg_results), ]
+  if (dim(pg_results)[1] < 2) {
+    return()
+  }
+  best <- max(abs(pg_results))
+
+  if (length(subtype) < 4 || length(unique(subtype)) < 2 ||
+    length(unique(subtype)) == dim(processed_data)[2]) {
+    pg_results <- pg_results[order(-apply(pg_results, 1, sd)), ]
+    return(list(pg_data = pg_results[1:top, ], best <- best))
+  }
+
+  cat("\nComputing P values using ANOVA\n")
+  path_p_value <- function(k,
+                           pg_results,
+                           subtype) {
+    return(summary(aov(pg_results[k, ] ~ subtype))[[1]][["Pr(>F)"]][1])
+  }
+  p_values <- sapply(1:dim(pg_results)[1], function(x) {
+    path_p_value(
+      k = x,
+      pg_results = pg_results,
+      subtype = subtype
+    )
+  })
+  p_values <- stats::p.adjust(p_values, "fdr")
+
+
+  if (sort(p_values)[2] > pathway_p_val_cutoff) {
+    return(list(pg_data = NULL, best = best))
+  } else {
+    result <- cbind(as.matrix(p_values), pg_results)
+    result <- result[order(result[, 1]), ]
+    result <- result[which(result[, 1] < pathway_p_val_cutoff), , drop = FALSE]
+
+    pg_results <- result
+
+    # When there is only 1 left in the matrix pg_results becomes a vector
+    if (sum(p_values < pathway_p_val_cutoff) == 1) {
+      pg_data <- t(as.matrix(pg_results))
+      pg_data <- rbind(pg_data, pg_data)
+    } else {
+      if (dim(pg_results)[1] > n_pathway_show) {
+        pg_data <- pg_results[1:n_pathway_show, ]
+      } else {
+        pg_data <- pg_results
+      }
+    }
+
+    rownames(pg_data) <- sapply(rownames(pg_data), extract_under)
+    a <- sprintf("%-3.2e", pg_data[, 1])
+    rownames(pg_data) <- paste(a, rownames(pg_data), sep = " ")
+    pg_data <- pg_data[, -1]
+
+    # Sort by SD
+    pg_data <- pg_data[order(-apply(pg_data, 1, sd)), ]
+
+    return(list(
+      pg_data = pg_data,
+      best = best
+    ))
+  }
+}
+
+#' Data from PGSEA plot
+#'
+#' Get the data matrix that is plotted in the heatmap created by
+#' the \code{\link{plot_pgsea}()}.
+#'
+#' @param my_range Vector of the (min_set_size, max_set_size)
+#' @param data Matrix of gene data that has been through
+#'  \code{\link{pre_process}()}
+#' @param select_contrast String designating the comparison from DEG analysis to
+#'  filter for the significant genes. See the 'comparison' element from the list
+#'  returned from \code{\link{limma_value}()} for options.
+#' @param gene_sets List of vectors with each vector being the
+#'  set of genes that correspond to a particular pathway in
+#'  the database. See list returned from \code{\link{read_gene_sets}()}
+#' @param sample_info Matrix of experiment design information for grouping
+#' @param select_factors_model The selected factors for the model
+#'  expression
+#' @param select_model_comprions String designating selected comparisons to
+#'  analyze in the DEG analysis. See \code{\link{list_model_comparisons_ui}()}
+#'  for options
+#' @param pathway_p_val_cutoff Significant p-value to determine
+#'  enriched pathways
+#' @param n_pathway_show Number of pathways to return in final
+#'  result
+#'
+#' @export
+#' @return Data matrix with the rownames the descriptions of pathways
+#'  and the matrix the returned expression calculation from the PGSEA
+#'  package.
+#'
+#' @family pathway functions
+get_gsva_plot_data <- function(my_range,
+                                data,
+                                select_contrast,
+                                gene_sets,
+                                sample_info,
+                                select_factors_model,
+                                select_model_comprions,
+                                pathway_p_val_cutoff,
+                                n_pathway_show) {
+  # Find sample related to the comparison
+  iz <- match(detect_groups(colnames(data)), unlist(strsplit(select_contrast, "-")))
+  iz <- which(!is.na(iz))
+
+  if (!is.null(sample_info) & !is.null(select_factors_model) & length(select_model_comprions) > 0) {
+    # Strings like: "groups: mutant vs. control"
+    comparisons <- gsub(".*: ", "", select_model_comprions)
+    comparisons <- gsub(" vs\\. ", "-", comparisons)
+    # Corresponding factors
+    factors_vector <- gsub(":.*", "", select_model_comprions)
+    # Selected contrast lookes like: "mutant-control"
+    ik <- match(select_contrast, comparisons)
+    if (is.na(ik)) {
+      iz <- 1:(dim(data)[2])
+    } else {
+      # Interaction term, use all samples
+      # Corresponding factors
+      selected_factor <- factors_vector[ik]
+      iz <- match(sample_info[, selected_factor], unlist(strsplit(select_contrast, "-")))
+      iz <- which(!is.na(iz))
+    }
+  }
+
+  if (grepl("I:", select_contrast)) {
+    # If it is factor design use all samples
+    iz <- 1:(dim(data)[2])
+  }
+  if (is.na(iz)[1] | length(iz) <= 1) {
+    iz <- 1:(dim(data)[2])
+  }
+
+  genes <- data
+  genes <- genes[, iz]
+
+  subtype <- detect_groups(colnames(genes))
+
+  if (length(gene_sets) == 0) {
+    return(as.data.frame("No significant pathway!"))
+  } else {
+    result <- gsva_data(
+      processed_data = genes,
+      gene_sets = gene_sets,
+      my_range = my_range,
+      pathway_p_val_cutoff = pathway_p_val_cutoff,
+      n_pathway_show = n_pathway_show
+    )
+
+    if (is.null(result$pg_data)) {
+      return(as.data.frame("No significant pathway!"))
+    } else {
+      return(as.data.frame(result$pg_data))
+    }
+  }
+}
+
+
 #' Pathway analysis with the FGSEA package
 #'
 #' Run pathway analysis with the FGSEA package using the results
@@ -885,6 +1157,7 @@ get_pathway_list_data <- function(pathway_method,
                                   fgsea_pathway_data,
                                   pgsea_plot_data,
                                   pgsea_plot_all_samples_data,
+                                  gsva_plot_data,
                                   go,
                                   select_org,
                                   gene_info,
@@ -929,6 +1202,18 @@ get_pathway_list_data <- function(pathway_method,
       }
     }
   }
+
+  if (pathway_method == 6) {
+    if (!is.null(gsva_plot_data)) {
+      if (dim(gsva_plot_data)[2] > 1) {
+        pathways <- as.data.frame(gsva_plot_data)
+        pathways$Pathways <- substr(rownames(pathways), 10, nchar(rownames(pathways)))
+        pathways$adj.Pval <- gsub(" .*", "", rownames(pathways))
+        pathways$Direction <- "Diff"
+      }
+    }
+  }
+
   if (is.null(pathways)) {
     return(NULL)
   }

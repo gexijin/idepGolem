@@ -39,7 +39,8 @@ mod_06_pathway_ui <- function(id) {
             "GSEA (preranked fgsea)" = 3,
             "PGSEA" = 2,
             "PGSEA w/ all samples" = 4,
-            "ReactomePA" = 5
+            "ReactomePA" = 5,
+            "GSVA" = 6
           ),
           selected = 3
         ),
@@ -134,7 +135,7 @@ mod_06_pathway_ui <- function(id) {
           "If selected, pathway IDs, such as Path:mmu04115 and GO:0042770,  will be appended to pathway name.",
           theme = "light-border"
         ),
-        h6("* P-hacking warning! If you try all the combinations, you can find evidence for anything."),
+        h6("Beware of P-hacking! If you try all the combinations, you can find evidence for anything."),
         # Download report button
         downloadButton(
           outputId = ns("report"),
@@ -258,14 +259,16 @@ mod_06_pathway_ui <- function(id) {
             br(),
             conditionalPanel(
               condition = "(input.pathway_method == 1 | input.pathway_method == 2 |
-                            input.pathway_method == 3 | input.pathway_method == 4) &
-                            input.select_go != 'KEGG'",
+                            input.pathway_method == 3 | input.pathway_method == 4
+                            | input.pathway_method == 6) 
+                            & input.select_go != 'KEGG'",
               h5("Please select KEGG database, if available, from left and perform pathway analysis first."),
               ns = ns
             ),
             conditionalPanel(
               condition = "(input.pathway_method == 1 | input.pathway_method == 2 |
-                            input.pathway_method == 3 | input.pathway_method == 4) &
+                            input.pathway_method == 3 | input.pathway_method == 4 
+                            | input.pathway_method == 6) &
                             input.select_go == 'KEGG'",
               fluidRow(
                 column(
@@ -428,7 +431,18 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           ),
 
           #5 ReactomePA
-          DT::dataTableOutput(outputId = ns("reactome_pa_pathway"))
+          DT::dataTableOutput(outputId = ns("reactome_pa_pathway")),
+
+          #6 GSVA
+          tagList(
+            h5("Red and blue indicates relatively activated
+              and suppressed pathways, respectively.
+              GS just indicates a color scale."),
+            plotOutput(
+              outputId = ns("gsva_plot"),
+              inline = TRUE
+            )
+          ),
 
         )
       })
@@ -488,6 +502,13 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
             choices <- reactome_pa_pathway_data()[, 2]
           }
         }
+      } else if (input$pathway_method == 6) {
+        if (!is.null(gsva_plot_data())) {
+          if (dim(gsva_plot_data())[2] > 1) {
+            pathways <- as.data.frame(gsva_plot_data())
+            choices <- substr(rownames(pathways), 10, nchar(rownames(pathways)))
+          }
+        }
       }
 
       selectInput(
@@ -531,6 +552,13 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         if (!is.null(reactome_pa_pathway_data())) {
           if (dim(reactome_pa_pathway_data())[2] > 1) {
             choices <- reactome_pa_pathway_data()[, 2]
+          }
+        }
+      } else if (input$pathway_method == 6) {
+        if (!is.null(gsva_plot_data())) {
+          if (dim(gsva_plot_data())[2] > 1) {
+            pathways <- as.data.frame(gsva_plot_data())
+            choices <- substr(rownames(pathways), 10, nchar(rownames(pathways)))
           }
         }
       }
@@ -695,6 +723,59 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         )
       })
     })
+
+
+    output$gsva_plot <- renderPlot(
+      {
+        input$submit_pathway_button
+        isolate({
+          req(input$pathway_method == 6)
+          withProgress(message = "Running GSVA...", {
+            incProgress(0.2)
+
+            # only remove pathway ID for Ensembl species
+            show_pathway_id <- input$show_pathway_id
+            # always show pathway ID for STRING species
+            if (pre_process$select_org() < 0) {
+              show_pathway_id <- TRUE
+            }
+
+            plot_gsva(
+              my_range = c(input$min_set_size, input$max_set_size),
+              processed_data = pre_process$data(),
+              contrast_samples = contrast_samples(),
+              gene_sets = gene_sets()$gene_lists,
+              pathway_p_val_cutoff = input$pathway_p_val_cutoff,
+              n_pathway_show = input$n_pathway_show,
+              select_go = input$select_go,
+              show_pathway_id = show_pathway_id
+            )
+          })
+        })
+      },
+      height = 800,
+      width = 800
+    )
+
+    gsva_plot_data <- eventReactive(input$submit_pathway_button, {
+      req(input$pathway_method == 6)
+      req(!is.null(gene_sets()))
+      withProgress(message = "Running GSVA...", {
+        incProgress(0.2)
+        get_gsva_plot_data(
+          my_range = c(input$min_set_size, input$max_set_size),
+          data = pre_process$data(),
+          select_contrast = input$select_contrast,
+          gene_sets = gene_sets()$gene_lists,
+          sample_info = pre_process$sample_info(),
+          select_factors_model = deg$select_factors_model(),
+          select_model_comprions = deg$select_model_comprions(),
+          pathway_p_val_cutoff = input$pathway_p_val_cutoff,
+          n_pathway_show = input$n_pathway_show
+        )
+      })
+    })
+
 
     fgsea_pathway_data <- eventReactive(input$submit_pathway_button, {
 #    fgsea_pathway_data <- reactive({
@@ -888,6 +969,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         req(!is.null(input$sig_pathways_kegg))
         withProgress(message = "Downloading KEGG pathway", {
           incProgress(0.2)
+          browser()
           kegg_pathway(
             go = input$select_go,
             gage_pathway_data = pathway_list_data()[, 1:5],
@@ -920,6 +1002,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         fgsea_pathway_data = fgsea_pathway_data(),
         pgsea_plot_data = pgsea_plot_data(),
         pgsea_plot_all_samples_data = pgsea_plot_all_samples_data(),
+        gsva_plot_data = gsva_plot_data(),
         go = input$select_go,
         select_org = pre_process$select_org(),
         gene_info = pre_process$all_gene_info(),
