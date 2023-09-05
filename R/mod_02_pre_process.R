@@ -1077,8 +1077,10 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
           # Set up parameters to pass to Rmd document
           params <- list(
             loaded_data = load_data$converted_data(),
+            #individual_data = individual_data(),
             descr = processed_data()$descr,
             sample_info = load_data$sample_info(),
+            all_gene_info = load_data$all_gene_info(),
             data_file_format = load_data$data_file_format(),
             no_id_conversion = input$no_id_conversion,
             min_counts = input$min_counts,
@@ -1094,6 +1096,10 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
             sd_color = heat_colors[[input$heat_color_select]],
             rank = input$rank,
             no_fdr = load_data$no_fdr()
+            # selected_gene = input$selected_gene,
+            # gene_plot_box = input$gene_plot_box,
+            # use_sd = input$use_sd,
+            # lab_rotate = input$angle_ind_axis_lab
           )
           req(params)
           # Knit the document, passing in the `params` list, and eval it in a

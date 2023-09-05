@@ -5,8 +5,10 @@ output:
     code_folding: hide
 params:
   loaded_data:
+  #individual_data:
   descr:
   sample_info:
+  all_gene_info:
   data_file_format:
   no_id_conversion:
   min_counts:
@@ -23,6 +25,10 @@ params:
   sd_color:
   rank:
   no_fdr:
+  # selected_gene:
+  # gene_plot_box:
+  # use_sd:
+  # lab_rotate:
   date:
     label: "Date: "
     value: !r Sys.Date()
@@ -141,3 +147,23 @@ idepGolem::mean_sd_plot(
   rank = params$rank
 )
 ```
+
+```{r}
+idepGolem::gene_counts_ggplot(
+  counts_data = params$loaded_data,
+  sample_info = params$sample_info,
+  type = "Raw",
+  all_gene_info = params$all_gene_info
+)
+```
+
+<!--  ```{r} -->
+<!--  individual_plots( -->
+<!--          individual_data = individual_data, -->
+<!--          sample_info = params$sample_info, -->
+<!--          selected_gene = params$selected_gene, -->
+<!--          gene_plot_box = params$gene_plot_box, -->
+<!--          use_sd = params$use_sd, -->
+<!--          lab_rotate = params$angle_ind_axis_lab -->
+<!--        ) -->
+<!--  ``` -->
