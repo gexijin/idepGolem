@@ -339,7 +339,8 @@ plot_gsva <- function(my_range,
                        pathway_p_val_cutoff,
                        n_pathway_show,
                        select_go,
-                       show_pathway_id) {
+                       show_pathway_id,
+                       algorithm = "gsva") {
   genes <- processed_data[, contrast_samples]
   if (length(gene_sets) == 0) {
     return(
@@ -352,7 +353,8 @@ plot_gsva <- function(my_range,
       gene_sets = gene_sets,
       my_range = my_range,
       pathway_p_val_cutoff = pathway_p_val_cutoff,
-      n_pathway_show = n_pathway_show
+      n_pathway_show = n_pathway_show,
+      algorithm = algorithm
     )
 
     if (is.null(result$pg_data)) {
@@ -397,6 +399,7 @@ plot_gsva <- function(my_range,
 #' @param pathway_p_val_cutoff Significant p-value to determine
 #'  enriched pathways
 #' @param n_pathway_show Number of significant pathways to show
+#' @param algorithm  Options for GSVA: plage, ssgsea, zscore or gsva
 #'
 #' @export
 #' @return A list with a data frame and a numeric value that is used
@@ -407,7 +410,8 @@ gsva_data <- function(processed_data,
                        gene_sets,
                        my_range,
                        pathway_p_val_cutoff,
-                       n_pathway_show) {
+                       n_pathway_show,
+                       algorithm = "gsva") {
   subtype <- detect_groups(colnames(processed_data))
 
   # Cut off to report in PGSEA. Otherwise NA
@@ -416,7 +420,7 @@ gsva_data <- function(processed_data,
     return(list(pg3 = NULL, best = 1))
   }
 
-  pg_results <- GSVA::gsva(processed_data, gene_sets, verbose = TRUE, method = "gsva")
+  pg_results <- GSVA::gsva(processed_data, gene_sets, verbose = FALSE, method = algorithm)
 
   # Remove se/wrts with all missing(non-signficant)
   pg_results <- pg_results[rowSums(is.na(pg_results)) < ncol(pg_results), ]
@@ -483,7 +487,7 @@ gsva_data <- function(processed_data,
   }
 }
 
-#' Data from PGSEA plot
+#' Data from GSVA plot
 #'
 #' Get the data matrix that is plotted in the heatmap created by
 #' the \code{\link{plot_pgsea}()}.
@@ -506,6 +510,7 @@ gsva_data <- function(processed_data,
 #' @param pathway_p_val_cutoff Significant p-value to determine
 #'  enriched pathways
 #' @param n_pathway_show Number of pathways to return in final
+#' @param algorithm  Options for GSVA: plage, ssgsea, zscore or gsva
 #'  result
 #'
 #' @export
@@ -522,7 +527,8 @@ get_gsva_plot_data <- function(my_range,
                                 select_factors_model,
                                 select_model_comprions,
                                 pathway_p_val_cutoff,
-                                n_pathway_show) {
+                                n_pathway_show,
+                                algorithm = "gsva") {
   # Find sample related to the comparison
   iz <- match(detect_groups(colnames(data)), unlist(strsplit(select_contrast, "-")))
   iz <- which(!is.na(iz))
@@ -567,7 +573,8 @@ get_gsva_plot_data <- function(my_range,
       gene_sets = gene_sets,
       my_range = my_range,
       pathway_p_val_cutoff = pathway_p_val_cutoff,
-      n_pathway_show = n_pathway_show
+      n_pathway_show = n_pathway_show,
+      algorithm = algorithm
     )
 
     if (is.null(result$pg_data)) {

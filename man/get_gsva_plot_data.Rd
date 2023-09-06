@@ -2,7 +2,7 @@
 % Please edit documentation in R/fct_06_pathway.R
 \name{get_gsva_plot_data}
 \alias{get_gsva_plot_data}
-\title{Data from PGSEA plot}
+\title{Data from GSVA plot}
 \usage{
 get_gsva_plot_data(
   my_range,
@@ -13,7 +13,8 @@ get_gsva_plot_data(
   select_factors_model,
   select_model_comprions,
   pathway_p_val_cutoff,
-  n_pathway_show
+  n_pathway_show,
+  algorithm = "gsva"
 )
 }
 \arguments{
@@ -42,7 +43,9 @@ for options}
 \item{pathway_p_val_cutoff}{Significant p-value to determine
 enriched pathways}
 
-\item{n_pathway_show}{Number of pathways to return in final
+\item{n_pathway_show}{Number of pathways to return in final}
+
+\item{algorithm}{Options for GSVA: plage, ssgsea, zscore or gsva
 result}
 }
 \value{

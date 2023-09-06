@@ -12,7 +12,8 @@ plot_gsva(
   pathway_p_val_cutoff,
   n_pathway_show,
   select_go,
-  show_pathway_id
+  show_pathway_id,
+  algorithm = "gsva"
 )
 }
 \arguments{

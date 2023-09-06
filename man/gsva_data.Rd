@@ -9,7 +9,8 @@ gsva_data(
   gene_sets,
   my_range,
   pathway_p_val_cutoff,
-  n_pathway_show
+  n_pathway_show,
+  algorithm = "gsva"
 )
 }
 \arguments{
@@ -26,6 +27,8 @@ the database. See returned list from \code{\link{read_gene_sets}()}}
 enriched pathways}
 
 \item{n_pathway_show}{Number of significant pathways to show}
+
+\item{algorithm}{Options for GSVA: plage, ssgsea, zscore or gsva}
 }
 \value{
 A list with a data frame and a numeric value that is used

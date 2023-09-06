@@ -40,9 +40,25 @@ mod_06_pathway_ui <- function(id) {
             "PGSEA" = 2,
             "PGSEA w/ all samples" = 4,
             "ReactomePA" = 5,
-            "GSVA" = 6
+            "GSVA package" = 6
           ),
           selected = 3
+        ),
+
+        conditionalPanel(
+          condition = "input.pathway_method == 6",
+          selectInput(
+            inputId = ns("gsva_algorithm"), 
+            label = "Algorithm for the GSVA package:",
+            choices = list(
+              "GSVA" = "gsva",
+              "PLAGE" = "plage",
+              "Z-Score" = "zscore",
+              "ssGSEA" = "ssgsea"
+            ),
+            selected = "plage"
+          ),
+          ns = ns
         ),
 
         htmlOutput(
@@ -748,7 +764,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
               pathway_p_val_cutoff = input$pathway_p_val_cutoff,
               n_pathway_show = input$n_pathway_show,
               select_go = input$select_go,
-              show_pathway_id = show_pathway_id
+              show_pathway_id = show_pathway_id,
+              algorithm = input$gsva_algorithm
             )
           })
         })
@@ -771,7 +788,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           select_factors_model = deg$select_factors_model(),
           select_model_comprions = deg$select_model_comprions(),
           pathway_p_val_cutoff = input$pathway_p_val_cutoff,
-          n_pathway_show = input$n_pathway_show
+          n_pathway_show = input$n_pathway_show,
+          algorithm = input$gsva_algorithm
         )
       })
     })
