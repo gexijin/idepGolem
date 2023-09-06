@@ -969,7 +969,6 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         req(!is.null(input$sig_pathways_kegg))
         withProgress(message = "Downloading KEGG pathway", {
           incProgress(0.2)
-          browser()
           kegg_pathway(
             go = input$select_go,
             gage_pathway_data = pathway_list_data()[, 1:5],
