@@ -1150,7 +1150,7 @@ individual_plots <- function(individual_data,
                              lab_rotate) {
   individual_data <- as.data.frame(individual_data)
   individual_data$symbol <- rownames(individual_data)
-
+  browser()
   plot_data <- individual_data |>
     dplyr::filter(symbol %in% selected_gene) |>
     tidyr::pivot_longer(!symbol, names_to = "sample", values_to = "value")
