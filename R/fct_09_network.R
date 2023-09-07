@@ -393,44 +393,45 @@ plot_mean_connectivity <- function(wgcna) {
   return(connectivity_plot)
 }
 
-#' Mean connectivity plot
+#' prepare_module_csv
 #'
-#' Create a ggplot from the wgcna object to display the mean connectivity.
+#' Create a dataframe from the wgcna object to export as a CSV file, this code is from old idep
 #'
 #' @param wgcna List returned from the \code{get_wgcna}
 #' @param select_org Organism the expression data is for
 #' @param all_gene_info Gene info that was found from querying the database
 #' 
 #' @export
-#' @return A formatted ggplot displaying the mean connectivityfor the
-#'  \code{get_wgcna} function return.
+#' @return A dataframe containing for csv file
 prepare_module_csv <- function(wgcna,
 select_org,
 all_gene_info) {
-  x2 <- merge(wgcna$module_info, wgcna$data, by.y = "row.names", by.x = "sub_gene_names", all.x = TRUE)
+  df <- merge(wgcna$module_info, wgcna$data, by.y = "row.names", by.x = "sub_gene_names", all.x = TRUE)
   dim_all_gene_info <- dim(all_gene_info)
   if (select_org != "NEW" &&
     !is.null(dim_all_gene_info) &&
     dim_all_gene_info[1] > 1) {
-      x2 <- merge(x2, all_gene_info, by.x = "sub_gene_names", by.y = "ensembl_gene_id", all.x = T)
-      rownames(x2) <- paste0(x2$symbol, "__", x2$sub_gene_names)
+      df <- merge(df, all_gene_info, by.x = "sub_gene_names", by.y = "ensembl_gene_id", all.x = T)
+      rownames(df) <- paste0(df$symbol, "__", df$sub_gene_names)
+      # Convert row names to a column and name it
+      df$symbol__gene_id <- rownames(df)
+      # Reorder the columns to have "symbol__gene_id" as the first column
+      df <- df[, c(ncol(df), 1:(ncol(df) - 1))]
   }
-  x2 <- x2[order(x2$dynamic_mods), ]
-  colnames(x2)[1:3] <- c("gene_id", "module_color", "module")
-  return(x2)
+  df <- df[order(df$dynamic_mods), ]
+  colnames(df)[2:4] <- c("gene_id", "module_color", "module")
+  return(df)
 }
 
-#' Mean connectivity plot
+#' prepare_module_csv_filter
 #'
-#' Create a ggplot from the wgcna object to display the mean connectivity.
+#' Create a dataframe from the wgcna object to export as a CSV file, allow the user to filter the module
 #'
 #' @param wgcna List returned from the \code{get_wgcna}
 #' @param select_org Organism the expression data is for
-#' @param all_gene_info Gene info that was found from querying the database
 #'
 #' @export
-#' @return A formatted ggplot displaying the mean connectivityfor the
-#'  \code{get_wgcna} function return.
+#' @return A dataframe containing for csv file
 prepare_module_csv_filter <- function(
     module_data,
     select_org) {

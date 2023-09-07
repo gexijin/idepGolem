@@ -66,6 +66,7 @@ mod_09_network_ui <- function(id) {
         htmlOutput(outputId = ns("list_wgcna_modules")),
         downloadButton(outputId = ns("download_all_WGCNA_module"),"Download all modules"),
         br(),
+        br(),
         downloadButton(outputId = ns("download_selected_WGCNA_module"),"Download network for selected module"),
         textOutput(ns("module_statistic")),
         a(
@@ -217,7 +218,7 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
         "WGCNA_modules.csv"
       },
       content = function(file) {
-        write.csv(module_csv_data(), file)
+        write.csv(module_csv_data(), file, row.names = FALSE)
       }
     )
     module_csv_data_filter <- reactive({
@@ -232,7 +233,7 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
         paste0("module_", input$select_wgcna_module, ".csv")
       },
       content <- function(file) {
-        write.csv(module_csv_data(), file)
+        write.csv(module_csv_data(), file, row.names = FALSE)
       },
     )
     
