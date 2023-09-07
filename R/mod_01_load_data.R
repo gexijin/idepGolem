@@ -149,11 +149,7 @@ mod_01_load_data_ui <- function(id) {
 
         # Experiment design file input ----------
         uiOutput(ns("design_file_ui")),
-        checkboxInput(
-          inputId = ns("customize_button"),
-          label = strong("Settings"),
-          value = FALSE
-        ),
+        div(strong("More Settings (optional)")),
         selectInput(
           inputId = ns("multiple_map"),
           label = "Multiple mapped IDs:",
@@ -317,15 +313,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
     # increase max input file size
     options(shiny.maxRequestSize = 2001024^2)
-
-    observe({
-      shinyjs::toggle(id = "heatmap_color_select", condition = input$customize_button)
-      shinyjs::toggle(id = "select_gene_id", condition = input$customize_button)
-      shinyjs::toggle(id = "multiple_map", condition = input$customize_button)
-      shinyjs::toggle(id = "no_id_conversion", condition = input$customize_button)
-      shinyjs::toggle(id = "plot_grid_lines", condition = input$customize_button)
-      shinyjs::toggle(id = "ggplot2_theme", condition = input$customize_button)
-    })
 
     welcome_modal <- shiny::modalDialog(
       title = "iDEP: Empower all scientists!",
@@ -545,7 +532,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       tagList(
         fileInput(
           inputId = ns("experiment_file"),
-          label = strong("4. Optional: experiment design (CSV or text)"),
+          label = strong("4. Experiment Design (CSV or text), (optional)"),
           accept = c(
             "text/csv",
             "text/comma-separated-values",
@@ -568,7 +555,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       ))
 
       showNotification(
-        ui = paste("Pleaes load a demo file or your own data first."),
+        ui = paste("Please load a demo file or your own data first."),
         id = "load_data_first",
         duration = NULL,
         type = "error"
