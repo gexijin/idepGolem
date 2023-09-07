@@ -40,25 +40,11 @@ mod_06_pathway_ui <- function(id) {
             "PGSEA" = 2,
             "PGSEA w/ all samples" = 4,
             "ReactomePA" = 5,
-            "GSVA package" = 6
+            "GSVA" = 6,
+            "ssGSEA" = 7,
+            "PLAGE" = 8
           ),
           selected = 3
-        ),
-
-        conditionalPanel(
-          condition = "input.pathway_method == 6",
-          selectInput(
-            inputId = ns("gsva_algorithm"), 
-            label = "Algorithm for the GSVA package:",
-            choices = list(
-              "GSVA" = "gsva",
-              "PLAGE" = "plage",
-              "Z-Score" = "zscore",
-              "ssGSEA" = "ssgsea"
-            ),
-            selected = "plage"
-          ),
-          ns = ns
         ),
 
         htmlOutput(
@@ -276,7 +262,8 @@ mod_06_pathway_ui <- function(id) {
             conditionalPanel(
               condition = "(input.pathway_method == 1 | input.pathway_method == 2 |
                             input.pathway_method == 3 | input.pathway_method == 4
-                            | input.pathway_method == 6) 
+                            | input.pathway_method == 6 | input.pathway_method == 7
+                            | input.pathway_method == 8) 
                             & input.select_go != 'KEGG'",
               h5("Please select KEGG database, if available, from left and perform pathway analysis first."),
               ns = ns
@@ -284,7 +271,8 @@ mod_06_pathway_ui <- function(id) {
             conditionalPanel(
               condition = "(input.pathway_method == 1 | input.pathway_method == 2 |
                             input.pathway_method == 3 | input.pathway_method == 4 
-                            | input.pathway_method == 6) &
+                            | input.pathway_method == 6 | input.pathway_method == 7
+                            | input.pathway_method == 8) &
                             input.select_go == 'KEGG'",
               fluidRow(
                 column(
@@ -460,6 +448,27 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
             )
           ),
 
+          #7 ssGSEA   same as above
+          tagList(
+            h5("Red and blue indicates relatively activated
+              and suppressed pathways, respectively.
+              GS just indicates a color scale."),
+            plotOutput(
+              outputId = ns("gsva_plot"),
+              inline = TRUE
+            )
+          ),
+
+          #8 PLAGE   same as above
+          tagList(
+            h5("Red and blue indicates relatively activated
+              and suppressed pathways, respectively.
+              GS just indicates a color scale."),
+            plotOutput(
+              outputId = ns("gsva_plot"),
+              inline = TRUE
+            )
+          ),
         )
       })
     })
@@ -518,7 +527,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
             choices <- reactome_pa_pathway_data()[, 2]
           }
         }
-      } else if (input$pathway_method == 6) {
+      } else if (input$pathway_method >= 6 && input$pathway_method <= 8 ) {
         if (!is.null(gsva_plot_data())) {
           if (dim(gsva_plot_data())[2] > 1) {
             pathways <- as.data.frame(gsva_plot_data())
@@ -570,7 +579,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
             choices <- reactome_pa_pathway_data()[, 2]
           }
         }
-      } else if (input$pathway_method == 6) {
+      } else if (input$pathway_method >= 6 && input$pathway_method <= 8) {
         if (!is.null(gsva_plot_data())) {
           if (dim(gsva_plot_data())[2] > 1) {
             pathways <- as.data.frame(gsva_plot_data())
@@ -745,8 +754,14 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       {
         input$submit_pathway_button
         isolate({
-          req(input$pathway_method == 6)
-          withProgress(message = "Running GSVA...", {
+          req(input$pathway_method >= 6 && input$pathway_method <= 8)
+          gsva_algorithm <- switch(
+            as.numeric(input$pathway_method) - 5, 
+            "gsva",   #6
+            "ssgsea", #7
+            "plage"   #8
+          )
+          withProgress(message = paste("Running", toupper(gsva_algorithm), "..."), {
             incProgress(0.2)
 
             # only remove pathway ID for Ensembl species
@@ -755,6 +770,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
             if (pre_process$select_org() < 0) {
               show_pathway_id <- TRUE
             }
+
 
             plot_gsva(
               my_range = c(input$min_set_size, input$max_set_size),
@@ -765,7 +781,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
               n_pathway_show = input$n_pathway_show,
               select_go = input$select_go,
               show_pathway_id = show_pathway_id,
-              algorithm = input$gsva_algorithm
+              algorithm = gsva_algorithm
             )
           })
         })
@@ -775,9 +791,15 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     )
 
     gsva_plot_data <- eventReactive(input$submit_pathway_button, {
-      req(input$pathway_method == 6)
+      req(input$pathway_method >= 6 && input$pathway_method <= 8)
       req(!is.null(gene_sets()))
-      withProgress(message = "Running GSVA...", {
+      gsva_algorithm <- switch(
+        as.numeric(input$pathway_method) - 5, 
+        "gsva",   #6
+        "ssgsea", #7
+        "plage"   #8
+      )
+      withProgress(message = paste("Running", toupper(gsva_algorithm), "..."), {
         incProgress(0.2)
         get_gsva_plot_data(
           my_range = c(input$min_set_size, input$max_set_size),
@@ -789,7 +811,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           select_model_comprions = deg$select_model_comprions(),
           pathway_p_val_cutoff = input$pathway_p_val_cutoff,
           n_pathway_show = input$n_pathway_show,
-          algorithm = input$gsva_algorithm
+          algorithm = gsva_algorithm
         )
       })
     })

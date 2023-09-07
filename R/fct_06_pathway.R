@@ -371,6 +371,12 @@ plot_gsva <- function(my_range,
         )
       }
 
+      if(algorithm == "ssgsea") {
+        result$pg_data <- result$pg_data - rowMeans(result$pg_data)        
+      }
+
+
+
       PGSEA::smcPlot(
         result$pg_data,
         factor(subtype),
@@ -1210,7 +1216,7 @@ get_pathway_list_data <- function(pathway_method,
     }
   }
 
-  if (pathway_method == 6) {
+  if (pathway_method >= 6 && pathway_method <= 8 ) {
     if (!is.null(gsva_plot_data)) {
       if (dim(gsva_plot_data)[2] > 1) {
         pathways <- as.data.frame(gsva_plot_data)
