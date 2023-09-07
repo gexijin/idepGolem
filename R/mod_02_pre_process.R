@@ -540,7 +540,7 @@ mod_02_pre_process_ui <- function(id) {
 mod_02_pre_process_server <- function(id, load_data, tab) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-
+    
     # Data file format for conditional panels ----------
     # outputOptions required otherwise the value can only be used
     # if it is rendered somewhere else in the UI
@@ -1004,7 +1004,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       req(!is.null(input$gene_plot_box))
       req(!is.null(input$use_sd))
       req(input$angle_ind_axis_lab)
-
+      
       p <- individual_plots(
         individual_data = individual_data(),
         sample_info = load_data$sample_info(),
@@ -1019,7 +1019,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         ggplot2_theme = load_data$ggplot2_theme()
       )
     })
-
+  
     output$gene_plot <- renderPlot({
       req(gene_plot())
       print(gene_plot())
@@ -1070,7 +1070,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
           # This should retrieve the project location on your device:
           # "C:/Users/bdere/Documents/GitHub/idepGolem"
           wd <- getwd()
-
+          
           markdown_location <- app_sys("app/www/RMD/pre_process_workflow.Rmd")
           file.copy(from = markdown_location, to = tempReport, overwrite = TRUE)
 
@@ -1102,6 +1102,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
             lab_rotate = input$angle_ind_axis_lab
           )
           req(params)
+
           # Knit the document, passing in the `params` list, and eval it in a
           # child of the global environment (this isolates the code in the document
           # from the code in this app).

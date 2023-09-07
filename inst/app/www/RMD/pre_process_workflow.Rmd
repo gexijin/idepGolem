@@ -157,15 +157,13 @@ idepGolem::gene_counts_ggplot(
 )
 ```
 
-```{r}
- # individual_plots(
- #         individual_data = params$individual_data,
- #         sample_info = params$sample_info,
- #         selected_gene = params$selected_gene,
- #         gene_plot_box = params$gene_plot_box,
- #         use_sd = params$use_sd,
- #         lab_rotate = params$angle_ind_axis_lab
- #       )
-
-head(params$individual_data)
-```
+<!--  ```{r} -->
+<!--   individual_plots( -->
+<!--           individual_data = params$individual_data, -->
+<!--           sample_info = params$sample_info,             # This is NULL, but think that's ok -->
+<!--           selected_gene = params$selected_gene, -->
+<!--           gene_plot_box = params$gene_plot_box, -->
+<!--           use_sd = params$use_sd, -->
+<!--           lab_rotate = params$angle_ind_axis_lab -->
+<!--         ) -->
+<!-- # ``` -->
