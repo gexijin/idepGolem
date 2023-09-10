@@ -569,6 +569,17 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       removeNotification("load_data_first")
     })
 
+    observe({
+      req(!is.null(loaded_data()$data) && any(apply(loaded_data()$data, 2, function(col) all(col == 0))))
+
+      showNotification(
+        ui = paste("A sample has all values as zero. it is recommended to remove that sample."),
+        id = "sample_remove_error",
+        duration = NULL,
+        type = "error"
+      )
+    })
+
     # Message for the status of the app ---------
     output$file_format <- renderUI({
       shinyjs::hideElement(id = "load_message")
