@@ -135,7 +135,7 @@ get_idep_data <- function(datapath = DATAPATH) {
     species_choice
   )
 
-  #species_choice <- append(
+  #species_choice <- apppend(
   #  setNames("BestMatch", "Best matching species"),
   #  species_choice
   #)

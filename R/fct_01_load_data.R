@@ -576,10 +576,19 @@ showGeneIDs <- function(species, nGenes = 10){
   if(species == "BestMatch")
     return(as.data.frame("Select a species above.") )
   
-  conn_db1 <- connect_convert_db_org()
+  datapath <- Sys.getenv("IDEP_DATABASE")[1]
+  if(nchar(datapath) == 0) {
+    datapath = "../../data/data104b/"
+  }
+  
+  converted <- DBI::dbConnect( 
+    drv = RSQLite::dbDriver("SQLite"), 
+    dbname = paste0(datapath, "convertIDs.db"), 
+    flags=RSQLite::SQLITE_RO
+    )  #read only mode
   
   idTypes <- DBI::dbGetQuery( 
-    conn_db1,              # NOT SURE IF THIS IS RIGHT
+    converted,              # THIS IS WRONG
     paste0( " select DISTINCT idType from mapping where species = '", 
       species,"'") 
     )	# slow
@@ -591,7 +600,7 @@ showGeneIDs <- function(species, nGenes = 10){
   for(k in 1:length(idTypes)){
     # retrieve 500 gene ids and then random choose 10
     result <- dbGetQuery( 
-      convert,
+      converted,                      # THIS IS WRONG
       paste0( " select  id,idType from mapping where species = '", 
       species,
       "' AND idType ='", 
@@ -608,7 +617,7 @@ showGeneIDs <- function(species, nGenes = 10){
   
   # Names of idTypes
   idNames <- dbGetQuery( 
-    connect_convert_db,           # NOT SURE IF THIS IS RIGHT
+    converted,           # THIS IS WRONG
     paste0( " SELECT id,idType from idIndex where id IN ('",
       paste(idTypes,
         collapse="', '"),
@@ -621,9 +630,9 @@ showGeneIDs <- function(species, nGenes = 10){
   
   
   #library(dplyr)
-  resultAll <- resultAll %>% 
-    select(id, idType.y) %>%
-    group_by(idType.y) %>%
+  resultAll <- resultAll |> 
+    select(id, idType.y) |>
+    group_by(idType.y) |>
     summarise(Examples = paste0(id, collapse = "; "))
   
   colnames(resultAll)[1] <- "ID Type"

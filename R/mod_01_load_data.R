@@ -592,7 +592,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       #   Name = c("John", "Alice", "Bob", "Carol"),
       #   Age = c(30, 25, 28, 22)
       # )
-      # data
+      # # data
       if (input$userSpecieIDexample == 0)   {
         return()
       }
@@ -742,7 +742,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           select_org = input$select_org,
           max_sample_ids = 200
         )
-
+        
         all_gene_info <- gene_info(
           converted = converted,
           select_org = input$select_org,
