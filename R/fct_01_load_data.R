@@ -97,9 +97,9 @@ gene_info <- function(converted,
   set <- match(gene_info_csv$ensembl_gene_id, query_set)
   set[which(is.na(set))] <- "Genome"
   set[which(set != "Genome")] <- "List"
+  
   return(cbind(gene_info_csv, set))
 }
-
 
 
 
@@ -566,4 +566,73 @@ median_fun <- function(x){
   } else {
     median(x, na.rm = TRUE)
   }
+}
+
+
+### Used to show sample gene ID in modal
+showGeneIDs <- function(species, nGenes = 10){
+  browser()
+  # Given a species ID, this function returns 10 gene ids for each idType
+  if(species == "BestMatch")
+    return(as.data.frame("Select a species above.") )
+  
+  conn_db1 <- connect_convert_db_org()
+  
+  idTypes <- DBI::dbGetQuery( 
+    conn_db1,              # NOT SURE IF THIS IS RIGHT
+    paste0( " select DISTINCT idType from mapping where species = '", 
+      species,"'") 
+    )	# slow
+  idTypes <- idTypes[,1, drop = TRUE]
+  
+  if(nGenes > 100) nGenes <- 100; # upper limit
+  
+  # for each id Type
+  for(k in 1:length(idTypes)){
+    # retrieve 500 gene ids and then random choose 10
+    result <- dbGetQuery( 
+      convert,
+      paste0( " select  id,idType from mapping where species = '", 
+      species,
+      "' AND idType ='", 
+      idTypes[k], "' LIMIT ", 
+      50 * nGenes) 
+    )
+    result <- result[sample(1:(50 * nGenes), nGenes), ]
+    if(k == 1) { 
+      resultAll <- result 
+    } else { 
+      resultAll <- rbind(resultAll, result)
+    }
+  }
+  
+  # Names of idTypes
+  idNames <- dbGetQuery( 
+    connect_convert_db,           # NOT SURE IF THIS IS RIGHT
+    paste0( " SELECT id,idType from idIndex where id IN ('",
+      paste(idTypes,
+        collapse="', '"),
+      "')"
+      )
+    )
+  
+  resultAll <- merge(resultAll, idNames, by.x = "idType", by.y = "id")
+  
+  
+  
+  #library(dplyr)
+  resultAll <- resultAll %>% 
+    select(id, idType.y) %>%
+    group_by(idType.y) %>%
+    summarise(Examples = paste0(id, collapse = "; "))
+  
+  colnames(resultAll)[1] <- "ID Type"
+  # put symbols first, refseq next, followed by ensembls. Descriptions (long gnee names) last
+  resultAll <- resultAll[ order( grepl("ensembl", resultAll$'ID Type'), decreasing = TRUE), ]    
+  resultAll <- resultAll[ order( grepl("refseq", resultAll$'ID Type'), decreasing = TRUE), ]      
+  resultAll <- resultAll[ order( grepl("symbol", resultAll$'ID Type'), decreasing = TRUE), ]
+  resultAll <- resultAll[ order( grepl("description", resultAll$'ID Type'), decreasing = FALSE), ]
+  
+  return(resultAll)
+  
 }

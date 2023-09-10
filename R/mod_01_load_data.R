@@ -149,6 +149,8 @@ mod_01_load_data_ui <- function(id) {
 
         # Experiment design file input ----------
         uiOutput(ns("design_file_ui")),
+        uiOutput(ns("example_genes_ui")),
+        br(),
         checkboxInput(
           inputId = ns("customize_button"),
           label = strong("Settings"),
@@ -558,9 +560,66 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       )
     })
 
+    output$example_genes_ui <- renderUI({
+      actionButton(ns("MGeneIDexamples"), "Example gene IDs")
+    })
 
-
-
+    # Define the content of the basic modal
+    observeEvent(input$MGeneIDexamples, {
+      showModal(
+        modalDialog(
+          title = "What the gene IDs in our database look like?",
+          selectizeInput(
+            inputId = ns("userSpecieIDexample"),
+            label = "Select or search for species", 
+            choices = c(names(idep_data$species_choice))
+            ),
+          tableOutput(ns("showGeneIDs4Species")),
+          easyClose = TRUE,
+          footer = tagList(
+            actionButton(ns("MGeneIDexamplesCloseBtn"), "Close")
+          )
+        )
+      )
+    })
+    
+    
+    
+    # Render Gene ID example table in gene example Modal
+    output$showGeneIDs4Species <- renderTable({
+      
+      # data <- data.frame(
+      #   Name = c("John", "Alice", "Bob", "Carol"),
+      #   Age = c(30, 25, 28, 22)
+      # )
+      # data
+      if (input$userSpecieIDexample == 0)   {
+        return()
+      }
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Retrieving gene IDs",
+        color = "#000000"
+      )
+      geneIDs <- showGeneIDs(species = input$userSpecieIDexample, nGenes = 10)
+      shinybusy::remove_modal_spinner()
+      geneIDs
+    }, 
+      digits = -1,
+      spacing="s",
+      striped=TRUE,
+      bordered = TRUE, 
+      width = "auto",
+      hover=T
+    )
+  
+    
+    
+    # Close example gene Modal
+    observeEvent(input$MGeneIDexamplesCloseBtn, {
+      removeModal()
+    })
+    
     # Show messages when on the Network tab or button is clicked ----
     observe({
       req(is.null(loaded_data()$data) && (
