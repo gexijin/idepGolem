@@ -144,7 +144,13 @@ mod_01_load_data_ui <- function(id) {
         # Includes load demo action button, demo data dropdown, and expression
         # file upload box
         uiOutput(ns("load_data_ui")),
-
+        # tags$style(
+        #   HTML("
+        #     #load_data-ui {
+        #       display: block !important;
+        #     }
+        #   ")
+        # ),
 
 
         # Experiment design file input ----------
@@ -426,11 +432,10 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # expression file upload
     output$load_data_ui <- renderUI({
       req(
-        (is.null(input$go_button) || input$go_button == 0) &&
-          is.null(input$expression_file)
+        (is.null(input$go_button) || input$go_button == 0)
       )
       req(input$data_file_format)
-
+      
       # get demo data files based on specified format
       files <- idep_data$demo_file_info
       files <- files[files$type == input$data_file_format, ]
@@ -897,3 +902,4 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
 ## To be copied in the server
 # mod_01_load_data_server("load_data") # nolint
+
