@@ -581,14 +581,17 @@ showGeneIDs <- function(species, nGenes = 10){
     datapath = "../../data/data104b/"
   }
   
-  converted <- DBI::dbConnect( 
+  #     Need a line of code that does this...
+  #convert <- dbConnect( sqlite, paste0(datapath, "convertIDs.db"), flags=SQLITE_RO)  #read only mode
+  
+  convert <- DBI::dbConnect( 
     drv = RSQLite::dbDriver("SQLite"), 
     dbname = paste0(datapath, "convertIDs.db"), 
     flags=RSQLite::SQLITE_RO
     )  #read only mode
   
   idTypes <- DBI::dbGetQuery( 
-    converted,              # THIS IS WRONG
+    convert,              # THIS IS WRONG
     paste0( " select DISTINCT idType from mapping where species = '", 
       species,"'") 
     )	# slow
@@ -600,7 +603,7 @@ showGeneIDs <- function(species, nGenes = 10){
   for(k in 1:length(idTypes)){
     # retrieve 500 gene ids and then random choose 10
     result <- dbGetQuery( 
-      converted,                      # THIS IS WRONG
+      convert,                      # THIS IS WRONG
       paste0( " select  id,idType from mapping where species = '", 
       species,
       "' AND idType ='", 
@@ -617,7 +620,7 @@ showGeneIDs <- function(species, nGenes = 10){
   
   # Names of idTypes
   idNames <- dbGetQuery( 
-    converted,           # THIS IS WRONG
+    convert,           # THIS IS WRONG
     paste0( " SELECT id,idType from idIndex where id IN ('",
       paste(idTypes,
         collapse="', '"),

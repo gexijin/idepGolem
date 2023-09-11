@@ -69,7 +69,6 @@ Imports:
     rmarkdown,
     RSQLite,
     Rtsne,
-    runibic,
     shiny (>= 1.6.0),
     shinybusy,
     shinyjs,
