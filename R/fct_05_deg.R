@@ -2775,6 +2775,8 @@ plot_ma <- function(data,
 #' @param sample_info Experiment file information for grouping
 #' @param plot_colors List containing three colors to differentiate between
 #'   the up-regulated, down-regulated, and other genes
+#' @param vol_data Volcano data used in gene annotation
+#' @param anotate_genes Genes to be anotated, coming from \code{mod_label_server()}
 #'
 #' @export
 #' @return A formatted ggplot with the X-axis as the mean expression
@@ -2788,7 +2790,14 @@ plot_deg_scatter <- function(select_contrast,
                              contrast_samples,
                              processed_data,
                              sample_info,
-                             plot_colors) { ##J Addition
+                             plot_colors,
+                             vol_data,
+                             anotate_genes = NULL
+                             ) { ##J Addition
+  browser()
+  anotate_data <- vol_data |>
+    dplyr::filter(Row.names %in% anotate_genes)
+  
   if (grepl("I:", select_contrast)) {
     grid::grid.newpage()
     return(
@@ -2876,7 +2885,18 @@ plot_deg_scatter <- function(select_contrast,
         y = paste0("Average Expression: ", unique(g)[2]),
         x = paste0("Average Expression: ", unique(g)[1]),
         color = "Regulated"
-      )
+      ) #+
+        # ggrepel::geom_text_repel(
+        #   data = anotate_data,
+        #   ggplot2::aes(label = Row.names),
+        #   size = 3,
+        #   min.segment.length = 0,
+        #   max.time = 2,
+        #   max.overlaps = 25,
+        #   direction = "both",
+        #   nudge_x = 0.5,
+        #   nudge_y = 2
+        # )
     )
   }
 }
@@ -2991,14 +3011,19 @@ mod_label_ui <- function(id) {
 #'
 #' @return A shiny module.
 #' @export
-mod_label_server <- function(id, data_list, method = c("volcano", "ma")) {
+mod_label_server <- function(id, data_list, method = c("volcano", "ma", "scatter")) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-
-    if (method != "volcano" & method != "ma") {
+    browser()
+    if (method != "volcano" & method != "ma" & method != "scatter") {
       stop(
         "The method parameter is misspecified. It must either be 'volcano' or 'ma'."
       )
+    }
+    
+    ### Debug
+    if (method == "scatter"){
+      print("Method scatter")
     }
 
     if (method == "volcano") {

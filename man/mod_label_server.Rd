@@ -4,7 +4,7 @@
 \alias{mod_label_server}
 \title{Server component to customize gene labels}
 \usage{
-mod_label_server(id, data_list, method = c("volcano", "ma"))
+mod_label_server(id, data_list, method = c("volcano", "ma", "scatter"))
 }
 \arguments{
 \item{id}{Namespace ID}
