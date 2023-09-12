@@ -2698,7 +2698,6 @@ plot_volcano <- function(data,
 plot_ma <- function(data,
                     plot_colors,
                     anotate_genes = NULL) {
-  browser()
   anotate_data <- data |>
     dplyr::filter(Row.names %in% anotate_genes)
 
@@ -2795,8 +2794,6 @@ plot_deg_scatter <- function(select_contrast,
                              all_gene_names,
                              anotate_genes = NULL
                              ) { ##J Addition
-  browser()
-  
   if (grepl("I:", select_contrast)) {
     grid::grid.newpage()
     return(
@@ -2851,6 +2848,7 @@ plot_deg_scatter <- function(select_contrast,
     rownames(genes_1) <- rownames(genes)
     genes_1 <- merge(genes_1, top_1, by = "row.names")
     
+    # Finds ensembl and symbols for anotated_genes
     pre_anotate_data <- all_gene_names |>
       dplyr::filter(all_gene_names$symbol %in% anotate_genes)
     
@@ -2858,87 +2856,51 @@ plot_deg_scatter <- function(select_contrast,
       dplyr::filter(Row.names %in% pre_anotate_data$ensembl_ID) |>
       merge(pre_anotate_data, by.x = 'Row.names', by.y = 'ensembl_ID')
 
-    if(is.null(anotate_genes)){
+
       p <- ggplot2::ggplot(genes_1, ggplot2::aes(x = average_1, y = average_2)) +
-      ggplot2::geom_point(ggplot2::aes(color = upOrDown)) +
-      ggplot2::scale_color_manual(values = plot_colors) +
-      ggplot2::theme_light() +
-      ggplot2::theme(
-        legend.position = "right",
-        axis.title.x = ggplot2::element_text(
-          color = "black",
-          size = 14
-        ),
-        axis.title.y = ggplot2::element_text(
-          color = "black",
-          size = 14
-        ),
-        axis.text.x = ggplot2::element_text(
-          size = 16
-        ),
-        axis.text.y = ggplot2::element_text(
-          size = 16
-        ),
-        plot.title = ggplot2::element_text(
-          color = "black",
-          size = 16,
-          face = "bold",
-          hjust = .5
-        )
-      ) +
-      ggplot2::labs(
-        title = "Average Expression in Group",
-        y = paste0("Average Expression: ", unique(g)[2]),
-        x = paste0("Average Expression: ", unique(g)[1]),
-        color = "Regulated"
-      )
-  }
-      else {
-        p <- ggplot2::ggplot(genes_1, ggplot2::aes(x = average_1, y = average_2)) +
-          ggplot2::geom_point(ggplot2::aes(color = upOrDown)) +
-          ggplot2::scale_color_manual(values = plot_colors) +
-          ggplot2::theme_light() +
-          ggplot2::theme(
-            legend.position = "right",
-            axis.title.x = ggplot2::element_text(
-              color = "black",
-              size = 14
-            ),
-            axis.title.y = ggplot2::element_text(
-              color = "black",
-              size = 14
-            ),
-            axis.text.x = ggplot2::element_text(
-              size = 16
-            ),
-            axis.text.y = ggplot2::element_text(
-              size = 16
-            ),
-            plot.title = ggplot2::element_text(
-              color = "black",
-              size = 16,
-              face = "bold",
-              hjust = .5
-            )
-          ) +
-          ggplot2::labs(
-            title = "Average Expression in Group",
-            y = paste0("Average Expression: ", unique(g)[2]),
-            x = paste0("Average Expression: ", unique(g)[1]),
-            color = "Regulated"
-          )+
-          ggrepel::geom_text_repel(
-            data = anotate_data,
-            ggplot2::aes(label = anotate_data$symbol),
-            size = 3,
-            min.segment.length = 0,
-            max.time = 2,
-            max.overlaps = 25,
-            direction = "both",
-            nudge_x = 0.5,
-            nudge_y = 2
+        ggplot2::geom_point(ggplot2::aes(color = upOrDown)) +
+        ggplot2::scale_color_manual(values = plot_colors) +
+        ggplot2::theme_light() +
+        ggplot2::theme(
+          legend.position = "right",
+          axis.title.x = ggplot2::element_text(
+            color = "black",
+            size = 14
+          ),
+          axis.title.y = ggplot2::element_text(
+            color = "black",
+            size = 14
+          ),
+          axis.text.x = ggplot2::element_text(
+            size = 16
+          ),
+          axis.text.y = ggplot2::element_text(
+            size = 16
+          ),
+          plot.title = ggplot2::element_text(
+            color = "black",
+            size = 16,
+            face = "bold",
+            hjust = .5
           )
-      }
+        ) +
+        ggplot2::labs(
+          title = "Average Expression in Group",
+          y = paste0("Average Expression: ", unique(g)[2]),
+          x = paste0("Average Expression: ", unique(g)[1]),
+          color = "Regulated"
+        )+
+        ggrepel::geom_text_repel(
+          data = anotate_data,
+          ggplot2::aes(label = anotate_data$symbol),
+          size = 3,
+          min.segment.length = 0,
+          max.time = 2,
+          max.overlaps = 25,
+          direction = "both",
+          nudge_x = 0.5,
+          nudge_y = 2
+        )
       
     return(p)
   }
@@ -3064,12 +3026,6 @@ mod_label_server <- function(id, data_list, method = c("volcano", "ma", "scatter
       )
     }
     
-    # ### Debug
-    # if (method == "scatter"){
-    #   print("Method scatter")
-    #   browser()
-    # }
-
     if (method == "volcano") {
       choice_list <- list(
         "Absolute LFC" = 1,
@@ -3177,11 +3133,6 @@ mod_label_server <- function(id, data_list, method = c("volcano", "ma", "scatter
       data <- data_list()$data |>
         dplyr::filter(upOrDown != "None")
       
-      # ### Debug
-      # if (method == "scatter"){
-      #   print("Method scatter")
-      #   browser()
-      # }
       if (method == "volcano") {
         data <- data |>
           dplyr::mutate(
