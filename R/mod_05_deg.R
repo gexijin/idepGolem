@@ -929,7 +929,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         processed_data = pre_process$data(),
         sample_info = pre_process$sample_info(),
         plot_colors = plot_colors[[input$plot_color_select]],
-        vol_data = vol_data()$data,
+        all_gene_names = pre_process$all_gene_names(),
         anotate_genes = gene_labels_scat()
       )
       refine_ggplot2(

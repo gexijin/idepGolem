@@ -14,7 +14,7 @@ plot_deg_scatter(
   processed_data,
   sample_info,
   plot_colors,
-  vol_data,
+  all_gene_names,
   anotate_genes = NULL
 )
 }
@@ -45,9 +45,9 @@ pre-processing}
 \item{plot_colors}{List containing three colors to differentiate between
 the up-regulated, down-regulated, and other genes}
 
-\item{vol_data}{Volcano data used in gene annotation}
-
 \item{anotate_genes}{Genes to be anotated, coming from \code{mod_label_server()}}
+
+\item{vol_data}{Volcano data used in gene annotation}
 }
 \value{
 A formatted ggplot with the X-axis as the mean expression
