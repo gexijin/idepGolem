@@ -229,6 +229,11 @@ mod_05_deg_2_ui <- function(id) {
           mod_label_ui(ns("label_ma")),
           ns = ns
         ),
+        conditionalPanel(
+          condition = "input.step_2 == 'Scatter Plot' ",
+          mod_label_ui(ns("label_scatter")),
+          ns = ns
+        ),
         width = 3
       ),
       mainPanel(
@@ -843,6 +848,14 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       }),
       method = "ma"
     )
+    
+    gene_labels_scat <- mod_label_server(
+      "label_scatter",
+      data_list = reactive({
+        vol_data()
+      }),
+      method = "scatter"
+    )
 
     vol_plot <- reactive({
       req(vol_data(), input$plot_color_select)
@@ -871,7 +884,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       }),
       label = ""
     )
-
+    
+    
     # ma plot----------------
     ma_plot <- reactive({
       req(vol_data())
@@ -879,7 +893,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       p <- plot_ma(
         data = vol_data()$data,
         plot_colors = plot_colors[[input$plot_color_select]],
-        anotate_genes = gene_labels_ma()
+        anotate_genes = gene_labels_ma()              ### RESTART HERE
       )
       refine_ggplot2(
         p = p,
@@ -914,7 +928,9 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         contrast_samples = contrast_samples(),
         processed_data = pre_process$data(),
         sample_info = pre_process$sample_info(),
-        plot_colors = plot_colors[[input$plot_color_select]]
+        plot_colors = plot_colors[[input$plot_color_select]],
+        all_gene_names = pre_process$all_gene_names(),
+        anotate_genes = gene_labels_scat()
       )
       refine_ggplot2(
         p = p,
