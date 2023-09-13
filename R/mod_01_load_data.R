@@ -19,7 +19,9 @@ mod_01_load_data_ui <- function(id) {
               position:fixed;
               top: calc(85%);
               left: calc(5%);
-              }
+               }
+              
+             .dis_gray { background-color: gray; }
               "
             )
         )
@@ -550,8 +552,16 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       )
     })
 
+    # Disables expression_file input to prevent multiple uploads
+    observeEvent(input$expression_file, {
+      shinyjs::disable("expression_file")
+    })
 
-
+    # Disables experiment_file input to prevent multiple uploads
+    observeEvent(input$experiment_file, {
+      shinyjs::disable("experiment_file")
+    })
+    
 
     # Show messages when on the Network tab or button is clicked ----
     observe({
