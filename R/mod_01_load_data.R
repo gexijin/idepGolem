@@ -588,29 +588,43 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # Render Gene ID example table in gene example Modal
     output$showGeneIDs4Species <- renderTable({
       
-      # data <- data.frame(
-      #   Name = c("John", "Alice", "Bob", "Carol"),
-      #   Age = c(30, 25, 28, 22)
+      #  if (input$userSpecieIDexample == 0)   {
+      #    return()
+      # }
+      
+        ### CLOSSES WHOLE MODAL DIALOG WHEN CLOSED
+      # shinybusy::show_modal_spinner(
+      #   spin = "orbit",
+      #   text = "Retrieving gene IDs",
+      #   color = "#000000"
       # )
-      # # data
-      if (input$userSpecieIDexample == 0)   {
-        return()
-      }
-      shinybusy::show_modal_spinner(
-        spin = "orbit",
-        text = "Retrieving gene IDs",
-        color = "#000000"
+
+      
+      # 
+      ix <- which(idep_data$org_info$name2 == input$userSpecieIDexample)
+      dbase <- idep_data$org_info$file[ix]
+      print(dbase)
+      # 
+      geneIDs <- showGeneIDs(species = input$userSpecieIDexample, db = dbase, nGenes = 10)
+      
+       ### CLOSSES WHOLE MODAL DIALOG WHEN CLOSED
+      #shinybusy::remove_modal_spinner()
+
+      # #geneIDs
+      dummy_data <- data.frame(
+        GeneID = c("Gene1", "Gene2", "Gene3"),
+        Description = c("Description1", "Description2", "Description3")
       )
-      geneIDs <- showGeneIDs(species = input$userSpecieIDexample, nGenes = 10)
-      shinybusy::remove_modal_spinner()
-      geneIDs
-    }, 
+
+      dummy_data
+      },
       digits = -1,
       spacing="s",
       striped=TRUE,
-      bordered = TRUE, 
+      bordered = TRUE,
       width = "auto",
       hover=T
+    
     )
   
     

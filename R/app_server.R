@@ -33,7 +33,7 @@ app_server <- function(input, output, session) {
   # see https://github.com/ThinkR-open/golem/issues/6
   idep_data <- get_idep_data()
 
-  # Tab Variable to control reactivity
+    # Tab Variable to control reactivity
   tab <- reactive(input$navbar)
 
   load_data <- mod_01_load_data_server(
