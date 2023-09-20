@@ -166,7 +166,7 @@ mod_06_pathway_ui <- function(id) {
               condition = "input.submit_pathway_button == 0",
               br(),
               br(),
-              h3("Adjust parameters and click the Submit button."),
+              h3("Click the Submit button to obtain or update results, everytime parameters are adjusted."),
               ns = ns
             ),
             htmlOutput(
@@ -222,15 +222,20 @@ mod_06_pathway_ui <- function(id) {
                 )
               ),
               column(
-                width = 3,
-                selectInput(
-                  inputId = ns("up_down_reg_deg"),
-                  label = NULL,
-                  choices = c(
-                    "Both Up & Down" = "All Groups",
-                    "Up regulated" = "Up",
-                    "Down regulated" = "Down"
-                  )
+                width = 3,              
+                conditionalPanel( #up and down only applies to GSEA and GAGE
+                                                  #GAGE                 GSEA
+                  condition = "input.pathway_method == 1 | input.pathway_method == 3",
+                  selectInput(
+                    inputId = ns("up_down_reg_deg"),
+                    label = NULL,
+                    choices = c(
+                      "Both Up & Down" = "All Groups",
+                      "Up regulated" = "Up",
+                      "Down regulated" = "Down"
+                    )
+                  ),
+                  ns = ns
                 )
               )
             ),
@@ -302,7 +307,7 @@ mod_06_pathway_ui <- function(id) {
                 width = "100%",
                 height = "100%"
               ),
-              h5("Red and green represent up- and down-regulated genes, respectively."),
+              h5("Green and red (or Blue and orange) represent up- and down-regulated genes, respectively."),
               ns = ns
             )
           ),
