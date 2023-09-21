@@ -579,21 +579,35 @@ showGeneIDs <- function(species, db, nGenes = 10){
   
   datapath <- Sys.getenv("IDEP_DATABASE")[1]
   if(nchar(datapath) == 0) {
-    datapath = "../../data107/db/"
+    datapath = "./data107/db/"
   }
   print(paste0("Database: ",datapath, db))
+  converted <- NULL
   
-  converted <- DBI::dbConnect(
+  try(
+    converted <- DBI::dbConnect(
     drv = RSQLite::dbDriver("SQLite"),
+    #dbname = paste(datapath, "orgInfo.db"),
     dbname = paste0(datapath, db),
     flags=RSQLite::SQLITE_RO
-    )  #read only mode
+    ),  #read only mode
+    silent = TRUE
+  )
 
-  # idTypes <- DBI::dbGetQuery( 
-  #   converted,              # THIS IS WRONG
-  #   paste0( " select DISTINCT idType from mapping where species = '", 
-  #     species,"'") 
-  #   )	# slow
+  if(is.null(converted)){
+    showNotification(
+      ui = paste("Selected database is not downloaded"),
+      id = "db_notDownloaded",
+      duration = NULL,
+      type = "error"
+    )
+    return()
+  }
+  idTypes <- DBI::dbGetQuery(
+    converted,              # THIS IS WRONG
+    paste0("select * from mapping group by idType limit 10")
+    #paste0( "select DISTINCT idType and id from mapping")
+    )	# slow
   # idTypes <- idTypes[,1, drop = TRUE]
   # 
   # if(nGenes > 100) nGenes <- 100; # upper limit
@@ -644,6 +658,11 @@ showGeneIDs <- function(species, db, nGenes = 10){
   # resultAll <- resultAll[ order( grepl("symbol", resultAll$'ID Type'), decreasing = TRUE), ]
   # resultAll <- resultAll[ order( grepl("description", resultAll$'ID Type'), decreasing = FALSE), ]
   # 
-  # return(resultAll)
-  # 
+  dummy_data <- data.frame(
+    GeneID = c("Gene1", "Gene2", "Gene3"),
+    Description = c("Description1", "Description2", "Description3")
+  )
+  
+  return(head(idTypes))
+  
 }

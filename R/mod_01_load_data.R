@@ -603,20 +603,17 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       # 
       ix <- which(idep_data$org_info$name2 == input$userSpecieIDexample)
       dbase <- idep_data$org_info$file[ix]
-      print(dbase)
       # 
-      geneIDs <- showGeneIDs(species = input$userSpecieIDexample, db = dbase, nGenes = 10)
+      geneIDs <- showGeneIDs(
+        species = input$userSpecieIDexample, 
+        db = dbase,
+        nGenes = 10
+      )
       
        ### CLOSSES WHOLE MODAL DIALOG WHEN CLOSED
       #shinybusy::remove_modal_spinner()
-
-      # #geneIDs
-      dummy_data <- data.frame(
-        GeneID = c("Gene1", "Gene2", "Gene3"),
-        Description = c("Description1", "Description2", "Description3")
-      )
-
-      dummy_data
+      geneIDs
+      
       },
       digits = -1,
       spacing="s",
@@ -624,14 +621,26 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       bordered = TRUE,
       width = "auto",
       hover=T
-    
     )
-  
-    
     
     # Close example gene Modal
     observeEvent(input$MGeneIDexamplesCloseBtn, {
       removeModal()
+    })
+    
+    # Removes notification from showGeneIDs
+    observe({
+      ### NEED TO ADD SOMETHING THAT CHECKS showGeneIDs4Species
+      req(tab() != "Load Data")
+      removeNotification("db_notDownloaded")
+    })
+    
+    remove_db_notDownlaod <- reactive(
+      list(input$userSpecieIDexample, input$MGeneIDexamplesCloseBtn)
+    )
+    observeEvent(remove_db_notDownlaod(), {
+        print("REMOVE RUN")
+        removeNotification("db_notDownloaded")
     })
     
     # Show messages when on the Network tab or button is clicked ----
