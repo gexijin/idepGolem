@@ -571,8 +571,6 @@ median_fun <- function(x){
 
 ### Used to show sample gene ID in modal
 showGeneIDs <- function(species, db, nGenes = 10){
-  print("RunShowGeneIDs")
-  
   # Given a species ID, this function returns 10 gene ids for each idType
   if(species == "BestMatch")
     return(as.data.frame("Select a species above.") )
@@ -581,7 +579,7 @@ showGeneIDs <- function(species, db, nGenes = 10){
   if(nchar(datapath) == 0) {
     datapath = "./data107/db/"
   }
-  print(paste0("Database: ",datapath, db))
+
   converted <- NULL
   
   try(
@@ -604,8 +602,8 @@ showGeneIDs <- function(species, db, nGenes = 10){
     return()
   }
   idTypes <- DBI::dbGetQuery(
-    converted,              # THIS IS WRONG
-    paste0("select * from mapping group by idType limit 10")
+    conn = converted,              # THIS IS WRONG
+    statement = paste0("select * from mapping group by idType limit 10")
     #paste0( "select DISTINCT idType and id from mapping")
     )	# slow
   # idTypes <- idTypes[,1, drop = TRUE]

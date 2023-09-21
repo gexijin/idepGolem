@@ -635,11 +635,11 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       removeNotification("db_notDownloaded")
     })
     
+    # Used to remove notification if inputs change
     remove_db_notDownlaod <- reactive(
       list(input$userSpecieIDexample, input$MGeneIDexamplesCloseBtn)
     )
     observeEvent(remove_db_notDownlaod(), {
-        print("REMOVE RUN")
         removeNotification("db_notDownloaded")
     })
     
