@@ -620,12 +620,12 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       # )
       geneIDs
       },
-      # digits = -1,
-      # spacing="s",
-      # striped=TRUE,
-      # bordered = TRUE,
-      # width = "auto",
-      # hover=T
+      digits = -1,
+      spacing="s",
+      striped=TRUE,
+      bordered = TRUE,
+      width = "auto",
+      hover=T
     )
     
     # Close example gene Modal
