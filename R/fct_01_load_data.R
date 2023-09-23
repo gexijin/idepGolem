@@ -579,17 +579,15 @@ showGeneIDs <- function(species, db, nGenes = 10){
   if(nchar(datapath) == 0) {
     datapath = "./data107/db/"
   }
-
-  converted <- NULL
   
+  converted <- NULL
   try(
-    converted <- DBI::dbConnect(
-    drv = RSQLite::dbDriver("SQLite"),
-    #dbname = paste(datapath, "orgInfo.db"),
-    dbname = paste0(datapath, db),
-    flags=RSQLite::SQLITE_RO
-    ),  #read only mode
-    silent = TRUE
+  converted <- DBI::dbConnect(
+  drv = RSQLite::dbDriver("SQLite"),
+  dbname = paste0(datapath, db),
+  flags=RSQLite::SQLITE_RO
+  ),  #read only mode
+  silent = TRUE
   )
 
   if(is.null(converted)){
@@ -602,10 +600,20 @@ showGeneIDs <- function(species, db, nGenes = 10){
     return()
   }
   idTypes <- DBI::dbGetQuery(
-    conn = converted,              # THIS IS WRONG
-    statement = paste0("select * from mapping group by idType limit 10")
-    #paste0( "select DISTINCT idType and id from mapping")
-    )	# slow
+    conn = converted,   
+    paste0( 
+      "WITH RandomIds AS (
+      SELECT m.idType,
+           m.id,
+           ROW_NUMBER() OVER (PARTITION BY m.idType ORDER BY RANDOM()) AS rn
+      FROM Mapping m
+      )
+      SELECT i.*, r.id AS RandomId
+      FROM idIndex i
+      LEFT JOIN RandomIds r ON i.id = r.idType AND r.rn <= 10;"
+    )
+  )	# slow
+  
   # idTypes <- idTypes[,1, drop = TRUE]
   # 
   # if(nGenes > 100) nGenes <- 100; # upper limit
@@ -656,11 +664,21 @@ showGeneIDs <- function(species, db, nGenes = 10){
   # resultAll <- resultAll[ order( grepl("symbol", resultAll$'ID Type'), decreasing = TRUE), ]
   # resultAll <- resultAll[ order( grepl("description", resultAll$'ID Type'), decreasing = FALSE), ]
   # 
-  dummy_data <- data.frame(
-    GeneID = c("Gene1", "Gene2", "Gene3"),
-    Description = c("Description1", "Description2", "Description3")
-  )
   
-  return(head(idTypes))
+  result <- aggregate(
+    formula = RandomId ~ idType, 
+    data = idTypes,
+    FUN = function(x) paste(x, collapse = "; ")
+    )
+  colnames(result) <- c("ID Type", "Examples")
+  
+  # put symbols first, refseq next, followed by ensembls. Descriptions (long gnee names) last
+  result <- result[ order( grepl("ensembl", result$'ID Type'), decreasing = TRUE), ]
+  result <- result[ order( grepl("refseq", result$'ID Type'), decreasing = TRUE), ]
+  result <- result[ order( grepl("symbol", result$'ID Type'), decreasing = TRUE), ]
+  result <- result[ order( grepl("description", result$'ID Type'), decreasing = FALSE), ]
+  
+
+  return(result)
   
 }

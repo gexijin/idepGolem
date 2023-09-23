@@ -588,10 +588,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # Render Gene ID example table in gene example Modal
     output$showGeneIDs4Species <- renderTable({
       
-      #  if (input$userSpecieIDexample == 0)   {
-      #    return()
-      # }
-      
         ### CLOSSES WHOLE MODAL DIALOG WHEN CLOSED
       # shinybusy::show_modal_spinner(
       #   spin = "orbit",
@@ -612,15 +608,24 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       
        ### CLOSSES WHOLE MODAL DIALOG WHEN CLOSED
       #shinybusy::remove_modal_spinner()
-      geneIDs
       
+      # DT::datatable(
+      #   geneIDs,
+      #   options = list(
+      #     pageLength = 10,
+      #     scrollX = "400px",
+      #     dom = "t"
+      #   ),
+      #   rownames = FALSE
+      # )
+      geneIDs
       },
-      digits = -1,
-      spacing="s",
-      striped=TRUE,
-      bordered = TRUE,
-      width = "auto",
-      hover=T
+      # digits = -1,
+      # spacing="s",
+      # striped=TRUE,
+      # bordered = TRUE,
+      # width = "auto",
+      # hover=T
     )
     
     # Close example gene Modal
