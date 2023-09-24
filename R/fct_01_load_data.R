@@ -101,6 +101,12 @@ gene_info <- function(converted,
 }
 
 
+# Safe conversion function
+safe_numeric_conversion <- function(x) {
+  converted <- suppressWarnings(as.numeric(gsub(",", "", x)))
+  ifelse(is.na(converted), NA, converted)
+}
+
 
 
 #' Load basic data information
@@ -161,10 +167,10 @@ input_data <- function(expression_file,
         comment.char = ""
       )
     }
-    # Convert all columns after the first one to numeric
+    # Convert all columns after the first one to numeric using the safe function
     data[, -1] <- lapply(data[, -1], function(col) {
       if (is.character(col)) {
-        return(as.numeric(gsub(",", "", col)))
+        return(sapply(col, safe_numeric_conversion))
       } else {
         return(col)
       }
@@ -178,6 +184,7 @@ input_data <- function(expression_file,
       return(NULL)
     }
     data <- data[, num_col]
+    browser()
 
     # Order by SD ----------
     data <- data[order(-apply(
