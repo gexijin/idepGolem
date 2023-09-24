@@ -130,15 +130,14 @@ input_data <- function(expression_file,
                        go_button,
                        demo_data_file,
                        demo_metadata_file) {
-  in_file_data <- expression_file
-  in_file_data <- in_file_data$datapath
+  in_file_data <- expression_file$datapath
 
   if (is.null(in_file_data) && go_button == 0) {
     return(NULL)
   } else if (go_button > 0) { # use demo data
     in_file_data <- demo_data_file
   }
-
+  
   isolate({
     # Read expression file -----------
     if (
@@ -149,7 +148,7 @@ input_data <- function(expression_file,
       data <- readxl::read_excel(in_file_data)
       data <- data.frame(data)
     } else {
-      data <- read.csv(in_file_data, quote = "", comment.char = "")
+      data <- read.csv(in_file_data, header = TRUE, stringsAsFactors = FALSE, quote = "\"", comment.char = "")
     }
     # Tab-delimented if not CSV
     if (ncol(data) <= 2) {
@@ -157,11 +156,19 @@ input_data <- function(expression_file,
         in_file_data,
         sep = "\t",
         header = TRUE,
-        quote = "",
+        stringsAsFactors = FALSE,
+        quote = "\"",
         comment.char = ""
       )
     }
-
+    # Convert all columns after the first one to numeric
+    data[, -1] <- lapply(data[, -1], function(col) {
+      if (is.character(col)) {
+        return(as.numeric(gsub(",", "", col)))
+      } else {
+        return(col)
+      }
+    })
     # Filter out non-numeric columns ---------
     num_col <- c(TRUE)
     for (i in 2:ncol(data)) {
