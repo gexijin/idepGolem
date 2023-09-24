@@ -184,8 +184,7 @@ input_data <- function(expression_file,
       return(NULL)
     }
     data <- data[, num_col]
-    browser()
-
+    
     # Order by SD ----------
     data <- data[order(-apply(
       data[, 2:ncol(data)],
