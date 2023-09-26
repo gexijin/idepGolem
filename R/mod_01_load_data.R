@@ -608,19 +608,30 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       removeNotification("ExampleIDDataQuery")
     })
 
+    tags$head(
+      tags$style(HTML("
+      #DataTables_Table_0_filter label{
+        text-align: left;
+        margin-left: -200px; /* Adjust the margin-left value as needed */
+      }
+    
+      #DataTables_Table_0_filter input[type='search'] {
+        margin-left: -200px; /* Adjust the margin-left value as needed */
+      }
+    "))
+    )
         
     # Render Gene ID example table in gene example Modal
     output$showGeneIDs4Species <- renderDataTable({
       req(!is.null(geneIDs()))
-          
       geneIDs()
-      # options = list(
-      #   pageLength = 10,
-      #   scrollX = TRUE,  # Enable horizontal scrolling
-      #   dom = "t"
-      # )
-      
-    }
+    },
+    options = list(
+      pageLength = 10,
+      scrollX = TRUE,
+      autoWidth = TRUE,
+      dom = "ft"
+    )
       # },
       # digits = -1,
       # spacing="s",
