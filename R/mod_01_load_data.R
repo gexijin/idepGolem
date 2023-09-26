@@ -588,8 +588,13 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     geneIDs <- reactiveVal(NULL)
     
     observeEvent(input$SubmitIDexamples, {
-      print("Bouton appuyé")
-      print(ns("SubmitIDexamples"))
+      showNotification(
+        ui = paste("Querying Data..."),
+        id = "ExampleIDDataQuery",
+        duration = NULL,
+        type = "message"
+      )
+      
       ix <- which(idep_data$org_info$name2 == input$userSpecieIDexample)
       dbase <- idep_data$org_info$file[ix]
       geneIDs(
@@ -599,21 +604,15 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         nGenes = 10
         )
       )
+      
+      removeNotification("ExampleIDDataQuery")
     })
 
         
     # Render Gene ID example table in gene example Modal
     output$showGeneIDs4Species <- renderDataTable({
       req(!is.null(geneIDs()))
-        ### CLOSSES WHOLE MODAL DIALOG WHEN CLOSED
-      # shinybusy::show_modal_spinner(
-      #   spin = "orbit",
-      #   text = "Retrieving gene IDs",
-      #   color = "#000000"
-      # )
-       ### CLOSSES WHOLE MODAL DIALOG WHEN CLOSED
-      #shinybusy::remove_modal_spinner()
-      
+          
       geneIDs()
       # options = list(
       #   pageLength = 10,
