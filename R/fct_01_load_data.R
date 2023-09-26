@@ -610,61 +610,10 @@ showGeneIDs <- function(species, db, nGenes = 10){
       )
       SELECT i.*, r.id AS RandomId
       FROM idIndex i
-      LEFT JOIN RandomIds r ON i.id = r.idType AND r.rn <= 10;"
+      LEFT JOIN RandomIds r ON i.id = r.idType AND r.rn <= ", nGenes, ";"
     )
   )	# slow
-  
-  # idTypes <- idTypes[,1, drop = TRUE]
-  # 
-  # if(nGenes > 100) nGenes <- 100; # upper limit
-  # 
-  # # for each id Type
-  # for(k in 1:length(idTypes)){
-  #   # retrieve 500 gene ids and then random choose 10
-  #   result <- dbGetQuery( 
-  #     converted,                      # THIS IS WRONG
-  #     paste0( " select  id,idType from mapping where species = '", 
-  #     species,
-  #     "' AND idType ='", 
-  #     idTypes[k], "' LIMIT ", 
-  #     50 * nGenes) 
-  #   )
-  #   result <- result[sample(1:(50 * nGenes), nGenes), ]
-  #   if(k == 1) { 
-  #     resultAll <- result 
-  #   } else { 
-  #     resultAll <- rbind(resultAll, result)
-  #   }
-  # }
-  # 
-  # # Names of idTypes
-  # idNames <- dbGetQuery( 
-  #   converted,           # THIS IS WRONG
-  #   paste0( " SELECT id,idType from idIndex where id IN ('",
-  #     paste(idTypes,
-  #       collapse="', '"),
-  #     "')"
-  #     )
-  #   )
-  # 
-  # resultAll <- merge(resultAll, idNames, by.x = "idType", by.y = "id")
-  # 
-  # 
-  # 
-  # #library(dplyr)
-  # resultAll <- resultAll |> 
-  #   select(id, idType.y) |>
-  #   group_by(idType.y) |>
-  #   summarise(Examples = paste0(id, collapse = "; "))
-  # 
-  # colnames(resultAll)[1] <- "ID Type"
-  # # put symbols first, refseq next, followed by ensembls. Descriptions (long gnee names) last
-  # resultAll <- resultAll[ order( grepl("ensembl", resultAll$'ID Type'), decreasing = TRUE), ]    
-  # resultAll <- resultAll[ order( grepl("refseq", resultAll$'ID Type'), decreasing = TRUE), ]      
-  # resultAll <- resultAll[ order( grepl("symbol", resultAll$'ID Type'), decreasing = TRUE), ]
-  # resultAll <- resultAll[ order( grepl("description", resultAll$'ID Type'), decreasing = FALSE), ]
-  # 
-  
+
   result <- aggregate(
     formula = RandomId ~ idType, 
     data = idTypes,

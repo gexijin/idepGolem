@@ -571,10 +571,12 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           title = "What the gene IDs in our database look like?",
           selectizeInput(
             inputId = ns("userSpecieIDexample"),
-            label = "Select or search for species", 
+            label = "Select or search for species",
             choices = c(names(idep_data$species_choice))
             ),
-          tableOutput(ns("showGeneIDs4Species")),
+          tags$style(HTML("#load_data-SubmitIDexamples { color: red; }")),
+          actionButton(ns("SubmitIDexamples"), "Submit"),
+          dataTableOutput(ns("showGeneIDs4Species")),
           easyClose = TRUE,
           footer = tagList(
             actionButton(ns("MGeneIDexamplesCloseBtn"), "Close")
@@ -582,56 +584,59 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         )
       )
     })
+
+    geneIDs <- reactiveVal(NULL)
     
-    
-    
+    observeEvent(input$SubmitIDexamples, {
+      print("Bouton appuyé")
+      print(ns("SubmitIDexamples"))
+      ix <- which(idep_data$org_info$name2 == input$userSpecieIDexample)
+      dbase <- idep_data$org_info$file[ix]
+      geneIDs(
+        showGeneIDs(
+        species = input$userSpecieIDexample,
+        db = dbase,
+        nGenes = 10
+        )
+      )
+    })
+
+        
     # Render Gene ID example table in gene example Modal
-    output$showGeneIDs4Species <- renderTable({
-      
+    output$showGeneIDs4Species <- renderDataTable({
+      req(!is.null(geneIDs()))
         ### CLOSSES WHOLE MODAL DIALOG WHEN CLOSED
       # shinybusy::show_modal_spinner(
       #   spin = "orbit",
       #   text = "Retrieving gene IDs",
       #   color = "#000000"
       # )
-
-      
-      # 
-      ix <- which(idep_data$org_info$name2 == input$userSpecieIDexample)
-      dbase <- idep_data$org_info$file[ix]
-      # 
-      geneIDs <- showGeneIDs(
-        species = input$userSpecieIDexample, 
-        db = dbase,
-        nGenes = 10
-      )
-      
        ### CLOSSES WHOLE MODAL DIALOG WHEN CLOSED
       #shinybusy::remove_modal_spinner()
       
-      # DT::datatable(
-      #   geneIDs,
-      #   options = list(
-      #     pageLength = 10,
-      #     scrollX = "400px",
-      #     dom = "t"
-      #   ),
-      #   rownames = FALSE
+      geneIDs()
+      # options = list(
+      #   pageLength = 10,
+      #   scrollX = TRUE,  # Enable horizontal scrolling
+      #   dom = "t"
       # )
-      geneIDs
-      },
-      digits = -1,
-      spacing="s",
-      striped=TRUE,
-      bordered = TRUE,
-      width = "auto",
-      hover=T
+      
+    }
+      # },
+      # digits = -1,
+      # spacing="s",
+      # striped=TRUE,
+      # bordered = TRUE,
+      # width = "auto",
+      # hover=T
     )
     
     # Close example gene Modal
     observeEvent(input$MGeneIDexamplesCloseBtn, {
       removeModal()
     })
+    
+    
     
     # Removes notification from showGeneIDs
     observe({
