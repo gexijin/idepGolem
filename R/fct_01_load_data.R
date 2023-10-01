@@ -175,6 +175,14 @@ input_data <- function(expression_file,
         return(col)
       }
     })
+    # Rows with at least one NA value
+    rows_with_na <- apply(data, MARGIN = 1, FUN = function(x) any(is.na(x)))
+    
+    # Extract rows with NA values
+    data_na_rows <- data[rows_with_na, ]
+    data_na_rows$reason_for_removal <- "At least one value couldn't be read as a number in this row.\nThey will show as blanket."
+    # Remove rows with NA values
+    data <- na.omit(data)
     # Filter out non-numeric columns ---------
     num_col <- c(TRUE)
     for (i in 2:ncol(data)) {
@@ -217,7 +225,8 @@ input_data <- function(expression_file,
   if (is.null(in_file_expr) && go_button == 0) {
     return(list(
       data = data,
-      sample_info = NULL
+      sample_info = NULL,
+      remove_data = data_na_rows
     ))
   } else if (go_button > 0) {
     sample_info_demo <- NULL
@@ -234,7 +243,8 @@ input_data <- function(expression_file,
     }
     return(list(
       sample_info = sample_info_demo,
-      data = data
+      data = data,
+      remove_data = data_na_rows
     ))
   }
 
@@ -329,11 +339,13 @@ input_data <- function(expression_file,
       }
       return(list(
         data = data,
-        sample_info = t(expr)
+        sample_info = t(expr),
+        remove_data = data_na_rows
       ))
     } else {
       return(list(
-        data = data
+        data = data,
+        remove_data = data_na_rows
       ))
     }
   })
