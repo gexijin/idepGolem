@@ -570,9 +570,9 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         modalDialog(
           title = "What the gene IDs in our database look like?",
           selectizeInput(
-            inputId = ns("userSpecieIDexample"),
+            inputId = ns("userSpeciesIDexample"),
             label = "Select or search for species",
-            choices = c(names(idep_data$species_choice))
+            choices = c("--Select species--", names(idep_data$species_choice))
             ),
           tags$style(HTML("#load_data-SubmitIDexamples { color: red; }")),
           actionButton(ns("SubmitIDexamples"), "Submit"),
@@ -595,11 +595,11 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         type = "message"
       )
       
-      ix <- which(idep_data$org_info$name2 == input$userSpecieIDexample)
+      ix <- which(idep_data$org_info$name2 == input$userSpeciesIDexample)
       dbase <- idep_data$org_info$file[ix]
       geneIDs(
         showGeneIDs(
-        species = input$userSpecieIDexample,
+        species = input$userSpeciesIDexample,
         db = dbase,
         nGenes = 10
         )
@@ -608,22 +608,25 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       removeNotification("ExampleIDDataQuery")
     })
 
-    tags$head(
-      tags$style(HTML("
-      #DataTables_Table_0_filter label{
-        text-align: left;
-        margin-left: -200px; /* Adjust the margin-left value as needed */
-      }
-    
-      #DataTables_Table_0_filter input[type='search'] {
-        margin-left: -200px; /* Adjust the margin-left value as needed */
-      }
-    "))
-    )
+    ##### Try to move search bar to the left
+    # tags$head(
+    #   tags$style(HTML("
+    #   #DataTables_Table_0_filter label{
+    #     text-align: left;
+    #     margin-left: -200px; /* Adjust the margin-left value as needed */
+    #   }
+    # 
+    #   #DataTables_Table_0_filter input[type='search'] {
+    #     margin-left: -200px; /* Adjust the margin-left value as needed */
+    #   }
+    # "))
+    # )
         
     # Render Gene ID example table in gene example Modal
     output$showGeneIDs4Species <- renderDataTable({
       req(!is.null(geneIDs()))
+      req(input$userSpeciesIDexample != "--Select species--")
+      print("run")
       geneIDs()
     },
     options = list(
@@ -655,9 +658,9 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       removeNotification("db_notDownloaded")
     })
     
-    # Used to remove notification if inputs change
+    # Remove notification if inputs change
     remove_db_notDownlaod <- reactive(
-      list(input$userSpecieIDexample, input$MGeneIDexamplesCloseBtn)
+      list(input$userSpeciesIDexample, input$MGeneIDexamplesCloseBtn)
     )
     observeEvent(remove_db_notDownlaod(), {
         removeNotification("db_notDownloaded")
