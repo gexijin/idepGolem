@@ -2197,7 +2197,7 @@ sig_genes_plot <- function(results) {
       axis.text = ggplot2::element_text(size = 12),
       legend.text = ggplot2::element_text(size = 12),
     ) +
-    ggplot2::ylab("Number of differntially expressed genes") +
+    ggplot2::ylab("Number of differentially expressed genes") +
     ggplot2::geom_text(
       ggplot2::aes(label = Genes),
       position = ggplot2::position_dodge(width = 0.9),
