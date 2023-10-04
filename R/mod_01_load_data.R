@@ -874,7 +874,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       data_file_format = reactive(input$data_file_format),
       no_fdr = reactive(input$no_fdr),
       select_org = reactive(input$select_org),
-      remove_data = reactive(loaded_data()$remove_data),
       gmt_file = reactive(input$gmt_file),
       sample_info = reactive(loaded_data()$sample_info),
       all_gene_info = reactive(conversion_info()$all_gene_info),
