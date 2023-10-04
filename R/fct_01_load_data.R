@@ -101,6 +101,12 @@ gene_info <- function(converted,
 }
 
 
+# Safe conversion function
+safe_numeric_conversion <- function(x) {
+  converted <- suppressWarnings(as.numeric(gsub(",", "", x)))
+  ifelse(is.na(converted), NA, converted)
+}
+
 
 
 #' Load basic data information
@@ -130,15 +136,14 @@ input_data <- function(expression_file,
                        go_button,
                        demo_data_file,
                        demo_metadata_file) {
-  in_file_data <- expression_file
-  in_file_data <- in_file_data$datapath
+  in_file_data <- expression_file$datapath
 
   if (is.null(in_file_data) && go_button == 0) {
     return(NULL)
   } else if (go_button > 0) { # use demo data
     in_file_data <- demo_data_file
   }
-
+  
   isolate({
     # Read expression file -----------
     if (
@@ -149,7 +154,7 @@ input_data <- function(expression_file,
       data <- readxl::read_excel(in_file_data)
       data <- data.frame(data)
     } else {
-      data <- read.csv(in_file_data, quote = "", comment.char = "")
+      data <- read.csv(in_file_data, header = TRUE, stringsAsFactors = FALSE, quote = "\"", comment.char = "")
     }
     # Tab-delimented if not CSV
     if (ncol(data) <= 2) {
@@ -157,11 +162,27 @@ input_data <- function(expression_file,
         in_file_data,
         sep = "\t",
         header = TRUE,
-        quote = "",
+        stringsAsFactors = FALSE,
+        quote = "\"",
         comment.char = ""
       )
     }
-
+    # Convert all columns after the first one to numeric using the safe function
+    data[, -1] <- lapply(data[, -1], function(col) {
+      if (is.character(col)) {
+        return(sapply(col, safe_numeric_conversion))
+      } else {
+        return(col)
+      }
+    })
+    # Rows with at least one NA value
+    rows_with_na <- apply(data, MARGIN = 1, FUN = function(x) any(is.na(x)))
+    
+    # Extract rows with NA values
+    data_na_rows <- data[rows_with_na, ]
+    data_na_rows$reason_for_removal <- "At least one value couldn't be read as a number in this row.\nThey will show as blanket."
+    # Remove rows with NA values
+    data <- na.omit(data)
     # Filter out non-numeric columns ---------
     num_col <- c(TRUE)
     for (i in 2:ncol(data)) {
@@ -171,7 +192,7 @@ input_data <- function(expression_file,
       return(NULL)
     }
     data <- data[, num_col]
-
+    
     # Order by SD ----------
     data <- data[order(-apply(
       data[, 2:ncol(data)],
@@ -204,7 +225,8 @@ input_data <- function(expression_file,
   if (is.null(in_file_expr) && go_button == 0) {
     return(list(
       data = data,
-      sample_info = NULL
+      sample_info = NULL,
+      remove_data = data_na_rows
     ))
   } else if (go_button > 0) {
     sample_info_demo <- NULL
@@ -221,7 +243,8 @@ input_data <- function(expression_file,
     }
     return(list(
       sample_info = sample_info_demo,
-      data = data
+      data = data,
+      remove_data = data_na_rows
     ))
   }
 
@@ -316,11 +339,13 @@ input_data <- function(expression_file,
       }
       return(list(
         data = data,
-        sample_info = t(expr)
+        sample_info = t(expr),
+        remove_data = data_na_rows
       ))
     } else {
       return(list(
-        data = data
+        data = data,
+        remove_data = data_na_rows
       ))
     }
   })
