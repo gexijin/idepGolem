@@ -525,6 +525,12 @@ mod_02_pre_process_ui <- function(id) {
             DT::dataTableOutput(outputId = ns("examine_data"))
           ),
           tabPanel(
+            title = "Data Removed",
+            h5("These rows were removed due to at least value be unable to read."),
+            br(),
+            DT::dataTableOutput(outputId = ns("examine_data_remove"))
+          ),
+          tabPanel(
             title = "Info",
             includeHTML(app_sys("app/www/help_preprocess.html"))
           ),

@@ -101,6 +101,13 @@ gene_info <- function(converted,
 }
 
 
+# Safe conversion function
+safe_numeric_conversion <- function(x) {
+  converted <- suppressWarnings(as.numeric(gsub(",", "", x)))
+  ifelse(is.na(converted), NA, converted)
+}
+
+
 
 
 #' Load basic data information
@@ -151,7 +158,10 @@ input_data <- function(expression_file,
       data <- readxl::read_excel(in_file_data)
       data <- data.frame(data)
     } else {
-      data <- read.csv(in_file_data, quote = "", comment.char = "")
+       data <- read.csv(in_file_data,
+         header = TRUE, stringsAsFactors = FALSE,
+         quote = "\"", comment.char = ""
+       )
     }
     # Tab-delimented if not CSV
     if (ncol(data) <= 2) {
@@ -160,6 +170,8 @@ input_data <- function(expression_file,
         sep = "\t",
         header = TRUE,
         quote = "",
+        stringsAsFactors = FALSE,
+        quote = "\"",
         comment.char = ""
       )
     }
@@ -225,7 +237,8 @@ input_data <- function(expression_file,
   if (is.null(in_file_expr) && go_button == 0) {
     return(list(
       data = data,
-      sample_info = NULL
+      sample_info = NULL,
+      remove_data = data_na_rows
     ))
   } else if (go_button > 0) {
     sample_info_demo <- NULL
@@ -242,7 +255,8 @@ input_data <- function(expression_file,
     }
     return(list(
       sample_info = sample_info_demo,
-      data = data
+      data = data,
+      remove_data = data_na_rows
     ))
   }
 
@@ -337,11 +351,13 @@ input_data <- function(expression_file,
       }
       return(list(
         data = data,
-        sample_info = t(expr)
+        sample_info = t(expr),
+        remove_data = data_na_rows
       ))
     } else {
       return(list(
-        data = data
+        data = data,
+        remove_data = data_na_rows
       ))
     }
   })
