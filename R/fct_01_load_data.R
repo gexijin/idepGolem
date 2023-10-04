@@ -120,8 +120,10 @@ gene_info <- function(converted,
 #'  \code{idep_data$demo_metadata_file}
 #'
 #' @export
-#' @return This returns a list that contains the expression data
-#' and the sample information. If there is no experiment file it
+#' @return This returns a list that contains the expression data,
+#' the sample information, and rows that are removed due to not able to read them.
+#' if no rows are removed then NULL is returned for that variable in the list.
+#' If there is no experiment file it
 #' only returns the expression data.
 #'
 #' @family load data functions
@@ -161,7 +163,26 @@ input_data <- function(expression_file,
         comment.char = ""
       )
     }
-
+    # Convert all columns after the first one to numeric using the safe function
+    data[, -1] <- lapply(data[, -1], function(col) {
+      if (is.character(col)) {
+        return(sapply(col, safe_numeric_conversion))
+      } else {
+        return(col)
+      }
+    })
+    # Rows with at least one NA value
+    rows_with_na <- apply(data, MARGIN = 1, FUN = function(x) any(is.na(x)))
+    
+    # Extract rows with NA values
+    data_na_rows <- data[rows_with_na, ]
+    if (nrow(data_na_rows) > 0) {
+      data_na_rows$reason_for_removal <- "At least one value couldn't be read as a number in this row.\nThey will show as blanket."
+    } else {
+      data_na_rows <- NULL
+    }
+    # Remove rows with NA values
+    data <- na.omit(data)
     # Filter out non-numeric columns ---------
     num_col <- c(TRUE)
     for (i in 2:ncol(data)) {

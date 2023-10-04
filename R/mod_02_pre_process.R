@@ -949,6 +949,26 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       )
     })
 
+    output$examine_data_remove <- DT::renderDataTable({
+      # Check if the data is NULL
+      if (is.null(load_data$remove_data())) {
+        return(DT::datatable(data.frame(Message = "No rows removed"),
+          rownames = FALSE,
+          options = list(autoWidth = TRUE, searching = FALSE, paging = FALSE)
+        ))
+      }
+
+      # If not NULL, render the datatable as usual
+      DT::datatable(
+        load_data$remove_data(),
+        options = list(
+          pageLength = 10,
+          scrollX = "400px"
+        ),
+        rownames = FALSE
+      )
+    })
+
     # Individual plot data ------------
     individual_data <- reactive({
       req(!is.null(processed_data()$data))
