@@ -570,6 +570,17 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     })
 
     observe({
+      req(!is.null(loaded_data()$message))
+
+      showNotification(
+        ui = loaded_data()$message,
+        id = "file_size_limit_error",
+        duration = NULL,
+        type = "error"
+      )
+    })
+
+    observe({
       req(!is.null(loaded_data()$data) && any(apply(loaded_data()$data, 2, function(col) all(col == 0))))
 
       showNotification(

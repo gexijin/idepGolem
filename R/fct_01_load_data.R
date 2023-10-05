@@ -107,7 +107,11 @@ safe_numeric_conversion <- function(x) {
   ifelse(is.na(converted), NA, converted)
 }
 
-
+# SI System (Decimal)
+bytes_to_MB_decimal <- function(bytes) {
+  MB <- bytes / (10^6)
+  return(MB)
+}
 
 
 #' Load basic data information
@@ -128,7 +132,8 @@ safe_numeric_conversion <- function(x) {
 #'
 #' @export
 #' @return This returns a list that contains the expression data,
-#' the sample information, and rows that are removed due to not able to read them.
+#' the sample information, message that show been shown to the user,
+#' and rows that are removed due to not able to read them.
 #' if no rows are removed then NULL is returned for that variable in the list.
 #' If there is no experiment file it
 #' only returns the expression data.
@@ -146,6 +151,20 @@ input_data <- function(expression_file,
     return(NULL)
   } else if (go_button > 0) { # use demo data
     in_file_data <- demo_data_file
+  }
+
+  if (bytes_to_MB_decimal(expression_file$size) > FILE_SIZE_LIMIT_MB) {
+    return(
+      list(
+        data = NULL,
+        sample_info = NULL,
+        remove_data = NULL,
+        message = paste(
+          "File size exceeds the limit of", FILE_SIZE_LIMIT_MB,
+          "MB. Please upload a smaller file. Look on GitHub how to run locally and change file size limit."
+        )
+      )
+    )
   }
 
   isolate({
@@ -245,6 +264,7 @@ input_data <- function(expression_file,
     return(list(
       data = data,
       sample_info = NULL,
+      message = NULL,
       remove_data = data_na_rows
     ))
   } else if (go_button > 0) {
@@ -263,6 +283,7 @@ input_data <- function(expression_file,
     return(list(
       sample_info = sample_info_demo,
       data = data,
+      message = NULL,
       remove_data = data_na_rows
     ))
   }
@@ -358,12 +379,14 @@ input_data <- function(expression_file,
       }
       return(list(
         data = data,
+        message = NULL,
         sample_info = t(expr),
         remove_data = data_na_rows
       ))
     } else {
       return(list(
         data = data,
+        message = NULL,
         remove_data = data_na_rows
       ))
     }
