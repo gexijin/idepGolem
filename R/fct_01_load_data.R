@@ -160,7 +160,8 @@ input_data <- function(expression_file,
     } else {
        data <- read.csv(in_file_data,
          header = TRUE, stringsAsFactors = FALSE,
-         quote = "\"", comment.char = ""
+         quote = "\"", comment.char = "",
+         blank.lines.skip = TRUE
        )
     }
     # Tab-delimented if not CSV
@@ -169,10 +170,10 @@ input_data <- function(expression_file,
         in_file_data,
         sep = "\t",
         header = TRUE,
-        quote = "",
         stringsAsFactors = FALSE,
         quote = "\"",
-        comment.char = ""
+        comment.char = "",
+        blank.lines.skip = TRUE
       )
     }
     # Convert all columns after the first one to numeric using the safe function
@@ -185,11 +186,17 @@ input_data <- function(expression_file,
     })
     # Rows with at least one NA value
     rows_with_na <- apply(data, MARGIN = 1, FUN = function(x) any(is.na(x)))
-    
     # Extract rows with NA values
     data_na_rows <- data[rows_with_na, ]
     if (nrow(data_na_rows) > 0) {
       data_na_rows$reason_for_removal <- "At least one value couldn't be read as a number in this row.\nThey will show as blanket."
+      colnames(data_na_rows)[1] <- "user_gene_id"
+      # Add row numbers as a new column
+      data_na_rows$row_number <- as.numeric(row.names(data_na_rows))
+      # Reorder columns to make row_number the first column
+      data_na_rows <- data_na_rows[, c("row_number", setdiff(colnames(data_na_rows), "row_number"))]
+      # Remove rows where user_gene_id is blank or NA
+      data_na_rows <- data_na_rows[!(is.na(data_na_rows$user_gene_id) | data_na_rows$user_gene_id == ""), ]
     } else {
       data_na_rows <- NULL
     }
