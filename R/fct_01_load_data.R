@@ -153,7 +153,7 @@ input_data <- function(expression_file,
     in_file_data <- demo_data_file
   }
 
-  if (bytes_to_MB_decimal(expression_file$size) > FILE_SIZE_LIMIT_MB) {
+  if (!is.null(expression_file) && bytes_to_MB_decimal(expression_file$size) > FILE_SIZE_LIMIT_MB) {
     return(
       list(
         data = NULL,
