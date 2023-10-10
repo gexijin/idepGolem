@@ -594,11 +594,19 @@ showGeneIDs <- function(species, db, nGenes = 10){
     showNotification(
       ui = paste("Selected database is not downloaded"),
       id = "db_notDownloaded",
-      duration = NULL,
+      duration = 2.5,
       type = "error"
     )
     return()
   }
+  removeNotification("db_notDownloaded")
+  showNotification(
+    ui = paste("Querying Data..."),
+    id = "ExampleIDDataQuery",
+    duration = NULL,
+    type = "message"
+  )
+  
   idTypes <- DBI::dbGetQuery(
     conn = converted,   
     paste0( 

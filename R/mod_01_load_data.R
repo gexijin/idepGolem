@@ -574,8 +574,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             label = "Select or search for species",
             choices = c("--Select species--", names(idep_data$species_choice))
             ),
-          tags$style(HTML("#load_data-SubmitIDexamples { color: red; }")),
-          actionButton(ns("SubmitIDexamples"), "Submit"),
           dataTableOutput(ns("showGeneIDs4Species")),
           easyClose = TRUE,
           footer = tagList(
@@ -587,14 +585,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
     geneIDs <- reactiveVal(NULL)
     
-    observeEvent(input$SubmitIDexamples, {
-      showNotification(
-        ui = paste("Querying Data..."),
-        id = "ExampleIDDataQuery",
-        duration = NULL,
-        type = "message"
-      )
-      
+    observeEvent(input$userSpeciesIDexample, {
+      req(input$userSpeciesIDexample != "--Select species--")
       ix <- which(idep_data$org_info$name2 == input$userSpeciesIDexample)
       dbase <- idep_data$org_info$file[ix]
       geneIDs(
@@ -604,8 +596,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         nGenes = 10
         )
       )
-      
-      removeNotification("ExampleIDDataQuery")
     })
 
     ##### Try to move search bar to the left
@@ -626,7 +616,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     output$showGeneIDs4Species <- renderDataTable({
       req(!is.null(geneIDs()))
       req(input$userSpeciesIDexample != "--Select species--")
-      print("run")
+      removeNotification("ExampleIDDataQuery")
       geneIDs()
     },
     options = list(
@@ -649,21 +639,11 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       removeModal()
     })
     
-    
-    
     # Removes notification from showGeneIDs
     observe({
       ### NEED TO ADD SOMETHING THAT CHECKS showGeneIDs4Species
       req(tab() != "Load Data")
       removeNotification("db_notDownloaded")
-    })
-    
-    # Remove notification if inputs change
-    remove_db_notDownlaod <- reactive(
-      list(input$userSpeciesIDexample, input$MGeneIDexamplesCloseBtn)
-    )
-    observeEvent(remove_db_notDownlaod(), {
-        removeNotification("db_notDownloaded")
     })
     
     # Show messages when on the Network tab or button is clicked ----
