@@ -569,17 +569,14 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       showModal(
         modalDialog(
           title = "What the gene IDs in our database look like?",
-          tags$style(HTML(
-            ".dataTables_wrapper .dataTables_filter label{
-              width: 250px;
-              float: left;
-            }
-            .dataTables_wrapper .dataTables_length label{
-              float: right;
-              color: blue;
-            }
-            "
-          )),
+          tags$style(
+            HTML(
+              "#DataTables_Table_0_wrapper #DataTables_Table_0_filter label{
+                width: 250px;
+                float: left;
+              }"
+          )
+          ),
           selectizeInput(
             inputId = ns("userSpeciesIDexample"),
             label = "Select or search for species",
