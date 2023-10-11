@@ -569,12 +569,23 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       showModal(
         modalDialog(
           title = "What the gene IDs in our database look like?",
+          tags$style(HTML(
+            ".dataTables_wrapper .dataTables_filter label{
+              width: 250px;
+              float: left;
+            }
+            .dataTables_wrapper .dataTables_length label{
+              float: right;
+              color: blue;
+            }
+            "
+          )),
           selectizeInput(
             inputId = ns("userSpeciesIDexample"),
             label = "Select or search for species",
             choices = c("--Select species--", names(idep_data$species_choice))
             ),
-          dataTableOutput(ns("showGeneIDs4Species")),
+          DT::dataTableOutput(ns("showGeneIDs4Species")),
           easyClose = TRUE,
           footer = tagList(
             actionButton(ns("MGeneIDexamplesCloseBtn"), "Close")
@@ -613,18 +624,32 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # )
         
     # Render Gene ID example table in gene example Modal
-    output$showGeneIDs4Species <- renderDataTable({
+    output$showGeneIDs4Species <- DT::renderDataTable({
       req(!is.null(geneIDs()))
       req(input$userSpeciesIDexample != "--Select species--")
       removeNotification("ExampleIDDataQuery")
-      geneIDs()
+      
+      # Creating a dummy data frame
+      # dummy_data <- data.frame(
+      #   Name = c("Alice", "Bob", "Charlie", "David", "Eve"),
+      #   Age = c(25, 30, 22, 35, 28),
+      #   Gender = c("Female", "Male", "Male", "Male", "Female"),
+      #   Score = c(92, 85, 78, 90, 88)
+      # )
+      # 
+      DT::datatable(
+        geneIDs(),
+        rownames = FALSE,
+        options = list(
+          pageLength = 10,
+          scrollX = TRUE
+          # autoWidth = TRUE,
+          # dom = "ft"
+        )
+      )
+      
+      
     },
-    options = list(
-      pageLength = 10,
-      scrollX = TRUE,
-      autoWidth = TRUE,
-      dom = "ft"
-    )
       # },
       # digits = -1,
       # spacing="s",
