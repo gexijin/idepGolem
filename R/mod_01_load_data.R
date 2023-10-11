@@ -605,20 +605,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         )
       )
     })
-
-    ##### Try to move search bar to the left
-    # tags$head(
-    #   tags$style(HTML("
-    #   #DataTables_Table_0_filter label{
-    #     text-align: left;
-    #     margin-left: -200px; /* Adjust the margin-left value as needed */
-    #   }
-    # 
-    #   #DataTables_Table_0_filter input[type='search'] {
-    #     margin-left: -200px; /* Adjust the margin-left value as needed */
-    #   }
-    # "))
-    # )
         
     # Render Gene ID example table in gene example Modal
     output$showGeneIDs4Species <- DT::renderDataTable({
@@ -626,46 +612,19 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       req(input$userSpeciesIDexample != "--Select species--")
       removeNotification("ExampleIDDataQuery")
       
-      # Creating a dummy data frame
-      # dummy_data <- data.frame(
-      #   Name = c("Alice", "Bob", "Charlie", "David", "Eve"),
-      #   Age = c(25, 30, 22, 35, 28),
-      #   Gender = c("Female", "Male", "Male", "Male", "Female"),
-      #   Score = c(92, 85, 78, 90, 88)
-      # )
-      # 
       DT::datatable(
         geneIDs(),
         rownames = FALSE,
         options = list(
           pageLength = 10,
           scrollX = TRUE
-          # autoWidth = TRUE,
-          # dom = "ft"
         )
       )
-      
-      
-    },
-      # },
-      # digits = -1,
-      # spacing="s",
-      # striped=TRUE,
-      # bordered = TRUE,
-      # width = "auto",
-      # hover=T
-    )
+    })
     
     # Close example gene Modal
     observeEvent(input$MGeneIDexamplesCloseBtn, {
       removeModal()
-    })
-    
-    # Removes notification from showGeneIDs
-    observe({
-      ### NEED TO ADD SOMETHING THAT CHECKS showGeneIDs4Species
-      req(tab() != "Load Data")
-      removeNotification("db_notDownloaded")
     })
     
     # Show messages when on the Network tab or button is clicked ----

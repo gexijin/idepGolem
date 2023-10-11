@@ -620,7 +620,7 @@ showGeneIDs <- function(species, db, nGenes = 10){
       FROM idIndex i
       LEFT JOIN RandomIds r ON i.id = r.idType AND r.rn <= ", nGenes, ";"
     )
-  )	# slow
+  )
 
   result <- aggregate(
     formula = RandomId ~ idType, 
