@@ -10,6 +10,13 @@ app_server <- function(input, output, session) {
   options(warn = -1) # turn off warning
   pdf(file = NULL)
 
+  FILE_SIZE_LIMIT_MB <<- as.numeric(Sys.getenv("IDEP_FILE_SIZE_LIMIT")[1])
+
+  # If environment variable not set or not a valid number, default to 5
+  if (is.na(FILE_SIZE_LIMIT_MB) || FILE_SIZE_LIMIT_MB <= 0) {
+    FILE_SIZE_LIMIT_MB <<- 5
+  }
+
   # define where database is located
   db_ver <<- "data107"
   db_url <<- "http://bioinformatics.sdstate.edu/data/"

@@ -570,6 +570,17 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     })
 
     observe({
+      req(!is.null(loaded_data()$message))
+
+      showNotification(
+        ui = loaded_data()$message,
+        id = "file_size_limit_error",
+        duration = NULL,
+        type = "error"
+      )
+    })
+
+    observe({
       req(!is.null(loaded_data()$data) && any(apply(loaded_data()$data, 2, function(col) all(col == 0))))
 
       showNotification(
@@ -874,6 +885,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       data_file_format = reactive(input$data_file_format),
       no_fdr = reactive(input$no_fdr),
       select_org = reactive(input$select_org),
+      remove_data = reactive(loaded_data()$remove_data),
       gmt_file = reactive(input$gmt_file),
       sample_info = reactive(loaded_data()$sample_info),
       all_gene_info = reactive(conversion_info()$all_gene_info),
