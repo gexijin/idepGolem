@@ -97,9 +97,9 @@ gene_info <- function(converted,
   set <- match(gene_info_csv$ensembl_gene_id, query_set)
   set[which(is.na(set))] <- "Genome"
   set[which(set != "Genome")] <- "List"
-  
   return(cbind(gene_info_csv, set))
 }
+
 
 
 
@@ -566,76 +566,4 @@ median_fun <- function(x){
   } else {
     median(x, na.rm = TRUE)
   }
-}
-
-
-### Used to show sample gene ID in modal
-showGeneIDs <- function(species, db, nGenes = 10){
-  # Given a species ID, this function returns 10 gene ids for each idType
-  if(species == "BestMatch")
-    return(as.data.frame("Select a species above.") )
-  
-  datapath <- Sys.getenv("IDEP_DATABASE")[1]
-  if(nchar(datapath) == 0) {
-    datapath = "./data107/db/"
-  }
-  
-  converted <- NULL
-  try(
-  converted <- DBI::dbConnect(
-  drv = RSQLite::dbDriver("SQLite"),
-  dbname = paste0(datapath, db),
-  flags=RSQLite::SQLITE_RO
-  ),  #read only mode
-  silent = TRUE
-  )
-
-  if(is.null(converted)){
-    showNotification(
-      ui = paste("Selected database is not downloaded"),
-      id = "db_notDownloaded",
-      duration = 2.5,
-      type = "error"
-    )
-    return()
-  }
-  removeNotification("db_notDownloaded")
-  showNotification(
-    ui = paste("Querying Data..."),
-    id = "ExampleIDDataQuery",
-    duration = NULL,
-    type = "message"
-  )
-  
-  idTypes <- DBI::dbGetQuery(
-    conn = converted,   
-    paste0( 
-      "WITH RandomIds AS (
-      SELECT m.idType,
-           m.id,
-           ROW_NUMBER() OVER (PARTITION BY m.idType ORDER BY RANDOM()) AS rn
-      FROM Mapping m
-      )
-      SELECT i.*, r.id AS RandomId
-      FROM idIndex i
-      LEFT JOIN RandomIds r ON i.id = r.idType AND r.rn <= ", nGenes, ";"
-    )
-  )
-
-  result <- aggregate(
-    formula = RandomId ~ idType, 
-    data = idTypes,
-    FUN = function(x) paste(x, collapse = "; ")
-    )
-  colnames(result) <- c("ID Type", "Examples")
-  
-  # put symbols first, refseq next, followed by ensembls. Descriptions (long gnee names) last
-  result <- result[ order( grepl("ensembl", result$'ID Type'), decreasing = TRUE), ]
-  result <- result[ order( grepl("refseq", result$'ID Type'), decreasing = TRUE), ]
-  result <- result[ order( grepl("symbol", result$'ID Type'), decreasing = TRUE), ]
-  result <- result[ order( grepl("description", result$'ID Type'), decreasing = FALSE), ]
-  
-
-  return(result)
-  
 }

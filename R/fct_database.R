@@ -53,7 +53,7 @@ connect_convert_db <- function(datapath = DATAPATH) {
 #' Create a database connection with the DBI package.
 #'
 #' @param datapath Folder path to the data file
-#' @param select_org The selected species
+#' @param select_org The slected species
 #' @param idep_data  Data object that includes org_info
 #'
 #' @export
@@ -135,7 +135,7 @@ get_idep_data <- function(datapath = DATAPATH) {
     species_choice
   )
 
-  #species_choice <- apppend(
+  #species_choice <- append(
   #  setNames("BestMatch", "Best matching species"),
   #  species_choice
   #)
@@ -889,7 +889,7 @@ read_gene_sets <- function(converted,
 
 #' Convert IDs from ensembl to entrez
 #'
-#' Convert an ID query for a species from the ensembl
+#' Convert an ID qeury for a species from the ensembl
 #' ID type to entrez type.
 #'
 #' @param query Vector of IDs to convert
