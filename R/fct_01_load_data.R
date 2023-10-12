@@ -181,6 +181,19 @@ input_data <- function(expression_file,
       }
     })
 
+    # rows where all values after the first column are NA cause issues
+    # if a row has all NA values down stream processing fails
+    # Remove rows where all values after the first column are NA
+    #data <- data[!apply(is.na(data[, -1]), 1, all), ]
+    # Identify rows where all values after the first column are NA
+    all_na_rows <- apply(is.na(data[, -1]), 1, all)
+
+    # Change all NA values in those rows to 0, column by column
+    data[all_na_rows, -1] <- lapply(
+      data[all_na_rows, -1],
+      function(col) ifelse(is.na(col), 0, col)
+    )
+
     # Filter out non-numeric columns ---------
     num_col <- c(TRUE)
     for (i in 2:ncol(data)) {
