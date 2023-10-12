@@ -101,6 +101,11 @@ gene_info <- function(converted,
 }
 
 
+# Safe conversion function
+safe_numeric_conversion <- function(x) {
+  converted <- suppressWarnings(as.numeric(gsub(",", "", x)))
+  ifelse(is.na(converted), NA, converted)
+}
 
 
 #' Load basic data information
@@ -148,7 +153,11 @@ input_data <- function(expression_file,
       data <- readxl::read_excel(in_file_data)
       data <- data.frame(data)
     } else {
-      data <- read.csv(in_file_data, quote = "", comment.char = "")
+       data <- read.csv(in_file_data,
+         header = TRUE, stringsAsFactors = FALSE,
+         quote = "\"", comment.char = "",
+         blank.lines.skip = TRUE
+       )
     }
     # Tab-delimented if not CSV
     if (ncol(data) <= 2) {
@@ -156,10 +165,21 @@ input_data <- function(expression_file,
         in_file_data,
         sep = "\t",
         header = TRUE,
-        quote = "",
-        comment.char = ""
+        stringsAsFactors = FALSE,
+        quote = "\"",
+        comment.char = "",
+        blank.lines.skip = TRUE
       )
     }
+
+    # Convert all columns after the first one to numeric using the safe function
+    data[, -1] <- lapply(data[, -1], function(col) {
+      if (is.character(col)) {
+        return(sapply(col, safe_numeric_conversion))
+      } else {
+        return(col)
+      }
+    })
 
     # Filter out non-numeric columns ---------
     num_col <- c(TRUE)
