@@ -138,14 +138,13 @@ input_data <- function(expression_file,
   } else if (go_button > 0) { # use demo data
     in_file_data <- demo_data_file
   }
-
   isolate({
     # Read expression file -----------
-    if (
-      substr(in_file_data,
-      nchar(in_file_data) - 4,
-      nchar(in_file_data)) == ".xlsx"
-    ) {
+
+    file_extension <- tolower(tools::file_ext(in_file_data))
+    if ( file_extension == ".xlsx" || 
+         file_extension == ".xls"
+      )  {
       data <- readxl::read_excel(in_file_data)
       data <- data.frame(data)
     } else {
@@ -180,7 +179,8 @@ input_data <- function(expression_file,
     )), ]
 
     # Format gene ids --------
-    data[, 1] <- toupper(data[, 1])
+    #iconv converts latin1 to UTF-8; otherwise toupper(ENSG00000267023Ê) causes error
+    data[, 1] <- toupper(iconv(data[, 1], "latin1", "UTF-8"))
     data[, 1] <- gsub(" |\"|\'", "", data[, 1])
 
     # Remove duplicated genes ----------
