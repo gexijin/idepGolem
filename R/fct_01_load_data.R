@@ -101,17 +101,6 @@ gene_info <- function(converted,
 }
 
 
-# Safe conversion function
-safe_numeric_conversion <- function(x) {
-  converted <- suppressWarnings(as.numeric(gsub(",", "", x)))
-  ifelse(is.na(converted), NA, converted)
-}
-
-# SI System (Decimal)
-bytes_to_MB_decimal <- function(bytes) {
-  MB <- bytes / (10^6)
-  return(MB)
-}
 
 
 #' Load basic data information
@@ -131,11 +120,8 @@ bytes_to_MB_decimal <- function(bytes) {
 #'  \code{idep_data$demo_metadata_file}
 #'
 #' @export
-#' @return This returns a list that contains the expression data,
-#' the sample information, message that show been shown to the user,
-#' and rows that are removed due to not able to read them.
-#' if no rows are removed then NULL is returned for that variable in the list.
-#' If there is no experiment file it
+#' @return This returns a list that contains the expression data
+#' and the sample information. If there is no experiment file it
 #' only returns the expression data.
 #'
 #' @family load data functions
@@ -152,23 +138,6 @@ input_data <- function(expression_file,
   } else if (go_button > 0) { # use demo data
     in_file_data <- demo_data_file
   }
-
-
-  if (!is.null(expression_file) && bytes_to_MB_decimal(expression_file$size) > FILE_SIZE_LIMIT_MB) {
-    return(
-      list(
-        data = NULL,
-        sample_info = NULL,
-        remove_data = NULL,
-        message = paste(
-          "File size exceeds the limit of", FILE_SIZE_LIMIT_MB,
-          "MB. Please upload a smaller file. Look on GitHub how to run locally and change file size limit."
-        )
-      )
-    )
-  }
-
-
   isolate({
     # Read expression file -----------
 
@@ -179,11 +148,7 @@ input_data <- function(expression_file,
       data <- readxl::read_excel(in_file_data)
       data <- data.frame(data)
     } else {
-       data <- read.csv(in_file_data,
-         header = TRUE, stringsAsFactors = FALSE,
-         quote = "\"", comment.char = "",
-         blank.lines.skip = TRUE
-       )
+      data <- read.csv(in_file_data, quote = "", comment.char = "")
     }
     # Tab-delimented if not CSV
     if (ncol(data) <= 2) {
@@ -191,38 +156,11 @@ input_data <- function(expression_file,
         in_file_data,
         sep = "\t",
         header = TRUE,
-        stringsAsFactors = FALSE,
-        quote = "\"",
-        comment.char = "",
-        blank.lines.skip = TRUE
+        quote = "",
+        comment.char = ""
       )
     }
-    # Convert all columns after the first one to numeric using the safe function
-    data[, -1] <- lapply(data[, -1], function(col) {
-      if (is.character(col)) {
-        return(sapply(col, safe_numeric_conversion))
-      } else {
-        return(col)
-      }
-    })
-    # Rows with at least one NA value
-    rows_with_na <- apply(data, MARGIN = 1, FUN = function(x) any(is.na(x)))
-    # Extract rows with NA values
-    data_na_rows <- data[rows_with_na, ]
-    if (nrow(data_na_rows) > 0) {
-      data_na_rows$reason_for_removal <- "At least one value couldn't be read as a number in this row.\nThey will show as blanket."
-      colnames(data_na_rows)[1] <- "user_gene_id"
-      # Add row numbers as a new column
-      data_na_rows$row_number <- as.numeric(row.names(data_na_rows))
-      # Reorder columns to make row_number the first column
-      data_na_rows <- data_na_rows[, c("row_number", setdiff(colnames(data_na_rows), "row_number"))]
-      # Remove rows where user_gene_id is blank or NA
-      data_na_rows <- data_na_rows[!(is.na(data_na_rows$user_gene_id) | data_na_rows$user_gene_id == ""), ]
-    } else {
-      data_na_rows <- NULL
-    }
-    # Remove rows with NA values
-    data <- na.omit(data)
+
     # Filter out non-numeric columns ---------
     num_col <- c(TRUE)
     for (i in 2:ncol(data)) {
@@ -266,9 +204,7 @@ input_data <- function(expression_file,
   if (is.null(in_file_expr) && go_button == 0) {
     return(list(
       data = data,
-      sample_info = NULL,
-      message = NULL,
-      remove_data = data_na_rows
+      sample_info = NULL
     ))
   } else if (go_button > 0) {
     sample_info_demo <- NULL
@@ -285,9 +221,7 @@ input_data <- function(expression_file,
     }
     return(list(
       sample_info = sample_info_demo,
-      data = data,
-      message = NULL,
-      remove_data = data_na_rows
+      data = data
     ))
   }
 
@@ -382,15 +316,11 @@ input_data <- function(expression_file,
       }
       return(list(
         data = data,
-        message = NULL,
-        sample_info = t(expr),
-        remove_data = data_na_rows
+        sample_info = t(expr)
       ))
     } else {
       return(list(
-        data = data,
-        message = NULL,
-        remove_data = data_na_rows
+        data = data
       ))
     }
   })
