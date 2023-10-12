@@ -20,6 +20,6 @@ convert_ensembl_to_entrez(query, species, org_info, idep_data)
 The queried genes with converted IDs.
 }
 \description{
-Convert an ID qeury for a species from the ensembl
+Convert an ID query for a species from the ensembl
 ID type to entrez type.
 }

@@ -10,7 +10,7 @@ connect_convert_db_org(datapath = DATAPATH, select_org, idep_data)
 \arguments{
 \item{datapath}{Folder path to the data file}
 
-\item{select_org}{The slected species}
+\item{select_org}{The selected species}
 
 \item{idep_data}{Data object that includes org_info}
 }

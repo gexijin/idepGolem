@@ -1252,7 +1252,6 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     # Remove messages if the tab changes --------
     observe({
       req(tab() != "Pre-Process")
-
       removeNotification("conversion_counts")
       removeNotification("read_counts_message")
       removeNotification("data_type_warning")
