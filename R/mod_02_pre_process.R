@@ -525,12 +525,6 @@ mod_02_pre_process_ui <- function(id) {
             DT::dataTableOutput(outputId = ns("examine_data"))
           ),
           tabPanel(
-            title = "Data Removed",
-            h5("These rows were removed due to at least value be unable to read."),
-            br(),
-            DT::dataTableOutput(outputId = ns("examine_data_remove"))
-          ),
-          tabPanel(
             title = "Info",
             includeHTML(app_sys("app/www/help_preprocess.html"))
           ),
@@ -947,26 +941,6 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
 
       DT::datatable(
         merged_processed_data(),
-        options = list(
-          pageLength = 10,
-          scrollX = "400px"
-        ),
-        rownames = FALSE
-      )
-    })
-
-    output$examine_data_remove <- DT::renderDataTable({
-      # Check if the data is NULL
-      if (is.null(load_data$remove_data())) {
-        return(DT::datatable(data.frame(Message = "No rows removed"),
-          rownames = FALSE,
-          options = list(autoWidth = TRUE, searching = FALSE, paging = FALSE)
-        ))
-      }
-
-      # If not NULL, render the datatable as usual
-      DT::datatable(
-        load_data$remove_data(),
         options = list(
           pageLength = 10,
           scrollX = "400px"
