@@ -143,6 +143,7 @@ mod_05_deg_1_ui <- function(id) {
               outputId = ns("sig_gene_stats")
             ),
             br(),
+            ottoPlots::mod_download_figure_ui(ns("download_sig_gene_stats")), ##J Add
             br(),
             h5(
               "Numbers of differentially expressed genes for all comparisons.
@@ -227,6 +228,11 @@ mod_05_deg_2_ui <- function(id) {
         conditionalPanel(
           condition = "input.step_2 == 'MA Plot' ",
           mod_label_ui(ns("label_ma")),
+          ns = ns
+        ),
+        conditionalPanel(
+          condition = "input.step_2 == 'Scatter Plot' ",
+          mod_label_ui(ns("label_scatter")),
           ns = ns
         ),
         width = 3
@@ -580,6 +586,17 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       )
     })
 
+    sig_genes_p <- reactive({
+      req(!is.null(deg$limma$results))
+      p <- sig_genes_plot(
+        results = deg$limma$results
+      )
+      refine_ggplot2(
+        p = p,
+        gridline = pre_process$plot_grid_lines(),
+        ggplot2_theme = pre_process$ggplot2_theme()
+      )
+    })
     output$sig_gene_stats <- renderPlot({
       req(!is.null(deg$limma$results))
       p <- sig_genes_plot(
@@ -591,6 +608,15 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         ggplot2_theme = pre_process$ggplot2_theme()
       )
     })
+
+    download_sig_gene_stats <- ottoPlots::mod_download_figure_server(
+      id = "download_sig_gene_stats",
+      filename = "sig_gene_stats",
+      figure = reactive({
+        sig_genes_p()
+      }),
+      label = ""
+    )
 
     output$sig_gene_stats_table <- renderTable(
       {
@@ -843,6 +869,14 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       }),
       method = "ma"
     )
+    
+    gene_labels_scat <- mod_label_server(
+      "label_scatter",
+      data_list = reactive({
+        vol_data()
+      }),
+      method = "scatter"
+    )
 
     vol_plot <- reactive({
       req(vol_data(), input$plot_color_select)
@@ -871,7 +905,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       }),
       label = ""
     )
-
+    
+    
     # ma plot----------------
     ma_plot <- reactive({
       req(vol_data())
@@ -879,7 +914,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       p <- plot_ma(
         data = vol_data()$data,
         plot_colors = plot_colors[[input$plot_color_select]],
-        anotate_genes = gene_labels_ma()
+        anotate_genes = gene_labels_ma()              ### RESTART HERE
       )
       refine_ggplot2(
         p = p,
@@ -914,7 +949,9 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         contrast_samples = contrast_samples(),
         processed_data = pre_process$data(),
         sample_info = pre_process$sample_info(),
-        plot_colors = plot_colors[[input$plot_color_select]]
+        plot_colors = plot_colors[[input$plot_color_select]],
+        all_gene_names = pre_process$all_gene_names(),
+        anotate_genes = gene_labels_scat()
       )
       refine_ggplot2(
         p = p,
