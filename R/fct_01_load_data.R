@@ -101,7 +101,7 @@ gene_info <- function(converted,
 }
 
 
-# Safe conversion function
+# Safe conversion function   "11,231" -> 11231
 safe_numeric_conversion <- function(x) {
   converted <- suppressWarnings(as.numeric(gsub(",", "", x)))
   ifelse(is.na(converted), NA, converted)
@@ -159,8 +159,9 @@ input_data <- function(expression_file,
          blank.lines.skip = TRUE
        )
     }
-    # Tab-delimented if not CSV
-    if (ncol(data) <= 2) {
+
+    # Try tab-delimented if not CSV
+    if (ncol(data) <= 1) {
       data <- read.table(
         in_file_data,
         sep = "\t",
@@ -172,44 +173,103 @@ input_data <- function(expression_file,
       )
     }
 
-    # Convert all columns after the first one to numeric using the safe function
-    data[, -1] <- lapply(data[, -1], function(col) {
-      if (is.character(col)) {
-        return(sapply(col, safe_numeric_conversion))
-      } else {
-        return(col)
-      }
-    })
-
-    # rows where all values after the first column are NA cause issues
-    # if a row has all NA values down stream processing fails
-    # Remove rows where all values after the first column are NA
-    #data <- data[!apply(is.na(data[, -1]), 1, all), ]
-    # Identify rows where all values after the first column are NA
-    all_na_rows <- apply(is.na(data[, -1]), 1, all)
-
-    # Change all NA values in those rows to 0, column by column
-    data[all_na_rows, -1] <- lapply(
-      data[all_na_rows, -1],
-      function(col) ifelse(is.na(col), 0, col)
-    )
-
-    # Filter out non-numeric columns ---------
-    num_col <- c(TRUE)
-    for (i in 2:ncol(data)) {
-      num_col <- c(num_col, is.numeric(data[, i]))
+    # try semicolon -delimented if not CSV
+    if (ncol(data) <= 1) {
+      data <- read.table(
+        in_file_data,
+        sep = ";",
+        header = TRUE,
+        stringsAsFactors = FALSE,
+        quote = "\"",
+        comment.char = "",
+        blank.lines.skip = TRUE
+      )
     }
-    if (sum(num_col) <= 2) {
+
+    # try space-delimented if not CSV
+    if (ncol(data) <= 1) {
+      data <- read.table(
+        in_file_data,
+        sep = " ",
+        header = TRUE,
+        stringsAsFactors = FALSE,
+        quote = "\"",
+        comment.char = "",
+        blank.lines.skip = TRUE
+      )
+    }
+
+
+    # cannot parse file; only one or two column
+    if (ncol(data) <= 1) {
+      showNotification(
+        ui = "Error!!! Expression file not recognized. 
+        Click the Reset button, examine the file, and try again.",
+        id = "error_expression_file",
+        duration = NULL,
+        type = "error"
+      )
       return(NULL)
     }
-    data <- data[, num_col]
+    
+    # if more than one column
+    if (ncol(data) > 1) {
+      # Convert all columns after the first one to numeric using the safe function
+      data[, -1] <- lapply(data[, -1], function(col) {
+        if (is.character(col)) {
+          return(sapply(col, safe_numeric_conversion))
+        } else {
+          return(col)
+        }
+      })
 
+      # rows where all values after the first column are NA cause issues
+      # if a row has all NA values down stream processing fails
+      # Remove rows where all values after the first column are NA
+      data <- data[!apply(is.na(data[, -1]), 1, all), ]
+
+      # Identify rows where all values after the first column are NA
+      #all_na_rows <- apply(is.na(data[, -1]), 1, all)
+      # Change all NA values in those rows to 0, column by column
+      #data[all_na_rows, -1] <- lapply(
+      #  data[all_na_rows, -1],
+      #  function(col) ifelse(is.na(col), 0, col)
+      #)
+
+      # remove columns where all values are NA
+      data <- data[, !apply(is.na(data), 2, all)]
+
+      # remove columns where all values are 0
+      ix <- apply(data, 2, function(col) all(col == 0))
+      if (sum(ix) > 0) {
+        showNotification(
+          ui = paste0("Warning!!! Columns with all zero values are deleted: ", 
+                      paste0(names(data)[ix], collapse = ", ")),
+          id = "zero_expression_file",
+          duration = 10,
+          type = "warning"
+        )
+        data <- data[, !ix]        
+      }
+    }
+
+    # cannot parse file; only one or two column
+    if (ncol(data) <= 1) {
+      showNotification(
+        ui = "Error!!! Expression file not recognized. 
+        Click the Reset button, examine the file, and try again.",
+        id = "error_expression_file",
+        duration = NULL,
+        type = "error"
+      )
+      return(NULL)
+    }
     # Order by SD ----------
-    data <- data[order(-apply(
-      data[, 2:ncol(data)],
-      1,
-      sd
-    )), ]
+    #data <- data[order(-apply(
+    #  data[, 2:ncol(data)],
+    #  1,
+    #  sd
+    #)), ]
 
     # Format gene ids --------
     #iconv converts latin1 to UTF-8; otherwise toupper(ENSG00000267023Ê) causes error
@@ -225,6 +285,9 @@ input_data <- function(expression_file,
     # Set gene ids as rownames and get rid of column ---------
     rownames(data) <- data[, 1]
     data <- as.matrix(data[, c(-1)])
+
+    # use janitor to clean up column names;  too slow!!!
+    #data <- janitor::clean_names(data)
 
     # Remove "-" or "." from sample names ----------
     colnames(data) <- gsub("-", "", colnames(data))
