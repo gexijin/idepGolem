@@ -147,8 +147,8 @@ input_data <- function(expression_file,
     # Read expression file -----------
 
     file_extension <- tolower(tools::file_ext(in_file_data))
-    if ( file_extension == ".xlsx" || 
-         file_extension == ".xls"
+    if ( file_extension == "xlsx" || 
+         file_extension == "xls"
       )  {
       data <- readxl::read_excel(in_file_data)
       data <- data.frame(data)
@@ -199,18 +199,6 @@ input_data <- function(expression_file,
       )
     }
 
-
-    # cannot parse file; only one or two column
-    if (ncol(data) <= 1) {
-      showNotification(
-        ui = "Error!!! Expression file not recognized. 
-        Click the Reset button, examine the file, and try again.",
-        id = "error_expression_file",
-        duration = NULL,
-        type = "error"
-      )
-      return(NULL)
-    }
     
     # if more than one column
     if (ncol(data) > 1) {
@@ -323,21 +311,39 @@ input_data <- function(expression_file,
 
   isolate({
     # Read experiment file ----------
-    expr <- read.csv(
-      in_file_expr,
-      row.names = 1,
-      header = TRUE,
-      colClasses = "character"
-    )
-    if (ncol(expr) <= 2) {
+    file_extension <- tolower(tools::file_ext(in_file_expr))
+    if ( file_extension == "xlsx" || 
+         file_extension == "xls"
+      )  {
+      expr <- readxl::read_excel(in_file_expr)
+      expr <- data.frame(expr)
+    } else {
+      expr <- read.csv(
+        in_file_expr,
+        row.names = 1,
+        header = TRUE,
+        colClasses = "character",
+        quote = "\"",
+        comment.char = "",
+        blank.lines.skip = TRUE
+      )
+    }
+
+    # Try tab-delimented if not CSV
+    if (ncol(data) <= 1) {
       expr <- read.table(
         in_file_expr,
         row.names = 1,
         sep = "\t",
         header = TRUE,
-        colClasses = "character"
+        colClasses = "character",
+        quote = "\"",
+        comment.char = "",
+        blank.lines.skip = TRUE
       )
     }
+
+
     # remove "-" or "." from sample names ----------
     colnames(expr) <- gsub("-", "", colnames(expr))
     colnames(expr) <- gsub("\\.", "", colnames(expr))
