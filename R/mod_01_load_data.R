@@ -638,7 +638,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       req(!is.null(conversion_info()$converted_data))
 
       DT::datatable(
-        conversion_info()$converted_data[1:20, ],
+        #conversion_info()$converted_data[1:20, ],
+        loaded_data()$data[1:20, ],
         options = list(
           pageLength = 10,
           scrollX = "400px",
