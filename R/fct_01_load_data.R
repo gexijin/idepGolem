@@ -101,7 +101,7 @@ gene_info <- function(converted,
 }
 
 
-# Safe conversion function
+# Safe conversion function   "11,231" -> 11231
 safe_numeric_conversion <- function(x) {
   converted <- suppressWarnings(as.numeric(gsub(",", "", x)))
   ifelse(is.na(converted), NA, converted)
@@ -184,32 +184,30 @@ input_data <- function(expression_file,
     # rows where all values after the first column are NA cause issues
     # if a row has all NA values down stream processing fails
     # Remove rows where all values after the first column are NA
-    #data <- data[!apply(is.na(data[, -1]), 1, all), ]
+    data <- data[!apply(is.na(data[, -1]), 1, all), ]
+
     # Identify rows where all values after the first column are NA
-    all_na_rows <- apply(is.na(data[, -1]), 1, all)
-
+    #all_na_rows <- apply(is.na(data[, -1]), 1, all)
     # Change all NA values in those rows to 0, column by column
-    data[all_na_rows, -1] <- lapply(
-      data[all_na_rows, -1],
-      function(col) ifelse(is.na(col), 0, col)
-    )
+    #data[all_na_rows, -1] <- lapply(
+    #  data[all_na_rows, -1],
+    #  function(col) ifelse(is.na(col), 0, col)
+    #)
 
-    # Filter out non-numeric columns ---------
-    num_col <- c(TRUE)
-    for (i in 2:ncol(data)) {
-      num_col <- c(num_col, is.numeric(data[, i]))
-    }
-    if (sum(num_col) <= 2) {
+    # remove columns where all values are NA
+    data <- data[, !apply(is.na(data), 2, all)]
+
+    # if no column left, return NULL
+    if (ncol(data) <= 1) {
       return(NULL)
     }
-    data <- data[, num_col]
 
     # Order by SD ----------
-    data <- data[order(-apply(
-      data[, 2:ncol(data)],
-      1,
-      sd
-    )), ]
+    #data <- data[order(-apply(
+    #  data[, 2:ncol(data)],
+    #  1,
+    #  sd
+    #)), ]
 
     # Format gene ids --------
     #iconv converts latin1 to UTF-8; otherwise toupper(ENSG00000267023Ê) causes error
@@ -229,6 +227,9 @@ input_data <- function(expression_file,
     # Remove "-" or "." from sample names ----------
     colnames(data) <- gsub("-", "", colnames(data))
     colnames(data) <- gsub("\\.", "", colnames(data))
+
+    # use janitor to clean up column names
+    data <- janitor::clean_names(data)
   })
 
   # Read experiment file ----------
