@@ -13,6 +13,7 @@ mod_05_deg_1_ui <- function(id) {
     title = "DEG1",
     sidebarLayout(
       sidebarPanel(
+        style = "height: 90vh; overflow-y: auto;", 
         # Button to run DEG analysis for the specified model
         uiOutput(ns("submit_ui")),
         tags$head(tags$style(
@@ -151,7 +152,8 @@ mod_05_deg_1_ui <- function(id) {
             ),
             tableOutput(
               outputId = ns("sig_gene_stats_table")
-            )
+            ),
+            uiOutput(ns("sig_genes_download_button"))
           ),
           tabPanel(
             title = "Venn Diagram & UpSet plot",
@@ -205,6 +207,7 @@ mod_05_deg_2_ui <- function(id) {
     title = "DEG2",
     sidebarLayout(
       sidebarPanel(
+        style = "height: 90vh; overflow-y: auto;", 
         htmlOutput(outputId = ns("list_comparisons")),
         p("Select a comparison to examine the associated DEGs.
           \"A-B\" means A vs. B (See heatmap).
@@ -632,6 +635,49 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       width = "auto",
       hover = T
     )
+
+    name_sig_genes_download <- reactive({
+      paste0(
+        "deg_sig_genes_",
+        deg_method[as.numeric(input$counts_deg_method)],
+        ".csv"
+      )
+    })
+
+    output$sig_genes_download <- downloadHandler(
+      filename = function() {
+        name_sig_genes_download()
+      },
+      content = function(file) {
+        # Convert the matrix to a data frame and replace values
+        list_genes_df <- dplyr::mutate_all(
+          as.data.frame(deg$limma$results),
+          ~ dplyr::case_when(
+            . == -1 ~ "Down",
+            . == 1 ~ "Up",
+            . == 0 ~ "None"
+          )
+        )
+
+        # Add rownames as a new column
+        list_genes_df$gene_id <- rownames(list_genes_df)
+
+        # Make gene_id the first column
+        list_genes_df <- list_genes_df[
+          ,
+          c("gene_id", setdiff(names(list_genes_df), "gene_id"))
+        ]
+        write.csv(list_genes_df, file, row.names = FALSE)
+      }
+    )
+
+    output$sig_genes_download_button <- renderUI({
+      req(!is.null(deg$limma$results))
+      downloadButton(
+        outputId = ns("sig_genes_download"),
+        "Results & data"
+      )
+    })
 
     output$deg_code <- renderText({
       req(!is.null(deg$limma))
