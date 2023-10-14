@@ -307,7 +307,7 @@ mod_06_pathway_ui <- function(id) {
                 width = "100%",
                 height = "100%"
               ),
-              h5("Green and red (or Blue and orange) represent up- and down-regulated genes, respectively."),
+              h5("Red and green (or orange and blue) represent up- and down-regulated genes, respectively."),
               ns = ns
             )
           ),
