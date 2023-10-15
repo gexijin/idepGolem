@@ -12,7 +12,8 @@ plot_pgsea(
   pathway_p_val_cutoff,
   n_pathway_show,
   select_go,
-  show_pathway_id
+  show_pathway_id,
+  margin = c(3, 1, 13, 38)
 )
 }
 \arguments{

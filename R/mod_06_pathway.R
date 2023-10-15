@@ -1092,7 +1092,11 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     # Markdown report------------
     output$report <- downloadHandler(
       # For PDF output, change this to "report.pdf"
-      filename = "pathway_report.html",
+      filename = paste0(
+              "pathway_workflow_",
+              format(Sys.time(), "%Y-%m-%d_%H-%M"),
+              ".html"
+            ),
       content = function(file) {
         # Set up parameters to pass to Rmd document
         params <- list(
@@ -1125,8 +1129,11 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           edge_cutoff_deg = input$edge_cutoff_deg,
           selected_pathway_data = selected_pathway_data(),
           heatmap_color_select = pre_process$heatmap_color_select(),
-          date = Sys.Date(),
-          descr = deg$limma()[["description"]]
+          sig_pathways_kegg = input$sig_pathways_kegg, 
+          kegg_color_select = input$kegg_color_select,
+          kegg_colors = kegg_colors,
+          descr = deg$limma()[["description"]],
+          show_pathway_id = input$show_pathway_id
         )
 
         req(params)
@@ -1136,7 +1143,11 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           # Copy the report file to a temporary directory before processing it, in
           # case we don't have write permissions to the current working dir (which
           # can happen when deployed).
-          tempReport <- file.path(tempdir(), "pathway_workflow.Rmd")
+
+          tempReport <- file.path(
+            tempdir(), 
+            "pathway_workflow.Rmd"
+          )
           # tempReport
           tempReport <- gsub("\\", "/", tempReport, fixed = TRUE)
 
