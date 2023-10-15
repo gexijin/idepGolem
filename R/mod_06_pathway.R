@@ -1123,6 +1123,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           wrap_text_network_deg = input$wrap_text_network_deg,
           layout_vis_deg = input$layout_vis_deg,
           edge_cutoff_deg = input$edge_cutoff_deg,
+          selected_pathway_data = selected_pathway_data(),
+          heatmap_color_select = pre_process$heatmap_color_select(),
           date = Sys.Date(),
           descr = deg$limma()[["description"]]
         )
