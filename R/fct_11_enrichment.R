@@ -523,7 +523,14 @@ enrich_net <- function(data,
   return(g)
 }
 
-#' VIS NETWORK FUNCTION
+#' VisNetwork plot
+#'
+#' Create VisNetwork plot 
+#'
+#' @param network_data object created by the network_data function
+#'
+#' @export
+#' @return plot
 vis_network_plot <- function(network_data) {
   if (is.null(network_data)) {
     return(NULL)

@@ -2,10 +2,16 @@
 % Please edit documentation in R/fct_11_enrichment.R
 \name{vis_network_plot}
 \alias{vis_network_plot}
-\title{VIS NETWORK FUNCTION}
+\title{VisNetwork plot}
 \usage{
 vis_network_plot(network_data)
 }
+\arguments{
+\item{network_data}{object created by the network_data function}
+}
+\value{
+plot
+}
 \description{
-VIS NETWORK FUNCTION
+Create VisNetwork plot
 }

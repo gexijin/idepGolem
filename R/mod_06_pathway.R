@@ -166,7 +166,7 @@ mod_06_pathway_ui <- function(id) {
               condition = "input.submit_pathway_button == 0",
               br(),
               br(),
-              h3("Click the Submit button to obtain or update results, everytime parameters are adjusted."),
+              h3("Adjust parameters and click the Submit button to perform analysis."),
               ns = ns
             ),
             htmlOutput(
@@ -1119,6 +1119,10 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           sig_pathways = input$sig_pathways,
           pathway_method = input$pathway_method,
           pathway_list_data = pathway_list_data(),
+          up_down_reg_deg = input$up_down_reg_deg,
+          wrap_text_network_deg = input$wrap_text_network_deg,
+          layout_vis_deg = input$layout_vis_deg,
+          edge_cutoff_deg = input$edge_cutoff_deg,
           date = Sys.Date(),
           descr = deg$limma()[["description"]]
         )
@@ -1134,11 +1138,10 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           # tempReport
           tempReport <- gsub("\\", "/", tempReport, fixed = TRUE)
 
-          # This should retrieve the project location on your device:
-          # "C:/Users/bdere/Documents/GitHub/idepGolem"
           wd <- getwd()
 
           markdown_location <- app_sys("app/www/RMD/pathway_workflow.Rmd")
+          markdown_location <- "C:/work/idepGolem/vignettes/Reports/pathway_workflow.Rmd"
           file.copy(from = markdown_location, to = tempReport, overwrite = TRUE)
 
           # Knit the document, passing in the `params` list, and eval it in a
