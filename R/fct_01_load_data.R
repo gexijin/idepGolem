@@ -639,3 +639,36 @@ showGeneIDs <- function(species, db, nGenes = 10){
   return(result)
   
 }
+
+### Add Example Gene ID column to database
+
+# -- Create a temporary table to store the concatenated Example IDs
+# CREATE TEMPORARY TABLE TempExampleIds AS
+# WITH RandomIds AS (
+#   SELECT m.idType,
+#   m.id,
+#   ROW_NUMBER() OVER (PARTITION BY m.idType ORDER BY RANDOM()) AS rn
+#   FROM Mapping m
+# )
+# SELECT i.id, GROUP_CONCAT(DISTINCT r.id) AS "ExampleIDs"
+# FROM idIndex i
+# LEFT JOIN RandomIds r ON i.id = r.idType AND r.rn <= 100
+# GROUP BY i.id;
+# 
+# -- Add new column
+# -- ALTER TABLE idIndex
+# -- ADD ExampleIDs TEXT;
+# 
+# -- Fill column with example genes
+# UPDATE idIndex AS i
+# SET "ExampleIDs" = (
+#   SELECT ExampleIDs
+#   FROM TempExampleIds AS t
+#   WHERE t.id = i.id
+# );
+# 
+# -- Drop the temporary table
+# DROP  TABLE TempExampleIds;
+# 
+# -- View results
+# SELECT * FROM idIndex

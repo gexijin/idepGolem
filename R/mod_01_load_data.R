@@ -316,10 +316,10 @@ mod_01_load_data_ui <- function(id) {
 mod_01_load_data_server <- function(id, idep_data, tab) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-
+    
     # increase max input file size
     options(shiny.maxRequestSize = 2001024^2)
-
+    
     observe({
       shinyjs::toggle(id = "heatmap_color_select", condition = input$customize_button)
       shinyjs::toggle(id = "select_gene_id", condition = input$customize_button)
@@ -568,7 +568,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     observeEvent(input$MGeneIDexamples, {
       showModal(
         modalDialog(
-          title = "What the gene IDs in our database look like?",
+          title = "What do the gene IDs in our database look like?",
           tags$style(
             HTML(
               "#DataTables_Table_0_wrapper #DataTables_Table_0_filter label{
