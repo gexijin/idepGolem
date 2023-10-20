@@ -643,7 +643,9 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
       DT::datatable(
         #conversion_info()$converted_data[1:20, ],
-        loaded_data()$data[1:20, ],
+        if(nrow(loaded_data()$data) > 20){
+          loaded_data()$data[1:20, ]
+        } else (loaded_data()$data),
         options = list(
           pageLength = 10,
           scrollX = "400px",

@@ -151,6 +151,26 @@ if (params$pathway_method == 2) {
 ```
 
 
+```{r FGSEA, message = F, quiet = TRUE}
+if (params$pathway_method == 3) {
+  fgsea_pathway_data <- fgsea_data(
+    select_contrast = params$select_contrast,
+    my_range = c(params$min_set_size, params$max_set_size),
+    limma = params$limma,
+    gene_p_val_cutoff = params$gene_p_val_cutoff,
+    gene_sets = params$gene_sets,
+    absolute_fold = params$absolute_fold,
+    pathway_p_val_cutoff = params$pathway_p_val_cutoff,
+    n_pathway_show = params$n_pathway_show
+  )
+  kbl(fgsea_pathway_data) %>% 
+    kable_classic(full_width = F, html_font = "Cambria")
+}
+```
+
+
+
+
 
 ## Tree
 ```{r echo=FALSE}
