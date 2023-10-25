@@ -84,7 +84,8 @@ mod_01_load_data_ui <- function(id) {
               "text/plain",
               ".csv",
               ".tsv",
-              ".xlsx"
+              ".xlsx",
+              ".xls"
             )
           ),
           ns = ns
@@ -349,7 +350,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           size = "l",
           p("Search annotated species by common or scientific names,
           or NCBI taxonomy id. Click on a row to select. 
-          Use annotation in STRING-db as a last resort.  
+          Use ENSEMBL annotation if available. Use STRING-db annotation as a last resort.  
            If your species cannot be found here,
           you can still use iDEP without pathway analysis."),
           easyClose = TRUE,
@@ -447,7 +448,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             "text/plain",
             ".csv",
             ".tsv",
-            ".xlsx"
+            ".xlsx",
+            ".xls"
           )
         ),
         fluidRow(
@@ -539,7 +541,9 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             "text/tab-separated-values",
             "text/plain",
             ".csv",
-            ".tsv"
+            ".tsv",
+            ".xlsx",
+            ".xls"
           )
         )
       )
@@ -638,7 +642,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       req(!is.null(conversion_info()$converted_data))
 
       DT::datatable(
-        conversion_info()$converted_data[1:20, ],
+        #conversion_info()$converted_data[1:20, ],
+        loaded_data()$data[1:20, ],
         options = list(
           pageLength = 10,
           scrollX = "400px",

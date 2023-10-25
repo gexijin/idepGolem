@@ -1329,6 +1329,10 @@ counts_bias_message <- function(raw_counts,
     )
   )
   message <- NULL
+      # all samples in one gropu         no grouping
+  if(length(unique(groups)) == 1 || length(unique(groups)) == ncol(raw_counts)) {
+    return(message)
+  }
   # ANOVA of total read counts vs sample groups parsed by sample name
   pval <- summary(aov(total_counts ~ groups))[[1]][["Pr(>F)"]][1]
   means <- aggregate(total_counts, by = list(groups), mean)
