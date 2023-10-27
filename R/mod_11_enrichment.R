@@ -380,7 +380,7 @@ mod_11_enrichment_server <- function(id,
       selected <- choices[1]
       updateSelectInput(
         session = session,
-        inputId = "select_cluster",
+        inputId = ns("select_cluster"),
         selected = selected
       )
     })
