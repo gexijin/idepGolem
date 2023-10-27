@@ -143,8 +143,9 @@ get_biclust_table_data <- function(res,
     return(as.data.frame("No clusters found!"))
   }
 
+  dim_all_gene_info <- dim(all_gene_info)
   if (select_org == "NEW" |
-    dim(all_gene_info)[1] == 1) {
+    (!is.null(dim_all_gene_info) && dim_all_gene_info[1] == 1)) {
     biclust_genes <- as.data.frame(rownames(biclust_data))
     colnames(biclust_genes) <- "Genes"
   } else {

@@ -71,9 +71,30 @@ pre_process <- function(data,
                         counts_transform,
                         counts_log_start,
                         no_fdr) {
-  data_type_warning <- 0
   data_size_original <- dim(data)
   kurtosis_log <- 50
+
+  results <- list(
+    data = as.matrix(data),
+    mean_kurtosis = NULL,
+    raw_counts = NULL,
+    data_type_warning = 0,
+    data_size = c(data_size_original),
+    p_vals = NULL,
+    descr = generate_descr(
+      missing_value,
+      data_file_format,
+      low_filter_fpkm,
+      n_min_samples_fpkm,
+      log_transform_fpkm,
+      log_start_fpkm,
+      min_counts,
+      n_min_samples_count,
+      counts_transform,
+      counts_log_start,
+      no_fdr
+    )
+  )
 
   # Sort by standard deviation -----------
   data <- data[order(-apply(
@@ -104,7 +125,7 @@ pre_process <- function(data,
         for (i in samples) {
           missing <- which(is.na(data[, i]))
           if (length(missing) > 0) {
-            data[missing, i] <- row_medians[misssing]
+            data[missing, i] <- row_medians[missing]
           }
         }
       }
@@ -123,14 +144,12 @@ pre_process <- function(data,
   }
 
   # Compute kurtosis ---------
-  mean_kurtosis <- mean(apply(data, 2, e1071::kurtosis), na.rm = TRUE)
-  raw_counts <- NULL
-  pvals <- NULL
+  results$mean_kurtosis <- mean(apply(data, 2, e1071::kurtosis), na.rm = TRUE)
 
   # Pre-processing for each file format ----------
   if (data_file_format == 2) {
     if (is.integer(data)) {
-      data_type_warning <- 1
+      results$data_type_warning <- 1
     }
 
     # Filters ----------
@@ -151,7 +170,7 @@ pre_process <- function(data,
     # Takes log if log is selected OR kurtosis is bigger than 50
     if (
       (log_transform_fpkm == TRUE) ||
-        (mean_kurtosis > kurtosis_log)
+        (results$mean_kurtosis > kurtosis_log)
     ) {
       data <- log(data + abs(log_start_fpkm), 2)
     }
@@ -159,11 +178,17 @@ pre_process <- function(data,
     std_dev <- apply(data, 1, sd)
     data <- data[order(-std_dev), ]
   } else if (data_file_format == 1) {
-    if (!is.integer(data) && mean_kurtosis < kurtosis_log) {
-      data_type_warning <- -1
+    if (!is.integer(data) && results$mean_kurtosis < kurtosis_log) {
+      results$data_type_warning <- -1
     }
 
     data <- round(data, 0)
+    # Check if any columns have all zeros
+    if (any(apply(data, 2, function(col) all(col == 0)))) {
+      results$data_type_warning <- -2
+      return(results)
+    }
+
 
     data <- data[which(apply(
       edgeR::cpm(edgeR::DGEList(counts = data)),
@@ -171,7 +196,7 @@ pre_process <- function(data,
       function(y) sum(y >= min_counts)
     ) >= n_min_samples_count), ]
 
-    raw_counts <- data
+    results$raw_counts <- data
 
     # Construct DESeqExpression Object ----------
     tem <- rep("A", dim(data)[2])
@@ -200,19 +225,19 @@ pre_process <- function(data,
     }
   } else if (data_file_format == 3) { # LFC and P-values
     n2 <- (ncol(data) %/% 2)
-    raw_counts <- data
+    results$raw_counts <- data
     if (!no_fdr) {
-      pvals <- data[, 2 * (1:n2), drop = FALSE]
+      results$p_vals <- data[, 2 * (1:n2), drop = FALSE]
       data <- data[, 2 * (1:n2) - 1, drop = FALSE]
       if (ncol(data) == 1) {
         placeholder <- rep(1, dim(data)[1])
-        pvals <- cbind(pvals, placeholder)
+        results$p_vals <- cbind(results$p_vals, placeholder)
         zero_placeholder <- rep(0, dim(data)[1])
         data <- cbind(data, zero_placeholder)
       }
     }
   }
-  data_size <- dim(data)
+  results$data_size <- c(results$data_size, dim(data))
 
   validate(
     need(
@@ -227,30 +252,8 @@ pre_process <- function(data,
     sd
   )), ]
 
-  # Generate paragraph of processing selections
-  descr <- generate_descr(
-    missing_value,
-    data_file_format,
-    low_filter_fpkm,
-    n_min_samples_fpkm,
-    log_transform_fpkm,
-    log_start_fpkm,
-    min_counts,
-    n_min_samples_count,
-    counts_transform,
-    counts_log_start,
-    no_fdr
-  )
+  results$data <- as.matrix(data)
 
-  results <- list(
-    data = as.matrix(data),
-    mean_kurtosis = mean_kurtosis,
-    raw_counts = raw_counts,
-    data_type_warning = data_type_warning,
-    data_size = c(data_size_original, data_size),
-    p_vals = pvals,
-    descr = descr
-  )
 
   return(results)
 }
@@ -1326,6 +1329,10 @@ counts_bias_message <- function(raw_counts,
     )
   )
   message <- NULL
+      # all samples in one gropu         no grouping
+  if(length(unique(groups)) == 1 || length(unique(groups)) == ncol(raw_counts)) {
+    return(message)
+  }
   # ANOVA of total read counts vs sample groups parsed by sample name
   pval <- summary(aov(total_counts ~ groups))[[1]][["Pr(>F)"]][1]
   means <- aggregate(total_counts, by = list(groups), mean)

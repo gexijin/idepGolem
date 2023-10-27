@@ -1,11 +1,11 @@
 Package: idepGolem
-Title: An Amazing Shiny App
-Version: 0.0.0.9000
+Title: Integrated Differential Expression and Pathway Analysis
+Version: 1.12
 Authors@R: 
-    person(given = "firstname",
-           family = "lastname",
+    person(given = "Xijin",
+           family = "Ge",
            role = c("aut", "cre"),
-           email = "your@email.com")
+           email = "gexijin@gmail.com")
 Description: What the package does (one paragraph).
 License: What license is it under?
 Imports: 
@@ -65,10 +65,12 @@ Imports:
     png,
     QUBIC,
     ReactomePA,
+    GSVA,
     reshape2,
     rmarkdown,
     RSQLite,
     Rtsne,
+    runibic,
     shiny (>= 1.6.0),
     shinybusy,
     shinyjs,
