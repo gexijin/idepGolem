@@ -150,6 +150,13 @@ mod_01_load_data_ui <- function(id) {
 
         # Experiment design file input ----------
         uiOutput(ns("design_file_ui")),
+        uiOutput(ns("example_genes_ui")),
+        br(),
+        checkboxInput(
+          inputId = ns("customize_button"),
+          label = strong("Settings"),
+          value = FALSE
+        ),
         div(strong("More Settings (optional)")),
         selectInput(
           inputId = ns("multiple_map"),
@@ -558,6 +565,10 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         )
       )
     })
+    
+    output$example_genes_ui <- renderUI({
+      actionButton(ns("MGeneIDexamples"), "Example gene IDs")
+    })
 
     # Define the content of the basic modal
     observeEvent(input$MGeneIDexamples, {
@@ -585,6 +596,43 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         )
       )
     })
+    
+    geneIDs <- reactiveVal(NULL)
+    
+    observeEvent(input$userSpeciesIDexample, {
+      req(input$userSpeciesIDexample != "--Select species--")
+      ix <- which(idep_data$org_info$name2 == input$userSpeciesIDexample)
+      dbase <- idep_data$org_info$file[ix]
+      geneIDs(
+        showGeneIDs(
+          species = input$userSpeciesIDexample,
+          db = dbase,
+          nGenes = 10
+        )
+      )
+    })
+    
+    # Render Gene ID example table in gene example Modal
+    output$showGeneIDs4Species <- DT::renderDataTable({
+      req(!is.null(geneIDs()))
+      req(input$userSpeciesIDexample != "--Select species--")
+      removeNotification("ExampleIDDataQuery")
+      
+      DT::datatable(
+        geneIDs(),
+        rownames = FALSE,
+        options = list(
+          pageLength = 10,
+          scrollX = TRUE
+        )
+      )
+    })
+    
+    # Close example gene Modal
+    observeEvent(input$MGeneIDexamplesCloseBtn, {
+      removeModal()
+    })
+    
 
 
 
