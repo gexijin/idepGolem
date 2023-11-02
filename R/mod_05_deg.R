@@ -95,6 +95,15 @@ mod_05_deg_1_ui <- function(id) {
           ),
           ns = ns
         ),
+        conditionalPanel(
+          condition = "input.step_1 == 'results'",
+          selectInput(
+            inputId = ns("plot_color_select_1"),
+            label = NULL,
+            choices = "Red-Green"
+          ),
+          ns = ns
+        ),
         tags$br(),
         tags$br(),
         uiOutput(ns("download_lfc_button")),
@@ -110,6 +119,7 @@ mod_05_deg_1_ui <- function(id) {
           id = ns("step_1"),
           tabPanel(
             title = "Experiment Design",
+            value = "experiment_design",
             fluidRow(
               column(
                 width = 6,
@@ -139,7 +149,7 @@ mod_05_deg_1_ui <- function(id) {
           ),
           tabPanel(
             title = "Results",
-            value = ("results_tab"),
+            value = "results",
             plotOutput(
               outputId = ns("sig_gene_stats")
             ),
@@ -157,6 +167,7 @@ mod_05_deg_1_ui <- function(id) {
           ),
           tabPanel(
             title = "Venn Diagram & UpSet plot",
+            value = "venn_diagram",
             checkboxInput(
               inputId = ns("up_down_regulated"),
               label = "Split gene lists by up- or down-regulation",
@@ -181,6 +192,7 @@ mod_05_deg_1_ui <- function(id) {
           ),
           tabPanel(
             title = "R Code",
+            value = "r_code",
             verbatimTextOutput(
               ns("deg_code")
             ),
@@ -589,10 +601,19 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       )
     })
 
+    observe({
+      updateSelectInput(
+        session = session,
+        inputId = "plot_color_select_1",
+        choices = plot_choices
+      )
+    })
+    
     sig_genes_p <- reactive({
       req(!is.null(deg$limma$results))
       p <- sig_genes_plot(
-        results = deg$limma$results
+        results = deg$limma$results,
+        plot_colors = plot_colors[[input$plot_color_select_1]]
       )
       refine_ggplot2(
         p = p,
@@ -603,7 +624,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     output$sig_gene_stats <- renderPlot({
       req(!is.null(deg$limma$results))
       p <- sig_genes_plot(
-        results = deg$limma$results
+        results = deg$limma$results,
+        plot_colors = plot_colors[[input$plot_color_select_1]]
       )
       refine_ggplot2(
         p = p,

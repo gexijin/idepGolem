@@ -4,7 +4,7 @@
 \alias{sig_genes_plot}
 \title{Significant genes bar plot}
 \usage{
-sig_genes_plot(results)
+sig_genes_plot(results, plot_colors)
 }
 \arguments{
 \item{results}{Results matrix from the limma_value function
