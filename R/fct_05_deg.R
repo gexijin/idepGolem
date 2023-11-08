@@ -2171,17 +2171,17 @@ print_vector <- function(x, # comparison
 #'
 #' @param results Results matrix from the limma_value function
 #'  returned list
+#' @param plot_colors Vector of colors for up and down regulation
+#'  
 #'
 #' @export
 #' @return Formatted gg barplot of the significantly expressed
 #'  genes.
-sig_genes_plot <- function(results) {
+sig_genes_plot <- function(results, plot_colors) {
   Up <- apply(results, 2, function(x) sum(x == 1))
   Down <- apply(results, 2, function(x) sum(x == -1))
   stats <- rbind(Up, Down)
-
   gg <- reshape2::melt(stats)
-
   colnames(gg) <- c("Regulation", "Comparisons", "Genes")
 
   plot_bar <- ggplot2::ggplot(
@@ -2191,6 +2191,7 @@ sig_genes_plot <- function(results) {
     ggplot2::geom_bar(position = "dodge", stat = "identity") +
     ggplot2::coord_flip() +
     ggplot2::theme_light() +
+    ggplot2::scale_fill_manual(values = plot_colors[c(3,1)]) +
     ggplot2::theme(
       legend.position = "top",
       axis.title.y = ggplot2::element_blank(),
