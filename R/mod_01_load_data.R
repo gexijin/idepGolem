@@ -150,6 +150,13 @@ mod_01_load_data_ui <- function(id) {
 
         # Experiment design file input ----------
         uiOutput(ns("design_file_ui")),
+        uiOutput(ns("example_genes_ui")),
+        br(),
+        checkboxInput(
+          inputId = ns("customize_button"),
+          label = strong("Settings"),
+          value = FALSE
+        ),
         div(strong("More Settings (optional)")),
         selectInput(
           inputId = ns("multiple_map"),
@@ -311,9 +318,19 @@ mod_01_load_data_ui <- function(id) {
 mod_01_load_data_server <- function(id, idep_data, tab) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-
+    
     # increase max input file size
     options(shiny.maxRequestSize = 2001024^2)
+    
+    observe({
+      shinyjs::toggle(id = "heatmap_color_select", condition = input$customize_button)
+      shinyjs::toggle(id = "select_gene_id", condition = input$customize_button)
+      shinyjs::toggle(id = "multiple_map", condition = input$customize_button)
+      shinyjs::toggle(id = "no_id_conversion", condition = input$customize_button)
+      shinyjs::toggle(id = "plot_grid_lines", condition = input$customize_button)
+      shinyjs::toggle(id = "ggplot2_theme", condition = input$customize_button)
+    })
+
 
     welcome_modal <- shiny::modalDialog(
       title = "iDEP: Empower all scientists!",
@@ -548,7 +565,74 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         )
       )
     })
+    
+    output$example_genes_ui <- renderUI({
+      actionButton(ns("MGeneIDexamples"), "Example gene IDs")
+    })
 
+    # Define the content of the basic modal
+    observeEvent(input$MGeneIDexamples, {
+      showModal(
+        modalDialog(
+          title = "What do the gene IDs in our database look like?",
+          tags$style(
+            HTML(
+              "#DataTables_Table_0_wrapper #DataTables_Table_0_filter label{
+                width: 250px;
+                float: left;
+              }"
+          )
+        ),
+          selectizeInput(
+            inputId = ns("userSpeciesIDexample"),
+            label = "Select or search for species",
+            choices = c("--Select species--", names(idep_data$species_choice))
+            ),
+          DT::dataTableOutput(ns("showGeneIDs4Species")),
+            easyClose = TRUE,
+            footer = tagList(
+            actionButton(ns("MGeneIDexamplesCloseBtn"), "Close")
+          )
+        )
+      )
+    })
+    
+    geneIDs <- reactiveVal(NULL)
+    
+    observeEvent(input$userSpeciesIDexample, {
+      req(input$userSpeciesIDexample != "--Select species--")
+      ix <- which(idep_data$org_info$name2 == input$userSpeciesIDexample)
+      dbase <- idep_data$org_info$file[ix]
+      geneIDs(
+        showGeneIDs(
+          species = input$userSpeciesIDexample,
+          db = dbase,
+          nGenes = 10
+        )
+      )
+    })
+    
+    # Render Gene ID example table in gene example Modal
+    output$showGeneIDs4Species <- DT::renderDataTable({
+      req(!is.null(geneIDs()))
+      req(input$userSpeciesIDexample != "--Select species--")
+      removeNotification("ExampleIDDataQuery")
+      
+      DT::datatable(
+        geneIDs(),
+        rownames = FALSE,
+        options = list(
+          pageLength = 10,
+          scrollX = TRUE
+        )
+      )
+    })
+    
+    # Close example gene Modal
+    observeEvent(input$MGeneIDexamplesCloseBtn, {
+      removeModal()
+    })
+    
 
 
 
