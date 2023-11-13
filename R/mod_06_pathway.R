@@ -183,7 +183,9 @@ mod_06_pathway_ui <- function(id) {
             br(),
             p("Adjusting the width of the browser
             window can render figure differently and
-            resolve the \"Figure margin too wide\" error. ")
+            resolve the \"Figure margin too wide\" error. "),
+            br(),
+            ottoPlots::mod_download_figure_ui(ns("download_pathway_tree"))
           ),
           tabPanel(
             title = "Network",
@@ -1056,15 +1058,37 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     })
 
     # Enrichment Tree -----------
-    output$enrichment_tree <- renderPlot({
+    # output$enrichment_tree <- renderPlot({
+    #   req(!is.null(pathway_list_data()))
+    # 
+    #   enrichment_tree_plot(
+    #     go_table = pathway_list_data(),
+    #     group = "All Groups",
+    #     right_margin = 45
+    #   )
+    # })
+    enrichment_tree_p <- reactive({
       req(!is.null(pathway_list_data()))
-
       enrichment_tree_plot(
         go_table = pathway_list_data(),
         group = "All Groups",
         right_margin = 45
       )
+      p <- recordPlot()
+      return(p)
     })
+    output$enrichment_tree <- renderPlot({
+      dev.off()
+      print(enrichment_tree_p())
+    })
+    download_pathway_tree <- ottoPlots::mod_download_figure_server(
+      id = "download_pathway_tree",
+      filename = "pathway_tree",
+      figure = reactive({
+        enrichment_tree_p()
+      }),
+      label = ""
+    )
 
     # Define a Network
     network_data_path <- reactive({
