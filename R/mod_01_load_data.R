@@ -467,7 +467,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             ".tsv",
             ".xlsx",
             ".xls"
-          )
+          ),
+          placeholder = "Drag and Drop Files Here"
         ),
         fluidRow(
           column(
@@ -561,7 +562,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             ".tsv",
             ".xlsx",
             ".xls"
-          )
+          ),
+          placeholder = "Drag and Drop Files Here"
         )
       )
     })
