@@ -9,6 +9,8 @@ sig_genes_plot(results, plot_colors)
 \arguments{
 \item{results}{Results matrix from the limma_value function
 returned list}
+
+\item{plot_colors}{Vector of colors for up and down regulation}
 }
 \value{
 Formatted gg barplot of the significantly expressed

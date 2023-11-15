@@ -1072,13 +1072,13 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       enrichment_tree_plot(
         go_table = pathway_list_data(),
         group = "All Groups",
-        right_margin = 45
+        right_margin = 30
       )
       p <- recordPlot()
       return(p)
     })
     output$enrichment_tree <- renderPlot({
-      dev.off()
+      req(!is.null(enrichment_tree_p()))
       print(enrichment_tree_p())
     })
     download_pathway_tree <- ottoPlots::mod_download_figure_server(
