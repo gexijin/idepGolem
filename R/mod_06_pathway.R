@@ -172,6 +172,15 @@ mod_06_pathway_ui <- function(id) {
             htmlOutput(
               outputId = ns("main_pathway_result")
             ),
+            downloadButton(
+              outputId = ns("download_sig_paths"),
+              label = "CSV file"
+            ),
+            tippy::tippy_this(
+              ns("download_sig_paths"),
+              "Download Significant Pathways",
+              theme = "light-border"
+            ),
           ),
 
           tabPanel(
@@ -479,6 +488,15 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         )
       })
     })
+    
+    # output$download_enrichment <- downloadHandler(
+    #   filename = function() {
+    #     "sig_pathways.csv"
+    #   },
+    #   content = function(file) {
+    #     write.csv(enrichment_dataframe(), file).   ##################
+    #   }
+    # )
 
     output$list_comparisons_pathway <- renderUI({
       if (is.null(deg$limma()$comparisons)) {
@@ -1057,16 +1075,6 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       )
     })
 
-    # Enrichment Tree -----------
-    # output$enrichment_tree <- renderPlot({
-    #   req(!is.null(pathway_list_data()))
-    # 
-    #   enrichment_tree_plot(
-    #     go_table = pathway_list_data(),
-    #     group = "All Groups",
-    #     right_margin = 45
-    #   )
-    # })
     enrichment_tree_p <- reactive({
       req(!is.null(pathway_list_data()))
       enrichment_tree_plot(
