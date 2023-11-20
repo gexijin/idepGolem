@@ -489,14 +489,14 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       })
     })
     
-    # output$download_enrichment <- downloadHandler(
-    #   filename = function() {
-    #     "sig_pathways.csv"
-    #   },
-    #   content = function(file) {
-    #     write.csv(enrichment_dataframe(), file).   ##################
-    #   }
-    # )
+    output$download_sig_paths <- downloadHandler(
+      filename = function() {
+        "sig_pathways.csv"
+      },
+      content = function(file) {
+        write.csv(res_pathway()[,c(1,6,7,3:5)], file)
+      }
+    )
 
     output$list_comparisons_pathway <- renderUI({
       if (is.null(deg$limma()$comparisons)) {
@@ -861,28 +861,39 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         )
       })
     })
+    
+    res_pathway <- reactive({
+      req(input$pathway_method == 3)
+      req(!is.null(fgsea_pathway_data()))
+      res <- fgsea_pathway_data()
+      # copy name from res[,2]
+      pathway_csv_name <- colnames(res)[2]
+      non_hypertext_name <- paste(pathway_csv_name, "Pathways")
+      
+      if (ncol(res) > 1) {
+        # add URL
+        ix <- match(res[, 2], gene_sets()$pathway_info$description)
+        # remove pathway ID, but only in Ensembl species
+        if (!input$show_pathway_id && pre_process$select_org() > 0) {
+          res[, 2] <- remove_pathway_id(res[, 2], input$select_go)
+        }
+        # copy res[,2] to new column before hypertext
+        res[non_hypertext_name] <- res[,2]
+        res[, 2] <- hyperText(
+          res[, 2],
+          gene_sets()$pathway_info$memo[ix]
+        )
+        # create separate URL column for download
+        res$URL <- NULL
+        res$URL <- gene_sets()$pathway_info$memo[ix]
+        res$Genes <- as.character(res$Genes)
+      }
+      return(res)
+    })
 
     output$fgsea_pathway <- renderTable(
       {
-        req(input$pathway_method == 3)
-        req(!is.null(fgsea_pathway_data()))
-
-        res <- fgsea_pathway_data()
-        if (ncol(res) > 1) {
-          # add URL
-          ix <- match(res[, 2], gene_sets()$pathway_info$description)
-          # remove pathway ID, but only in Ensembl species
-          if (!input$show_pathway_id && pre_process$select_org() > 0) {
-            res[, 2] <- remove_pathway_id(res[, 2], input$select_go)
-          }
-          res[, 2] <- hyperText(
-            res[, 2],
-            gene_sets()$pathway_info$memo[ix]
-          )
-          res$Genes <- as.character(res$Genes)
-        }
-
-        return(res)
+        res_pathway()[,1:5]
       },
       digits = -1,
       spacing = "s",
