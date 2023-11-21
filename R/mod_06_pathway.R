@@ -166,11 +166,20 @@ mod_06_pathway_ui <- function(id) {
               condition = "input.submit_pathway_button == 0",
               br(),
               br(),
-              h3("Adjust parameters and click the Submit button."),
+              h3("Click the Submit button to obtain or update results, everytime parameters are adjusted."),
               ns = ns
             ),
             htmlOutput(
               outputId = ns("main_pathway_result")
+            ),
+            downloadButton(
+              outputId = ns("download_sig_paths"),
+              label = "CSV file"
+            ),
+            tippy::tippy_this(
+              ns("download_sig_paths"),
+              "Download Significant Pathways",
+              theme = "light-border"
             ),
           ),
 
@@ -183,7 +192,9 @@ mod_06_pathway_ui <- function(id) {
             br(),
             p("Adjusting the width of the browser
             window can render figure differently and
-            resolve the \"Figure margin too wide\" error. ")
+            resolve the \"Figure margin too wide\" error. "),
+            br(),
+            ottoPlots::mod_download_figure_ui(ns("download_pathway_tree"))
           ),
           tabPanel(
             title = "Network",
@@ -222,15 +233,20 @@ mod_06_pathway_ui <- function(id) {
                 )
               ),
               column(
-                width = 3,
-                selectInput(
-                  inputId = ns("up_down_reg_deg"),
-                  label = NULL,
-                  choices = c(
-                    "Both Up & Down" = "All Groups",
-                    "Up regulated" = "Up",
-                    "Down regulated" = "Down"
-                  )
+                width = 3,              
+                conditionalPanel( #up and down only applies to GSEA and GAGE
+                                                  #GAGE                 GSEA
+                  condition = "input.pathway_method == 1 | input.pathway_method == 3",
+                  selectInput(
+                    inputId = ns("up_down_reg_deg"),
+                    label = NULL,
+                    choices = c(
+                      "Both Up & Down" = "All Groups",
+                      "Up regulated" = "Up",
+                      "Down regulated" = "Down"
+                    )
+                  ),
+                  ns = ns
                 )
               )
             ),
@@ -302,7 +318,7 @@ mod_06_pathway_ui <- function(id) {
                 width = "100%",
                 height = "100%"
               ),
-              h5("Red and green represent up- and down-regulated genes, respectively."),
+              h5("Green and red (or Blue and orange) represent up- and down-regulated genes, respectively."),
               ns = ns
             )
           ),
@@ -472,6 +488,15 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         )
       })
     })
+    
+    output$download_sig_paths <- downloadHandler(
+      filename = function() {
+        "sig_pathways.csv"
+      },
+      content = function(file) {
+        write.csv(res_pathway()[,c(1,6,7,3:5)], file)
+      }
+    )
 
     output$list_comparisons_pathway <- renderUI({
       if (is.null(deg$limma()$comparisons)) {
@@ -836,28 +861,39 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         )
       })
     })
+    
+    res_pathway <- reactive({
+      req(input$pathway_method == 3)
+      req(!is.null(fgsea_pathway_data()))
+      res <- fgsea_pathway_data()
+      # copy name from res[,2]
+      pathway_csv_name <- colnames(res)[2]
+      non_hypertext_name <- paste(pathway_csv_name, "Pathways")
+      
+      if (ncol(res) > 1) {
+        # add URL
+        ix <- match(res[, 2], gene_sets()$pathway_info$description)
+        # remove pathway ID, but only in Ensembl species
+        if (!input$show_pathway_id && pre_process$select_org() > 0) {
+          res[, 2] <- remove_pathway_id(res[, 2], input$select_go)
+        }
+        # copy res[,2] to new column before hypertext
+        res[non_hypertext_name] <- res[,2]
+        res[, 2] <- hyperText(
+          res[, 2],
+          gene_sets()$pathway_info$memo[ix]
+        )
+        # create separate URL column for download
+        res$URL <- NULL
+        res$URL <- gene_sets()$pathway_info$memo[ix]
+        res$Genes <- as.character(res$Genes)
+      }
+      return(res)
+    })
 
     output$fgsea_pathway <- renderTable(
       {
-        req(input$pathway_method == 3)
-        req(!is.null(fgsea_pathway_data()))
-
-        res <- fgsea_pathway_data()
-        if (ncol(res) > 1) {
-          # add URL
-          ix <- match(res[, 2], gene_sets()$pathway_info$description)
-          # remove pathway ID, but only in Ensembl species
-          if (!input$show_pathway_id && pre_process$select_org() > 0) {
-            res[, 2] <- remove_pathway_id(res[, 2], input$select_go)
-          }
-          res[, 2] <- hyperText(
-            res[, 2],
-            gene_sets()$pathway_info$memo[ix]
-          )
-          res$Genes <- as.character(res$Genes)
-        }
-
-        return(res)
+        res_pathway()[,1:5]
       },
       digits = -1,
       spacing = "s",
@@ -1050,16 +1086,28 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       )
     })
 
-    # Enrichment Tree -----------
-    output$enrichment_tree <- renderPlot({
+    enrichment_tree_p <- reactive({
       req(!is.null(pathway_list_data()))
-
       enrichment_tree_plot(
         go_table = pathway_list_data(),
         group = "All Groups",
-        right_margin = 45
+        right_margin = 30
       )
+      p <- recordPlot()
+      return(p)
     })
+    output$enrichment_tree <- renderPlot({
+      req(!is.null(enrichment_tree_p()))
+      print(enrichment_tree_p())
+    })
+    download_pathway_tree <- ottoPlots::mod_download_figure_server(
+      id = "download_pathway_tree",
+      filename = "pathway_tree",
+      figure = reactive({
+        enrichment_tree_p()
+      }),
+      label = ""
+    )
 
     # Define a Network
     network_data_path <- reactive({

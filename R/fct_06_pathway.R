@@ -357,6 +357,18 @@ plot_gsva <- function(my_range,
       algorithm = algorithm
     )
 
+    # remove notificatoin from last analysis
+    removeNotification("small_sample_size")
+    if(ncol(genes) <= 10) {
+      showNotification(
+        ui = paste("Only ", ncol(genes), "samples! GSVA results are not reliable when sample sizes are small (<=10)"),
+        id = "small_sample_size",
+        duration = NULL,
+        type = "error"
+      )
+
+    }
+
     if (is.null(result$pg_data)) {
       return(
         NULL

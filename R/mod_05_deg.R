@@ -13,6 +13,7 @@ mod_05_deg_1_ui <- function(id) {
     title = "DEG1",
     sidebarLayout(
       sidebarPanel(
+        style = "height: 90vh; overflow-y: auto;", 
         # Button to run DEG analysis for the specified model
         uiOutput(ns("submit_ui")),
         tags$head(tags$style(
@@ -94,6 +95,15 @@ mod_05_deg_1_ui <- function(id) {
           ),
           ns = ns
         ),
+        conditionalPanel(
+          condition = "input.step_1 == 'results'",
+          selectInput(
+            inputId = ns("plot_color_select_1"),
+            label = NULL,
+            choices = "Red-Green"
+          ),
+          ns = ns
+        ),
         tags$br(),
         tags$br(),
         uiOutput(ns("download_lfc_button")),
@@ -109,6 +119,7 @@ mod_05_deg_1_ui <- function(id) {
           id = ns("step_1"),
           tabPanel(
             title = "Experiment Design",
+            value = "experiment_design",
             fluidRow(
               column(
                 width = 6,
@@ -138,11 +149,12 @@ mod_05_deg_1_ui <- function(id) {
           ),
           tabPanel(
             title = "Results",
-            value = ("results_tab"),
+            value = "results",
             plotOutput(
               outputId = ns("sig_gene_stats")
             ),
             br(),
+            ottoPlots::mod_download_figure_ui(ns("download_sig_gene_stats")), ##J Add
             br(),
             h5(
               "Numbers of differentially expressed genes for all comparisons.
@@ -150,10 +162,12 @@ mod_05_deg_1_ui <- function(id) {
             ),
             tableOutput(
               outputId = ns("sig_gene_stats_table")
-            )
+            ),
+            uiOutput(ns("sig_genes_download_button"))
           ),
           tabPanel(
             title = "Venn Diagram & UpSet plot",
+            value = "venn_diagram",
             checkboxInput(
               inputId = ns("up_down_regulated"),
               label = "Split gene lists by up- or down-regulation",
@@ -178,6 +192,7 @@ mod_05_deg_1_ui <- function(id) {
           ),
           tabPanel(
             title = "R Code",
+            value = "r_code",
             verbatimTextOutput(
               ns("deg_code")
             ),
@@ -204,6 +219,7 @@ mod_05_deg_2_ui <- function(id) {
     title = "DEG2",
     sidebarLayout(
       sidebarPanel(
+        style = "height: 90vh; overflow-y: auto;", 
         htmlOutput(outputId = ns("list_comparisons")),
         p("Select a comparison to examine the associated DEGs.
           \"A-B\" means A vs. B (See heatmap).
@@ -227,6 +243,11 @@ mod_05_deg_2_ui <- function(id) {
         conditionalPanel(
           condition = "input.step_2 == 'MA Plot' ",
           mod_label_ui(ns("label_ma")),
+          ns = ns
+        ),
+        conditionalPanel(
+          condition = "input.step_2 == 'Scatter Plot' ",
+          mod_label_ui(ns("label_scatter")),
           ns = ns
         ),
         width = 3
@@ -580,10 +601,19 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       )
     })
 
-    output$sig_gene_stats <- renderPlot({
+    observe({
+      updateSelectInput(
+        session = session,
+        inputId = "plot_color_select_1",
+        choices = plot_choices
+      )
+    })
+    
+    sig_genes_p <- reactive({
       req(!is.null(deg$limma$results))
       p <- sig_genes_plot(
-        results = deg$limma$results
+        results = deg$limma$results,
+        plot_colors = plot_colors[[input$plot_color_select_1]]
       )
       refine_ggplot2(
         p = p,
@@ -591,6 +621,27 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         ggplot2_theme = pre_process$ggplot2_theme()
       )
     })
+    output$sig_gene_stats <- renderPlot({
+      req(!is.null(deg$limma$results))
+      p <- sig_genes_plot(
+        results = deg$limma$results,
+        plot_colors = plot_colors[[input$plot_color_select_1]]
+      )
+      refine_ggplot2(
+        p = p,
+        gridline = pre_process$plot_grid_lines(),
+        ggplot2_theme = pre_process$ggplot2_theme()
+      )
+    })
+
+    download_sig_gene_stats <- ottoPlots::mod_download_figure_server(
+      id = "download_sig_gene_stats",
+      filename = "sig_gene_stats",
+      figure = reactive({
+        sig_genes_p()
+      }),
+      label = ""
+    )
 
     output$sig_gene_stats_table <- renderTable(
       {
@@ -606,6 +657,49 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       width = "auto",
       hover = T
     )
+
+    name_sig_genes_download <- reactive({
+      paste0(
+        "deg_sig_genes_",
+        deg_method[as.numeric(input$counts_deg_method)],
+        ".csv"
+      )
+    })
+
+    output$sig_genes_download <- downloadHandler(
+      filename = function() {
+        name_sig_genes_download()
+      },
+      content = function(file) {
+        # Convert the matrix to a data frame and replace values
+        list_genes_df <- dplyr::mutate_all(
+          as.data.frame(deg$limma$results),
+          ~ dplyr::case_when(
+            . == -1 ~ "Down",
+            . == 1 ~ "Up",
+            . == 0 ~ "None"
+          )
+        )
+
+        # Add rownames as a new column
+        list_genes_df$gene_id <- rownames(list_genes_df)
+
+        # Make gene_id the first column
+        list_genes_df <- list_genes_df[
+          ,
+          c("gene_id", setdiff(names(list_genes_df), "gene_id"))
+        ]
+        write.csv(list_genes_df, file, row.names = FALSE)
+      }
+    )
+
+    output$sig_genes_download_button <- renderUI({
+      req(!is.null(deg$limma$results))
+      downloadButton(
+        outputId = ns("sig_genes_download"),
+        "Results & data"
+      )
+    })
 
     output$deg_code <- renderText({
       req(!is.null(deg$limma))
@@ -843,6 +937,14 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       }),
       method = "ma"
     )
+    
+    gene_labels_scat <- mod_label_server(
+      "label_scatter",
+      data_list = reactive({
+        vol_data()
+      }),
+      method = "scatter"
+    )
 
     vol_plot <- reactive({
       req(vol_data(), input$plot_color_select)
@@ -871,7 +973,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       }),
       label = ""
     )
-
+    
+    
     # ma plot----------------
     ma_plot <- reactive({
       req(vol_data())
@@ -879,7 +982,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       p <- plot_ma(
         data = vol_data()$data,
         plot_colors = plot_colors[[input$plot_color_select]],
-        anotate_genes = gene_labels_ma()
+        anotate_genes = gene_labels_ma()              ### RESTART HERE
       )
       refine_ggplot2(
         p = p,
@@ -914,7 +1017,9 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         contrast_samples = contrast_samples(),
         processed_data = pre_process$data(),
         sample_info = pre_process$sample_info(),
-        plot_colors = plot_colors[[input$plot_color_select]]
+        plot_colors = plot_colors[[input$plot_color_select]],
+        all_gene_names = pre_process$all_gene_names(),
+        anotate_genes = gene_labels_scat()
       )
       refine_ggplot2(
         p = p,
