@@ -19,7 +19,9 @@ mod_01_load_data_ui <- function(id) {
               position:fixed;
               top: calc(85%);
               left: calc(5%);
-              }
+               }
+              
+             .dis_gray { background-color: gray; }
               "
             )
         )
@@ -145,7 +147,13 @@ mod_01_load_data_ui <- function(id) {
         # Includes load demo action button, demo data dropdown, and expression
         # file upload box
         uiOutput(ns("load_data_ui")),
-
+        # tags$style(
+        #   HTML("
+        #     #load_data-ui {
+        #       display: block !important;
+        #     }
+        #   ")
+        # ),
 
 
         # Experiment design file input ----------
@@ -444,11 +452,10 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # expression file upload
     output$load_data_ui <- renderUI({
       req(
-        (is.null(input$go_button) || input$go_button == 0) &&
-          is.null(input$expression_file)
+        (is.null(input$go_button) || input$go_button == 0)
       )
       req(input$data_file_format)
-
+      
       # get demo data files based on specified format
       files <- idep_data$demo_file_info
       files <- files[files$type == input$data_file_format, ]
@@ -572,6 +579,12 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       actionButton(ns("MGeneIDexamples"), "Example gene IDs")
     })
 
+
+    # Disables expression_file input to prevent multiple uploads
+    observeEvent(input$expression_file, {
+      shinyjs::disable("expression_file")
+    })
+
     # Define the content of the basic modal
     observeEvent(input$MGeneIDexamples, {
       showModal(
@@ -637,6 +650,11 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     
 
 
+    # Disables experiment_file input to prevent multiple uploads
+    observeEvent(input$experiment_file, {
+      shinyjs::disable("experiment_file")
+    })
+    
 
     # Show messages when on the Network tab or button is clicked ----
     observe({
@@ -988,3 +1006,4 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
 ## To be copied in the server
 # mod_01_load_data_server("load_data") # nolint
+
