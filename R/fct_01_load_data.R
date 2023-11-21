@@ -330,7 +330,7 @@ input_data <- function(expression_file,
     }
 
     # Try tab-delimented if not CSV
-    if (ncol(data) <= 1) {
+    if (ncol(expr) <= 1) {
       expr <- read.table(
         in_file_expr,
         row.names = 1,
