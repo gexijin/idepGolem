@@ -1052,43 +1052,47 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
 
     output$kegg_image <- renderImage(
       {
-        req(!is.null(input$sig_pathways_kegg))
-        withProgress(message = "Downloading KEGG pathway", {
-          incProgress(0.2)
-          file <- kegg_pathway(
-            go = input$select_go,
-            gage_pathway_data = pathway_list_data()[, 1:5],
-            sig_pathways = input$sig_pathways_kegg,
-            select_contrast = input$select_contrast,
-            limma = deg$limma(),
-            converted = pre_process$converted(),
-            idep_data = idep_data,
-            select_org = pre_process$select_org(),
-            low_color = kegg_colors[[input$kegg_color_select]][1],
-            high_color = kegg_colors[[input$kegg_color_select]][2]
-          )
-        })
-        # kegg_file <- kegg_image_fun()
+        # req(!is.null(input$sig_pathways_kegg))
+        # withProgress(message = "Downloading KEGG pathway", {
+        #   incProgress(0.2)
+        #   file <- kegg_pathway(
+        #     go = input$select_go,
+        #     gage_pathway_data = pathway_list_data()[, 1:5],
+        #     sig_pathways = input$sig_pathways_kegg,
+        #     select_contrast = input$select_contrast,
+        #     limma = deg$limma(),
+        #     converted = pre_process$converted(),
+        #     idep_data = idep_data,
+        #     select_org = pre_process$select_org(),
+        #     low_color = kegg_colors[[input$kegg_color_select]][1],
+        #     high_color = kegg_colors[[input$kegg_color_select]][2]
+        #   )
+        # })
+      # },
+      #list(src = kegg_src, contentType = "image/png")
+        kegg_image()
       },
-      deleteFile = TRUE
+      deleteFile = FALSE
     )
-    # 
-    # kegg_image_fun <- function(){
-    #   req(!is.null(input$sig_pathways_kegg))
-    #   file <- kegg_pathway(
-    #     go = input$select_go,
-    #     gage_pathway_data = pathway_list_data()[, 1:5],
-    #     sig_pathways = input$sig_pathways_kegg,
-    #     select_contrast = input$select_contrast,
-    #     limma = deg$limma(),
-    #     converted = pre_process$converted(),
-    #     idep_data = idep_data,
-    #     select_org = pre_process$select_org(),
-    #     low_color = kegg_colors[[input$kegg_color_select]][1],
-    #     high_color = kegg_colors[[input$kegg_color_select]][2]
-    #   )
-    #   return(file)
-    # }
+
+    kegg_image <- reactive({
+      req(!is.null(input$sig_pathways_kegg))
+      tmpfile <- kegg_pathway(
+        go = input$select_go,
+        gage_pathway_data = pathway_list_data()[, 1:5],
+        sig_pathways = input$sig_pathways_kegg,
+        select_contrast = input$select_contrast,
+        limma = deg$limma(),
+        converted = pre_process$converted(),
+        idep_data = idep_data,
+        select_org = pre_process$select_org(),
+        low_color = kegg_colors[[input$kegg_color_select]][1],
+        high_color = kegg_colors[[input$kegg_color_select]][2]
+      )
+      browser()
+     # tmpfile$src    ###THIS WORKS!!!
+      tmpfile
+    })
     
     output$download_kegg <- downloadHandler(
       filename = function() {
@@ -1096,8 +1100,10 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       },
       content = function(file) {
         #write.csv(res_pathway()[,c(1,6,7,3:5)], file)
-        file.copy(output$kegg_image$src, file)
-      }) 
+        file.copy(kegg_image()$src, file)
+      },
+      contentType = "image/png"
+      ) 
 
     # List of pathways with details
     pathway_list_data <- reactive({
