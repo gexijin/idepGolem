@@ -321,7 +321,6 @@ mod_06_pathway_ui <- function(id) {
               br(),
               h5("Green and red (or Blue and orange) represent up- and down-
                  regulated genes, respectively."),
-              br(),
               downloadButton(ns('download_kegg'),''),
               tippy::tippy_this(
                 ns("download_kegg"),
@@ -1049,28 +1048,14 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       })
     )
 
-
     output$kegg_image <- renderImage(
       {
-        # req(!is.null(input$sig_pathways_kegg))
-        # withProgress(message = "Downloading KEGG pathway", {
-        #   incProgress(0.2)
-        #   file <- kegg_pathway(
-        #     go = input$select_go,
-        #     gage_pathway_data = pathway_list_data()[, 1:5],
-        #     sig_pathways = input$sig_pathways_kegg,
-        #     select_contrast = input$select_contrast,
-        #     limma = deg$limma(),
-        #     converted = pre_process$converted(),
-        #     idep_data = idep_data,
-        #     select_org = pre_process$select_org(),
-        #     low_color = kegg_colors[[input$kegg_color_select]][1],
-        #     high_color = kegg_colors[[input$kegg_color_select]][2]
-        #   )
-        # })
-      # },
-      #list(src = kegg_src, contentType = "image/png")
-        kegg_image()
+      list(
+        src = kegg_image(), 
+        height = "100%", 
+        width = "100%", 
+        contentType = "image/png"
+      )
       },
       deleteFile = FALSE
     )
@@ -1089,9 +1074,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         low_color = kegg_colors[[input$kegg_color_select]][1],
         high_color = kegg_colors[[input$kegg_color_select]][2]
       )
-      browser()
-     # tmpfile$src    ###THIS WORKS!!!
-      tmpfile
+     tmpfile$src
     })
     
     output$download_kegg <- downloadHandler(
@@ -1099,11 +1082,10 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         "KEGGplot.png"
       },
       content = function(file) {
-        #write.csv(res_pathway()[,c(1,6,7,3:5)], file)
-        file.copy(kegg_image()$src, file)
+        file.copy(kegg_image(), file)
       },
       contentType = "image/png"
-      ) 
+    ) 
 
     # List of pathways with details
     pathway_list_data <- reactive({
