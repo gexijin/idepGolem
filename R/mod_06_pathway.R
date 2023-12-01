@@ -318,7 +318,16 @@ mod_06_pathway_ui <- function(id) {
                 width = "100%",
                 height = "100%"
               ),
-              h5("Green and red (or Blue and orange) represent up- and down-regulated genes, respectively."),
+              br(),
+              h5("Green and red (or Blue and orange) represent up- and down-
+                 regulated genes, respectively."),
+              downloadButton(ns('download_kegg'),''),
+              tippy::tippy_this(
+                ns("download_kegg"),
+                "Download KEGG plot",
+                theme = "light-border"
+              ),
+              br(),
               ns = ns
             )
           ),
@@ -1039,28 +1048,44 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       })
     )
 
-
     output$kegg_image <- renderImage(
       {
-        req(!is.null(input$sig_pathways_kegg))
-        withProgress(message = "Downloading KEGG pathway", {
-          incProgress(0.2)
-          kegg_pathway(
-            go = input$select_go,
-            gage_pathway_data = pathway_list_data()[, 1:5],
-            sig_pathways = input$sig_pathways_kegg,
-            select_contrast = input$select_contrast,
-            limma = deg$limma(),
-            converted = pre_process$converted(),
-            idep_data = idep_data,
-            select_org = pre_process$select_org(),
-            low_color = kegg_colors[[input$kegg_color_select]][1],
-            high_color = kegg_colors[[input$kegg_color_select]][2]
-          )
-        })
+      list(
+        src = kegg_image(), 
+        height = "100%", 
+        width = "100%", 
+        contentType = "image/png"
+      )
       },
-      deleteFile = TRUE
+      deleteFile = FALSE
     )
+
+    kegg_image <- reactive({
+      req(!is.null(input$sig_pathways_kegg))
+      tmpfile <- kegg_pathway(
+        go = input$select_go,
+        gage_pathway_data = pathway_list_data()[, 1:5],
+        sig_pathways = input$sig_pathways_kegg,
+        select_contrast = input$select_contrast,
+        limma = deg$limma(),
+        converted = pre_process$converted(),
+        idep_data = idep_data,
+        select_org = pre_process$select_org(),
+        low_color = kegg_colors[[input$kegg_color_select]][1],
+        high_color = kegg_colors[[input$kegg_color_select]][2]
+      )
+     tmpfile$src
+    })
+    
+    output$download_kegg <- downloadHandler(
+      filename = function() {
+        "KEGGplot.png"
+      },
+      content = function(file) {
+        file.copy(kegg_image(), file)
+      },
+      contentType = "image/png"
+    ) 
 
     # List of pathways with details
     pathway_list_data <- reactive({
