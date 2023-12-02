@@ -672,25 +672,31 @@ median_fun <- function(x){
 
 
 
-### Used to show sample gene ID in modal
+
+#' Show sample gene IDs in modal
+#'
+#' Show example gene IDs for a selected species.
+#'
+#' @param species String indicating selected organism for the expression
+#' @param db String indicating selected database
+#' @param nGenes Number of genes to show for each idType
+#'
+#' @export
+#' @return a data frame with example gene IDs
+#'
 showGeneIDs <- function(species, db, nGenes = 10){
   # Given a species ID, this function returns 10 gene ids for each idType
   if(species == "BestMatch")
     return(as.data.frame("Select a species above.") )
-  
-  datapath <- Sys.getenv("IDEP_DATABASE")[1]
-  if(nchar(datapath) == 0) {
-    datapath = "./data107/db/"
-  }
-  
+
   converted <- NULL
   try(
-  converted <- DBI::dbConnect(
-  drv = RSQLite::dbDriver("SQLite"),
-  dbname = paste0(datapath, db),
-  flags=RSQLite::SQLITE_RO
-  ),  #read only mode
-  silent = TRUE
+    converted <- DBI::dbConnect(
+      drv = RSQLite::dbDriver("SQLite"),
+      dbname = paste0(DATAPATH, "/db/", db),
+      flags = RSQLite::SQLITE_RO #read only mode
+    ),
+    silent = TRUE
   )
 
   if(is.null(converted)){
@@ -704,12 +710,12 @@ showGeneIDs <- function(species, db, nGenes = 10){
   }
   removeNotification("db_notDownloaded")
   showNotification(
-    ui = paste("Querying Data..."),
+    ui = paste("Querying Data...  May take 5 minutes."),
     id = "ExampleIDDataQuery",
     duration = NULL,
     type = "message"
   )
-  
+
   idTypes <- DBI::dbGetQuery(
     conn = converted,   
     paste0( 
@@ -724,12 +730,13 @@ showGeneIDs <- function(species, db, nGenes = 10){
       LEFT JOIN RandomIds r ON i.id = r.idType AND r.rn <= ", nGenes, ";"
     )
   )
+  DBI::dbDisconnect(converted) # suggested by GitHub Copilot
 
   result <- aggregate(
-    formula = RandomId ~ idType, 
+    RandomId ~ idType, 
     data = idTypes,
     FUN = function(x) paste(x, collapse = "; ")
-    )
+  )
   colnames(result) <- c("ID Type", "Examples")
   
   # put symbols first, refseq next, followed by ensembls. Descriptions (long gnee names) last
@@ -737,10 +744,8 @@ showGeneIDs <- function(species, db, nGenes = 10){
   result <- result[ order( grepl("refseq", result$'ID Type'), decreasing = TRUE), ]
   result <- result[ order( grepl("symbol", result$'ID Type'), decreasing = TRUE), ]
   result <- result[ order( grepl("description", result$'ID Type'), decreasing = FALSE), ]
-  
 
   return(result)
-  
 }
 
 ### Add Example Gene ID column to database
