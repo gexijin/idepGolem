@@ -608,7 +608,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           ),
           DT::dataTableOutput(ns("showGeneIDs4Species")),
           size = "l", # size is large
-          easyClose = FALSE   # diabled: click outside the modal to close
+          easyClose = FALSE   # disabled: click outside the modal to close
         )
       )
     })
