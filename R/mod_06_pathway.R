@@ -1127,7 +1127,9 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           wrap_text_network_deg = input$wrap_text_network_deg,
           layout_vis_deg = input$layout_vis_deg,
           edge_cutoff_deg = input$edge_cutoff_deg,
-          selected_pathway_data = selected_pathway_data(),
+
+          #selected_pathway_data() causes error when input$sig_pathways is NULL
+          selected_pathway_data = ifelse(is.null(input$sig_pathways), 0, selected_pathway_data()),
           heatmap_color_select = pre_process$heatmap_color_select(),
           sig_pathways_kegg = input$sig_pathways_kegg, 
           kegg_color_select = input$kegg_color_select,

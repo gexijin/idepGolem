@@ -92,7 +92,7 @@ library(dplyr)
 library(idepGolem)
 ```
 
-## Read Gene Sets
+## Gene Sets
 ```{r}
 gene_sets <- read_gene_sets(
   converted = params$converted,
@@ -201,13 +201,16 @@ idepGolem::vis_network_plot(
 params$sig_pathways
 ```
 ```{r heatmap, fig.width = 5, fig.height = 8}
-deg_heatmap(
-  data = params$selected_pathway_data,
-  bar = NULL,
-  heatmap_color_select = unlist(strsplit(params$heatmap_color_select, "-")),
-  cluster_rows = TRUE
-)
-
+if(!is.null(params$sig_pathways)) {
+  deg_heatmap(
+    data = params$selected_pathway_data,
+    bar = NULL,
+    heatmap_color_select = unlist(strsplit(params$heatmap_color_select, "-")),
+    cluster_rows = TRUE
+  )
+} else {
+  print("Click on the Heatmap tab to do the analysis first.")
+}
 ```
 
 ## KEGG pathway
