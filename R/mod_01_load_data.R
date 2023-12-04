@@ -159,13 +159,12 @@ mod_01_load_data_ui <- function(id) {
         # Experiment design file input ----------
         uiOutput(ns("design_file_ui")),
         uiOutput(ns("example_genes_ui")),
-        br(),
+        br(), br(),
         checkboxInput(
           inputId = ns("customize_button"),
-          label = strong("Settings"),
+          label = strong("Global Settings"),
           value = FALSE
         ),
-        div(strong("More Settings (optional)")),
         selectInput(
           inputId = ns("multiple_map"),
           label = "Multiple mapped IDs:",
