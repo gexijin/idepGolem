@@ -150,6 +150,29 @@ if (params$pathway_method == 2) {
 }
 ```
 
+```{r PGSEA_all, fig.width = 6, fig.height = 10}
+if (params$pathway_method == 4) {
+  # only remove pathway ID for Ensembl species
+  show_pathway_id <- params$show_pathway_id
+  # always show pathway ID for STRING species
+  if (params$select_org < 0) {
+    show_pathway_id <- TRUE
+  }
+  pgsea_plot_all(
+    go = params$go,
+    my_range = c(params$min_set_size, params$max_set_size),
+    data = params$pre_processed,
+    select_contrast = params$contrast_samples,
+    gene_sets = params$gene_sets,
+    pathway_p_val_cutoff = params$pathway_p_val_cutoff,
+    n_pathway_show = params$n_pathway_show,
+    select_go = params$go,
+    show_pathway_id = show_pathway_id,
+    margin = c(3, 1, 13, 20)
+  ) 
+}
+```
+
 
 ```{r FGSEA, message = F, quiet = TRUE}
 if (params$pathway_method == 3) {

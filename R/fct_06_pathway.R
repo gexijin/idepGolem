@@ -911,7 +911,8 @@ pgsea_plot_all <- function(go,
                            pathway_p_val_cutoff,
                            n_pathway_show,
                            select_go,
-                           show_pathway_id) {
+                           show_pathway_id,
+                           margin = c(3, 1, 13, 38)) {
   if (length(gene_sets) == 0) {
     plot.new()
     text(0, 1, "No gene sets!")
@@ -942,7 +943,7 @@ pgsea_plot_all <- function(go,
         factor(subtype),
         scale = c(-max(result$pg_data), max(result$pg_data)),
         show.grid = T,
-        margins = c(3, 1, 13, 38),
+        margins = margin,
         col = PGSEA::.rwb,
         cex.lab = 0.5
       )
