@@ -5,7 +5,7 @@
 #' comparison. The data for this heatmap comes from the
 #' deg_heat_data function.
 #'
-#' @param data Submatrix of the processed data matrix from the
+#' @param df Submatrix of the processed data matrix from the
 #'  deg_heta_data function
 #' @param bar Vector to signify a positive (1) expression fold
 #'  change or a negative (-1) change
@@ -16,43 +16,47 @@
 #'
 #' @export
 #' @return A drawn heatmap from the filtered data.
-deg_heatmap <- function(data,
+deg_heatmap <- function(df,
                         bar,
                         heatmap_color_select,
                         cluster_rows) {
+
+  if(is.null(df)) {
+    return(NULL)
+  }
   # Number of genes to show
   n_genes <- as.character(table(bar))
 
-  data <- as.matrix(data) - apply(data, 1, mean)
-  cutoff <- median(unlist(data)) + 3 * sd(unlist(data))
-  data[data > cutoff] <- cutoff
-  cutoff <- median(unlist(data)) - 3 * sd(unlist(data))
-  data[data < cutoff] <- cutoff
+  df <- as.matrix(df) - apply(df, 1, mean)
+  cutoff <- median(unlist(df)) + 3 * sd(unlist(df))
+  df[df > cutoff] <- cutoff
+  cutoff <- median(unlist(df)) - 3 * sd(unlist(df))
+  df[df < cutoff] <- cutoff
 
   # sometimes one row is all zeroes or the same value, 
   # this causes error for the complexHeatmap
-  ix <- which(abs(apply(data, 1, sd)) < 1e-20)
+  ix <- which(abs(apply(df, 1, sd)) < 1e-20)
   if(length(ix) > 0) {
-    data <- data[-1 * ix, ]
+    df <- df[-1 * ix, ]
     if(!is.null(bar)) {
       bar <- bar[-1 * ix]
     }
   }
 
   # Color scale
-  if (min(data) < 0) {
+  if (min(df) < 0) {
     col_fun <- circlize::colorRamp2(
-      c(min(data), 0, max(data)),
+      c(min(df), 0, max(df)),
       heatmap_color_select
     )
   } else {
     col_fun <- circlize::colorRamp2(
-      c(min(data), median(data), max(data)),
+      c(min(df), median(df), max(df)),
       heatmap_color_select
     )
   }
 
-  groups <- detect_groups(colnames(data))
+  groups <- detect_groups(colnames(df))
   group_count <- length(unique(groups))
   groups_colors <- gg_color_hue(2 + group_count)
 
@@ -90,7 +94,7 @@ deg_heatmap <- function(data,
   }
 
   heat <- ComplexHeatmap::Heatmap(
-    data,
+    df,
     name = "Expression",
     col = col_fun,
     cluster_rows = cluster_rows,

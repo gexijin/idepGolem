@@ -173,6 +173,40 @@ if (params$pathway_method == 4) {
 }
 ```
 
+```{r gsva, fig.width = 10, fig.height = 12}
+if (params$pathway_method %in% c(6:8)) {
+  gsva_algorithm <- switch(
+    as.numeric(params$pathway_method) - 5, 
+    "gsva",   #6
+    "ssgsea", #7
+    "plage"   #8
+  )
+
+  # only remove pathway ID for Ensembl species
+  show_pathway_id <- params$show_pathway_id
+  # always show pathway ID for STRING species
+  if (params$select_org < 0) {
+    show_pathway_id <- TRUE
+  }
+
+    plot_gsva(
+      my_range = c(params$min_set_size, params$max_set_size),
+      processed_data = params$pre_processed,
+      contrast_samples = params$contrast_samples,
+      gene_sets = params$gene_sets,
+      pathway_p_val_cutoff = params$pathway_p_val_cutoff,
+      n_pathway_show = params$n_pathway_show,
+      select_go = params$go,
+      show_pathway_id = show_pathway_id,
+      algorithm = gsva_algorithm
+    )
+}
+```
+
+
+
+
+
 
 ```{r FGSEA, message = F, quiet = TRUE}
 if (params$pathway_method == 3) {
@@ -223,10 +257,15 @@ idepGolem::vis_network_plot(
 ```{r pathway-name}
 params$sig_pathways
 ```
-```{r heatmap, fig.width = 5, fig.height = 8}
+```{r heatmap, fig.width = 8, fig.height = 8}
+class(params$selected_pathway_data)
+
+dim(params$selected_pathway_data)
+
+if(0)
 if(!is.null(params$sig_pathways)) {
   deg_heatmap(
-    data = params$selected_pathway_data,
+    df = params$selected_pathway_data,
     bar = NULL,
     heatmap_color_select = unlist(strsplit(params$heatmap_color_select, "-")),
     cluster_rows = TRUE
@@ -297,24 +336,6 @@ if (params$pathway_method == 0) {
   )
 
    gage
-
-
-
-   #basic_heatmap(
-   #  data = params$selected_pathway_data,
-   #  c("green", "black", "red")
-   #)
-
-  # vis_network_plot(
-  #     network_data = params$network_data
-  # )
-
-
-  # enrichment_tree_plot(
-  #   go_table = params$pathway_list_data,
-  #   group = "All Groups"
-  #   #45
-  # )
 }
 ```
 

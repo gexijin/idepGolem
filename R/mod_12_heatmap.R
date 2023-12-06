@@ -86,7 +86,7 @@ mod_12_heatmap_server <- function(id,
       withProgress(message = "Creating Heatmap for export", {
         incProgress(0.2)
         deg_heatmap(
-          data = data(),
+          df = data(),
           bar = bar(),
           heatmap_color_select = unlist(strsplit(heatmap_color(), "-")),
           cluster_rows = cluster_rows

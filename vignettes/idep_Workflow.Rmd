@@ -348,7 +348,7 @@ down_reg_data$direction <- rep("Down", nrow(down_reg_data))
 # down_reg_data
 
 main_heat_deg <- deg_heatmap(
-  data = deg_heat$genes,
+  df = deg_heat$genes,
   bar = deg_heat$bar,
   heatmap_color_select = c("green", "black", "red"),
   cluster_rows = TRUE

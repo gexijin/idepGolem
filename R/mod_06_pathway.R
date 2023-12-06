@@ -1099,6 +1099,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
             ),
       content = function(file) {
         # Set up parameters to pass to Rmd document
+        browser()
         params <- list(
           pre_processed = pre_process$data(),
           sample_info = pre_process$sample_info(),
