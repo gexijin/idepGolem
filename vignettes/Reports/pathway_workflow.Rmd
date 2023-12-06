@@ -150,7 +150,7 @@ if (params$pathway_method == 2) {
 }
 ```
 
-```{r PGSEA_all, fig.width = 6, fig.height = 10}
+```{r PGSEA_all, fig.width = 8, fig.height = 10}
 if (params$pathway_method == 4) {
   # only remove pathway ID for Ensembl species
   show_pathway_id <- params$show_pathway_id
