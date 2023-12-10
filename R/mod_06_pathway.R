@@ -141,7 +141,7 @@ mod_06_pathway_ui <- function(id) {
         # Download report button
         downloadButton(
           outputId = ns("report"),
-          label = "Generate Report"
+          label = "Report"
         ),
         tippy::tippy_this(
           ns("report"),
@@ -958,17 +958,20 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     })
 
     selected_pathway_data <- reactive({
-      req(!is.null(input$sig_pathways))
-      req(!is.null(gene_sets()$gene_lists))
 
-      pathway_select_data(
-        sig_pathways = input$sig_pathways,
-        gene_sets = gene_sets()$gene_lists,
-        contrast_samples = contrast_samples(),
-        data = pre_process$data(),
-        select_org = pre_process$select_org(),
-        all_gene_names = pre_process$all_gene_names()
-      )
+      req(!is.null(gene_sets()$gene_lists))
+      if(is.null(input$sig_pathways)) {
+        return(NULL)
+      } else {
+        pathway_select_data(
+          sig_pathways = input$sig_pathways,
+          gene_sets = gene_sets()$gene_lists,
+          contrast_samples = contrast_samples(),
+          data = pre_process$data(),
+          select_org = pre_process$select_org(),
+          all_gene_names = pre_process$all_gene_names()
+        )
+      }
     })
 
     # Kegg Colors --------
@@ -1099,7 +1102,6 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
             ),
       content = function(file) {
         # Set up parameters to pass to Rmd document
-        browser()
         params <- list(
           pre_processed = pre_process$data(),
           sample_info = pre_process$sample_info(),
@@ -1128,9 +1130,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           wrap_text_network_deg = input$wrap_text_network_deg,
           layout_vis_deg = input$layout_vis_deg,
           edge_cutoff_deg = input$edge_cutoff_deg,
-
-          #selected_pathway_data() causes error when input$sig_pathways is NULL
-          selected_pathway_data = ifelse(is.null(input$sig_pathways), 0, selected_pathway_data()),
+          selected_pathway_data = selected_pathway_data(),
           heatmap_color_select = pre_process$heatmap_color_select(),
           sig_pathways_kegg = input$sig_pathways_kegg, 
           kegg_color_select = input$kegg_color_select,

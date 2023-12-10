@@ -257,12 +257,7 @@ idepGolem::vis_network_plot(
 ```{r pathway-name}
 params$sig_pathways
 ```
-```{r heatmap, fig.width = 8, fig.height = 8}
-class(params$selected_pathway_data)
-
-dim(params$selected_pathway_data)
-
-if(0)
+```{r heatmap, fig.width = 6, fig.height = 8}
 if(!is.null(params$sig_pathways)) {
   deg_heatmap(
     df = params$selected_pathway_data,
