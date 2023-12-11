@@ -19,7 +19,9 @@ mod_01_load_data_ui <- function(id) {
               position:fixed;
               top: calc(85%);
               left: calc(5%);
-              }
+               }
+              
+             .dis_gray { background-color: gray; }
               "
             )
         )
@@ -145,12 +147,24 @@ mod_01_load_data_ui <- function(id) {
         # Includes load demo action button, demo data dropdown, and expression
         # file upload box
         uiOutput(ns("load_data_ui")),
-
+        # tags$style(
+        #   HTML("
+        #     #load_data-ui {
+        #       display: block !important;
+        #     }
+        #   ")
+        # ),
 
 
         # Experiment design file input ----------
         uiOutput(ns("design_file_ui")),
-        div(strong("More Settings (optional)")),
+        uiOutput(ns("example_genes_ui")),
+        br(), br(),
+        checkboxInput(
+          inputId = ns("customize_button"),
+          label = strong("Global Settings"),
+          value = FALSE
+        ),
         selectInput(
           inputId = ns("multiple_map"),
           label = "Multiple mapped IDs:",
@@ -311,9 +325,19 @@ mod_01_load_data_ui <- function(id) {
 mod_01_load_data_server <- function(id, idep_data, tab) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-
+    
     # increase max input file size
     options(shiny.maxRequestSize = 2001024^2)
+    
+    observe({
+      shinyjs::toggle(id = "heatmap_color_select", condition = input$customize_button)
+      shinyjs::toggle(id = "select_gene_id", condition = input$customize_button)
+      shinyjs::toggle(id = "multiple_map", condition = input$customize_button)
+      shinyjs::toggle(id = "no_id_conversion", condition = input$customize_button)
+      shinyjs::toggle(id = "plot_grid_lines", condition = input$customize_button)
+      shinyjs::toggle(id = "ggplot2_theme", condition = input$customize_button)
+    })
+
 
     welcome_modal <- shiny::modalDialog(
       title = "iDEP: Empower all scientists!",
@@ -427,11 +451,10 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # expression file upload
     output$load_data_ui <- renderUI({
       req(
-        (is.null(input$go_button) || input$go_button == 0) &&
-          is.null(input$expression_file)
+        (is.null(input$go_button) || input$go_button == 0)
       )
       req(input$data_file_format)
-
+      
       # get demo data files based on specified format
       files <- idep_data$demo_file_info
       files <- files[files$type == input$data_file_format, ]
@@ -450,7 +473,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             ".tsv",
             ".xlsx",
             ".xls"
-          )
+          ),
+          placeholder = "Drag and Drop Files Here"
         ),
         fluidRow(
           column(
@@ -524,9 +548,11 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         )
       }
     })
+
     observeEvent(input$reset_app_new_data, {
       session$reload()
     })
+
     # UI element for design file upload ----
     output$design_file_ui <- renderUI({
       req(is.null(input$go_button) || input$go_button == 0)
@@ -544,13 +570,85 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             ".tsv",
             ".xlsx",
             ".xls"
-          )
+          ),
+          placeholder = "Drag and Drop Files Here"
+        )
+      )
+    })
+    
+    #name variables like this: gene_ids_example_popup, not GeneIDsExamplePopup.
+    output$example_genes_ui <- renderUI({
+      actionButton(ns("gene_ids_example_popup"), "Example gene IDs")
+    })
+
+
+    # Disables expression_file input to prevent multiple uploads
+    observeEvent(input$expression_file, {
+      shinyjs::disable("expression_file")
+    })
+
+    # Define the content of the basic modal
+    observeEvent(input$gene_ids_example_popup, {
+      shiny::showModal(
+        shiny::modalDialog(
+          title = "What do the gene IDs in our database look like?",
+          tags$style(
+            HTML(
+              "#DataTables_Table_0_wrapper #DataTables_Table_0_filter label{
+                width: 400px;
+                float: left;
+              }"
+            )
+          ),
+          selectizeInput(
+            inputId = ns("gene_id_examples"),
+            label = "Select or search for species",
+            choices = c("--Select species--", names(idep_data$species_choice))
+          ),
+          DT::dataTableOutput(ns("showGeneIDs4Species")),
+          size = "l", # size is large
+          easyClose = FALSE   # disabled: click outside the modal to close
+        )
+      )
+    })
+    
+    geneIDs <- reactiveVal(NULL)
+    
+    observeEvent(input$gene_id_examples, {
+      req(input$gene_id_examples != "--Select species--")
+      ix <- which(idep_data$org_info$name2 == input$gene_id_examples)
+      dbase <- idep_data$org_info$file[ix]
+      geneIDs(
+        showGeneIDs(
+          species = input$gene_id_examples,
+          db = dbase,
+          nGenes = 10
+        )
+      )
+    })
+    
+    # Render Gene ID example table in gene example Modal
+    output$showGeneIDs4Species <- DT::renderDataTable({
+      req(!is.null(geneIDs()))
+      req(input$gene_id_examples != "--Select species--")
+      removeNotification("ExampleIDDataQuery")
+      
+      DT::datatable(
+        geneIDs(),
+        rownames = FALSE,
+        options = list(
+          pageLength = 10,
+          scrollX = TRUE
         )
       )
     })
 
 
-
+    # Disables experiment_file input to prevent multiple uploads
+    observeEvent(input$experiment_file, {
+      shinyjs::disable("experiment_file")
+    })
+    
 
     # Show messages when on the Network tab or button is clicked ----
     observe({
@@ -904,3 +1002,4 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
 ## To be copied in the server
 # mod_01_load_data_server("load_data") # nolint
+

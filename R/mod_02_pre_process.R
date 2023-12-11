@@ -540,7 +540,7 @@ mod_02_pre_process_ui <- function(id) {
 mod_02_pre_process_server <- function(id, load_data, tab) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-
+    
     # Data file format for conditional panels ----------
     # outputOptions required otherwise the value can only be used
     # if it is rendered somewhere else in the UI
@@ -1004,7 +1004,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       req(!is.null(input$gene_plot_box))
       req(!is.null(input$use_sd))
       req(input$angle_ind_axis_lab)
-
+      
       p <- individual_plots(
         individual_data = individual_data(),
         sample_info = load_data$sample_info(),
@@ -1019,7 +1019,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         ggplot2_theme = load_data$ggplot2_theme()
       )
     })
-
+  
     output$gene_plot <- renderPlot({
       req(gene_plot())
       print(gene_plot())
@@ -1070,15 +1070,17 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
           # This should retrieve the project location on your device:
           # "C:/Users/bdere/Documents/GitHub/idepGolem"
           wd <- getwd()
-
+          
           markdown_location <- app_sys("app/www/RMD/pre_process_workflow.Rmd")
           file.copy(from = markdown_location, to = tempReport, overwrite = TRUE)
 
           # Set up parameters to pass to Rmd document
           params <- list(
             loaded_data = load_data$converted_data(),
+            individual_data = individual_data(),
             descr = processed_data()$descr,
             sample_info = load_data$sample_info(),
+            all_gene_info = load_data$all_gene_info(),
             data_file_format = load_data$data_file_format(),
             no_id_conversion = input$no_id_conversion,
             min_counts = input$min_counts,
@@ -1093,9 +1095,14 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
             scatter_y = input$scatter_y,
             sd_color = heat_colors[[input$heat_color_select]],
             rank = input$rank,
-            no_fdr = load_data$no_fdr()
+            no_fdr = load_data$no_fdr(),
+            selected_gene = input$selected_gene,
+            gene_plot_box = input$gene_plot_box,
+            use_sd = input$use_sd,
+            lab_rotate = input$angle_ind_axis_lab
           )
           req(params)
+
           # Knit the document, passing in the `params` list, and eval it in a
           # child of the global environment (this isolates the code in the document
           # from the code in this app).

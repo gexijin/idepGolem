@@ -172,6 +172,15 @@ mod_06_pathway_ui <- function(id) {
             htmlOutput(
               outputId = ns("main_pathway_result")
             ),
+            downloadButton(
+              outputId = ns("download_sig_paths"),
+              label = "CSV file"
+            ),
+            tippy::tippy_this(
+              ns("download_sig_paths"),
+              "Download Significant Pathways",
+              theme = "light-border"
+            ),
           ),
 
           tabPanel(
@@ -183,7 +192,9 @@ mod_06_pathway_ui <- function(id) {
             br(),
             p("Adjusting the width of the browser
             window can render figure differently and
-            resolve the \"Figure margin too wide\" error. ")
+            resolve the \"Figure margin too wide\" error. "),
+            br(),
+            ottoPlots::mod_download_figure_ui(ns("download_pathway_tree"))
           ),
           tabPanel(
             title = "Network",
@@ -307,7 +318,18 @@ mod_06_pathway_ui <- function(id) {
                 width = "100%",
                 height = "100%"
               ),
-              h5("Red and green (or orange and blue) represent up- and down-regulated genes, respectively."),
+
+              br(),
+              h5("Red and green (or orange and blue) represent up- and down-
+                 regulated genes, respectively."),
+              downloadButton(ns('download_kegg'),''),
+              tippy::tippy_this(
+                ns("download_kegg"),
+                "Download KEGG plot",
+                theme = "light-border"
+              ),
+              br(),
+
               ns = ns
             )
           ),
@@ -477,6 +499,15 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         )
       })
     })
+    
+    output$download_sig_paths <- downloadHandler(
+      filename = function() {
+        "sig_pathways.csv"
+      },
+      content = function(file) {
+        write.csv(res_pathway()[,c(1,6,7,3:5)], file)
+      }
+    )
 
     output$list_comparisons_pathway <- renderUI({
       if (is.null(deg$limma()$comparisons)) {
@@ -841,28 +872,39 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         )
       })
     })
+    
+    res_pathway <- reactive({
+      req(input$pathway_method == 3)
+      req(!is.null(fgsea_pathway_data()))
+      res <- fgsea_pathway_data()
+      # copy name from res[,2]
+      pathway_csv_name <- colnames(res)[2]
+      non_hypertext_name <- paste(pathway_csv_name, "Pathways")
+      
+      if (ncol(res) > 1) {
+        # add URL
+        ix <- match(res[, 2], gene_sets()$pathway_info$description)
+        # remove pathway ID, but only in Ensembl species
+        if (!input$show_pathway_id && pre_process$select_org() > 0) {
+          res[, 2] <- remove_pathway_id(res[, 2], input$select_go)
+        }
+        # copy res[,2] to new column before hypertext
+        res[non_hypertext_name] <- res[,2]
+        res[, 2] <- hyperText(
+          res[, 2],
+          gene_sets()$pathway_info$memo[ix]
+        )
+        # create separate URL column for download
+        res$URL <- NULL
+        res$URL <- gene_sets()$pathway_info$memo[ix]
+        res$Genes <- as.character(res$Genes)
+      }
+      return(res)
+    })
 
     output$fgsea_pathway <- renderTable(
       {
-        req(input$pathway_method == 3)
-        req(!is.null(fgsea_pathway_data()))
-
-        res <- fgsea_pathway_data()
-        if (ncol(res) > 1) {
-          # add URL
-          ix <- match(res[, 2], gene_sets()$pathway_info$description)
-          # remove pathway ID, but only in Ensembl species
-          if (!input$show_pathway_id && pre_process$select_org() > 0) {
-            res[, 2] <- remove_pathway_id(res[, 2], input$select_go)
-          }
-          res[, 2] <- hyperText(
-            res[, 2],
-            gene_sets()$pathway_info$memo[ix]
-          )
-          res$Genes <- as.character(res$Genes)
-        }
-
-        return(res)
+        res_pathway()[,1:5]
       },
       digits = -1,
       spacing = "s",
@@ -1011,28 +1053,44 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       })
     )
 
-
     output$kegg_image <- renderImage(
       {
-        req(!is.null(input$sig_pathways_kegg))
-        withProgress(message = "Downloading KEGG pathway", {
-          incProgress(0.2)
-          kegg_pathway(
-            go = input$select_go,
-            gage_pathway_data = pathway_list_data()[, 1:5],
-            sig_pathways = input$sig_pathways_kegg,
-            select_contrast = input$select_contrast,
-            limma = deg$limma(),
-            converted = pre_process$converted(),
-            idep_data = idep_data,
-            select_org = pre_process$select_org(),
-            low_color = kegg_colors[[input$kegg_color_select]][1],
-            high_color = kegg_colors[[input$kegg_color_select]][2]
-          )
-        })
+      list(
+        src = kegg_image(), 
+        height = "100%", 
+        width = "100%", 
+        contentType = "image/png"
+      )
       },
-      deleteFile = TRUE
+      deleteFile = FALSE
     )
+
+    kegg_image <- reactive({
+      req(!is.null(input$sig_pathways_kegg))
+      tmpfile <- kegg_pathway(
+        go = input$select_go,
+        gage_pathway_data = pathway_list_data()[, 1:5],
+        sig_pathways = input$sig_pathways_kegg,
+        select_contrast = input$select_contrast,
+        limma = deg$limma(),
+        converted = pre_process$converted(),
+        idep_data = idep_data,
+        select_org = pre_process$select_org(),
+        low_color = kegg_colors[[input$kegg_color_select]][1],
+        high_color = kegg_colors[[input$kegg_color_select]][2]
+      )
+     tmpfile$src
+    })
+    
+    output$download_kegg <- downloadHandler(
+      filename = function() {
+        "KEGGplot.png"
+      },
+      content = function(file) {
+        file.copy(kegg_image(), file)
+      },
+      contentType = "image/png"
+    ) 
 
     # List of pathways with details
     pathway_list_data <- reactive({
@@ -1058,16 +1116,28 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       )
     })
 
-    # Enrichment Tree -----------
-    output$enrichment_tree <- renderPlot({
+    enrichment_tree_p <- reactive({
       req(!is.null(pathway_list_data()))
-
       enrichment_tree_plot(
         go_table = pathway_list_data(),
         group = "All Groups",
-        right_margin = 45
+        right_margin = 30
       )
+      p <- recordPlot()
+      return(p)
     })
+    output$enrichment_tree <- renderPlot({
+      req(!is.null(enrichment_tree_p()))
+      print(enrichment_tree_p())
+    })
+    download_pathway_tree <- ottoPlots::mod_download_figure_server(
+      id = "download_pathway_tree",
+      filename = "pathway_tree",
+      figure = reactive({
+        enrichment_tree_p()
+      }),
+      label = ""
+    )
 
     # Define a Network
     network_data_path <- reactive({

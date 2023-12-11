@@ -330,7 +330,7 @@ input_data <- function(expression_file,
     }
 
     # Try tab-delimented if not CSV
-    if (ncol(data) <= 1) {
+    if (ncol(expr) <= 1) {
       expr <- read.table(
         in_file_expr,
         row.names = 1,
@@ -669,3 +669,117 @@ median_fun <- function(x){
     median(x, na.rm = TRUE)
   }
 }
+
+
+
+
+#' Show sample gene IDs in modal
+#'
+#' Show example gene IDs for a selected species.
+#'
+#' @param species String indicating selected organism for the expression
+#' @param db String indicating selected database
+#' @param nGenes Number of genes to show for each idType
+#'
+#' @export
+#' @return a data frame with example gene IDs
+#'
+showGeneIDs <- function(species, db, nGenes = 10){
+  # Given a species ID, this function returns 10 gene ids for each idType
+  if(species == "BestMatch")
+    return(as.data.frame("Select a species above.") )
+
+  converted <- NULL
+  try(
+    converted <- DBI::dbConnect(
+      drv = RSQLite::dbDriver("SQLite"),
+      dbname = paste0(DATAPATH, "/db/", db),
+      flags = RSQLite::SQLITE_RO #read only mode
+    ),
+    silent = TRUE
+  )
+
+  if(is.null(converted)){
+    showNotification(
+      ui = paste("Selected database is not downloaded"),
+      id = "db_notDownloaded",
+      duration = 2.5,
+      type = "error"
+    )
+    return()
+  }
+  removeNotification("db_notDownloaded")
+  showNotification(
+    ui = paste("Querying Data...  May take 5 minutes."),
+    id = "ExampleIDDataQuery",
+    duration = NULL,
+    type = "message"
+  )
+
+  idTypes <- DBI::dbGetQuery(
+    conn = converted,   
+    paste0( 
+      "WITH RandomIds AS (
+      SELECT m.idType,
+           m.id,
+           ROW_NUMBER() OVER (PARTITION BY m.idType ORDER BY RANDOM()) AS rn
+      FROM Mapping m
+      )
+      SELECT i.*, r.id AS RandomId
+      FROM idIndex i
+      LEFT JOIN RandomIds r ON i.id = r.idType AND r.rn <= ", nGenes, ";"
+    )
+  )
+  DBI::dbDisconnect(converted) # suggested by GitHub Copilot
+
+  result <- aggregate(
+    RandomId ~ idType, 
+    data = idTypes,
+    FUN = function(x) paste(x, collapse = "; ")
+  )
+  colnames(result) <- c("ID Type", "Examples")
+  
+  # put symbols first, refseq next, followed by ensembls. Descriptions (long gnee names) last
+  result <- result[ order( grepl("ensembl", result$'ID Type'), decreasing = TRUE), ]
+  result <- result[ order( grepl("refseq", result$'ID Type'), decreasing = TRUE), ]
+  result <- result[ order( grepl("symbol", result$'ID Type'), decreasing = TRUE), ]
+  result <- result[ order( grepl("description", result$'ID Type'), decreasing = FALSE), ]
+
+  return(result)
+}
+
+### Add Example Gene ID column to database
+
+# -- Create a temporary table to store the concatenated Example IDs
+# CREATE TEMPORARY TABLE TempExampleIds AS
+# WITH RandomIds AS (
+#   SELECT m.idType,
+#   m.id,
+#   ROW_NUMBER() OVER (PARTITION BY m.idType ORDER BY RANDOM()) AS rn
+#   FROM Mapping m
+# )
+# SELECT i.id, GROUP_CONCAT(DISTINCT r.id) AS "ExampleIDs"
+# FROM idIndex i
+# LEFT JOIN RandomIds r ON i.id = r.idType AND r.rn <= 100
+# GROUP BY i.id;
+# 
+# -- Add new column
+# -- ALTER TABLE idIndex
+# -- ADD ExampleIDs TEXT;
+# 
+# -- Fill column with example genes
+# UPDATE idIndex AS i
+# SET "ExampleIDs" = (
+#   SELECT ExampleIDs
+#   FROM TempExampleIds AS t
+#   WHERE t.id = i.id
+# );
+# 
+# -- Drop the temporary table
+# DROP  TABLE TempExampleIds;
+# 
+# -- View results
+# SELECT * FROM idIndex
+
+
+
