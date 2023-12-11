@@ -1227,7 +1227,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           wd <- getwd()
 
           markdown_location <- app_sys("app/www/RMD/pathway_workflow.Rmd")
-          markdown_location <- "C:/work/idepGolem/vignettes/Reports/pathway_workflow.Rmd"
+          #markdown_location <- "C:/work/idepGolem/vignettes/Reports/pathway_workflow.Rmd"
           file.copy(from = markdown_location, to = tempReport, overwrite = TRUE)
 
           # Knit the document, passing in the `params` list, and eval it in a
