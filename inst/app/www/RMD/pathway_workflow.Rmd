@@ -1,5 +1,5 @@
 ---
-title: "Pathway Workflow"
+title: "Pathway analysis using iDEP"
 output: 
   html_document:
     code_folding: hide
@@ -27,15 +27,24 @@ params:
   sig_pathways:
   pathway_method:
   pathway_list_data:
-  date:
-    label: "Date: "
-    value: !r Sys.Date()
+  up_down_reg_deg:
+  wrap_text_network_deg:
+  layout_vis_deg:
+  edge_cutoff_deg:
+  selected_pathway_data:
+  heatmap_color_select:
+  sig_pathways_kegg:
+  kegg_color_select:
+  kegg_colors:
   descr:
+  show_pathway_id:
   printcode:
     label: "Display Code"
     value: TRUE
     input: checkbox
 ---
+
+Automatically generated using  [iDEP](http://bioinformatics.sdstate.edu/) at `r format(Sys.time(), "%H:%M, %Y-%m-%d")`. 
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = params$printcode) # , include = FALSE, eval = FALSE)
@@ -45,24 +54,17 @@ knitr::opts_chunk$set(echo = params$printcode) # , include = FALSE, eval = FALSE
 <div>
 
 ::: {style="color: Blue"}
-## If this site has contributed to your work, please cite our article:
-
-Ge, S.X., Son, E.W. & Yao, R. iDEP: an integrated web application for differential expression and pathway analysis of RNA-Seq data. BMC Bioinformatics 19, 534 (2018). <https://doi.org/10.1186/s12859-018-2486-6>
+If this site has contributed to your work, please cite: Ge, Son & Yao, iDEP: an integrated web application for differential expression and pathway analysis of RNA-Seq data. BMC Bioinformatics 19, 534 (2018). <https://doi.org/10.1186/s12859-018-2486-6>
 :::
 
-## 
-
 </div>
-This html document contains what parameters values were selected on the IDEP interface. It also includes the plots generated from those selections. Genes with FDR Greater than **`r params$gene_p_val_cutoff`** were removed.
-
+This document contains what parameters values were selected on the IDEP interface. It also includes the plots generated from those selections. 
 
 # Summary
 
 `r params$descr`
 
-
-The comparison selected was **`r params$select_contrast`** using **`r params$go`** genesets. **`r params$n_pathway_show`** pathways with between **`r params$min_set_size`** and **`r params$max_set_size`** genes were included. Absolute fold values were `r ifelse(params$absolute_fold, 'not', '')`  used. Pathways were found using the **`r switch(as.character(params$pathway_method), "1" = "GAGE", "2" = "PGSEA", "3" = "GSEA (Pre-Ranked)", "4" = "PGSEA with all samples", "5" = "ReactomePA" )`** method. Pathway p values cutoff is set to **`r params$pathway_p_val_cutoff`**.
-
+The comparison selected was **`r params$select_contrast`** using **`r params$go`** genesets. **`r params$n_pathway_show`** pathways with between **`r params$min_set_size`** and **`r params$max_set_size`** genes were included. Absolute fold values were `r ifelse(params$absolute_fold, 'not', '')`  used. Pathways were found using the **`r switch(as.character(params$pathway_method), "1" = "GAGE", "2" = "PGSEA", "3" = "GSEA (Pre-Ranked)", "4" = "PGSEA with all samples", "5" = "ReactomePA" )`** method. Pathway p values cutoff is set to **`r params$pathway_p_val_cutoff`**. Genes with FDR (DEG) greater than **`r params$gene_p_val_cutoff`** were removed.
 
 
 <!--ALL SELECTED PARAMETERS-->
@@ -73,7 +75,8 @@ The comparison selected was **`r params$select_contrast`** using **`r params$go`
 excluded_params <- c(
   "sample_info", "loaded_data", "pre_processed", "deg",
   "idep_data", "converted", "limma", "gene_sets",
-  "pathway_list_data", "all_gene_names", "all_gene_info"
+  "pathway_list_data", "all_gene_names", "all_gene_info",
+  "selected_pathway_data", 'descr'
 )
 
 for (i in 1:length(params)) {
@@ -83,7 +86,150 @@ for (i in 1:length(params)) {
 }
 ```
 
-# Tree
+```{r, quiet = TRUE, message = FALSE}
+library(kableExtra)
+library(dplyr)
+library(idepGolem)
+```
+
+## Gene Sets
+```{r}
+gene_sets <- read_gene_sets(
+  converted = params$converted,
+  all_gene_names = params$all_gene_names,
+  go = params$go,
+  select_org = params$select_org,
+  idep_data = params$idep_data,
+  my_range = params$my_range
+)
+
+gene_sets$gene_lists[1:2]
+```
+
+
+## Pathway analysis for contrast: `r params$select_contrast`
+
+```{r }
+if (params$pathway_method == 1) {
+  gage <- idepGolem::gage_data(
+    select_go = params$go,
+    select_contrast = params$select_contrast,
+    min_set_size = params$min_set_size,
+    max_set_size = params$max_set_size,
+    limma = params$limma,
+    gene_p_val_cutoff = params$gene_p_val_cutoff,
+    gene_sets = params$gene_sets,
+    absolute_fold = params$absolute_fold,
+    pathway_p_val_cutoff = params$pathway_p_val_cutoff,
+    n_pathway_show = params$n_pathway_show
+  )
+  kbl(gage) %>% 
+    kable_classic(full_width = F, html_font = "Cambria")  
+}
+```
+
+```{r PGSEA, fig.width = 6, fig.height = 10}
+if (params$pathway_method == 2) {
+  # only remove pathway ID for Ensembl species
+  show_pathway_id <- params$show_pathway_id
+  # always show pathway ID for STRING species
+  if (params$select_org < 0) {
+    show_pathway_id <- TRUE
+  }
+  plot_pgsea(
+    my_range = c(params$min_set_size, params$max_set_size),
+    processed_data = params$pre_processed,
+    contrast_samples = params$contrast_samples,
+    gene_sets = params$gene_sets,
+    pathway_p_val_cutoff = params$pathway_p_val_cutoff,
+    n_pathway_show = params$n_pathway_show,
+    select_go = params$go,
+    show_pathway_id = show_pathway_id,
+    margin = c(3, 1, 13, 20)
+  ) 
+}
+```
+
+```{r PGSEA_all, fig.width = 8, fig.height = 10}
+if (params$pathway_method == 4) {
+  # only remove pathway ID for Ensembl species
+  show_pathway_id <- params$show_pathway_id
+  # always show pathway ID for STRING species
+  if (params$select_org < 0) {
+    show_pathway_id <- TRUE
+  }
+  pgsea_plot_all(
+    go = params$go,
+    my_range = c(params$min_set_size, params$max_set_size),
+    data = params$pre_processed,
+    select_contrast = params$contrast_samples,
+    gene_sets = params$gene_sets,
+    pathway_p_val_cutoff = params$pathway_p_val_cutoff,
+    n_pathway_show = params$n_pathway_show,
+    select_go = params$go,
+    show_pathway_id = show_pathway_id,
+    margin = c(3, 1, 13, 20)
+  ) 
+}
+```
+
+```{r gsva, fig.width = 10, fig.height = 12}
+if (params$pathway_method %in% c(6:8)) {
+  gsva_algorithm <- switch(
+    as.numeric(params$pathway_method) - 5, 
+    "gsva",   #6
+    "ssgsea", #7
+    "plage"   #8
+  )
+
+  # only remove pathway ID for Ensembl species
+  show_pathway_id <- params$show_pathway_id
+  # always show pathway ID for STRING species
+  if (params$select_org < 0) {
+    show_pathway_id <- TRUE
+  }
+
+    plot_gsva(
+      my_range = c(params$min_set_size, params$max_set_size),
+      processed_data = params$pre_processed,
+      contrast_samples = params$contrast_samples,
+      gene_sets = params$gene_sets,
+      pathway_p_val_cutoff = params$pathway_p_val_cutoff,
+      n_pathway_show = params$n_pathway_show,
+      select_go = params$go,
+      show_pathway_id = show_pathway_id,
+      algorithm = gsva_algorithm
+    )
+}
+```
+
+
+
+
+
+
+```{r FGSEA, message = F, quiet = TRUE}
+if (params$pathway_method == 3) {
+  fgsea_pathway_data <- fgsea_data(
+    select_contrast = params$select_contrast,
+    my_range = c(params$min_set_size, params$max_set_size),
+    limma = params$limma,
+    gene_p_val_cutoff = params$gene_p_val_cutoff,
+    gene_sets = params$gene_sets,
+    absolute_fold = params$absolute_fold,
+    pathway_p_val_cutoff = params$pathway_p_val_cutoff,
+    n_pathway_show = params$n_pathway_show
+  )
+  kbl(fgsea_pathway_data) %>% 
+    kable_classic(full_width = F, html_font = "Cambria")
+}
+```
+
+
+
+
+
+## Tree
 ```{r echo=FALSE}
 idepGolem::enrichment_tree_plot(
   go_table = params$pathway_list_data,
@@ -92,10 +238,76 @@ idepGolem::enrichment_tree_plot(
 )
 ```
 
-```{r eval=FALSE, include=FALSE}
+## Network plot
+```{r network}
+network_data <- idepGolem::network_data(
+  network = params$pathway_list_data,
+  up_down_reg_deg = params$up_down_reg_deg,
+  wrap_text_network_deg = params$wrap_text_network_deg,
+  layout_vis_deg = params$layout_vis_deg,
+  edge_cutoff_deg = params$edge_cutoff_deg
+)
+idepGolem::vis_network_plot(
+  network_data = network_data
+ )
+```
 
+## Heatmap
+
+```{r pathway-name}
+params$sig_pathways
+```
+```{r heatmap, fig.width = 6, fig.height = 8}
+if(!is.null(params$sig_pathways)) {
+  deg_heatmap(
+    df = params$selected_pathway_data,
+    bar = NULL,
+    heatmap_color_select = unlist(strsplit(params$heatmap_color_select, "-")),
+    cluster_rows = TRUE
+  )
+} else {
+  print("Click on the Heatmap tab to do the analysis first.")
+}
+```
+
+## KEGG pathway
+
+```{r, message = FALSE}
+out_image <- kegg_pathway(
+  go = params$go,
+  gage_pathway_data = params$pathway_list_data[, 1:5],
+  sig_pathways = params$sig_pathways_kegg, 
+  select_contrast = params$select_contrast,
+  limma = params$limma,
+  converted = params$converted,
+  idep_data = params$idep_data,
+  select_org = params$select_org,
+  low_color = params$kegg_colors[[params$kegg_color_select]][1],
+  high_color = params$kegg_colors[[params$kegg_color_select]][2]
+)
+
+```
+<!-- The png file is written to a temp folder. The file path and name is shown -->
+\centering
+`r params$sig_pathways_kegg`
+![](`r out_image$src`){width=100%} 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
 # GAGE Method
-if (params$pathway_method == 1) {
+if (params$pathway_method == 0) {
   gene_sets <- read_gene_sets(
     converted = params$converted,
     all_gene_names = params$all_gene_names,
@@ -118,21 +330,7 @@ if (params$pathway_method == 1) {
     n_pathway_show = params$n_pathway_show
   )
 
-  # basic_heatmap(
-  #   data = params$selected_pathway_data,
-  #   c("green", "black", "red")
-  # )
-
-  # vis_network_plot(
-  #     network_data = params$network_data
-  # )
-
-
-  # enrichment_tree_plot(
-  #   go_table = params$pathway_list_data,
-  #   group = "All Groups"
-  #   #45
-  # )
+   gage
 }
 ```
 
@@ -170,3 +368,5 @@ if (params$pathway_method == 2) {
   )
 }
 ```
+
+Free for academic use. No warranty of correctness. 
