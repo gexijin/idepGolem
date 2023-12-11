@@ -543,7 +543,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
           updateTabsetPanel(
             session = session,
             inputId = "step_1",
-            selected = "results_tab"
+            selected = "results"
           )
         })
       }

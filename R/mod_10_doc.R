@@ -93,11 +93,11 @@ mod_10_doc_ui <- function(id) {
       ),
       p(
         "According to Google Scholar, more than",
-        a("673 papers cited iDEP,",
+        a("786 papers cited iDEP,",
           href = "https://scholar.google.com/scholar?oi=bibs&hl=en&cites=6502699637682046008,17999801138713500070,11001860275874506471",
           target = "_blank"
         ),
-        " as of August 7, 2023.",
+        " as of December 11, 2023.",
         "Our website has been accessed over 458,000 times by 114,000 users,
         spending 15 minutes each time. For every 1000 users, only 6 cited
         the iDEP paper, which is disappointingly low. Consider citing iDEP even
