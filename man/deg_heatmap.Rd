@@ -4,10 +4,10 @@
 \alias{deg_heatmap}
 \title{Heatmap for significant contrast genes}
 \usage{
-deg_heatmap(data, bar, heatmap_color_select, cluster_rows)
+deg_heatmap(df, bar, heatmap_color_select, cluster_rows)
 }
 \arguments{
-\item{data}{Submatrix of the processed data matrix from the
+\item{df}{Submatrix of the processed data matrix from the
 deg_heta_data function}
 
 \item{bar}{Vector to signify a positive (1) expression fold

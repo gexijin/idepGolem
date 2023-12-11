@@ -141,7 +141,7 @@ mod_06_pathway_ui <- function(id) {
         # Download report button
         downloadButton(
           outputId = ns("report"),
-          label = "Generate Report"
+          label = "Report"
         ),
         tippy::tippy_this(
           ns("report"),
@@ -166,7 +166,7 @@ mod_06_pathway_ui <- function(id) {
               condition = "input.submit_pathway_button == 0",
               br(),
               br(),
-              h3("Click the Submit button to obtain or update results, everytime parameters are adjusted."),
+              h3("Adjust parameters and click the Submit button to perform analysis."),
               ns = ns
             ),
             htmlOutput(
@@ -318,8 +318,9 @@ mod_06_pathway_ui <- function(id) {
                 width = "100%",
                 height = "100%"
               ),
+
               br(),
-              h5("Green and red (or Blue and orange) represent up- and down-
+              h5("Red and green (or orange and blue) represent up- and down-
                  regulated genes, respectively."),
               downloadButton(ns('download_kegg'),''),
               tippy::tippy_this(
@@ -328,6 +329,7 @@ mod_06_pathway_ui <- function(id) {
                 theme = "light-border"
               ),
               br(),
+
               ns = ns
             )
           ),
@@ -998,17 +1000,20 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     })
 
     selected_pathway_data <- reactive({
-      req(!is.null(input$sig_pathways))
-      req(!is.null(gene_sets()$gene_lists))
 
-      pathway_select_data(
-        sig_pathways = input$sig_pathways,
-        gene_sets = gene_sets()$gene_lists,
-        contrast_samples = contrast_samples(),
-        data = pre_process$data(),
-        select_org = pre_process$select_org(),
-        all_gene_names = pre_process$all_gene_names()
-      )
+      req(!is.null(gene_sets()$gene_lists))
+      if(is.null(input$sig_pathways)) {
+        return(NULL)
+      } else {
+        pathway_select_data(
+          sig_pathways = input$sig_pathways,
+          gene_sets = gene_sets()$gene_lists,
+          contrast_samples = contrast_samples(),
+          data = pre_process$data(),
+          select_org = pre_process$select_org(),
+          all_gene_names = pre_process$all_gene_names()
+        )
+      }
     })
 
     # Kegg Colors --------
@@ -1160,7 +1165,11 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     # Markdown report------------
     output$report <- downloadHandler(
       # For PDF output, change this to "report.pdf"
-      filename = "pathway_report.html",
+      filename = paste0(
+              "pathway_workflow_",
+              format(Sys.time(), "%Y-%m-%d_%H-%M"),
+              ".html"
+            ),
       content = function(file) {
         # Set up parameters to pass to Rmd document
         params <- list(
@@ -1187,8 +1196,17 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           sig_pathways = input$sig_pathways,
           pathway_method = input$pathway_method,
           pathway_list_data = pathway_list_data(),
-          date = Sys.Date(),
-          descr = deg$limma()[["description"]]
+          up_down_reg_deg = input$up_down_reg_deg,
+          wrap_text_network_deg = input$wrap_text_network_deg,
+          layout_vis_deg = input$layout_vis_deg,
+          edge_cutoff_deg = input$edge_cutoff_deg,
+          selected_pathway_data = selected_pathway_data(),
+          heatmap_color_select = pre_process$heatmap_color_select(),
+          sig_pathways_kegg = input$sig_pathways_kegg, 
+          kegg_color_select = input$kegg_color_select,
+          kegg_colors = kegg_colors,
+          descr = deg$limma()[["description"]],
+          show_pathway_id = input$show_pathway_id
         )
 
         req(params)
@@ -1198,15 +1216,18 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           # Copy the report file to a temporary directory before processing it, in
           # case we don't have write permissions to the current working dir (which
           # can happen when deployed).
-          tempReport <- file.path(tempdir(), "pathway_workflow.Rmd")
+
+          tempReport <- file.path(
+            tempdir(), 
+            "pathway_workflow.Rmd"
+          )
           # tempReport
           tempReport <- gsub("\\", "/", tempReport, fixed = TRUE)
 
-          # This should retrieve the project location on your device:
-          # "C:/Users/bdere/Documents/GitHub/idepGolem"
           wd <- getwd()
 
           markdown_location <- app_sys("app/www/RMD/pathway_workflow.Rmd")
+          markdown_location <- "C:/work/idepGolem/vignettes/Reports/pathway_workflow.Rmd"
           file.copy(from = markdown_location, to = tempReport, overwrite = TRUE)
 
           # Knit the document, passing in the `params` list, and eval it in a
