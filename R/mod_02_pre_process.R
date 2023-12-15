@@ -1272,7 +1272,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         get_gene_info(
           load_data$converted(),
           load_data$select_org(),
-          all_gene_info = idep_data$gene_info_files
+          gene_info_files = idep_data$gene_info_files
         )
       )
     })
