@@ -566,7 +566,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       "DESeq2"
     )
 
-    name <- reactive({
+    file_name <- reactive({
       paste0(
         "deg_values_",
         deg_method[as.numeric(input$counts_deg_method)],
@@ -576,7 +576,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
 
     output$download_lfc <- downloadHandler(
       filename = function() {
-        name()
+        file_name()
       },
       content = function(file) {
         write.csv(deg_info(), file, row.names = FALSE)

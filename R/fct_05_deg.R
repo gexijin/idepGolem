@@ -1376,7 +1376,6 @@ deg_limma <- function(processed_data,
         "eset <- limma::voom(eset, design)\n",
         "fit <- limma::lmFit(eset, design)\n"
       )
-
       # Regular limma ----------------
     } else {
       fit <- limma::lmFit(eset, design)
@@ -1424,9 +1423,9 @@ deg_limma <- function(processed_data,
 
     expr <- paste0(
       expr,
-      "stats <- limma::topTable(fit, number = Inf, sort.by = \"log2FC\")\n",
+      "stats <- limma::topTable(fit, number = Inf, sort.by = \"logFC\")\n",
       "head(stats)\n",
-      "table(sign(subset(stats, adj.P.Val < FDR & abs(log2FC) > log2(FC))$log2FC))\n",
+      "table(sign(subset(stats, adj.P.Val < FDR & abs(logFC) > log2(FC))$log2FC))\n",
       "plotMDS(eset) # MDS plot of original data\n",
       "plotMD(fit, status = results)\n",
       "volcanoplot(fit, names = row.names(eset), highlight = 10)\n"
@@ -1434,7 +1433,10 @@ deg_limma <- function(processed_data,
 
     # only keep FC and FDR columns
     if (dim(top_genes_table)[1] != 0) { # have rows
-      top_genes_table <- top_genes_table[, c("log2FC", "adj.P.Val")]
+      # Colnames: "logFC"     "AveExpr"   "t"         "P.Value"   "adj.P.Val" "B" 
+      top_genes_table <- top_genes_table[, c("logFC", "adj.P.Val")]
+      ix <- which(colnames(top_genes_table) == "logFC")
+      colnames(top_genes_table)[ix] <- "log2FC"
       top_genes[[1]] <- top_genes_table
     }
 
