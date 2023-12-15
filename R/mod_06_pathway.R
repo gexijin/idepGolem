@@ -1067,6 +1067,12 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
 
     kegg_image <- reactive({
       req(!is.null(input$sig_pathways_kegg))
+      
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Generating KEGG...",
+        color = "#000000"
+      )
       tmpfile <- kegg_pathway(
         go = input$select_go,
         gage_pathway_data = pathway_list_data()[, 1:5],
@@ -1079,6 +1085,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         low_color = kegg_colors[[input$kegg_color_select]][1],
         high_color = kegg_colors[[input$kegg_color_select]][2]
       )
+      shinybusy::remove_modal_spinner()
      tmpfile$src
     })
     
