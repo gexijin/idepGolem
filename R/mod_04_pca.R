@@ -41,12 +41,12 @@ mod_04_pca_ui <- function(id) {
           ns = ns
         ),
         conditionalPanel(
-          condition = "input.PCA_panels == 'PCA 3D'",
+          condition = "input.PCA_panels == '3D'",
           fluidRow(
             column(
               width = 6,
               selectInput(
-                inputId = ns("PCAx"),
+                inputId = ns("PCAx3d"),
                 label = "X-axis",
                 choices = 1:5,
                 selected = 1
@@ -55,7 +55,7 @@ mod_04_pca_ui <- function(id) {
             column(
               width = 6,
               selectInput(
-                inputId = ns("PCAy"),
+                inputId = ns("PCAy3d"),
                 label = "Y-axis",
                 choices = 1:5,
                 selected = 2
@@ -64,7 +64,7 @@ mod_04_pca_ui <- function(id) {
             column(
               width = 6,
               selectInput(
-                inputId = ns("PCAz"),
+                inputId = ns("PCAz3d"),
                 label = "Z-axis",
                 choices = 1:5,
                 selected = 3
@@ -218,7 +218,7 @@ mod_04_pca_ui <- function(id) {
             br(),
           ),
           tabPanel(
-            title = "PCA 3D",
+            title = "3D",
             plotly::plotlyOutput(
               outputId = ns("pca_plot_obj_3d"),
               width = "100%",
@@ -360,9 +360,9 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
       p <- PCA_plot_3d(
         data = pre_process$data(),
         sample_info = pre_process$sample_info(),
-        PCAx = input$PCAx,
-        PCAy = input$PCAy,
-        PCAz = input$PCAz,
+        PCAx = input$PCAx3d,
+        PCAy = input$PCAy3d,
+        PCAz = input$PCAz3d,
         selected_shape = input$selectFactors2,
         selected_color = input$selectFactors1
       )
