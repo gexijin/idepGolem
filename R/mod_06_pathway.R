@@ -137,7 +137,6 @@ mod_06_pathway_ui <- function(id) {
           "If selected, pathway IDs, such as Path:mmu04115 and GO:0042770,  will be appended to pathway name.",
           theme = "light-border"
         ),
-        h6("Beware of P-hacking! If you try all the combinations, you can find evidence for anything."),
         # Download report button
         downloadButton(
           outputId = ns("report"),
@@ -148,6 +147,7 @@ mod_06_pathway_ui <- function(id) {
           "Generate HTML report of pathway tab",
           theme = "light-border"
         ),
+        h6("Beware of P-hacking! If you try all the combinations, you can find evidence for anything."),
         a(
           h5("Questions?", align = "right"),
           href = "https://idepsite.wordpress.com/pathways/",
