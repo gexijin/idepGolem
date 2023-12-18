@@ -4,9 +4,11 @@
 \alias{plot_venn}
 \title{Create a venn diagram plot}
 \usage{
-plot_venn(results)
+plot_venn(results, plots_color_select)
 }
 \arguments{
+\item{plots_color_select}{Vector of colors for plots}
+
 \item{limma}{limma Returned list of results from the limma_value
 function}
 

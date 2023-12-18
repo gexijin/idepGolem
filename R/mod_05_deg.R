@@ -143,7 +143,7 @@ mod_05_deg_1_ui <- function(id) {
               outputId = ns("sig_gene_stats")
             ),
             br(),
-            ottoPlots::mod_download_figure_ui(ns("download_sig_gene_stats")), ##J Add
+            ottoPlots::mod_download_figure_ui(ns("download_sig_gene_stats")),
             br(),
             h5(
               "Numbers of differentially expressed genes for all comparisons.
@@ -589,7 +589,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     sig_genes_p <- reactive({
       req(!is.null(deg$limma$results))
       p <- sig_genes_plot(
-        results = deg$limma$results
+        results = deg$limma$results,
+        plots_color_select = load_data$plots_color_select()
       )
       refine_ggplot2(
         p = p,
@@ -600,7 +601,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     output$sig_gene_stats <- renderPlot({
       req(!is.null(deg$limma$results))
       p <- sig_genes_plot(
-        results = deg$limma$results
+        results = deg$limma$results,
+        plots_color_select = load_data$plots_color_select()
       )
       refine_ggplot2(
         p = p,
@@ -698,7 +700,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       req(!is.null(input$select_comparisons_venn))
 
       venn <- plot_venn(
-        results = venn_data()
+        results = venn_data(),
+        plots_color_select = load_data$plots_color_select()
       )
       p <- recordPlot()
       return(p)

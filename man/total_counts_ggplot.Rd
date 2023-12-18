@@ -4,7 +4,7 @@
 \alias{total_counts_ggplot}
 \title{Creates a barplot of the count data}
 \usage{
-total_counts_ggplot(counts_data, sample_info, type = "")
+total_counts_ggplot(counts_data, sample_info, type = "", plots_color_select)
 }
 \arguments{
 \item{counts_data}{Matrix of raw counts from gene expression data}
@@ -14,6 +14,8 @@ samples}
 
 \item{type}{String designating the type of data to be used in the title.
 Commonly either "Raw" or "Transformed"}
+
+\item{plots_color_select}{Vector of colors for plots}
 }
 \value{
 A barplot as a \code{ggplot} object

@@ -4,7 +4,7 @@
 \alias{MDS_plot}
 \title{MDS plot}
 \usage{
-MDS_plot(data, sample_info, selected_shape, selected_color)
+MDS_plot(data, sample_info, selected_shape, selected_color, plots_color_select)
 }
 \arguments{
 \item{data}{Matrix of gene data that has been through
@@ -19,6 +19,8 @@ default which automatically detects groups from gene data file}
 \item{selected_color}{String designating factor to color points by. Should be
 one of the design factors from the design file or "Names" as default which
 automatically detects groups from gene data file}
+
+\item{plots_color_select}{Vector of colors for plots}
 }
 \value{
 A \code{ggplot} object formatted PCA plot
