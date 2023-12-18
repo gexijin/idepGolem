@@ -2171,13 +2171,11 @@ print_vector <- function(x, # comparison
 #'
 #' @param results Results matrix from the limma_value function
 #'  returned list
-#' @param plots_color_select Vector of colors for plots
 #'
 #' @export
 #' @return Formatted gg barplot of the significantly expressed
 #'  genes.
-sig_genes_plot <- function(results,
-                           plots_color_select) {
+sig_genes_plot <- function(results) {
   Up <- apply(results, 2, function(x) sum(x == 1))
   Down <- apply(results, 2, function(x) sum(x == -1))
   stats <- rbind(Up, Down)
@@ -2185,8 +2183,6 @@ sig_genes_plot <- function(results,
   gg <- reshape2::melt(stats)
 
   colnames(gg) <- c("Regulation", "Comparisons", "Genes")
-
-  color_palette <- RColorBrewer::brewer.pal(n = nlevels(as.factor(gg$Regulation)), name = plots_color_select)
 
   plot_bar <- ggplot2::ggplot(
     gg,
@@ -2208,8 +2204,7 @@ sig_genes_plot <- function(results,
       vjust = 0.5,
       hjust = 0
     ) +
-    ggplot2::ylim(0, max(gg$Genes) * 1.1) +
-    ggplot2::scale_fill_manual(values = color_palette)
+    ggplot2::ylim(0, max(gg$Genes) * 1.1)
 
   return(plot_bar)
 }

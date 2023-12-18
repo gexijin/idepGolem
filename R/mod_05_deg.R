@@ -589,8 +589,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     sig_genes_p <- reactive({
       req(!is.null(deg$limma$results))
       p <- sig_genes_plot(
-        results = deg$limma$results,
-        plots_color_select = load_data$plots_color_select()
+        results = deg$limma$results
       )
       refine_ggplot2(
         p = p,
@@ -601,8 +600,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     output$sig_gene_stats <- renderPlot({
       req(!is.null(deg$limma$results))
       p <- sig_genes_plot(
-        results = deg$limma$results,
-        plots_color_select = load_data$plots_color_select()
+        results = deg$limma$results
       )
       refine_ggplot2(
         p = p,

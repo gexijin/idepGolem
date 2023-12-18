@@ -4,13 +4,12 @@
 \alias{sig_genes_plot}
 \title{Significant genes bar plot}
 \usage{
-sig_genes_plot(results, plots_color_select)
+sig_genes_plot(results)
 }
 \arguments{
 \item{results}{Results matrix from the limma_value function
 returned list}
 
-\item{plots_color_select}{Vector of colors for plots}
 }
 \value{
 Formatted gg barplot of the significantly expressed
