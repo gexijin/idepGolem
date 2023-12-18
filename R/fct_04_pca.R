@@ -79,6 +79,7 @@ get_pc_variance <- function(data) {
 #' @param selected_shape String designating factor to shape points by.
 #'  Should be one of the design factors from the design file or "Names" as
 #'  default which automatically detects groups from gene data file
+#' @param plots_color_select Vector of colors for plots
 #'
 #' @export
 #' @return A \code{ggplot} object as a PCA plot
@@ -92,7 +93,8 @@ PCA_plot <- function(data,
                      PCAx = 1,
                      PCAy = 2,
                      selected_color = "Names",
-                     selected_shape = "Names") {
+                     selected_shape = "Names",
+                     plots_color_select) {
   # no design file
   if (is.null(selected_color)) {
     selected_color <- "Names"
@@ -121,6 +123,9 @@ PCA_plot <- function(data,
 
   # get data
   pcaData <- get_pc(data, sample_info)
+
+  # plot color scheme
+  color_palette <- RColorBrewer::brewer.pal(n = nlevels(groups), name = plots_color_select)
 
   # hide legend for large or no groups levels
   if (nlevels(groups) <= 1 | nlevels(groups) > 20) {
@@ -193,7 +198,9 @@ PCA_plot <- function(data,
       title = memo,
       y = "Dimension 2",
       x = "Dimension 1"
-    ) #+
+    ) +
+    ggplot2::scale_color_manual(values = color_palette)
+    #+
   # removed - causes plot legend to be missing shapes
   # ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(shape = 15)))9
 
@@ -226,6 +233,7 @@ PCA_plot <- function(data,
 #' @param selected_shape String designating factor to shape points by.
 #'  Should be one of the design factors from the design file or "Names" as
 #'  default which automatically detects groups from gene data file
+#' @param plots_color_select Vector of colors for plots
 #'
 #' @export
 #' @return Formatted PCA plot
@@ -239,7 +247,8 @@ PCA_plot_3d <- function(data,
                         PCAy = 2,
                         PCAz = 3,
                         selected_color = "Names",
-                        selected_shape = "Names") {
+                        selected_shape = "Names",
+                        plots_color_select) {
   # no design file
   if (is.null(selected_color)) {
     selected_color <- "Names"
@@ -277,6 +286,9 @@ PCA_plot_3d <- function(data,
   }
   colnames(pcaData)[npc + 1] <- "Names"
 
+  # plot color scheme
+  color_palette <- RColorBrewer::brewer.pal(n = nlevels(as.factor(pcaData$Names)), name = plots_color_select)
+
   # selected principal components
   PCAxyz <- c(as.integer(PCAx), as.integer(PCAy), as.integer(PCAz))
   percentVar <- get_pc_variance(data)[PCAxyz]
@@ -296,7 +308,8 @@ PCA_plot_3d <- function(data,
     ),
     type = "scatter3d",
     mode = "markers",
-    width =
+    width = ,
+    marker = list(color = color_palette[as.factor(pcaData$Names)])
     )
   plot_PCA <- plotly::layout(
     p = plot_PCA,
@@ -333,6 +346,7 @@ PCA_plot_3d <- function(data,
 #' @param selected_shape String designating factor to shape points by.
 #'  Should be one of the design factors from the design file or "Names" as
 #'  default which automatically detects groups from gene data file
+#' @param plots_color_select Vector of colors for plots
 #'
 #' @export
 #' @return A \code{ggplot} object formatted t-SNE plot
@@ -343,7 +357,8 @@ PCA_plot_3d <- function(data,
 t_SNE_plot <- function(data,
                        sample_info,
                        selected_color = "Names",
-                       selected_shape = "Names") {
+                       selected_shape = "Names",
+                       plots_color_select) {
   # no design file
   if (is.null(selected_color)) {
     selected_color <- "Names"
@@ -388,6 +403,9 @@ t_SNE_plot <- function(data,
     point_size <- 3
   }
 
+  # plot color scheme
+  color_palette <- RColorBrewer::brewer.pal(n = nlevels(as.factor(pcaData$Names)), name = plots_color_select)
+
   # Generate plot
   plot_t_SNE <- ggplot2::ggplot(
     data = pcaData,
@@ -430,7 +448,8 @@ t_SNE_plot <- function(data,
       title = memo,
       y = "Dimension 2",
       x = "Dimension 1"
-    )
+    ) +
+    ggplot2::scale_color_manual(values = color_palette)
 
   return(plot_t_SNE)
 }
@@ -449,6 +468,7 @@ t_SNE_plot <- function(data,
 #' @param selected_shape String designating factor to shape points by.
 #'  Should be one of the design factors from the design file or "Names" as
 #'  default which automatically detects groups from gene data file
+#' @param plots_color_select Vector of colors for plots
 #'
 #' @export
 #' @return A \code{ggplot} object formatted PCA plot
@@ -458,7 +478,8 @@ t_SNE_plot <- function(data,
 MDS_plot <- function(data,
                      sample_info,
                      selected_shape,
-                     selected_color) {
+                     selected_color,
+                     plots_color_select) {
   # no design file
   if (is.null(selected_color)) {
     selected_color <- "Names"
@@ -509,6 +530,8 @@ MDS_plot <- function(data,
     # text_size <- 16
   }
 
+  # plot color scheme
+  color_palette <- RColorBrewer::brewer.pal(n = nlevels(as.factor(pcaData$Names)), name = plots_color_select)
 
   p <- ggplot2::ggplot(
     data = pcaData,
@@ -551,7 +574,9 @@ MDS_plot <- function(data,
       title = memo,
       y = "Dimension 2",
       x = "Dimension 1"
-    )
+    ) +
+    ggplot2::scale_color_manual(values = color_palette)
+
   return(p)
 }
 

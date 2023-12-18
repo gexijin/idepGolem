@@ -2364,18 +2364,22 @@ prep_venn <- function(limma,
 #'  up or down regulated
 #' @param select_comparisons_venn The comparisons to plot on the
 #'  venn diagram
+#' @param plots_color_select Vector of colors for plots
 #'
 #' @export
 #' @return A formatted venn diagram plot of the selected comparisons.
-plot_venn <- function(results) {
+plot_venn <- function(results,
+                      plots_color_select) {
   if (dim(results)[2] > 5) {
     results <- results[, 1:5]
   }
 
+  color_palette <- RColorBrewer::brewer.pal(n = 5, name = plots_color_select)
+
   return(
     limma::vennDiagram(
       results,
-      circle.col = rainbow(5),
+      circle.col = color_palette,
       cex = c(1., 1, 0.7)
     )
   )
@@ -2795,8 +2799,7 @@ plot_deg_scatter <- function(select_contrast,
                              sample_info,
                              plot_colors,
                              all_gene_names,
-                             anotate_genes = NULL
-                             ) { ##J Addition
+                             anotate_genes = NULL) { 
   if (grepl("I:", select_contrast)) {
     grid::grid.newpage()
     return(

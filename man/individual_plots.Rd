@@ -10,7 +10,8 @@ individual_plots(
   selected_gene,
   gene_plot_box,
   use_sd,
-  lab_rotate
+  lab_rotate,
+  plots_color_select
 )
 }
 \arguments{
@@ -27,6 +28,8 @@ bar plot}
 
 \item{lab_rotate}{Numeric value indicating what angle to rotate
 the x-axis labels}
+
+\item{plots_color_select}{Vector of colors for plots}
 
 \item{select_gene}{List of gene(s) to be plotted}
 }

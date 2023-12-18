@@ -4,7 +4,13 @@
 \alias{rRNA_counts_ggplot}
 \title{Creates a barplot of the count data by gene type}
 \usage{
-rRNA_counts_ggplot(counts_data, sample_info, type = "", all_gene_info)
+rRNA_counts_ggplot(
+  counts_data,
+  sample_info,
+  type = "",
+  all_gene_info,
+  plots_color_select
+)
 }
 \arguments{
 \item{counts_data}{Matrix of raw counts from gene expression data}
@@ -16,6 +22,8 @@ samples}
 Commonly either "Raw" or "Transformed"}
 
 \item{all_gene_info}{Gene info, including chr., gene type etc.}
+
+\item{plots_color_select}{Vector of colors for plots}
 }
 \value{
 A barplot as a \code{ggplot} object

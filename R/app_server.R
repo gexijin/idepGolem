@@ -54,6 +54,7 @@ app_server <- function(input, output, session) {
   )
   mod_04_pca_server(
     id = "pca",
+    load_data = load_data,
     pre_process = pre_process,
     idep_data = idep_data
   )

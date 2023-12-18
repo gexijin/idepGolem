@@ -10,7 +10,8 @@ PCA_plot(
   PCAx = 1,
   PCAy = 2,
   selected_color = "Names",
-  selected_shape = "Names"
+  selected_shape = "Names",
+  plots_color_select
 )
 }
 \arguments{
@@ -30,6 +31,8 @@ automatically detects groups from gene data file}
 \item{selected_shape}{String designating factor to shape points by.
 Should be one of the design factors from the design file or "Names" as
 default which automatically detects groups from gene data file}
+
+\item{plots_color_select}{Vector of colors for plots}
 }
 \value{
 A \code{ggplot} object as a PCA plot
