@@ -347,6 +347,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     options(shiny.maxRequestSize = 2001024^2)
     
     observe({
+      shinyjs::toggle(id = "plots_color_select", condition = input$customize_button)
       shinyjs::toggle(id = "heatmap_color_select", condition = input$customize_button)
       shinyjs::toggle(id = "select_gene_id", condition = input$customize_button)
       shinyjs::toggle(id = "multiple_map", condition = input$customize_button)
