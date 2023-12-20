@@ -270,6 +270,7 @@ pre_process <- function(data,
 #'  samples
 #' @param type String designating the type of data to be used in the title.
 #'  Commonly either "Raw" or "Transformed"
+#' @param plots_color_select Vector of colors for plots
 #'
 #' @export
 #' @return A barplot as a \code{ggplot} object
@@ -280,7 +281,8 @@ pre_process <- function(data,
 #'
 total_counts_ggplot <- function(counts_data,
                                 sample_info,
-                                type = "") {
+                                type = "",
+                                plots_color_select) {
   counts <- counts_data
   memo <- ""
 
@@ -313,6 +315,8 @@ total_counts_ggplot <- function(counts_data,
   } else {
     grouping <- groups
 
+    color_palette <- RColorBrewer::brewer.pal(n = nlevels(grouping), name = plots_color_select)
+
     plot_data <- data.frame(
       sample = as.factor(colnames(counts)),
       counts = colSums(counts) / 1e6,
@@ -323,7 +327,8 @@ total_counts_ggplot <- function(counts_data,
     plot <- ggplot2::ggplot(
       data = plot_data,
       ggplot2::aes(x = sample, y = counts, fill = grouping)
-    )
+    ) +
+    ggplot2::scale_fill_manual(values = color_palette)
   }
 
   plot <- plot +
@@ -373,6 +378,7 @@ total_counts_ggplot <- function(counts_data,
 #' @param type String designating the type of data to be used in the title.
 #'  Commonly either "Raw" or "Transformed"
 #' @param all_gene_info Gene info, including chr., gene type etc.
+#' @param plots_color_select Vector of colors for plots
 #' @export
 #' @return A barplot as a \code{ggplot} object
 #'
@@ -383,7 +389,8 @@ total_counts_ggplot <- function(counts_data,
 gene_counts_ggplot <- function(counts_data,
                                 sample_info,
                                 type = "",
-                                all_gene_info) {
+                                all_gene_info,
+                                plots_color_select) {
   counts <- counts_data
 
   df <- merge(
@@ -408,12 +415,15 @@ gene_counts_ggplot <- function(counts_data,
   # Order the categories by value
   data <- data[order(-data$value), ]
 
+  color_palette <- RColorBrewer::brewer.pal(n = nlevels(as.factor(data$category)), name = plots_color_select)
+
   plot <- ggplot2::ggplot(data, ggplot2::aes(x = reorder(category, value), y = value, fill = category)) +
     ggplot2::geom_bar(stat = "identity") +
     ggplot2::scale_y_log10(limits = c(1, 2 * max(data$value))) +
     ggplot2::coord_flip() +
     ggplot2::labs(x = NULL, y = "Number of genes", title = "Number of genes by type") +       
-    ggplot2::geom_text(ggplot2::aes(label = value), hjust = -0.1, vjust = 0.5) 
+    ggplot2::geom_text(ggplot2::aes(label = value), hjust = -0.1, vjust = 0.5) +
+    ggplot2::scale_fill_manual(values = color_palette)
 
   plot <- plot +
     ggplot2::theme_light() +
@@ -457,6 +467,7 @@ gene_counts_ggplot <- function(counts_data,
 #' @param type String designating the type of data to be used in the title.
 #'  Commonly either "Raw" or "Transformed"
 #' @param all_gene_info Gene info, including chr., gene type etc.
+#' @param plots_color_select Vector of colors for plots
 #' @export
 #' @return A barplot as a \code{ggplot} object
 #'
@@ -467,7 +478,8 @@ gene_counts_ggplot <- function(counts_data,
 rRNA_counts_ggplot <- function(counts_data,
                                 sample_info,
                                 type = "",
-                                all_gene_info) {
+                                all_gene_info,
+                                plots_color_select) {
   counts <- counts_data
   memo <- ""
 
@@ -512,10 +524,12 @@ rRNA_counts_ggplot <- function(counts_data,
 
   plot_data <- reshape2::melt(df, id.vars = "Gene_Type")
 
+  color_palette <- RColorBrewer::brewer.pal(n = nlevels(as.factor(plot_data$Gene_Type)), name = plots_color_select)
+
   plot <- ggplot2::ggplot(plot_data, ggplot2::aes(x = variable, y = value, fill = Gene_Type)) +
     ggplot2::geom_bar(stat = "identity") +
-    ggplot2::labs(x = NULL, y = "% Reads", title = "% Reads by gene type") +
-    ggplot2::scale_fill_brewer(palette = "Set1")
+    ggplot2::labs(x = NULL, y = "% Reads", title = "% Reads by gene type")+
+    ggplot2::scale_fill_manual(values = color_palette)
 
   plot <- plot +
     ggplot2::geom_bar(stat = "identity") +
@@ -946,6 +960,7 @@ eda_scatter <- function(processed_data,
 #' @param processed_data Matrix of data that has gone through
 #'  \code{\link{pre_process}()}
 #' @param sample_info Matrix of experiment design information
+#' @param plots_color_select Vector of colors for plots
 #'
 #' @export
 #' @return Boxplot of the distribution of counts for each sample as a
@@ -955,7 +970,8 @@ eda_scatter <- function(processed_data,
 #' @family preprocess functions
 #'
 eda_boxplot <- function(processed_data,
-                        sample_info) {
+                        sample_info,
+                        plots_color_select) {
   counts <- as.data.frame(processed_data)
   memo <- ""
 
@@ -989,10 +1005,13 @@ eda_boxplot <- function(processed_data,
   longer_data$groups <- rep(groups, nrow(counts))
   longer_data$grouping <- rep(grouping, nrow(counts))
 
+  color_palette <- RColorBrewer::brewer.pal(n = nlevels(grouping), name = plots_color_select)
+
   plot <- ggplot2::ggplot(
     data = longer_data,
     ggplot2::aes(x = sample, y = expression, fill = grouping)
   ) +
+    ggplot2::scale_fill_manual(values = color_palette) +
     ggplot2::geom_boxplot() +
     ggplot2::theme_light() +
     ggplot2::theme(
@@ -1033,6 +1052,7 @@ eda_boxplot <- function(processed_data,
 #' @param processed_data Matrix of gene data that has gone through
 #'   \code{\link{pre_process}()}
 #' @param sample_info Sample_info from the experiment file
+#' @param plots_color_select Vector of colors for plots
 #'
 #' @export
 #' @return A density plot as a \code{ggplot} object
@@ -1040,7 +1060,8 @@ eda_boxplot <- function(processed_data,
 #' @family plots
 #' @family preprocess functions
 eda_density <- function(processed_data,
-                        sample_info) {
+                        sample_info,
+                        plots_color_select) {
   counts <- as.data.frame(processed_data)
   memo <- ""
 
@@ -1074,6 +1095,8 @@ eda_density <- function(processed_data,
   )
   longer_data$groups <- rep(groups, nrow(counts))
   longer_data$group_fill <- rep(group_fill, nrow(counts))
+
+  color_palette <- RColorBrewer::brewer.pal(n = nlevels(group_fill), name = plots_color_select)
 
   plot <- ggplot2::ggplot(
     data = longer_data,
@@ -1109,7 +1132,8 @@ eda_density <- function(processed_data,
       x = "Transformed Expression",
       y = "Density",
       color = "Sample"
-    )
+    ) +
+    ggplot2::scale_color_manual(values = color_palette)
 
   return(plot)
 }
@@ -1133,6 +1157,7 @@ eda_density <- function(processed_data,
 #'   bar plot
 #' @param lab_rotate Numeric value indicating what angle to rotate
 #'   the x-axis labels
+#' @param plots_color_select Vector of colors for plots
 #'
 #' @export
 #'
@@ -1150,7 +1175,8 @@ individual_plots <- function(individual_data,
                              selected_gene,
                              gene_plot_box,
                              use_sd,
-                             lab_rotate) {
+                             lab_rotate,
+                             plots_color_select) {
   individual_data <- as.data.frame(individual_data)
   individual_data$symbol <- rownames(individual_data)
   
@@ -1164,6 +1190,9 @@ individual_plots <- function(individual_data,
   }
 
   if (gene_plot_box == TRUE) {
+    plot_data$symbol <- factor(plot_data$symbol, levels = unique(plot_data$symbol))
+    color_palette <- RColorBrewer::brewer.pal(n = nlevels(plot_data$symbol), name = plots_color_select)
+
     ind_line <- ggplot2::ggplot(
       data = plot_data,
       ggplot2::aes(x = sample, y = value, group = symbol, color = symbol)
@@ -1195,7 +1224,8 @@ individual_plots <- function(individual_data,
           size = 14
         ),
         legend.text = ggplot2::element_text(size = 12)
-      )
+      ) +
+    ggplot2::scale_color_manual(values = color_palette)
 
     return(ind_line)
   } else if (gene_plot_box == FALSE) {
@@ -1206,6 +1236,8 @@ individual_plots <- function(individual_data,
       dplyr::summarise(Mean = mean(value), SD = sd(value), N = dplyr::n())
 
     summarized$SE <- summarized$SD / sqrt(summarized$N)
+
+    color_palette <- RColorBrewer::brewer.pal(n = nlevels(summarized$groups), name = plots_color_select)
   
     gene_bar <- ggplot2::ggplot(
       summarized,
@@ -1251,7 +1283,8 @@ individual_plots <- function(individual_data,
           size = 14
         ),
         legend.text = ggplot2::element_text(size = 12)
-      )
+      ) +
+    ggplot2::scale_fill_manual(values = color_palette)
 
     if (use_sd == TRUE) {
       gene_bar <- gene_bar + ggplot2::geom_errorbar(

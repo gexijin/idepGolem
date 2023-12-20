@@ -294,7 +294,7 @@ mod_04_pca_ui <- function(id) {
 #' 05_pca Server Functions
 #'
 #' @noRd
-mod_04_pca_server <- function(id, pre_process, idep_data) {
+mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     # Store client info in a convenience variable
@@ -310,7 +310,8 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
         PCAx = input$PCAx,
         PCAy = input$PCAy,
         selected_shape = input$selectFactors2,
-        selected_color = input$selectFactors1
+        selected_color = input$selectFactors1,
+        plots_color_select = load_data$plots_color_select()
       )
       refine_ggplot2(
         p = p,
@@ -364,7 +365,8 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
         PCAy = input$PCAy3d,
         PCAz = input$PCAz3d,
         selected_shape = input$selectFactors2,
-        selected_color = input$selectFactors1
+        selected_color = input$selectFactors1,
+        plots_color_select = load_data$plots_color_select()
       )
     })
     output$pca_plot_obj_3d <- plotly::renderPlotly({
@@ -390,7 +392,8 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
         data = pre_process$data(),
         sample_info = pre_process$sample_info(),
         selected_shape = input$selectFactors2,
-        selected_color = input$selectFactors1
+        selected_color = input$selectFactors1,
+        plots_color_select = load_data$plots_color_select()
       )
       refine_ggplot2(
         p = p,
@@ -421,7 +424,8 @@ mod_04_pca_server <- function(id, pre_process, idep_data) {
         data = pre_process$data(),
         sample_info = pre_process$sample_info(),
         selected_shape = input$selectFactors2,
-        selected_color = input$selectFactors1
+        selected_color = input$selectFactors1,
+        plots_color_select = load_data$plots_color_select()
       )
       refine_ggplot2(
         p = p,

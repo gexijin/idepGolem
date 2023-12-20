@@ -4,13 +4,15 @@
 \alias{eda_boxplot}
 \title{Boxplot for processed data}
 \usage{
-eda_boxplot(processed_data, sample_info)
+eda_boxplot(processed_data, sample_info, plots_color_select)
 }
 \arguments{
 \item{processed_data}{Matrix of data that has gone through
 \code{\link{pre_process}()}}
 
 \item{sample_info}{Matrix of experiment design information}
+
+\item{plots_color_select}{Vector of colors for plots}
 }
 \value{
 Boxplot of the distribution of counts for each sample as a

@@ -4,13 +4,15 @@
 \alias{eda_density}
 \title{Density plot for the processed data}
 \usage{
-eda_density(processed_data, sample_info)
+eda_density(processed_data, sample_info, plots_color_select)
 }
 \arguments{
 \item{processed_data}{Matrix of gene data that has gone through
 \code{\link{pre_process}()}}
 
 \item{sample_info}{Sample_info from the experiment file}
+
+\item{plots_color_select}{Vector of colors for plots}
 }
 \value{
 A density plot as a \code{ggplot} object

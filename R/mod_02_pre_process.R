@@ -621,7 +621,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       p <- total_counts_ggplot(
         counts_data = processed_data()$raw_counts,
         sample_info = load_data$sample_info(),
-        type = "Raw"
+        type = "Raw",
+        plots_color_select = load_data$plots_color_select()
       )
       refine_ggplot2(
         p = p,
@@ -653,7 +654,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         counts_data = load_data$converted_data(),
         sample_info = load_data$sample_info(),
         type = "Raw",
-        all_gene_info = load_data$all_gene_info()
+        all_gene_info = load_data$all_gene_info(),
+        plots_color_select = load_data$plots_color_select()
       )
       p <- refine_ggplot2(
         p = p,
@@ -688,7 +690,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         counts_data = load_data$converted_data(),
         sample_info = load_data$sample_info(),
         type = "Raw",
-        all_gene_info = load_data$all_gene_info()
+        all_gene_info = load_data$all_gene_info(),
+        plots_color_select = load_data$plots_color_select()
       )
       p <- refine_ggplot2(
         p = p,
@@ -818,7 +821,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
 
       p <- eda_boxplot(
         processed_data = processed_data()$data,
-        sample_info = load_data$sample_info()
+        sample_info = load_data$sample_info(),
+        plots_color_select = load_data$plots_color_select()
       )
       refine_ggplot2(
         p = p,
@@ -844,7 +848,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
 
       p <- eda_density(
         processed_data = processed_data()$data,
-        sample_info = load_data$sample_info()
+        sample_info = load_data$sample_info(),
+        plots_color_select = load_data$plots_color_select()
       )
       refine_ggplot2(
         p = p,
@@ -1011,7 +1016,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         selected_gene = input$selected_gene,
         gene_plot_box = input$gene_plot_box,
         use_sd = input$use_sd,
-        lab_rotate = input$angle_ind_axis_lab
+        lab_rotate = input$angle_ind_axis_lab,
+        plots_color_select = load_data$plots_color_select()
       )
       refine_ggplot2(
         p = p,

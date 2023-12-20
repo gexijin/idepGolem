@@ -187,6 +187,23 @@ mod_01_load_data_ui <- function(id) {
           theme = "light-border"
         ),
         selectInput(
+          inputId = ns("plots_color_select"),
+          label = "Plots Color scheme:",
+          choices = c(
+            "Set1",
+            "Set2",
+            "Set3",
+            "Paired",
+            "Dark2",
+            "Accent",
+            "Pastel1",
+            "Pastel2",
+            "Spectral"
+          ),
+          selected = "Set1",
+          width = "100%"
+        ),
+        selectInput(
           inputId = ns("heatmap_color_select"),
           label = "Heatmap Color scheme:",
           choices = c(
@@ -330,6 +347,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     options(shiny.maxRequestSize = 2001024^2)
     
     observe({
+      shinyjs::toggle(id = "plots_color_select", condition = input$customize_button)
       shinyjs::toggle(id = "heatmap_color_select", condition = input$customize_button)
       shinyjs::toggle(id = "select_gene_id", condition = input$customize_button)
       shinyjs::toggle(id = "multiple_map", condition = input$customize_button)
@@ -988,6 +1006,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       gmt_choices = reactive(conversion_info()$gmt_choices),
       converted = reactive(conversion_info()$converted),
       no_id_conversion = reactive(input$no_id_conversion),
+      plots_color_select = reactive(input$plots_color_select),
       heatmap_color_select = reactive(input$heatmap_color_select),
       select_gene_id = reactive(input$select_gene_id),
       multiple_map = reactive(input$multiple_map),
