@@ -980,3 +980,48 @@ build_pathway_query <- function(go, query_set) {
   )
   return(sql_query)
 }
+
+
+#' retrieve source info for pathway db
+#'
+#'
+#' @param go  Pathway category "KEGG", "GOBP"
+#' @param pathway_file  pathway file
+#' @param select_org  selected species
+#' @param idep_data  Data object with species info for connecting to database
+#' @export
+#' @return A vector with the source information
+pathway_source_info <- function(pathway_file, go, select_org, idep_data) {
+
+  conn_db <- connect_convert_db_org(
+    select_org = select_org,
+    idep_data = idep_data
+  )
+
+  # if database connection error
+  if(inherits(conn_db, "try-error")) {
+    return(NULL)
+  }
+
+  # does the db file has a categories table?
+  ix <- grep(
+    pattern = "source",
+    x = DBI::dbListTables(conn_db)
+  )
+
+  if (length(ix) == 0) {
+    return(NULL)
+  }
+
+  pathway_info <- DBI::dbGetQuery(
+    conn_db,
+    # table.file is an SQL keyword, so use []
+    paste0(
+      "SELECT * FROM source WHERE [Subtype.Database.name] = '",
+      go,
+      "';"
+    )
+  )
+  DBI::dbDisconnect(conn_db)
+  return(pathway_info)
+}

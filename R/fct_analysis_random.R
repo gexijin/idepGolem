@@ -147,7 +147,7 @@ find_overlap <- function(pathway_table,
   min_genes_background <- 1000
   #  max_terms <- 15
   min_fdr <- .05
-  min_overlap <- 5
+  min_overlap <- 2
   min_word_overlap <- 0.5 # % of overlapping words for reduandant pathway
   if (reduced) {
     reduced <- .9

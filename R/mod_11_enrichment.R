@@ -323,6 +323,12 @@ mod_11_enrichment_ui <- function(id) {
         tableOutput(ns("gene_info_table")),
         p("Note: In the gene type column, \"C\" indicates
         protein-coding genes, and \"P\" means pseduogenes.")
+      ),
+      tabPanel(
+        title = "Details",
+        value = "Details",
+        h4("Details of Enrichment Analysis"),
+        htmlOutput(ns("enrichment_details"))
       )
     )
   )
@@ -867,7 +873,69 @@ mod_11_enrichment_server <- function(id,
       height = 6,
       label = "Download"
     )
+
+    output$enrichment_details <- renderUI ({
+
+      info <- pathway_source_info(
+        pathway_file = gmt_file(),
+        go = input$select_go,
+        select_org = select_org(),
+        idep_data = idep_data
+      )
+
+      tagList(
+        p("Enrichment P-value are calculated based on one-sided the hypergeometric test, which is then 
+                adjusted for multiple testing using the Benjamini-Hochberg procedure and converted to 
+                FDR(false discovery rate). FDR tells us how likely to observe the enrichment by chance. Due to increased statistical power,
+                large pathways tend to have smaller FDRs.
+                Fold Enrichment is defined as the percentage
+                of genes in the list belonging to a pathway, divided by the corresponding percentage in the
+                background. As a measure of effect size, Fold Enrichment indicates 
+                how drastically genes of a certain pathway is overrepresented.
+                "),
+        if(input$filtered_background) {
+          p("The background genes are filtered genes from the original gene list. 
+          The filtered genes are those that are passed a low filter in RNA-seq.")
+        } else {
+          p("The background genes are all protein-coding genes.")
+        },
+
+        if(input$remove_redudant) {
+          p("Similar pathways sharing 90% of genes are represented by the most significant pathway if
+                they also share 50% of the words in their names.")
+        },
+
+
+        if(!is.null(info)) {
+          p("A total of ", info$GeneSets, " gene sets are obtained from ", 
+            a(
+              info$Subtype.Database.name,
+              href = info$Link
+            ),
+            "(", info$Database.Description, ").",
+            "Dabase version/date is ", info$Version, ".",
+            "For details on  this ", info$Type, "type of database, please refer to: ",
+            info$Author, ", ", 
+            info$PaperTitle, ", ",
+            info$Citation.Reference, 
+            "(",
+            a(
+              paste("PubMed ID: ", info$PMID),
+              href = paste0("https://www.ncbi.nlm.nih.gov/pubmed/", info$PMID)
+            ),
+            ")."
+          )#p
+        } else {
+          p("Gene sets are derived from ", paste0(input$select_go, "."))
+        },
+        p("After the analysis is done, pathways are first filtered based on a user specified FDR cutoff.
+          Then the siginificant pathways are sorted by.", input$sort_by, ".",
+          " Only the top ", input$top_pathways, " pathways are shown.")
+      )
+    })    
   })
+
+
 }
 
 ## To be copied in the UI
