@@ -771,27 +771,31 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       )
     })
 
+    observeEvent(input$expression_file, {
+      # test data for correct format
+      if (
+        min(loaded_data()$data, na.rm = TRUE) < 0 && input$data_file_format == 1
+      ) {
+        showModal(modalDialog(
+          title = "Data type does not match data format",
+          tags$p("Negative values were detected in this dataset. This is not
+                 correct for the selected data type (Read Counts).
+                 Please double check data type or the data."),
+          tags$br(),
+          size = "m",
+          easyClose = TRUE
+          #footer = actionButton(ns("reset_app"), "Start over")
+        ))
+      }
+    })
+
     # Get converted IDs ----------
     conversion_info <- reactive({
       req(!is.null(loaded_data()$data))
 
-      # test data for correct format
-      if (
-        min(loaded_data()$data, na.rm = TRUE) < 0 & input$data_file_format == 1
-      ) {
-        showModal(modalDialog(
-          title = "Somthing seems incorrect...",
-          tags$p("Negative values were detected in this dataset. This is not
-                 correct for the selected data type (Read Counts).
-                 Please double check data type or the data.
-                 You will not be able to continue until one of these
-                 are resolved."),
-          tags$br(),
-          tags$p("Upon clicking okay, the application will reset."),
-          size = "m",
-          footer = actionButton(ns("reset_app"), "Okay, I will check my inputs!")
-        ))
-      } else {
+
+      req(!(min(loaded_data()$data, na.rm = TRUE) < 0 && input$data_file_format == 1))
+
         shinybusy::show_modal_spinner(
           spin = "orbit",
           text = "Loading Data",
@@ -840,7 +844,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           all_gene_names = all_gene_names,
           gmt_choices = gmt_choices
         ))
-      }
+      
     })
 
     observeEvent(input$reset_app, {
@@ -896,6 +900,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       if (is.null(input$expression_file) && input$go_button == 0) {
         return(NULL)
       }
+      req(input$data_file_format)
       isolate({
         if (is.null(conversion_info()$converted)) {
           return(as.data.frame("ID not recognized."))

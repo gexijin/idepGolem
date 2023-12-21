@@ -1023,5 +1023,9 @@ pathway_source_info <- function(pathway_file, go, select_org, idep_data) {
     )
   )
   DBI::dbDisconnect(conn_db)
-  return(pathway_info)
+  if(nrow(pathway_info) == 0) { # no record found.
+    return(NULL)
+  } else {
+    return(pathway_info)
+  }
 }
