@@ -185,6 +185,12 @@ mod_06_pathway_ui <- function(id) {
 
           tabPanel(
             title = "Tree",
+            br(),
+            selectInput(
+              inputId = ns("leaf_colors"),
+              label = "Select leaf colors (low-high)",
+              choices = "green-red"
+            ),
             plotOutput(
               outputId = ns("enrichment_tree"),
               width = "100%"
@@ -1019,11 +1025,18 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     # Kegg Colors --------
     kegg_colors <- list(
       "Green-Red" = c("green", "red"),
+      "Red-Green" = c("red", "green"),
+      "Blue-Red" = c("blue", "red"),
+      "Green-Magenta" = c("green", "magenta"),
       "Blue-Orange" = c("blue", "orange")
     )
     kegg_choices <- c(
       "Green-Red",
+      "Red-Green",
+      "Blue-Red",
+      "Green-Magenta",
       "Blue-Orange"
+
     )
     observe({
       updateSelectInput(
@@ -1122,13 +1135,22 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         show_pathway_id = show_pathway_id
       )
     })
+    
+    observe({
+      updateSelectInput(
+        session = session,
+        inputId = "leaf_colors",
+        choices = kegg_choices
+      )
+    })
 
     enrichment_tree_p <- reactive({
       req(!is.null(pathway_list_data()))
       enrichment_tree_plot(
         go_table = pathway_list_data(),
         group = "All Groups",
-        right_margin = 30
+        right_margin = 30,
+        leaf_color_choices = kegg_colors[[input$leaf_colors]]
       )
       p <- recordPlot()
       return(p)

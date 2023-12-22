@@ -13,7 +13,8 @@
 #'  that are enriched share genes.
 enrichment_tree_plot <- function(go_table,
                                  group,
-                                 right_margin = 10) {
+                                 right_margin = 10,
+                                 leaf_color_choices = NULL) {
   # a program for ploting enrichment results by highlighting the similarities among terms
   # must have columns: Direction, adj.Pval   Pathways Genes
   #  Direction  adj.Pval  nGenes  Pathways    Genes
@@ -80,9 +81,13 @@ enrichment_tree_plot <- function(go_table,
     stats::hclust(method = "average")
   # Permutated order of leaves
   ix <- dend$order
-
   leaf_type <- as.factor(data$Direction[ix])
-  leaf_colors <- rev(gg_color_hue(length(unique(data$Direction))))
+  if(!is.null(leaf_color_choices)) {
+    leaf_colors <- leaf_color_choices
+    }
+  else{
+    leaf_colors <- rev(gg_color_hue(length(unique(data$Direction))))
+  }
 
   # Leaf size represent P values
   leaf_size <- -log10(as.numeric(data$adj_p_val[ix]))
