@@ -824,11 +824,12 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     })
     # pop-up modal
     observeEvent(input$elbow_pop_up, {
-      shinybusy::show_modal_spinner(
-            spin = "orbit",
-            text = "Creating sub-heatmap",
-            color = "#000000"
-          )
+      showNotification(
+        ui = "Generating plot. May take 5-10 seconds...",
+        id = "elbow_pop_up_message",
+        duration = 6,
+        type = "message"
+      )
       showModal(modalDialog(
         plotOutput(ns("k_clusters")),
         footer = NULL,
@@ -843,7 +844,6 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           )
         ),
       ))
-      shinybusy::remove_modal_spinner()
     })
 
     # Heatmap Download Data -----------

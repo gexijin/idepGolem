@@ -316,7 +316,7 @@ enrich_barplot <- function(enrichment_dataframe,
 #' @param network GO table from the pathway analysis
 #' @param up_down_reg_deg Plot just up/down or both
 #' @param wrap_text_network_deg Wrap the text from the pathway description
-#' @param layout_vis_deg BUtton to reset the layout of the network
+#' @param layout_vis_deg Button to reset the layout of the network
 #' @param edge_cutoff_deg P-value to cutoff enriched pathways
 #'
 #' @export
