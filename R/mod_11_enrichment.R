@@ -459,7 +459,6 @@ mod_11_enrichment_server <- function(id,
             idep_data = idep_data,
             # when GMT file is uploaded, pretend to be a new species
             select_org = ifelse(is.null(gmt_file()), select_org(), "NEW"),
-            sub_pathway_files = gene_sets$pathway_files,
             use_filtered_background = input$filtered_background,
             reduced = input$remove_redudant,
             max_terms = input$top_pathways,

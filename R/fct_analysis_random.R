@@ -128,9 +128,6 @@ find_overlap_gmt <- function(query,
 #' @param go String designating the section of the database to query for pathway
 #'   analysis. See \code{\link{gmt_category}()} for choices.
 #' @param idep_data List of data returned from \code{\link{get_idep_data}()}
-#' @param sub_pathway_files String designating file location for GMT files in
-#'   the database that contain information for the matched species. This string
-#'   is returned from \code{\link{read_pathway_sets}()}.
 #' @param use_filtered_background TRUE/FALSE to indicate the use of the genes
 #'   that passed the pre_process filter as the background
 #' @param select_org String designating which organism is being analyzed.
@@ -157,7 +154,6 @@ find_overlap <- function(pathway_table,
                          gene_info,
                          go,
                          idep_data,
-                         sub_pathway_files,
                          use_filtered_background,
                          select_org,
                          reduced = FALSE,
@@ -187,8 +183,6 @@ find_overlap <- function(pathway_table,
       max_size = 10000
     )
   } else {
-
-
 
     # pathway_table <- pathway_table[pathway_table$overlap > 1, ]
 
@@ -231,8 +225,7 @@ find_overlap <- function(pathway_table,
           go = go,
           pathway_table = pathway_table,
           idep_data = idep_data,
-          select_org = select_org,
-          sub_pathway_files = sub_pathway_files
+          select_org = select_org
         )
 
         # note that both the query size and the background size

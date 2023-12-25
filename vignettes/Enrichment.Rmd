@@ -181,9 +181,7 @@ portion of the database. This input should be the same as what was inputted for
 `go` in the function `read_pathway_sets`. 
 
 The next parameter takes in the `idep_data` list that is created from the iDEP
-database. `sub_pathway_files` is the parameter that takes in the pathway files
-that were found in the previous function to have information for the matched
-species. `use_filtered_background` is TURE/FALSE for which gene set to use as
+database.  `use_filtered_background` is TURE/FALSE for which gene set to use as
 the background when calculating overlap. For TRUE, the background gene set will
 be the genes in the processed data matrix that passed the filtering. If the
 value is set to FALSE, the background will be all the gene IDs that were found
@@ -198,8 +196,7 @@ pathway_info <- find_overlap(
   processed_data = processed_data$data,
   gene_info = all_gene_info,
   go = "GOBP",
-  idep_data = idep_data,
-  sub_pathway_files = gene_sets$pathway_files,
+  idep_data = idep_data
   use_filtered_background = TRUE,
   select_org = "BestMatch",
   reduced = .75

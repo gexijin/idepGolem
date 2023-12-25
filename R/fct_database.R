@@ -584,9 +584,6 @@ read_pathway_sets <- function(all_gene_names_query,
 #'  \code{\link{read_pathway_sets}()}. If this data frame is NULL or 0 rows
 #'  there this function will return no significant enrichment.
 #' @param idep_data List of data returned from \code{\link{get_idep_data}()}
-#' @param sub_pathway_files String designating file location for GMT files in
-#'   the database that contain information for the matched species. This string
-#'   is returned from \code{\link{read_pathway_sets}()}.
 #' @param select_org Species selected.
 #'
 #' @export
@@ -601,8 +598,7 @@ background_pathway_sets <- function(processed_data,
                                     go,
                                     pathway_table,
                                     idep_data,
-                                    select_org,
-                                    sub_pathway_files) {
+                                    select_org) {
   query_set <- rownames(processed_data)
 
   #  if (!is.null(gene_info)) {
