@@ -457,7 +457,8 @@ mod_11_enrichment_server <- function(id,
             gene_info = gene_info(),
             go = input$select_go,
             idep_data = idep_data,
-            select_org = select_org(),
+            # when GMT file is uploaded, pretend to be a new species
+            select_org = ifelse(is.null(gmt_file()), select_org(), "NEW"),
             sub_pathway_files = gene_sets$pathway_files,
             use_filtered_background = input$filtered_background,
             reduced = input$remove_redudant,
@@ -928,7 +929,7 @@ mod_11_enrichment_server <- function(id,
         } else {
           p("Gene sets are derived from ", paste0(input$select_go, "."))
         },
-        p("After the analysis is done, pathways are first filtered based on a user specified FDR cutoff.
+        p("After the analysis is done, pathways are first filtered based on a FDR cutoff (0.05).
           Then the siginificant pathways are sorted by.", input$sort_by, ".",
           " Only the top ", input$top_pathways, " pathways are shown.")
       )

@@ -72,26 +72,23 @@ mod_01_load_data_ui <- function(id) {
               ),
 
         br(),
-        # Conditional .GMT file input bar ----------
-        conditionalPanel(
-          condition = 'input.select_org == "NEW"',
-          fileInput(
-            inputId = ns("gmt_file"),
-            label =
-              "Upload a geneset .GMT file for enrichment analysis (optional)",
-            accept = c(
-              "text/csv",
-              "text/comma-separated-values",
-              "text/tab-separated-values",
-              "text/plain",
-              ".csv",
-              ".tsv",
-              ".xlsx",
-              ".xls"
-            )
-          ),
-          ns = ns
+        # .GMT file input bar ----------
+
+        fileInput(
+          inputId = ns("gmt_file"),
+          label =
+            "Upload a geneset .GMT file for enrichment analysis (optional)",
+          accept = c(
+            "text/csv",
+            "text/comma-separated-values",
+            "text/tab-separated-values",
+            "text/plain",
+            ".csv",
+            ".tsv",
+            ".gmt"
+          )
         ),
+
 
         # Dropdown for data file format ----------
         strong("2. Choose data type"),

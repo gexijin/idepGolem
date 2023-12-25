@@ -415,21 +415,26 @@ read_pathway_sets <- function(all_gene_names_query,
                               idep_data,
                               gene_info) {
   id_not_recognized <- as.data.frame("ID not recognized!")
-
+  query_set <- all_gene_names_query[, 2]
   if (select_org == "NEW" && is.null(gmt_file)) {
     return(as.data.frame("No GMT file provided!"))
-  } else if (select_org == "NEW" && !is.null(gmt_file)) {
+  } else if (!is.null(gmt_file)) {
     in_file <- gmt_file
     in_file <- in_file$datapath
+    gene_sets <- read_gmt(in_file)
 
-    return(read_gmt(in_file))
+    return(list(
+      pathway_table = gene_sets,
+      query_set = query_set,
+      total_genes = NULL
+    ))
   }
 
   if (ncol(all_gene_names_query) == 1) {
     return(id_not_recognized)
   }
 
-  query_set <- all_gene_names_query[, 2]
+
 
   #  if (!is.null(gene_info)) {
   #    if (dim(gene_info)[1] > 1) {
@@ -700,7 +705,7 @@ gmt_category <- function(converted,
                          select_org,
                          gmt_file,
                          idep_data) {
-  if (select_org == "NEW" && !is.null(gmt_file)) {
+  if (!is.null(gmt_file)) {
     return(list(custom_gene_set = "Custom"))
   }
 
