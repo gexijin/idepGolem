@@ -19,7 +19,7 @@ network_data(
 
 \item{wrap_text_network_deg}{Wrap the text from the pathway description}
 
-\item{layout_vis_deg}{BUtton to reset the layout of the network}
+\item{layout_vis_deg}{Button to reset the layout of the network}
 
 \item{edge_cutoff_deg}{P-value to cutoff enriched pathways}
 }
