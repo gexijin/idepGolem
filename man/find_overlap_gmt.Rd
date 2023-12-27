@@ -9,7 +9,12 @@ find_overlap_gmt(
   gene_set,
   min_fdr = 0.2,
   min_size = 2,
-  max_size = 10000
+  max_size = 10000,
+  use_filtered_background,
+  min_genes_background,
+  max_genes_background,
+  idep_data,
+  processed_data
 )
 }
 \arguments{

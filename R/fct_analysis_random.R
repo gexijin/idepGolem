@@ -33,7 +33,12 @@ find_overlap_gmt <- function(query,
                              gene_set,
                              min_fdr = .2,
                              min_size = 2,
-                             max_size = 10000) {
+                             max_size = 10000,
+                             use_filtered_background ,
+                             min_genes_background,
+                             max_genes_background,
+                             idep_data,
+                             processed_data) {
   total_elements <- 20000 # why 3000?
   min_overlap <- 1 # nolint
   max_terms <- 10
@@ -62,14 +67,32 @@ find_overlap_gmt <- function(query,
   }
   result <- unlist(lapply(X = gene_set, FUN = length_fun, query = query))
   result <- cbind(unlist(lapply(X = gene_set, FUN = length)), result)
-  result <- as.data.frame(result)
+  result <- as.data.frame(result) # n, overlap
+
+  # Background genes -----------
+  if (!is.null(use_filtered_background)) {
+    if (
+      use_filtered_background &&
+        length(row.names(processed_data)) > min_genes_background &&
+        length(row.names(processed_data)) < max_genes_background + 1
+    ) {
+
+      query_bg <- row.names(processed_data)
+      #total genes
+      total_elements <- length(query_bg)
+      # num. of genes in background in each of the gene sets
+      result[, 1] <- unlist(lapply(X = gene_set, FUN = length_fun, query = query_bg))
+    }
+  }
+
 
   # add intersection genes
   genes_fun <- function(x, query) {
     paste(intersect(query, x), collapse = ", ")
   }
+  # list of genes in the intersection
   result$gene_sets <- unlist(lapply(X = gene_set, FUN = genes_fun, query = query))
-
+  # fold enrichment
   result$fold <- result[, 2] / query_length / (result[, 1] / total_elements)
 
   result <- result[which(result[, 2] > min_overlap), , drop = FALSE]
@@ -163,7 +186,7 @@ find_overlap <- function(pathway_table,
   max_genes_background <- 30000
   min_genes_background <- 1000
   #  max_terms <- 15
-  min_fdr <- .05
+  min_fdr <- .1
   min_overlap <- 2
   min_word_overlap <- 0.5 # % of overlapping words for reduandant pathway
   if (reduced) {
@@ -174,13 +197,18 @@ find_overlap <- function(pathway_table,
   if (select_org == "NEW" && is.null(pathway_table)) {
     return(data.frame("Enrichment" = "No GMT file provided!"))
   } else if (select_org == "NEW") {
-    pathway_table <-
-    find_overlap_gmt(
+    
+    pathway_table <- find_overlap_gmt(
       query = query_set,
       gene_set = pathway_table,
       min_fdr = min_fdr,
       min_size = 2,
-      max_size = 10000
+      max_size = 10000,
+      use_filtered_background = use_filtered_background,
+      min_genes_background = min_genes_background,
+      max_genes_background = max_genes_background,
+      idep_data = idep_data,
+      processed_data = processed_data
     )
   } else {
 

@@ -73,19 +73,30 @@ mod_01_load_data_ui <- function(id) {
 
         br(),
         # .GMT file input bar ----------
-
-        fileInput(
-          inputId = ns("gmt_file"),
-          label =
-            "Upload a geneset .GMT file for enrichment analysis (optional)",
-          accept = c(
-            "text/csv",
-            "text/comma-separated-values",
-            "text/tab-separated-values",
-            "text/plain",
-            ".csv",
-            ".tsv",
-            ".gmt"
+        fluidRow(
+          column(1,
+          ),
+          column(
+            11,
+            fileInput(
+              inputId = ns("gmt_file"),
+              label =
+                "Optional: Upload a custom pathway file",
+              accept = c(
+                "text/csv",
+                "text/comma-separated-values",
+                "text/tab-separated-values",
+                "text/plain",
+                ".csv",
+                ".tsv",
+                ".gmt"
+              )
+            ),
+            tippy::tippy_this(
+              ns("gmt_file"),
+              "Upload a customized pathway file (.GMT format) to perform pathway analysis.",
+              theme = "light-border"
+            )            
           )
         ),
 
@@ -459,7 +470,11 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     selected_species_name <- reactiveVal("Human")
 
     output$selected_species <- renderText({
-      selected_species_name()
+      if(is.null(input$gmt_file)){
+        selected_species_name() 
+      } else {
+        return("Upload")
+      }
     })
 
     # UI elements for load demo action button, demo data drop down, and -----
@@ -575,7 +590,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       tagList(
         fileInput(
           inputId = ns("experiment_file"),
-          label = strong("4. Experiment Design (CSV or text), (optional)"),
+          label = strong("4. Optional: Experiment Design (CSV or text)"),
           accept = c(
             "text/csv",
             "text/comma-separated-values",
