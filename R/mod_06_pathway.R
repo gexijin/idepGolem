@@ -641,12 +641,22 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
 
       withProgress(message = "Reading pathway database", {
         incProgress(0.2)
+
         if (
-          pre_process$select_org() == "NEW" && !is.null(pre_process$gmt_file())
+          !is.null(pre_process$gmt_file())
         ) {
           in_file <- pre_process$gmt_file()
           in_file <- in_file$datapath
-          gene_sets <- read_gmt_robust(in_file)
+          gene_lists <- read_gmt_robust(in_file)
+          pathway_info <- data.frame(
+            id = 1:length(gene_lists),
+            description = names(gene_lists),
+            memo = rep("", length(gene_lists))
+          )
+          gene_sets <- list(
+            gene_lists = gene_lists,
+            pathway_info = pathway_info
+          )     
         } else {
           gene_sets <- read_gene_sets(
             converted = pre_process$converted(),
