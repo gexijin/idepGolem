@@ -1179,7 +1179,7 @@ individual_plots <- function(individual_data,
                              plots_color_select) {
   individual_data <- as.data.frame(individual_data)
   individual_data$symbol <- rownames(individual_data)
-  
+
   plot_data <- individual_data |>
     dplyr::filter(symbol %in% selected_gene) |>
     tidyr::pivot_longer(!symbol, names_to = "sample", values_to = "value")
@@ -1237,53 +1237,53 @@ individual_plots <- function(individual_data,
 
     summarized$SE <- summarized$SD / sqrt(summarized$N)
 
-    color_palette <- RColorBrewer::brewer.pal(n = nlevels(summarized$groups), name = plots_color_select)
+    color_palette <- RColorBrewer::brewer.pal(n = length(unique(summarized$groups)), name = plots_color_select)
   
     gene_bar <- ggplot2::ggplot(
       summarized,
       ggplot2::aes(x = symbol, y = Mean, fill = groups)
     ) +
-      ggplot2::geom_bar(
-        stat = "identity",
-        position = ggplot2::position_dodge()
-        ) +
-      ggplot2::labs(
-        title = "Expression Level",
-        y = "Grouped Transformed Expression"
+    ggplot2::geom_bar(
+      stat = "identity",
+      position = ggplot2::position_dodge()
       ) +
-      ggplot2::geom_dotplot(
-        data = plot_data,
-        ggplot2::aes(
-          y = value,
-          groups = groups
-        ),
-        fill = "black",
-        position = ggplot2::position_dodge(),
-        binaxis='y', 
-        stackdir='center', 
-        dotsize=1
-      ) +
-      ggplot2::theme_light() +
-      ggplot2::theme(
-        plot.title = ggplot2::element_text(
-          color = "black",
-          size = 16,
-          face = "bold",
-          hjust = .5
-        ),
-        axis.text.x = ggplot2::element_text(
-          angle = as.numeric(lab_rotate),
-          size = x_axis_labels,
-          vjust = .5
-        ),
-        axis.text.y = ggplot2::element_text(size = 16),
-        axis.title.x = ggplot2::element_blank(),
-        axis.title.y = ggplot2::element_text(
-          color = "black",
-          size = 14
-        ),
-        legend.text = ggplot2::element_text(size = 12)
-      ) +
+    ggplot2::labs(
+      title = "Expression Level",
+      y = "Grouped Transformed Expression"
+    ) +
+    ggplot2::geom_dotplot(
+      data = plot_data,
+      ggplot2::aes(
+        y = value,
+        groups = groups
+      ),
+      fill = "black",
+      position = ggplot2::position_dodge(),
+      binaxis='y', 
+      stackdir='center', 
+      dotsize=1
+    ) +
+    ggplot2::theme_light() +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(
+        color = "black",
+        size = 16,
+        face = "bold",
+        hjust = .5
+      ),
+      axis.text.x = ggplot2::element_text(
+        angle = as.numeric(lab_rotate),
+        size = x_axis_labels,
+        vjust = .5
+      ),
+      axis.text.y = ggplot2::element_text(size = 16),
+      axis.title.x = ggplot2::element_blank(),
+      axis.title.y = ggplot2::element_text(
+        color = "black",
+        size = 14
+      ),
+      legend.text = ggplot2::element_text(size = 12)
+    ) +
     ggplot2::scale_fill_manual(values = color_palette)
 
     if (use_sd == TRUE) {

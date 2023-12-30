@@ -46,11 +46,11 @@ mod_01_load_data_ui <- function(id) {
 
         fluidRow(
           column(
-            width = 4, 
-            strong("1. Choose a species"),
+            width = 5, 
+            strong("1. Choose a species or upload a pathway file."),
           ),
           column(
-            width = 4,
+            width = 3,
             align = "center",
             # Species list and genome assemblies ----------
             actionButton(
@@ -64,8 +64,8 @@ mod_01_load_data_ui <- function(id) {
             textOutput(ns("selected_species"))
           )
         ),
-    tags$head(tags$style("#load_data-selected_species{color: red;
-                                 font-size: 15px;
+    tags$head(tags$style("#load_data-selected_species{color: blue;
+                                 font-size: 12px;
                                  font-style: italic;
                                  }"
                          )
@@ -74,10 +74,10 @@ mod_01_load_data_ui <- function(id) {
         br(),
         # .GMT file input bar ----------
         fluidRow(
-          column(1,
+          column(2,
           ),
           column(
-            11,
+            10,
             fileInput(
               inputId = ns("gmt_file"),
               label =
@@ -150,7 +150,7 @@ mod_01_load_data_ui <- function(id) {
           ),
           ns = ns
         ),
-
+        br(),
         # Load expression data options ----------
         # Includes load demo action button, demo data dropdown, and expression
         # file upload box
@@ -489,7 +489,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       if(is.null(input$gmt_file)){
         selected_species_name() 
       } else {
-        return("Customized")
+        return("Custom")
       }
     })
 
@@ -624,7 +624,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     
     #name variables like this: gene_ids_example_popup, not GeneIDsExamplePopup.
     output$example_genes_ui <- renderUI({
-      actionButton(ns("gene_ids_example_popup"), "Example gene IDs")
+      actionButton(ns("gene_ids_example_popup"), "Gene IDs")
     })
 
 

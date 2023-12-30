@@ -60,6 +60,9 @@ connect_convert_db <- function(datapath = DATAPATH) {
 #' @return Database connection.
 connect_convert_db_org <- function(datapath = DATAPATH, select_org, idep_data) {
   ix <- which(idep_data$org_info$id == select_org)
+  if(select_org == "NEW" || length(ix) == 0) {
+    return(NULL)
+  } 
   db_file <- idep_data$org_info[ix, "file"]
   return(try(
     DBI::dbConnect(
@@ -274,6 +277,8 @@ convert_id <- function(query,
   # Solves the issue of app shut down when species
   # is deleted after genes are uploaded.
   if (is.null(select_org)) {
+    return(NULL)
+  } else if(select_org == "NEW") {
     return(NULL)
   }
 

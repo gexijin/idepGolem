@@ -1024,7 +1024,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       req(!is.null(input$gene_plot_box))
       req(!is.null(input$use_sd))
       req(input$angle_ind_axis_lab)
-      
+
       p <- individual_plots(
         individual_data = individual_data(),
         sample_info = load_data$sample_info(),
