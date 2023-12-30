@@ -1305,7 +1305,6 @@ individual_plots <- function(individual_data,
         position = ggplot2::position_dodge(.9)
       )
     }
-
     return(gene_bar)
   }
 }

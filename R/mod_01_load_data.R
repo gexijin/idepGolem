@@ -81,7 +81,7 @@ mod_01_load_data_ui <- function(id) {
             fileInput(
               inputId = ns("gmt_file"),
               label =
-                "Optional: Upload a custom pathway file",
+                "Or: Upload a custom pathway .GMT file",
               accept = c(
                 "text/csv",
                 "text/comma-separated-values",
@@ -441,6 +441,22 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       )
     })
 
+    observeEvent(input$gmt_file, {
+      req(!is.null(input$gmt_file))
+      updateSelectizeInput(
+        session = session,
+        inputId = "select_org",
+        choices = "NEW",
+        selected = "NEW",
+        server = TRUE
+      )
+      updateCheckboxInput(
+        inputId = "no_id_conversion",
+        label = "Do not convert gene IDs",
+        value = TRUE
+      )
+    })
+
     shinyjs::hideElement(id = "select_org")
     observeEvent(input$clicked_row, {
       # find species ID from ensembl_dataset
@@ -473,7 +489,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       if(is.null(input$gmt_file)){
         selected_species_name() 
       } else {
-        return("Upload")
+        return("Customized")
       }
     })
 
@@ -936,7 +952,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       req(
         tab() == "Load Data" &&
           #!is.null(conversion_info()$converted)
-          species_match_data()[1,1] == "ID not recognized."
+          species_match_data()[1,1] == "ID not recognized." &&
+          input$select_org != "NEW"
       )
 
 

@@ -421,7 +421,7 @@ read_pathway_sets <- function(all_gene_names_query,
   } else if (!is.null(gmt_file)) {
     in_file <- gmt_file
     in_file <- in_file$datapath
-    gene_sets <- read_gmt(in_file)
+    gene_sets <- read_gmt_robust(in_file)
 
     return(list(
       pathway_table = gene_sets,
