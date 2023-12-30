@@ -370,6 +370,13 @@ mod_02_pre_process_ui <- function(id) {
           # Barplot for rRNA counts ----------
           tabPanel(
             title = "QC",
+            conditionalPanel(
+              condition = "output.select_org == 'NEW'",
+              h4("QC reports are not available for custom organisms."),
+              ns = ns
+            ),
+            conditionalPanel(
+              condition = "output.select_org != 'NEW'",
 
               plotOutput(
                 outputId = ns("gene_counts_gg"),
@@ -399,32 +406,56 @@ mod_02_pre_process_ui <- function(id) {
               br(),
               hr(),
             
-            conditionalPanel(
-              condition = "output.data_file_format == 1",
-              br(),
-              plotOutput(
-                outputId = ns("rRNA_counts_gg"),
-                width = "100%",
-                height = "500px"
-              ),
-              br(),
-              fluidRow(
-                column(
-                  2, 
-                  ottoPlots::mod_download_figure_ui(
-                    id = ns("dl_rRNA_counts_gg")
+              conditionalPanel(
+                condition = "output.data_file_format == 1",
+                br(),
+                plotOutput(
+                  outputId = ns("rRNA_counts_gg"),
+                  width = "100%",
+                  height = "500px"
+                ),
+                br(),
+                fluidRow(
+                  column(
+                    2, 
+                    ottoPlots::mod_download_figure_ui(
+                      id = ns("dl_rRNA_counts_gg")
+                    )
+                  ),
+                  column(
+                    10,
+                    align = "right",
+                    p("Higher proportions of rRNA indicuate ineffective rRNA-removal.")
                   )
                 ),
-                column(
-                  10,
-                  align = "right",
-                  p("Higher proportions of rRNA indicuate ineffective rRNA-removal.")
-                )
+                br(),
+                hr(),
+                plotOutput(
+                  outputId = ns("chr_counts_gg"),
+                  width = "100%",
+                  height = "2000px"
+                ),
+                br(),
+                fluidRow(
+                  column(
+                    2, 
+                    ottoPlots::mod_download_figure_ui(
+                      id = ns("dl_chr_counts_gg")
+                    ),
+                  ),
+                  column(
+                    10,
+                    align = "right",
+                    p("Higher bar means more reads map to this chromosome in this sample.")
+                  )
+                ),
+                br(),
+                hr(),
+                ns = ns
               ),
-              br(),
-              hr(),
+            
               plotOutput(
-                outputId = ns("chr_counts_gg"),
+                outputId = ns("chr_normalized_gg"),
                 width = "100%",
                 height = "2000px"
               ),
@@ -433,39 +464,17 @@ mod_02_pre_process_ui <- function(id) {
                 column(
                   2, 
                   ottoPlots::mod_download_figure_ui(
-                    id = ns("dl_chr_counts_gg")
-                  ),
+                    id = ns("dl_chr_normalized_gg")
+                  )
                 ),
                 column(
                   10,
                   align = "right",
-                  p("Higher bar means more reads map to this chromosome in this sample.")
+                  p("A tall bar means genes on this chromosome are expressed at higher levels in a sample, as indicated by the 75th percentile.")
                 )
               ),
-              br(),
-              hr(),
-              ns = ns
-            ),
-            
-            plotOutput(
-              outputId = ns("chr_normalized_gg"),
-              width = "100%",
-              height = "2000px"
-            ),
-            br(),
-            fluidRow(
-              column(
-                2, 
-                ottoPlots::mod_download_figure_ui(
-                  id = ns("dl_chr_normalized_gg")
-                )
-              ),
-              column(
-                10,
-                align = "right",
-                p("Total bar means genes on this chromosome are expressed at higher levels in a sample, as indicated by the 75th percentile.")
-              )
-            ),
+            ns = ns
+            )
           ),
           # Plot panel for individual genes ---------
           tabPanel(
@@ -548,6 +557,11 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       load_data$data_file_format()
     })
     outputOptions(output, "data_file_format", suspendWhenHidden = FALSE)
+
+    output$select_org <- reactive({
+      load_data$select_org()
+    })
+    outputOptions(output, "select_org", suspendWhenHidden = FALSE)
 
     # Update Variable Selection for the Scatter Plots ----------
     observe({
@@ -665,6 +679,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       shinybusy::remove_modal_spinner()
       return(p)
     })
+
     output$gene_counts_gg <- renderPlot({
       print(gene_counts())
     })
@@ -1009,7 +1024,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       req(!is.null(input$gene_plot_box))
       req(!is.null(input$use_sd))
       req(input$angle_ind_axis_lab)
-      
+
       p <- individual_plots(
         individual_data = individual_data(),
         sample_info = load_data$sample_info(),

@@ -46,11 +46,11 @@ mod_01_load_data_ui <- function(id) {
 
         fluidRow(
           column(
-            width = 4, 
-            strong("1. Choose a species"),
+            width = 5, 
+            strong("1. Choose a species or upload a pathway file."),
           ),
           column(
-            width = 4,
+            width = 3,
             align = "center",
             # Species list and genome assemblies ----------
             actionButton(
@@ -64,34 +64,42 @@ mod_01_load_data_ui <- function(id) {
             textOutput(ns("selected_species"))
           )
         ),
-    tags$head(tags$style("#load_data-selected_species{color: red;
-                                 font-size: 15px;
+    tags$head(tags$style("#load_data-selected_species{color: blue;
+                                 font-size: 12px;
                                  font-style: italic;
                                  }"
                          )
               ),
 
         br(),
-        # Conditional .GMT file input bar ----------
-        conditionalPanel(
-          condition = 'input.select_org == "NEW"',
-          fileInput(
-            inputId = ns("gmt_file"),
-            label =
-              "Upload a geneset .GMT file for enrichment analysis (optional)",
-            accept = c(
-              "text/csv",
-              "text/comma-separated-values",
-              "text/tab-separated-values",
-              "text/plain",
-              ".csv",
-              ".tsv",
-              ".xlsx",
-              ".xls"
-            )
+        # .GMT file input bar ----------
+        fluidRow(
+          column(2,
           ),
-          ns = ns
+          column(
+            10,
+            fileInput(
+              inputId = ns("gmt_file"),
+              label =
+                "Or: Upload a custom pathway .GMT file",
+              accept = c(
+                "text/csv",
+                "text/comma-separated-values",
+                "text/tab-separated-values",
+                "text/plain",
+                ".csv",
+                ".tsv",
+                ".gmt"
+              )
+            ),
+            tippy::tippy_this(
+              ns("gmt_file"),
+              "Upload a customized pathway file (.GMT format) to perform pathway analysis.",
+              theme = "light-border"
+            )            
+          )
         ),
+
 
         # Dropdown for data file format ----------
         strong("2. Choose data type"),
@@ -142,7 +150,7 @@ mod_01_load_data_ui <- function(id) {
           ),
           ns = ns
         ),
-
+        br(),
         # Load expression data options ----------
         # Includes load demo action button, demo data dropdown, and expression
         # file upload box
@@ -433,6 +441,22 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       )
     })
 
+    observeEvent(input$gmt_file, {
+      req(!is.null(input$gmt_file))
+      updateSelectizeInput(
+        session = session,
+        inputId = "select_org",
+        choices = "NEW",
+        selected = "NEW",
+        server = TRUE
+      )
+      updateCheckboxInput(
+        inputId = "no_id_conversion",
+        label = "Do not convert gene IDs",
+        value = TRUE
+      )
+    })
+
     shinyjs::hideElement(id = "select_org")
     observeEvent(input$clicked_row, {
       # find species ID from ensembl_dataset
@@ -462,7 +486,11 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     selected_species_name <- reactiveVal("Human")
 
     output$selected_species <- renderText({
-      selected_species_name()
+      if(is.null(input$gmt_file)){
+        selected_species_name() 
+      } else {
+        return("Custom")
+      }
     })
 
     # UI elements for load demo action button, demo data drop down, and -----
@@ -578,7 +606,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       tagList(
         fileInput(
           inputId = ns("experiment_file"),
-          label = strong("4. Experiment Design (CSV or text), (optional)"),
+          label = strong("4. Optional: Experiment Design (CSV or text)"),
           accept = c(
             "text/csv",
             "text/comma-separated-values",
@@ -596,7 +624,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     
     #name variables like this: gene_ids_example_popup, not GeneIDsExamplePopup.
     output$example_genes_ui <- renderUI({
-      actionButton(ns("gene_ids_example_popup"), "Example gene IDs")
+      actionButton(ns("gene_ids_example_popup"), "Gene IDs")
     })
 
 
@@ -771,27 +799,31 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       )
     })
 
+    observeEvent(input$expression_file, {
+      # test data for correct format
+      if (
+        min(loaded_data()$data, na.rm = TRUE) < 0 && input$data_file_format == 1
+      ) {
+        showModal(modalDialog(
+          title = "Data type does not match data format",
+          tags$p("Negative values were detected in this dataset. This is not
+                 correct for the selected data type (Read Counts).
+                 Please double check data type or the data."),
+          tags$br(),
+          size = "m",
+          easyClose = TRUE
+          #footer = actionButton(ns("reset_app"), "Start over")
+        ))
+      }
+    })
+
     # Get converted IDs ----------
     conversion_info <- reactive({
       req(!is.null(loaded_data()$data))
 
-      # test data for correct format
-      if (
-        min(loaded_data()$data, na.rm = TRUE) < 0 & input$data_file_format == 1
-      ) {
-        showModal(modalDialog(
-          title = "Somthing seems incorrect...",
-          tags$p("Negative values were detected in this dataset. This is not
-                 correct for the selected data type (Read Counts).
-                 Please double check data type or the data.
-                 You will not be able to continue until one of these
-                 are resolved."),
-          tags$br(),
-          tags$p("Upon clicking okay, the application will reset."),
-          size = "m",
-          footer = actionButton(ns("reset_app"), "Okay, I will check my inputs!")
-        ))
-      } else {
+
+      req(!(min(loaded_data()$data, na.rm = TRUE) < 0 && input$data_file_format == 1))
+
         shinybusy::show_modal_spinner(
           spin = "orbit",
           text = "Loading Data",
@@ -840,7 +872,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           all_gene_names = all_gene_names,
           gmt_choices = gmt_choices
         ))
-      }
+      
     })
 
     observeEvent(input$reset_app, {
@@ -896,6 +928,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       if (is.null(input$expression_file) && input$go_button == 0) {
         return(NULL)
       }
+      req(input$data_file_format)
       isolate({
         if (is.null(conversion_info()$converted)) {
           return(as.data.frame("ID not recognized."))
@@ -919,7 +952,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       req(
         tab() == "Load Data" &&
           #!is.null(conversion_info()$converted)
-          species_match_data()[1,1] == "ID not recognized."
+          species_match_data()[1,1] == "ID not recognized." &&
+          input$select_org != "NEW"
       )
 
 

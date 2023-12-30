@@ -60,6 +60,9 @@ connect_convert_db <- function(datapath = DATAPATH) {
 #' @return Database connection.
 connect_convert_db_org <- function(datapath = DATAPATH, select_org, idep_data) {
   ix <- which(idep_data$org_info$id == select_org)
+  if(select_org == "NEW" || length(ix) == 0) {
+    return(NULL)
+  } 
   db_file <- idep_data$org_info[ix, "file"]
   return(try(
     DBI::dbConnect(
@@ -275,6 +278,8 @@ convert_id <- function(query,
   # is deleted after genes are uploaded.
   if (is.null(select_org)) {
     return(NULL)
+  } else if(select_org == "NEW") {
+    return(NULL)
   }
 
   query <- gsub(pattern = "\"|\'", "", x = query)
@@ -415,21 +420,26 @@ read_pathway_sets <- function(all_gene_names_query,
                               idep_data,
                               gene_info) {
   id_not_recognized <- as.data.frame("ID not recognized!")
-
+  query_set <- all_gene_names_query[, 2]
   if (select_org == "NEW" && is.null(gmt_file)) {
     return(as.data.frame("No GMT file provided!"))
-  } else if (select_org == "NEW" && !is.null(gmt_file)) {
+  } else if (!is.null(gmt_file)) {
     in_file <- gmt_file
     in_file <- in_file$datapath
+    gene_sets <- read_gmt_robust(in_file)
 
-    return(read_gmt(in_file))
+    return(list(
+      pathway_table = gene_sets,
+      query_set = query_set,
+      total_genes = NULL
+    ))
   }
 
   if (ncol(all_gene_names_query) == 1) {
     return(id_not_recognized)
   }
 
-  query_set <- all_gene_names_query[, 2]
+
 
   #  if (!is.null(gene_info)) {
   #    if (dim(gene_info)[1] > 1) {
@@ -579,9 +589,6 @@ read_pathway_sets <- function(all_gene_names_query,
 #'  \code{\link{read_pathway_sets}()}. If this data frame is NULL or 0 rows
 #'  there this function will return no significant enrichment.
 #' @param idep_data List of data returned from \code{\link{get_idep_data}()}
-#' @param sub_pathway_files String designating file location for GMT files in
-#'   the database that contain information for the matched species. This string
-#'   is returned from \code{\link{read_pathway_sets}()}.
 #' @param select_org Species selected.
 #'
 #' @export
@@ -596,8 +603,7 @@ background_pathway_sets <- function(processed_data,
                                     go,
                                     pathway_table,
                                     idep_data,
-                                    select_org,
-                                    sub_pathway_files) {
+                                    select_org) {
   query_set <- rownames(processed_data)
 
   #  if (!is.null(gene_info)) {
@@ -700,7 +706,7 @@ gmt_category <- function(converted,
                          select_org,
                          gmt_file,
                          idep_data) {
-  if (select_org == "NEW" && !is.null(gmt_file)) {
+  if (!is.null(gmt_file)) {
     return(list(custom_gene_set = "Custom"))
   }
 
@@ -1023,5 +1029,9 @@ pathway_source_info <- function(pathway_file, go, select_org, idep_data) {
     )
   )
   DBI::dbDisconnect(conn_db)
-  return(pathway_info)
+  if(nrow(pathway_info) == 0) { # no record found.
+    return(NULL)
+  } else {
+    return(pathway_info)
+  }
 }

@@ -33,8 +33,13 @@ find_overlap_gmt <- function(query,
                              gene_set,
                              min_fdr = .2,
                              min_size = 2,
-                             max_size = 10000) {
-  total_elements <- 30000 # why 3000?
+                             max_size = 10000,
+                             use_filtered_background ,
+                             min_genes_background,
+                             max_genes_background,
+                             idep_data,
+                             processed_data) {
+  total_elements <- 20000 # why 3000?
   min_overlap <- 1 # nolint
   max_terms <- 10
   no_sig <- as.data.frame("No significant enrichment found!")
@@ -45,16 +50,51 @@ find_overlap_gmt <- function(query,
     return(no_sig)
   }
 
-  # gene sets smaller than 1 is ignored!!!
+  # gene sets smaller than 1 are ignored
   gene_set <- gene_set[which(sapply(X = gene_set, FUN = length) > min_size)]
-  # gene sets smaller than 1 is ignored!!!
+  # gene sets that are too big are ignored
   gene_set <- gene_set[which(sapply(X = gene_set, FUN = length) < max_size)]
+  
+  # calculate total number of unique genes in the union of all gene_sets
+  total_unique_genes <- length(unique(unlist(gene_set)))
+  if(total_unique_genes > 5000) {
+    total_elements <- total_unique_genes
+  }
 
-  foo <- function(x, query) {
+  # calculate overlap
+  length_fun <- function(x, query) {
     length(intersect(query, x))
   }
-  result <- unlist(lapply(X = gene_set, FUN = foo, query = query))
+  result <- unlist(lapply(X = gene_set, FUN = length_fun, query = query))
   result <- cbind(unlist(lapply(X = gene_set, FUN = length)), result)
+  result <- as.data.frame(result) # n, overlap
+
+  # Background genes -----------
+  if (!is.null(use_filtered_background)) {
+    if (
+      use_filtered_background &&
+        length(row.names(processed_data)) > min_genes_background &&
+        length(row.names(processed_data)) < max_genes_background + 1
+    ) {
+
+      query_bg <- row.names(processed_data)
+      #total genes
+      total_elements <- length(query_bg)
+      # num. of genes in background in each of the gene sets
+      result[, 1] <- unlist(lapply(X = gene_set, FUN = length_fun, query = query_bg))
+    }
+  }
+
+
+  # add intersection genes
+  genes_fun <- function(x, query) {
+    paste(intersect(query, x), collapse = ", ")
+  }
+  # list of genes in the intersection
+  result$gene_sets <- unlist(lapply(X = gene_set, FUN = genes_fun, query = query))
+  # fold enrichment
+  result$fold <- result[, 2] / query_length / (result[, 1] / total_elements)
+
   result <- result[which(result[, 2] > min_overlap), , drop = FALSE]
   if (nrow(result) == 0) {
     return(no_sig)
@@ -65,19 +105,23 @@ find_overlap_gmt <- function(query,
   pval_enrich <- phyper(xx - 1, query_length, nn, kk, lower.tail = FALSE)
   fdr <- p.adjust(pval_enrich, method = "fdr", n = length(gene_set))
   result <- as.data.frame(cbind(fdr, result))
-  result <- result[, c(1, 3, 2)]
   result$pathway <- rownames(result)
-  result$Genes <- "" # place holder just
+  result$memo <- "" # place holder just
+
+
   colnames(result) <- c(
-    "Corrected P value (FDR)",
-    "Genes in list", "Total genes in category", "Functional Category", "Genes"
+    "fdr", "n", "overlap", "gene_sets", "fold", "description", "memo"
   )
-  result <- result[which(result[, 1] < min_fdr), , drop = FALSE]
+  result <- result[, 
+    c("fdr", "overlap", "n", "fold", "description", "memo", "gene_sets")
+  ]
+
+  result <- result[which(result$fdr < min_fdr), , drop = FALSE]
   if (nrow(result) == 0 || min(fdr) > min_fdr) {
     return(no_sig)
   }
-  result <- result[order(result[, 1]), ]
-  if (nrows(result) > max_terms) {
+  result <- result[order(result$fdr), ]
+  if (nrow(result) > max_terms) {
     result <- result[1:max_terms, ]
   }
   return(result)
@@ -107,9 +151,6 @@ find_overlap_gmt <- function(query,
 #' @param go String designating the section of the database to query for pathway
 #'   analysis. See \code{\link{gmt_category}()} for choices.
 #' @param idep_data List of data returned from \code{\link{get_idep_data}()}
-#' @param sub_pathway_files String designating file location for GMT files in
-#'   the database that contain information for the matched species. This string
-#'   is returned from \code{\link{read_pathway_sets}()}.
 #' @param use_filtered_background TRUE/FALSE to indicate the use of the genes
 #'   that passed the pre_process filter as the background
 #' @param select_org String designating which organism is being analyzed.
@@ -136,7 +177,6 @@ find_overlap <- function(pathway_table,
                          gene_info,
                          go,
                          idep_data,
-                         sub_pathway_files,
                          use_filtered_background,
                          select_org,
                          reduced = FALSE,
@@ -146,7 +186,7 @@ find_overlap <- function(pathway_table,
   max_genes_background <- 30000
   min_genes_background <- 1000
   #  max_terms <- 15
-  min_fdr <- .05
+  min_fdr <- .1
   min_overlap <- 2
   min_word_overlap <- 0.5 # % of overlapping words for reduandant pathway
   if (reduced) {
@@ -157,78 +197,83 @@ find_overlap <- function(pathway_table,
   if (select_org == "NEW" && is.null(pathway_table)) {
     return(data.frame("Enrichment" = "No GMT file provided!"))
   } else if (select_org == "NEW") {
-    find_overlap_gmt(
+    
+    pathway_table <- find_overlap_gmt(
       query = query_set,
       gene_set = pathway_table,
-      min_fdr = .2,
+      min_fdr = min_fdr,
       min_size = 2,
-      max_size = 10000
+      max_size = 10000,
+      use_filtered_background = use_filtered_background,
+      min_genes_background = min_genes_background,
+      max_genes_background = max_genes_background,
+      idep_data = idep_data,
+      processed_data = processed_data
     )
-  }
+  } else {
 
-  # pathway_table <- pathway_table[pathway_table$overlap > 1, ]
+    # pathway_table <- pathway_table[pathway_table$overlap > 1, ]
 
-  if (dim(pathway_table)[1] == 0 || is.null(pathway_table)) {
-    return(error_msg)
-  }
-
-  # only keep pathways that are overrepresented
-  #  pathway_table <- pathway_table[which(
-  #    pathway_table$overlap / length(query_set) /
-  #    (as.numeric(pathway_table$n) / total_genes) > 1
-  #  ), ]
-
-  pathway_table$pval <- stats::phyper(
-    pathway_table$overlap - 1,
-    length(query_set),
-    total_genes - length(query_set),
-    as.numeric(pathway_table$n),
-    lower.tail = FALSE
-  )
-
-  pathway_table$fold <- pathway_table$overlap / length(query_set) / (
-    as.numeric(pathway_table$n) / total_genes
-  )
-
-  # remove some with p > 0.3
-  # pathway_table <- subset(pathway_table, pathway_table$pval < max_pval_filter)
-
-  # Background genes -----------
-  if (!is.null(use_filtered_background)) {
-    if (
-      use_filtered_background &&
-        length(row.names(processed_data)) > min_genes_background &&
-        length(row.names(processed_data)) < max_genes_background + 1
-    ) {
-      pathway_table_bg <- background_pathway_sets(
-        processed_data = processed_data,
-        gene_info = gene_info,
-        sub_query = query_set,
-        go = go,
-        pathway_table = pathway_table,
-        idep_data = idep_data,
-        select_org = select_org,
-        sub_pathway_files = sub_pathway_files
-      )
-
-      # note that both the query size and the background size
-      # uses effective size: # of genes with at least one pathway in pathwayDB
-      pathway_table$pval <- phyper(
-        pathway_table_bg$overlap - 1,
-        length(query_set),
-        pathway_table_bg$total_genes_bg[1] - length(query_set),
-        as.numeric(pathway_table_bg$overlap_bg),
-        lower.tail = FALSE
-      )
-      pathway_table$fold <- (pathway_table$overlap / length(query_set)) / (
-        as.numeric(pathway_table_bg$overlap_bg) / pathway_table_bg$total_genes_bg[1]
-      )
+    if (dim(pathway_table)[1] == 0 || is.null(pathway_table)) {
+      return(error_msg)
     }
+
+    # only keep pathways that are overrepresented
+    #  pathway_table <- pathway_table[which(
+    #    pathway_table$overlap / length(query_set) /
+    #    (as.numeric(pathway_table$n) / total_genes) > 1
+    #  ), ]
+
+    pathway_table$pval <- stats::phyper(
+      pathway_table$overlap - 1,
+      length(query_set),
+      total_genes - length(query_set),
+      as.numeric(pathway_table$n),
+      lower.tail = FALSE
+    )
+
+    pathway_table$fold <- pathway_table$overlap / length(query_set) / (
+      as.numeric(pathway_table$n) / total_genes
+    )
+
+    # remove some with p > 0.3
+    # pathway_table <- subset(pathway_table, pathway_table$pval < max_pval_filter)
+
+    # Background genes -----------
+    if (!is.null(use_filtered_background)) {
+      if (
+        use_filtered_background &&
+          length(row.names(processed_data)) > min_genes_background &&
+          length(row.names(processed_data)) < max_genes_background + 1
+      ) {
+        pathway_table_bg <- background_pathway_sets(
+          processed_data = processed_data,
+          gene_info = gene_info,
+          sub_query = query_set,
+          go = go,
+          pathway_table = pathway_table,
+          idep_data = idep_data,
+          select_org = select_org
+        )
+
+        # note that both the query size and the background size
+        # uses effective size: # of genes with at least one pathway in pathwayDB
+        pathway_table$pval <- phyper(
+          pathway_table_bg$overlap - 1,
+          length(query_set),
+          pathway_table_bg$total_genes_bg[1] - length(query_set),
+          as.numeric(pathway_table_bg$overlap_bg),
+          lower.tail = FALSE
+        )
+        pathway_table$fold <- (pathway_table$overlap / length(query_set)) / (
+          as.numeric(pathway_table_bg$overlap_bg) / pathway_table_bg$total_genes_bg[1]
+        )
+      }
+    }
+
+    pathway_table$fdr <- stats::p.adjust(pathway_table$pval, method = "fdr")
+
   }
-
-  pathway_table$fdr <- stats::p.adjust(pathway_table$pval, method = "fdr")
-
-
 
   if (min(pathway_table$fdr) > min_fdr) {
     pathway_table <- error_msg

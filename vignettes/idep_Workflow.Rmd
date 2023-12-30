@@ -237,8 +237,7 @@ pathway_info <- find_overlap(
   processed_data = processed_data$data,
   gene_info = all_gene_info,
   go = "GOBP",
-  idep_data = idep_data,
-  sub_pathway_files = gene_sets$pathway_files,
+  idep_data = idep_data
   use_filtered_background = TRUE,
   select_org = "BestMatch",
   reduced = .75
@@ -619,8 +618,7 @@ pathway_info <- find_overlap(
   gene_info = all_gene_info,
   go = "GOBP",
   idep_data = idep_data,
-  select_org = "GOBP",
-  sub_pathway_files = gene_sets$pathway_files,
+  select_org = "GOBP"
   use_filtered_background = FALSE,
   reduced = FALSE
 )
@@ -680,8 +678,7 @@ pathway_info <- find_overlap(
   gene_info = all_gene_info,
   go = "GOBP",
   idep_data = idep_data,
-  select_org = "BestMatch",
-  sub_pathway_files = gene_sets$pathway_files,
+  select_org = "BestMatch"
   use_filtered_background = TRUE,
   reduced = FALSE
 )

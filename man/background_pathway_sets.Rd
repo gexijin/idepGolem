@@ -11,8 +11,7 @@ background_pathway_sets(
   go,
   pathway_table,
   idep_data,
-  select_org,
-  sub_pathway_files
+  select_org
 )
 }
 \arguments{
@@ -36,10 +35,6 @@ there this function will return no significant enrichment.}
 \item{idep_data}{List of data returned from \code{\link{get_idep_data}()}}
 
 \item{select_org}{Species selected.}
-
-\item{sub_pathway_files}{String designating file location for GMT files in
-the database that contain information for the matched species. This string
-is returned from \code{\link{read_pathway_sets}()}.}
 }
 \value{
 Pathway gene set table for the background genes. Used

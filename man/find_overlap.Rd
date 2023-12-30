@@ -12,7 +12,6 @@ find_overlap(
   gene_info,
   go,
   idep_data,
-  sub_pathway_files,
   use_filtered_background,
   select_org,
   reduced = FALSE,
@@ -45,10 +44,6 @@ filtered genes.This number is also return from
 analysis. See \code{\link{gmt_category}()} for choices.}
 
 \item{idep_data}{List of data returned from \code{\link{get_idep_data}()}}
-
-\item{sub_pathway_files}{String designating file location for GMT files in
-the database that contain information for the matched species. This string
-is returned from \code{\link{read_pathway_sets}()}.}
 
 \item{use_filtered_background}{TRUE/FALSE to indicate the use of the genes
 that passed the pre_process filter as the background}

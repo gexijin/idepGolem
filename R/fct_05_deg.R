@@ -2670,7 +2670,7 @@ plot_volcano <- function(data,
     ggplot2::labs(
       title = "Fold Change vs. Adjusted p-Value",
       y = "-log10(Adjusted p-Val)",
-      x = "Fold Change",
+      x = "Log2 Fold Change",
       color = "Regulated"
     ) +
     ggrepel::geom_text_repel(
