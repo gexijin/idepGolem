@@ -314,9 +314,6 @@ mod_01_load_data_ui <- function(id) {
       mainPanel(
         shinyjs::useShinyjs(),
 
-        # Display file format help html document when prompted ----
-        uiOutput(ns("format_help_ui")),
-
         # Table output for sample tissue type ----------
         DT::dataTableOutput(ns("sample_info_table")),
         br(),
@@ -328,7 +325,8 @@ mod_01_load_data_ui <- function(id) {
           id = ns("load_message"),
           h4("Loading R packages, please wait ... ... ...")
         ),
-
+        # Display file format help html document when prompted ----
+        uiOutput(ns("format_help_ui")),
         # Hide welcome screen after data is loaded -----
         uiOutput(ns("welcome_ui"))
       )
