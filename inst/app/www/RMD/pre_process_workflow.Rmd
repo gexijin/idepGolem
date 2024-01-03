@@ -29,6 +29,7 @@ params:
   gene_plot_box:
   use_sd:
   lab_rotate:
+  plots_color_select:
   date:
     label: "Date: "
     value: !r Sys.Date()
@@ -113,7 +114,9 @@ processed_data <- idepGolem::pre_process(
 if (params$data_file_format == 1) {
   idepGolem::total_counts_ggplot(
     counts_data = processed_data$raw_counts,
-    sample_info = params$sample_info
+    sample_info = params$sample_info,
+    type = "RAW",
+    plots_color_select = params$plots_color_select
   )
 }
 ```
@@ -129,14 +132,16 @@ idepGolem::eda_scatter(
 ```{r fig.height=5.5, fig.width=7.5}
 idepGolem::eda_boxplot(
   processed_data = processed_data$data,
-  sample_info = params$sample_info
+  sample_info = params$sample_info,
+  plots_color_select = params$plots_color_select
 )
 ```
 
 ```{r }
 idepGolem::eda_density(
   processed_data = processed_data$data,
-  sample_info = params$sample_info
+  sample_info = params$sample_info,
+  plots_color_select = params$plots_color_select
 )
 ```
 
@@ -153,7 +158,8 @@ idepGolem::gene_counts_ggplot(
   counts_data = params$loaded_data,
   sample_info = params$sample_info,
   type = "Raw",
-  all_gene_info = params$all_gene_info
+  all_gene_info = params$all_gene_info,
+  plots_color_select = params$plots_color_select
 )
 ```
 

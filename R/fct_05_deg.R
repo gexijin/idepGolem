@@ -65,8 +65,9 @@ list_factors_ui <- function(sample_info,
   if (is.null(sample_info)) {
     return(
       HTML(
-        "<font size = \"2\">A <a href=\"https://idepsite.wordpress.com/data-format/\">
-        sample information file</a> can be uploaded to build a linear model according
+        "<h3>Select comparisons</h3>
+       <br><font size = \"2\">An <a href=\"https://idepsite.wordpress.com/data-format/\">
+        experiment design file</a> can be uploaded to build a linear model according
         to experiment design. </font>"
       )
     )

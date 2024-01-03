@@ -1111,7 +1111,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       # For PDF output, change this to "report.pdf"
       filename = "pre_process_report.html",
       content = function(file) {
-        withProgress(message = "Generating Report", {
+        withProgress(message = "Generating Report (5 mins)", {
           incProgress(0.2)
           # Copy the report file to a temporary directory before processing it, in
           # case we don't have write permissions to the current working dir (which
@@ -1152,7 +1152,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
             selected_gene = input$selected_gene,
             gene_plot_box = input$gene_plot_box,
             use_sd = input$use_sd,
-            lab_rotate = input$angle_ind_axis_lab
+            lab_rotate = input$angle_ind_axis_lab,
+            plots_color_select = load_data$plots_color_select()
           )
           req(params)
 

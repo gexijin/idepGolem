@@ -166,8 +166,7 @@ mod_05_deg_1_ui <- function(id) {
               "#deg-experiment_design{color: red;font-size: 16px;}"
             )),
             htmlOutput(outputId = ns("list_model_comparisons")),
-            h3("Use the submit button in the sidebar once the desired
-               design is selected!"),
+
             a(
               h5("More info on DESeq2 experiment design", align = "right"),
               href = "http://rpubs.com/ge600/deseq2",
