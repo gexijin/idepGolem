@@ -538,11 +538,12 @@ mod_02_pre_process_ui <- function(id) {
           # Searchable table of transformed converted data ---------
           tabPanel(
             title = "Data",
+            br(),
             conditionalPanel(
               condition = "output.data_file_format == 1",
               checkboxInput(
                 inputId = ns("show_raw"),
-                label = "Raw counts",
+                label = "Show raw counts",
                 value = FALSE
               ),
               ns = ns
