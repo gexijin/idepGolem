@@ -57,6 +57,11 @@ mod_05_deg_1_ui <- function(id) {
               min = 1e-5,
               max = 1,
               step = .05
+            ),
+            tippy::tippy_this(
+              ns("limma_p_val"),
+              "Cutoff for adjusted p-value. ",
+              theme = "light-border"
             )
           ),
           column(
@@ -69,6 +74,11 @@ mod_05_deg_1_ui <- function(id) {
               min = 1,
               max = 100,
               step = 0.5
+            ),
+            tippy::tippy_this(
+              ns("limma_fc"),
+              "Entering 2 selects genes that are upregulated or downregulated by at least 2-fold.",
+              theme = "light-border"
             )
           ),
           # Style both numeric inputs
@@ -411,6 +421,26 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       )
     })
 
+    observeEvent(input$limma_fc, {
+      req(!is.null(input$limma_fc))
+      req(is.numeric(input$limma_fc))
+      if (input$limma_fc < 1) {
+        updateNumericInput( # doesn't work!!! 
+          session,
+          ns("limma_fc"),
+          label = "Min fold-change",
+          value = 2,
+          min = 1,
+          max = 100,
+          step = 0.5
+        )
+        showNotification(
+          "Fold change cutoff must be greater than 1, which means no change. This cutoff is applied to both up and downregulated genes. It is not log fold change.",
+          type = "warning",
+          duration = 2
+        )
+      }
+    })
 
     # Set limits for selections of factors
     observe({
