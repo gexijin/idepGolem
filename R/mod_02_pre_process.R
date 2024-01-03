@@ -499,7 +499,16 @@ mod_02_pre_process_ui <- function(id) {
                   label = "Show individual samples",
                   value = FALSE
                 ),
-                uiOutput(ns("sd_checkbox"))
+                uiOutput(ns("sd_checkbox")),
+                conditionalPanel(
+                  condition = "output.data_file_format == 1",
+                  checkboxInput(
+                    inputId = ns("plot_raw"),
+                    label = "Raw data",
+                    value = FALSE
+                  ),
+                  ns = ns
+                )
               ),
               column(
                 4,
@@ -973,8 +982,15 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     individual_data <- reactive({
       req(!is.null(processed_data()$data))
 
+      if(input$plot_raw) {
+        data_matrix <- processed_data()$raw_counts
+      } else {
+        data_matrix <- processed_data()$data
+      }
+
+
       rowname_id_swap(
-        data_matrix = processed_data()$data,
+        data_matrix = data_matrix,
         all_gene_names = load_data$all_gene_names(),
         select_gene_id = load_data$select_gene_id()
       )
@@ -1012,7 +1028,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
 
       checkboxInput(
         inputId = ns("use_sd"),
-        label = "Use standard deviation instead of standard error",
+        label = "Use standard deviation",
         value = FALSE
       )
     })
@@ -1032,7 +1048,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         gene_plot_box = input$gene_plot_box,
         use_sd = input$use_sd,
         lab_rotate = input$angle_ind_axis_lab,
-        plots_color_select = load_data$plots_color_select()
+        plots_color_select = load_data$plots_color_select(),
+        plot_raw = input$plot_raw
       )
       refine_ggplot2(
         p = p,

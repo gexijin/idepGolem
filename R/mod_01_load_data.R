@@ -47,7 +47,7 @@ mod_01_load_data_ui <- function(id) {
         fluidRow(
           column(
             width = 5, 
-            strong("1. Choose a species or upload a pathway file."),
+            strong("1. Choose a species or upload a pathway file"),
           ),
           column(
             width = 3,
@@ -90,7 +90,8 @@ mod_01_load_data_ui <- function(id) {
                 ".csv",
                 ".tsv",
                 ".gmt"
-              )
+              ),
+              placeholder = ""
             ),
             tippy::tippy_this(
               ns("gmt_file"),
@@ -518,7 +519,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             ".xlsx",
             ".xls"
           ),
-          placeholder = "Drag and Drop Files Here"
+          placeholder = ""
         ),
         fluidRow(
           column(
@@ -615,7 +616,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             ".xlsx",
             ".xls"
           ),
-          placeholder = "Drag and Drop Files Here"
+          placeholder = ""
         )
       )
     })

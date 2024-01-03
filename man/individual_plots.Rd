@@ -11,7 +11,8 @@ individual_plots(
   gene_plot_box,
   use_sd,
   lab_rotate,
-  plots_color_select
+  plots_color_select,
+  plot_raw
 )
 }
 \arguments{
