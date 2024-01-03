@@ -504,7 +504,7 @@ mod_02_pre_process_ui <- function(id) {
                   condition = "output.data_file_format == 1",
                   checkboxInput(
                     inputId = ns("plot_raw"),
-                    label = "Raw data",
+                    label = "Plot raw counts",
                     value = FALSE
                   ),
                   ns = ns
@@ -538,7 +538,15 @@ mod_02_pre_process_ui <- function(id) {
           # Searchable table of transformed converted data ---------
           tabPanel(
             title = "Data",
-            h5("Normalized data with Ensembl ID mappings and gene symbols."),
+            conditionalPanel(
+              condition = "output.data_file_format == 1",
+              checkboxInput(
+                inputId = ns("show_raw"),
+                label = "Raw counts",
+                value = FALSE
+              ),
+              ns = ns
+            ),
             br(),
             DT::dataTableOutput(outputId = ns("examine_data"))
           ),
@@ -968,10 +976,16 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     output$examine_data <- DT::renderDataTable({
       req(!is.null(merged_processed_data()))
 
+      if(input$show_raw) {
+        data_matrix <- merged_raw_counts_data()
+      } else {
+        data_matrix <- merged_processed_data()
+      }
+
       DT::datatable(
-        merged_processed_data(),
+        data_matrix,
         options = list(
-          pageLength = 10,
+          pageLength = 20,
           scrollX = "400px"
         ),
         rownames = FALSE
