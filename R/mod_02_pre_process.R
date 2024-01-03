@@ -543,7 +543,7 @@ mod_02_pre_process_ui <- function(id) {
               condition = "output.data_file_format == 1",
               checkboxInput(
                 inputId = ns("show_raw"),
-                label = "Show raw counts",
+                label = "Show raw counts, not transformed data",
                 value = FALSE
               ),
               ns = ns
