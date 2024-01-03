@@ -660,7 +660,8 @@ mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
             pointlabs = input$pointLabs,
             point_size = input$pointSize,
             ui_color = input$selectColor,
-            ui_shape = input$selectShape
+            ui_shape = input$selectShape,
+            plots_color_select = load_data$plots_color_select()
           )
 
           # stops report generation if params are missing
