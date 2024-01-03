@@ -66,7 +66,24 @@ mod_05_deg_1_ui <- function(id) {
           ),
           column(
             width = 7,
-            # Min fold change to use
+            # Enforce lower limit on fold change
+            tags$head(
+              tags$script(HTML("
+                $(document).on('shiny:connected', function(event) {
+                    $('#deg-limma_fc').on('input', function() {
+                        var inputElement = $(this);
+                        setTimeout(function() {
+                            var value = parseFloat(inputElement.val());
+                            if (value < 1) {
+                                inputElement.val('1.5');
+                                alert('Must be greater than 1.');
+                                inputElement.trigger('change'); // Trigger update
+                            }
+                        }, 1000); // Wait for 1 second
+                    });
+                });
+              "))
+            ),
             numericInput(
               inputId = ns("limma_fc"),
               label = "Min fold-change",
@@ -77,7 +94,7 @@ mod_05_deg_1_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("limma_fc"),
-              "Entering 2 selects genes that are upregulated or downregulated by at least 2-fold.",
+              "Entering 2 selects genes that are upregulated or downregulated by at least 2-fold. Must be bigger than 1, which means no change. This is not log fold change.",
               theme = "light-border"
             )
           ),
@@ -419,27 +436,6 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         choices = interactions,
         selected = NULL
       )
-    })
-
-    observeEvent(input$limma_fc, {
-      req(!is.null(input$limma_fc))
-      req(is.numeric(input$limma_fc))
-      if (input$limma_fc < 1) {
-        updateNumericInput( # doesn't work!!! 
-          session,
-          ns("limma_fc"),
-          label = "Min fold-change",
-          value = 2,
-          min = 1,
-          max = 100,
-          step = 0.5
-        )
-        showNotification(
-          "Fold change cutoff must be greater than 1, which means no change. This cutoff is applied to both up and downregulated genes. It is not log fold change.",
-          type = "warning",
-          duration = 2
-        )
-      }
     })
 
     # Set limits for selections of factors
