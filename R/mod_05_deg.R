@@ -1008,7 +1008,6 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
 
     vol_plot <- reactive({
       req(vol_data(), input$plot_color_select)
-      browser()
       p <- vol <- plot_volcano(
         data = vol_data()$data,
         plot_colors = plot_colors[[input$plot_color_select]],
