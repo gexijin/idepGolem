@@ -913,8 +913,12 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     })
 
     output$fgsea_pathway <- renderTable(
-      {
-        res_pathway()[,1:5]
+      { if(ncol(res_pathway()) > 4) {
+          res_pathway()[,1:5]
+        } else {
+          res_pathway()
+        }
+        
       },
       digits = -1,
       spacing = "s",

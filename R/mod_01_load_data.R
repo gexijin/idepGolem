@@ -74,10 +74,10 @@ mod_01_load_data_ui <- function(id) {
         br(),
         # .GMT file input bar ----------
         fluidRow(
-          column(2,
+          column(1,
           ),
           column(
-            10,
+            11,
             fileInput(
               inputId = ns("gmt_file"),
               label =
@@ -522,9 +522,9 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           placeholder = ""
         ),
         fluidRow(
+          column(1),
           column(
             width = 5,
-            align = "right",
             actionButton(
               inputId = ns("go_button"),
               label = "Load Demo:"
@@ -539,7 +539,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             )
           ),
           column(
-            width = 7,
+            width = 6,
             align = "left",
             selectInput(
               inputId = ns("select_demo"),

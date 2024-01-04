@@ -282,9 +282,8 @@ plot_pgsea <- function(my_range,
     )
 
     if (is.null(result$pg_data)) {
-      return(
-        NULL
-      )
+      plot.new()
+      text(0.5, 1, "No significant pathway found!")
     } else {
 
        # remove pathway ID if selected so
@@ -344,9 +343,8 @@ plot_gsva <- function(my_range,
                        algorithm = "gsva") {
   genes <- processed_data[, contrast_samples]
   if (length(gene_sets) == 0) {
-    return(
-      NULL
-    )
+    plot.new()
+    text(0.5, 1, "No significant pathway found!")
   } else {
     subtype <- detect_groups(colnames(genes))
     result <- gsva_data(
@@ -371,9 +369,8 @@ plot_gsva <- function(my_range,
     }
 
     if (is.null(result$pg_data)) {
-      return(
-        NULL
-      )
+      plot.new()
+      text(0.5, 1, "No significant pathway found!")
     } else {
 
        # remove pathway ID if selected so
@@ -925,6 +922,7 @@ pgsea_plot_all <- function(go,
       pathway_p_val_cutoff = pathway_p_val_cutoff,
       n_pathway_show = n_pathway_show
     )
+
     if (is.null(result$pg_data)) {
       plot.new()
       text(0.5, 1, "No significant pathway found!")
