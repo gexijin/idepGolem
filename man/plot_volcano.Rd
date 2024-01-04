@@ -9,7 +9,7 @@ plot_volcano(data, anotate_genes = NULL, plot_colors)
 \arguments{
 \item{data}{Dataframe of processed data from \code{volcano_data()}.}
 
-\item{anotate_genes}{List of gene names to anotate. Default is NULL.}
+\item{anotate_genes}{List of gene names to annotate. Default is NULL.}
 
 \item{plot_colors}{List containing three colors to differentiate between
 the up-regulated, down-regulated, and other genes}

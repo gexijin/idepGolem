@@ -7,7 +7,7 @@
 #' contains lists
 #' @param group  Selected group int the Direction column
 #' @param right_margin Control the size of the dendogram labels
-#'
+#' @param leaf_color_choices Vector of 2 colors for down and up regulation
 #' @export
 #' @return A dendogram plot that shows the users what pathways are
 #'  that are enriched share genes.

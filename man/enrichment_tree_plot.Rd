@@ -18,6 +18,8 @@ contains lists}
 \item{group}{Selected group int the Direction column}
 
 \item{right_margin}{Control the size of the dendogram labels}
+
+\item{leaf_color_choices}{Vector of 2 colors for down and up regulation}
 }
 \value{
 A dendogram plot that shows the users what pathways are

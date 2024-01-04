@@ -110,7 +110,7 @@ deg_heatmap <- function(df,
     left_annotation = row_ann,
     top_annotation = top_ann,
     show_row_names = FALSE,
-    show_column_names = FALSE,
+    show_column_names = TRUE,
     heatmap_legend_param = list(
       direction = "horizontal",
       legend_width = grid::unit(6, "cm"),

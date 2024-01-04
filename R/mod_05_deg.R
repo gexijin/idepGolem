@@ -250,6 +250,20 @@ mod_05_deg_2_ui <- function(id) {
         p("Select a comparison to examine the associated DEGs.
           \"A-B\" means A vs. B (See heatmap).
             Interaction terms start with \"I:\""),
+        conditionalPanel("input.step_2 == 'Heatmap'",
+            selectInput(
+              inputId = ns("heatmap_gene_number"),
+              label = "Number of genes displayed",
+              choices = c("All genes"),
+              selected = "All genes"
+            ),
+            selectInput(
+              inputId = ns("heatmap_fdr_fold"),
+              label = "Sort by FDR or Fold Change",
+              choices = c("FDR", "Fold Change")
+            ),
+            ns = ns
+            ),
         conditionalPanel(
           condition = "input.step_2 == 'Volcano Plot' |
             input.step_2 == 'MA Plot' |
@@ -866,6 +880,21 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         data_file_format = pre_process$data_file_format()
       )
     })
+    
+
+    observe({
+      req(!is.null(heat_data()$genes))
+      
+      number_heat_genes <- nrow(heat_data()$genes)
+      heat_number_vec <- seq(from = 5,to = number_heat_genes, by = 5)
+      heat_choices <- c("All genes", heat_number_vec)
+      updateSelectInput(
+        session = session,
+        inputId = "heatmap_gene_number",
+        choices = heat_choices,
+        selected = "All genes"
+      )
+    })
 
     heat_data <- reactive({
       req(!is.null(deg$limma))
@@ -885,26 +914,57 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       req(!is.null(heat_data()))
       heat_data()$bar
     })
-
-    heatmap_module <- mod_12_heatmap_server(
-      id = "12_heatmap_1",
-      data = reactive({
-        heat_data()$genes
-      }),
-      bar = reactive({
-        heatmap_bar()
-      }),
-      all_gene_names = reactive({
-        pre_process$all_gene_names()
-      }),
-      cluster_rows = FALSE,
-      heatmap_color = reactive({
-        pre_process$heatmap_color_select()
-      }),
-      select_gene_id = reactive({
-        pre_process$select_gene_id()
-      })
-    )
+  
+    observe({
+      if(input$heatmap_gene_number == "All genes"){
+        deg2_heat_data <- heat_data()$genes
+        deg2_heat_bar <- heatmap_bar()
+      }
+      else{
+        if(input$heatmap_fdr_fold == "FDR"){
+          # get ensembl id for number of genes with lowest FDR
+          heat_names <- vol_data()$data |>
+            dplyr::arrange(FDR) |>
+            dplyr::slice(1:input$heatmap_gene_number) |>
+            dplyr::pull(Row.names)
+        }
+        else if(input$heatmap_fdr_fold == "Fold Change"){
+          # get ensembl id for number of genes with highest Fold Change
+          heat_names <- vol_data()$data |>
+            dplyr::arrange(dplyr::desc(abs(Fold))) |>
+            dplyr::slice(1:input$heatmap_gene_number) |>
+            dplyr::pull(Row.names)
+        }
+        # match ensembl ids and symbols to filter
+        heat_names_to_ensembl <- pre_process$all_gene_names() |>
+          dplyr::filter(symbol %in% heat_names) |>
+          dplyr::select(ensembl_ID)
+        heat_names_to_ensembl <- heat_names_to_ensembl[['ensembl_ID']]
+        
+        # filter heat_data()$genes and heatmap_bar() for desired genes
+        deg2_heat_data <- heat_data()$genes[rownames(heat_data()$genes) %in% heat_names_to_ensembl,]
+        deg2_heat_bar <- heatmap_bar()[names(heatmap_bar()) %in% heat_names_to_ensembl]
+      }
+      heatmap_module <- mod_12_heatmap_server(
+        id = "12_heatmap_1",
+        data = reactive({
+          deg2_heat_data
+        }),
+        bar = reactive({
+          deg2_heat_bar
+        }),
+        all_gene_names = reactive({
+          pre_process$all_gene_names()
+        }),
+        cluster_rows = FALSE,
+        heatmap_color = reactive({
+          pre_process$heatmap_color_select()
+        }),
+        select_gene_id = reactive({
+          pre_process$select_gene_id()
+        })
+      )
+    })
 
     # Plot colors -------
     plot_colors <- list(
@@ -974,7 +1034,6 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
 
     vol_plot <- reactive({
       req(vol_data(), input$plot_color_select)
-
       p <- vol <- plot_volcano(
         data = vol_data()$data,
         plot_colors = plot_colors[[input$plot_color_select]],

@@ -2629,7 +2629,7 @@ volcano_data <- function(select_contrast,
 #'
 #' @param plot_colors List containing three colors to differentiate between
 #'  the up-regulated, down-regulated, and other genes
-#' @param anotate_genes List of gene names to anotate. Default is NULL.
+#' @param anotate_genes List of gene names to annotate. Default is NULL.
 #' @param data Dataframe of processed data from \code{volcano_data()}.
 #'
 #' @export
