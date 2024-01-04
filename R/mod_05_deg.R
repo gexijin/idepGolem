@@ -228,7 +228,7 @@ mod_05_deg_2_ui <- function(id) {
             selectInput(
               inputId = ns("heatmap_gene_number"),
               label = "Number of genes displayed",
-              choices = c("All genes"),         ######!
+              choices = c("All genes"),
               selected = "All genes"
             ),
             selectInput(
@@ -855,9 +855,9 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       )
     })
     
-    ######!
+
     observe({
-      req(!is.null(heat_data))
+      req(!is.null(heat_data()$genes))
       
       number_heat_genes <- nrow(heat_data()$genes)
       heat_number_vec <- seq(from = 5,to = number_heat_genes, by = 5)
@@ -891,56 +891,53 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
   
     observe({
       if(input$heatmap_gene_number == "All genes"){
-        heatmap_module <- mod_12_heatmap_server(
-          id = "12_heatmap_1",
-          data = reactive({
-            heat_data()$genes
-          }),
-          bar = reactive({
-            heatmap_bar()
-          }),
-          all_gene_names = reactive({
-            pre_process$all_gene_names()
-          }),
-          cluster_rows = FALSE,
-          heatmap_color = reactive({
-            pre_process$heatmap_color_select()
-          }),
-          select_gene_id = reactive({
-            pre_process$select_gene_id()
-          })
-        )
+        deg2_heat_data <- heat_data()$genes
+        deg2_heat_bar <- heatmap_bar()
       }
       else{
         if(input$heatmap_fdr_fold == "FDR"){
+          # get ensembl id for number of genes with lowest FDR
           heat_names <- vol_data()$data |>
             dplyr::arrange(FDR) |>
             dplyr::slice(1:input$heatmap_gene_number) |>
             dplyr::pull(Row.names)
-          print(head(heat_names))
         }
         else if(input$heatmap_fdr_fold == "Fold Change"){
+          # get ensembl id for number of genes with highest Fold Change
           heat_names <- vol_data()$data |>
             dplyr::arrange(dplyr::desc(abs(Fold))) |>
             dplyr::slice(1:input$heatmap_gene_number) |>
             dplyr::pull(Row.names)
-          print(head(heat_names))
         }
+        # match ensembl ids and symbols to filter
         heat_names_to_ensembl <- pre_process$all_gene_names() |>
           dplyr::filter(symbol %in% heat_names) |>
           dplyr::select(ensembl_ID)
         heat_names_to_ensembl <- heat_names_to_ensembl[['ensembl_ID']]
-        heat_str <- capture.output(str(heat_names_to_ensembl))
-        print(heat_str)
-        print("Done")
-      
-        # deg2_heat_data <- as.data.frame(heat_data()$genes) |>  
-        #   tibble::rownames_to_column(var = "ensembl_id") |>   ######!
-        #   dplyr::filter(ensembl_id %in% heat_names_to_ensembl)#filter(ensembl_id == "ENSG00000059804") #|>
-          # dplyr::select(-c(ensembl_id))
-        print(heat_data()$genes[rownames(heat_data()$genes) %in% heat_names_to_ensembl,])
-        # print(deg2_heat_data)
+        
+        # filter heat_data()$genes and heatmap_bar() for desired genes
+        deg2_heat_data <- heat_data()$genes[rownames(heat_data()$genes) %in% heat_names_to_ensembl,]
+        deg2_heat_bar <- heatmap_bar()[names(heatmap_bar()) %in% heat_names_to_ensembl]
       }
+      heatmap_module <- mod_12_heatmap_server(
+        id = "12_heatmap_1",
+        data = reactive({
+          deg2_heat_data
+        }),
+        bar = reactive({
+          deg2_heat_bar
+        }),
+        all_gene_names = reactive({
+          pre_process$all_gene_names()
+        }),
+        cluster_rows = FALSE,
+        heatmap_color = reactive({
+          pre_process$heatmap_color_select()
+        }),
+        select_gene_id = reactive({
+          pre_process$select_gene_id()
+        })
+      )
     })
 
     # Plot colors -------
