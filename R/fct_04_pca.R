@@ -124,11 +124,12 @@ PCA_plot <- function(data,
   # get data
   pcaData <- get_pc(data, sample_info)
 
+  levels <- length(unique(groups))
   # plot color scheme
-  color_palette <- RColorBrewer::brewer.pal(n = nlevels(groups), name = plots_color_select)
+  color_palette <- RColorBrewer::brewer.pal(n = levels, name = plots_color_select)
 
   # hide legend for large or no groups levels
-  if (nlevels(groups) <= 1 | nlevels(groups) > 20) {
+  if (levels <= 1 | levels > 20) {
     group_fill <- NULL
     legend <- "none"
   } else {

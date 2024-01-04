@@ -301,7 +301,7 @@ total_counts_ggplot <- function(counts_data,
     x_axis_labels <- 12
   }
 
-  if (nlevels(groups) <= 1 || nlevels(groups) > 20) {
+  if (length(unique(groups)) <= 1 || length(unique(groups)) > 20) {
     plot_data <- data.frame(
       sample = as.factor(colnames(counts)),
       counts = colSums(counts) / 1e6,
@@ -315,7 +315,7 @@ total_counts_ggplot <- function(counts_data,
   } else {
     grouping <- groups
 
-    color_palette <- RColorBrewer::brewer.pal(n = nlevels(grouping), name = plots_color_select)
+    color_palette <- RColorBrewer::brewer.pal(n = length(unique(grouping)), name = plots_color_select)
 
     plot_data <- data.frame(
       sample = as.factor(colnames(counts)),
@@ -1005,7 +1005,7 @@ eda_boxplot <- function(processed_data,
   longer_data$groups <- rep(groups, nrow(counts))
   longer_data$grouping <- rep(grouping, nrow(counts))
 
-  color_palette <- RColorBrewer::brewer.pal(n = nlevels(grouping), name = plots_color_select)
+  color_palette <- RColorBrewer::brewer.pal(n = length(unique(grouping)), name = plots_color_select)
 
   plot <- ggplot2::ggplot(
     data = longer_data,
@@ -1096,7 +1096,7 @@ eda_density <- function(processed_data,
   longer_data$groups <- rep(groups, nrow(counts))
   longer_data$group_fill <- rep(group_fill, nrow(counts))
 
-  color_palette <- RColorBrewer::brewer.pal(n = nlevels(group_fill), name = plots_color_select)
+  color_palette <- RColorBrewer::brewer.pal(n = length(unique(group_fill)), name = plots_color_select)
 
   plot <- ggplot2::ggplot(
     data = longer_data,
