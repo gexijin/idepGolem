@@ -1192,7 +1192,7 @@ individual_plots <- function(individual_data,
 
   if (gene_plot_box == TRUE) {
     plot_data$symbol <- factor(plot_data$symbol, levels = unique(plot_data$symbol))
-    color_palette <- RColorBrewer::brewer.pal(n = nlevels(plot_data$symbol), name = plots_color_select)
+    color_palette <- RColorBrewer::brewer.pal(n = nlevels(as.factor(plot_data$symbol)), name = plots_color_select)
 
     ind_line <- ggplot2::ggplot(
       data = plot_data,
