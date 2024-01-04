@@ -57,11 +57,33 @@ mod_05_deg_1_ui <- function(id) {
               min = 1e-5,
               max = 1,
               step = .05
+            ),
+            tippy::tippy_this(
+              ns("limma_p_val"),
+              "Cutoff for adjusted p-value. ",
+              theme = "light-border"
             )
           ),
           column(
             width = 7,
-            # Min fold change to use
+            # Enforce lower limit on fold change
+            tags$head(
+              tags$script(HTML("
+                $(document).on('shiny:connected', function(event) {
+                    $('#deg-limma_fc').on('input', function() {
+                        var inputElement = $(this);
+                        setTimeout(function() {
+                            var value = parseFloat(inputElement.val());
+                            if (value < 1) {
+                                inputElement.val('1.5');
+                                alert('Must be greater than 1.');
+                                inputElement.trigger('change'); // Trigger update
+                            }
+                        }, 1000); // Wait for 1 second
+                    });
+                });
+              "))
+            ),
             numericInput(
               inputId = ns("limma_fc"),
               label = "Min fold-change",
@@ -69,6 +91,11 @@ mod_05_deg_1_ui <- function(id) {
               min = 1,
               max = 100,
               step = 0.5
+            ),
+            tippy::tippy_this(
+              ns("limma_fc"),
+              "Entering 2 selects genes that are upregulated or downregulated by at least 2-fold. Must be bigger than 1, which means no change. This is not log fold change.",
+              theme = "light-border"
             )
           ),
           # Style both numeric inputs
@@ -139,8 +166,7 @@ mod_05_deg_1_ui <- function(id) {
               "#deg-experiment_design{color: red;font-size: 16px;}"
             )),
             htmlOutput(outputId = ns("list_model_comparisons")),
-            h3("Use the submit button in the sidebar once the desired
-               design is selected!"),
+
             a(
               h5("More info on DESeq2 experiment design", align = "right"),
               href = "http://rpubs.com/ge600/deseq2",
@@ -410,7 +436,6 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         selected = NULL
       )
     })
-
 
     # Set limits for selections of factors
     observe({

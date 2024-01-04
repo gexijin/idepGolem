@@ -499,7 +499,16 @@ mod_02_pre_process_ui <- function(id) {
                   label = "Show individual samples",
                   value = FALSE
                 ),
-                uiOutput(ns("sd_checkbox"))
+                uiOutput(ns("sd_checkbox")),
+                conditionalPanel(
+                  condition = "output.data_file_format == 1",
+                  checkboxInput(
+                    inputId = ns("plot_raw"),
+                    label = "Plot raw counts",
+                    value = FALSE
+                  ),
+                  ns = ns
+                )
               ),
               column(
                 4,
@@ -529,7 +538,16 @@ mod_02_pre_process_ui <- function(id) {
           # Searchable table of transformed converted data ---------
           tabPanel(
             title = "Data",
-            h5("Normalized data with Ensembl ID mappings and gene symbols."),
+            br(),
+            conditionalPanel(
+              condition = "output.data_file_format == 1",
+              checkboxInput(
+                inputId = ns("show_raw"),
+                label = "Show raw counts, not transformed data",
+                value = FALSE
+              ),
+              ns = ns
+            ),
             br(),
             DT::dataTableOutput(outputId = ns("examine_data"))
           ),
@@ -959,10 +977,16 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     output$examine_data <- DT::renderDataTable({
       req(!is.null(merged_processed_data()))
 
+      if(input$show_raw) {
+        data_matrix <- merged_raw_counts_data()
+      } else {
+        data_matrix <- merged_processed_data()
+      }
+
       DT::datatable(
-        merged_processed_data(),
+        data_matrix,
         options = list(
-          pageLength = 10,
+          pageLength = 20,
           scrollX = "400px"
         ),
         rownames = FALSE
@@ -973,8 +997,15 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     individual_data <- reactive({
       req(!is.null(processed_data()$data))
 
+      if(input$plot_raw) {
+        data_matrix <- processed_data()$raw_counts
+      } else {
+        data_matrix <- processed_data()$data
+      }
+
+
       rowname_id_swap(
-        data_matrix = processed_data()$data,
+        data_matrix = data_matrix,
         all_gene_names = load_data$all_gene_names(),
         select_gene_id = load_data$select_gene_id()
       )
@@ -1012,7 +1043,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
 
       checkboxInput(
         inputId = ns("use_sd"),
-        label = "Use standard deviation instead of standard error",
+        label = "Use standard deviation",
         value = FALSE
       )
     })
@@ -1032,7 +1063,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         gene_plot_box = input$gene_plot_box,
         use_sd = input$use_sd,
         lab_rotate = input$angle_ind_axis_lab,
-        plots_color_select = load_data$plots_color_select()
+        plots_color_select = load_data$plots_color_select(),
+        plot_raw = input$plot_raw
       )
       refine_ggplot2(
         p = p,
@@ -1079,7 +1111,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       # For PDF output, change this to "report.pdf"
       filename = "pre_process_report.html",
       content = function(file) {
-        withProgress(message = "Generating Report", {
+        withProgress(message = "Generating Report (5 mins)", {
           incProgress(0.2)
           # Copy the report file to a temporary directory before processing it, in
           # case we don't have write permissions to the current working dir (which
@@ -1120,7 +1152,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
             selected_gene = input$selected_gene,
             gene_plot_box = input$gene_plot_box,
             use_sd = input$use_sd,
-            lab_rotate = input$angle_ind_axis_lab
+            lab_rotate = input$angle_ind_axis_lab,
+            plots_color_select = load_data$plots_color_select()
           )
           req(params)
 

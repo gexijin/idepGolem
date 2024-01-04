@@ -47,7 +47,7 @@ mod_01_load_data_ui <- function(id) {
         fluidRow(
           column(
             width = 5, 
-            strong("1. Choose a species or upload a pathway file."),
+            strong("1. Choose a species or upload a pathway file"),
           ),
           column(
             width = 3,
@@ -74,10 +74,10 @@ mod_01_load_data_ui <- function(id) {
         br(),
         # .GMT file input bar ----------
         fluidRow(
-          column(2,
+          column(1,
           ),
           column(
-            10,
+            11,
             fileInput(
               inputId = ns("gmt_file"),
               label =
@@ -90,7 +90,8 @@ mod_01_load_data_ui <- function(id) {
                 ".csv",
                 ".tsv",
                 ".gmt"
-              )
+              ),
+              placeholder = ""
             ),
             tippy::tippy_this(
               ns("gmt_file"),
@@ -314,9 +315,6 @@ mod_01_load_data_ui <- function(id) {
       mainPanel(
         shinyjs::useShinyjs(),
 
-        # Display file format help html document when prompted ----
-        uiOutput(ns("format_help_ui")),
-
         # Table output for sample tissue type ----------
         DT::dataTableOutput(ns("sample_info_table")),
         br(),
@@ -328,7 +326,8 @@ mod_01_load_data_ui <- function(id) {
           id = ns("load_message"),
           h4("Loading R packages, please wait ... ... ...")
         ),
-
+        # Display file format help html document when prompted ----
+        uiOutput(ns("format_help_ui")),
         # Hide welcome screen after data is loaded -----
         uiOutput(ns("welcome_ui"))
       )
@@ -520,12 +519,12 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             ".xlsx",
             ".xls"
           ),
-          placeholder = "Drag and Drop Files Here"
+          placeholder = ""
         ),
         fluidRow(
+          column(1),
           column(
             width = 5,
-            align = "right",
             actionButton(
               inputId = ns("go_button"),
               label = "Load Demo:"
@@ -540,7 +539,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             )
           ),
           column(
-            width = 7,
+            width = 6,
             align = "left",
             selectInput(
               inputId = ns("select_demo"),
@@ -617,7 +616,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             ".xlsx",
             ".xls"
           ),
-          placeholder = "Drag and Drop Files Here"
+          placeholder = ""
         )
       )
     })

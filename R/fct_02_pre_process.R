@@ -1176,7 +1176,8 @@ individual_plots <- function(individual_data,
                              gene_plot_box,
                              use_sd,
                              lab_rotate,
-                             plots_color_select) {
+                             plots_color_select,
+                             plot_raw) {
   individual_data <- as.data.frame(individual_data)
   individual_data$symbol <- rownames(individual_data)
 
@@ -1200,8 +1201,8 @@ individual_plots <- function(individual_data,
       ggplot2::geom_line() +
       ggplot2::geom_point(size = 5, fill = "white") +
       ggplot2::labs(
-        title = "Transformed Expression Level",
-        y = "Transformed Expression"
+        title = "Expression Level",
+        y = ifelse(plot_raw, "Raw counts", "Normalized Expression")
       ) +
       ggplot2::coord_cartesian(ylim = c(0, max(plot_data$value))) +
       ggplot2::theme_light() +
@@ -1249,7 +1250,7 @@ individual_plots <- function(individual_data,
       ) +
     ggplot2::labs(
       title = "Expression Level",
-      y = "Grouped Transformed Expression"
+      y = ifelse(plot_raw, "Raw counts", "Normalized Expression")
     ) +
     ggplot2::geom_dotplot(
       data = plot_data,

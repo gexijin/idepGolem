@@ -22,6 +22,7 @@ params:
   point_size:
   ui_color:
   ui_shape:
+  plots_color_select:
   printcode:
     label: "Display Code"
     value: TRUE
@@ -77,7 +78,8 @@ PCA_plot(
   PCAx = params$pc_x,
   PCAy = params$pc_y,
   selected_color = params$color,
-  selected_shape = params$shape
+  selected_shape = params$shape,
+  plots_color_select = params$plots_color_select
 )
 pc_factor_correlation(
   data = params$pre_processed_data,
@@ -94,7 +96,8 @@ PCA_plot_3d(
   PCAy = params$pc_y,
   PCAz = params$pc_z,
   selected_color = params$color,
-  selected_shape = params$shape
+  selected_shape = params$shape,
+  plots_color_select = params$plots_color_select
 )
 ```
 Plot not included on this report.
@@ -105,7 +108,8 @@ t_SNE_plot(
   data = params$pre_processed_data,
   sample_info = params$sample_info,
   selected_color = params$color,
-  selected_shape = params$shape
+  selected_shape = params$shape,
+  plots_color_select = params$plots_color_select
 )
 ```
 
@@ -115,7 +119,8 @@ MDS_plot(
   data = params$pre_processed_data,
   sample_info = params$sample_info,
   selected_color = params$color,
-  selected_shape = params$shape
+  selected_shape = params$shape,
+  plots_color_select = params$plots_color_select
 )
 ```
 
