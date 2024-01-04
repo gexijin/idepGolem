@@ -301,7 +301,7 @@ total_counts_ggplot <- function(counts_data,
     x_axis_labels <- 12
   }
 
-  if (nlevels(groups) <= 1 || nlevels(groups) > 20) {
+  if (length(unique(groups)) <= 1 || length(unique(groups)) > 20) {
     plot_data <- data.frame(
       sample = as.factor(colnames(counts)),
       counts = colSums(counts) / 1e6,
@@ -315,7 +315,7 @@ total_counts_ggplot <- function(counts_data,
   } else {
     grouping <- groups
 
-    color_palette <- RColorBrewer::brewer.pal(n = nlevels(grouping), name = plots_color_select)
+    color_palette <- RColorBrewer::brewer.pal(n = length(unique(grouping)), name = plots_color_select)
 
     plot_data <- data.frame(
       sample = as.factor(colnames(counts)),
@@ -415,15 +415,12 @@ gene_counts_ggplot <- function(counts_data,
   # Order the categories by value
   data <- data[order(-data$value), ]
 
-  color_palette <- RColorBrewer::brewer.pal(n = nlevels(as.factor(data$category)), name = plots_color_select)
-
   plot <- ggplot2::ggplot(data, ggplot2::aes(x = reorder(category, value), y = value, fill = category)) +
     ggplot2::geom_bar(stat = "identity") +
     ggplot2::scale_y_log10(limits = c(1, 2 * max(data$value))) +
     ggplot2::coord_flip() +
     ggplot2::labs(x = NULL, y = "Number of genes", title = "Number of genes by type") +       
-    ggplot2::geom_text(ggplot2::aes(label = value), hjust = -0.1, vjust = 0.5) +
-    ggplot2::scale_fill_manual(values = color_palette)
+    ggplot2::geom_text(ggplot2::aes(label = value), hjust = -0.1, vjust = 0.5) 
 
   plot <- plot +
     ggplot2::theme_light() +
@@ -1005,7 +1002,7 @@ eda_boxplot <- function(processed_data,
   longer_data$groups <- rep(groups, nrow(counts))
   longer_data$grouping <- rep(grouping, nrow(counts))
 
-  color_palette <- RColorBrewer::brewer.pal(n = nlevels(grouping), name = plots_color_select)
+  color_palette <- RColorBrewer::brewer.pal(n = length(unique(grouping)), name = plots_color_select)
 
   plot <- ggplot2::ggplot(
     data = longer_data,
@@ -1096,7 +1093,7 @@ eda_density <- function(processed_data,
   longer_data$groups <- rep(groups, nrow(counts))
   longer_data$group_fill <- rep(group_fill, nrow(counts))
 
-  color_palette <- RColorBrewer::brewer.pal(n = nlevels(group_fill), name = plots_color_select)
+  color_palette <- RColorBrewer::brewer.pal(n = length(unique(group_fill)), name = plots_color_select)
 
   plot <- ggplot2::ggplot(
     data = longer_data,
@@ -1192,7 +1189,7 @@ individual_plots <- function(individual_data,
 
   if (gene_plot_box == TRUE) {
     plot_data$symbol <- factor(plot_data$symbol, levels = unique(plot_data$symbol))
-    color_palette <- RColorBrewer::brewer.pal(n = nlevels(plot_data$symbol), name = plots_color_select)
+    color_palette <- RColorBrewer::brewer.pal(n = nlevels(as.factor(plot_data$symbol)), name = plots_color_select)
 
     ind_line <- ggplot2::ggplot(
       data = plot_data,

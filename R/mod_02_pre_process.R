@@ -1014,27 +1014,28 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     # Individual genes selection ----------
     observe({
       req(!is.null(processed_data()$data))
-      req(!is.null(individual_data()))
+      #the orders of genes stays the same when user clicks on "Plot raw counts"
+      isolate({
+        # Genes are sorted by SD
+        sorted <- sort(
+          apply( # gene SD
+            individual_data(),
+            MARGIN = 1,
+            FUN = function(x) sd(x) #/ abs(mean(x) + 1e-10) # add small number to avoid 0
+          ),
+          decreasing = TRUE
+        )
+        # top 2 most variable genes are plotted by default
+        selected <- names(sorted)[1:2]
 
-      # Genes are sorted by SD
-      sorted <- sort(
-        apply( # gene SD
-          individual_data(),
-          MARGIN = 1,
-          FUN = sd # function(x) max(x) - min(x)
-        ),
-        decreasing = TRUE
-      )
-      # top 2 most variable genes are plotted by default
-      selected <- names(sorted)[1:2]
-
-      updateSelectizeInput(
-        session,
-        inputId = "selected_gene", # genes are ranked by SD
-        choices = names(sorted),
-        selected = selected,
-        server = TRUE
-      )
+        updateSelectizeInput(
+          session,
+          inputId = "selected_gene", # genes are ranked by SD
+          choices = names(sorted),
+          selected = selected,
+          server = TRUE
+        )
+      })
     })
 
     # Dynamic individual gene checkbox ----------
