@@ -11,7 +11,7 @@ app_ui <- function(request) {
     # Your application UI logic
 
     navbarPage(
-      "iDEP 1.2",
+      "iDEP 2.0",
       theme = bslib::bs_theme(
         version = 5,
         primary = "#0033A0",
@@ -64,7 +64,7 @@ golem_add_external_resources <- function() {
     ),
     bundle_resources(
       path = app_sys("app/www"),
-      app_title = "iDEP 1.1"
+      app_title = "iDEP 2.0"
     )
     # Add here other external resources
     # for example, you can add shinyalert::useShinyalert()
