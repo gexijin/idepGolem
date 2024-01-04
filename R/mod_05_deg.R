@@ -913,11 +913,33 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       }
       else{
         if(input$heatmap_fdr_fold == "FDR"){
-          volcano_data()
+          heat_names <- vol_data()$data |>
+            dplyr::arrange(FDR) |>
+            dplyr::slice(1:input$heatmap_gene_number) |>
+            dplyr::pull(Row.names)
+          print(head(heat_names))
         }
         else if(input$heatmap_fdr_fold == "Fold Change"){
-          
+          heat_names <- vol_data()$data |>
+            dplyr::arrange(dplyr::desc(abs(Fold))) |>
+            dplyr::slice(1:input$heatmap_gene_number) |>
+            dplyr::pull(Row.names)
+          print(head(heat_names))
         }
+        heat_names_to_ensembl <- pre_process$all_gene_names() |>
+          dplyr::filter(symbol %in% heat_names) |>
+          dplyr::select(ensembl_ID)
+        heat_names_to_ensembl <- heat_names_to_ensembl[['ensembl_ID']]
+        heat_str <- capture.output(str(heat_names_to_ensembl))
+        print(heat_str)
+        print("Done")
+      
+        # deg2_heat_data <- as.data.frame(heat_data()$genes) |>  
+        #   tibble::rownames_to_column(var = "ensembl_id") |>   ######!
+        #   dplyr::filter(ensembl_id %in% heat_names_to_ensembl)#filter(ensembl_id == "ENSG00000059804") #|>
+          # dplyr::select(-c(ensembl_id))
+        print(heat_data()$genes[rownames(heat_data()$genes) %in% heat_names_to_ensembl,])
+        # print(deg2_heat_data)
       }
     })
 
