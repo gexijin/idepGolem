@@ -415,15 +415,12 @@ gene_counts_ggplot <- function(counts_data,
   # Order the categories by value
   data <- data[order(-data$value), ]
 
-  color_palette <- RColorBrewer::brewer.pal(n = nlevels(as.factor(data$category)), name = plots_color_select)
-
   plot <- ggplot2::ggplot(data, ggplot2::aes(x = reorder(category, value), y = value, fill = category)) +
     ggplot2::geom_bar(stat = "identity") +
     ggplot2::scale_y_log10(limits = c(1, 2 * max(data$value))) +
     ggplot2::coord_flip() +
     ggplot2::labs(x = NULL, y = "Number of genes", title = "Number of genes by type") +       
-    ggplot2::geom_text(ggplot2::aes(label = value), hjust = -0.1, vjust = 0.5) +
-    ggplot2::scale_fill_manual(values = color_palette)
+    ggplot2::geom_text(ggplot2::aes(label = value), hjust = -0.1, vjust = 0.5) 
 
   plot <- plot +
     ggplot2::theme_light() +
