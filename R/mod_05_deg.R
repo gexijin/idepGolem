@@ -228,13 +228,13 @@ mod_05_deg_2_ui <- function(id) {
             selectInput(
               inputId = ns("heatmap_gene_number"),
               label = "Number of genes displayed",
-              choices = c("All genes"),
-              selected = "All genes"
+              choices = c("All DEGs"),
+              selected = "All DEGs"
             ),
             selectInput(
               inputId = ns("heatmap_fdr_fold"),
-              label = "Sort by FDR or Fold Change",
-              choices = c("FDR", "Fold Change")
+              label = "Sort by Fold Change or FDR",
+              choices = c("Fold Change", "FDR")
             ),
             ns = ns
             ),
@@ -861,12 +861,12 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       
       number_heat_genes <- nrow(heat_data()$genes)
       heat_number_vec <- seq(from = 5,to = number_heat_genes, by = 5)
-      heat_choices <- c("All genes", heat_number_vec)
+      heat_choices <- c("All DEGs", heat_number_vec)
       updateSelectInput(
         session = session,
         inputId = "heatmap_gene_number",
         choices = heat_choices,
-        selected = "All genes"
+        selected = "All DEGs"
       )
     })
 
@@ -890,7 +890,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     })
   
     observe({
-      if(input$heatmap_gene_number == "All genes"){
+      if(input$heatmap_gene_number == "All DEGs"){
         deg2_heat_data <- heat_data()$genes
         deg2_heat_bar <- heatmap_bar()
       }
