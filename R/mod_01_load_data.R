@@ -377,7 +377,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           target = "_blank"
         ),
         "  which has been cited ",
-        a("673 times.",
+        a("810 times.",
           href = "https://scholar.google.com/scholar?oi=bibs&hl=en&cites=6502699637682046008,17999801138713500070,11001860275874506471",
           target = "_blank"
         )
