@@ -95,7 +95,8 @@ mod_01_load_data_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("gmt_file"),
-              "Upload a customized pathway file (.GMT format) to perform pathway analysis.",
+              "Upload a customized pathway file (.GMT format) to perform pathway analysis. This enables 
+              you to analyze data for species not annotated in our database.",
               theme = "light-border"
             )            
           )
@@ -326,6 +327,7 @@ mod_01_load_data_ui <- function(id) {
           id = ns("load_message"),
           h4("Loading R packages, please wait ... ... ...")
         ),
+        uiOutput(ns("show_gmt")),        
         # Display file format help html document when prompted ----
         uiOutput(ns("format_help_ui")),
         # Hide welcome screen after data is loaded -----
@@ -456,6 +458,31 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       )
     })
 
+    output$show_gmt <- renderUI({
+      req(!is.null(input$gmt_file))
+
+      in_file <- input$gmt_file
+      in_file <- in_file$datapath
+      lines <- scan(in_file, what = "", sep = "\n")
+      total <- length(lines)
+      if(length(lines) > 3){
+        lines <- lines[1:3]
+      }
+      tagList(
+        h4("The uploaded GMT file has ", total, " gene-sets. 
+        Data will be analyzed in a custom mode, not using our database.  
+        The gene IDs in the GMT file must match those in the expression data."),
+        br(),
+        tags$pre(
+          style = "font-size: 12px;",
+          lines[1],
+          ifelse(length(lines) > 1, lines[2], ""),
+          ifelse(length(lines) > 2, lines[2], ""),
+        )
+      )
+
+
+    })
     shinyjs::hideElement(id = "select_org")
     observeEvent(input$clicked_row, {
       # find species ID from ensembl_dataset
