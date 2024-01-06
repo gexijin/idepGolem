@@ -95,7 +95,8 @@ mod_01_load_data_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("gmt_file"),
-              "Upload a customized pathway file (.GMT format) to perform pathway analysis.",
+              "Upload a customized pathway file (.GMT format) to perform pathway analysis. This enables 
+              you to analyze data for species not annotated in our database.",
               theme = "light-border"
             )            
           )
@@ -326,6 +327,7 @@ mod_01_load_data_ui <- function(id) {
           id = ns("load_message"),
           h4("Loading R packages, please wait ... ... ...")
         ),
+        uiOutput(ns("show_gmt")),        
         # Display file format help html document when prompted ----
         uiOutput(ns("format_help_ui")),
         # Hide welcome screen after data is loaded -----
@@ -367,7 +369,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     welcome_modal <- shiny::modalDialog(
       title = "iDEP: Empower all scientists!",
       tags$p(
-        "Our passion is to enable all scientists, especially busy biologists in small labs, to analyze their own data."),
+        "Our passion is to enable all scientists, especially those in small labs with little resources."),
       tags$p(" If iDEP is used,
       even for preliminrary analysis, please cite: ",
         "Ge, Son & Yao, iDEP,",
@@ -377,13 +379,13 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           target = "_blank"
         ),
         "  which has been cited ",
-        a("673 times.",
+        a("810 times.",
           href = "https://scholar.google.com/scholar?oi=bibs&hl=en&cites=6502699637682046008,17999801138713500070,11001860275874506471",
           target = "_blank"
         )
       ),
       tags$h5("By citing the iDEP paper properly, you will help make this service
-      available in the future. ",
+      available in the future. Just including the URL is not enough.",
         style = "color:#6B1518"
       ),
       easyClose = TRUE,
@@ -456,6 +458,31 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       )
     })
 
+    output$show_gmt <- renderUI({
+      req(!is.null(input$gmt_file))
+
+      in_file <- input$gmt_file
+      in_file <- in_file$datapath
+      lines <- scan(in_file, what = "", sep = "\n")
+      total <- length(lines)
+      if(length(lines) > 3){
+        lines <- lines[1:3]
+      }
+      tagList(
+        h4("The uploaded GMT file has ", total, " gene-sets. 
+        Data will be analyzed in a custom mode, not using our database.  
+        The gene IDs in the GMT file must match those in the expression data."),
+        br(),
+        tags$pre(
+          style = "font-size: 12px;",
+          lines[1],
+          ifelse(length(lines) > 1, lines[2], ""),
+          ifelse(length(lines) > 2, lines[2], ""),
+        )
+      )
+
+
+    })
     shinyjs::hideElement(id = "select_org")
     observeEvent(input$clicked_row, {
       # find species ID from ensembl_dataset
@@ -568,7 +595,12 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           p(
             "First time here? Just click ",
             tags$span("Load Demo", id = "load-demo"),
-            " below to see some magic!"
+            " below to see some magic! Or watch a",
+            a(
+              "video.",
+              href = "https://youtu.be/Hs5SamHHG9s",
+              target = "_blank"
+            ),
           ),
           tags$script("
             document.getElementById('load-demo').style.color = 'red';

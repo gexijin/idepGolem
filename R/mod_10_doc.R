@@ -36,14 +36,16 @@ mod_10_doc_ui <- function(id) {
         ),
         "Our team consists
       of Xijin Ge (PI), Jianli Qi (research staff), and
-      two talented graduate students (Emma Spors and Ben Derenge).
+      several talented students.
       None of us are trained as software engineers. But
       we share the passion about  developing an
       user-friendly tool for all biologists,
       especially those who do not have access to bioinformaticians."
       ),
-      p("Past contributors include Eun Wo Son, Runan Yao,
-      Gavin Doering, Roberto Villegas-Diaz, and Eric Tulowetzke.
+      p("Graduate students contributed to this project include Eun Wo Son, Runan Yao,
+      Gavin Doering, Roberto Villegas-Diaz, Eric Tulowetzke, Emma Spors,  
+      Chris Trettel, Jand Ben Derenge. Undergraduate students include Jenna Thorstenson and
+      Jakob Fossen.
       Eric still helps us fix bugs after leaving the lab.
       Much of the new version of iDEP is rewritten by Gavin Doering.
       The iDEP logo was designed by Emma Spors.
@@ -118,6 +120,50 @@ mod_10_doc_ui <- function(id) {
           href = "http://bioinformatics.sdstate.edu/data/"
         )
       ),
+      h3("Reproducibility"),
+      p("Download the reports in the multiple
+       tabs, which has the parameters and results. Also download and try
+       the the R code on the DEG1 tab."),
+      h4("Previous versions of iDEP are still useable:"),
+      a("iDEP 1.13 with Ensembl Release 107, archived January 5, 2024 ",
+        href = "http://bioinformatics.sdstate.edu/idep96/"
+      ),
+      br(),
+      a("iDEP 0.96 with Ensembl Release 104, released on July 30, 2022 ",
+        href = "http://bioinformatics.sdstate.edu/idep96/"
+      ),
+      br(),
+      a("iDEP 0.95 with Ensembl Release 104, released on Feb. 8, 2022 ",
+        href = "http://bioinformatics.sdstate.edu/idep95/"
+      ),
+      br(),
+      a("iDEP 0.94 with Ensembl Release 104, released on Oct. 15, 2021 ",
+        href = "http://bioinformatics.sdstate.edu/idep94/"
+      ),
+      br(),
+      a("iDEP 0.93 with Ensembl Release 103, released on May 20, 2021 ",
+        href = "http://bioinformatics.sdstate.edu/idep93/"
+      ),
+      br(),
+      a("iDEP 0.92 with Ensembl Release 100, released on May 20, 2021 ",
+        href = "http://bioinformatics.sdstate.edu/idep92/"
+      ),
+      br(),
+      a("iDEP 0.90 with Ensembl Release 96, released on May 19, 2021 ",
+        href = "http://bioinformatics.sdstate.edu/idep90/"
+      ),
+      br(),
+      a("iDEP 0.85 with Ensembl Release 95, released on March 29, 2019 ",
+        href = "http://bioinformatics.sdstate.edu/idep85/"
+      ),
+      br(),
+      a("iDEP 0.82 with Ensembl  Release 92, released on July 11, 2018 ",
+        href = "http://bioinformatics.sdstate.edu/idep82/"
+      ),
+      br(),
+      a("iDEP 0.73 with Ensembl  Release 91,  released in December 2017 ",
+        href = "http://bioinformatics.sdstate.edu/idep73/"
+      ),
       h3("Privacy policy"),
       p("User uploaded data files are saved in a temporary folder during your session and automatically deleted. 
       Our group does not keep a copy of the uploaded data.
@@ -162,46 +208,7 @@ mod_10_doc_ui <- function(id) {
       Try to focus on robust results, rather than those that only should up
       with a certain parameter using a particular method.
       "),
-      h3("Reproducibility"),
-      p("Download the reports in the multiple
-       tabs, which has the parameters and results. Also download and try
-       the the R code on the DEG1 tab."),
-      h4("Previous versions of iDEP are still useable:"),
-      a("iDEP 0.96 with Ensembl Release 104, released July 30, 2022 ",
-        href = "http://bioinformatics.sdstate.edu/idep96/"
-      ),
-      br(),
-      a("iDEP 0.95 with Ensembl Release 104, released Feb. 8, 2022 ",
-        href = "http://bioinformatics.sdstate.edu/idep95/"
-      ),
-      br(),
-      a("iDEP 0.94 with Ensembl Release 104, released on Oct. 15, 2021 ",
-        href = "http://bioinformatics.sdstate.edu/idep94/"
-      ),
-      br(),
-      a("iDEP 0.93 with Ensembl Release 103, released May 20, 2021 ",
-        href = "http://bioinformatics.sdstate.edu/idep93/"
-      ),
-      br(),
-      a("iDEP 0.92 with Ensembl Release 100, released May 20, 2021 ",
-        href = "http://bioinformatics.sdstate.edu/idep92/"
-      ),
-      br(),
-      a("iDEP 0.90 with Ensembl Release 96, released May 19, 2021 ",
-        href = "http://bioinformatics.sdstate.edu/idep90/"
-      ),
-      br(),
-      a("iDEP 0.85 with Ensembl Release 95, released March 29, 2019 ",
-        href = "http://bioinformatics.sdstate.edu/idep85/"
-      ),
-      br(),
-      a("iDEP 0.82 with Ensembl  Release 92, released July 11, 2018 ",
-        href = "http://bioinformatics.sdstate.edu/idep82/"
-      ),
-      br(),
-      a("iDEP 0.73 with Ensembl  Release 91,  released December 2017 ",
-        href = "http://bioinformatics.sdstate.edu/idep73/"
-      ),
+
       htmlOutput(ns("session_info"))
     )
   )
