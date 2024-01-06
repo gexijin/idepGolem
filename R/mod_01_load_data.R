@@ -369,7 +369,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     welcome_modal <- shiny::modalDialog(
       title = "iDEP: Empower all scientists!",
       tags$p(
-        "Our passion is to enable all scientists, especially busy biologists in small labs, to analyze their own data."),
+        "Our passion is to enable all scientists, especially those in small labs with little resources."),
       tags$p(" If iDEP is used,
       even for preliminrary analysis, please cite: ",
         "Ge, Son & Yao, iDEP,",
@@ -385,7 +385,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         )
       ),
       tags$h5("By citing the iDEP paper properly, you will help make this service
-      available in the future. ",
+      available in the future. Just including the URL is not enough.",
         style = "color:#6B1518"
       ),
       easyClose = TRUE,
@@ -595,7 +595,12 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           p(
             "First time here? Just click ",
             tags$span("Load Demo", id = "load-demo"),
-            " below to see some magic!"
+            " below to see some magic! Or watch a",
+            a(
+              "video.",
+              href = "https://youtu.be/Hs5SamHHG9s",
+              target = "_blank"
+            ),
           ),
           tags$script("
             document.getElementById('load-demo').style.color = 'red';
