@@ -251,7 +251,7 @@ pgsea_data <- function(processed_data,
 #' @param n_pathway_show Number of significant pathways to show
 #' @param select_go pathway category.
 #' @param show_pathway_id Whether to show pathway id for GO and KEGG pathways
-#'
+#' @param plot_colors A vector of colors for activated/surpressed pathways
 #' @export
 #' @return A heatmap plot with the rows as the significant
 #'  pathways and the columns corresponding to the samples.
@@ -265,7 +265,8 @@ plot_pgsea <- function(my_range,
                        n_pathway_show,
                        select_go,
                        show_pathway_id,
-                       margin = c(3, 1, 13, 38)) {
+                       margin = c(3, 1, 13, 38),
+                       plot_colors = NULL) {
   genes <- processed_data[, contrast_samples]
   if (length(gene_sets) == 0) {
     return(
@@ -294,14 +295,23 @@ plot_pgsea <- function(my_range,
           select_go = select_go
         )
       }
-
+      
+      if(is.null(plot_colors)){
+        color_vec <- PGSEA::.rwb
+      }
+      else{
+        color_vec_1 <- colorRampPalette(c(plot_colors[[1]][1],"white"))(25)
+        color_vec_2 <- colorRampPalette(c("white",plot_colors[[1]][2]))(25)
+        color_vec <- c(color_vec_1,color_vec_2)
+      }
+      
       PGSEA::smcPlot(
         result$pg_data,
         factor(subtype),
         scale = c(-max(result$pg_data), max(result$pg_data)),
         show.grid = T,
         margins = margin,
-        col = PGSEA::.rwb,
+        col = color_vec,
         cex.lab = 0.5
       )
     }
@@ -895,6 +905,7 @@ reactome_data <- function(select_contrast,
 #'  result
 #' @param select_go pathway category.
 #' @param show_pathway_id Whether to show pathway id for GO and KEGG pathways
+#' @param plot_colors A vector of colors for activated/surpressed pathways
 #' 
 #' @export
 #' @return A data frame with the results of the pathway analysis.
@@ -912,7 +923,8 @@ pgsea_plot_all <- function(go,
                            n_pathway_show,
                            select_go,
                            show_pathway_id,
-                           margin = c(3, 1, 13, 38)) {
+                           margin = c(3, 1, 13, 38),
+                           plot_colors = NULL) {
   if (length(gene_sets) == 0) {
     plot.new()
     text(0, 1, "No gene sets!")
@@ -937,6 +949,15 @@ pgsea_plot_all <- function(go,
           select_go = select_go
         )
       }
+      
+      if(is.null(plot_colors)){
+        color_vec <- PGSEA::.rwb
+      }
+      else{
+        color_vec_1 <- colorRampPalette(c(plot_colors[[1]][1],"white"))(25)
+        color_vec_2 <- colorRampPalette(c("white",plot_colors[[1]][2]))(25)
+        color_vec <- c(color_vec_1,color_vec_2)
+      }
 
       PGSEA::smcPlot(
         result$pg_data,
@@ -944,7 +965,7 @@ pgsea_plot_all <- function(go,
         scale = c(-max(result$pg_data), max(result$pg_data)),
         show.grid = T,
         margins = margin,
-        col = PGSEA::.rwb,
+        col = color_vec,
         cex.lab = 0.5
       )
     }
