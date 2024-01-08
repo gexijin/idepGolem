@@ -26,7 +26,6 @@ deg_heatmap <- function(df,
   }
   # Number of genes to show
   n_genes <- as.character(table(bar))
-
   df <- as.matrix(df) - apply(df, 1, mean)
   cutoff <- median(unlist(df)) + 3 * sd(unlist(df))
   df[df > cutoff] <- cutoff
@@ -77,12 +76,14 @@ deg_heatmap <- function(df,
     bar[bar == -1] <- "Negative"
     bar[bar == 1] <- "Positive"
     groups <- bar
+    num_cols_needed <- length(unique(groups)) - 1 # determines length of col
 
     row_ann <- ComplexHeatmap::rowAnnotation(
       Change = groups,
       col = list(
         Change = setNames(
-          groups_colors[(group_count + 1):length(groups_colors)], unique(groups)
+          groups_colors[(group_count + 1):(group_count + 1 + num_cols_needed)], 
+          unique(groups)
         )
       ),
       annotation_legend_param = list(
