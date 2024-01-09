@@ -14,7 +14,8 @@ pgsea_plot_all(
   n_pathway_show,
   select_go,
   show_pathway_id,
-  margin = c(3, 1, 13, 38)
+  margin = c(3, 1, 13, 38),
+  plot_colors = NULL
 )
 }
 \arguments{
@@ -43,6 +44,8 @@ result}
 \item{select_go}{pathway category.}
 
 \item{show_pathway_id}{Whether to show pathway id for GO and KEGG pathways}
+
+\item{plot_colors}{A vector of colors for activated/surpressed pathways}
 }
 \value{
 A data frame with the results of the pathway analysis.

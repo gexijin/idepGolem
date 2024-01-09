@@ -152,6 +152,15 @@ mod_06_pathway_ui <- function(id) {
           h5("Questions?", align = "right"),
           href = "https://idepsite.wordpress.com/pathways/",
           target = "_blank"
+        ),
+        conditionalPanel(
+          condition = "input.pathway_method == 2 || input.pathway_method == 4",
+          selectInput(
+            inputId = ns("pgsea_plot_color_select"),
+            label = "Select PGSEA plot colors",
+            choices = "Blue_Red",
+          ),
+          ns = ns
         )
       ),
 
@@ -749,6 +758,31 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         data_file_format = pre_process$data_file_format()
       )
     })
+    
+    # Plot colors -------
+    pgsea_plot_colors <- list(
+      "Blue-Red" = c("blue", "red"),
+      "Green-Red" = c("green", "red"),
+      "Red-Green" = c("red", "green"),
+      "Green-Magenta" = c("green", "magenta"),
+      "Orange-Blue" = c("orange", "blue")
+    )
+    
+    pgsea_plot_choices <- c(
+      "Blue-Red",
+      "Green-Red",
+      "Red-Green",
+      "Green-Magenta",
+      "Orange-Blue"
+    )
+    
+    observe({
+      updateSelectInput(
+        session = session,
+        inputId = "pgsea_plot_color_select",
+        choices = pgsea_plot_choices
+      )
+    })
 
     output$pgsea_plot <- renderPlot(
       {
@@ -773,7 +807,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
               pathway_p_val_cutoff = input$pathway_p_val_cutoff,
               n_pathway_show = input$n_pathway_show,
               select_go = input$select_go,
-              show_pathway_id = show_pathway_id
+              show_pathway_id = show_pathway_id,
+              plot_colors = pgsea_plot_colors[input$pgsea_plot_color_select]
             )
           })
         })
@@ -980,7 +1015,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
               pathway_p_val_cutoff = input$pathway_p_val_cutoff,
               n_pathway_show = input$n_pathway_show,
               select_go = input$select_go,
-              show_pathway_id = show_pathway_id
+              show_pathway_id = show_pathway_id,
+              plot_colors = pgsea_plot_colors[input$pgsea_plot_color_select]
             )
           })
         })
