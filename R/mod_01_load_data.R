@@ -368,18 +368,27 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
     welcome_modal <- shiny::modalDialog(
       title = "iDEP: Empower all scientists!",
+      tags$h3("Urgent request! Send us an email to support iDEP before Aril 5th", style = "color: red"),
+      tags$h4(
+        "As the current funding ends this year, we are writting an NIH grant proposal to continue the maintainence & development of iDEP for the long term. 
+Please tell us your research area and how iDEP helped your work. We are trying to develop iDEP towards a commerical service while keeping it free for academia, 
+thus are looking for letters from both academia and industry.",        
+     "Take 5 minutes to email ", a("Xijin.Ge@SDstate.edu",
+          href = "mailto:xijin.ge@sdstate.edu?Subject=iDEP support letter"
+        ), "today! Thank you for your support"
+      ),
+      tags$br(),
       tags$p(
-        "Our passion is to enable all scientists, especially those in small labs with little resources."),
+        "Our passion is to enable all scientists, especially those with little resources, to interpret their data."),
       tags$p(" If iDEP is used,
       even for preliminrary analysis, please cite: ",
-        "Ge, Son & Yao, iDEP,",
         a(
           " BMC Bioinformatics 19:1-24, 2018, ",
           href = "https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-018-2486-6",
           target = "_blank"
         ),
         "  which has been cited ",
-        a("810 times.",
+        a("890 times.",
           href = "https://scholar.google.com/scholar?oi=bibs&hl=en&cites=6502699637682046008,17999801138713500070,11001860275874506471",
           target = "_blank"
         )
