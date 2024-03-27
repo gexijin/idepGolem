@@ -370,9 +370,9 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       title = "iDEP: Empower all scientists!",
       tags$h2("Urgent! Send an email to support iDEP by Friday, Aril 5th", style = "color: red"),
       tags$h4(
-        "As the current funding ends this year, we are writting an NIH grant proposal to continue the maintainence & development of iDEP. 
-Please tell us your research area and how iDEP helps. We are trying to develop iDEP towards a commerical service while keeping it free for academia, 
-thus we are looking for letters from both academia and industry.",        
+        "Our funding expires this year, and we're seeking NIH grant support to maintain and enhance iDEP. 
+        Help us by sharing your research area and how iDEP benefits you. For long-term sustainability, we aim to evolve iDEP into a commercial service, 
+        remaining free for academia. We need letters of support from both academic and industry users. ",        
      "Take 5 minutes to email Dr. Ge", a("(Xijin.Ge@SDstate.edu)",
           href = "mailto:xijin.ge@sdstate.edu?Subject=iDEP support letter"
         ), "today! Thank you."
