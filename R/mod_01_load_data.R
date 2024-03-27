@@ -368,14 +368,14 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
     welcome_modal <- shiny::modalDialog(
       title = "iDEP: Empower all scientists!",
-      tags$h3("Urgent request! Send us an email to support iDEP before Aril 5th", style = "color: red"),
+      tags$h2("Urgent! Send an email to support iDEP by Friday, Aril 5th", style = "color: red"),
       tags$h4(
-        "As the current funding ends this year, we are writting an NIH grant proposal to continue the maintainence & development of iDEP for the long term. 
-Please tell us your research area and how iDEP helped your work. We are trying to develop iDEP towards a commerical service while keeping it free for academia, 
-thus are looking for letters from both academia and industry.",        
-     "Take 5 minutes to email ", a("Xijin.Ge@SDstate.edu",
+        "As the current funding ends this year, we are writting an NIH grant proposal to continue the maintainence & development of iDEP. 
+Please tell us your research area and how iDEP helps. We are trying to develop iDEP towards a commerical service while keeping it free for academia, 
+thus we are looking for letters from both academia and industry.",        
+     "Take 5 minutes to email Dr. Ge", a("(Xijin.Ge@SDstate.edu)",
           href = "mailto:xijin.ge@sdstate.edu?Subject=iDEP support letter"
-        ), "today! Thank you for your support"
+        ), "today! Thank you."
       ),
       tags$br(),
       tags$p(
