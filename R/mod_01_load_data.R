@@ -368,7 +368,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
     welcome_modal <- shiny::modalDialog(
       title = "iDEP: Empower all scientists!",
-      tags$h2("Urgent! Send an email to support iDEP by Friday, Aril 5th", style = "color: red"),
+  
       tags$br(),
       tags$p(" If iDEP is used,
       even for preliminrary analysis, please cite: ",
