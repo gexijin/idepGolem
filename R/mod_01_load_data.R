@@ -391,7 +391,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       size = "l"
     )
 
-    shiny::showModal(welcome_modal)
+    #shiny::showModal(welcome_modal)
 
     # Pop-up modal for gene assembl information ----
     observeEvent(input$genome_assembl_button, {
