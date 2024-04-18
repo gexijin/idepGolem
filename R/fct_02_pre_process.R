@@ -315,7 +315,7 @@ total_counts_ggplot <- function(counts_data,
   } else {
     grouping <- groups
 
-    color_palette <- RColorBrewer::brewer.pal(n = length(unique(grouping)), name = plots_color_select)
+    color_palette <- generate_colors(n = length(unique(grouping)), palette_name = plots_color_select)
 
     plot_data <- data.frame(
       sample = as.factor(colnames(counts)),
@@ -521,8 +521,7 @@ rRNA_counts_ggplot <- function(counts_data,
 
   plot_data <- reshape2::melt(df, id.vars = "Gene_Type")
 
-  color_palette <- RColorBrewer::brewer.pal(n = nlevels(as.factor(plot_data$Gene_Type)), name = plots_color_select)
-
+  color_palette <- generate_colors(n = nlevels(as.factor(plot_data$Gene_Type)), palette_name = plots_color_select)
   plot <- ggplot2::ggplot(plot_data, ggplot2::aes(x = variable, y = value, fill = Gene_Type)) +
     ggplot2::geom_bar(stat = "identity") +
     ggplot2::labs(x = NULL, y = "% Reads", title = "% Reads by gene type")+
@@ -1002,7 +1001,7 @@ eda_boxplot <- function(processed_data,
   longer_data$groups <- rep(groups, nrow(counts))
   longer_data$grouping <- rep(grouping, nrow(counts))
 
-  color_palette <- RColorBrewer::brewer.pal(n = length(unique(grouping)), name = plots_color_select)
+  color_palette <- generate_colors(n = length(unique(grouping)), palette_name = plots_color_select)
 
   plot <- ggplot2::ggplot(
     data = longer_data,
@@ -1093,7 +1092,7 @@ eda_density <- function(processed_data,
   longer_data$groups <- rep(groups, nrow(counts))
   longer_data$group_fill <- rep(group_fill, nrow(counts))
 
-  color_palette <- RColorBrewer::brewer.pal(n = length(unique(group_fill)), name = plots_color_select)
+  color_palette <- generate_colors(n = length(unique(group_fill)), palette_name = plots_color_select)
 
   plot <- ggplot2::ggplot(
     data = longer_data,
@@ -1189,8 +1188,7 @@ individual_plots <- function(individual_data,
 
   if (gene_plot_box == TRUE) {
     plot_data$symbol <- factor(plot_data$symbol, levels = unique(plot_data$symbol))
-    color_palette <- RColorBrewer::brewer.pal(n = nlevels(as.factor(plot_data$symbol)), name = plots_color_select)
-
+    color_palette <- generate_colors(n = nlevels(as.factor(plot_data$symbol)), palette_name = plots_color_select)
     ind_line <- ggplot2::ggplot(
       data = plot_data,
       ggplot2::aes(x = sample, y = value, group = symbol, color = symbol)
@@ -1235,7 +1233,7 @@ individual_plots <- function(individual_data,
 
     summarized$SE <- summarized$SD / sqrt(summarized$N)
 
-    color_palette <- RColorBrewer::brewer.pal(n = length(unique(summarized$groups)), name = plots_color_select)
+    color_palette <- generate_colors(n = length(unique(summarized$groups)), palette_name = plots_color_select)
   
     gene_bar <- ggplot2::ggplot(
       summarized,
@@ -1558,3 +1556,43 @@ generate_descr <- function(missing_value,
 
   return(descr)
 }
+
+
+#' Generate colors for plots, solving the problem of not having enough colors for some selections
+#'
+#' Creates a message about the size of the counts
+#' data and the amount of IDs that were converted.
+#'
+#' @param n Number of desired colors
+#' @param palette_name Selected color set, i.e. Set1, Set2, etc.
+#'
+#' @export
+#' @return a list of n colors, even if there are fewer colors in the palette
+#' 
+# Custom function to generate n colors from a palette
+generate_colors <- function(n, palette_name = "Set1") {
+  # Ensure RColorBrewer is available
+  if (!requireNamespace("RColorBrewer", quietly = TRUE)) {
+    stop("Package 'RColorBrewer' is required but not installed.")
+  }
+  
+  # Validate palette name and get the maximum number of colors available
+  if (!palette_name %in% rownames(RColorBrewer::brewer.pal.info)) {
+    stop("Invalid palette name provided. Please choose a valid palette name from RColorBrewer.")
+  }
+  
+  max_colors <- RColorBrewer::brewer.pal.info[palette_name, "maxcolors"]
+  
+  if (n <= max_colors) {
+    # If n is less than or equal to max_colors, use brewer.pal() directly
+    return(RColorBrewer::brewer.pal(n, name = palette_name))
+  } else {
+    # If n is greater than max_colors, interpolate new colors
+    base_colors <- RColorBrewer::brewer.pal(max_colors, name = palette_name)
+    additional_colors_needed <- n - max_colors
+    # Interpolate additional colors using grDevices
+    additional_colors <- grDevices::colorRampPalette(base_colors)(n)
+    return(additional_colors)
+  }
+}
+

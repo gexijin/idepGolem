@@ -126,7 +126,7 @@ PCA_plot <- function(data,
 
   levels <- length(unique(groups))
   # plot color scheme
-  color_palette <- RColorBrewer::brewer.pal(n = levels, name = plots_color_select)
+  color_palette <- generate_colors(n = levels, palette_name = plots_color_select)
 
   # hide legend for large or no groups levels
   if (levels <= 1 | levels > 20) {
@@ -288,7 +288,7 @@ PCA_plot_3d <- function(data,
   colnames(pcaData)[npc + 1] <- "Names"
 
   # plot color scheme
-  color_palette <- RColorBrewer::brewer.pal(n = nlevels(as.factor(pcaData$Names)), name = plots_color_select)
+  color_palette <- generate_colors(n = nlevels(as.factor(pcaData$Names)), palette_name = plots_color_select)
 
   # selected principal components
   PCAxyz <- c(as.integer(PCAx), as.integer(PCAy), as.integer(PCAz))
@@ -405,7 +405,7 @@ t_SNE_plot <- function(data,
   }
 
   # plot color scheme
-  color_palette <- RColorBrewer::brewer.pal(n = nlevels(as.factor(pcaData$Names)), name = plots_color_select)
+  color_palette <- generate_colors(n = nlevels(as.factor(pcaData$Names)), palette_name = plots_color_select)
 
   # Generate plot
   plot_t_SNE <- ggplot2::ggplot(
@@ -532,7 +532,7 @@ MDS_plot <- function(data,
   }
 
   # plot color scheme
-  color_palette <- RColorBrewer::brewer.pal(n = nlevels(as.factor(pcaData$Names)), name = plots_color_select)
+  color_palette <- generate_colors(n = nlevels(as.factor(pcaData$Names)), palette_name = plots_color_select)
 
   p <- ggplot2::ggplot(
     data = pcaData,

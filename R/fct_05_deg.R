@@ -2375,7 +2375,7 @@ plot_venn <- function(results,
     results <- results[, 1:5]
   }
 
-  color_palette <- RColorBrewer::brewer.pal(n = 5, name = plots_color_select)
+  color_palette <- generate_colors(n = 5, palette_name = plots_color_select)
 
   return(
     limma::vennDiagram(
