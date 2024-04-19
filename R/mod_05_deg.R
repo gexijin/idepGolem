@@ -52,7 +52,7 @@ mod_05_deg_1_ui <- function(id) {
             # Adjusted significant p-value to use
             numericInput(
               inputId = ns("limma_p_val"),
-              label = "FDR cutoff",
+              label = "FDR cutoff:",
               value = 0.1,
               min = 1e-5,
               max = 1,
@@ -86,7 +86,7 @@ mod_05_deg_1_ui <- function(id) {
             ),
             numericInput(
               inputId = ns("limma_fc"),
-              label = "Min fold-change",
+              label = "Min fold-change:",
               value = 2,
               min = 1,
               max = 100,
@@ -97,15 +97,6 @@ mod_05_deg_1_ui <- function(id) {
               "Entering 2 selects genes that are upregulated or downregulated by at least 2-fold. Must be bigger than 1, which means no change. This is not log fold change.",
               theme = "light-border"
             )
-          ),
-          # Style both numeric inputs
-          tags$style(
-            type = "text/css",
-            "#deg-limma_p_val { width:100%;   margin-top:-12px}"
-          ),
-          tags$style(
-            type = "text/css",
-            "#deg-limma_fc { width:100%;   margin-top:-12px}"
           )
         ),
         conditionalPanel(

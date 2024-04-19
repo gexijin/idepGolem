@@ -19,7 +19,7 @@ mod_02_pre_process_ui <- function(id) {
         # Conditional panel for read count data -----------
         conditionalPanel(
           condition = "output.data_file_format == 1",
-          strong("Keep genes with minimal counts per million (CPM) in at
+          p("Keep genes with minimal counts per million (CPM) in at
                   least n libraries:"),
           fluidRow(
             column(
@@ -43,19 +43,11 @@ mod_02_pre_process_ui <- function(id) {
               )
             )
           ),
-          tags$style(
-            type = "text/css",
-            "#pre_process-min_counts { width:100%;   margin-top:-8px}"
-          ),
-          tags$style(
-            type = "text/css",
-            "#pre_process-n_min_samples_count { width:100%;   margin-top:-8px}"
-          ),
-
+          p("Transform counts data for clustering & PCA:"),
           # Type of transformation to perform on the counts data
           selectInput(
             inputId = ns("counts_transform"),
-            label = "Transform counts data for clustering & PCA:",
+            label = NULL,
             choices = c(
               "VST: variance stabilizing transform" = 2,
               "rlog: regularized log (slow) " = 3,

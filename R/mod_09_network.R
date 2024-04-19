@@ -51,14 +51,6 @@ mod_09_network_ui <- function(id) {
             )
           )
         ),
-        tags$style(
-          type = "text/css",
-          "#network-soft_power{ width:100%;   margin-top:-12px}"
-        ),
-        tags$style(
-          type = "text/css",
-          "#network-min_module_size{ width:100%;   margin-top:-12px}"
-        ),
         uiOutput(outputId = ns("heatmap_color_ui")),
         HTML(
           "<hr style='height:1px;border:none;color:#333;background-color:#333;' />"
@@ -113,14 +105,6 @@ mod_09_network_ui <- function(id) {
                   style = "float:center"
                 )
               )
-            ),
-            tags$style(
-              type = "text/css",
-              "#network-edge_threshold{ width:100%;   margin-top:-12px}"
-            ),
-            tags$style(
-              type = "text/css",
-              "#network-top_genes_network{ width:100%;   margin-top:-12px}"
             ),
             br(),
             plotOutput(outputId = ns("module_network"))
