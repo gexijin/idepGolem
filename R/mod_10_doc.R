@@ -206,8 +206,8 @@ mod_10_doc_ui <- function(id) {
       with a certain parameter using a particular method.
       "),
       h3("Change log"),
-      p("4/19/2024: iDEP 2.01. Fixed a bug related to insufficiant # of color in palettes. 
-      Optimized UI for load data. Revert to basic Shiny style due to issue with new version of Shiny package."),
+      p("4/19/2024: iDEP 2.01. Minor upgrade. Fixed a bug related to insufficiant # of color in palettes. 
+      Optimized UI for load data. Reverted to basic Shiny theme due to an issue with new version of Shiny package."),
       htmlOutput(ns("session_info"))
     )
   )

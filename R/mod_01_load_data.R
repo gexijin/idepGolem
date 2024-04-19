@@ -566,13 +566,13 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           )
         ),
         fluidRow(
-          column(1),
           column(
-            width = 2,
+            width = 4,
             actionButton(
               inputId = ns("go_button"),
               label = "Demo"
             ),
+            align = "right",
             tippy::tippy_this(
               ns("go_button"),
               "Load the selected demo file",
@@ -593,17 +593,17 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
               ns("select_demo"),
               "Select a demo file then click the \"Demo\" button",
               theme = "light-border"
+            ),
+            tags$style(
+              type = "text/css",
+              "#load_data-go_button { margin-top:-25px; color: red;}"
+            ),
+            tags$style(
+              type = "text/css",
+              "#load_data-select_demo { margin-top:-20px}"
             )
           )
-        ),
-        tags$style(
-          type = "text/css",
-          "#load_data-go_button { margin-top:-25px; color: red;}"
-        ),
-        tags$style(
-          type = "text/css",
-          "#load_data-select_demo { margin-top:-20px}"
-        ),
+        )
       )
     })
 
@@ -659,7 +659,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
       tagList(
 
-        strong("4. Optional: Experiment Design (CSV or text)"),
+        strong("4. Optional: Exp. Design (CSV or text)"),
         fluidRow(
           column(
             width = 9,
