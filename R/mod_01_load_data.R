@@ -46,21 +46,11 @@ mod_01_load_data_ui <- function(id) {
 
         fluidRow(
           column(
-            width = 5, 
-            strong("1. Choose a species or upload a pathway file"),
+            width = 4, 
+            strong("1. Species"),
           ),
           column(
-            width = 3,
-            align = "center",
-            # Species list and genome assemblies ----------
-            actionButton(
-              inputId = ns("genome_assembl_button"),
-              label = "Select"
-            )
-          ),
-
-          column(
-            width = 4,
+            width = 8,
             textOutput(ns("selected_species"))
           )
         ),
@@ -71,77 +61,59 @@ mod_01_load_data_ui <- function(id) {
                          )
               ),
 
-        br(),
         # .GMT file input bar ----------
         fluidRow(
-          column(1,
-          ),
           column(
-            11,
-            fileInput(
-              inputId = ns("gmt_file"),
-              label =
-                "Or: Upload a custom pathway .GMT file",
-              accept = c(
-                "text/csv",
-                "text/comma-separated-values",
-                "text/tab-separated-values",
-                "text/plain",
-                ".csv",
-                ".tsv",
-                ".gmt"
-              ),
-              placeholder = ""
-            ),
-            tippy::tippy_this(
-              ns("gmt_file"),
-              "Upload a customized pathway file (.GMT format) to perform pathway analysis. This enables 
-              you to analyze data for species not annotated in our database.",
-              theme = "light-border"
-            )            
-          )
-        ),
-
-
-        # Dropdown for data file format ----------
-        strong("2. Choose data type"),
-        fluidRow(
-          column(
-            width = 9,
-            selectInput(
-              inputId = ns("data_file_format"),
-              label = NULL,
-              choices = list(
-                "Read counts data (recommended)" = 1,
-                "Normalized Expression data" = 2,
-                "Fold-changes & adjusted P-values" = 3
-              ),
-              selected = 1,
-              selectize = FALSE
-            ),
-            tippy::tippy_this(
-              ns("data_file_format"),
-              "We recommend uploading Read Counts Data, which can be analyzed using DESeq2.
-              Choose Normalized Expression Data if your data is derived from 
-              RNA-Seq(FPKM, RPKM, TPM), DNA microarray, proteomics data, etc. 
-              Select Fold Change and Adjusted P-value, if you have already conducted D.E.G. analysis.
-                ",
-              theme = "light-border"
-            )
-          ),
-          column(
-            width = 3,
+            width = 6,
+            align = "center",
+            # Species list and genome assemblies ----------
             actionButton(
-              inputId = ns("data_format_help"),
-              label = "Info"
+              inputId = ns("genome_assembl_button"),
+              label = strong("Select")
+            )
+          ),
+          column(
+            width = 6,
+            align = "center",
+            # Species list and genome assemblies ----------
+            actionButton(
+              inputId = ns("upload_gmt_button"),
+              label = strong("Custom")
             ),
             tippy::tippy_this(
-              ns("data_format_help"),
-              "Additional info on accepted data types",
+              ns("upload_gmt_button"),
+              "Upload a custom pathway .GMT file to perform pathway analysis for any genome.",
               theme = "light-border"
             )
           )
         ),
+
+        br(),
+        # Dropdown for data file format ----------
+        strong("2. Data type"),
+
+        selectInput(
+          inputId = ns("data_file_format"),
+          label = NULL,
+          choices = list(
+            "Read counts data (recommended)" = 1,
+            "Normalized Expression data" = 2,
+            "Fold-changes & adjusted P-values" = 3
+          ),
+          selected = 1,
+          selectize = FALSE
+        ),
+        tippy::tippy_this(
+          ns("data_file_format"),
+          "We recommend uploading Read Counts Data, which can be analyzed using DESeq2.
+          Choose Normalized Expression Data if your data is derived from 
+          RNA-Seq(FPKM, RPKM, TPM), DNA microarray, proteomics data, etc. 
+          Select Fold Change and Adjusted P-value, if you have already conducted D.E.G. analysis.
+            ",
+          theme = "light-border"
+        ),
+
+
         # Conditional panel for fold changes data file ----------
         conditionalPanel(
           condition = "input.data_file_format == 3",
@@ -164,12 +136,12 @@ mod_01_load_data_ui <- function(id) {
         #     }
         #   ")
         # ),
-
+        br(),
 
         # Experiment design file input ----------
         uiOutput(ns("design_file_ui")),
         uiOutput(ns("example_genes_ui")),
-        br(), br(),
+        br(),
         checkboxInput(
           inputId = ns("customize_button"),
           label = strong("Global Settings"),
@@ -230,7 +202,7 @@ mod_01_load_data_ui <- function(id) {
         ),
         selectInput(
           inputId = ns("select_gene_id"),
-          label = "Gene ID type for plots",
+          label = "Gene ID type for plots:",
           choices = c("symbol", "ensembl_ID", "User_ID"),
           selected = "symbol"
         ),
@@ -272,7 +244,7 @@ mod_01_load_data_ui <- function(id) {
           which is used as a central id type in pathway databases.",
           theme = "light-border"
         ),
-        br(), br(),
+        br(),
         fluidRow(
           column(
             width = 4,
@@ -441,6 +413,34 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       )
     })
 
+    # Pop-up modal for uploading GMT file ----
+    observeEvent(input$upload_gmt_button, {
+      shiny::showModal(
+        shiny::modalDialog(
+          size = "l",
+          p("Upload a custom pathway .GMT file to perform pathway analysis. 
+          This enables you to analyze data for species not annotated in our database."),
+          fileInput(
+            inputId = ns("gmt_file"),
+            label =
+              "Upload a custom pathway .GMT file",
+            accept = c(
+              "text/csv",
+              "text/comma-separated-values",
+              "text/tab-separated-values",
+              "text/plain",
+              ".csv",
+              ".tsv",
+              ".gmt"
+            ),
+            placeholder = ""
+          ),
+          easyClose = TRUE
+        )
+      )
+    })
+
+
     observeEvent(input$gmt_file, {
       req(!is.null(input$gmt_file))
       updateSelectizeInput(
@@ -531,33 +531,48 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       files <- files[files$type == input$data_file_format, ]
       choices <- setNames(as.list(files$ID), files$name)
       tagList(
-        # Expression data file input
-        fileInput(
-          inputId = ns("expression_file"),
-          label = strong("3. Expression data (CSV, text, or xlsx)"),
-          accept = c(
-            "text/csv",
-            "text/comma-separated-values",
-            "text/tab-separated-values",
-            "text/plain",
-            ".csv",
-            ".tsv",
-            ".xlsx",
-            ".xls"
+        strong("3. Expression matrix (CSV, text, or xlsx)"),
+        fluidRow(
+          column(
+            width = 9,
+            # Expression data file input
+            fileInput(
+              inputId = ns("expression_file"),
+              label = NULL,
+              accept = c(
+                "text/csv",
+                "text/comma-separated-values",
+                "text/tab-separated-values",
+                "text/plain",
+                ".csv",
+                ".tsv",
+                ".xlsx",
+                ".xls"
+              ),
+              placeholder = ""
+            )
           ),
-          placeholder = ""
+          column(
+            width = 3,
+            actionButton(
+              inputId = ns("data_format_help"),
+              label = "Info"
+            ),
+            tippy::tippy_this(
+              ns("data_format_help"),
+              "Additional info on accepted data types",
+              theme = "light-border"
+            )
+          )
         ),
         fluidRow(
           column(1),
           column(
-            width = 5,
+            width = 2,
             actionButton(
               inputId = ns("go_button"),
-              label = "Load Demo:"
+              label = "Demo"
             ),
-            tags$head(tags$style(
-              "#load_data-go_button{color: red;}"
-            )),
             tippy::tippy_this(
               ns("go_button"),
               "Load the selected demo file",
@@ -565,7 +580,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             )
           ),
           column(
-            width = 6,
+            width = 8,
             align = "left",
             selectInput(
               inputId = ns("select_demo"),
@@ -576,11 +591,19 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             ),
             tippy::tippy_this(
               ns("select_demo"),
-              "Select a demo file then click the \"Load Demo\"",
+              "Select a demo file then click the \"Demo\" button",
               theme = "light-border"
             )
           )
-        )
+        ),
+        tags$style(
+          type = "text/css",
+          "#load_data-go_button { margin-top:-25px; color: red;}"
+        ),
+        tags$style(
+          type = "text/css",
+          "#load_data-select_demo { margin-top:-20px}"
+        ),
       )
     })
 
@@ -592,14 +615,15 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       ) {
         tagList(
           p(
-            "First time here? Just click ",
-            tags$span("Load Demo", id = "load-demo"),
-            " below to see some magic! Or watch a",
+            "Watch a ",
             a(
               "video.",
               href = "https://youtu.be/Hs5SamHHG9s",
               target = "_blank"
             ),
+            " Or click ",
+            tags$span("Demo", id = "load-demo"),
+            " below to try!"
           ),
           tags$script("
             document.getElementById('load-demo').style.color = 'red';
@@ -634,20 +658,39 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       req(is.null(input$go_button) || input$go_button == 0)
 
       tagList(
-        fileInput(
-          inputId = ns("experiment_file"),
-          label = strong("4. Optional: Experiment Design (CSV or text)"),
-          accept = c(
-            "text/csv",
-            "text/comma-separated-values",
-            "text/tab-separated-values",
-            "text/plain",
-            ".csv",
-            ".tsv",
-            ".xlsx",
-            ".xls"
+
+        strong("4. Optional: Experiment Design (CSV or text)"),
+        fluidRow(
+          column(
+            width = 9,
+            fileInput(
+              inputId = ns("experiment_file"),
+              label = NULL,
+              accept = c(
+                "text/csv",
+                "text/comma-separated-values",
+                "text/tab-separated-values",
+                "text/plain",
+                ".csv",
+                ".tsv",
+                ".xlsx",
+                ".xls"
+              ),
+              placeholder = ""
+            )
           ),
-          placeholder = ""
+          column(
+            width = 3,
+            actionButton(
+              inputId = ns("data_format_help"),
+              label = "Info"
+            ),
+            tippy::tippy_this(
+              ns("data_format_help"),
+              "Additional info on accepted data types",
+              theme = "light-border"
+            )
+          )
         )
       )
     })

@@ -43,17 +43,16 @@ mod_10_doc_ui <- function(id) {
       especially those who do not have access to bioinformaticians."
       ),
       p("Graduate students contributed to this project include Eun Wo Son, Runan Yao,
-      Gavin Doering, Roberto Villegas-Diaz, Eric Tulowetzke, Emma Spors,  
-      Chris Trettel, Jand Ben Derenge. Undergraduate students include Jenna Thorstenson and
-      Jakob Fossen.
-      Eric still helps us fix bugs after leaving the lab.
+      Roberto Villegas-Diaz, Eric Tulowetzke, Emma Spors,  
+      Chris Trettel, and Ben Derenge. Undergraduate students include Jenna Thorstenson and
+      Jakob Fossen. Research staff include Jianli Qi and Gavin Doering.
       Much of the new version of iDEP is rewritten by Gavin Doering.
       The iDEP logo was designed by Emma Spors.
       Technical support is kindly provided by the Office of Information
       Technology (OIT) at SDSU. Mirror site is enabled by a JetStream2
       allocation award (BIO210175), which is supported by NSF.
       "),
-      h3("Please cite the iDEP paper! Otherwise, this service might disappear"),
+      h3("Cite the iDEP paper, otherwise, this service might vanish!"),
       p(
         "If you use iDEP, even just for prelimiary analysis,
         please cite: Ge, Son & Yao, iDEP:
@@ -95,16 +94,14 @@ mod_10_doc_ui <- function(id) {
       ),
       p(
         "According to Google Scholar, more than",
-        a("786 papers cited iDEP,",
+        a("900 papers cited iDEP,",
           href = "https://scholar.google.com/scholar?oi=bibs&hl=en&cites=6502699637682046008,17999801138713500070,11001860275874506471",
           target = "_blank"
         ),
-        " as of December 11, 2023.",
-        "Our website has been accessed over 458,000 times by 114,000 users,
+        " as of April 19, 2024.",
+        "Our website has been accessed over 600,000 times by 120,000 users,
         spending 15 minutes each time. For every 1000 users, only 6 cited
-        the iDEP paper, which is disappointingly low. Consider citing iDEP even
-        if you used it just for preliminary analysis. Otherwise, this tool might
-        just vanish."
+        the iDEP paper, which is disappointingly low."
       ),
       h3("Source code, database, & local installation"),
       p(
@@ -208,7 +205,9 @@ mod_10_doc_ui <- function(id) {
       Try to focus on robust results, rather than those that only should up
       with a certain parameter using a particular method.
       "),
-
+      h3("Change log"),
+      p("4/19/2024: iDEP 2.01. Fixed a bug related to insufficiant # of color in palettes. 
+      Optimized UI for load data. Revert to basic Shiny style due to issue with new version of Shiny package."),
       htmlOutput(ns("session_info"))
     )
   )
