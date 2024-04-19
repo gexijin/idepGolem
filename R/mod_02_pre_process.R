@@ -45,17 +45,17 @@ mod_02_pre_process_ui <- function(id) {
           ),
           tags$style(
             type = "text/css",
-            "#pre_process-min_counts { width:100%;   margin-top:-12px}"
+            "#pre_process-min_counts { width:100%;   margin-top:-8px}"
           ),
           tags$style(
             type = "text/css",
-            "#pre_process-n_min_samples_count { width:100%;   margin-top:-12px}"
+            "#pre_process-n_min_samples_count { width:100%;   margin-top:-8px}"
           ),
 
           # Type of transformation to perform on the counts data
           selectInput(
             inputId = ns("counts_transform"),
-            label = "Transform counts data for clustering & PCA.",
+            label = "Transform counts data for clustering & PCA:",
             choices = c(
               "VST: variance stabilizing transform" = 2,
               "rlog: regularized log (slow) " = 3,

@@ -11,19 +11,8 @@ app_ui <- function(request) {
     # Your application UI logic
 
     navbarPage(
-      "iDEP 2.0",
-      theme = bslib::bs_theme(
-        version = 5,
-        primary = "#0033A0",
-        secondary = "#CBD3EB",
-        warning = "#ffc107",
-        bg = "#fbfbfb",
-        fg = "#0D223E",
-        base_font = bslib::font_google("Merriweather"),
-        heading_font = bslib::font_google("Merriweather"),
-        font_scale = 0.7,
-        "navbar-bg" = "#0033A0"
-      ),
+      "iDEP 2.01",
+
       id = "navbar",
       mod_01_load_data_ui(id = "load_data"),
       mod_02_pre_process_ui(id = "pre_process"),
