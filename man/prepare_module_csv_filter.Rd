@@ -4,10 +4,10 @@
 \alias{prepare_module_csv_filter}
 \title{prepare_module_csv_filter}
 \usage{
-prepare_module_csv_filter(module_data, select_org)
+prepare_module_csv_filter(module_data, module)
 }
 \arguments{
-\item{select_org}{Organism the expression data is for}
+\item{module}{The module to create a plot of hte top genes for,}
 
 \item{wgcna}{List returned from the \code{get_wgcna}}
 }

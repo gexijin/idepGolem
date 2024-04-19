@@ -209,7 +209,8 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
       req(!is.null(module_csv_data()))
 
       prepare_module_csv_filter(
-        module_data = module_csv_data(), select_org = pre_process$select_org()
+        module_data = module_csv_data(), 
+        module = input$select_wgcna_module
       )
     })
     output$download_selected_WGCNA_module <- downloadHandler(
@@ -217,8 +218,8 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
         paste0("module_", input$select_wgcna_module, ".csv")
       },
       content <- function(file) {
-        write.csv(module_csv_data(), file, row.names = FALSE)
-      },
+        write.csv(module_csv_data_filter(), file, row.names = FALSE)
+      }
     )
     
     output$module_plot <- renderPlot({

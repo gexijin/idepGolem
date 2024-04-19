@@ -428,15 +428,15 @@ all_gene_info) {
 #' Create a dataframe from the wgcna object to export as a CSV file, allow the user to filter the module
 #'
 #' @param wgcna List returned from the \code{get_wgcna}
-#' @param select_org Organism the expression data is for
+#' @param module The module to create a plot of hte top genes for,
 #'
 #' @export
 #' @return A dataframe containing for csv file
 prepare_module_csv_filter <- function(
     module_data,
-    select_org) {
-  if (select_org == "Entire network") {
+    module) {
+  if (module == "ALL") {
     return(module_data)
   }
-  return(subset(module_data, module == select_org))
+  return(subset(module_data, module == module))
 }
