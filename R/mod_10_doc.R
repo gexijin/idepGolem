@@ -206,6 +206,7 @@ mod_10_doc_ui <- function(id) {
       with a certain parameter using a particular method.
       "),
       h3("Change log"),
+      p("4/20/2024: Fix bug in network tab related to module download. Enable download of network as a CSV file."),
       p("4/19/2024: iDEP 2.01. Minor upgrade. Fixed a bug related to insufficiant # of color in palettes. 
       Optimized UI for load data. Reverted to basic Shiny theme due to an issue with new version of Shiny package."),
       htmlOutput(ns("session_info"))
