@@ -90,14 +90,6 @@ mod_06_pathway_ui <- function(id) {
             )
           )
         ),
-        tags$style(
-          type = "text/css",
-          "#pathway-min_set_size { width:100%;   margin-top:-10px}"
-        ),
-        tags$style(
-          type = "text/css",
-          "#pathway-max_set_size { width:100%;   margin-top:-10px}"
-        ),
         numericInput(
           inputId = ns("n_pathway_show"),
           label = "Number of top pathways to show",
@@ -106,10 +98,6 @@ mod_06_pathway_ui <- function(id) {
           max = 100,
           step = 5
         ),
-        tags$style(
-          type = "text/css",
-          "#pathway-n_pathway_show { width:100%;   margin-top:-12px}"
-        ),
         numericInput(
           inputId = ns("gene_p_val_cutoff"),
           label = "Remove genes with big FDR before pathway analysis:",
@@ -117,10 +105,6 @@ mod_06_pathway_ui <- function(id) {
           min = 1e-20,
           max = 1,
           step = .05
-        ),
-        tags$style(
-          type = "text/css",
-          "#pathway-gene_p_val_cutoff { width:100%;   margin-top:-12px}"
         ),
         checkboxInput(
           inputId = ns("absolute_fold"),

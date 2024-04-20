@@ -2,35 +2,19 @@
 % Please edit documentation in R/fct_09_network.R
 \name{get_network_plot}
 \alias{get_network_plot}
-\title{Network of top genes}
+\title{Network of top genes, plot}
 \usage{
-get_network_plot(
-  select_wgcna_module,
-  wgcna,
-  top_genes_network,
-  select_org,
-  all_gene_info,
-  edge_threshold
-)
+get_network_plot(adjacency_matrix, edge_threshold)
 }
 \arguments{
-\item{select_wgcna_module}{The module to create a plot of hte top genes for,
-options can be found with the \code{get_wgcna_modules} function}
+\item{adjacency_matrix}{igraph object}
 
-\item{wgcna}{List returned from the \code{get_wgcna}}
-
-\item{top_genes_network}{Number of genes to include in the network plot}
-
-\item{select_org}{Organism the expression data is for}
-
-\item{all_gene_info}{Gene info that was found from querying the database}
-
-\item{edge_threshold}{Wavlue from 1-.1 (.4 recommended)}
+\item{edge_threshold}{Value from 1 to 0.1 (0.4 recommended)}
 }
 \value{
 A function that can be stored as an object and then called to produce
- the plot that the function created. If it is note stored and called the
- function will only return another funciton.
+ the plot that the function created. If it is not stored and called, the
+ function will only return another function.
 }
 \description{
 Create a network plot of the top genes found with the WGCNA package.

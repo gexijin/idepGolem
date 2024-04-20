@@ -51,23 +51,13 @@ mod_09_network_ui <- function(id) {
             )
           )
         ),
-        tags$style(
-          type = "text/css",
-          "#network-soft_power{ width:100%;   margin-top:-12px}"
-        ),
-        tags$style(
-          type = "text/css",
-          "#network-min_module_size{ width:100%;   margin-top:-12px}"
-        ),
         uiOutput(outputId = ns("heatmap_color_ui")),
         HTML(
           "<hr style='height:1px;border:none;color:#333;background-color:#333;' />"
         ),
         htmlOutput(outputId = ns("list_wgcna_modules")),
-        downloadButton(outputId = ns("download_all_WGCNA_module"),"Download all modules"),
-        br(),
-        br(),
-        downloadButton(outputId = ns("download_selected_WGCNA_module"),"Download network for selected module"),
+        downloadButton(outputId = ns("download_all_WGCNA_module"),"All modules"),
+        downloadButton(outputId = ns("download_selected_WGCNA_module"),"Selected module"),
         textOutput(ns("module_statistic")),
         a(
           h5("Questions?", align = "right"),
@@ -114,22 +104,17 @@ mod_09_network_ui <- function(id) {
                 )
               )
             ),
-            tags$style(
-              type = "text/css",
-              "#network-edge_threshold{ width:100%;   margin-top:-12px}"
-            ),
-            tags$style(
-              type = "text/css",
-              "#network-top_genes_network{ width:100%;   margin-top:-12px}"
-            ),
             br(),
-            plotOutput(outputId = ns("module_network"))
-            #            ,h5(
-            #              "The network file can be imported to",
-            #              a("VisANT", href = "http://visant.bu.edu/", target = "_blank"),
-            #              " or ",
-            #              a("Cytoscape.", href = "http://www.cytoscape.org/", target = "_blank")
-            #            ),
+            plotOutput(outputId = ns("module_network")),
+            downloadButton(outputId = ns("download_module_network"), "Network file"),
+            tippy::tippy_this(
+              ns("download_module_network"),
+              "This file can be imported to CytoScape or VisANT for further analysis.",
+              theme = "light-border"
+            ),
+            #ottoPlots::mod_download_figure_ui(
+            #  id = ns("dl_network_plot")
+            #)
           ),
           tabPanel(
             "Module Plot",
@@ -225,7 +210,8 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
       req(!is.null(module_csv_data()))
 
       prepare_module_csv_filter(
-        module_data = module_csv_data(), select_org = pre_process$select_org()
+        module_data = module_csv_data(), 
+        module = input$select_wgcna_module
       )
     })
     output$download_selected_WGCNA_module <- downloadHandler(
@@ -233,8 +219,8 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
         paste0("module_", input$select_wgcna_module, ".csv")
       },
       content <- function(file) {
-        write.csv(module_csv_data(), file, row.names = FALSE)
-      },
+        write.csv(module_csv_data_filter(), file, row.names = FALSE)
+      }
     )
     
     output$module_plot <- renderPlot({
@@ -244,11 +230,12 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
 
     network <- reactiveValues(network_plot = NULL)
 
-    observe({
+    adj_matrix <- reactive({
       req(!is.null(input$select_wgcna_module))
       req(!is.null(wgcna()))
-
-      network$network_plot <- get_network_plot(
+      tem <- input$network_layout
+      tem <- input$edge_threshold
+      get_network(
         select_wgcna_module = input$select_wgcna_module,
         wgcna = wgcna(),
         top_genes_network = input$top_genes_network,
@@ -258,22 +245,28 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
       )
     })
 
-    observeEvent(
-      input$network_layout,
-      {
-        req(!is.null(input$select_wgcna_module))
-        req(!is.null(wgcna()))
+    observe({
+      req(!is.null(input$select_wgcna_module))
+      req(!is.null(wgcna()))
+      tem = input$network_layout
+      network$network_plot <- get_network_plot(
+        adj_matrix(),
+        edge_threshold = input$edge_threshold
+      )
+    })
 
-        network$network_plot <- get_network_plot(
-          select_wgcna_module = input$select_wgcna_module,
-          wgcna = wgcna(),
-          top_genes_network = input$top_genes_network,
-          select_org = pre_process$select_org(),
-          all_gene_info = pre_process$all_gene_info(),
-          edge_threshold = input$edge_threshold
-        )
 
-        
+
+    output$download_module_network <- downloadHandler(
+      filename = function() {
+        paste0("module_network_", input$select_wgcna_module, ".csv")
+      },
+      content = function(file) {
+        # convert adjacency matrix to edge list, i.e. from wide to long format
+        network <- reshape2::melt(adj_matrix(), id.vars = "gene")
+        network <- dplyr::rename(network, gene1 = Var1, gene2 = Var2, weight = value)
+        network <- dplyr::filter(network, weight > 0 & gene1 != gene2)
+        write.csv(network, file, row.names = FALSE)
       }
     )
 
@@ -282,6 +275,17 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
       req(!is.null(wgcna()))
       network$network_plot()
     })
+
+    # not working
+    #dl_network_plot <- ottoPlots::mod_download_figure_server(
+    #  id = "dl_network_plot",
+    #  filename = "module_network",
+    #  figure = reactive({
+    #    network$network_plot
+    #  })
+    #  ,
+    #  label = ""
+    #)
 
     network_query <- reactive({
       req(!is.null(input$select_wgcna_module))

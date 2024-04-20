@@ -370,6 +370,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       shiny::showModal(
         shiny::modalDialog(
           size = "l",
+          h3("Click on a row to select. Then close this window."),
           p("Search annotated species by common or scientific names,
           or NCBI taxonomy id. Click on a row to select. 
           Use ENSEMBL annotation if available. Use STRING-db annotation as a last resort.  

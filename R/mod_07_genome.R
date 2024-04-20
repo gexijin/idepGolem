@@ -42,14 +42,6 @@ mod_07_genome_ui <- function(id) {
             )
           )
         ),
-        tags$style(
-          type = "text/css",
-          "#genome-limma_p_val_viz{ width:100%;   margin-top:-12px}"
-        ),
-        tags$style(
-          type = "text/css",
-          "#genome-limma_fc_viz{ width:100%;   margin-top:-12px}"
-        ),
         fluidRow(
           column(
             width = 6,
