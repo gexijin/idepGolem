@@ -154,22 +154,22 @@ get_module_plot <- function(wgcna) {
 #'
 #' Create a network plot of the top genes found with the WGCNA package.
 #'
-#' @param select_wgcna_module The module to create a plot of hte top genes for,
+#' @param select_wgcna_module The module to create a plot of the top genes for,
 #'  options can be found with the \code{get_wgcna_modules} function
 #' @param wgcna List returned from the \code{get_wgcna}
 #' @param top_genes_network Number of genes to include in the network plot
 #' @param select_org Organism the expression data is for
 #' @param all_gene_info Gene info that was found from querying the database
-#' @param edge_threshold Wavlue from 1-.1 (.4 recommended)
+#' @param edge_threshold Value from 1 to 0.1 (0.4 recommended)
 #'
 #' @export
-#' @return a igraph graph object
+#' @return An adjacency matrix of the top genes in the selected module
 get_network <- function(select_wgcna_module,
-                             wgcna,
-                             top_genes_network,
-                             select_org,
-                             all_gene_info,
-                             edge_threshold) {
+            wgcna,
+            top_genes_network,
+            select_org,
+            all_gene_info,
+            edge_threshold) {
   module <- unlist(strsplit(select_wgcna_module, " "))[2]
   module_colors <- wgcna$dynamic_colors
   in_module <- (module_colors == module)
@@ -184,10 +184,7 @@ get_network <- function(select_wgcna_module,
   mod_tom <- wgcna$tom[in_module, in_module]
   dimnames(mod_tom) <- list(mod_probes, mod_probes)
 
-  n_top <- top_genes_network
-  if (n_top > 1000) {
-    n_top <- 1000
-  }
+  n_top <- min(top_genes_network, 1000)
   im_conn <- WGCNA::softConnectivity(dat_expr[, mod_probes])
   top <- (rank(-im_conn) <= n_top)
 
@@ -197,23 +194,21 @@ get_network <- function(select_wgcna_module,
   if (select_org != "NEW" &&
     !is.null(dim_all_gene_info) &&
     dim_all_gene_info[1] > 1) {
-    # If more than 50% genes has symbol
-    if (sum(is.na(all_gene_info$symbol)) / dim_all_gene_info[1] < .5) {
-      probe_to_gene <- all_gene_info[, c("ensembl_gene_id", "symbol")]
-      probe_to_gene$symbol <- gsub(" ", "", probe_to_gene$symbol)
+  # If more than 50% genes have symbol
+  if (sum(is.na(all_gene_info$symbol)) / dim_all_gene_info[1] < .5) {
+    probe_to_gene <- all_gene_info[, c("ensembl_gene_id", "symbol")]
+    probe_to_gene$symbol <- gsub(" ", "", probe_to_gene$symbol)
 
-      ix <- which(
-        is.na(probe_to_gene$symbol) |
-          nchar(probe_to_gene$symbol) < 2 |
-          toupper(probe_to_gene$symbol) == "NA" |
-          toupper(probe_to_gene$symbol) == "0"
-      )
-      # Use gene ID
-      probe_to_gene[ix, 2] <- probe_to_gene[ix, 1]
-    }
+    ix <- which(
+    is.na(probe_to_gene$symbol) |
+      nchar(probe_to_gene$symbol) < 2 |
+      toupper(probe_to_gene$symbol) == "NA" |
+      toupper(probe_to_gene$symbol) == "0"
+    )
+    # Use gene ID
+    probe_to_gene[ix, 2] <- probe_to_gene[ix, 1]
   }
-
-
+  }
 
   net <- mod_tom[top, top]
 
@@ -227,24 +222,24 @@ get_network <- function(select_wgcna_module,
   return(net)
 }
 
-#' Network of top genes
+#' Network of top genes, plot
 #'
 #' Create a network plot of the top genes found with the WGCNA package.
 #'
 #' @param adjacency_matrix igraph object
-#' @param edge_threshold Wavlue from 1-.1 (.4 recommended)
+#' @param edge_threshold Value from 1 to 0.1 (0.4 recommended)
 #' @export
 #' @return A function that can be stored as an object and then called to produce
-#'  the plot that the function created. If it is note stored and called the
-#'  function will only return another funciton.
+#'  the plot that the function created. If it is not stored and called, the
+#'  function will only return another function.
 get_network_plot <- function(adjacency_matrix, edge_threshold) {
   # plot using igraph, use the correlation as edge weight
   adjacency_matrix <- adjacency_matrix > edge_threshold
-    for (i in 1:dim(adjacency_matrix)[1]) {
-    # Remove self connection
+  for (i in 1:dim(adjacency_matrix)[1]) {
+    # Remove self-connection
     adjacency_matrix[i, i] <- FALSE
   }
-  graph <- igraph::graph_from_adjacency_matrix(adjacency_matrix, mod = "undirected")
+  graph <- igraph::graph_from_adjacency_matrix(adjacency_matrix, mode = "undirected")
 
   # http://www.kateto.net/wp-content/uploads/2016/01/NetSciX_2016_Workshop.pdf
   net_plot <- function() {

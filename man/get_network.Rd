@@ -14,7 +14,7 @@ get_network(
 )
 }
 \arguments{
-\item{select_wgcna_module}{The module to create a plot of hte top genes for,
+\item{select_wgcna_module}{The module to create a plot of the top genes for,
 options can be found with the \code{get_wgcna_modules} function}
 
 \item{wgcna}{List returned from the \code{get_wgcna}}
@@ -25,10 +25,10 @@ options can be found with the \code{get_wgcna_modules} function}
 
 \item{all_gene_info}{Gene info that was found from querying the database}
 
-\item{edge_threshold}{Wavlue from 1-.1 (.4 recommended)}
+\item{edge_threshold}{Value from 1 to 0.1 (0.4 recommended)}
 }
 \value{
-a igraph graph object
+An adjacency matrix of the top genes in the selected module
 }
 \description{
 Create a network plot of the top genes found with the WGCNA package.

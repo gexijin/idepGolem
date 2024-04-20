@@ -107,13 +107,13 @@ mod_09_network_ui <- function(id) {
               )
             ),
             br(),
-            plotOutput(outputId = ns("module_network"))
-            #            ,h5(
-            #              "The network file can be imported to",
-            #              a("VisANT", href = "http://visant.bu.edu/", target = "_blank"),
-            #              " or ",
-            #              a("Cytoscape.", href = "http://www.cytoscape.org/", target = "_blank")
-            #            ),
+            plotOutput(outputId = ns("module_network")),
+            downloadButton(outputId = ns("download_module_network"), "Download network")
+            tipply::tipply(
+              ns("download_module_network"),
+              "This file can be imported to CytoScape or VisANT for further analysis.",
+              theme = "light-border"
+            )
           ),
           tabPanel(
             "Module Plot",
@@ -247,33 +247,34 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
     observe({
       req(!is.null(input$select_wgcna_module))
       req(!is.null(wgcna()))
-
+      tem = input$network_layout
       network$network_plot <- get_network_plot(
         current_network(),
         edge_threshold = input$edge_threshold
       )
     })
 
-    observeEvent( # update network layout
-      input$network_layout,
-      {
-        req(!is.null(input$select_wgcna_module))
-        req(!is.null(wgcna()))
-
-        network$network_plot <- get_network_plot(
-          current_network(),
-          edge_threshold = input$edge_threshold
-        )
-
-        
+    output$download_module_network <- downloadHandler(
+      filename = function() {
+        paste0("module_network_", input$select_wgcna_module, ".csv")
+      },
+      content = function(file) {
+        # convert adjacency matrix to edge list, i.e. from wide to long format
+        network <- reshape2::melt(current_network(), id.vars = "gene")
+        network <- dplyr::rename(network, gene1 = Var1, gene2 = Var2, weight = value)
+        network <- dplyr::filter(network, weight > 0 & gene1 != gene2)
+        write.csv(network, file, row.names = FALSE)
       }
     )
+
 
     output$module_network <- renderPlot({
       req(!is.null(input$select_wgcna_module))
       req(!is.null(wgcna()))
       network$network_plot()
     })
+
+
 
     network_query <- reactive({
       req(!is.null(input$select_wgcna_module))

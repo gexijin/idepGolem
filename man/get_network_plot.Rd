@@ -2,19 +2,19 @@
 % Please edit documentation in R/fct_09_network.R
 \name{get_network_plot}
 \alias{get_network_plot}
-\title{Network of top genes}
+\title{Network of top genes, plot}
 \usage{
 get_network_plot(adjacency_matrix, edge_threshold)
 }
 \arguments{
 \item{adjacency_matrix}{igraph object}
 
-\item{edge_threshold}{Wavlue from 1-.1 (.4 recommended)}
+\item{edge_threshold}{Value from 1 to 0.1 (0.4 recommended)}
 }
 \value{
 A function that can be stored as an object and then called to produce
- the plot that the function created. If it is note stored and called the
- function will only return another funciton.
+ the plot that the function created. If it is not stored and called, the
+ function will only return another function.
 }
 \description{
 Create a network plot of the top genes found with the WGCNA package.
