@@ -4,26 +4,10 @@
 \alias{get_network_plot}
 \title{Network of top genes}
 \usage{
-get_network_plot(
-  select_wgcna_module,
-  wgcna,
-  top_genes_network,
-  select_org,
-  all_gene_info,
-  edge_threshold
-)
+get_network_plot(adjacency_matrix, edge_threshold)
 }
 \arguments{
-\item{select_wgcna_module}{The module to create a plot of hte top genes for,
-options can be found with the \code{get_wgcna_modules} function}
-
-\item{wgcna}{List returned from the \code{get_wgcna}}
-
-\item{top_genes_network}{Number of genes to include in the network plot}
-
-\item{select_org}{Organism the expression data is for}
-
-\item{all_gene_info}{Gene info that was found from querying the database}
+\item{adjacency_matrix}{igraph object}
 
 \item{edge_threshold}{Wavlue from 1-.1 (.4 recommended)}
 }

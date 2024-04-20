@@ -229,11 +229,12 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
 
     network <- reactiveValues(network_plot = NULL)
 
-    observe({
+    current_network <- reactive({
       req(!is.null(input$select_wgcna_module))
       req(!is.null(wgcna()))
-
-      network$network_plot <- get_network_plot(
+      tem <- input$network_layout
+      tem <- input$edge_threshold
+      get_network(
         select_wgcna_module = input$select_wgcna_module,
         wgcna = wgcna(),
         top_genes_network = input$top_genes_network,
@@ -243,18 +244,24 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
       )
     })
 
-    observeEvent(
+    observe({
+      req(!is.null(input$select_wgcna_module))
+      req(!is.null(wgcna()))
+
+      network$network_plot <- get_network_plot(
+        current_network(),
+        edge_threshold = input$edge_threshold
+      )
+    })
+
+    observeEvent( # update network layout
       input$network_layout,
       {
         req(!is.null(input$select_wgcna_module))
         req(!is.null(wgcna()))
 
         network$network_plot <- get_network_plot(
-          select_wgcna_module = input$select_wgcna_module,
-          wgcna = wgcna(),
-          top_genes_network = input$top_genes_network,
-          select_org = pre_process$select_org(),
-          all_gene_info = pre_process$all_gene_info(),
+          current_network(),
           edge_threshold = input$edge_threshold
         )
 

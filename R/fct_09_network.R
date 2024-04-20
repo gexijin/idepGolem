@@ -163,10 +163,8 @@ get_module_plot <- function(wgcna) {
 #' @param edge_threshold Wavlue from 1-.1 (.4 recommended)
 #'
 #' @export
-#' @return A function that can be stored as an object and then called to produce
-#'  the plot that the function created. If it is note stored and called the
-#'  function will only return another funciton.
-get_network_plot <- function(select_wgcna_module,
+#' @return a igraph graph object
+get_network <- function(select_wgcna_module,
                              wgcna,
                              top_genes_network,
                              select_org,
@@ -215,12 +213,10 @@ get_network_plot <- function(select_wgcna_module,
     }
   }
 
-  net <- mod_tom[top, top] > edge_threshold
 
-  for (i in 1:dim(net)[1]) {
-    # Remove self connection
-    net[i, i] <- FALSE
-  }
+
+  net <- mod_tom[top, top]
+
   if (!is.null(probe_to_gene)) {
     ix <- match(colnames(net), probe_to_gene[, 1])
     colnames(net) <- probe_to_gene[ix, 2]
@@ -228,10 +224,32 @@ get_network_plot <- function(select_wgcna_module,
     rownames(net) <- probe_to_gene[ix, 2]
   }
 
+  return(net)
+}
+
+#' Network of top genes
+#'
+#' Create a network plot of the top genes found with the WGCNA package.
+#'
+#' @param adjacency_matrix igraph object
+#' @param edge_threshold Wavlue from 1-.1 (.4 recommended)
+#' @export
+#' @return A function that can be stored as an object and then called to produce
+#'  the plot that the function created. If it is note stored and called the
+#'  function will only return another funciton.
+get_network_plot <- function(adjacency_matrix, edge_threshold) {
+  # plot using igraph, use the correlation as edge weight
+  adjacency_matrix <- adjacency_matrix > edge_threshold
+    for (i in 1:dim(adjacency_matrix)[1]) {
+    # Remove self connection
+    adjacency_matrix[i, i] <- FALSE
+  }
+  graph <- igraph::graph_from_adjacency_matrix(adjacency_matrix, mod = "undirected")
+
   # http://www.kateto.net/wp-content/uploads/2016/01/NetSciX_2016_Workshop.pdf
   net_plot <- function() {
     plot(
-      igraph::graph_from_adjacency_matrix(net, mod = "undirected"),
+      graph,
       vertex.label.color = "black",
       vertex.label.dist = 3,
       vertex.size = 7
@@ -239,6 +257,9 @@ get_network_plot <- function(select_wgcna_module,
   }
   return(net_plot)
 }
+
+
+
 
 #' List WGCNA modules
 #'
