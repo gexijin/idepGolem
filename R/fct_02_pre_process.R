@@ -196,6 +196,25 @@ pre_process <- function(data,
       function(y) sum(y >= min_counts)
     ) >= n_min_samples_count), ]
 
+    #R cannot handle integers larger than 3 billion, which can impact popular 
+    #packages such as DESeq2. R still uses 32-bit integers, and the largest 
+    #allowable integer is 2^32 −1. In an unusual case, a user's RNA-Seq counts 
+    #matrix included a count of 4 billion for a single gene, which was converted 
+    #to NA, leading to an error in DESeq2. This issue also caused the iDEP app to crash. 
+    
+    if(max(data) > 2e9) {
+      scale_factor <- max(data) / (2^32 - 1)
+      #round up scale_factor to the nearest integer
+      scale_factor <- ceiling(scale_factor) + 1
+      # divide by scale factor and round to the nearest integer, for the entire matrix, data
+      data <- round(data / scale_factor)
+
+      # warning message via the showNotification function
+      showNotification(paste("Data contain counts bigger than 2.15 billion, the largest integer that can be handled by R. The entire data was divided by ", scale_factor,". Double check the data file. Proceed with caution."), duration = 15, type = "warning")
+
+    }
+
+
     results$raw_counts <- data
 
     # Construct DESeqExpression Object ----------
@@ -203,6 +222,7 @@ pre_process <- function(data,
     tem[1] <- "B"
     col_data <- cbind(colnames(data), tem)
     colnames(col_data) <- c("sample", "groups")
+
     dds <- DESeq2::DESeqDataSetFromMatrix(
       countData = data,
       colData = col_data,
