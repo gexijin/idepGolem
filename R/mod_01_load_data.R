@@ -287,7 +287,8 @@ mod_01_load_data_ui <- function(id) {
       ##################################################################
       mainPanel(
         shinyjs::useShinyjs(),
-
+        # connection issue button
+        actionButton(ns("server_connection"), "Server Connection Tips"),
         # Table output for sample tissue type ----------
         DT::dataTableOutput(ns("sample_info_table")),
         br(),
@@ -1098,6 +1099,49 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
       includeHTML(app_sys("app/www/format.html"))
     })
+
+observeEvent(input$server_connection, {
+  showModal(
+    modalDialog(
+      title = "Server Connection Tips",
+      p("The iDEP webserver uses a load balancer to distribute incoming traffic across 125 virtual 
+      servers, which are hosted on three physical servers(SDSU, Azure, & JetStream2). Each virtual server is capable of 
+      serving multiple users simultaneously, provided it is not operating at full CPU capacity. 
+      The assignment of users to specific virtual servers is determined by 
+      their browser session and IP address."),
+      tags$h4("Slow Performance:"),
+      tags$ul(
+        tags$li("Trying using iDEP in a new browser window (not just a new tab)."),
+        tags$li("Using a different browser (Chrome, Edge, Safari, Firefox, etc.) to be assigned a different virtual server.")
+      ),
+      
+      tags$h4("Connection Issues:"),
+      tags$p("If you can't connect, try accessing iDEP directly using these mirror server URLs like this:"),
+      tags$ul(
+        tags$li(tags$a(href="http://149.165.173.123:55011/idep/", target="_blank", "JetStream2 (http://149.165.173.123:55011/idep/)")),
+        tags$li(tags$a(href="http://4.236.179.243:55011/idep/", target="_blank", "Azure (http://4.236.179.243:55011/idep/)"))
+      ),
+      tags$p("Note: The port number (55011 in this example) can vary between 55001 and 55050, each pointing to a different virtual server."),
+      
+      tags$h4("Frequent Crashing:"),
+      tags$p("There are several reasons iDEP might crash:"),
+      tags$ul(
+        tags$li("Problems with your data."),
+        tags$li("Running a large analysis."),
+        tags$li("The assigned virtual server overload (100% CPU).")
+      ),
+      tags$p("Try from a new browser window. Try again later. If issues persist, email us."),
+      
+      tags$h4("Insecure Connection (http):"),
+      tags$p("We are transitioning to a secure https protocol. For now, you can:"),
+      tags$ul(
+        tags$li("Trust the current http connection."),
+        tags$li("Download and run iDEP on your laptop.")
+      ),
+      easyClose = TRUE
+    )
+  )
+})
 
 
     # Return data used in the following panels --------
