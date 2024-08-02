@@ -201,19 +201,15 @@ pre_process <- function(data,
     #allowable integer is 2^32 −1. In an unusual case, a user's RNA-Seq counts 
     #matrix included a count of 4 billion for a single gene, which was converted 
     #to NA, leading to an error in DESeq2. This issue also caused the iDEP app to crash. 
-    
     if(max(data) > 2e9) {
       scale_factor <- max(data) / (2^32 - 1)
       #round up scale_factor to the nearest integer
-      scale_factor <- ceiling(scale_factor) + 1
+      scale_factor <- ceiling(scale_factor / 10 + 1) * 10 #  just to be safe.
       # divide by scale factor and round to the nearest integer, for the entire matrix, data
-      data <- round(data / scale_factor)
-
+      data <- round(data / scale_factor)       
       # warning message via the showNotification function
-      showNotification(paste("Data contain counts bigger than 2.15 billion, the largest integer that can be handled by R. The entire data was divided by ", scale_factor,". Double check the data file. Proceed with caution."), duration = 15, type = "warning")
-
+      showNotification(paste("Data contain counts bigger than 2.15 billion, the largest integer that can be handled by R and DESeq2. The the data was divided by a factor of ", scale_factor,". Double check the data file. Proceed with caution."), duration = 15, type = "warning")
     }
-
 
     results$raw_counts <- data
 
