@@ -208,7 +208,7 @@ pre_process <- function(data,
       # divide by scale factor and round to the nearest integer, for the entire matrix, data
       data <- round(data / scale_factor)       
       # warning message via the showNotification function
-      showNotification(paste("Data contain counts bigger than 2.15 billion, the largest integer that can be handled by R and DESeq2. The the data was divided by a factor of ", scale_factor,". Double check the data file. Proceed with caution."), duration = 15, type = "warning")
+      showNotification(paste("Data includes counts bigger than 2.15 billion (2^32). The data was divided by ", scale_factor,". Double check the data file. Is this really counts data? Proceed with caution."), duration = 60, type = "warning")
     }
 
     results$raw_counts <- data
