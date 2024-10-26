@@ -366,6 +366,22 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
     #shiny::showModal(welcome_modal)
 
+    commercial_use_modal <- shiny::modalDialog(
+      title = "iDEP Usage Policy",
+
+      tags$br(),
+      tags$h4("iDEP is available to the public strictly for education and
+        non-profit organizations. If you are affiliated with a company or intend
+        to use iDEP for commercial activities, you must obtain a license from us.
+        Please contact us at ",
+        a("gexijin@gmail.com", href = "mailto:gexijin@gmail.com")
+      ),
+      easyClose = TRUE,
+      size = "l"
+    )
+
+    shiny::showModal(commercial_use_modal)
+
     # Pop-up modal for gene assembl information ----
     observeEvent(input$genome_assembl_button, {
       shiny::showModal(
