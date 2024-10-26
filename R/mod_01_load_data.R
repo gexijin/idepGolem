@@ -370,12 +370,13 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       title = "iDEP Usage Policy",
 
       tags$br(),
-      tags$h4("iDEP is available to the public strictly for education and
+      tags$h4("Free for educational and 
         non-profit organizations. If you are affiliated with a company or intend
         to use iDEP for commercial activities, you must obtain a license from us.
         Please contact us at ",
-        a("gexijin@gmail.com", href = "mailto:gexijin@gmail.com")
+        a("gelabinfo@gmail.com", href = "mailto:gelabinfo@gmail.com")
       ),
+      tags$h3("For-profit organizations: contact us for licensing, local installation, or customization services.", style="color: red;"),
       easyClose = TRUE,
       size = "l"
     )
