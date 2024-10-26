@@ -288,7 +288,7 @@ mod_01_load_data_ui <- function(id) {
       mainPanel(
         shinyjs::useShinyjs(),
         # connection issue button
-        actionButton(ns("server_connection"), "Server Connection Tips"),
+        #actionButton(ns("server_connection"), "Server Connection Tips"),
         # Table output for sample tissue type ----------
         DT::dataTableOutput(ns("sample_info_table")),
         br(),
