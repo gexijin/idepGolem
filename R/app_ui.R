@@ -24,10 +24,25 @@ app_ui <- function(request) {
       mod_07_genome_ui(id = "genome"),
       mod_08_bicluster_ui(id = "bicluster"),
       mod_09_network_ui(id = "network"),
-      mod_10_doc_ui(id = "doc")
+      mod_10_doc_ui(id = "doc"),
+
+      ### Hidden Policies Tabs ###
+      tabPanel(title = "Privacy Policy", value = "privacy_policy", privacy_policy_content()),
+      tabPanel(title = "Terms of Use", value = "terms_of_use", terms_of_use_content())
     ),
     tags$head(includeHTML(app_sys("app/www/google_analytics_GA4.html"))),
-    tags$head(includeHTML(app_sys("app/www/google_analytics_golem.html")))
+    tags$head(includeHTML(app_sys("app/www/google_analytics_golem.html"))),
+
+    tags$footer(
+      style = "position: fixed;bottom: 0;width: 100%;background-color: #f0f0f0;
+        padding: 10px;text-align: center;z-index: 99;",
+      span("© 2024 Orditus LLC | "),
+      actionLink(inputId = "ppolicy", "Privacy Policy"),
+      span(" | "),
+      actionLink(inputId = "tofu", "Terms of Use"),
+      span(" | "),
+      a("Orditus.com", href = "https://orditus.com/", target = "_blank")
+    ) # footer
   )
 }
 
