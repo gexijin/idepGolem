@@ -1,3 +1,5 @@
+Docker_image branch. Just for deployment as a docker image?
+
 ## Integrated Differential Expression & Pathway analysis (iDEP)
 [Original repo](https://github.com/iDEP-SDSU/idep)
 ## Description
