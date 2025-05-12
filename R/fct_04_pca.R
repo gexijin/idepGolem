@@ -299,7 +299,7 @@ PCA_plot_3d <- function(data,
     z = pcaData[, as.integer(PCAz)],
     color = pcaData[, selected_color],
     symbol = pcaData[, selected_shape],
-    text = rownames(pcaData)[1],
+    text = rownames(pcaData),
     hovertemplate = paste(
       "<b>%{text}</b><br><br>",
       "PC ", PCAy, ":%{y:.3f}<br>",
@@ -310,7 +310,7 @@ PCA_plot_3d <- function(data,
     type = "scatter3d",
     mode = "markers",
     width = ,
-    marker = list(color = color_palette[as.factor(pcaData$Names)])
+    colors = unique(color_palette[as.factor(pcaData$Names)])
     )
   plot_PCA <- plotly::layout(
     p = plot_PCA,
