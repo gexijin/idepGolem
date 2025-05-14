@@ -263,7 +263,7 @@ mod_04_pca_ui <- function(id) {
           tabPanel(
             "MDS",
             br(),
-            plotOutput(
+            plotly::plotlyOutput(
               outputId = ns("mds_plot_obj"),
               width = "100%",
               height = "500px"
@@ -273,7 +273,7 @@ mod_04_pca_ui <- function(id) {
           tabPanel(
             "t-SNE",
             br(),
-            plotOutput(
+            plotly::plotlyOutput(
               outputId = ns("t_sne"),
               width = "100%",
               height = "500px"
@@ -401,9 +401,12 @@ mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
         ggplot2_theme = pre_process$ggplot2_theme()
       )
     })
-    output$t_sne <- renderPlot({
+    output$t_sne <- plotly::renderPlotly({
       req(t_SNE_plot_obj())
-      print(t_SNE_plot_obj())
+      plotly::ggplotly(
+        t_SNE_plot_obj(),
+        tooltip = "text"
+      )
     })
     # Download Button
     download_t_sne <- ottoPlots::mod_download_figure_server(
@@ -433,10 +436,12 @@ mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
         ggplot2_theme = pre_process$ggplot2_theme()
       )
     })
-    output$mds_plot_obj <- renderPlot({
+    
+    output$mds_plot_obj <- plotly::renderPlotly({
       req(mds_plot())
-      print(mds_plot())
+      plotly::ggplotly(mds_plot(), tooltip = "text")
     })
+    
     # Download Button
     download_mds <- ottoPlots::mod_download_figure_server(
       id = "download_mds",
