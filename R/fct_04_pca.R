@@ -17,11 +17,6 @@ NULL
 #' @return pca data ready for plotting
 get_pc <- function(data,
                    sample_info) {
-  # subset data if more than 100 columns
-  if (ncol(data) > 100) {
-    part <- 1:100
-    data <- data[, part]
-  }
 
   pca.object <- prcomp(t(data))
 
@@ -104,19 +99,11 @@ PCA_plot <- function(data,
   }
   memo <- ""
 
-  if (ncol(data) > 100) {
-    part <- 1:100
-    data <- data[, part]
-    memo <- paste("(only showing 100 samples)")
-  }
-
   if (ncol(data) < 31) {
     x_axis_labels <- 16
   } else {
     x_axis_labels <- 12
   }
-
-
 
   # get groups
   groups <- detect_groups(sample_names = colnames(data), sample_info = sample_info)
@@ -127,6 +114,8 @@ PCA_plot <- function(data,
   levels <- length(unique(groups))
   # plot color scheme
   color_palette <- generate_colors(n = levels, palette_name = plots_color_select)
+  
+  nshapes <- (length(unique(groups)) / 8) + 1
 
   # hide legend for large or no groups levels
   if (levels <= 1 | levels > 20) {
@@ -150,6 +139,12 @@ PCA_plot <- function(data,
   if (ncol(data) >= 40) {
     point_size <- 3
   }
+  
+  pcaData$tooltip_text <- paste0(
+    "Name: ", rownames(pcaData),
+    "<br>PC",PCAx,": ", round(pcaData[[paste0("PC", PCAx)]], 2),
+    "<br>PC",PCAy,": ", round(pcaData[[paste0("PC", PCAy)]], 2)
+  )
 
   plot_PCA <- ggplot2::ggplot(
     data = pcaData,
@@ -159,14 +154,13 @@ PCA_plot <- function(data,
       color = selected_color,
       shape = selected_shape,
       group = selected_shape,
-      text = "rownames(pcaData)" # Add this line to specify the tooltip content
+      text = "tooltip_text" # Add this line to specify the tooltip content
     )
   ) +
     # Preferred shapes
     ggplot2::scale_shape_manual(
       values = c(
-        15, 16, 17, 18, 3, 4, 7, 8, 9, 10, 11, 12, 13, 14,
-        0, 1, 2, 5, 6, 19, 20, 30:100
+        rep(c(15, 16, 18, 0, 1, 3:5), nshapes)
       )
     ) +
     ggplot2::geom_point(size = point_size) +
@@ -260,12 +254,6 @@ PCA_plot_3d <- function(data,
   counts <- data
   memo <- ""
 
-  if (ncol(counts) > 100) {
-    part <- 1:100
-    counts <- counts[, part]
-    memo <- paste("(only showing 100 samples)")
-  }
-
   if (ncol(counts) < 31) {
     x_axis_labels <- 16
   } else {
@@ -286,6 +274,8 @@ PCA_plot_3d <- function(data,
     pcaData <- cbind(pcaData, detect_groups(colnames(data), sample_info), sample_info)
   }
   colnames(pcaData)[npc + 1] <- "Names"
+  
+  nshapes <- (length(unique(groups)) / 8) + 1
 
   # plot color scheme
   color_palette <- generate_colors(n = nlevels(as.factor(pcaData$Names)), palette_name = plots_color_select)
@@ -298,10 +288,12 @@ PCA_plot_3d <- function(data,
     y = pcaData[, as.integer(PCAy)],
     z = pcaData[, as.integer(PCAz)],
     color = pcaData[, selected_color],
-    symbol = pcaData[, selected_shape],
+    symbol = pcaData[,selected_shape],
+    symbols = rep(c("square", "circle", "diamond", "square-open", "circle-open",
+                    "cross", "x", "diamond-open"), nshapes),
     text = rownames(pcaData),
-    hovertemplate = paste(
-      "<b>%{text}</b><br><br>",
+    hovertemplate = ~paste(
+      "<b>",rownames(pcaData),"</b><br><br>",
       "PC ", PCAy, ":%{y:.3f}<br>",
       "PC ", PCAx, ":%{x:.3f}<br>",
       "PC ", PCAz, ":%{z:.3f}<br>",
@@ -309,7 +301,6 @@ PCA_plot_3d <- function(data,
     ),
     type = "scatter3d",
     mode = "markers",
-    width = ,
     colors = unique(color_palette[as.factor(pcaData$Names)])
     )
   plot_PCA <- plotly::layout(
@@ -371,12 +362,6 @@ t_SNE_plot <- function(data,
   counts <- data
   memo <- ""
 
-  if (ncol(counts) > 100) {
-    part <- 1:100
-    counts <- counts[, part]
-    memo <- paste("(only showing 100 samples)")
-  }
-
   if (ncol(counts) < 31) {
     x_axis_labels <- 16
   } else {
@@ -388,7 +373,8 @@ t_SNE_plot <- function(data,
   y <- sample_info
   tsne <- Rtsne::Rtsne(t(x), dims = 2, perplexity = 1, verbose = FALSE, max_iter = 400)
   pcaData <- as.data.frame(tsne$Y)
-
+  rownames(pcaData) <- rownames(t(x))
+  
   # Missing design clause
   if (is.null(sample_info)) {
     pcaData <- cbind(pcaData, detect_groups(colnames(x), y))
@@ -397,7 +383,15 @@ t_SNE_plot <- function(data,
   }
 
   colnames(pcaData)[1:3] <- c("x1", "x2", "Names")
+  
+  pcaData$tooltip_text <- paste0(
+    "Name: ", rownames(pcaData),
+    "<br>Dimension 1: ", round(pcaData$x1, 2),
+    "<br>Dimension 2: ", round(pcaData$x2, 2)
+  )
 
+  nshapes <- (length(unique(as.factor(pcaData$Names))) / 8) + 1
+  
   # Set point size based on number of sample
   point_size <- 6
   if (ncol(x) >= 40) {
@@ -414,12 +408,13 @@ t_SNE_plot <- function(data,
       x = "x1",
       y = "x2",
       color = selected_color,
-      shape = selected_shape
+      shape = selected_shape,
+      text = "tooltip_text"
     )
   ) +
     ggplot2::geom_point(size = point_size) +
     # Preferred shapes
-    ggplot2::scale_shape_manual(values = c(15, 16, 17, 18, 3, 4, 7, 8, 9, 10, 11, 12, 13, 14, 0, 1, 2, 5, 6, 19, 20, 30:100)) +
+    ggplot2::scale_shape_manual(values = rep(c(15, 16, 18, 0, 1, 3:5), nshapes)) +
     ggplot2::theme_light() +
     ggplot2::theme(
       legend.position = "right",
@@ -492,12 +487,6 @@ MDS_plot <- function(data,
   counts <- data
   memo <- ""
 
-  if (ncol(counts) > 100) {
-    part <- 1:100
-    counts <- counts[, part]
-    memo <- paste("(only showing 100 samples)")
-  }
-
   if (ncol(counts) < 31) {
     x_axis_labels <- 16
   } else {
@@ -522,6 +511,14 @@ MDS_plot <- function(data,
     pcaData <- cbind(pcaData, detect_groups(colnames(x), y), sample_info)
   }
   colnames(pcaData)[1:3] <- c("x1", "x2", "Names")
+  
+  pcaData$tooltip_text <- paste0(
+    "Name: ", rownames(pcaData),
+    "<br>Dimension 1: ", round(pcaData$x1, 2),
+    "<br>Dimension 2: ", round(pcaData$x2, 2)
+  )
+  
+  nshapes <- (length(unique(as.factor(pcaData$Names))) / 8) + 1
 
   # Set point & text size based on number of sample
   point_size <- 6
@@ -540,12 +537,13 @@ MDS_plot <- function(data,
       x = "x1",
       y = "x2",
       color = selected_color,
-      shape = selected_shape
+      shape = selected_shape,
+      text = "tooltip_text"
     )
   )
   p <- p + ggplot2::geom_point(size = point_size) +
     # Preferred shapes
-    ggplot2::scale_shape_manual(values = c(15, 16, 17, 18, 3, 4, 7, 8, 9, 10, 11, 12, 13, 14, 0, 1, 2, 5, 6, 19, 20, 30:100)) +
+    ggplot2::scale_shape_manual(values = rep(c(15, 16, 18, 0, 1, 3:5), nshapes)) +
     ggplot2::theme_light() +
     ggplot2::theme(
       legend.position = "right",
