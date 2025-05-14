@@ -252,6 +252,24 @@ mod_04_pca_ui <- function(id) {
             br(),
             br(),
             plotOutput(
+              outputId = ns("var_imp_x"),
+              width = "100%",
+              height = "500px"
+            ),
+            ottoPlots::mod_download_figure_ui(ns("download_imp_x")),
+            br(),
+            br(),
+            br(),
+            plotOutput(
+              outputId = ns("var_imp_y"),
+              width = "100%",
+              height = "500px"
+            ),
+            ottoPlots::mod_download_figure_ui(ns("download_imp_y")),
+            br(),
+            br(),
+            br(),
+            plotOutput(
               outputId = ns("pcatools_eigencor"),
               width = "100%",
               height = "500px"
@@ -545,6 +563,61 @@ mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
       }),
       label = ""
     )
+    
+    # Variable importance for 1st selected PC
+    var_plot1 <- reactive({
+      req(!is.null(pre_process$data()))
+      
+      var_imp_plots(pre_process$data(),
+                    pre_process$all_gene_names(),
+                    input$x_axis_pc)
+    })
+    
+    output$var_imp_x <- renderPlot({
+      req(var_plot1())
+      
+      return(var_plot1())
+    })
+    
+    # Download Button
+    download_imp_x <- ottoPlots::mod_download_figure_server(
+      id = "download_imp_x",
+      filename = "var_imp_x",
+      figure = reactive({
+        var_plot1()
+      }),
+      label = "",
+      width = 10,
+      height = 6
+    )
+    
+    # Variable importance for 2nd selected PC
+    var_plot2 <- reactive({
+      req(!is.null(pre_process$data()))
+      
+      var_imp_plots(pre_process$data(),
+                    pre_process$all_gene_names(),
+                    input$y_axis_pc)
+    })
+    
+    output$var_imp_y <- renderPlot({
+      req(var_plot2())
+      
+      return(var_plot2())
+    })
+    
+    # Download Button
+    download_imp_y <- ottoPlots::mod_download_figure_server(
+      id = "download_imp_y",
+      filename = "var_imp_y",
+      figure = reactive({
+        var_plot2()
+      }),
+      label = "",
+      width = 10,
+      height = 6
+    )
+    
     # select color
     output$listFactors1 <- renderUI({
       req(!is.null(pre_process$data()))

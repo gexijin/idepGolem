@@ -267,6 +267,9 @@ PCA_plot_3d <- function(data,
   pcaData <- as.data.frame(pca.object$x[, 1:npc])
 
   groups <- detect_groups(sample_names = colnames(data), sample_info = sample_info)
+  
+  levels <- length(unique(groups))
+  
   # Missing design clause
   if (is.null(sample_info)) {
     pcaData <- cbind(pcaData, detect_groups(colnames(data), sample_info))
@@ -278,8 +281,8 @@ PCA_plot_3d <- function(data,
   nshapes <- (length(unique(groups)) / 8) + 1
 
   # plot color scheme
-  color_palette <- generate_colors(n = nlevels(as.factor(pcaData$Names)), palette_name = plots_color_select)
-
+  color_palette <- generate_colors(n = levels, palette_name = plots_color_select)
+  
   # selected principal components
   PCAxyz <- c(as.integer(PCAx), as.integer(PCAy), as.integer(PCAz))
   percentVar <- get_pc_variance(data)[PCAxyz]
@@ -288,6 +291,7 @@ PCA_plot_3d <- function(data,
     y = pcaData[, as.integer(PCAy)],
     z = pcaData[, as.integer(PCAz)],
     color = pcaData[, selected_color],
+    colors = color_palette[sort(as.factor(pcaData[, selected_color]))],
     symbol = pcaData[,selected_shape],
     symbols = rep(c("square", "circle", "diamond", "square-open", "circle-open",
                     "cross", "x", "diamond-open"), nshapes),
@@ -300,8 +304,7 @@ PCA_plot_3d <- function(data,
       "<extra></extra>"
     ),
     type = "scatter3d",
-    mode = "markers",
-    colors = unique(color_palette[as.factor(pcaData$Names)])
+    mode = "markers"
     )
   plot_PCA <- plotly::layout(
     p = plot_PCA,
@@ -808,7 +811,7 @@ PCAtools_eigencorplot <- function(processed_data,
     # colnames(meta_data)[1] <- "Sample_Name"
   } else {
     meta_data <- sample_info
-
+    
     # Design Factors must be converted to numeric
     meta_data <- as.data.frame(meta_data)
     meta_data <- sapply(meta_data, function(x) as.numeric(factor(x)))
@@ -826,6 +829,74 @@ PCAtools_eigencorplot <- function(processed_data,
   }
 }
 
+#'  Principal Component Analysis with PCAtools package
+#'  
+#'  Convert PCA loadings to percent contribution values by squaring and plot
+#'  them
+#'
+#' @param processed_data Matrix of gene data that has been through
+#'  \code{\link{pre_process}())}
+#' @param all_gene_names vector of gene names from 
+#' \code{\link{pre_process}())}
+#' @param PC # Selected principal component
+#'
+#' @return A \code{ggplot} object as a formatted plot generated with PCAtools
+#'  package
+#'  
+#' @export
+#' 
+#' @family PCA Functions
+#'
+var_imp_plots <- function(data,
+                          all_gene_names,
+                          PC){
+  
+  # Swap rownames with gene symbols
+  data <- rowname_id_swap(
+    data_matrix = data,
+    all_gene_names = all_gene_names,
+    select_gene_id = "symbol"
+  )
+  
+  #create pca object
+  pca_obj <- PCAtools::pca(mat = data)
+  
+  #Convert loadings to importance values
+  loadings <- as.data.frame(PCAtools::getLoadings(pca_obj))
+  imp_vals <- data.frame(vals = ((loadings[[paste0(PC)]])^2) * 100, 
+                         gene = rownames(loadings))
+  
+  #Sort and trim importance values greatest to least
+  imp_vals <- imp_vals[order(imp_vals$vals, decreasing = TRUE), ]
+  imp_vals <- imp_vals[c(1:10),]
+  
+  imp_plot <- ggplot2::ggplot(data = imp_vals)+
+    ggplot2::aes(
+      x = reorder(gene, -vals), 
+      y = vals, 
+      label = paste(round(vals, 2), "%")
+    )+
+    ggplot2::geom_bar(stat = "identity", color = "black", fill = "dodgerblue")+
+    ggplot2::geom_text(vjust = 2, size = 5)+
+    ggplot2::theme_minimal()+
+    ggplot2::labs(
+      x = "Genes", 
+      y = "Contribution (%)", 
+      title = paste0("Contribution of Genes to ", PC, " (Top 10)")
+    )+
+    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45,
+                                                       size = 12,
+                                                       vjust = 0.5),
+                   axis.text.y = ggplot2::element_text(size = 12),
+                   plot.title = ggplot2::element_text(size = 20),
+                   axis.title.x = ggplot2::element_text(size = 12,
+                                                        vjust = 0.8),
+                   axis.title.y = ggplot2::element_text(size = 12)
+    )
+  
+  return(imp_plot)
+  
+}
 
 
 #' Gets plot width dimensions from session$clientdata
