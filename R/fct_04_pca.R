@@ -301,7 +301,7 @@ PCA_plot_3d <- function(data,
     ),
     type = "scatter3d",
     mode = "markers",
-    colors = unique(color_palette[as.factor(pcaData$Names)])
+    colors = color_palette
     )
   plot_PCA <- plotly::layout(
     p = plot_PCA,
