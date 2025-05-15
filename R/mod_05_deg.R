@@ -719,6 +719,13 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
           ,
           c("gene_id", setdiff(names(list_genes_df), "gene_id"))
         ]
+        
+        # Filter out unenriched genes (not up or down regulated)
+        list_genes_df <- list_genes_df[apply(
+          as.data.frame(list_genes_df[ , -1]), 1, 
+          function(row) any(row %in% c("Up", "Down"))
+        ), ]
+        
         write.csv(list_genes_df, file, row.names = FALSE)
       }
     )
@@ -727,7 +734,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       req(!is.null(deg$limma$results))
       downloadButton(
         outputId = ns("sig_genes_download"),
-        "Results & data"
+        "Enriched Gene List"
       )
     })
 
