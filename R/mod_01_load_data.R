@@ -38,10 +38,10 @@ mod_01_load_data_ui <- function(id) {
         selectInput(
           inputId = ns("select_org"),
           label = NULL,
-          choices = setNames(99, "Human"), # Human is selected by default
+          choices = setNames(c(99, 999), c("Human", "None")), # Human is selected by default
           multiple = FALSE,
           selectize = TRUE,
-          selected = setNames(99, "Human")
+          selected = setNames(999, "None")
         ),
 
         fluidRow(
@@ -96,11 +96,12 @@ mod_01_load_data_ui <- function(id) {
           inputId = ns("data_file_format"),
           label = NULL,
           choices = list(
+            "No data type selected" = 0,
             "Read counts data (recommended)" = 1,
             "Normalized Expression data" = 2,
             "Fold-changes & adjusted P-values" = 3
           ),
-          selected = 1,
+          selected = 0,
           selectize = FALSE
         ),
         tippy::tippy_this(
@@ -510,7 +511,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       )
     })
 
-    selected_species_name <- reactiveVal("Human")
+    selected_species_name <- reactiveVal("None")
 
     output$selected_species <- renderText({
       if(is.null(input$gmt_file)){
@@ -528,10 +529,15 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       )
       req(input$data_file_format)
       
+      if (input$data_file_format > 0){
       # get demo data files based on specified format
       files <- idep_data$demo_file_info
       files <- files[files$type == input$data_file_format, ]
       choices <- setNames(as.list(files$ID), files$name)
+      } else {
+        files <- NULL
+        choices <- NULL
+      }
       tagList(
         strong("3. Expression matrix (CSV, text, or xlsx)"),
         fluidRow(
