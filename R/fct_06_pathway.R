@@ -395,8 +395,6 @@ plot_gsva <- function(my_range,
         result$pg_data <- result$pg_data - rowMeans(result$pg_data)        
       }
 
-
-
       PGSEA::smcPlot(
         result$pg_data,
         factor(subtype),
@@ -445,7 +443,24 @@ gsva_data <- function(processed_data,
   if (length(gene_sets) == 0) {
     return(list(pg3 = NULL, best = 1))
   }
-
+  
+  # Modern Syntax for current GSVA versions
+  # if (algorithm == "gsva"){
+  #   
+  #   param <- GSVA::gsvaParam(processed_data, gene_sets)
+  #   
+  # } else if (algorithm == "ssgsea") {
+  #   
+  #   param <- GSVA::ssgseaParam(processed_data, gene_sets)
+  #   
+  # } else if (algorithm == "plage") {
+  #   
+  #   param <- GSVA::plageParam(processed_data, gene_sets)
+  # }
+  # 
+  # pg_results <- GSVA::gsva(param = param, verbose = FALSE)
+  
+  # Deprecated syntax for old versions
   pg_results <- GSVA::gsva(processed_data, gene_sets, verbose = FALSE, method = algorithm)
 
   # Remove se/wrts with all missing(non-signficant)
@@ -1120,10 +1135,9 @@ get_pgsea_plot_all_samples_data <- function(data,
   }
 }
 
-#' Transform Pathway Data with Table Output
+#' Transform Pathway Data
 #' 
-#' Transform data from plotted Pathway Methods like GAGE, FGSEA, etc.
-#' for data downloading
+#' Transform data from various pathway methods for uniform download format
 #'
 #' @param data Pathway data from selected method
 #' @param contrast Selected contrast from DEG1 tab
@@ -1134,21 +1148,37 @@ get_pgsea_plot_all_samples_data <- function(data,
 #' @param go Selected pathway database
 #'
 #' @return Data frame with hyperlinks and urls for pathways
+#' 
+#' @export
 #'          
-table_data_transform <- function(data, 
-                                 contrast,
-                                 method,
-                                 genes,
-                                 org,
-                                 path_id,
-                                 go){
+pathway_data_transform <- function(data, 
+                                   contrast,
+                                   method,
+                                   genes,
+                                   org,
+                                   path_id,
+                                   go){
   
-  # Rename the second column
-  colnames(data)[2] <- paste0(method," Analysis: ", contrast)
+  if (method %in% c("PGSEA", "GSVA", "ssGSEA", "PLAGE")){
+    rn <- rownames(data)
+    
+    data <- data.frame(
+      adj.Pval = sub("^([0-9.eE+-]+)\\s+.*", "\\1", rn),
+      pathway = sub("^[0-9.eE+-]+\\s+", "", rn),
+      data,
+      row.names = NULL,
+      check.names = FALSE
+    )
+  }
   
-  # copy name from data[,2]
-  pathway_csv_name <- colnames(data)[2]
-  non_hypertext_name <- paste(pathway_csv_name, "Pathways")
+  if(method == "ssGSEA") {
+    data[,-c(1:3)] <- data[, -c(1:3)] - rowMeans(data[, -c(1:3)])        
+  }
+  
+  # Name for hypertext column
+  hypertext_name <- paste0(method," Analysis: ", contrast)
+  # Rename 2nd column
+  colnames(data)[2] <- paste(hypertext_name, "Pathways")
   
   if (ncol(data) > 1) {
     # add URL
@@ -1159,78 +1189,26 @@ table_data_transform <- function(data,
       data[, 2] <- remove_pathway_id(data[, 2], go)
     }
     
-    # copy data[,2] to new column before hypertext
-    data[non_hypertext_name] <- data[,2]
-    data[, 2] <- hyperText(
+    # Add hypertext to the end of the data
+    data[hypertext_name] <- hyperText(
       data[, 2],
       genes$pathway_info$memo[ix]
     )
     
     # create separate URL column for download
-    data$URL <- NULL
-    data$URL <- genes$pathway_info$memo[ix]
+    data <- data.frame(data[,1:2],
+                       URL = genes$pathway_info$memo[ix],
+                       data[,-c(1,2)],
+                       check.names = FALSE
+    )
+    
+    if (method %in% c("GSEA", "GAGE")){
+      data$Genes <- as.character(data$Genes)
+    }
     
   }
   
   return(data)
-  
-}
-
-#' Transform Pathway Data with Plot Output
-#' 
-#' Transform data from plotted Pathway Methods like PGSEA, GSVA, PLAGE, etc.
-#' for data downloading, so p-vals and pathways are columns
-#'
-#' @param plot_data Pathway data from selected method
-#' @param contrast Selected contrast from DEG1 tab
-#' @param method  Selected pathway method
-#' @param genes Gene data
-#' @param org  Selected org from pre-process step
-#' @param path_id Show pathway ID toggle
-#' @param go Selected pathway database
-#'
-#' @return Data frame with pathway names and p-value as columns, along with
-#'          gene expression values from original data
-#' @export
-#'
-plot_data_transform <- function(plot_data, 
-                                contrast,
-                                method,
-                                genes,
-                                org,
-                                path_id,
-                                go){
-  
-  rn <- rownames(plot_data)
-  
-  res <- data.frame(
-    adj.Pval = sub("^([0-9.eE+-]+)\\s+.*", "\\1", rn),
-    pathway = sub("^[0-9.eE+-]+\\s+", "", rn),
-    plot_data,
-    row.names = NULL
-  )
-  
-  # Rename the second column
-  colnames(res)[2] <- paste0(names(method)," Analysis: ", contrast)
-  
-  if (ncol(res) > 1) {
-    # add URL
-    ix <- match(res[, 2], genes$pathway_info$description)
-    
-    # remove pathway ID, but only in Ensembl species
-    if (!path_id && org > 0) {
-      res[, 2] <- remove_pathway_id(res[, 2], go)
-    }
-    
-    # create separate URL column for download
-    res <- data.frame(res[,1:2],
-                      URL = genes$pathway_info$memo[ix],
-                      res[,-c(1,2)]
-                      )
-    
-  }
-  
-  return(res)
   
 }
 

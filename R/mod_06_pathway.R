@@ -504,7 +504,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         "sig_pathways.csv"
       },
       content = function(file) {
-        write.csv(res_pathway(), file)
+        write.csv(res_pathway()[, -ncol(res_pathway())], file)
       }
     )
 
@@ -697,25 +697,16 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     output$gage_pathway_table <- renderTable(
       {
         input$submit_pathway_button
-        isolate({
+        isolate({ 
+          
           req(!is.null(gage_pathway_data()))
-
-          res <- gage_pathway_data()
-          if (ncol(res) > 1) {
-            # add URL
-            ix <- match(res[, 2], gene_sets()$pathway_info$description)
-
-            # remove pathway ID  only in Ensembl species
-            if (!input$show_pathway_id && pre_process$select_org() > 0) {
-              res[, 2] <- remove_pathway_id(res[, 2], input$select_go)
-            }
-            res[, 2] <- hyperText(
-              res[, 2],
-              gene_sets()$pathway_info$memo[ix]
-            )
-            res$Genes <- as.character(res$Genes)
+          req(input$pathway_method == 1)
+          
+          if(ncol(res_pathway()) > 4) {
+            res_pathway()[c(1,7,4:6)]
+          } else {
+            res_pathway()
           }
-          return(res)
         })
       },
       digits = -1,
@@ -924,7 +915,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         as.numeric(input$pathway_method),
         {
           req(!is.null(gage_pathway_data()))
-          table_data_transform(
+          pathway_data_transform(
             data = gage_pathway_data(),
             contrast = input$select_contrast,
             method = method_list[as.numeric(input$pathway_method)],
@@ -937,8 +928,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         { 
           req(!is.null(pgsea_plot_data()))
           
-          plot_data_transform(
-            plot_data = pgsea_plot_data(),
+          pathway_data_transform(
+            data = pgsea_plot_data(),
             contrast = input$select_contrast,
             method = method_list[as.numeric(input$pathway_method)],
             genes = gene_sets(),
@@ -951,7 +942,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         {
           req(!is.null(fgsea_pathway_data()))
           
-          table_data_transform(
+          pathway_data_transform(
             data = fgsea_pathway_data(),
             contrast = input$select_contrast,
             method = method_list[as.numeric(input$pathway_method)],
@@ -964,8 +955,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         {
           req(!is.null(pgsea_plot_all_samples_data()))
           
-          plot_data_transform(
-            plot_data = pgsea_plot_all_samples_data(),
+          pathway_data_transform(
+            data = pgsea_plot_all_samples_data(),
             contrast = input$select_contrast,
             method = method_list[as.numeric(input$pathway_method)],
             genes = gene_sets(),
@@ -976,9 +967,40 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         },
         {
           req(!is.null(reactome_pa_pathway_data()))
+          data <- data.frame(reactome_pa_pathway_data(), DummyCol = NA)
+          data
+        },
+        {
+          req(!is.null(gsva_plot_data()))
           
-          table_data_transform(
-            data = reactome_pa_pathway_data(),
+          pathway_data_transform(
+            data = gsva_plot_data(),
+            contrast = input$select_contrast,
+            method = method_list[as.numeric(input$pathway_method)],
+            genes = gene_sets(),
+            org = pre_process$select_org(),
+            path_id = input$show_pathway_id,
+            go = input$select_go
+          )
+        },
+        {
+          req(!is.null(gsva_plot_data()))
+          
+          pathway_data_transform(
+            data = gsva_plot_data(),
+            contrast = input$select_contrast,
+            method = method_list[as.numeric(input$pathway_method)],
+            genes = gene_sets(),
+            org = pre_process$select_org(),
+            path_id = input$show_pathway_id,
+            go = input$select_go
+          )
+        },
+        {
+          req(!is.null(gsva_plot_data()))
+          
+          pathway_data_transform(
+            data = gsva_plot_data(),
             contrast = input$select_contrast,
             method = method_list[as.numeric(input$pathway_method)],
             genes = gene_sets(),
@@ -997,7 +1019,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         req(!is.null(fgsea_pathway_data()))
         req(input$pathway_method == 3)
         if(ncol(res_pathway()) > 4) {
-          res_pathway()[,1:5]
+          res_pathway()[c(1,7,4:6)]
         } else {
           res_pathway()
         }
