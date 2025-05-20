@@ -819,8 +819,9 @@ reactome_data <- function(select_contrast,
     org_info = idep_data$org_info,
     idep_data = idep_data
   )
-
-
+  # Remove duplicate gene entrez IDs
+  fold <- fold[!duplicated(names(fold))]
+  
   fold <- sort(fold, decreasing = T)
   paths <- ReactomePA::gsePathway(
     fold,
@@ -1117,6 +1118,120 @@ get_pgsea_plot_all_samples_data <- function(data,
       return(as.data.frame(result$pg_data))
     }
   }
+}
+
+#' Transform Pathway Data with Table Output
+#' 
+#' Transform data from plotted Pathway Methods like GAGE, FGSEA, etc.
+#' for data downloading
+#'
+#' @param data Pathway data from selected method
+#' @param contrast Selected contrast from DEG1 tab
+#' @param method  Selected pathway method
+#' @param genes Gene data
+#' @param org  Selected org from pre-process step
+#' @param path_id Show pathway ID toggle
+#' @param go Selected pathway database
+#'
+#' @return Data frame with hyperlinks and urls for pathways
+#'          
+table_data_transform <- function(data, 
+                                 contrast,
+                                 method,
+                                 genes,
+                                 org,
+                                 path_id,
+                                 go){
+  
+  # Rename the second column
+  colnames(data)[2] <- paste0(method," Analysis: ", contrast)
+  
+  # copy name from data[,2]
+  pathway_csv_name <- colnames(data)[2]
+  non_hypertext_name <- paste(pathway_csv_name, "Pathways")
+  
+  if (ncol(data) > 1) {
+    # add URL
+    ix <- match(data[, 2], genes$pathway_info$description)
+    
+    # remove pathway ID, but only in Ensembl species
+    if (!path_id && org > 0) {
+      data[, 2] <- remove_pathway_id(data[, 2], go)
+    }
+    
+    # copy data[,2] to new column before hypertext
+    data[non_hypertext_name] <- data[,2]
+    data[, 2] <- hyperText(
+      data[, 2],
+      genes$pathway_info$memo[ix]
+    )
+    
+    # create separate URL column for download
+    data$URL <- NULL
+    data$URL <- genes$pathway_info$memo[ix]
+    
+  }
+  
+  return(data)
+  
+}
+
+#' Transform Pathway Data with Plot Output
+#' 
+#' Transform data from plotted Pathway Methods like PGSEA, GSVA, PLAGE, etc.
+#' for data downloading, so p-vals and pathways are columns
+#'
+#' @param plot_data Pathway data from selected method
+#' @param contrast Selected contrast from DEG1 tab
+#' @param method  Selected pathway method
+#' @param genes Gene data
+#' @param org  Selected org from pre-process step
+#' @param path_id Show pathway ID toggle
+#' @param go Selected pathway database
+#'
+#' @return Data frame with pathway names and p-value as columns, along with
+#'          gene expression values from original data
+#' @export
+#'
+plot_data_transform <- function(plot_data, 
+                                contrast,
+                                method,
+                                genes,
+                                org,
+                                path_id,
+                                go){
+  
+  rn <- rownames(plot_data)
+  
+  res <- data.frame(
+    adj.Pval = sub("^([0-9.eE+-]+)\\s+.*", "\\1", rn),
+    pathway = sub("^[0-9.eE+-]+\\s+", "", rn),
+    plot_data,
+    row.names = NULL
+  )
+  
+  # Rename the second column
+  colnames(res)[2] <- paste0(names(method)," Analysis: ", contrast)
+  
+  if (ncol(res) > 1) {
+    # add URL
+    ix <- match(res[, 2], genes$pathway_info$description)
+    
+    # remove pathway ID, but only in Ensembl species
+    if (!path_id && org > 0) {
+      res[, 2] <- remove_pathway_id(res[, 2], go)
+    }
+    
+    # create separate URL column for download
+    res <- data.frame(res[,1:2],
+                      URL = genes$pathway_info$memo[ix],
+                      res[,-c(1,2)]
+                      )
+    
+  }
+  
+  return(res)
+  
 }
 
 #' Get data from genes in selected pathway

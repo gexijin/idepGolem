@@ -504,7 +504,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         "sig_pathways.csv"
       },
       content = function(file) {
-        write.csv(res_pathway()[,c(1,6,7,3:5)], file)
+        write.csv(res_pathway(), file)
       }
     )
 
@@ -909,36 +909,94 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     })
     
     res_pathway <- reactive({
-      req(input$pathway_method == 3)
-      req(!is.null(fgsea_pathway_data()))
-      res <- fgsea_pathway_data()
-      # copy name from res[,2]
-      pathway_csv_name <- colnames(res)[2]
-      non_hypertext_name <- paste(pathway_csv_name, "Pathways")
+      req(!is.null(input$pathway_method))
       
-      if (ncol(res) > 1) {
-        # add URL
-        ix <- match(res[, 2], gene_sets()$pathway_info$description)
-        # remove pathway ID, but only in Ensembl species
-        if (!input$show_pathway_id && pre_process$select_org() > 0) {
-          res[, 2] <- remove_pathway_id(res[, 2], input$select_go)
+      method_list <- list("GAGE",
+                          "PGSEA",
+                          "GSEA",
+                          "PGSEA",
+                          "ReactomePA",
+                          "GSVA",
+                          "ssGSEA",
+                          "PLAGE")
+      
+      res <- switch(
+        as.numeric(input$pathway_method),
+        {
+          req(!is.null(gage_pathway_data()))
+          table_data_transform(
+            data = gage_pathway_data(),
+            contrast = input$select_contrast,
+            method = method_list[as.numeric(input$pathway_method)],
+            genes = gene_sets(),
+            org = pre_process$select_org(),
+            path_id = input$show_pathway_id,
+            go = input$select_go
+          )
+        },
+        { 
+          req(!is.null(pgsea_plot_data()))
+          
+          plot_data_transform(
+            plot_data = pgsea_plot_data(),
+            contrast = input$select_contrast,
+            method = method_list[as.numeric(input$pathway_method)],
+            genes = gene_sets(),
+            org = pre_process$select_org(),
+            path_id = input$show_pathway_id,
+            go = input$select_go
+          )
+
+        },
+        {
+          req(!is.null(fgsea_pathway_data()))
+          
+          table_data_transform(
+            data = fgsea_pathway_data(),
+            contrast = input$select_contrast,
+            method = method_list[as.numeric(input$pathway_method)],
+            genes = gene_sets(),
+            org = pre_process$select_org(),
+            path_id = input$show_pathway_id,
+            go = input$select_go
+          )
+        },
+        {
+          req(!is.null(pgsea_plot_all_samples_data()))
+          
+          plot_data_transform(
+            plot_data = pgsea_plot_all_samples_data(),
+            contrast = input$select_contrast,
+            method = method_list[as.numeric(input$pathway_method)],
+            genes = gene_sets(),
+            org = pre_process$select_org(),
+            path_id = input$show_pathway_id,
+            go = input$select_go
+          ) 
+        },
+        {
+          req(!is.null(reactome_pa_pathway_data()))
+          
+          table_data_transform(
+            data = reactome_pa_pathway_data(),
+            contrast = input$select_contrast,
+            method = method_list[as.numeric(input$pathway_method)],
+            genes = gene_sets(),
+            org = pre_process$select_org(),
+            path_id = input$show_pathway_id,
+            go = input$select_go
+          )
         }
-        # copy res[,2] to new column before hypertext
-        res[non_hypertext_name] <- res[,2]
-        res[, 2] <- hyperText(
-          res[, 2],
-          gene_sets()$pathway_info$memo[ix]
-        )
-        # create separate URL column for download
-        res$URL <- NULL
-        res$URL <- gene_sets()$pathway_info$memo[ix]
-        res$Genes <- as.character(res$Genes)
-      }
+      )
+
       return(res)
     })
 
     output$fgsea_pathway <- renderTable(
-      { if(ncol(res_pathway()) > 4) {
+      { 
+        req(!is.null(fgsea_pathway_data()))
+        req(input$pathway_method == 3)
+        if(ncol(res_pathway()) > 4) {
           res_pathway()[,1:5]
         } else {
           res_pathway()
