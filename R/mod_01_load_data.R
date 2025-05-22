@@ -78,7 +78,7 @@ mod_01_load_data_ui <- function(id) {
             # Species list and genome assemblies ----------
             actionButton(
               inputId = ns("upload_gmt_button"),
-              label = strong("Custom")
+              label = "Custom"
             ),
             tippy::tippy_this(
               ns("upload_gmt_button"),
@@ -96,7 +96,7 @@ mod_01_load_data_ui <- function(id) {
           inputId = ns("data_file_format"),
           label = NULL,
           choices = list(
-            "No data type selected" = 0,
+            "..." = 0,
             "Read counts data (recommended)" = 1,
             "Normalized Expression data" = 2,
             "Fold-changes & adjusted P-values" = 3
@@ -802,9 +802,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       req(input$select_org == 999 || input$data_file_format == 0)
         
         showNotification(
-          paste("Please select a species and a data type before uploading data", 
-                "or loading a demo"),
-          duration = NULL,
+          "Select a species and a data type before uploading data.",
+          duration = 30,
           type = "error",
           id = "select_first"
           )
