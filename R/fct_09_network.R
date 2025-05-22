@@ -173,7 +173,7 @@ get_network <- function(select_wgcna_module,
   module <- unlist(strsplit(select_wgcna_module, " "))[2]
   module_colors <- wgcna$dynamic_colors
   in_module <- (module_colors == module)
-
+  
   if (select_wgcna_module == "Entire network") {
     in_module <- rep(TRUE, length(in_module))
   }
@@ -214,9 +214,15 @@ get_network <- function(select_wgcna_module,
 
   if (!is.null(probe_to_gene)) {
     ix <- match(colnames(net), probe_to_gene[, 1])
-    colnames(net) <- probe_to_gene[ix, 2]
+    colnames(net) <- dplyr::case_when(
+      !is.na(probe_to_gene[ix, 2]) ~ probe_to_gene[ix, 2],
+      TRUE ~ colnames(net)
+    )
     ix <- match(rownames(net), probe_to_gene[, 1])
-    rownames(net) <- probe_to_gene[ix, 2]
+    rownames(net) <- dplyr::case_when(
+      !is.na(probe_to_gene[ix, 2]) ~ probe_to_gene[ix, 2],
+      TRUE ~ rownames(net)
+    )
   }
 
   return(net)
@@ -240,7 +246,6 @@ get_network_plot <- function(adjacency_matrix, edge_threshold) {
     adjacency_matrix[i, i] <- FALSE
   }
   graph <- igraph::graph_from_adjacency_matrix(adjacency_matrix, mode = "undirected")
-
   # http://www.kateto.net/wp-content/uploads/2016/01/NetSciX_2016_Workshop.pdf
   net_plot <- function() {
     plot(

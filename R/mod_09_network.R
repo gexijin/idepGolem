@@ -179,6 +179,9 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
     })
 
     wgcna <- reactive({
+      req(!is.na(input$n_genes_network))
+      req(!is.na(input$min_module_size))
+      req(!is.na(input$soft_power))
       req(!is.null(pre_process$data()))
       withProgress(message = "Runing WGCNA ...", {
         incProgress(0.2)
@@ -232,7 +235,14 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
 
     adj_matrix <- reactive({
       req(!is.null(input$select_wgcna_module))
+      req(!is.na(input$network_layout))
+      req(!is.na(input$edge_threshold))
+      req(!is.na(input$top_genes_network))
+      req(!is.na(input$n_genes_network))
+      req(!is.na(input$min_module_size))
+      req(!is.na(input$soft_power))
       req(!is.null(wgcna()))
+      
       tem <- input$network_layout
       tem <- input$edge_threshold
       get_network(
@@ -247,7 +257,14 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
 
     observe({
       req(!is.null(input$select_wgcna_module))
+      req(!is.na(input$network_layout))
+      req(!is.na(input$edge_threshold))
+      req(!is.na(input$top_genes_network))
+      req(!is.na(input$n_genes_network))
+      req(!is.na(input$min_module_size))
+      req(!is.na(input$soft_power))
       req(!is.null(wgcna()))
+
       tem = input$network_layout
       network$network_plot <- get_network_plot(
         adj_matrix(),
