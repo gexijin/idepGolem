@@ -395,8 +395,6 @@ plot_gsva <- function(my_range,
         result$pg_data <- result$pg_data - rowMeans(result$pg_data)        
       }
 
-
-
       PGSEA::smcPlot(
         result$pg_data,
         factor(subtype),
@@ -445,7 +443,24 @@ gsva_data <- function(processed_data,
   if (length(gene_sets) == 0) {
     return(list(pg3 = NULL, best = 1))
   }
-
+  
+  # Modern Syntax for current GSVA versions
+  # if (algorithm == "gsva"){
+  #   
+  #   param <- GSVA::gsvaParam(processed_data, gene_sets)
+  #   
+  # } else if (algorithm == "ssgsea") {
+  #   
+  #   param <- GSVA::ssgseaParam(processed_data, gene_sets)
+  #   
+  # } else if (algorithm == "plage") {
+  #   
+  #   param <- GSVA::plageParam(processed_data, gene_sets)
+  # }
+  # 
+  # pg_results <- GSVA::gsva(param = param, verbose = FALSE)
+  
+  # Deprecated syntax for old versions
   pg_results <- GSVA::gsva(processed_data, gene_sets, verbose = FALSE, method = algorithm)
 
   # Remove se/wrts with all missing(non-signficant)
@@ -819,8 +834,9 @@ reactome_data <- function(select_contrast,
     org_info = idep_data$org_info,
     idep_data = idep_data
   )
-
-
+  # Remove duplicate gene entrez IDs
+  fold <- fold[!duplicated(names(fold))]
+  
   fold <- sort(fold, decreasing = T)
   paths <- ReactomePA::gsePathway(
     fold,
@@ -1117,6 +1133,83 @@ get_pgsea_plot_all_samples_data <- function(data,
       return(as.data.frame(result$pg_data))
     }
   }
+}
+
+#' Transform Pathway Data
+#' 
+#' Transform data from various pathway methods for uniform download format
+#'
+#' @param data Pathway data from selected method
+#' @param contrast Selected contrast from DEG1 tab
+#' @param method  Selected pathway method
+#' @param genes Gene data
+#' @param org  Selected org from pre-process step
+#' @param path_id Show pathway ID toggle
+#' @param go Selected pathway database
+#'
+#' @return Data frame with hyperlinks and urls for pathways
+#' 
+#' @export
+#'          
+pathway_data_transform <- function(data, 
+                                   contrast,
+                                   method,
+                                   genes,
+                                   org,
+                                   path_id,
+                                   go){
+  
+  if (method %in% c("PGSEA", "GSVA", "ssGSEA", "PLAGE")){
+    rn <- rownames(data)
+    
+    data <- data.frame(
+      adj.Pval = sub("^([0-9.eE+-]+)\\s+.*", "\\1", rn),
+      pathway = sub("^[0-9.eE+-]+\\s+", "", rn),
+      data,
+      row.names = NULL,
+      check.names = FALSE
+    )
+  }
+  
+  if(method == "ssGSEA") {
+    data[,-c(1:3)] <- data[, -c(1:3)] - rowMeans(data[, -c(1:3)])        
+  }
+  
+  # Name for hypertext column
+  hypertext_name <- paste0(method," Analysis: ", contrast)
+  # Rename 2nd column
+  colnames(data)[2] <- paste(hypertext_name, "Pathways")
+  
+  if (ncol(data) > 1) {
+    # add URL
+    ix <- match(data[, 2], genes$pathway_info$description)
+    
+    # remove pathway ID, but only in Ensembl species
+    if (!path_id && org > 0) {
+      data[, 2] <- remove_pathway_id(data[, 2], go)
+    }
+    
+    # Add hypertext to the end of the data
+    data[hypertext_name] <- hyperText(
+      data[, 2],
+      genes$pathway_info$memo[ix]
+    )
+    
+    # create separate URL column for download
+    data <- data.frame(data[,1:2],
+                       URL = genes$pathway_info$memo[ix],
+                       data[,-c(1,2)],
+                       check.names = FALSE
+    )
+    
+    if (method %in% c("GSEA", "GAGE")){
+      data$Genes <- as.character(data$Genes)
+    }
+    
+  }
+  
+  return(data)
+  
 }
 
 #' Get data from genes in selected pathway
