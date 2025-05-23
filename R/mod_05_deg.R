@@ -253,6 +253,10 @@ mod_05_deg_2_ui <- function(id) {
               label = "Sort by Fold Change or FDR",
               choices = c("Fold Change", "FDR")
             ),
+            downloadButton(
+              outputId = ns("download_heat_data"),
+              label = "Heatmap Data"
+            ),
             ns = ns
             ),
         conditionalPanel(
@@ -906,50 +910,85 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       )
     })
 
+    heat_names <- reactive({
+      req(!is.null(vol_data()))
+      req(!is.null(input$heatmap_fdr_fold))
+      req(!is.null(input$heatmap_gene_number))
+      req(input$heatmap_gene_number != "All DEGs")
+      
+      if(input$heatmap_fdr_fold == "FDR"){
+        # get ensembl id for number of genes with lowest FDR
+        heat_names <- vol_data()$data |>
+          dplyr::arrange(FDR) |>
+          dplyr::slice(1:input$heatmap_gene_number) |>
+          dplyr::pull(Row.names)
+      }
+      else if(input$heatmap_fdr_fold == "Fold Change"){
+        # get ensembl id for number of genes with highest Fold Change
+        heat_names <- vol_data()$data |>
+          dplyr::arrange(dplyr::desc(abs(Fold))) |>
+          dplyr::slice(1:input$heatmap_gene_number) |>
+          dplyr::pull(Row.names)
+      }
+    })
+    
+    heat_names_to_ensembl <- reactive({
+      req(!is.null(heat_names()))
+      
+      # match ensembl ids and symbols to filter
+      df <- pre_process$all_gene_names() |>
+        dplyr::filter(symbol %in% heat_names()) |>
+        dplyr::select(ensembl_ID)
+      df[['ensembl_ID']]
+    })
+    
     # bar to make the heatmap module reactive
     # otherwise, error when switching heatmap
     heatmap_bar <- reactive({
       req(!is.null(heat_data()))
       heat_data()$bar
     })
-  
-    observe({
+    
+    deg2_heat_bar <- reactive({
+      req(!is.null(heatmap_bar()))
+      req(!is.null(input$heatmap_gene_number))
+      
       if(input$heatmap_gene_number == "All DEGs"){
-        deg2_heat_data <- heat_data()$genes
-        deg2_heat_bar <- heatmap_bar()
+        heatmap_bar()
       }
       else{
-        if(input$heatmap_fdr_fold == "FDR"){
-          # get ensembl id for number of genes with lowest FDR
-          heat_names <- vol_data()$data |>
-            dplyr::arrange(FDR) |>
-            dplyr::slice(1:input$heatmap_gene_number) |>
-            dplyr::pull(Row.names)
-        }
-        else if(input$heatmap_fdr_fold == "Fold Change"){
-          # get ensembl id for number of genes with highest Fold Change
-          heat_names <- vol_data()$data |>
-            dplyr::arrange(dplyr::desc(abs(Fold))) |>
-            dplyr::slice(1:input$heatmap_gene_number) |>
-            dplyr::pull(Row.names)
-        }
-        # match ensembl ids and symbols to filter
-        heat_names_to_ensembl <- pre_process$all_gene_names() |>
-          dplyr::filter(symbol %in% heat_names) |>
-          dplyr::select(ensembl_ID)
-        heat_names_to_ensembl <- heat_names_to_ensembl[['ensembl_ID']]
+        req(!is.null(heat_names_to_ensembl()))
         
-        # filter heat_data()$genes and heatmap_bar() for desired genes
-        deg2_heat_data <- heat_data()$genes[rownames(heat_data()$genes) %in% heat_names_to_ensembl,]
-        deg2_heat_bar <- heatmap_bar()[names(heatmap_bar()) %in% heat_names_to_ensembl]
+        heatmap_bar()[names(heatmap_bar()) %in% heat_names_to_ensembl()]
       }
+    })
+    
+    deg2_heat_data <- reactive({
+      req(!is.null(heat_data()))
+      req(!is.null(input$heatmap_gene_number))
+      
+      if(input$heatmap_gene_number == "All DEGs"){
+        deg2_heat_data <- heat_data()$genes
+      }
+      else{
+        req(!is.null(heat_names_to_ensembl()))
+        # filter heat_data()$genes and heatmap_bar() for desired genes
+        deg2_heat_data <- heat_data()$genes[rownames(heat_data()$genes) %in% heat_names_to_ensembl(),]
+      }
+      
+    })
+    
+    observe({
+      req(!is.null(deg2_heat_data()))
+      req(!is.null(deg2_heat_bar()))
+      
       heatmap_module <- mod_12_heatmap_server(
         id = "12_heatmap_1",
         data = reactive({
-          deg2_heat_data
+          deg2_heat_data()
         }),
         bar = reactive({
-          deg2_heat_bar
+          deg2_heat_bar()
         }),
         all_gene_names = reactive({
           pre_process$all_gene_names()
@@ -988,6 +1027,20 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         choices = plot_choices
       )
     })
+    
+    output$download_heat_data <- downloadHandler(
+      filename = function() {
+        "DEG2_Heatmap_Data.csv"
+      },
+      content = function(file) {
+        req(!is.null(heat_data()))
+          
+        write.csv(
+          deg2_heat_data(),
+          file
+        )
+        }
+    )
 
     # volcano plot -----
     vol_data <- reactive({
