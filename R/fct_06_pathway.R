@@ -444,24 +444,24 @@ gsva_data <- function(processed_data,
     return(list(pg3 = NULL, best = 1))
   }
   
-  # Modern Syntax for current GSVA versions
+  # # Modern Syntax for current GSVA versions
   # if (algorithm == "gsva"){
-  #   
+  # 
   #   param <- GSVA::gsvaParam(processed_data, gene_sets)
-  #   
+  # 
   # } else if (algorithm == "ssgsea") {
-  #   
+  # 
   #   param <- GSVA::ssgseaParam(processed_data, gene_sets)
-  #   
+  # 
   # } else if (algorithm == "plage") {
-  #   
+  # 
   #   param <- GSVA::plageParam(processed_data, gene_sets)
   # }
   # 
   # pg_results <- GSVA::gsva(param = param, verbose = FALSE)
-  
-  # Deprecated syntax for old versions
-  pg_results <- GSVA::gsva(processed_data, gene_sets, verbose = FALSE, method = algorithm)
+  # 
+ # Deprecated syntax for old versions
+ pg_results <- GSVA::gsva(processed_data, gene_sets, verbose = FALSE, method = algorithm)
 
   # Remove se/wrts with all missing(non-signficant)
   pg_results <- pg_results[rowSums(is.na(pg_results)) < ncol(pg_results), ]
@@ -786,6 +786,7 @@ reactome_data <- function(select_contrast,
                           pathway_p_val_cutoff,
                           n_pathway_show,
                           absolute_fold) {
+  
   ensembl_species <- c(
     "hsapiens_gene_ensembl", "rnorvegicus_gene_ensembl", "mmusculus_gene_ensembl",
     "celegans_gene_ensembl", "scerevisiae_gene_ensembl", "drerio_gene_ensembl",
@@ -1159,6 +1160,10 @@ pathway_data_transform <- function(data,
                                    path_id,
                                    go){
   
+  if (data[1,1] == "No significant pathway found."){
+    return(data)
+  }
+  
   if (method %in% c("PGSEA", "GSVA", "ssGSEA", "PLAGE")){
     rn <- rownames(data)
     
@@ -1259,6 +1264,55 @@ pathway_select_data <- function(sig_pathways,
   iz <- contrast_samples
   x <- data[which(rownames(data) %in% genes), iz]
   return(x)
+}
+
+#' Find list of genes in Reactome Pathway
+#'
+#' @param sig_pathway Pathway selection
+#' @param data ReactomePA pathway dataset
+#' @param gene_info Gene dataset
+#' @param converted pre_process converted data
+#'
+#' @returns data frame of genes from the selected pathway
+#' @export
+#'
+reactome_gene_list <- function(sig_pathway,
+                               data,
+                               gene_info,
+                               converted){
+  
+  ensembl_species <- c(
+    "hsapiens_gene_ensembl", "rnorvegicus_gene_ensembl", 
+    "mmusculus_gene_ensembl", "celegans_gene_ensembl", 
+    "scerevisiae_gene_ensembl", "drerio_gene_ensembl",
+    "dmelanogaster_gene_ensembl"
+  )
+  reactome_pa_species <- c("human", "rat", "mouse", 
+                           "celegans", "yeast", "zebrafish", 
+                           "fly")
+  # Find species of data
+  species <- converted$species[1, 1]
+  #Match to ensembl ID
+  ix <- match(species, ensembl_species)
+  
+  # Find genes in pathway selected
+  gene_search <- ReactomePA::viewPathway(sig_pathway,
+                                         organism = reactome_pa_species[ix],
+                                         keyType = "ENSEMBLID")
+  gene_search <- as.vector(gene_search$data$name)
+  
+  # Match genes by symbol
+  symbolID <- gene_info[, c("ensembl_gene_id", "symbol")]
+  symbolID$symbol <- gsub(" ", "", symbolID$symbol)
+  ix <- match(gene_search, symbolID$symbol)
+  
+  genes <- symbolID[ix, 1]
+  
+  # search for genes in submitted data
+  x <- data[which(rownames(data) %in% genes),]
+  
+  return(x)
+  
 }
 
 #' Create pathway table with gene sets
