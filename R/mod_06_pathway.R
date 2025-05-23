@@ -177,6 +177,11 @@ mod_06_pathway_ui <- function(id) {
             actionButton(
               inputId = ns("gene_list_popup"),
               label = "Gene List"
+            ),
+            tippy::tippy_this(
+              ns("gene_list_popup"),
+              "Download Gene List",
+              theme = "light-border"
             )
           ),
 
@@ -503,6 +508,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       })
     })
     
+    # Gene list download popup
     observeEvent(input$gene_list_popup, {
       req(!is.null(path_choices()))
       
@@ -534,6 +540,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       }
     )
     
+    # Get pathway choices from correct data
     choices <- reactive({
       if (input$pathway_method == 1) {
         if (!is.null(gage_pathway_data())) {
@@ -570,29 +577,57 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       } else if (input$pathway_method >= 6 && input$pathway_method <= 8 ) {
         if (!is.null(gsva_plot_data())) {
           if (dim(gsva_plot_data())[2] > 1) {
-            as.data.frame(gsva_plot_data())
+            pathways <- as.data.frame(gsva_plot_data())
             substr(rownames(pathways), 10, nchar(rownames(pathways)))
           }
         }
       } else {"All"}
     })
     
+    # Trim pathway choices
     path_choices <- reactive({
+      req(!is.null(choices()))
       setNames(choices(),
                sub("^Path:hsa\\d+\\s*", "", choices()))
     })
     
+    # Get gene list data
     path_gene_data <- reactive({
       req(!is.null(input$pathway_select))
       
-      pathway_select_data(
-        sig_pathways = input$pathway_select,
-        gene_sets = gene_sets()$gene_lists,
-        contrast_samples = contrast_samples(),
-        data = pre_process$data(),
-        select_org = pre_process$select_org(),
-        all_gene_names = pre_process$all_gene_names()
-      )
+      # Reactome data is handled differently
+      if (input$pathway_method == 5){
+        req(!is.null(reactome_pa_pathway_data()))
+        
+        df <- reactome_gene_list(
+          sig_pathway = input$pathway_select,
+          data = pre_process$data(),
+          gene_info = pre_process$all_gene_info(),
+          converted = pre_process$converted()
+        )
+        
+        data.frame(
+          Gene = rownames(df),
+          df,
+          row.names = NULL
+        )
+        
+      } else {
+        df <- pathway_select_data(
+          sig_pathways = input$pathway_select,
+          gene_sets = gene_sets()$gene_lists,
+          contrast_samples = contrast_samples(),
+          data = pre_process$data(),
+          select_org = pre_process$select_org(),
+          all_gene_names = pre_process$all_gene_names()
+        )
+        
+        data.frame(
+          Gene = rownames(df),
+          df,
+          row.names = NULL
+        )
+      }
     })
     
     output$download_gene_list <- downloadHandler(
@@ -600,12 +635,12 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         req(path_choices())
         paste0(
           names(path_choices()[path_choices() == input$pathway_select]),
-          "_genes.csv")
+          " genes.csv")
       },
       content = function(file) {
         req(path_choices())
         df <- path_gene_data()
-        write.csv(df, file, row.names = FALSE)
+        write.csv(df, file)
       }
     )
 
@@ -629,53 +664,12 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
 
     output$list_sig_pathways <- renderUI({
       req(!is.null(input$pathway_method))
-      # Default, sometimes these methods returns "No significant pathway found"
-      choices <- "All"
-      if (input$pathway_method == 1) {
-        if (!is.null(gage_pathway_data())) {
-          if (dim(gage_pathway_data())[2] > 1) {
-            choices <- gage_pathway_data()[, 2]
-          }
-        }
-      } else if (input$pathway_method == 2) {
-        if (!is.null(pgsea_plot_data())) {
-          if (dim(pgsea_plot_data())[2] > 1) {
-            pathways <- as.data.frame(pgsea_plot_data())
-            choices <- substr(rownames(pathways), 10, nchar(rownames(pathways)))
-          }
-        }
-      } else if (input$pathway_method == 3) {
-        if (!is.null(fgsea_pathway_data())) {
-          if (dim(fgsea_pathway_data())[2] > 1) {
-            choices <- fgsea_pathway_data()[, 2]
-          }
-        }
-      } else if (input$pathway_method == 4) {
-        if (!is.null(pgsea_plot_all_samples_data())) {
-          if (dim(pgsea_plot_all_samples_data())[2] > 1) {
-            pathways <- as.data.frame(pgsea_plot_all_samples_data())
-            choices <- substr(rownames(pathways), 10, nchar(rownames(pathways)))
-          }
-        }
-      } else if (input$pathway_method == 5) {
-        if (!is.null(reactome_pa_pathway_data())) {
-          if (dim(reactome_pa_pathway_data())[2] > 1) {
-            choices <- reactome_pa_pathway_data()[, 2]
-          }
-        }
-      } else if (input$pathway_method >= 6 && input$pathway_method <= 8 ) {
-        if (!is.null(gsva_plot_data())) {
-          if (dim(gsva_plot_data())[2] > 1) {
-            pathways <- as.data.frame(gsva_plot_data())
-            choices <- substr(rownames(pathways), 10, nchar(rownames(pathways)))
-          }
-        }
-      }
+      req(!is.null(path_choices()))
 
       selectInput(
         inputId = ns("sig_pathways"),
         label = "Select a significant pathway:",
-        choices = choices()
+        choices = path_choices()
       )
     })
 
