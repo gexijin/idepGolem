@@ -538,7 +538,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         inputId = "data_file_format",
         choices = list("Read counts data (recommended)" = 1,
                        "Normalized Expression data" = 2,
-                       "Fold-changes & adjusted P-values" = 3)
+                       "Fold-changes & adjusted P-values" = 3),
+        selected = input$data_file_format
         )
     })
 
