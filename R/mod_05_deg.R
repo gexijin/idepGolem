@@ -968,12 +968,12 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       req(!is.null(input$heatmap_gene_number))
       
       if(input$heatmap_gene_number == "All DEGs"){
-        deg2_heat_data <- heat_data()$genes
+        heat_data()$genes
       }
       else{
         req(!is.null(heat_names_to_ensembl()))
         # filter heat_data()$genes and heatmap_bar() for desired genes
-        deg2_heat_data <- heat_data()$genes[rownames(heat_data()$genes) %in% heat_names_to_ensembl(),]
+        heat_data()$genes[rownames(heat_data()$genes) %in% heat_names_to_ensembl(),]
       }
       
     })
