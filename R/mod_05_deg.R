@@ -1033,13 +1033,23 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         "DEG2_Heatmap_Data.csv"
       },
       content = function(file) {
-        req(!is.null(heat_data()))
-          
-        write.csv(
-          deg2_heat_data(),
-          file
+        req(!is.null(deg2_heat_data()))
+        df <- deg2_heat_data()
+        # Center data to match heatmap
+        df <- df - rowMeans(df, na.rm = TRUE)
+        # Convert row names to gene symbols
+        df <- data.frame(
+          Gene_ID = rownames(df),
+          rowname_id_swap(
+            data_matrix = df,
+            all_gene_names = pre_process$all_gene_names(),
+            select_gene_id = pre_process$select_gene_id()
+          )
         )
-        }
+        rownames(df) <- gsub(" ", "", rownames(df))  
+        
+        write.csv(df, file)
+      }
     )
 
     # volcano plot -----
