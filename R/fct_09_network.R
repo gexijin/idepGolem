@@ -455,9 +455,9 @@ all_gene_info) {
 #' @return A dataframe containing for csv file
 prepare_module_csv_filter <- function(
     module_data,
-    module) {
-  if (module == "ALL") {
+    module_select) {
+  if (module_select == "Entire network") {
     return(module_data)
   }
-  return(subset(module_data, module == module))
+  return(subset(module_data, module == substr(module_select, 0, 1)))
 }
