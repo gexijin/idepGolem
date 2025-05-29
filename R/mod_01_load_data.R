@@ -23,11 +23,11 @@ mod_01_load_data_ui <- function(id) {
               
              .dis_gray { background-color: gray; }
               "
-            )
         )
+      )
     ),
     sidebarLayout(
-
+      
       ##################################################################
       #       Load Data sidebar panel ----
       ##################################################################
@@ -43,7 +43,7 @@ mod_01_load_data_ui <- function(id) {
           selectize = TRUE,
           selected = setNames(999, "None")
         ),
-
+        
         fluidRow(
           column(
             width = 4, 
@@ -54,13 +54,13 @@ mod_01_load_data_ui <- function(id) {
             textOutput(ns("selected_species"))
           )
         ),
-    tags$head(tags$style("#load_data-selected_species{color: blue;
+        tags$head(tags$style("#load_data-selected_species{color: blue;
                                  font-size: 12px;
                                  font-style: italic;
                                  }"
-                         )
-              ),
-
+        )
+        ),
+        
         # .GMT file input bar ----------
         fluidRow(
           column(
@@ -87,11 +87,11 @@ mod_01_load_data_ui <- function(id) {
             )
           )
         ),
-
+        
         br(),
         # Dropdown for data file format ----------
         strong("2. Data type"),
-
+        
         selectInput(
           inputId = ns("data_file_format"),
           label = NULL,
@@ -113,8 +113,8 @@ mod_01_load_data_ui <- function(id) {
             ",
           theme = "light-border"
         ),
-
-
+        
+        
         # Conditional panel for fold changes data file ----------
         conditionalPanel(
           condition = "input.data_file_format == 3",
@@ -129,10 +129,10 @@ mod_01_load_data_ui <- function(id) {
         # Load expression data options ----------
         # Includes load demo action button, demo data dropdown, and expression
         # file upload box
-      conditionalPanel(
-        condition = "input.data_file_format != 0 && input.select_org != 999",
-        uiOutput(ns("load_data_ui")),
-        ns = ns
+        conditionalPanel(
+          condition = "input.data_file_format != 0 && input.select_org != 999",
+          uiOutput(ns("load_data_ui")),
+          ns = ns
         ),
         # tags$style(
         #   HTML("
@@ -142,12 +142,12 @@ mod_01_load_data_ui <- function(id) {
         #   ")
         # ),
         br(),
-
+        
         # Experiment design file input ----------
-      conditionalPanel(
-        condition = "input.data_file_format != 0 && input.select_org != 999",
-        uiOutput(ns("design_file_ui")),
-        ns = ns
+        conditionalPanel(
+          condition = "input.data_file_format != 0 && input.select_org != 999",
+          uiOutput(ns("design_file_ui")),
+          ns = ns
         ),
         uiOutput(ns("example_genes_ui")),
         br(),
@@ -289,8 +289,8 @@ mod_01_load_data_ui <- function(id) {
         #br(),
         #tableOutput(ns("species_match"))
       ),
-
-
+      
+      
       ##################################################################
       #       Load Data panel main ----
       ##################################################################
@@ -342,7 +342,10 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       shinyjs::toggle(id = "heatmap_color_select", condition = input$customize_button)
       shinyjs::toggle(id = "select_gene_id", condition = input$customize_button)
       shinyjs::toggle(id = "multiple_map", condition = input$customize_button)
-      shinyjs::toggle(id = "no_id_conversion", condition = input$customize_button)
+      shinyjs::toggle(
+        id = "no_id_conversion", 
+        condition = (input$customize_button && !grepl("STRING", input$clicked_row))
+      )
       shinyjs::toggle(id = "plot_grid_lines", condition = input$customize_button)
       shinyjs::toggle(id = "ggplot2_theme", condition = input$customize_button)
     })
@@ -498,6 +501,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     selected_species_name <- reactiveVal("None")
     
     observeEvent(input$clicked_row, {
+      
       # find species ID from ensembl_dataset
       selected <- find_species_id_by_ensembl(
         input$clicked_row, 
