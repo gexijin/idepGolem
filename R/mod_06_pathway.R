@@ -121,15 +121,34 @@ mod_06_pathway_ui <- function(id) {
           "If selected, pathway IDs, such as Path:mmu04115 and GO:0042770,  will be appended to pathway name.",
           theme = "light-border"
         ),
-        # Download report button
-        downloadButton(
-          outputId = ns("report"),
-          label = "Report"
-        ),
-        tippy::tippy_this(
-          ns("report"),
-          "Generate HTML report of pathway tab",
-          theme = "light-border"
+        fluidRow(
+          column(3,
+                 # Download report button
+                 downloadButton(
+                   outputId = ns("report"),
+                   label = "Report"
+                 ),
+                 tippy::tippy_this(
+                   ns("report"),
+                   "Generate HTML report of pathway tab",
+                   theme = "light-border"
+                 )
+          ),
+          column(9,
+                 conditionalPanel(
+                   condition = "input.pathway_tabs == 'Heatmap'",
+                   downloadButton(
+                     outputId = ns("download_heat_data"), 
+                     label = "Heatmap Data"
+                   ),
+                   tippy::tippy_this(
+                     ns("download_heat_data"),
+                     "Download Heatmap Dataset",
+                     theme = "light-border"
+                    ),
+                   ns = ns
+                 )
+          )
         ),
         h6("Beware of P-hacking! If you try all the combinations, you can find evidence for anything."),
         a(
@@ -584,7 +603,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       } else {"All"}
     })
     
-    # Trim pathway choices
+    # Trim pathway choices to no ID
     path_choices <- reactive({
       req(!is.null(choices()))
       setNames(choices(),
@@ -606,10 +625,14 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           converted = pre_process$converted()
         )
         
+        # Convert row names to gene symbols, keep Ensembl ID
         data.frame(
-          Gene = rownames(df),
-          df,
-          row.names = NULL
+          Ensembl_ID = rownames(df),
+          rowname_id_swap(
+            data_matrix = df,
+            all_gene_names = pre_process$all_gene_names(),
+            select_gene_id = pre_process$select_gene_id()
+          )
         )
         
       } else {
@@ -622,10 +645,14 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           all_gene_names = pre_process$all_gene_names()
         )
         
+        # Convert row names to gene symbols, keep Ensembl ID
         data.frame(
-          Gene = rownames(df),
-          df,
-          row.names = NULL
+          Ensembl_ID = rownames(df),
+          rowname_id_swap(
+            data_matrix = df,
+            all_gene_names = pre_process$all_gene_names(),
+            select_gene_id = pre_process$select_gene_id()
+          )
         )
       }
     })
@@ -633,9 +660,11 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     output$download_gene_list <- downloadHandler(
       filename = function() {
         req(path_choices())
-        paste0(
+        x <- paste0(
           names(path_choices()[path_choices() == input$pathway_select]),
-          " genes.csv")
+          "_genes.csv"
+        )
+        gsub(" ", "_", x)
       },
       content = function(file) {
         req(path_choices())
@@ -665,11 +694,17 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     output$list_sig_pathways <- renderUI({
       req(!is.null(input$pathway_method))
       req(!is.null(path_choices()))
+      
+      if (input$show_pathway_id){
+        choices <- choices()
+      } else {
+        choices <- path_choices()
+      }
 
       selectInput(
         inputId = ns("sig_pathways"),
         label = "Select a significant pathway:",
-        choices = path_choices()
+        choices = choices
       )
     })
 
@@ -679,6 +714,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       
       if (input$kegg_sig_only && !is.null(gene_sets())) {
         choices <- names(gene_sets()$gene_lists)
+      } else if (input$show_pathway_id){
+        choices <- choices()
       } else {
         choices <- path_choices()
       }
@@ -955,17 +992,20 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       })
     })
     
+    # Analysis methods for dynamic file names
+    method_list <- reactive({
+      list("GAGE",
+           "PGSEA",
+           "GSEA",
+           "PGSEA",
+           "ReactomePA",
+           "GSVA",
+           "ssGSEA",
+           "PLAGE")
+    })
+    
     res_pathway <- reactive({
       req(!is.null(input$pathway_method))
-      
-      method_list <- list("GAGE",
-                          "PGSEA",
-                          "GSEA",
-                          "PGSEA",
-                          "ReactomePA",
-                          "GSVA",
-                          "ssGSEA",
-                          "PLAGE")
       
       res <- switch(
         as.numeric(input$pathway_method),
@@ -974,7 +1014,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           pathway_data_transform(
             data = gage_pathway_data(),
             contrast = input$select_contrast,
-            method = method_list[as.numeric(input$pathway_method)],
+            method = method_list()[as.numeric(input$pathway_method)],
             genes = gene_sets(),
             org = pre_process$select_org(),
             path_id = input$show_pathway_id,
@@ -987,7 +1027,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           pathway_data_transform(
             data = pgsea_plot_data(),
             contrast = input$select_contrast,
-            method = method_list[as.numeric(input$pathway_method)],
+            method = method_list()[as.numeric(input$pathway_method)],
             genes = gene_sets(),
             org = pre_process$select_org(),
             path_id = input$show_pathway_id,
@@ -1001,7 +1041,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           pathway_data_transform(
             data = fgsea_pathway_data(),
             contrast = input$select_contrast,
-            method = method_list[as.numeric(input$pathway_method)],
+            method = method_list()[as.numeric(input$pathway_method)],
             genes = gene_sets(),
             org = pre_process$select_org(),
             path_id = input$show_pathway_id,
@@ -1014,7 +1054,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           pathway_data_transform(
             data = pgsea_plot_all_samples_data(),
             contrast = input$select_contrast,
-            method = method_list[as.numeric(input$pathway_method)],
+            method = method_list()[as.numeric(input$pathway_method)],
             genes = gene_sets(),
             org = pre_process$select_org(),
             path_id = input$show_pathway_id,
@@ -1032,7 +1072,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           pathway_data_transform(
             data = gsva_plot_data(),
             contrast = input$select_contrast,
-            method = method_list[as.numeric(input$pathway_method)],
+            method = method_list()[as.numeric(input$pathway_method)],
             genes = gene_sets(),
             org = pre_process$select_org(),
             path_id = input$show_pathway_id,
@@ -1045,7 +1085,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           pathway_data_transform(
             data = gsva_plot_data(),
             contrast = input$select_contrast,
-            method = method_list[as.numeric(input$pathway_method)],
+            method = method_list()[as.numeric(input$pathway_method)],
             genes = gene_sets(),
             org = pre_process$select_org(),
             path_id = input$show_pathway_id,
@@ -1058,7 +1098,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           pathway_data_transform(
             data = gsva_plot_data(),
             contrast = input$select_contrast,
-            method = method_list[as.numeric(input$pathway_method)],
+            method = method_list()[as.numeric(input$pathway_method)],
             genes = gene_sets(),
             org = pre_process$select_org(),
             path_id = input$show_pathway_id,
@@ -1234,6 +1274,39 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       select_gene_id = reactive({
         pre_process$select_gene_id()
       })
+    )
+    
+    # Download handler for heatmap data
+    output$download_heat_data <- downloadHandler(
+      filename = function() {
+        req(!is.null(selected_pathway_data()))
+        req(!is.null(path_choices()))
+        
+        x <- paste0(
+          names(path_choices()[path_choices() == input$sig_pathways]), 
+          "_Heatmap_Data.csv")
+        gsub(" ", "_", x)
+      },
+      content = function(file) {
+        req(!is.null(selected_pathway_data()))
+        req(!is.null(path_choices()))
+        
+        df <- selected_pathway_data()
+        # Center the data to match heatmap scale
+        df <- df - rowMeans(df, na.rm = TRUE)
+        # Convert row names to gene symbols, keep original ID
+        df <- data.frame(
+          Gene_ID = rownames(df),
+          rowname_id_swap(
+            data_matrix = df,
+            all_gene_names = pre_process$all_gene_names(),
+            select_gene_id = pre_process$select_gene_id()
+          )
+        )
+        rownames(df) <- gsub(" ", "", rownames(df)) 
+        
+        write.csv(df, file)
+      }
     )
 
     output$kegg_image <- renderImage(
