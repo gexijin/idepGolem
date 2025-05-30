@@ -4,7 +4,7 @@
 \alias{pathway_data_transform}
 \title{Transform Pathway Data}
 \usage{
-pathway_data_transform(data, contrast, method, genes, org, path_id, go)
+pathway_data_transform(data, contrast, method, genes, org, path_id, go, deg)
 }
 \arguments{
 \item{data}{Pathway data from selected method}
@@ -20,6 +20,8 @@ pathway_data_transform(data, contrast, method, genes, org, path_id, go)
 \item{path_id}{Show pathway ID toggle}
 
 \item{go}{Selected pathway database}
+
+\item{deg}{Up/Down-regulation results from DEG1}
 }
 \value{
 Data frame with hyperlinks and urls for pathways
