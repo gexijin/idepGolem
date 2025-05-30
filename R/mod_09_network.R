@@ -57,7 +57,7 @@ mod_09_network_ui <- function(id) {
         ),
         htmlOutput(outputId = ns("list_wgcna_modules")),
         div(
-          style = "display: flex; gap: 10px;",
+          style = "display: flex; flex-wrap: wrap; gap: 10px;",
           downloadButton(
             outputId = ns("download_all_WGCNA_module"),
             "All modules"
@@ -231,7 +231,7 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
 
       prepare_module_csv_filter(
         module_data = module_csv_data(), 
-        module = input$select_wgcna_module
+        module_select = input$select_wgcna_module
       )
     })
     output$download_selected_WGCNA_module <- downloadHandler(
