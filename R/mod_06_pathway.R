@@ -607,7 +607,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     path_choices <- reactive({
       req(!is.null(choices()))
       setNames(choices(),
-               sub("^Path:hsa\\d+\\s*", "", choices()))
+               sub("^Path:[a-zA-Z]{3}\\d+\\s*", "", choices()))
     })
     
     # Get gene list data
@@ -796,7 +796,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           req(input$pathway_method == 1)
           
           if(ncol(res_pathway()) > 4) {
-            res_pathway()[c(1,7,4:6)]
+            res_pathway()[c(1,10,4,6:9)]
           } else {
             res_pathway()
           }
@@ -1018,7 +1018,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
             genes = gene_sets(),
             org = pre_process$select_org(),
             path_id = input$show_pathway_id,
-            go = input$select_go
+            go = input$select_go,
+            deg = as.data.frame(deg$limma()$results)
           )
         },
         { 
@@ -1031,7 +1032,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
             genes = gene_sets(),
             org = pre_process$select_org(),
             path_id = input$show_pathway_id,
-            go = input$select_go
+            go = input$select_go,
+            deg = as.data.frame(deg$limma()$results)
           )
 
         },
@@ -1045,7 +1047,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
             genes = gene_sets(),
             org = pre_process$select_org(),
             path_id = input$show_pathway_id,
-            go = input$select_go
+            go = input$select_go,
+            deg = as.data.frame(deg$limma()$results)
           )
         },
         {
@@ -1058,7 +1061,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
             genes = gene_sets(),
             org = pre_process$select_org(),
             path_id = input$show_pathway_id,
-            go = input$select_go
+            go = input$select_go,
+            deg = as.data.frame(deg$limma()$results)
           ) 
         },
         {
@@ -1076,7 +1080,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
             genes = gene_sets(),
             org = pre_process$select_org(),
             path_id = input$show_pathway_id,
-            go = input$select_go
+            go = input$select_go,
+            deg = as.data.frame(deg$limma()$results)
           )
         },
         {
@@ -1089,7 +1094,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
             genes = gene_sets(),
             org = pre_process$select_org(),
             path_id = input$show_pathway_id,
-            go = input$select_go
+            go = input$select_go,
+            deg = as.data.frame(deg$limma()$results)
           )
         },
         {
@@ -1102,7 +1108,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
             genes = gene_sets(),
             org = pre_process$select_org(),
             path_id = input$show_pathway_id,
-            go = input$select_go
+            go = input$select_go,
+            deg = as.data.frame(deg$limma()$results)
           )
         }
       )
@@ -1115,7 +1122,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         req(!is.null(fgsea_pathway_data()))
         req(input$pathway_method == 3)
         if(ncol(res_pathway()) > 4) {
-          res_pathway()[c(1,7,4:6)]
+          res_pathway()[c(1,10,4,6:9)]
         } else {
           res_pathway()
         }

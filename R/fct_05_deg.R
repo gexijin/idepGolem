@@ -721,7 +721,6 @@ deg_deseq2 <- function(raw_counts,
     colData = col_data,
     design = ~groups
   )
-
   # no factors selected
   if (is.null(model_factors)) {
     dds <- DESeq2::DESeq(dds)
@@ -2186,7 +2185,7 @@ sig_genes_plot <- function(results, plot_colors) {
   stats <- rbind(Up, Down)
   gg <- reshape2::melt(stats)
   colnames(gg) <- c("Regulation", "Comparisons", "Genes")
-
+  
   plot_bar <- ggplot2::ggplot(
     gg,
     ggplot2::aes(x = Comparisons, y = Genes, fill = Regulation)
