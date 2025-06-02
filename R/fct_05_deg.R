@@ -713,7 +713,6 @@ deg_deseq2 <- function(raw_counts,
 
   comparison_names <- comparisons
 
-
   # Run DESeq2 -----------------------------------------------------------
   # Set up the DESeqDataSet Object and run the DESeq pipeline
   dds <- DESeq2::DESeqDataSetFromMatrix(
@@ -829,7 +828,7 @@ deg_deseq2 <- function(raw_counts,
 
     # Base model
     deseq2_object <- paste(
-      "dds <- DESeq2::DESeqDataSetFromMatrix(\n",
+      "DESeq2::DESeqDataSetFromMatrix(\n",
       "  countData = raw_counts,\n",
       "  colData = col_data,\n",
       "  design = ~ ",
@@ -859,8 +858,17 @@ deg_deseq2 <- function(raw_counts,
     # End the model
     deseq2_object <- paste(deseq2_object, "\n)")
 
-    eval(parse(text = deseq2_object))
-
+    # Evaluate DESeq2 object, catch errors
+    dds <- tryCatch(
+      eval(parse(text = deseq2_object)),
+      error = function(e) {
+        paste("Error in DESeq2 analysis:", e$message)
+      })
+    # Return if dds contains an error message
+    if(class(dds) == "character"){
+      return(dds)
+    }
+    
     dds <- DESeq2::DESeq(dds) # main function
 
     expr <- paste0(
