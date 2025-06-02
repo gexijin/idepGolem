@@ -108,6 +108,11 @@ mod_07_genome_ui <- function(id) {
           label = "FDR cutoff for window",
           selected = 0.0001,
           choices = c(0.1, 0.05, 0.01, 0.001, 0.0001, 0.00001)
+        ),
+        actionButton(
+          inputId = ns("chr_data_popup"),
+          label = "Download Plot Data",
+          icon = icon("download")
         )
       ),
       mainPanel(
@@ -208,9 +213,9 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data) {
     output$genome_plotly <- plotly::renderPlotly({
       req(!is.null(deg$limma()))
       req(!is.null(pre_process$all_gene_info()))
+      req(!is.null(chr_data()))
       req(
         input$select_contrast,
-        input$ignore_non_coding,
         input$limma_p_val_viz,
         input$limma_fc_viz,
         input$ma_window_size,
@@ -223,17 +228,116 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data) {
           limma = deg$limma(),
           select_contrast = input$select_contrast,
           all_gene_info = pre_process$all_gene_info(),
-          ignore_non_coding = input$ignore_non_coding,
-          limma_p_val_viz = input$limma_p_val_viz,
-          limma_fc_viz = input$limma_fc_viz,
           label_gene_symbol = input$label_gene_symbol,
           ma_window_size = input$ma_window_size,
           ma_window_steps = input$ma_window_steps,
           ch_region_p_val = input$ch_region_p_val,
           hide_patches = input$hide_patches,
-          hide_chr = input$hide_chr
+          hide_chr = input$hide_chr,
+          x = chr_data()$chr_data,
+          x0 = chr_data()$other,
+          moving_average = chr_data()$enriched_regions,
+          ch_length_table = chr_data()$ch_length
         )
       })
+    })
+    
+    # Popup for chromosome data download options
+    observeEvent(input$chr_data_popup, {
+      req(!is.null(chr_data()))
+      showModal(
+        modalDialog(
+          title = "Chromosome Data Options",
+          # Dataset selection
+          selectInput(
+            inputId = ns("data_type"),
+            label = "Select Dataset",
+            choices = c("Enriched Genes" = "enriched_genes",
+                        "Chromosome Data" = "chr_data",
+                        "Enriched Region Boundaries" = "enriched_regions")
+          ),
+          # Chromosome data filtering options
+          conditionalPanel(
+            condition = "input.data_type == 'chr_data'",
+            # Gene regulation selection
+            selectInput(
+              inputId = ns("gene_regulation"),
+              label = "Select Gene Regulation",
+              choices = c("All", "Up", "Down"),
+              selected = "All"
+            ),
+            # Chromosome selection
+            selectizeInput(
+              inputId = ns("chr_select"),
+              label = "Select Chromosomes",
+              multiple = TRUE,
+              choices = "All",
+              selected = "All"
+            ),
+            ns = ns
+          ),
+          downloadButton(
+            ns("download_chr_data"), 
+            "Download Data"
+            ),
+          easyClose = TRUE,
+          size = "s",
+          footer = modalButton("Close")
+        )
+      )
+    })
+    
+    # Get chromosome data using user-entered parameters
+    chr_data <- reactive({
+      req(!is.null(deg$limma()))
+      req(!is.null(input$select_contrast))
+      req(!is.null(pre_process$all_gene_info()))
+
+      chromosome_data(
+        limma = deg$limma(),
+        select_contrast = input$select_contrast,
+        all_gene_info = pre_process$all_gene_info(),
+        ignore_non_coding = input$ignore_non_coding,
+        limma_p_val_viz = input$limma_p_val_viz,
+        limma_fc_viz = input$limma_fc_viz,
+        ma_window_size = input$ma_window_size,
+        ma_window_steps = input$ma_window_steps,
+        ch_region_p_val = input$ch_region_p_val,
+        hide_patches = input$hide_patches,
+        hide_chr = input$hide_chr
+      )
+    })
+    
+    # Download config for data file download
+    output$download_chr_data <- downloadHandler(
+      filename = function(){
+        req(!is.null(input$data_type))
+        paste0(input$data_type, ".csv") #dynamic file name
+      },
+      content = function(file){
+        req(!is.null(chr_data()))
+        req(!is.null(input$gene_regulation))
+        req(!is.null(input$chr_select))
+        
+        df <- chr_data()
+        # Filter chromosome data
+        if (input$data_type == "chr_data"){
+          df$chr_data <- chr_filter(chr_data = df$chr_data,
+                                    regulation = input$gene_regulation,
+                                    chr_select = input$chr_select)
+        }
+        write.csv(df[[input$data_type]], file)
+      }
+    )
+    
+    observeEvent(input$chr_data_popup, {
+      # Update chromosome selection dynamically
+      updateSelectizeInput(
+        inputId = "chr_select",
+        session = session,
+        choices = c(unique(chr_data()$chr_data$chromosome_name), "All"),
+        selected = "All"
+      )
     })
   })
 }
