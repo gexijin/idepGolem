@@ -893,7 +893,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         get_pgsea_plot_data(
           my_range = c(input$min_set_size, input$max_set_size),
           data = pre_process$data(),
-          select_contrast = input$select_contrast,
+          contrast_samples = contrast_samples(),
           gene_sets = gene_sets()$gene_lists,
           sample_info = pre_process$sample_info(),
           select_factors_model = deg$select_factors_model(),
