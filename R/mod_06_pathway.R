@@ -195,7 +195,8 @@ mod_06_pathway_ui <- function(id) {
             ),
             actionButton(
               inputId = ns("gene_list_popup"),
-              label = "Gene List"
+              label = "Gene List",
+              icon = icon("download")
             ),
             tippy::tippy_this(
               ns("gene_list_popup"),
