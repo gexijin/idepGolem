@@ -711,7 +711,7 @@ deg_deseq2 <- function(raw_counts,
     comparisons <- selected_comparisons
   }
 
-  comparison_names <- comparisons
+  comparison_names <- gsub("\\.", "-", comparisons)
 
 
   # Run DESeq2 -----------------------------------------------------------
@@ -1124,10 +1124,7 @@ deg_deseq2 <- function(raw_counts,
     all_calls <- as.matrix(
       result_first[, grep("calls", colnames(result_first)), drop = FALSE]
     )
-    colnames(all_calls) <- gsub("___.*", "", colnames(all_calls))
-    # Note that samples names should have no "."
-    colnames(all_calls) <- gsub("\\.", "-", colnames(all_calls))
-    colnames(all_calls) <- gsub("^I-", "I:", colnames(all_calls))
+    colnames(all_calls) <- comparison_names
   }
 
   return(list(
