@@ -123,15 +123,18 @@ mod_09_network_ui <- function(id) {
             ),
             br(),
             plotOutput(outputId = ns("module_network")),
-            downloadButton(outputId = ns("download_module_network"), "Network file"),
-            tippy::tippy_this(
-              ns("download_module_network"),
-              "This file can be imported to CytoScape or VisANT for further analysis.",
-              theme = "light-border"
-            ),
-            #ottoPlots::mod_download_figure_ui(
-            #  id = ns("dl_network_plot")
-            #)
+            div(
+              style = "display: flex; flex-wrap: wrap; gap: 5px",
+              downloadButton(outputId = ns("download_module_network"), "Network file"),
+              tippy::tippy_this(
+                ns("download_module_network"),
+                "This file can be imported to CytoScape or VisANT for further analysis.",
+                theme = "light-border"
+              ),
+              ottoPlots::mod_download_figure_ui(
+                id = ns("dl_network_plot")
+              )
+            )
           ),
           tabPanel(
             "Module Plot",
@@ -139,6 +142,10 @@ mod_09_network_ui <- function(id) {
               outputId = ns("module_plot"),
               width = "100%",
               height = "500px"
+            ),
+            downloadButton(
+              outputId = ns("dl_module_plot"),
+              label = "Module Plot"
             )
           ),
           tabPanel(
@@ -183,7 +190,7 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
 
     # Interactive heatmap environment
     network_env <- new.env()
-
+    
     output$list_wgcna_modules <- renderUI({
       req(!is.null(wgcna()))
       module_list <- get_wgcna_modules(wgcna = wgcna())
@@ -247,6 +254,15 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
       req(!is.null(wgcna()))
       get_module_plot(wgcna())
     })
+    
+    output$dl_module_plot <- downloadHandler(
+      filename = "module_dendrogram.png", 
+      content = function(file) {
+        req(!is.null(wgcna()))
+        png(file, res = 360, width = 10, height = 6, units = "in")
+        get_module_plot(wgcna())
+        dev.off()
+    })
 
     network <- reactiveValues(network_plot = NULL)
 
@@ -307,19 +323,20 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
     output$module_network <- renderPlot({
       req(!is.null(input$select_wgcna_module))
       req(!is.null(wgcna()))
-      network$network_plot()
+      network$network_plot
     })
 
-    # not working
-    #dl_network_plot <- ottoPlots::mod_download_figure_server(
-    #  id = "dl_network_plot",
-    #  filename = "module_network",
-    #  figure = reactive({
-    #    network$network_plot
-    #  })
-    #  ,
-    #  label = ""
-    #)
+    dl_network_plot <- ottoPlots::mod_download_figure_server(
+     id = "dl_network_plot",
+     filename = "module_network",
+     figure = reactive({
+       network$network_plot
+     })
+     ,
+     label = "Network plot",
+     width = 10,
+     height = 6
+    )
 
     network_query <- reactive({
       req(!is.null(input$select_wgcna_module))
