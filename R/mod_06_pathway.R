@@ -606,8 +606,14 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     # Trim pathway choices to no ID
     path_choices <- reactive({
       req(!is.null(choices()))
-      setNames(choices(),
-               sub("^Path:hsa\\d+\\s*", "", choices()))
+      if (input$select_go %in% c("GOBP", "GOCC", "GOMF", "KEGG") && 
+          !input$show_pathway_id && 
+          input$pathway_method != 5){
+        setNames(choices(),
+                 proper(sub("^[^0-9]*\\d+\\s*", "", choices())))
+      } else {
+        choices()
+      }
     })
     
     # Get gene list data
@@ -694,17 +700,11 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     output$list_sig_pathways <- renderUI({
       req(!is.null(input$pathway_method))
       req(!is.null(path_choices()))
-      
-      if (input$show_pathway_id){
-        choices <- choices()
-      } else {
-        choices <- path_choices()
-      }
 
       selectInput(
         inputId = ns("sig_pathways"),
         label = "Select a significant pathway:",
-        choices = choices
+        choices = path_choices()
       )
     })
 
@@ -714,8 +714,6 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       
       if (input$kegg_sig_only && !is.null(gene_sets())) {
         choices <- names(gene_sets()$gene_lists)
-      } else if (input$show_pathway_id){
-        choices <- choices()
       } else {
         choices <- path_choices()
       }
