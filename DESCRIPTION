@@ -29,6 +29,7 @@ Imports:
     GetoptLong,
     ggalt,
     ggplot2,
+    ggraph,
     golem (>= 0.3.1),
     graphics,
     grDevices,

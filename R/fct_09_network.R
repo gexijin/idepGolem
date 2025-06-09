@@ -250,11 +250,13 @@ get_network_plot <- function(adjacency_matrix, edge_threshold) {
   ggraph_obj <- ggraph::ggraph(graph, layout = "fr") +
     ggraph::geom_edge_link(edge_colour = "darkgrey") +
     ggraph::geom_node_point(shape = 21, 
-                            size = 3, 
+                            size = 3.5, 
                             fill = "gold", 
                             color = "black",
                             stroke = 0.5) +
-    ggraph::geom_node_text(ggplot2::aes(label = name), repel = TRUE, size = 4)+
+    ggraph::geom_node_text(ggplot2::aes(label = name), 
+                           repel = TRUE, 
+                           size = 4.5)+
     ggplot2::theme_void()
   return(ggraph_obj)
 }
