@@ -4,12 +4,12 @@
 \alias{prepare_module_csv_filter}
 \title{prepare_module_csv_filter}
 \usage{
-prepare_module_csv_filter(module_data, module)
+prepare_module_csv_filter(module_data, module_select)
 }
 \arguments{
-\item{module}{The module to create a plot of hte top genes for,}
-
 \item{wgcna}{List returned from the \code{get_wgcna}}
+
+\item{module}{The module to create a plot of hte top genes for,}
 }
 \value{
 A dataframe containing for csv file
