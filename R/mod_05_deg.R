@@ -533,8 +533,9 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       )
     )
 
-    # Observe submit button ------
     deg <- reactiveValues(limma = NULL)
+    warning_type <- reactiveVal(NULL)
+    # Observe submit button ------
     observeEvent(
       input$submit_model_button,
       {
@@ -573,16 +574,62 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
             independent_filtering = independent_filtering,
             descr = pre_process$descr()
           )
-
-          updateTabsetPanel(
-            session = session,
-            inputId = "step_1",
-            selected = "results"
-          )
+          
+          # Check for returned errors
+          if (class(deg$limma) == "character"){
+            if (grepl("the model matrix is not full rank", deg$limma)){
+              warning_type("FullRankError")
+              deg$limma <- NULL
+            } else {
+              warning_type("Unknown")
+              deg$limma <- NULL
+            }
+          } else{
+            updateTabsetPanel(
+              session = session,
+              inputId = "step_1",
+              selected = "results"
+            )
+          }
         })
       }
     )
 
+    # Dynamic modal for different error types in DEG1
+    observe({
+      req(!is.null(warning_type()))
+        modal_title <- switch(
+          warning_type(),
+          "FullRankError" = "Please Check Experiment Design",
+          "Unknown Error" = "Analysis Error Occurred"
+        )
+        modal_text <- switch(
+          warning_type(),
+          "FullRankError" = paste(
+            'The model matrix generated for the analysis is not 
+            "full rank." This is often due to a flaw in the experimental 
+            design submitted. Check that all combinations of design factors are 
+            accounted for and have entries in your data.'
+          ),
+          "UnknownError" = paste(
+            "An unexpected error occurred during analysis. 
+             Please check your inputs and try again. If the error persists, 
+             contact the admin")
+        )
+        showModal(
+          modalDialog(
+            title = modal_title,
+            modal_text,
+            easyClose = TRUE,
+            footer = modalButton("Close"),
+            size = "s"
+          ),
+          session = session
+        )
+        
+        warning_type(NULL)
+    })
+    
     deg_info <- reactive({
       req(!is.null(deg$limma$results))
 
