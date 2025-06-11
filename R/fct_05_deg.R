@@ -711,8 +711,7 @@ deg_deseq2 <- function(raw_counts,
     comparisons <- selected_comparisons
   }
 
-  comparison_names <- comparisons
-
+  comparison_names <- gsub("\\.", "-", comparisons)
 
   # Run DESeq2 -----------------------------------------------------------
   # Set up the DESeqDataSet Object and run the DESeq pipeline
@@ -721,7 +720,6 @@ deg_deseq2 <- function(raw_counts,
     colData = col_data,
     design = ~groups
   )
-
   # no factors selected
   if (is.null(model_factors)) {
     dds <- DESeq2::DESeq(dds)
@@ -829,7 +827,7 @@ deg_deseq2 <- function(raw_counts,
 
     # Base model
     deseq2_object <- paste(
-      "dds <- DESeq2::DESeqDataSetFromMatrix(\n",
+      "DESeq2::DESeqDataSetFromMatrix(\n",
       "  countData = raw_counts,\n",
       "  colData = col_data,\n",
       "  design = ~ ",
@@ -859,8 +857,17 @@ deg_deseq2 <- function(raw_counts,
     # End the model
     deseq2_object <- paste(deseq2_object, "\n)")
 
-    eval(parse(text = deseq2_object))
-
+    # Evaluate DESeq2 object, catch errors
+    dds <- tryCatch(
+      eval(parse(text = deseq2_object)),
+      error = function(e) {
+        paste("Error in DESeq2 analysis:", e$message)
+      })
+    # Return if dds contains an error message
+    if(class(dds) == "character"){
+      return(dds)
+    }
+    
     dds <- DESeq2::DESeq(dds) # main function
 
     expr <- paste0(
@@ -1102,6 +1109,7 @@ deg_deseq2 <- function(raw_counts,
       result_first <- selected
       pp <- 1
       top_genes[[1]] <- selected[, c(2, 6)] # fold and FDR in columns 2 & 6
+      baseMean <- selected[, 1, drop = FALSE]
       names(top_genes)[1] <- comparison_names[kk]
     } else {
       result_first <- merge(result_first, selected, by = "row.names")
@@ -1124,26 +1132,26 @@ deg_deseq2 <- function(raw_counts,
     all_calls <- as.matrix(
       result_first[, grep("calls", colnames(result_first)), drop = FALSE]
     )
-    colnames(all_calls) <- gsub("___.*", "", colnames(all_calls))
-    # Note that samples names should have no "."
-    colnames(all_calls) <- gsub("\\.", "-", colnames(all_calls))
-    colnames(all_calls) <- gsub("^I-", "I:", colnames(all_calls))
+    colnames(all_calls) <- comparison_names
   }
 
-  return(list(
-    results = all_calls,
-    comparisons = comparison_names,
-    exp_type = exp_type,
-    expr = expr,
-    top_genes = top_genes,
-    description = paste0(
-      descr,
-      " Genes are classified as differly expressed based on having a p-value below ",
-      max_p_limma,
-      " and log fold change above ",
-      min_fc_limma, "."
+  return(
+    list(
+      results = all_calls,
+      comparisons = comparison_names,
+      exp_type = exp_type,
+      expr = expr,
+      top_genes = top_genes,
+      description = paste0(
+        descr,
+        " Genes are classified as differly expressed based on having a p-value below ",
+        max_p_limma,
+        " and log fold change above ",
+        min_fc_limma, "."
+      ),
+      baseMean = baseMean
     )
-  ))
+  )
 }
 
 
@@ -1198,7 +1206,6 @@ deg_limma <- function(processed_data,
 
   top_genes <- list()
   limma_trend <- FALSE
-
   # Build DESeq2 commands
   expr <- paste0(
     "# R script for differential expression using the limma package\n",
@@ -2186,7 +2193,7 @@ sig_genes_plot <- function(results, plot_colors) {
   stats <- rbind(Up, Down)
   gg <- reshape2::melt(stats)
   colnames(gg) <- c("Regulation", "Comparisons", "Genes")
-
+  
   plot_bar <- ggplot2::ggplot(
     gg,
     ggplot2::aes(x = Comparisons, y = Genes, fill = Regulation)
@@ -2928,15 +2935,34 @@ deg_information <- function(limma_value,
                             gene_names,
                             processed_data,
                             no_id_conversion = FALSE) {
-  if (no_id_conversion) {
-    # get the first comparison level
+  # get the first comparison level
+  if(is.null(limma_value$baseMean)){
     degs_data <- limma_value$top_genes[[1]]
+    colnames(degs_data) <- c(
+      (paste(limma_value$comparisons[[1]], "log2FC", sep = "_")),
+      (paste(limma_value$comparisons[[1]], "adjPval", sep = "_"))
+    )
+  } else {
+    degs_data <- data.frame(limma_value$baseMean,
+                            limma_value$top_genes[[1]])
+    colnames(degs_data) <- c(
+      paste("baseMean"),
+      (paste(limma_value$comparisons[[1]], "log2FC", sep = "_")),
+      (paste(limma_value$comparisons[[1]], "adjPval", sep = "_"))
+    )
+  }
+  
+  if (no_id_conversion) {
     degs_data$User_ID <- rownames(degs_data)
 
     # get the additional comparison levels if they exists
     if (length(names(limma_value$top_genes)) > 1) {
       for (i in 2:length(names(limma_value$top_genes))) {
         temp <- limma_value$top_genes[[i]]
+        colnames(temp) <- c(
+          (paste(limma_value$comparisons[[i]], "log2FC", sep = "_")),
+          (paste(limma_value$comparisons[[i]], "adjPval", sep = "_"))
+        )
         temp$User_ID <- rownames(temp)
         degs_data <- dplyr::inner_join(degs_data, temp, by = "User_ID")
       }
@@ -2945,20 +2971,10 @@ deg_information <- function(limma_value,
     # connect to gene symbols and original user id
     processed_data <- as.data.frame(processed_data)
     processed_data$User_ID <- rownames(processed_data)
-
     degs_data <- dplyr::full_join(degs_data, gene_names, by = "User_ID")
     degs_data <- dplyr::full_join(degs_data, processed_data, by = "User_ID")
 
-
-    degs_data <- degs_data |>
-      dplyr::relocate(User_ID)
   } else {
-    # get the first comparison level
-    degs_data <- limma_value$top_genes[[1]]
-    colnames(degs_data) <- c(
-      (paste(limma_value$comparisons[[1]], "log2FC", sep = "_")),
-      (paste(limma_value$comparisons[[1]], "adjPval", sep = "_"))
-    )
     degs_data$ensembl_ID <- rownames(degs_data)
 
     # get the additional comparison levels if they exists
@@ -2973,20 +2989,19 @@ deg_information <- function(limma_value,
         degs_data <- dplyr::inner_join(degs_data, temp, by = "ensembl_ID")
       }
     }
-
     # connect to gene symbols and original user id
     processed_data <- as.data.frame(processed_data)
     processed_data$ensembl_ID <- rownames(processed_data)
     degs_data$"Processed data:" <- "" # add a empty column
     degs_data <- dplyr::full_join(degs_data, gene_names, by = "ensembl_ID")
     degs_data <- dplyr::full_join(degs_data, processed_data, by = "ensembl_ID")
-
-
-    degs_data <- degs_data |>
-      dplyr::relocate(User_ID) |>
-      dplyr::relocate(ensembl_ID) |>
-      dplyr::relocate(symbol)
   }
+  
+  degs_data <- degs_data |>
+    dplyr::relocate(User_ID) |>
+    dplyr::relocate(ensembl_ID) |>
+    dplyr::relocate(symbol)
+  
   return(list(degs_data, limma_value$Results))
 }
 

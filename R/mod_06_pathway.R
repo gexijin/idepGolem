@@ -195,7 +195,8 @@ mod_06_pathway_ui <- function(id) {
             ),
             actionButton(
               inputId = ns("gene_list_popup"),
-              label = "Gene List"
+              label = "Gene List",
+              icon = icon("download")
             ),
             tippy::tippy_this(
               ns("gene_list_popup"),
@@ -606,6 +607,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     # Trim pathway choices to no ID
     path_choices <- reactive({
       req(!is.null(choices()))
+
       if (input$select_go %in% c("GOBP", "GOCC", "GOMF", "KEGG") && 
           !input$show_pathway_id && 
           input$pathway_method != 5){
@@ -614,6 +616,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       } else {
         choices()
       }
+
     })
     
     # Get gene list data
@@ -794,7 +797,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           req(input$pathway_method == 1)
           
           if(ncol(res_pathway()) > 4) {
-            res_pathway()[c(1,7,4:6)]
+            res_pathway()[c(1,10,4,6:9)]
           } else {
             res_pathway()
           }
@@ -1016,7 +1019,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
             genes = gene_sets(),
             org = pre_process$select_org(),
             path_id = input$show_pathway_id,
-            go = input$select_go
+            go = input$select_go,
+            deg = as.data.frame(deg$limma()$results)
           )
         },
         { 
@@ -1029,7 +1033,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
             genes = gene_sets(),
             org = pre_process$select_org(),
             path_id = input$show_pathway_id,
-            go = input$select_go
+            go = input$select_go,
+            deg = as.data.frame(deg$limma()$results)
           )
 
         },
@@ -1043,7 +1048,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
             genes = gene_sets(),
             org = pre_process$select_org(),
             path_id = input$show_pathway_id,
-            go = input$select_go
+            go = input$select_go,
+            deg = as.data.frame(deg$limma()$results)
           )
         },
         {
@@ -1056,7 +1062,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
             genes = gene_sets(),
             org = pre_process$select_org(),
             path_id = input$show_pathway_id,
-            go = input$select_go
+            go = input$select_go,
+            deg = as.data.frame(deg$limma()$results)
           ) 
         },
         {
@@ -1074,7 +1081,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
             genes = gene_sets(),
             org = pre_process$select_org(),
             path_id = input$show_pathway_id,
-            go = input$select_go
+            go = input$select_go,
+            deg = as.data.frame(deg$limma()$results)
           )
         },
         {
@@ -1087,7 +1095,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
             genes = gene_sets(),
             org = pre_process$select_org(),
             path_id = input$show_pathway_id,
-            go = input$select_go
+            go = input$select_go,
+            deg = as.data.frame(deg$limma()$results)
           )
         },
         {
@@ -1100,7 +1109,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
             genes = gene_sets(),
             org = pre_process$select_org(),
             path_id = input$show_pathway_id,
-            go = input$select_go
+            go = input$select_go,
+            deg = as.data.frame(deg$limma()$results)
           )
         }
       )
@@ -1113,7 +1123,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         req(!is.null(fgsea_pathway_data()))
         req(input$pathway_method == 3)
         if(ncol(res_pathway()) > 4) {
-          res_pathway()[c(1,7,4:6)]
+          res_pathway()[c(1,10,4,6:9)]
         } else {
           res_pathway()
         }
