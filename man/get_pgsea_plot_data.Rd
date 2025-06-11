@@ -7,7 +7,7 @@
 get_pgsea_plot_data(
   my_range,
   data,
-  select_contrast,
+  contrast_samples,
   gene_sets,
   sample_info,
   select_factors_model,
@@ -22,9 +22,8 @@ get_pgsea_plot_data(
 \item{data}{Matrix of gene data that has been through
 \code{\link{pre_process}()}}
 
-\item{select_contrast}{String designating the comparison from DEG analysis to
-filter for the significant genes. See the 'comparison' element from the list
-returned from \code{\link{limma_value}()} for options.}
+\item{contrast_samples}{Sample columns that correspond to the
+selected comparison}
 
 \item{gene_sets}{List of vectors with each vector being the
 set of genes that correspond to a particular pathway in

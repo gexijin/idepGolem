@@ -994,9 +994,8 @@ pgsea_plot_all <- function(go,
 #' @param my_range Vector of the (min_set_size, max_set_size)
 #' @param data Matrix of gene data that has been through
 #'  \code{\link{pre_process}()}
-#' @param select_contrast String designating the comparison from DEG analysis to
-#'  filter for the significant genes. See the 'comparison' element from the list
-#'  returned from \code{\link{limma_value}()} for options.
+#' @param contrast_samples Sample columns that correspond to the
+#'  selected comparison
 #' @param gene_sets List of vectors with each vector being the
 #'  set of genes that correspond to a particular pathway in
 #'  the database. See list returned from \code{\link{read_gene_sets}()}
@@ -1019,46 +1018,14 @@ pgsea_plot_all <- function(go,
 #' @family pathway functions
 get_pgsea_plot_data <- function(my_range,
                                 data,
-                                select_contrast,
+                                contrast_samples,
                                 gene_sets,
                                 sample_info,
                                 select_factors_model,
                                 select_model_comprions,
                                 pathway_p_val_cutoff,
                                 n_pathway_show) {
-  # Find sample related to the comparison
-  iz <- match(detect_groups(colnames(data)), unlist(strsplit(select_contrast, "-")))
-  iz <- which(!is.na(iz))
-
-  if (!is.null(sample_info) & !is.null(select_factors_model) & length(select_model_comprions) > 0) {
-    # Strings like: "groups: mutant vs. control"
-    comparisons <- gsub(".*: ", "", select_model_comprions)
-    comparisons <- gsub(" vs\\. ", "-", comparisons)
-    # Corresponding factors
-    factors_vector <- gsub(":.*", "", select_model_comprions)
-    # Selected contrast lookes like: "mutant-control"
-    ik <- match(select_contrast, comparisons)
-    if (is.na(ik)) {
-      iz <- 1:(dim(data)[2])
-    } else {
-      # Interaction term, use all samples
-      # Corresponding factors
-      selected_factor <- factors_vector[ik]
-      iz <- match(sample_info[, selected_factor], unlist(strsplit(select_contrast, "-")))
-      iz <- which(!is.na(iz))
-    }
-  }
-
-  if (grepl("I:", select_contrast)) {
-    # If it is factor design use all samples
-    iz <- 1:(dim(data)[2])
-  }
-  if (is.na(iz)[1] | length(iz) <= 1) {
-    iz <- 1:(dim(data)[2])
-  }
-
-  genes <- data
-  genes <- genes[, iz]
+  genes <- data[, contrast_samples]
 
   subtype <- detect_groups(colnames(genes))
 

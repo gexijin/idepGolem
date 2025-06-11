@@ -607,8 +607,16 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     # Trim pathway choices to no ID
     path_choices <- reactive({
       req(!is.null(choices()))
-      setNames(choices(),
-               sub("^Path:[a-zA-Z]{3}\\d+\\s*", "", choices()))
+
+      if (input$select_go %in% c("GOBP", "GOCC", "GOMF", "KEGG") && 
+          !input$show_pathway_id && 
+          input$pathway_method != 5){
+        setNames(choices(),
+                 proper(sub("^[^0-9]*\\d+\\s*", "", choices())))
+      } else {
+        choices()
+      }
+
     })
     
     # Get gene list data
@@ -695,17 +703,11 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     output$list_sig_pathways <- renderUI({
       req(!is.null(input$pathway_method))
       req(!is.null(path_choices()))
-      
-      if (input$show_pathway_id){
-        choices <- choices()
-      } else {
-        choices <- path_choices()
-      }
 
       selectInput(
         inputId = ns("sig_pathways"),
         label = "Select a significant pathway:",
-        choices = choices
+        choices = path_choices()
       )
     })
 
@@ -715,8 +717,6 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       
       if (input$kegg_sig_only && !is.null(gene_sets())) {
         choices <- names(gene_sets()$gene_lists)
-      } else if (input$show_pathway_id){
-        choices <- choices()
       } else {
         choices <- path_choices()
       }
@@ -894,7 +894,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         get_pgsea_plot_data(
           my_range = c(input$min_set_size, input$max_set_size),
           data = pre_process$data(),
-          select_contrast = input$select_contrast,
+          contrast_samples = contrast_samples(),
           gene_sets = gene_sets()$gene_lists,
           sample_info = pre_process$sample_info(),
           select_factors_model = deg$select_factors_model(),
