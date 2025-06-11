@@ -247,15 +247,18 @@ get_network_plot <- function(adjacency_matrix, edge_threshold) {
   }
   graph <- igraph::graph_from_adjacency_matrix(adjacency_matrix, mode = "undirected")
   # http://www.kateto.net/wp-content/uploads/2016/01/NetSciX_2016_Workshop.pdf
-  net_plot <- function() {
-    plot(
-      graph,
-      vertex.label.color = "black",
-      vertex.label.dist = 3,
-      vertex.size = 7
-    )
-  }
-  return(net_plot)
+  ggraph_obj <- ggraph::ggraph(graph, layout = "fr") +
+    ggraph::geom_edge_link(edge_colour = "darkgrey") +
+    ggraph::geom_node_point(shape = 21, 
+                            size = 3.5, 
+                            fill = "gold", 
+                            color = "black",
+                            stroke = 0.5) +
+    ggraph::geom_node_text(ggplot2::aes(label = name), 
+                           repel = TRUE, 
+                           size = 4.5)+
+    ggplot2::theme_void()
+  return(ggraph_obj)
 }
 
 

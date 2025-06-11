@@ -64,6 +64,7 @@ usethis::use_package("ottoPlots")
 usethis::use_package("ggupset")
 usethis::use_package("purrr")
 usethis::use_package("readxl")
+usethis::use_package("ggraph")
 
 ## Add modules ----
 ## Create a module infrastructure in R/
