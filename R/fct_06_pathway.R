@@ -175,7 +175,7 @@ pgsea_data <- function(processed_data,
   if (length(subtype) < 4 || length(unique(subtype)) < 2 ||
     length(unique(subtype)) == dim(processed_data)[2]) {
     pg_results <- pg_results[order(-apply(pg_results, 1, sd)), ]
-    return(list(pg_data = pg_results[1:top, ], best <- best))
+    return(list(pg_data = pg_results[1:n_pathway_show, ], best <- best))
   }
 
   cat("\nComputing P values using ANOVA\n")
@@ -693,7 +693,6 @@ fgsea_data <- function(select_contrast,
     return(as.data.frame("No gene set found!"))
   }
 
-
   fold <- top_1[, 1]
   names(fold) <- rownames(top_1)
 
@@ -1147,6 +1146,7 @@ get_pgsea_plot_all_samples_data <- function(data,
 #' @param org  Selected org from pre-process step
 #' @param path_id Show pathway ID toggle
 #' @param go Selected pathway database
+#' @param deg Up/Down-regulation results from DEG1
 #'
 #' @return Data frame with hyperlinks and urls for pathways
 #' 
@@ -1158,7 +1158,8 @@ pathway_data_transform <- function(data,
                                    genes,
                                    org,
                                    path_id,
-                                   go){
+                                   go,
+                                   deg){
   
   if (data[1,1] == "No significant pathway found."){
     return(data)
@@ -1189,31 +1190,57 @@ pathway_data_transform <- function(data,
     # add URL
     ix <- match(data[, 2], genes$pathway_info$description)
     
+    paths <- genes$gene_lists[which(names(genes$gene_lists) %in% data[,2])]
+    # Find gene matches in top pathways
+    path_match <- lapply(rownames(deg), function(x) {
+      groups <- names(paths)[sapply(paths, function(vec) x %in% vec)]
+      if (length(groups) > 0) {
+        data.frame(Gene = x, group = groups, stringsAsFactors = FALSE)
+      } else {
+        NULL  # skip this element if no groups matched
+      }
+    })
+    
+    # Combine into one data frame
+    result_df <- do.call(rbind, path_match)
+    deg$Gene <- rownames(deg)
+    counts <- merge(x = result_df, y = deg, by = "Gene", all.x = TRUE)
+    colnames(counts)[3] <- "Expr"
+    # Find Up/Down Gene count
+    counts <- dplyr::group_by(counts, group) |>
+      dplyr::summarize(UpGenes = sum(Expr == 1, na.rm = TRUE),
+                       DownGenes = sum(Expr == -1, na.rm = TRUE),
+                       UnregGenes = sum(Expr == 0, na.rm = TRUE))
+    
+    data2 <- merge(x = data, y = counts, by.x = colnames(data)[2], by.y = "group")
+    # sort by adj.Pval
+    data2 <- data2[match(data[,2], data2[,1]), ]
+    
     # remove pathway ID, but only in Ensembl species
     if (!path_id && org > 0) {
-      data[, 2] <- remove_pathway_id(data[, 2], go)
+      data2[, 1] <- remove_pathway_id(data2[, 1], go)
     }
     
     # Add hypertext to the end of the data
-    data[hypertext_name] <- hyperText(
-      data[, 2],
+    data2[hypertext_name] <- hyperText(
+      data2[, 1],
       genes$pathway_info$memo[ix]
     )
     
     # create separate URL column for download
-    data <- data.frame(data[,1:2],
-                       URL = genes$pathway_info$memo[ix],
-                       data[,-c(1,2)],
-                       check.names = FALSE
+    data2 <- data.frame(data2[,c(2,1)],
+                        URL = genes$pathway_info$memo[ix],
+                        data2[,-c(1,2)],
+                        check.names = FALSE
     )
     
     if (method %in% c("GSEA", "GAGE")){
-      data$Genes <- as.character(data$Genes)
+      data2[, 7:9] <- lapply(data2[, 7:9], as.character)
     }
     
   }
   
-  return(data)
+  return(data2)
   
 }
 
