@@ -97,7 +97,7 @@ mod_03_clustering_ui <- function(id) {
           # Re-run k-means with a different seed
           actionButton(
             inputId = ns("k_means_re_run"),
-            label = "Re-Run"
+            label = "New Seed"
           ),
           tippy::tippy_this(
             ns("k_means_re_run"),
