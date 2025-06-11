@@ -374,7 +374,6 @@ enrichment_network <- function(go_table,
   gene_lists <- lapply(go_table$Genes, function(x) unlist(strsplit(as.character(x), " ")))
   names(gene_lists) <- go_table$Pathways
   #  go_table$Direction <- gsub(" .*", "", go_table$Direction)
-
   g <- enrich_net(
     data = go_table,
     gene_set = gene_lists,
@@ -392,6 +391,7 @@ enrichment_network <- function(go_table,
     layout_button = layout_button,
     edge_cutoff = edge_cutoff
   )
+  return(g)
 }
 
 #' numChar=100 maximum number of characters
