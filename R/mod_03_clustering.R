@@ -22,6 +22,19 @@ mod_03_clustering_ui <- function(id) {
       # Heatmap Panel Sidebar ----------
       sidebarPanel(
         width = 3,
+        div(
+          style = "text-align: right;",
+          actionButton(
+            inputId = ns("submit_model_button"),
+            label = "Submit",
+            style = "font-size: 16px; color: red;"
+          )
+        ),
+        tippy::tippy_this(
+          ns("submit_model_button"),
+          "Run Cluster analysis",
+          theme = "light-border"
+        ),
         # Select Clustering Method ----------
         conditionalPanel(
           condition = "input.cluster_panels == 'Heatmap' |
@@ -237,7 +250,9 @@ mod_03_clustering_ui <- function(id) {
                   outputId = ns("heatmap_main"),
                   height = "450px",
                   width = "100%",
-                  brush = ns("ht_brush")
+                  brush = brushOpts(id = ns("ht_brush"),
+                                    delayType = "debounce",
+                                    clip = TRUE)
                 ),
                 fluidRow(
                   column(
@@ -407,7 +422,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     })
 
     # Standard Deviation Density Plot ----------
-    sd_density_plot <- reactive({
+    sd_density_plot <- eventReactive(input$submit_model_button, {
       req(!is.null(pre_process$data()))
 
       p <- sd_density(
@@ -437,7 +452,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
 
 
     # Heatmap Data -----------
-    heatmap_data <- reactive({
+    heatmap_data <- eventReactive(input$submit_model_button, {
       req(!is.null(pre_process$data()))
 
       process_heatmap_data(
@@ -500,7 +515,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       # height = 600
     )
 
-    heatmap_main_object <- reactive({
+    heatmap_main_object <- eventReactive(input$submit_model_button, {
       req(!is.null(heatmap_data()))
       req(input$select_factors_heatmap)
 
@@ -605,6 +620,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     # Subheatmap creation ---------
     output$sub_heatmap <- renderPlot(
       {
+        req(!is.null(heatmap_main_object()))
         if (is.null(input$ht_brush)) {
           grid::grid.newpage()
           grid::grid.text("Select a region on the heatmap to zoom in.
@@ -648,6 +664,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
 
 
     heatmap_sub_object_calc <- reactive({
+      req(!is.null(heatmap_main_object()))
       try( # tolerates error; otherwise stuck with spinner
         submap_return <- heat_sub(
           ht_brush = input$ht_brush,
@@ -664,6 +681,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     })
     # Subheatmap creation ---------
     heatmap_sub_object <- reactive({
+      req(!is.null(heatmap_main_object()))
       if (is.null(input$ht_brush)) {
         grid::grid.newpage()
         grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
@@ -765,7 +783,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     })
 
     # Sample Tree ----------
-    sample_tree <- reactive({
+    sample_tree <- eventReactive(input$submit_model_button, {
       req(!is.null(pre_process$data()), input$cluster_meth == 1)
 
       draw_sample_tree(

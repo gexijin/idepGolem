@@ -13,6 +13,14 @@ mod_09_network_ui <- function(id) {
     title = "Network",
     sidebarLayout(
       sidebarPanel(
+        div(
+          style = "text-align: right;",
+          actionButton(
+            inputId = ns("submit_button"),
+            label = "Submit",
+            style = "font-size: 16px; color: red;"
+          )
+        ),
         h5(
           "Identify co-expression networks and sub-modules using",
           a(
@@ -66,11 +74,6 @@ mod_09_network_ui <- function(id) {
             outputId = ns("download_selected_WGCNA_module"),
             "Selected module"
           ),
-          tippy::tippy_this(
-            ns("download_selected_WGCNA_module"),
-            "Download gene information for the selected module",
-            theme = "light-border"
-          ),
           conditionalPanel(
             condition = "input.network_tabs == 'Heatmap'",
             downloadButton(
@@ -79,6 +82,11 @@ mod_09_network_ui <- function(id) {
             ),
             ns = ns
           )
+        ),
+        tippy::tippy_this(
+          ns("download_selected_WGCNA_module"),
+          "Download gene information for the selected module",
+          theme = "light-border"
         ),
         textOutput(ns("module_statistic")),
         a(
@@ -207,7 +215,7 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
       )
     })
 
-    wgcna <- reactive({
+    wgcna <- eventReactive(input$submit_button, {
       req(!is.na(input$n_genes_network))
       req(!is.na(input$min_module_size))
       req(!is.na(input$soft_power))
@@ -280,10 +288,7 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
       req(!is.null(input$select_wgcna_module))
       req(!is.na(input$network_layout))
       req(!is.na(input$edge_threshold))
-      req(!is.na(input$top_genes_network))
-      req(!is.na(input$n_genes_network))
-      req(!is.na(input$min_module_size))
-      req(!is.na(input$soft_power))
+      req(!is.na(input$top_genes_network) && input$top_genes_network > 0)
       req(!is.null(wgcna()))
       
       tem <- input$network_layout
@@ -302,11 +307,7 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
       req(!is.null(input$select_wgcna_module))
       req(!is.na(input$network_layout))
       req(!is.na(input$edge_threshold))
-      req(!is.na(input$top_genes_network))
-      req(!is.na(input$n_genes_network))
-      req(!is.na(input$min_module_size))
-      req(!is.na(input$soft_power))
-      req(!is.null(wgcna()))
+      req(!is.null(adj_matrix()))
 
       tem = input$network_layout
       network$network_plot <- get_network_plot(

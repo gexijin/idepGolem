@@ -18,6 +18,14 @@ mod_04_pca_ui <- function(id) {
         # width = 3,
         conditionalPanel(
           condition = "input.PCA_panels == 'PCA'",
+          div(
+            style = "text-align: right;",
+            actionButton(
+              inputId = ns("submit_2D"),
+              label = "Submit",
+              style = "font-size: 16px; color: red;"
+            )
+          ),
           fluidRow(
             column(
               width = 6,
@@ -42,6 +50,14 @@ mod_04_pca_ui <- function(id) {
         ),
         conditionalPanel(
           condition = "input.PCA_panels == '3D'",
+          div(
+            style = "text-align: right;",
+            actionButton(
+              inputId = ns("submit_3D"),
+              label = "Submit",
+              style = "font-size: 16px; color: red;"
+            )
+          ),
           fluidRow(
             column(
               width = 6,
@@ -95,12 +111,9 @@ mod_04_pca_ui <- function(id) {
         ),
         conditionalPanel(
           condition = "input.PCA_panels == 't-SNE'",
-          fluidRow(
-            actionButton(
-              inputId = ns("seedTSNE"),
-              label = "Re-calculate"
-            ),
-            tags$br()
+          actionButton(
+            inputId = ns("seedTSNE"),
+            label = "Re-calculate"
           ),
           br(),
           br(),
@@ -109,6 +122,14 @@ mod_04_pca_ui <- function(id) {
         # PCATools plot options
         conditionalPanel(
           condition = "input.PCA_panels == 'PCAtools'",
+          div(
+            style = "text-align: right;",
+            actionButton(
+              inputId = ns("submit_tools"),
+              label = "Submit",
+              style = "font-size: 16px; color: red;"
+            )
+          ),
           fluidRow(
             column(
               width = 6,
@@ -319,7 +340,7 @@ mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
 
     # PCA plot ------------
     # reactive part -----
-    pca_plot <- reactive({
+    pca_plot <- eventReactive(input$submit_2D, {
       req(!is.null(pre_process$data()))
 
       p <- PCA_plot(
@@ -373,7 +394,7 @@ mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
 
     # PCA plot 3D ------------
     # reactive part -----
-    pca_plot_3d <- reactive({
+    pca_plot_3d <- eventReactive(input$submit_3D, {
       req(!is.null(pre_process$data()))
 
       p <- PCA_plot_3d(
@@ -471,7 +492,7 @@ mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
     )
 
     # PCAtools biplot  ---------------------
-    biplot <- reactive({
+    biplot <- eventReactive(input$submit_tools, {
       req(!is.null(pre_process$data()))
       withProgress(message = "Generating Plots", {
         incProgress(0.2)
@@ -511,7 +532,7 @@ mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
     )
 
     # PCAtools Scree Plot --------------------
-    scree <- reactive({
+    scree <- eventReactive(input$submit_tools, {
       req(!is.null(pre_process$data()))
 
       p <- PCA_Scree(
@@ -536,7 +557,7 @@ mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
 
 
     # PCAtools Eigencor Plot --------------------
-    eigencor <- reactive({
+    eigencor <- eventReactive(input$submit_tools, {
       req(!is.null(pre_process$data()))
 
       p <- PCAtools_eigencorplot(
@@ -565,7 +586,7 @@ mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
     )
     
     # Variable importance for 1st selected PC
-    var_plot1 <- reactive({
+    var_plot1 <- eventReactive(input$submit_tools, {
       req(!is.null(pre_process$data()))
       
       var_imp_plots(pre_process$data(),
@@ -592,7 +613,7 @@ mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
     )
     
     # Variable importance for 2nd selected PC
-    var_plot2 <- reactive({
+    var_plot2 <- eventReactive(input$submit_tools, {
       req(!is.null(pre_process$data()))
       
       var_imp_plots(pre_process$data(),
