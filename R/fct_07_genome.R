@@ -141,7 +141,7 @@ chromosome_plotly <- function(limma,
         angle = 45,
         size = 2,
         vjust = 0,
-        nudge_y = 0.5
+        nudge_y = 0.35
       )
     }
     # Label y with ch names

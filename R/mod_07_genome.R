@@ -13,10 +13,18 @@ mod_07_genome_ui <- function(id) {
     title = "Genome",
     sidebarLayout(
       sidebarPanel(
+        div(
+          style = "text-align: right;",
+          actionButton(
+            inputId = ns("submit_button"),
+            label = "Submit",
+            style = "font-size: 16px; color: red;"
+          )
+        ),
         htmlOutput(outputId = ns("list_comparisons_genome")),
         tags$style(
           type = "text/css",
-          "#genome-list_comparisons_genome{ width:100%;   margin-top:-12px}"
+          "#genome-list_comparisons_genome{ width:100%;   margin-top: 10px}"
         ),
         fluidRow(
           column(
@@ -208,9 +216,8 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data) {
         )
       }
     })
-
-    # visualizing fold change on chrs.
-    output$genome_plotly <- plotly::renderPlotly({
+    
+    genome_plot <- eventReactive(input$submit_button, {
       req(!is.null(deg$limma()))
       req(!is.null(pre_process$all_gene_info()))
       req(!is.null(chr_data()))
@@ -240,6 +247,11 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data) {
           ch_length_table = chr_data()$ch_length
         )
       })
+    })
+
+    # visualizing fold change on chrs.
+    output$genome_plotly <- plotly::renderPlotly({
+      genome_plot()
     })
     
     # Popup for chromosome data download options
@@ -288,7 +300,7 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data) {
     })
     
     # Get chromosome data using user-entered parameters
-    chr_data <- reactive({
+    chr_data <- eventReactive(input$submit_button, {
       req(!is.null(deg$limma()))
       req(!is.null(input$select_contrast))
       req(!is.null(pre_process$all_gene_info()))

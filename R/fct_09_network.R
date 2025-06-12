@@ -210,7 +210,7 @@ get_network <- function(select_wgcna_module,
   }
   }
 
-  net <- mod_tom[top, top]
+  net <- mod_tom[top, top, drop = FALSE]
 
   if (!is.null(probe_to_gene)) {
     ix <- match(colnames(net), probe_to_gene[, 1])
