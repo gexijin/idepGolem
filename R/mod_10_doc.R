@@ -123,7 +123,7 @@ mod_10_doc_ui <- function(id) {
        the the R code on the DEG1 tab."),
       h4("Previous versions of iDEP are still useable:"),
       a("iDEP 1.13 with Ensembl Release 107, archived January 5, 2024 ",
-        href = "http://bioinformatics.sdstate.edu/idep96/"
+        href = "http://bioinformatics.sdstate.edu/idep11"
       ),
       br(),
       a("iDEP 0.96 with Ensembl Release 104, released on July 30, 2022 ",
