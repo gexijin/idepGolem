@@ -614,7 +614,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         setNames(choices(),
                  proper(sub("^[^0-9]*\\d+\\s*", "", choices())))
       } else {
-        choices()
+        setNames(choices(), choices())
       }
 
     })
@@ -651,12 +651,14 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           contrast_samples = contrast_samples(),
           data = pre_process$data(),
           select_org = pre_process$select_org(),
-          all_gene_names = pre_process$all_gene_names()
+          all_gene_names = pre_process$all_gene_names(),
+          deg = as.data.frame(deg$limma()$results)
         )
         
         # Convert row names to gene symbols, keep Ensembl ID
         data.frame(
           Ensembl_ID = rownames(df),
+          Regulation = df[, ncol(df)],
           rowname_id_swap(
             data_matrix = df,
             all_gene_names = pre_process$all_gene_names(),
@@ -1224,20 +1226,19 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     })
 
     selected_pathway_data <- reactive({
-
       req(!is.null(gene_sets()$gene_lists))
-      if(is.null(input$sig_pathways)) {
-        return(NULL)
-      } else {
-        pathway_select_data(
-          sig_pathways = input$sig_pathways,
-          gene_sets = gene_sets()$gene_lists,
-          contrast_samples = contrast_samples(),
-          data = pre_process$data(),
-          select_org = pre_process$select_org(),
-          all_gene_names = pre_process$all_gene_names()
-        )
-      }
+      req(!is.null(input$sig_pathways))
+      
+      df <- pathway_select_data(
+        sig_pathways = input$sig_pathways,
+        gene_sets = gene_sets()$gene_lists,
+        contrast_samples = contrast_samples(),
+        data = pre_process$data(),
+        select_org = pre_process$select_org(),
+        all_gene_names = pre_process$all_gene_names(),
+        deg = as.data.frame(deg$limma()$results)
+      )
+      df[,-ncol(df)]
     })
 
     # Kegg Colors --------
