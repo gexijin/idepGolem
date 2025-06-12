@@ -1230,6 +1230,8 @@ pathway_data_transform <- function(data,
 #' @param select_org String designating the organism being analyzed
 #' @param all_gene_names Matrix of all the matched and converted
 #'  gene IDs from \code{\link{get_all_gene_names}()}
+#' @param deg data frame of DEG1 gene regulation results - i.e.-1, 0 , 1 for
+#' every gene
 #'
 #' @export
 #' @return Sub-data matrix from the processed data. Only contains
@@ -1242,10 +1244,12 @@ pathway_select_data <- function(sig_pathways,
                                 contrast_samples,
                                 data,
                                 select_org,
-                                all_gene_names) {
+                                all_gene_names,
+                                deg) {
   if (sig_pathways == "All") {
     return(NULL)
   }
+  
   # Find the gene set
   ix <- which(names(gene_sets) == sig_pathways)
   if (length(ix) == 0) {
@@ -1257,6 +1261,13 @@ pathway_select_data <- function(sig_pathways,
   # Find related samples
   iz <- contrast_samples
   x <- data[which(rownames(data) %in% genes), iz]
+  x <- merge(x = x, y = deg, by = "row.names")
+  rownames(x) <- x$Row.names
+  x <- dplyr::select(x,-1)
+  x[,ncol(x)] <- dplyr::case_when(x[,ncol(x)] == 1 ~ "Up", 
+                                  x[,ncol(x)] == -1 ~ "Down", 
+                                  TRUE ~ "None")
+  
   return(x)
 }
 
