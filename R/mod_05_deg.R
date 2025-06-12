@@ -1298,6 +1298,9 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       processed_data = reactive({
         pre_process$data()
       }),
+      filter_size = reactive({
+        pre_process$filter_size()
+      }),
       gene_info = reactive({
         pre_process$all_gene_info()
       }),

@@ -637,6 +637,27 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
 
       return(processed_data)
     })
+    
+    observe({
+      req(processed_data()$data_size[3] < 1000)
+      showNotification(
+        "Less than 1000 genes passed through the pre-processing filter. 
+         By default, all genes will be used as background in enrichment 
+         analysis.",
+        id = "filter_warning",
+        duration = 20,
+        type = "warning",
+        session = session
+      )
+    })
+    
+    observe({
+      req(!tab() %in% c("Clustering", "Load Data", 
+                        "Network", "Bicluster", 
+                        "DEG2"))
+      removeNotification(id = "filter_warning",
+                         session = session)
+    })
 
     # Counts barplot ------------
     raw_counts <- reactive({
@@ -1330,6 +1351,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       raw_counts = reactive(processed_data()$raw_counts),
       data = reactive(processed_data()$data),
       p_vals = reactive(processed_data()$p_vals),
+      filter_size = reactive(processed_data()$data_size[3]),
       sample_info = reactive(load_data$sample_info()),
       all_gene_names = reactive(load_data$all_gene_names()),
       gmt_choices = reactive(load_data$gmt_choices()),
