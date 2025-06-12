@@ -819,7 +819,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           (tab() != "Load Data"))
       
       removeNotification("select_first")
-      
     })
 
     # Show messages when on the Network tab or button is clicked ----
