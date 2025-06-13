@@ -248,9 +248,11 @@ mod_02_pre_process_ui <- function(id) {
             h5(
               "Figure width can be adjusted by changing
              the width of browser window."
+            ),
+            tableOutput(
+              outputId = ns("counts_table")
             )
           ),
-
 
           # Boxplot of transformed data ----------
           tabPanel(
@@ -641,7 +643,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     # Counts barplot ------------
     raw_counts <- reactive({
       req(!is.null(processed_data()$raw_counts))
-
+      
       p <- total_counts_ggplot(
         counts_data = processed_data()$raw_counts,
         sample_info = load_data$sample_info(),
@@ -654,9 +656,11 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         ggplot2_theme = load_data$ggplot2_theme()
       )
     })
+    
     output$raw_counts_gg <- renderPlot({
       print(raw_counts())
     })
+    
     dl_raw_counts_gg <- ottoPlots::mod_download_figure_server(
       id = "dl_raw_counts_gg",
       filename = "raw_counts_barplot",
@@ -664,6 +668,24 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         raw_counts()
       }),
       label = ""
+    )
+    
+    output$counts_table <- renderTable({
+      req(!is.null(processed_data()))
+      # Sums of counts by sample
+      filtered <- as.data.frame(colSums(processed_data()$raw_counts))
+      original <- as.data.frame(colSums(load_data$converted_data()))
+      
+      # Merge and rename columns
+      df <- merge(x = original, y = filtered, by = "row.names")
+      colnames(df) <- c("Sample", "Total Counts", "Total Counts After Filter")
+      df$`Counts Removed` <- df[,2] - df[,3] # Gene counts lost
+      df <- dplyr::mutate(df, across(2:4, ~ format(.x, big.mark = ",")))
+      df
+    },
+    bordered = TRUE,
+    digits = 0,
+    hover = TRUE
     )
 
     # gene type barplot ------------
