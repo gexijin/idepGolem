@@ -1162,7 +1162,6 @@ eda_density <- function(processed_data,
 #' @param individual_data Data that has been merged with the gene info
 #' @param sample_info Matrix of experiment design information for
 #'   grouping samples
-#' @param select_gene List of gene(s) to be plotted
 #' @param gene_plot_box TRUE/FALSE for individual sample plot or grouped
 #'   data plot
 #' @param use_sd TRUE/FALSE for standard error or standard deviation bars on
@@ -1170,6 +1169,11 @@ eda_density <- function(processed_data,
 #' @param lab_rotate Numeric value indicating what angle to rotate
 #'   the x-axis labels
 #' @param plots_color_select Vector of colors for plots
+#' @param selected_gene list of genes selected for plotting
+#' @param plot_raw logical value specifying whether raw count data should be 
+#' used
+#' @param plot_tukey logical value that specifies whether or not to run 
+#' TukeyHSD tests within genes between sample groups
 #'
 #' @export
 #'
@@ -1189,13 +1193,15 @@ individual_plots <- function(individual_data,
                              use_sd,
                              lab_rotate,
                              plots_color_select,
-                             plot_raw) {
+                             plot_raw,
+                             plot_tukey) {
   individual_data <- as.data.frame(individual_data)
   individual_data$symbol <- rownames(individual_data)
 
   plot_data <- individual_data |>
     dplyr::filter(symbol %in% selected_gene) |>
     tidyr::pivot_longer(!symbol, names_to = "sample", values_to = "value")
+  
   if (ncol(plot_data) < 31) {
     x_axis_labels <- 14
   } else {
@@ -1248,7 +1254,7 @@ individual_plots <- function(individual_data,
       dplyr::summarise(Mean = mean(value), SD = sd(value), N = dplyr::n())
 
     summarized$SE <- summarized$SD / sqrt(summarized$N)
-
+    
     color_palette <- generate_colors(n = length(unique(summarized$groups)), palette_name = plots_color_select)
   
     gene_bar <- ggplot2::ggplot(
@@ -1317,6 +1323,77 @@ individual_plots <- function(individual_data,
         position = ggplot2::position_dodge(.9)
       )
     }
+    
+    if (plot_tukey == TRUE) {
+      
+      # Run TukeyHSD test within each gene
+      dfAOV <- plot_data |>
+        dplyr::mutate(groups = detect_groups(sample, sample_info)) |>
+        dplyr::group_by(symbol, groups) |>
+        dplyr::mutate(avg = mean(value, na.rm = TRUE)) |>
+        dplyr::group_by(symbol) |>
+        dplyr::reframe(pval = TukeyHSD(aov(value ~ groups))$group[,4],
+                       comp = rownames(TukeyHSD(aov(value ~ groups))$group),
+                       avg = max(avg)) |>
+        dplyr::group_by(symbol) |>
+        dplyr::arrange(pval) |> # Sort p-values, take lowest 10 in gene
+        dplyr::slice(1:10) |>
+        dplyr::mutate(n_bracket = dplyr::row_number())
+      
+      # Get group levels and offsets for dodging
+      group_levels <- levels(as.factor(plot_data$groups))
+      dodge_width <- 0.9
+      n_groups <- length(group_levels)
+      bar_width <- dodge_width / n_groups
+      offsets <- setNames(
+        seq(-(dodge_width / 2) + bar_width/2, 
+            (dodge_width / 2) - bar_width/2, 
+            length.out = n_groups), 
+        group_levels)
+      
+      # Filter only significant p-values and apply offset for brackets
+      dfAOV <- dfAOV |>
+        dplyr::filter(pval <= 0.05) |>
+        dplyr::ungroup() |>
+        dplyr::mutate(
+          pval = dplyr::case_when(pval <= 0.05 & pval > 0.01 ~ "*",
+                                  pval <= 0.01 & pval > 0.001 ~ "**",
+                                  pval <= 0.001 ~ "***"),
+          g1 = factor(gsub("-.*", "", comp), levels = group_levels),
+          g2 = factor(gsub(".*-", "", comp), levels = group_levels)
+        ) |>
+        dplyr::mutate(
+          symbol_num = as.numeric(as.factor(symbol)),
+          g1_offset = offsets[as.character(g1)],
+          g2_offset = offsets[as.character(g2)],
+          edge1 = symbol_num + g1_offset,
+          edge2 = symbol_num + g2_offset,
+          label_loc = (edge1 + edge2) / 2
+        )
+     
+      #Plot brackets and p-values above bars 
+      gene_bar <- gene_bar +
+        ggplot2::geom_errorbarh(data = dfAOV, 
+                                ggplot2::aes(
+                                  xmin = edge1, 
+                                  xmax = edge2,
+                                  y = avg + (max(avg)* 0.1) * n_bracket,
+                                  height = (max(avg)* 0.05)),
+                                inherit.aes = FALSE)+
+        ggplot2::geom_text(data = dfAOV,
+                           mapping = ggplot2::aes(
+                             x = label_loc, 
+                             y = avg + ((max(avg)* 0.1) * n_bracket),
+                             label = pval,
+                             vjust = -0.45),
+                           size = 4,
+                           inherit.aes = FALSE)+
+        ggplot2::labs(
+          caption = paste0('Only 10 most significant differences displayed',
+                           ' (*** = pval < 0.001; ** = pval < 0.01; ',
+                           '* = pval < 0.05)'))
+    }
+    
     return(gene_bar)
   }
 }

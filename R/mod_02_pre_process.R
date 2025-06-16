@@ -500,6 +500,11 @@ mod_02_pre_process_ui <- function(id) {
                     value = FALSE
                   ),
                   ns = ns
+                ),
+                checkboxInput(
+                  inputId = ns("plot_tukey"),
+                  label = "Run TukeyHSD test between groups",
+                  value = FALSE
                 )
               ),
               column(
@@ -1047,6 +1052,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       req(input$selected_gene)
       req(!is.null(input$gene_plot_box))
       req(!is.null(input$use_sd))
+      req(!is.null(input$plot_tukey))
       req(input$angle_ind_axis_lab)
 
       p <- individual_plots(
@@ -1057,7 +1063,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         use_sd = input$use_sd,
         lab_rotate = input$angle_ind_axis_lab,
         plots_color_select = load_data$plots_color_select(),
-        plot_raw = input$plot_raw
+        plot_raw = input$plot_raw,
+        plot_tukey = input$plot_tukey
       )
       refine_ggplot2(
         p = p,
