@@ -503,7 +503,7 @@ mod_02_pre_process_ui <- function(id) {
                 ),
                 checkboxInput(
                   inputId = ns("plot_tukey"),
-                  label = "Run TukeyHSD test between groups",
+                  label = "Run TukeyHSD test",
                   value = FALSE
                 )
               ),
@@ -517,13 +517,23 @@ mod_02_pre_process_ui <- function(id) {
                 )
               )
             ),
+            uiOutput(
+              outputId = ns("signif_text")
+            ),
             plotOutput(
               outputId = ns("gene_plot"),
               width = "100%",
               height = "500px"
             ),
-            ottoPlots::mod_download_figure_ui(
-              id = ns("dl_gene_plot")
+            div(
+              style = "display: flex; gap: 10px",
+              ottoPlots::mod_download_figure_ui(
+                id = ns("dl_gene_plot")
+              ),
+              downloadButton(
+                outputId = ns("tukey_download"),
+                label = "TukeyHSD Results"
+              )
             ),
             h5(
               "Figure width can be adjusted by changing
@@ -1046,6 +1056,40 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       )
     })
 
+    observe({
+      shinyjs::toggle(id = "plot_tukey", condition = !input$plot_raw)
+      shinyjs::toggle(id = "tukey_download", condition = input$plot_tukey)
+      
+      if (input$plot_raw == TRUE && input$plot_tukey == TRUE){
+        shinyjs::reset(id = "plot_tukey")
+      }
+    })
+    
+    tukey_data <- reactive({
+      req(!is.null(individual_data()))
+      req(!is.na(input$selected_gene))
+      
+      get_tukey_data(individual_data(),
+                     sample_info = load_data$sample_info(),
+                     selected_gene = input$selected_gene,
+                     summarized = FALSE)
+    })
+    
+    output$tukey_download <- downloadHandler(
+      filename = function(){
+        req(!is.null(tukey_data()))
+        req(!is.na(input$selected_gene))
+        
+        "TukeyHSD_results.csv"
+      },
+      content = function(file){
+        req(!is.null(tukey_data()))
+        req(!is.na(input$selected_gene))
+        
+        write.csv(tukey_data(), file)
+      }
+    )
+    
     # Individual gene plot ---------
     gene_plot <- reactive({
       req(individual_data())
@@ -1054,6 +1098,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       req(!is.null(input$use_sd))
       req(!is.null(input$plot_tukey))
       req(input$angle_ind_axis_lab)
+      req(input$plot_raw != TRUE || input$plot_tukey != TRUE)
 
       p <- individual_plots(
         individual_data = individual_data(),
@@ -1087,6 +1132,15 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       label = ""
     )
 
+    output$signif_text <- renderUI({
+      req(!is.null(input$plot_tukey))
+      
+      if (input$plot_tukey == TRUE){
+        paste0('Only top 10 most significant differences displayed for each',
+               ' gene (*** = pval < 0.001; ** = pval < 0.01; ',
+               '* = pval < 0.05)')
+      } else {NULL}
+    })
 
     # Download buttons ----------
     output$download_processed_data <- downloadHandler(

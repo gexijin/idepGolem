@@ -1325,16 +1325,11 @@ individual_plots <- function(individual_data,
     }
     
     if (plot_tukey == TRUE) {
+      dfAOV <- get_tukey_data(gene_data = plot_data,
+                              sample_info = sample_info,
+                              summarized = TRUE)
       
-      # Run TukeyHSD test within each gene
-      dfAOV <- plot_data |>
-        dplyr::mutate(groups = detect_groups(sample, sample_info)) |>
-        dplyr::group_by(symbol, groups) |>
-        dplyr::mutate(avg = mean(value, na.rm = TRUE)) |>
-        dplyr::group_by(symbol) |>
-        dplyr::reframe(pval = TukeyHSD(aov(value ~ groups))$group[,4],
-                       comp = rownames(TukeyHSD(aov(value ~ groups))$group),
-                       avg = max(avg)) |>
+      dfAOV <- dfAOV |>
         dplyr::group_by(symbol) |>
         dplyr::arrange(pval) |> # Sort p-values, take lowest 10 in gene
         dplyr::slice(1:10) |>
@@ -1387,15 +1382,55 @@ individual_plots <- function(individual_data,
                              label = pval,
                              vjust = -0.45),
                            size = 4,
-                           inherit.aes = FALSE)+
-        ggplot2::labs(
-          caption = paste0('Only 10 most significant differences displayed',
-                           ' (*** = pval < 0.001; ** = pval < 0.01; ',
-                           '* = pval < 0.05)'))
+                           inherit.aes = FALSE)
     }
     
     return(gene_bar)
   }
+}
+
+#' Get TukeyHSD Result Data
+#' 
+#' Takes a data frame of gene expression data and runs TukeyHSD tests between
+#' sample groups within each gene. Returns as a data frame.
+#'
+#' @param sample_info additional sample info from experimental design file
+#' @param gene_data data frame of gene expression data
+#' @param selected_gene list of genes selected for analysis; Only required if 
+#' summarized = FALSE
+#' @param summarized TRUE/FALSE whether data has been summarized
+#'
+#' @returns Data frame containing TukeyHSD results
+#' @export
+#'
+get_tukey_data <- function(gene_data,
+                           sample_info,
+                           selected_gene = NULL,
+                           summarized){
+  
+  if (summarized == FALSE){
+    gene_data <- as.data.frame(gene_data)
+    gene_data$symbol <- rownames(gene_data)
+    
+    gene_data <- gene_data |>
+      dplyr::filter(symbol %in% selected_gene) |>
+      tidyr::pivot_longer(!symbol, names_to = "sample", values_to = "value")
+  }
+  
+  # Run TukeyHSD test within each gene
+  dfTukey <- gene_data |>
+    dplyr::mutate(groups = detect_groups(sample, sample_info)) |>
+    dplyr::group_by(symbol, groups) |>
+    dplyr::mutate(avg = mean(value, na.rm = TRUE)) |>
+    dplyr::group_by(symbol) |>
+    dplyr::reframe(comp = rownames(TukeyHSD(aov(value ~ groups))$group),
+                   diff = TukeyHSD(aov(value ~ groups))$group[,1],
+                   lwr = TukeyHSD(aov(value ~ groups))$group[,2],
+                   upr = TukeyHSD(aov(value ~ groups))$group[,3],
+                   pval = TukeyHSD(aov(value ~ groups))$group[,4],
+                   avg = max(avg))
+  
+  return(dfTukey)
 }
 
 #' Data processing message
