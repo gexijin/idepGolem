@@ -153,7 +153,8 @@ mod_01_load_data_ui <- function(id) {
         br(),
         checkboxInput(
           inputId = ns("customize_button"),
-          label = strong("Global Settings"),
+          label = strong("Global Settings",
+                         style = "color: red;"),
           value = FALSE
         ),
         selectInput(
