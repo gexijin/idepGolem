@@ -1197,7 +1197,7 @@ individual_plots <- function(individual_data,
                              plot_tukey) {
   individual_data <- as.data.frame(individual_data)
   individual_data$symbol <- rownames(individual_data)
-
+  
   plot_data <- individual_data |>
     dplyr::filter(symbol %in% selected_gene) |>
     tidyr::pivot_longer(!symbol, names_to = "sample", values_to = "value")
@@ -1208,7 +1208,7 @@ individual_plots <- function(individual_data,
     x_axis_labels <- 10
   }
 
-  if (gene_plot_box == TRUE) {
+  if (gene_plot_box == 2) {
     plot_data$symbol <- factor(plot_data$symbol, levels = unique(plot_data$symbol))
     color_palette <- generate_colors(n = nlevels(as.factor(plot_data$symbol)), palette_name = plots_color_select)
     ind_line <- ggplot2::ggplot(
@@ -1246,7 +1246,7 @@ individual_plots <- function(individual_data,
     ggplot2::scale_color_manual(values = color_palette)
 
     return(ind_line)
-  } else if (gene_plot_box == FALSE) {
+  } else if (gene_plot_box == 1) {
     plot_data$groups <- detect_groups(plot_data$sample, sample_info)
 
     summarized <- plot_data |>

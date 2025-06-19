@@ -486,10 +486,15 @@ mod_02_pre_process_ui <- function(id) {
               ),
               column(
                 4,
-                checkboxInput(
+                selectInput(
                   inputId = ns("gene_plot_box"),
-                  label = "Show individual samples",
-                  value = FALSE
+                  label = "Plot Type:",
+                  choices = setNames(
+                    c(1,2), 
+                    c("Sample Group Expression",
+                      "Individual Sample Expression")
+                  ),
+                  selected = 1
                 ),
                 uiOutput(ns("sd_checkbox")),
                 conditionalPanel(
@@ -1047,7 +1052,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
 
     # Dynamic individual gene checkbox ----------
     output$sd_checkbox <- renderUI({
-      req(input$gene_plot_box == FALSE)
+      req(input$gene_plot_box != 2)
 
       checkboxInput(
         inputId = ns("use_sd"),
@@ -1057,7 +1062,9 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     })
 
     observe({
-      shinyjs::toggle(id = "plot_tukey", condition = !input$plot_raw)
+      shinyjs::toggle(id = "plot_tukey", 
+                      condition = input$gene_plot_box != 2 &&
+                        !input$plot_raw)
       shinyjs::toggle(id = "tukey_download", condition = input$plot_tukey)
       
       if (input$plot_raw == TRUE && input$plot_tukey == TRUE){
