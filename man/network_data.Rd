@@ -9,7 +9,8 @@ network_data(
   up_down_reg_deg,
   wrap_text_network_deg,
   layout_vis_deg,
-  edge_cutoff_deg
+  edge_cutoff_deg,
+  group_color
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ network_data(
 \item{layout_vis_deg}{Button to reset the layout of the network}
 
 \item{edge_cutoff_deg}{P-value to cutoff enriched pathways}
+
+\item{group_color}{}
 }
 \value{
 Data that can be inputted in the vis_network_plot function
