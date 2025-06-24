@@ -890,7 +890,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         write.csv(heatmap_data_download(), file)
       }
     )
-
+    
     enrichment_table_cluster <- mod_11_enrichment_server(
       id = "enrichment_table_cluster",
       gmt_choices = reactive({
@@ -920,6 +920,9 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       }),
       ggplot2_theme = reactive({
         pre_process$ggplot2_theme()
+      }),
+      heat_colors = reactive({
+        strsplit(load_data$heatmap_color_select(), "-")[[1]][c(1,3)]
       })
     )
 

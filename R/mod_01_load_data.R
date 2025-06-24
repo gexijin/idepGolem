@@ -179,7 +179,7 @@ mod_01_load_data_ui <- function(id) {
         ),
         selectInput(
           inputId = ns("plots_color_select"),
-          label = "Plots Color scheme:",
+          label = "Plots Color scheme (PCA/Pre-Process):",
           choices = c(
             "Set1",
             "Set2",
@@ -196,7 +196,7 @@ mod_01_load_data_ui <- function(id) {
         ),
         selectInput(
           inputId = ns("heatmap_color_select"),
-          label = "Heatmap Color scheme:",
+          label = "Heatmap/Tree/Network Color scheme:",
           choices = c(
             "Green-Black-Red",
             "Red-Black-Green",

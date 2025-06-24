@@ -1316,6 +1316,9 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       }),
       ggplot2_theme = reactive({
         pre_process$ggplot2_theme()
+      }),
+      heat_colors = reactive({
+        strsplit(load_data$heatmap_color_select(), "-")[[1]][c(1,3)]
       })
     )
 
