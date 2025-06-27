@@ -964,3 +964,107 @@ prep_download <- function(heatmap,
     return(heatmap_data)
   }
 }
+
+#' Prepare Word Cloud Data
+#' 
+#' Prepares words in pathway and corresponding frequencies for 
+#' constructing word clouds
+#'
+#' @param gene_lists 
+#' @param cluster 
+#' @param select_org 
+#' @param gmt_file 
+#' @param idep_data 
+#' @param gene_info 
+#' @param cloud_go 
+#' @param cluster2 
+#' @param compare 
+#' @param converted 
+#'
+#' @returns Returns data frame of words from pathways in the selected cluster
+#' and their frequencies.
+#' @export
+#'
+prep_cloud_data <- function(gene_lists,
+                            cluster,
+                            cluster2 = NULL,
+                            compare = FALSE,
+                            cloud_go,
+                            select_org,
+                            converted,
+                            gmt_file,
+                            idep_data,
+                            gene_info){
+  
+  paths1 <- read_pathway_sets(
+    all_gene_names_query = gene_lists[[cluster]],
+    converted = converted,
+    go = cloud_go,
+    select_org = select_org,
+    gmt_file = gmt_file,
+    idep_data = idep_data,
+    gene_info = gene_info
+  )
+  
+  if (is.null(paths1)) {
+    return("Pathways Not Found")
+  }
+  
+  paths1 <- data.frame(Descr = paths1$pathway_table$description)
+  paths1 <- data.frame(Descr = remove_pathway_id(paths1[,1], cloud_go))
+  
+  words1 <- paths1 |>
+    dplyr::mutate(Descr = gsub("[-[:punct:]]", " ", Descr),
+                  Descr = gsub("\\s+", " ", Descr),
+                  Descr = trimws(Descr))|>
+    tidytext::unnest_tokens(word, Descr) |>
+    dplyr::filter(!word %in% c("pathway", "pathways"),
+                  nchar(word) > 2) |>
+    dplyr::anti_join(tidytext::stop_words, by = "word") |>
+    dplyr::count(word, sort = TRUE)
+  
+  if(compare && !is.null(cluster2) && (cluster2 != cluster)) {
+
+    paths2 <- read_pathway_sets(
+      all_gene_names_query = gene_lists[[cluster2]],
+      converted = converted,
+      go = cloud_go,
+      select_org = select_org,
+      gmt_file = gmt_file,
+      idep_data = idep_data,
+      gene_info = gene_info
+    )
+    
+    if (is.null(paths2)) {
+      return("Pathways Not Found")
+    }
+    
+    paths2 <- data.frame(Descr = paths2$pathway_table$description)
+    paths2 <- data.frame(Descr = remove_pathway_id(paths2[,1], cloud_go))
+    
+    words2 <- paths2 |>
+      dplyr::mutate(Descr = gsub("[-[:punct:]]", " ", Descr),
+                    Descr = gsub("\\s+", " ", Descr),
+                    Descr = trimws(Descr))|>
+      tidytext::unnest_tokens(word, Descr) |>
+      dplyr::filter(!word %in% c("pathway", "pathways"),
+                    nchar(word) > 2) |>
+      dplyr::anti_join(tidytext::stop_words, by = "word") |>
+      dplyr::count(word)
+    
+    words1 <- dplyr::full_join(words1, words2, by = "word") |>
+      dplyr::mutate(n.x = dplyr::case_when(is.na(n.x) ~ 0,
+                                    TRUE ~ n.x),
+                    n.y = dplyr::case_when(is.na(n.y) ~ 0,
+                                    TRUE ~ n.y)) |>
+      dplyr::mutate(Diff = (abs(n.x - n.y) / (n.x + n.y)) * 100) |>
+      dplyr::arrange(-Diff, -n.x, -n.y) |>
+      dplyr::filter(Diff != 0) |>
+      dplyr::mutate(rank = dplyr::row_number())
+    words1$scaled <- scale(nrow(words1) - words1$rank + 1)
+    colnames(words1)[3] <- paste0("Cluster", cluster2)
+  }
+  
+  colnames(words1)[2] <- paste0("Cluster", cluster)
+  return(words1)
+}
