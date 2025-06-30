@@ -970,16 +970,16 @@ prep_download <- function(heatmap,
 #' Prepares words in pathway and corresponding frequencies for 
 #' constructing word clouds
 #'
-#' @param gene_lists 
-#' @param cluster 
-#' @param select_org 
-#' @param gmt_file 
-#' @param idep_data 
-#' @param gene_info 
-#' @param cloud_go 
-#' @param cluster2 
-#' @param compare 
-#' @param converted 
+#' @param gene_lists List of gene data within each cluster
+#' @param cluster Selected cluster from k-means clustering
+#' @param select_org Selected organism
+#' @param gmt_file Optional custom GMT file
+#' @param idep_data iDEP data 
+#' @param gene_info Gene info from pre-processing step
+#' @param cloud_go GO selected for word cloud. KEGG, GOBP, etc. 
+#' @param cluster2 Second cluster selected for comparison
+#' @param compare TRUE/FALSE to compare two clusters
+#' @param converted Converted data from pre-processing
 #'
 #' @returns Returns data frame of words from pathways in the selected cluster
 #' and their frequencies.
@@ -996,6 +996,7 @@ prep_cloud_data <- function(gene_lists,
                             idep_data,
                             gene_info){
   
+  # Retrieve pathway information
   paths1 <- read_pathway_sets(
     all_gene_names_query = gene_lists[[cluster]],
     converted = converted,
@@ -1006,23 +1007,27 @@ prep_cloud_data <- function(gene_lists,
     gene_info = gene_info
   )
   
+  # If null, either error or no pathways found
   if (is.null(paths1)) {
     return("Pathways Not Found")
   }
   
+  # Select description, remove path ID
   paths1 <- data.frame(Descr = paths1$pathway_table$description)
   paths1 <- data.frame(Descr = remove_pathway_id(paths1[,1], cloud_go))
   
+  # Remove common words/punctuation
   words1 <- paths1 |>
     dplyr::mutate(Descr = gsub("[-[:punct:]]", " ", Descr),
                   Descr = gsub("\\s+", " ", Descr),
                   Descr = trimws(Descr))|>
-    tidytext::unnest_tokens(word, Descr) |>
+    tidytext::unnest_tokens(word, Descr) |> # Tokenize the descriptions
     dplyr::filter(!word %in% c("pathway", "pathways"),
                   nchar(word) > 2) |>
     dplyr::anti_join(tidytext::stop_words, by = "word") |>
     dplyr::count(word, sort = TRUE)
   
+  # Additional analysis if comparison is selected
   if(compare && !is.null(cluster2) && (cluster2 != cluster)) {
 
     paths2 <- read_pathway_sets(
@@ -1042,6 +1047,7 @@ prep_cloud_data <- function(gene_lists,
     paths2 <- data.frame(Descr = paths2$pathway_table$description)
     paths2 <- data.frame(Descr = remove_pathway_id(paths2[,1], cloud_go))
     
+    # Remove common words/punctuation
     words2 <- paths2 |>
       dplyr::mutate(Descr = gsub("[-[:punct:]]", " ", Descr),
                     Descr = gsub("\\s+", " ", Descr),
@@ -1052,13 +1058,14 @@ prep_cloud_data <- function(gene_lists,
       dplyr::anti_join(tidytext::stop_words, by = "word") |>
       dplyr::count(word)
     
+    # Join word counts together, calculate percent difference in frequency
     words1 <- dplyr::full_join(words1, words2, by = "word") |>
       dplyr::mutate(n.x = dplyr::case_when(is.na(n.x) ~ 0,
                                     TRUE ~ n.x),
                     n.y = dplyr::case_when(is.na(n.y) ~ 0,
                                     TRUE ~ n.y)) |>
       dplyr::mutate(Diff = (abs(n.x - n.y) / (n.x + n.y)) * 100) |>
-      dplyr::arrange(-Diff, -n.x, -n.y) |>
+      dplyr::arrange(-Diff, -n.x, -n.y) |> # Rank words by difference/frequency
       dplyr::filter(Diff != 0) |>
       dplyr::mutate(rank = dplyr::row_number())
     words1$scaled <- scale(nrow(words1) - words1$rank + 1)

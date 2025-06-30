@@ -1012,6 +1012,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       })
     )
 
+    # Generate word/frequency data for word cloud
     word_cloud_data <- reactive({
       req(!is.na(input$select_cluster))
       req(!is.null(input$cloud_go))
@@ -1044,6 +1045,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       }
     })
     
+    # Error message UI for word cloud
     output$cloud_error <- renderUI({
       req(!is.null(word_cloud_data()))
       
