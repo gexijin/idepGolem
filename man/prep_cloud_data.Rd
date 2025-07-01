@@ -7,8 +7,6 @@
 prep_cloud_data(
   gene_lists,
   cluster,
-  cluster2 = NULL,
-  compare = FALSE,
   cloud_go,
   select_org,
   converted,
@@ -18,25 +16,21 @@ prep_cloud_data(
 )
 }
 \arguments{
-\item{gene_lists}{}
+\item{gene_lists}{List of gene data within each cluster}
 
-\item{cluster}{}
+\item{cluster}{Selected cluster from k-means clustering}
 
-\item{cluster2}{}
+\item{cloud_go}{GO selected for word cloud. KEGG, GOBP, etc.}
 
-\item{compare}{}
+\item{select_org}{Selected organism}
 
-\item{cloud_go}{}
+\item{converted}{Converted data from pre-processing}
 
-\item{select_org}{}
+\item{gmt_file}{Optional custom GMT file}
 
-\item{converted}{}
+\item{idep_data}{iDEP data}
 
-\item{gmt_file}{}
-
-\item{idep_data}{}
-
-\item{gene_info}{}
+\item{gene_info}{Gene info from pre-processing step}
 }
 \value{
 Returns data frame of words from pathways in the selected cluster

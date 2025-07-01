@@ -216,20 +216,8 @@ mod_03_clustering_ui <- function(id) {
         ),
         conditionalPanel(
           condition = "input.cluster_panels == 'word_cloud'",
-          checkboxInput(
-            label = "Compare Clusters",
-            inputId = ns("comp_cluster"),
-            value = FALSE
-          ),
           uiOutput(
             outputId = ns("cloud_ui")
-          ),
-          ns = ns
-        ),
-        conditionalPanel(
-          condition = "input.cluster_panels == 'word_cloud' & input.comp_cluster",
-          uiOutput(
-            outputId = ns("cloud_comp_ui")
           ),
           ns = ns
         ),
@@ -329,13 +317,8 @@ mod_03_clustering_ui <- function(id) {
           ),
           tabPanel(
             br(),
-            div('Generate a word cloud of pathways that contain genes of one
-                or two selected clusters. To compare to clusters by the 
-                frequency of words in their pathways, click the "Compare
-                Clusters" box. The comparison word cloud will list terms
-                that have the largest difference in frequency between clusters
-                (Ranked by difference, frequency in cluster 1, and frequency
-                in cluster 2)'),
+            div('Generate a word cloud of pathways that contain genes from the 
+                selected cluster. Words are ranked by frequency.'),
             uiOutput(
               outputId = ns("cloud_error")
             ),
@@ -853,16 +836,6 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       )
     })
     
-    output$cloud_comp_ui <- renderUI({
-      req(!is.null(gene_lists()))
-      
-      selectInput(
-        label = "Select Second Cluster:",
-        inputId = ns("select_cluster2"),
-        choices = unique(names(gene_lists()))
-      )
-    })
-    
     # Sample Tree ----------
     sample_tree <- eventReactive(input$submit_model_button, {
       req(!is.null(pre_process$data()), input$cluster_meth == 1)
@@ -1016,13 +989,15 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     word_cloud_data <- reactive({
       req(!is.na(input$select_cluster))
       req(!is.null(input$cloud_go))
-      req(!is.null(input$comp_cluster))
       req(!is.null(gene_lists()))
-
+      
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Creating Word Cloud",
+        color = "#000000"
+      )
       prep_cloud_data(gene_lists = gene_lists(), 
                       cluster = input$select_cluster,
-                      cluster2 = input$select_cluster2,
-                      compare = input$comp_cluster,
                       cloud_go = input$cloud_go,
                       select_org = pre_process$select_org(),
                       converted = pre_process$converted(),
@@ -1034,14 +1009,17 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     output$word_cloud <- wordcloud2::renderWordcloud2({
       req(!is.null(word_cloud_data()))
       
-      if (class(word_cloud_data()) == "character"){
+      shinybusy::remove_modal_spinner()
+      
+      if ("character" %in% class(word_cloud_data())){
         NULL
       } else {
-      wordcloud2::wordcloud2(word_cloud_data()[,c(1, ncol(word_cloud_data()))],
-                             shape = "circle",
-                             rotateRatio = 0,
-                             color = "random-dark",
-                             shuffle = FALSE)
+        
+        wordcloud2::wordcloud2(word_cloud_data(),
+                               shape = "circle",
+                               rotateRatio = 0,
+                               color = "random-dark",
+                               shuffle = FALSE)
       }
     })
     
@@ -1049,7 +1027,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     output$cloud_error <- renderUI({
       req(!is.null(word_cloud_data()))
       
-      if (class(word_cloud_data()) == "character"){
+      if ("character" %in% class(word_cloud_data())){
         div(style = "color:red;",
             "Pathways Not Found for selected cluster!")
       } else {NULL}
