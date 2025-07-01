@@ -991,7 +991,7 @@ prep_cloud_data <- function(gene_lists,
                             gmt_file,
                             idep_data,
                             gene_info){
-  browser()
+  
   # Retrieve pathway information
   paths1 <- read_pathway_sets(
     all_gene_names_query = gene_lists[[cluster]],

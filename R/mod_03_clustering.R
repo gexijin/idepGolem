@@ -318,7 +318,8 @@ mod_03_clustering_ui <- function(id) {
           tabPanel(
             br(),
             div('Generate a word cloud of pathways that contain genes from the 
-                selected cluster. Words are ranked by frequency.'),
+                selected cluster (Must run clustering with heatmap first). 
+                Words are ranked by frequency.'),
             uiOutput(
               outputId = ns("cloud_error")
             ),
