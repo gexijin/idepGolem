@@ -4,7 +4,13 @@
 \alias{sub_heat_ann}
 \title{Create annotation for shiny subheatmap}
 \usage{
-sub_heat_ann(data, sample_info, select_factors_heatmap)
+sub_heat_ann(
+  data,
+  sample_info,
+  select_factors_heatmap,
+  group_pal = NULL,
+  sample_color = NULL
+)
 }
 \arguments{
 \item{data}{Matrix of heatmap data}
@@ -13,6 +19,10 @@ sub_heat_ann(data, sample_info, select_factors_heatmap)
 
 \item{select_factors_heatmap}{Factor to group by in the samples.
 "All factors" will use all of the sample information.}
+
+\item{group_pal}{Named list of colors and their corresponding categories}
+
+\item{sample_color}{Selected colorspace color palette}
 }
 \value{
 A list containing a ComplexHeatmap annotation object,

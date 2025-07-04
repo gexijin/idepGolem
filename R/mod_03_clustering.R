@@ -193,6 +193,14 @@ mod_03_clustering_ui <- function(id) {
             label = "Normalize genes (divide by SD)",
             value = FALSE
           ),
+          selectInput(
+            inputId = ns("sample_color"),
+            label = "Experiment Group Colors",
+            choices = c("Pastel 1", "Dark 2", "Dark 3", 
+                        "Set 2", "Set 3", "Warm",
+                        "Cold", "Harmonic", "Dynamic"),
+            selected = "Dynamic"
+          ),
           numericInput(
             inputId = ns("heatmap_cutoff"),
             label = "Max Z score:",
@@ -200,21 +208,23 @@ mod_03_clustering_ui <- function(id) {
             min = 2,
             step = 1
           ),
-          fluidRow(
-            column(
-              width = 6,
-              downloadButton(
-                outputId = ns("download_heatmap_data"),
-                label = "Heatmap data"
-              )
-            )
-          ),
           ns = ns
         ),
         br(),
-        downloadButton(
-          outputId = ns("report"),
-          label = "Report"
+        div(
+          style = "display: flex; flex: wrap; gap: 5px;",
+          downloadButton(
+            outputId = ns("report"),
+            label = "Report"
+          ),
+          conditionalPanel(
+            condition = "input.cluster_panels == 'Heatmap' ",
+            downloadButton(
+              outputId = ns("download_heatmap_data"),
+              label = "Heatmap data"
+            ),
+            ns = ns
+          )
         ),
         tippy::tippy_this(
           ns("report"),
@@ -381,6 +391,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       shinyjs::toggle(id = "heatmap_cutoff", condition = input$customize_button)
       shinyjs::toggle(id = "gene_normalize", condition = input$customize_button)
       shinyjs::toggle(id = "gene_centering", condition = input$customize_button)
+      shinyjs::toggle(id = "sample_color", condition = input$customize_button)
     })
 
     # Distance functions -----------
@@ -495,7 +506,6 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     output$heatmap_main <- renderPlot(
       {
         req(!is.null(heatmap_data()))
-        req(input$select_factors_heatmap)
         #      req(input$selected_genes)
 
         shinybusy::show_modal_spinner(
@@ -514,10 +524,31 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       width = 240 # , # this avoids the heatmap being redraw
       # height = 600
     )
-
+    
+    # Color palette for experiment groups on heatmap
+    group_pal <- eventReactive(input$submit_model_button, {
+      req(!is.null(pre_process$sample_info()))
+      req(!is.na(input$sample_color))
+      
+      groups <- as.vector(as.matrix(pre_process$sample_info()))
+      pal <- setNames(
+        colorspace::qualitative_hcl(length(unique(groups)), 
+                                    palette = input$sample_color,
+                                    c = 70),
+        unique(groups)
+      )
+      sample_list <- as.list(as.data.frame(pre_process$sample_info()))
+      
+      lapply(sample_list, function(x){
+        setNames(
+          pal[unique(x)], 
+          unique(x)
+        )
+      })
+    })
+    
     heatmap_main_object <- eventReactive(input$submit_model_button, {
       req(!is.null(heatmap_data()))
-      req(input$select_factors_heatmap)
 
       # Assign heatmap to be used in multiple components
       try(
@@ -535,7 +566,9 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           row_dend = input$show_row_dend,
           k_clusters = input$k_clusters,
           re_run = input$k_means_re_run,
-          selected_genes = input$selected_genes
+          selected_genes = input$selected_genes,
+          group_pal = group_pal(),
+          sample_color = input$sample_color
         )
       )
 
@@ -661,10 +694,20 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       # width = 500 # this avoids the heatmap being redraw
     )
 
-
+    # Reactive input versions to store values every submit press
+    selected_factors_heatmap <- eventReactive(input$submit_model_button, {
+      req(!is.na(input$select_factors_heatmap))
+      input$select_factors_heatmap
+    })
+    
+    submitted_pal <- eventReactive(input$submit_model_button, {
+      input$sample_color
+    })
 
     heatmap_sub_object_calc <- reactive({
       req(!is.null(heatmap_main_object()))
+      req(!is.null(submitted_pal()))
+      req(!is.null(selected_factors_heatmap()))
       try( # tolerates error; otherwise stuck with spinner
         submap_return <- heat_sub(
           ht_brush = input$ht_brush,
@@ -672,8 +715,10 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           ht_pos_main = shiny_env$ht_pos_main,
           heatmap_data = heatmap_data(),
           sample_info = pre_process$sample_info(),
-          select_factors_heatmap = input$select_factors_heatmap,
-          cluster_meth = input$cluster_meth
+          select_factors_heatmap = selected_factors_heatmap(),
+          cluster_meth = input$cluster_meth,
+          group_pal = group_pal(),
+          sample_color = submitted_pal()
         )
       )
 

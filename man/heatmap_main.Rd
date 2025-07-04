@@ -18,7 +18,9 @@ heatmap_main(
   row_dend,
   k_clusters,
   re_run,
-  selected_genes
+  selected_genes,
+  group_pal = NULL,
+  sample_color = NULL
 )
 }
 \arguments{
@@ -50,6 +52,10 @@ hierarchical and 2 for kmeans.}
 \item{re_run}{Integer for a seed to Re-run k-means with}
 
 \item{selected_genes}{Character list of genes to label on the heatmap}
+
+\item{group_pal}{Named list of colors and their corresponding categories}
+
+\item{sample_color}{Selected colorspace color palette}
 }
 \value{
 Heatmap of the processed data.

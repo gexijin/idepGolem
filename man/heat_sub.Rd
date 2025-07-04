@@ -11,7 +11,9 @@ heat_sub(
   heatmap_data,
   sample_info,
   select_factors_heatmap,
-  cluster_meth
+  cluster_meth,
+  group_pal = NULL,
+  sample_color = NULL
 )
 }
 \arguments{
@@ -30,6 +32,10 @@ heat_sub(
 
 \item{cluster_meth}{Integer indicating which clustering method to use 1 for
 hierarchical and 2 for kmeans.}
+
+\item{group_pal}{Named list of colors and their corresponding categories}
+
+\item{sample_color}{Selected colorspace color palette}
 }
 \value{
 A list containing a Heatmap from the brush selection
