@@ -169,7 +169,12 @@ mod_03_clustering_ui <- function(id) {
             column(width = 4, p("Label Genes:")),
             column(
               width = 8,
-              htmlOutput(ns("selected_genes_ui"))
+              selectizeInput(
+                inputId = ns("selected_genes"),
+                label = NULL,
+                choices = c("Top 5", "Top 10", "Top 15"),
+                multiple = TRUE
+              )
             )
           ),
           checkboxInput(ns("customize_button"), "More options"),
@@ -469,17 +474,17 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
 
 
     # Heatmap Click Value ---------
-    output$selected_genes_ui <- renderUI({
+    observeEvent(input$submit_model_button, {
       req(!is.null(pre_process$all_gene_names()))
       req(!is.null(pre_process$data()))
       req(!is.null(heatmap_data()))
 
-      selectizeInput(
-        inputId = ns("selected_genes"),
+      updateSelectizeInput(
+        session = session,
+        inputId = "selected_genes",
         label = NULL,
-        choices = row.names(heatmap_data()),
-        selected = NULL,
-        multiple = TRUE
+        choices = c("Top 5", "Top 10", "Top 15", row.names(heatmap_data())),
+        selected = input$selected_genes
       )
     })
 
