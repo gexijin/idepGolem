@@ -270,6 +270,7 @@ heatmap_main <- function(data,
   heat_ann <- NULL
   if (!is.null(select_factors_heatmap)) {
     if (select_factors_heatmap != "All factors") { # one factor-------
+      show_legend <- TRUE
       # Annotation for groups
       if (!is.null(sample_info) && !is.null(select_factors_heatmap)) {
         if (select_factors_heatmap == "Names") {
@@ -278,7 +279,6 @@ heatmap_main <- function(data,
         } else {
           ix <- match(select_factors_heatmap, colnames(sample_info))
           groups <- sample_info[, ix]
-          show_legend <- TRUE
         }
       }
       groups_colors <- colorspace::qualitative_hcl(length(unique(groups)), 
