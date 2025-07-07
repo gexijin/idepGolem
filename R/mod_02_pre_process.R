@@ -248,9 +248,11 @@ mod_02_pre_process_ui <- function(id) {
             h5(
               "Figure width can be adjusted by changing
              the width of browser window."
+            ),
+            tableOutput(
+              outputId = ns("counts_table")
             )
           ),
-
 
           # Boxplot of transformed data ----------
           tabPanel(
@@ -486,10 +488,15 @@ mod_02_pre_process_ui <- function(id) {
               ),
               column(
                 4,
-                checkboxInput(
+                selectInput(
                   inputId = ns("gene_plot_box"),
-                  label = "Show individual samples",
-                  value = FALSE
+                  label = "Plot Type:",
+                  choices = setNames(
+                    c(1,2), 
+                    c("Sample Group Expression",
+                      "Individual Sample Expression")
+                  ),
+                  selected = 1
                 ),
                 uiOutput(ns("sd_checkbox")),
                 conditionalPanel(
@@ -500,6 +507,11 @@ mod_02_pre_process_ui <- function(id) {
                     value = FALSE
                   ),
                   ns = ns
+                ),
+                checkboxInput(
+                  inputId = ns("plot_tukey"),
+                  label = "Run TukeyHSD test",
+                  value = FALSE
                 )
               ),
               column(
@@ -512,13 +524,23 @@ mod_02_pre_process_ui <- function(id) {
                 )
               )
             ),
+            uiOutput(
+              outputId = ns("signif_text")
+            ),
             plotOutput(
               outputId = ns("gene_plot"),
               width = "100%",
               height = "500px"
             ),
-            ottoPlots::mod_download_figure_ui(
-              id = ns("dl_gene_plot")
+            div(
+              style = "display: flex; gap: 10px",
+              ottoPlots::mod_download_figure_ui(
+                id = ns("dl_gene_plot")
+              ),
+              downloadButton(
+                outputId = ns("tukey_download"),
+                label = "TukeyHSD Results"
+              )
             ),
             h5(
               "Figure width can be adjusted by changing
@@ -637,11 +659,32 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
 
       return(processed_data)
     })
+    
+    observe({
+      req(processed_data()$data_size[3] < 1000)
+      showNotification(
+        "Less than 1000 genes passed through the pre-processing filter. 
+         By default, all genes will be used as background in enrichment 
+         analysis.",
+        id = "filter_warning",
+        duration = 20,
+        type = "warning",
+        session = session
+      )
+    })
+    
+    observe({
+      req(!tab() %in% c("Clustering", "Load Data", 
+                        "Network", "Bicluster", 
+                        "DEG2"))
+      removeNotification(id = "filter_warning",
+                         session = session)
+    })
 
     # Counts barplot ------------
     raw_counts <- reactive({
       req(!is.null(processed_data()$raw_counts))
-
+      
       p <- total_counts_ggplot(
         counts_data = processed_data()$raw_counts,
         sample_info = load_data$sample_info(),
@@ -654,9 +697,11 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         ggplot2_theme = load_data$ggplot2_theme()
       )
     })
+    
     output$raw_counts_gg <- renderPlot({
       print(raw_counts())
     })
+    
     dl_raw_counts_gg <- ottoPlots::mod_download_figure_server(
       id = "dl_raw_counts_gg",
       filename = "raw_counts_barplot",
@@ -664,6 +709,24 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         raw_counts()
       }),
       label = ""
+    )
+    
+    output$counts_table <- renderTable({
+      req(!is.null(processed_data()))
+      # Sums of counts by sample
+      filtered <- as.data.frame(colSums(processed_data()$raw_counts))
+      original <- as.data.frame(colSums(load_data$converted_data()))
+      
+      # Merge and rename columns
+      df <- merge(x = original, y = filtered, by = "row.names")
+      colnames(df) <- c("Sample", "Total Counts", "Total Counts After Filter")
+      df$`Counts Removed` <- df[,2] - df[,3] # Gene counts lost
+      df <- dplyr::mutate(df, across(2:4, ~ format(.x, big.mark = ",")))
+      df
+    },
+    bordered = TRUE,
+    digits = 0,
+    hover = TRUE
     )
 
     # gene type barplot ------------
@@ -1032,7 +1095,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
 
     # Dynamic individual gene checkbox ----------
     output$sd_checkbox <- renderUI({
-      req(input$gene_plot_box == FALSE)
+      req(input$gene_plot_box != 2)
 
       checkboxInput(
         inputId = ns("use_sd"),
@@ -1041,13 +1104,51 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       )
     })
 
+    observe({
+      shinyjs::toggle(id = "plot_tukey", 
+                      condition = input$gene_plot_box != 2 &&
+                        !input$plot_raw)
+      shinyjs::toggle(id = "tukey_download", condition = input$plot_tukey)
+      
+      if (input$plot_raw == TRUE && input$plot_tukey == TRUE){
+        shinyjs::reset(id = "plot_tukey")
+      }
+    })
+    
+    tukey_data <- reactive({
+      req(!is.null(individual_data()))
+      req(!is.na(input$selected_gene))
+      
+      get_tukey_data(individual_data(),
+                     sample_info = load_data$sample_info(),
+                     selected_gene = input$selected_gene,
+                     summarized = FALSE)
+    })
+    
+    output$tukey_download <- downloadHandler(
+      filename = function(){
+        req(!is.null(tukey_data()))
+        req(!is.na(input$selected_gene))
+        
+        "TukeyHSD_results.csv"
+      },
+      content = function(file){
+        req(!is.null(tukey_data()))
+        req(!is.na(input$selected_gene))
+        
+        write.csv(tukey_data(), file)
+      }
+    )
+    
     # Individual gene plot ---------
     gene_plot <- reactive({
       req(individual_data())
       req(input$selected_gene)
       req(!is.null(input$gene_plot_box))
       req(!is.null(input$use_sd))
+      req(!is.null(input$plot_tukey))
       req(input$angle_ind_axis_lab)
+      req(input$plot_raw != TRUE || input$plot_tukey != TRUE)
 
       p <- individual_plots(
         individual_data = individual_data(),
@@ -1057,7 +1158,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         use_sd = input$use_sd,
         lab_rotate = input$angle_ind_axis_lab,
         plots_color_select = load_data$plots_color_select(),
-        plot_raw = input$plot_raw
+        plot_raw = input$plot_raw,
+        plot_tukey = input$plot_tukey
       )
       refine_ggplot2(
         p = p,
@@ -1080,6 +1182,15 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       label = ""
     )
 
+    output$signif_text <- renderUI({
+      req(!is.null(input$plot_tukey))
+      
+      if (input$plot_tukey == TRUE){
+        paste0('Only top 10 most significant differences displayed for each',
+               ' gene (*** = pval < 0.001; ** = pval < 0.01; ',
+               '* = pval < 0.05)')
+      } else {NULL}
+    })
 
     # Download buttons ----------
     output$download_processed_data <- downloadHandler(
@@ -1330,6 +1441,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       raw_counts = reactive(processed_data()$raw_counts),
       data = reactive(processed_data()$data),
       p_vals = reactive(processed_data()$p_vals),
+      filter_size = reactive(processed_data()$data_size[3]),
       sample_info = reactive(load_data$sample_info()),
       all_gene_names = reactive(load_data$all_gene_names()),
       gmt_choices = reactive(load_data$gmt_choices()),

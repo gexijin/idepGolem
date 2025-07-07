@@ -389,6 +389,9 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
       processed_data = reactive({
         pre_process$data()
       }),
+      filter_size = reactive({
+        pre_process$filter_size()
+      }),
       gene_info = reactive({
         pre_process$all_gene_info()
       }),
@@ -407,6 +410,9 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
       }),
       ggplot2_theme = reactive({
         pre_process$ggplot2_theme()
+      }),
+      heat_colors = reactive({
+        strsplit(pre_process$heatmap_color_select(), "-")[[1]][c(1,3)]
       })
     )
 

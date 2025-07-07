@@ -53,6 +53,7 @@ mod_03_clustering_ui <- function(id) {
         HTML('<hr style="height:1px;border:none;color:#333;background-color:#333;" />'),
         conditionalPanel(
           condition = "input.cluster_panels == 'Heatmap' |
+          input.cluster_panels == 'word_cloud' |
           input.cluster_panels == 'Gene SD Distribution' ",
           fluidRow(
             column(width = 6, p("Top Genes:")),
@@ -81,7 +82,8 @@ mod_03_clustering_ui <- function(id) {
         ),
         conditionalPanel(
           condition = "(input.cluster_panels == 'Heatmap' |
-            input.cluster_panels == 'sample_tab') &&  input.cluster_meth == 2",
+          input.cluster_panels == 'word_cloud' |
+          input.cluster_panels == 'sample_tab') &&  input.cluster_meth == 2",
 
           # k- means slidebar -----------
 
@@ -126,6 +128,7 @@ mod_03_clustering_ui <- function(id) {
         conditionalPanel(
           condition = "input.cluster_meth == 1 &&
             (input.cluster_panels == 'Heatmap' |
+            input.cluster_panels == 'word_cloud' |
             input.cluster_panels == 'sample_tab')",
           fluidRow(
             column(width = 4, p("Distance")),
@@ -157,7 +160,7 @@ mod_03_clustering_ui <- function(id) {
           ns = ns
         ),
         conditionalPanel(
-          condition = "input.cluster_panels == 'Heatmap' ",
+          condition = "input.cluster_panels == 'Heatmap'",
           fluidRow(
             column(width = 4, p("Samples color")),
             column(
@@ -169,7 +172,12 @@ mod_03_clustering_ui <- function(id) {
             column(width = 4, p("Label Genes:")),
             column(
               width = 8,
-              htmlOutput(ns("selected_genes_ui"))
+              selectizeInput(
+                inputId = ns("selected_genes"),
+                label = NULL,
+                choices = c("Top 5", "Top 10", "Top 15"),
+                multiple = TRUE
+              )
             )
           ),
           checkboxInput(ns("customize_button"), "More options"),
@@ -207,6 +215,13 @@ mod_03_clustering_ui <- function(id) {
             value = 3,
             min = 2,
             step = 1
+          ),
+          ns = ns
+        ),
+        conditionalPanel(
+          condition = "input.cluster_panels == 'word_cloud'",
+          uiOutput(
+            outputId = ns("cloud_ui")
           ),
           ns = ns
         ),
@@ -315,7 +330,25 @@ mod_03_clustering_ui <- function(id) {
               )
             )
           ),
-
+          tabPanel(
+            br(),
+            div('Generate a word cloud of pathways that contain genes from the 
+                selected cluster (Must run clustering with heatmap first). 
+                Words are ranked by frequency.'),
+            uiOutput(
+              outputId = ns("cloud_error")
+            ),
+            title = "Word Cloud",
+            value = "word_cloud",
+            wordcloud2::wordcloud2Output(
+              outputId = ns("word_cloud"),
+              height = "600px"
+            ),
+            downloadButton(
+              outputId = ns("cloud_download"),
+              label = "Data Download"
+            )
+          ),
           # Gene Standard Deviation Distribution ----------
           tabPanel(
             title = "Gene SD Distribution",
@@ -384,14 +417,18 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         max = max_genes
       )
     })
-
     observe({
-      shinyjs::toggle(id = "sample_clustering", condition = input$customize_button)
-      shinyjs::toggle(id = "show_row_dend", condition = input$customize_button)
-      shinyjs::toggle(id = "heatmap_cutoff", condition = input$customize_button)
-      shinyjs::toggle(id = "gene_normalize", condition = input$customize_button)
-      shinyjs::toggle(id = "gene_centering", condition = input$customize_button)
-      shinyjs::toggle(id = "sample_color", condition = input$customize_button)
+
+      shinyjs::toggle(id = "sample_clustering", 
+                      condition = input$customize_button)
+      shinyjs::toggle(id = "show_row_dend", 
+                      condition = input$customize_button)
+      shinyjs::toggle(id = "heatmap_cutoff", 
+                      condition = input$customize_button)
+      shinyjs::toggle(id = "gene_normalize", 
+                      condition = input$customize_button)
+      shinyjs::toggle(id = "gene_centering", 
+                      condition = input$customize_button)
     })
 
     # Distance functions -----------
@@ -480,17 +517,17 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
 
 
     # Heatmap Click Value ---------
-    output$selected_genes_ui <- renderUI({
+    observeEvent(input$submit_model_button, {
       req(!is.null(pre_process$all_gene_names()))
       req(!is.null(pre_process$data()))
       req(!is.null(heatmap_data()))
 
-      selectizeInput(
-        inputId = ns("selected_genes"),
+      updateSelectizeInput(
+        session = session,
+        inputId = "selected_genes",
         label = NULL,
-        choices = row.names(heatmap_data()),
-        selected = NULL,
-        multiple = TRUE
+        choices = c("Top 5", "Top 10", "Top 15", row.names(heatmap_data())),
+        selected = input$selected_genes
       )
     })
 
@@ -762,10 +799,10 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     )
 
     # gene lists for enrichment analysis
-    gene_lists <- reactive({
+    gene_lists <- eventReactive(input$submit_model_button, {
       req(!is.null(pre_process$select_gene_id()))
       req(!is.null(input$ht_brush) || input$cluster_meth == 2)
-
+      
       gene_lists <- list()
 
       if (input$cluster_meth == 1) {
@@ -806,7 +843,8 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           }
         }
         clusts$id <- rownames(heatmap_data()[clusts$row_order, ])
-
+        
+        req(length(unique(clusts$cluster)) == input$k_clusters)
         # disregard user selection use clusters for enrichment
         for (i in 1:input$k_clusters) {
           cluster_data <- subset(clusts, cluster == i)
@@ -823,10 +861,32 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
             dplyr::select_if(gene_names, is.character)
         }
       }
-
       return(gene_lists)
     })
 
+    output$cloud_ui <- renderUI({
+      req(!is.null(gene_lists()))
+      tagList(
+        selectInput(
+          label = "Select Cluster:",
+          inputId = ns("select_cluster"),
+          choices = unique(names(gene_lists())),
+          selected = unique(names(gene_lists()))[1]
+        ),
+        selectInput(
+          label = "Select GO:",
+          inputId = ns("cloud_go"),
+          choices = setNames(
+            c( "KEGG", "GOBP", "GOCC", "GOMF"),
+            c("KEGG",
+              "GO Biological Process",
+              "GO Cellular Component",
+              "GO Molecular Function")
+          )
+        )
+      )
+    })
+    
     # Sample Tree ----------
     sample_tree <- eventReactive(input$submit_model_button, {
       req(!is.null(pre_process$data()), input$cluster_meth == 1)
@@ -865,6 +925,10 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           inputId = "cluster_panels",
           target = "sample_tab"
         )
+        hideTab(
+          inputId = "cluster_panels",
+          target = "word_cloud"
+        )
       }
     })
 
@@ -873,6 +937,10 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         hideTab(
           inputId = "cluster_panels",
           target = "sample_tab"
+        )
+        showTab(
+          inputId = "cluster_panels",
+          target = "word_cloud"
         )
       }
     })
@@ -935,7 +1003,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         write.csv(heatmap_data_download(), file)
       }
     )
-
+    
     enrichment_table_cluster <- mod_11_enrichment_server(
       id = "enrichment_table_cluster",
       gmt_choices = reactive({
@@ -946,6 +1014,9 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       }),
       processed_data = reactive({
         pre_process$data()
+      }),
+      filter_size = reactive({
+        pre_process$filter_size()
       }),
       gene_info = reactive({
         pre_process$all_gene_info()
@@ -965,9 +1036,69 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       }),
       ggplot2_theme = reactive({
         pre_process$ggplot2_theme()
+      }),
+      heat_colors = reactive({
+        strsplit(load_data$heatmap_color_select(), "-")[[1]][c(1,3)]
       })
     )
 
+    # Generate word/frequency data for word cloud
+    word_cloud_data <- reactive({
+      req(!is.na(input$select_cluster))
+      req(!is.null(input$cloud_go))
+      req(!is.null(gene_lists()))
+      
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Creating Word Cloud",
+        color = "#000000"
+      )
+      prep_cloud_data(gene_lists = gene_lists(), 
+                      cluster = input$select_cluster,
+                      cloud_go = input$cloud_go,
+                      select_org = pre_process$select_org(),
+                      converted = pre_process$converted(),
+                      gmt_file = pre_process$gmt_file(),
+                      idep_data = idep_data,
+                      gene_info = pre_process$all_gene_info())
+    })
+    
+    output$word_cloud <- wordcloud2::renderWordcloud2({
+      req(!is.null(word_cloud_data()))
+      
+      shinybusy::remove_modal_spinner()
+      
+      if ("character" %in% class(word_cloud_data())){
+        NULL
+      } else {
+        
+        wordcloud2::wordcloud2(word_cloud_data(),
+                               shape = "circle",
+                               rotateRatio = 0,
+                               color = "random-dark",
+                               shuffle = FALSE)
+      }
+    })
+    
+    # Error message UI for word cloud
+    output$cloud_error <- renderUI({
+      req(!is.null(word_cloud_data()))
+      
+      if ("character" %in% class(word_cloud_data())){
+        div(style = "color:red;",
+            "Pathways Not Found for selected cluster!")
+      } else {NULL}
+    })
+    
+    output$cloud_download <- downloadHandler(
+      filename = "word_cloud_data.csv",
+      content = function(file) {
+        req(!is.null(word_cloud_data()))
+        
+        write.csv(word_cloud_data(), file)
+      }
+    )
+    
     # Markdown report------------
     output$report <- downloadHandler(
 

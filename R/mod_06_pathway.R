@@ -208,11 +208,6 @@ mod_06_pathway_ui <- function(id) {
           tabPanel(
             title = "Tree",
             br(),
-            selectInput(
-              inputId = ns("leaf_colors"),
-              label = "Select leaf colors (low-high)",
-              choices = "green-red"
-            ),
             plotOutput(
               outputId = ns("enrichment_tree"),
               width = "100%"
@@ -614,7 +609,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         setNames(choices(),
                  proper(sub("^[^0-9]*\\d+\\s*", "", choices())))
       } else {
-        choices()
+        setNames(choices(), choices())
       }
 
     })
@@ -651,12 +646,14 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           contrast_samples = contrast_samples(),
           data = pre_process$data(),
           select_org = pre_process$select_org(),
-          all_gene_names = pre_process$all_gene_names()
+          all_gene_names = pre_process$all_gene_names(),
+          deg = as.data.frame(deg$limma()$results)
         )
         
         # Convert row names to gene symbols, keep Ensembl ID
         data.frame(
           Ensembl_ID = rownames(df),
+          Regulation = df[, ncol(df)],
           rowname_id_swap(
             data_matrix = df,
             all_gene_names = pre_process$all_gene_names(),
@@ -1224,20 +1221,19 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     })
 
     selected_pathway_data <- reactive({
-
       req(!is.null(gene_sets()$gene_lists))
-      if(is.null(input$sig_pathways)) {
-        return(NULL)
-      } else {
-        pathway_select_data(
-          sig_pathways = input$sig_pathways,
-          gene_sets = gene_sets()$gene_lists,
-          contrast_samples = contrast_samples(),
-          data = pre_process$data(),
-          select_org = pre_process$select_org(),
-          all_gene_names = pre_process$all_gene_names()
-        )
-      }
+      req(!is.null(input$sig_pathways))
+      
+      df <- pathway_select_data(
+        sig_pathways = input$sig_pathways,
+        gene_sets = gene_sets()$gene_lists,
+        contrast_samples = contrast_samples(),
+        data = pre_process$data(),
+        select_org = pre_process$select_org(),
+        all_gene_names = pre_process$all_gene_names(),
+        deg = as.data.frame(deg$limma()$results)
+      )
+      df[,-ncol(df)]
     })
 
     # Kegg Colors --------
@@ -1386,14 +1382,6 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         show_pathway_id = show_pathway_id
       )
     })
-    
-    observe({
-      updateSelectInput(
-        session = session,
-        inputId = "leaf_colors",
-        choices = kegg_choices
-      )
-    })
 
     enrichment_tree_p <- reactive({
       req(!is.null(pathway_list_data()))
@@ -1401,7 +1389,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         go_table = pathway_list_data(),
         group = "All Groups",
         right_margin = 30,
-        leaf_color_choices = kegg_colors[[input$leaf_colors]]
+        leaf_color_choices = strsplit(pre_process$heatmap_color_select(), 
+                                      "-")[[1]][c(1,3)]
       )
       p <- recordPlot()
       return(p)
@@ -1428,7 +1417,9 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         up_down_reg_deg = input$up_down_reg_deg,
         wrap_text_network_deg = input$wrap_text_network_deg,
         layout_vis_deg = input$layout_vis_deg,
-        edge_cutoff_deg = input$edge_cutoff_deg
+        edge_cutoff_deg = input$edge_cutoff_deg,
+        group_color = strsplit(pre_process$heatmap_color_select(), 
+                               "-")[[1]][c(1,3)]
       )
     })
 

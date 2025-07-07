@@ -65,6 +65,8 @@ usethis::use_package("ggupset")
 usethis::use_package("purrr")
 usethis::use_package("readxl")
 usethis::use_package("ggraph")
+usethis::use_package("tidytext")
+usethis::use_package("wordcloud2")
 
 ## Add modules ----
 ## Create a module infrastructure in R/

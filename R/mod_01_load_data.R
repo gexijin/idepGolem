@@ -153,7 +153,8 @@ mod_01_load_data_ui <- function(id) {
         br(),
         checkboxInput(
           inputId = ns("customize_button"),
-          label = strong("Global Settings"),
+          label = strong("Global Settings",
+                         style = "color: red;"),
           value = FALSE
         ),
         selectInput(
@@ -179,7 +180,7 @@ mod_01_load_data_ui <- function(id) {
         ),
         selectInput(
           inputId = ns("plots_color_select"),
-          label = "Plots Color scheme:",
+          label = "Plots Color scheme (PCA/Pre-Process):",
           choices = c(
             "Set1",
             "Set2",
@@ -196,7 +197,7 @@ mod_01_load_data_ui <- function(id) {
         ),
         selectInput(
           inputId = ns("heatmap_color_select"),
-          label = "Heatmap Color scheme:",
+          label = "Heatmap/Tree/Network Color scheme:",
           choices = c(
             "Green-Black-Red",
             "Red-Black-Green",
@@ -819,7 +820,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           (tab() != "Load Data"))
       
       removeNotification("select_first")
-      
     })
 
     # Show messages when on the Network tab or button is clicked ----

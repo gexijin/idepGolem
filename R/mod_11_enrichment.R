@@ -345,13 +345,15 @@ mod_11_enrichment_server <- function(id,
                                      gmt_choices, # list of pathway categories "GOBP"
                                      gene_lists, # list of genes, each element is a list
                                      processed_data,
+                                     filter_size,
                                      gene_info,
                                      idep_data,
                                      select_org,
                                      converted,
                                      gmt_file,
                                      plot_grid_lines,
-                                     ggplot2_theme) {
+                                     ggplot2_theme,
+                                     heat_colors) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     observe({
@@ -389,6 +391,26 @@ mod_11_enrichment_server <- function(id,
         inputId = ns("select_cluster"),
         selected = selected
       )
+    })
+    
+    observe({
+      req(!is.null(filter_size()))
+      
+      if(filter_size() < 1000) {
+        
+        updateCheckboxInput(
+          session = session,
+          inputId = "filtered_background",
+          value = FALSE
+        )
+      } else {
+        updateCheckboxInput(
+          session = session,
+          inputId = "filtered_background",
+          value = TRUE
+        )
+      }
+      
     })
 
     output$select_cluster <- renderUI({
@@ -708,7 +730,8 @@ mod_11_enrichment_server <- function(id,
       enrichment_tree_plot(
         go_table = enrichment_dataframe_for_tree(),
         group = input$select_cluster,
-        right_margin = 30
+        right_margin = 30,
+        leaf_color_choices = heat_colors()
       )
     })
 
@@ -739,7 +762,8 @@ mod_11_enrichment_server <- function(id,
         up_down_reg_deg = input$select_cluster,
         wrap_text_network_deg = input$wrap_text_network_deg,
         layout_vis_deg = input$layout_vis_deg,
-        edge_cutoff_deg = input$edge_cutoff_deg
+        edge_cutoff_deg = input$edge_cutoff_deg,
+        group_color = heat_colors()
       )
     })
 

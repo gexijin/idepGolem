@@ -299,7 +299,7 @@ heatmap_main <- function(data,
       )
     }
   }
-
+  
   # Different heatmaps for hierarchical and k-means
   if (cluster_meth == 1) {
     heat <- ComplexHeatmap::Heatmap(
@@ -337,7 +337,6 @@ heatmap_main <- function(data,
     } else {
       row_title <- 10
     }
-
     heat <- ComplexHeatmap::Heatmap(
       data,
       name = "Expression",
@@ -365,6 +364,21 @@ heatmap_main <- function(data,
 
   # mark selected genes on heatmap
   if (!is.null(selected_genes)) {
+    
+    if ("Top 5" %in% selected_genes){
+      selected_genes <- c(rownames(data)[1:5], 
+                          selected_genes[which(selected_genes != "Top 5")])
+    } 
+    if ("Top 10" %in% selected_genes){
+      selected_genes <- c(rownames(data)[1:10], 
+                          selected_genes[which(selected_genes != "Top 10")])
+    } 
+    if ("Top 15" %in% selected_genes){
+      selected_genes <- c(rownames(data)[1:15], 
+                          selected_genes[which(selected_genes != "Top 15")])
+    }
+    
+    selected_genes <- unique(selected_genes)
     ids <- row.names(heat@matrix)[heat@row_order]
     ix <- which(ids %in% selected_genes)
     req(length(ix) > 0)
@@ -988,4 +1002,71 @@ prep_download <- function(heatmap,
   } else {
     return(heatmap_data)
   }
+}
+
+#' Prepare Word Cloud Data
+#' 
+#' Prepares words in pathway and corresponding frequencies for 
+#' constructing word clouds
+#'
+#' @param gene_lists List of gene data within each cluster
+#' @param cluster Selected cluster from k-means clustering
+#' @param select_org Selected organism
+#' @param gmt_file Optional custom GMT file
+#' @param idep_data iDEP data 
+#' @param gene_info Gene info from pre-processing step
+#' @param cloud_go GO selected for word cloud. KEGG, GOBP, etc. 
+#' @param converted Converted data from pre-processing
+#'
+#' @returns Returns data frame of words from pathways in the selected cluster
+#' and their frequencies.
+#' @export
+#'
+prep_cloud_data <- function(gene_lists,
+                            cluster,
+                            cloud_go,
+                            select_org,
+                            converted,
+                            gmt_file,
+                            idep_data,
+                            gene_info){
+  
+  # Retrieve pathway information
+  paths1 <- read_pathway_sets(
+    all_gene_names_query = gene_lists[[cluster]],
+    converted = converted,
+    go = cloud_go,
+    select_org = select_org,
+    gmt_file = gmt_file,
+    idep_data = idep_data,
+    gene_info = gene_info
+  )
+  
+  # If null, either error or no pathways found
+  if (is.null(paths1)) {
+    return("Pathways Not Found")
+  }
+  
+  # Select description, remove path ID
+  paths1 <- data.frame(
+    Descr = remove_pathway_id(names(paths1$pathway_table$gene_sets), cloud_go), 
+    n = t(as.data.frame(lapply(paths1$pathway_table$gene_sets, length))), 
+    row.names = NULL
+  )
+  
+  # Remove common words/punctuation
+  words1 <- paths1 |>
+    dplyr::mutate(Descr = gsub("[-[:punct:]]", " ", Descr),
+                  Descr = gsub("\\s+", " ", Descr),
+                  Descr = trimws(Descr))|>
+    tidytext::unnest_tokens(word, Descr) |> # Tokenize the descriptions
+    dplyr::filter(!word %in% c("pathway", "pathways"),
+                  nchar(word) > 2) |>
+    dplyr::anti_join(tidytext::stop_words, by = "word") |>
+    dplyr::group_by(word) |>
+    dplyr::summarise(n = sum(n, na.rm = TRUE)) |>
+    dplyr::arrange(-n)
+
+  colnames(words1)[2] <- paste0("Cluster", cluster)
+  return(words1)
 }

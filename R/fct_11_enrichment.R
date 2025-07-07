@@ -323,6 +323,7 @@ enrich_barplot <- function(enrichment_dataframe,
 #' @param wrap_text_network_deg Wrap the text from the pathway description
 #' @param layout_vis_deg Button to reset the layout of the network
 #' @param edge_cutoff_deg P-value to cutoff enriched pathways
+#' @param group_color 
 #'
 #' @export
 #' @return Data that can be inputted in the vis_network_plot function
@@ -331,7 +332,8 @@ network_data <- function(network,
                          up_down_reg_deg,
                          wrap_text_network_deg,
                          layout_vis_deg,
-                         edge_cutoff_deg) {
+                         edge_cutoff_deg,
+                         group_color) {
   if (up_down_reg_deg != "All Groups") {
     network <- network[network$Direction == up_down_reg_deg, ]
   }
@@ -347,7 +349,8 @@ network_data <- function(network,
   g <- enrichment_network(
     network,
     layout_button = layout_vis_deg,
-    edge_cutoff = edge_cutoff_deg
+    edge_cutoff = edge_cutoff_deg,
+    group_color = group_color
   )
 
   if (is.null(g)) {
@@ -369,7 +372,8 @@ network_data <- function(network,
 #' ENRICHMENT NETWORK FUNCTION
 enrichment_network <- function(go_table,
                                layout_button = 0,
-                               edge_cutoff = 5) {
+                               edge_cutoff = 5,
+                               group_color) {
   req(!is.null(go_table))
   gene_lists <- lapply(go_table$Genes, function(x) unlist(strsplit(as.character(x), " ")))
   names(gene_lists) <- go_table$Pathways
@@ -384,7 +388,7 @@ enrichment_network <- function(go_table,
     degree_cutoff = 0,
     n = 200,
     group = go_table$Direction,
-    group_color = gg_color_hue(2 + length(unique(go_table$Direction))),
+    group_color = group_color,
     vertex.label.cex = 1,
     vertex.label.color = "black",
     show_legend = FALSE,

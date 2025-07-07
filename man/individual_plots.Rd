@@ -12,7 +12,8 @@ individual_plots(
   use_sd,
   lab_rotate,
   plots_color_select,
-  plot_raw
+  plot_raw,
+  plot_tukey
 )
 }
 \arguments{
@@ -20,6 +21,8 @@ individual_plots(
 
 \item{sample_info}{Matrix of experiment design information for
 grouping samples}
+
+\item{selected_gene}{list of genes selected for plotting}
 
 \item{gene_plot_box}{TRUE/FALSE for individual sample plot or grouped
 data plot}
@@ -32,7 +35,11 @@ the x-axis labels}
 
 \item{plots_color_select}{Vector of colors for plots}
 
-\item{select_gene}{List of gene(s) to be plotted}
+\item{plot_raw}{logical value specifying whether raw count data should be 
+used}
+
+\item{plot_tukey}{logical value that specifies whether or not to run 
+TukeyHSD tests within genes between sample groups}
 }
 \value{
 A \code{ggplot} object. For \code{gene_plot_box = TRUE} the return
