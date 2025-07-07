@@ -410,6 +410,9 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
       }),
       ggplot2_theme = reactive({
         pre_process$ggplot2_theme()
+      }),
+      heat_colors = reactive({
+        strsplit(pre_process$heatmap_color_select(), "-")[[1]][c(1,3)]
       })
     )
 
