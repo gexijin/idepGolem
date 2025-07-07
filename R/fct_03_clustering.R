@@ -978,3 +978,70 @@ prep_download <- function(heatmap,
     return(heatmap_data)
   }
 }
+
+#' Prepare Word Cloud Data
+#' 
+#' Prepares words in pathway and corresponding frequencies for 
+#' constructing word clouds
+#'
+#' @param gene_lists List of gene data within each cluster
+#' @param cluster Selected cluster from k-means clustering
+#' @param select_org Selected organism
+#' @param gmt_file Optional custom GMT file
+#' @param idep_data iDEP data 
+#' @param gene_info Gene info from pre-processing step
+#' @param cloud_go GO selected for word cloud. KEGG, GOBP, etc. 
+#' @param converted Converted data from pre-processing
+#'
+#' @returns Returns data frame of words from pathways in the selected cluster
+#' and their frequencies.
+#' @export
+#'
+prep_cloud_data <- function(gene_lists,
+                            cluster,
+                            cloud_go,
+                            select_org,
+                            converted,
+                            gmt_file,
+                            idep_data,
+                            gene_info){
+  
+  # Retrieve pathway information
+  paths1 <- read_pathway_sets(
+    all_gene_names_query = gene_lists[[cluster]],
+    converted = converted,
+    go = cloud_go,
+    select_org = select_org,
+    gmt_file = gmt_file,
+    idep_data = idep_data,
+    gene_info = gene_info
+  )
+  
+  # If null, either error or no pathways found
+  if (is.null(paths1)) {
+    return("Pathways Not Found")
+  }
+  
+  # Select description, remove path ID
+  paths1 <- data.frame(
+    Descr = remove_pathway_id(names(paths1$pathway_table$gene_sets), cloud_go), 
+    n = t(as.data.frame(lapply(paths1$pathway_table$gene_sets, length))), 
+    row.names = NULL
+  )
+  
+  # Remove common words/punctuation
+  words1 <- paths1 |>
+    dplyr::mutate(Descr = gsub("[-[:punct:]]", " ", Descr),
+                  Descr = gsub("\\s+", " ", Descr),
+                  Descr = trimws(Descr))|>
+    tidytext::unnest_tokens(word, Descr) |> # Tokenize the descriptions
+    dplyr::filter(!word %in% c("pathway", "pathways"),
+                  nchar(word) > 2) |>
+    dplyr::anti_join(tidytext::stop_words, by = "word") |>
+    dplyr::group_by(word) |>
+    dplyr::summarise(n = sum(n, na.rm = TRUE)) |>
+    dplyr::arrange(-n)
+
+  colnames(words1)[2] <- paste0("Cluster", cluster)
+  return(words1)
+}
