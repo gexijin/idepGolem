@@ -429,6 +429,8 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
                       condition = input$customize_button)
       shinyjs::toggle(id = "gene_centering", 
                       condition = input$customize_button)
+      shinyjs::toggle(id = "sample_color", 
+                      condition = input$customize_button)
     })
 
     # Distance functions -----------
