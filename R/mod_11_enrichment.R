@@ -345,6 +345,7 @@ mod_11_enrichment_server <- function(id,
                                      gmt_choices, # list of pathway categories "GOBP"
                                      gene_lists, # list of genes, each element is a list
                                      processed_data,
+                                     filter_size,
                                      gene_info,
                                      idep_data,
                                      select_org,
@@ -389,6 +390,26 @@ mod_11_enrichment_server <- function(id,
         inputId = ns("select_cluster"),
         selected = selected
       )
+    })
+    
+    observe({
+      req(!is.null(filter_size()))
+      
+      if(filter_size() < 1000) {
+        
+        updateCheckboxInput(
+          session = session,
+          inputId = "filtered_background",
+          value = FALSE
+        )
+      } else {
+        updateCheckboxInput(
+          session = session,
+          inputId = "filtered_background",
+          value = TRUE
+        )
+      }
+      
     })
 
     output$select_cluster <- renderUI({
