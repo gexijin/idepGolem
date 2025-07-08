@@ -306,7 +306,8 @@ chromosome_data <- function(limma,
     by.x = "row.names",
     by.y = "ensembl_gene_id"
   )
-
+  x$Fold2 <- x$Fold
+  
   colnames(x)[which(colnames(x) == "Row.names")] <- "ensembl_gene_id"
 
   # only coding genes?
@@ -494,6 +495,11 @@ chromosome_data <- function(limma,
     # Filter raw gene data
     filtered_genes <- x[S4Vectors::queryHits(hits), ]
     filtered_genes <- filtered_genes[!duplicated(filtered_genes), ]
+    
+    x$Fold <- x$Fold2
+    x <- x |>
+      dplyr::select(-Fold2) |>
+      dplyr::rename("log2(FoldChange)" = "Fold")
     
     return(list("chr_data" = x,
                 "enriched_regions" = moving_average,

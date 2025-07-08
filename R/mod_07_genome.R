@@ -42,7 +42,7 @@ mod_07_genome_ui <- function(id) {
             width = 6,
             numericInput(
               inputId = ns("limma_fc_viz"),
-              label = "Fold change",
+              label = "Min. Fold Change",
               value = 2,
               min = 1,
               max = 100,
