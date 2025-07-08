@@ -664,8 +664,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       req(processed_data()$data_size[3] < 1000)
       showNotification(
         "Less than 1000 genes passed through the pre-processing filter. 
-         By default, all genes will be used as background in enrichment 
-         analysis.",
+         By default, all genes in the database from the selected species 
+         will be used as background in enrichment analysis.",
         id = "filter_warning",
         duration = 20,
         type = "warning",
