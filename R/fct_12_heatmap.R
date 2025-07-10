@@ -190,15 +190,26 @@ deg_heat_sub <- function(ht_brush,
   if (!is.null(bar)) {
     bar[bar == -1] <- "Down"
     bar[bar == 1] <- "Up"
+
     row_groups <- bar
 
+    if (length(unique(row_groups)) > 1){
+      col_list <- setNames(
+        groups_colors[(group_count + 1):length(groups_colors)],
+        unique(row_groups)
+      )
+    } else {
+      
+      col_list <- setNames(
+        groups_colors[group_count + 1],
+        unique(row_groups)
+      )
+    }
+    
     row_ann <- ComplexHeatmap::rowAnnotation(
       Change = row_groups,
       col = list(
-        Change = setNames(
-          groups_colors[(group_count + 1):length(groups_colors)],
-          unique(row_groups)
-        )
+        Change = col_list
       ),
       annotation_legend_param = list(
         Change = list(nrow = 1, title = NULL)
