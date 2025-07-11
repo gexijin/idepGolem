@@ -693,7 +693,8 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     output$sub_heatmap <- renderPlot(
       {
         req(!is.null(heatmap_main_object()))
-        if (is.null(input$ht_brush)) {
+        
+        if (is.null(input$ht_brush) || is.null(heatmap_sub_object_calc())) {
           grid::grid.newpage()
           grid::grid.text("Select a region on the heatmap to zoom in.
         Selection can be adjusted from the sides.
@@ -743,11 +744,17 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       input$sample_color
     })
 
+    current_method <- eventReactive(input$submit_model_button, {
+      input$cluster_meth
+    })
+    
     heatmap_sub_object_calc <- reactive({
       req(!is.null(heatmap_main_object()))
       req(!is.null(submitted_pal()))
       req(!is.null(selected_factors_heatmap()))
-      try( # tolerates error; otherwise stuck with spinner
+      req(input$cluster_meth == current_method())
+      
+      try({ # tolerates error; otherwise stuck with spinner
         submap_return <- heat_sub(
           ht_brush = input$ht_brush,
           ht = shiny_env$ht,
@@ -759,14 +766,19 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           group_pal = group_pal(),
           sample_color = submitted_pal()
         )
-      )
+      })
+      
+      if (nrow(submap_return$ht_select) == 0 || 
+          ncol(submap_return$ht_select) == 0) {
+        submap_return <- NULL
+      }
 
       return(submap_return)
     })
     # Subheatmap creation ---------
     heatmap_sub_object <- reactive({
       req(!is.null(heatmap_main_object()))
-      if (is.null(input$ht_brush)) {
+      if (is.null(input$ht_brush) || is.null(heatmap_sub_object_calc())) {
         grid::grid.newpage()
         grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
       } else {
