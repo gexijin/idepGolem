@@ -752,25 +752,31 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       req(!is.null(heatmap_main_object()))
       req(!is.null(submitted_pal()))
       req(!is.null(selected_factors_heatmap()))
-      req(input$cluster_meth == current_method())
       
-      try({ # tolerates error; otherwise stuck with spinner
-        submap_return <- heat_sub(
+      submap_return <- tryCatch({ # tolerates error; otherwise stuck with spinner
+        heat_sub(
           ht_brush = input$ht_brush,
           ht = shiny_env$ht,
           ht_pos_main = shiny_env$ht_pos_main,
           heatmap_data = heatmap_data(),
           sample_info = pre_process$sample_info(),
           select_factors_heatmap = selected_factors_heatmap(),
-          cluster_meth = input$cluster_meth,
+          cluster_meth = current_method(),
           group_pal = group_pal(),
           sample_color = submitted_pal()
-        )
-      })
+        )},
+        error = function(e) {e$message}
+      )
       
-      if (nrow(submap_return$ht_select) == 0 || 
-          ncol(submap_return$ht_select) == 0) {
+      if ("character" %in% class(submap_return)){
         submap_return <- NULL
+      }
+      
+      if (!is.null(dim(submap_return$ht_select))){
+        if (nrow(submap_return$ht_select) == 0 || 
+            ncol(submap_return$ht_select) == 0) {
+          submap_return <- NULL
+        }
       }
 
       return(submap_return)
@@ -813,7 +819,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     )
 
     # gene lists for enrichment analysis
-    gene_lists <- eventReactive(input$submit_model_button, {
+    gene_lists <- reactive({
       req(!is.null(pre_process$select_gene_id()))
       req(!is.null(input$ht_brush) || input$cluster_meth == 2)
       
@@ -879,13 +885,13 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     })
 
     output$cloud_ui <- renderUI({
-      req(!is.null(gene_lists()))
+      req(!is.null(cloud_genes()))
       tagList(
         selectInput(
           label = "Select Cluster:",
           inputId = ns("select_cluster"),
-          choices = unique(names(gene_lists())),
-          selected = unique(names(gene_lists()))[1]
+          choices = unique(names(cloud_genes())),
+          selected = unique(names(cloud_genes()))[1]
         ),
         selectInput(
           label = "Select GO:",
@@ -1056,18 +1062,22 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       })
     )
 
+    cloud_genes <- eventReactive(input$submit_model_button, {
+      gene_lists()
+    })
+    
     # Generate word/frequency data for word cloud
     word_cloud_data <- reactive({
       req(!is.na(input$select_cluster))
       req(!is.null(input$cloud_go))
-      req(!is.null(gene_lists()))
+      req(!is.null(cloud_genes()))
       
       shinybusy::show_modal_spinner(
         spin = "orbit",
         text = "Creating Word Cloud",
         color = "#000000"
       )
-      prep_cloud_data(gene_lists = gene_lists(), 
+      prep_cloud_data(gene_lists = cloud_genes(), 
                       cluster = input$select_cluster,
                       cloud_go = input$cloud_go,
                       select_org = pre_process$select_org(),
