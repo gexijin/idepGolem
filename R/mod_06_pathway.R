@@ -46,7 +46,19 @@ mod_06_pathway_ui <- function(id) {
           ),
           selected = 3
         ),
-
+        conditionalPanel(
+          condition = "input.pathway_method == 1",
+          selectInput(
+            inputId = ns("gage_data"),
+            label = "GAGE Metric: ",
+            choices = list(
+              "Fold Change" = 1,
+              "Expression" = 2
+            ),
+            selected = 1
+          ),
+          ns = ns
+        ),
         htmlOutput(
           outputId = ns("select_go_selector")
         ),
@@ -771,6 +783,9 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       withProgress(message = "Running GAGE", {
         incProgress(0.2)
         gage_data(
+          expr_data = pre_process$data(),
+          sample_info = pre_process$sample_info(),
+          data_type = input$gage_data,
           select_go = input$select_go,
           select_contrast = input$select_contrast,
           min_set_size = input$min_set_size,
