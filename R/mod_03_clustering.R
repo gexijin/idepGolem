@@ -801,7 +801,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     )
 
     # gene lists for enrichment analysis
-    gene_lists <- eventReactive(input$submit_model_button, {
+    gene_lists <- reactive({
       req(!is.null(pre_process$select_gene_id()))
       req(!is.null(input$ht_brush) || input$cluster_meth == 2)
       
