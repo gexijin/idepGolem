@@ -5,6 +5,9 @@
 \title{Pathway analysis with gage package}
 \usage{
 gage_data(
+  expr_data,
+  sample_info = NULL,
+  data_type,
   select_go,
   select_contrast,
   min_set_size,
@@ -18,6 +21,13 @@ gage_data(
 )
 }
 \arguments{
+\item{expr_data}{Pre-processed gene expression data frame}
+
+\item{sample_info}{Experiment design structure as a data frame}
+
+\item{data_type}{Data type selected as integers; Fold Change = 1, 
+Expression = 2}
+
 \item{select_go}{String designating the section of the database to query for
 pathway analysis. See \code{\link{gmt_category}()} for choices.}
 

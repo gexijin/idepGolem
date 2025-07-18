@@ -32,6 +32,10 @@ NULL
 #'  enriched pathways
 #' @param n_pathway_show Number of pathways to return in final
 #'  result
+#' @param expr_data Pre-processed gene expression data frame
+#' @param sample_info Experiment design structure as a data frame
+#' @param data_type Data type selected as integers; Fold Change = 1, 
+#' Expression = 2
 #'
 #' @export
 #' @return A data frame with the results of the pathway analysis.
@@ -40,7 +44,10 @@ NULL
 #'  number of overlapping genes, and the p-value.
 #'
 #' @family pathway functions
-gage_data <- function(select_go,
+gage_data <- function(expr_data,
+                      sample_info = NULL,
+                      data_type,
+                      select_go,
                       select_contrast,
                       min_set_size,
                       max_set_size,
@@ -61,7 +68,7 @@ gage_data <- function(select_go,
   if (length(limma$top_genes) == 0) {
     return(no_sig)
   }
-
+  
   if (length(limma$comparisons) == 1) {
     top_1 <- limma$top_genes[[1]]
   } else {
@@ -77,19 +84,52 @@ gage_data <- function(select_go,
   }
   colnames(top_1) <- c("Fold", "FDR")
 
+  expr_data <- expr_data[rownames(top_1),]
+  expr_data <- expr_data[which(top_1$FDR < gene_p_val_cutoff), ]
   top_1 <- top_1[which(top_1$FDR < gene_p_val_cutoff), ]
 
   gmt <- gene_sets
   if (length(gene_sets) == 0) {
     return(as.data.frame("No gene set found!"))
   }
-
-  fold <- top_1[, 1]
-  names(fold) <- rownames(top_1)
-  if (absolute_fold) {
-    fold <- abs(fold)
+  
+  groups <- unlist(
+    stringr::str_split(string = select_contrast, 
+                       pattern = "-")
+  )
+  
+  # Conditional statements for determining GAGE data
+  # Expression data selected with experiment design/sample info
+  if(!is.null(sample_info) && data_type == 2) {
+    sample_info <- t(sample_info)
+    
+    samples <- sapply(groups, function(x){
+      colnames(sample_info)[colSums(sample_info == x) > 0]
+    })
+    
+    samples <- as.vector(samples)
+    data <- expr_data[, samples]
+    # Fold change selected
+  } else if (data_type == 1){
+    fold <- top_1[, 1]
+    names(fold) <- rownames(top_1)
+    if (absolute_fold) {
+      fold <- abs(fold)
+    } 
+    data <- fold
+    # Expression data selected without experiment design
+  } else {
+    col_groups <- detect_groups(colnames(expr_data))
+    
+    cols <- sapply(groups, function(x){
+      which(col_groups == x)
+    })
+    cols <- sort(as.vector(cols))
+    
+    data <- expr_data[, cols]
   }
-  paths <- gage::gage(fold, gsets = gmt, ref = NULL, samp = NULL)
+  
+  paths <- gage::gage(data, gsets = gmt, ref = NULL, samp = NULL)
 
   paths <- rbind(paths$greater, paths$less)
 
