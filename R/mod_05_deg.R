@@ -951,7 +951,13 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       req(!is.null(heat_data()$genes))
       
       number_heat_genes <- nrow(heat_data()$genes)
-      heat_number_vec <- seq(from = 5,to = number_heat_genes, by = 5)
+      
+      if (number_heat_genes < 5) {
+        start <- 1
+      } else {
+        start <- 5
+      }
+      heat_number_vec <- seq(from = start, to = number_heat_genes, by = start)
       heat_choices <- c("All DEGs", heat_number_vec)
       updateSelectInput(
         session = session,
@@ -1255,14 +1261,14 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       req(!is.null(heat_data()))
 
       return(
-        heat_data()$genes[heat_data()$bar == 1, ]
+        heat_data()$genes[heat_data()$bar == 1, , drop = FALSE]
       )
     })
     down_reg_data <- reactive({
       req(!is.null(heat_data()))
 
       return(
-        heat_data()$genes[heat_data()$bar == -1, ]
+        heat_data()$genes[heat_data()$bar == -1, , drop = FALSE]
       )
     })
 
@@ -1280,14 +1286,19 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
           } else {
             data <- down_reg_data()
           }
-
+          
+          if (nrow(data) != 0){
           gene_names <- merge_data(
             all_gene_names = pre_process$all_gene_names(),
             data = data,
             merge_ID = "ensembl_ID"
           )
-          # Only keep the gene names and scrap the data
           deg_lists[[direction]] <- dplyr::select_if(gene_names, is.character)
+          } else {
+            deg_lists[[direction]] <- NULL
+          }
+          # Only keep the gene names and scrap the data
+          
           incProgress(0.5)
         }
       })
