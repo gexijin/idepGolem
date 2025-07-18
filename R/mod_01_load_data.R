@@ -32,8 +32,7 @@ mod_01_load_data_ui <- function(id) {
       #       Load Data sidebar panel ----
       ##################################################################
       sidebarPanel(
-        # alternative UI output message for once expression data is loaded
-        uiOutput(ns("load_data_alt")),
+        uiOutput(ns("reset_button")),
         # Species Match Drop Down ------------
         selectInput(
           inputId = ns("select_org"),
@@ -605,7 +604,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             width = 4,
             actionButton(
               inputId = ns("go_button"),
-              label = "Demo"
+              label = "Load Demo"
             ),
             align = "right",
             tippy::tippy_this(
@@ -649,21 +648,37 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
       ) {
         tagList(
-          p(
-            "Watch a ",
-            a(
-              "video.",
-              href = "https://youtu.be/Hs5SamHHG9s",
-              target = "_blank"
-            ),
-            " Or click ",
-            tags$span("Demo", id = "load-demo"),
-            " below to try!"
+            tags$span("First Steps", style = "font-size: 18px;"),
+            tags$ul(
+              tags$li(
+                "Watch a ",
+                a(
+                  "video",
+                  href = "https://youtu.be/Hs5SamHHG9s",
+                  target = "_blank"
+                ),
+                "tutorial!"
+              ),
+              tags$li("Select a Species & Data Type"),
+              tags$li("Upload data or click ",
+                      tags$span("Load Demo", id = "load-demo"),
+                      " to try a sample data set!"
+              )
           ),
           tags$script("
             document.getElementById('load-demo').style.color = 'red';
           ")
         )
+      } else {
+        NULL
+      }
+    })
+
+    output$reset_button <- renderUI({
+      if (
+        is.null(input$go_button) || input$go_button == 0 && is.null(input$expression_file)
+      ) {
+        NULL
       } else {
         # reset message and action button
         tagList(
@@ -683,7 +698,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         )
       }
     })
-
+    
     observeEvent(input$reset_app_new_data, {
       session$reload()
     })
@@ -1127,6 +1142,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           )
         ),
         htmlOutput(ns("file_format")),
+        # alternative UI output message for once expression data is loaded
+        uiOutput(ns("load_data_alt")),
         includeHTML(app_sys("app/www/messages.html")),
         br(),
         img(
