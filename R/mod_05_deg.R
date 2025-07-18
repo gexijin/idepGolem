@@ -551,7 +551,6 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
           !is.null(pre_process$data()))
         withProgress(message = "DEG analysis...", {
           incProgress(0.4)
-
           # only use with DESeq2
           threshold_wald_test <- FALSE
           if (input$counts_deg_method == 3) {
@@ -562,42 +561,46 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
           if (input$counts_deg_method == 3) {
             independent_filtering <- input$independent_filtering
           }
-
-          deg$limma <- limma_value(
-            data_file_format = pre_process$data_file_format(),
-            counts_deg_method = input$counts_deg_method,
-            raw_counts = pre_process$raw_counts(),
-            limma_p_val = input$limma_p_val,
-            limma_fc = input$limma_fc,
-            select_model_comprions = input$select_model_comprions,
-            sample_info = pre_process$sample_info(),
-            select_factors_model = input$select_factors_model,
-            select_interactions = input$select_interactions,
-            select_block_factors_model = input$select_block_factors_model,
-            factor_reference_levels = factor_reference_levels(),
-            processed_data = pre_process$data(),
-            counts_log_start = pre_process$counts_log_start(),
-            p_vals = pre_process$p_vals(),
-            threshold_wald_test = threshold_wald_test,
-            independent_filtering = independent_filtering,
-            descr = pre_process$descr()
-          )
           
-          # Check for returned errors
-          if (class(deg$limma) == "character"){
-            if (grepl("the model matrix is not full rank", deg$limma)){
-              warning_type("FullRankError")
-              deg$limma <- NULL
-            } else {
-              warning_type("Unknown")
-              deg$limma <- NULL
-            }
-          } else{
-            updateTabsetPanel(
-              session = session,
-              inputId = "step_1",
-              selected = "results"
+          if (is.null(input$select_model_comprions)) {
+            warning_type("NoComparison")
+            deg$limma <- NULL
+          } else {
+            deg$limma <- limma_value(
+              data_file_format = pre_process$data_file_format(),
+              counts_deg_method = input$counts_deg_method,
+              raw_counts = pre_process$raw_counts(),
+              limma_p_val = input$limma_p_val,
+              limma_fc = input$limma_fc,
+              select_model_comprions = input$select_model_comprions,
+              sample_info = pre_process$sample_info(),
+              select_factors_model = input$select_factors_model,
+              select_interactions = input$select_interactions,
+              select_block_factors_model = input$select_block_factors_model,
+              factor_reference_levels = factor_reference_levels(),
+              processed_data = pre_process$data(),
+              counts_log_start = pre_process$counts_log_start(),
+              p_vals = pre_process$p_vals(),
+              threshold_wald_test = threshold_wald_test,
+              independent_filtering = independent_filtering,
+              descr = pre_process$descr()
             )
+            # Check for returned errors
+            if ("character" %in% class(deg$limma)){
+              if (grepl("the model matrix is not full rank", deg$limma)){
+                warning_type("FullRankError")
+                deg$limma <- NULL
+              } else {
+                warning_type("Unknown")
+                deg$limma <- NULL
+              }
+            } else {
+              updateTabsetPanel(
+                session = session,
+                inputId = "step_1",
+                selected = "results"
+              )
+            }
           }
         })
       }
@@ -609,6 +612,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         modal_title <- switch(
           warning_type(),
           "FullRankError" = "Please Check Experiment Design",
+          "NoComparison" = "No Comparison Selected",
           "Unknown Error" = "Analysis Error Occurred"
         )
         modal_text <- switch(
@@ -619,6 +623,10 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
             design submitted. Check that all combinations of design factors are 
             accounted for and have entries in your data.'
           ),
+          "NoComparison" = paste(
+          "No comparisons selected to perform DEG1 analysis on. Please select 
+          group comparisons (checkboxes) before submitting again."
+          ), 
           "UnknownError" = paste(
             "An unexpected error occurred during analysis. 
              Please check your inputs and try again. If the error persists, 
@@ -943,7 +951,13 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       req(!is.null(heat_data()$genes))
       
       number_heat_genes <- nrow(heat_data()$genes)
-      heat_number_vec <- seq(from = 5,to = number_heat_genes, by = 5)
+      
+      if (number_heat_genes < 5) {
+        start <- 1
+      } else {
+        start <- 5
+      }
+      heat_number_vec <- seq(from = start, to = number_heat_genes, by = start)
       heat_choices <- c("All DEGs", heat_number_vec)
       updateSelectInput(
         session = session,
@@ -1247,14 +1261,14 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       req(!is.null(heat_data()))
 
       return(
-        heat_data()$genes[heat_data()$bar == 1, ]
+        heat_data()$genes[heat_data()$bar == 1, , drop = FALSE]
       )
     })
     down_reg_data <- reactive({
       req(!is.null(heat_data()))
 
       return(
-        heat_data()$genes[heat_data()$bar == -1, ]
+        heat_data()$genes[heat_data()$bar == -1, , drop = FALSE]
       )
     })
 
@@ -1272,14 +1286,19 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
           } else {
             data <- down_reg_data()
           }
-
+          
+          if (nrow(data) != 0){
           gene_names <- merge_data(
             all_gene_names = pre_process$all_gene_names(),
             data = data,
             merge_ID = "ensembl_ID"
           )
-          # Only keep the gene names and scrap the data
           deg_lists[[direction]] <- dplyr::select_if(gene_names, is.character)
+          } else {
+            deg_lists[[direction]] <- NULL
+          }
+          # Only keep the gene names and scrap the data
+          
           incProgress(0.5)
         }
       })

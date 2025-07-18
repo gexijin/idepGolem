@@ -2496,7 +2496,7 @@ deg_heat_data <- function(limma,
     return(NULL)
   }
   # No significant genes for this comparison
-  if (sum(abs(genes[, ix])) <= 1) {
+  if (sum(abs(genes[, ix])) < 1) {
     return(NULL)
   }
   if (dim(genes)[2] < ix) {

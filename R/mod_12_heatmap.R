@@ -139,7 +139,7 @@ mod_12_heatmap_server <- function(id,
 
     output$sub_heatmap <- renderPlot(
       {
-        if (is.null(input$ht_brush)) {
+        if (is.null(input$ht_brush) || is.null(sub_heatmap_calc())) {
           grid::grid.newpage()
           grid::grid.text("Select a region on the heatmap to zoom in.
 
@@ -176,8 +176,10 @@ mod_12_heatmap_server <- function(id,
     )
 
     sub_heatmap_calc <- reactive({
-      try(
-        heat_return <- deg_heat_sub(
+      req(!is.null(data()))
+      
+      submap_return <- tryCatch({ # tolerates error; otherwise stuck with spinner
+        deg_heat_sub(
           ht_brush = input$ht_brush,
           ht = shiny_env$ht,
           ht_pos_main = shiny_env$ht_pos_main,
@@ -185,13 +187,26 @@ mod_12_heatmap_server <- function(id,
           bar = bar(),
           all_gene_names = all_gene_names(),
           select_gene_id = select_gene_id()
-        )
+        )},
+        error = function(e) {e$message}
       )
-      return(heat_return)
+      
+      if ("character" %in% class(submap_return)){
+        submap_return <- NULL
+      }
+      
+      if (!is.null(dim(submap_return$ht_select))){
+        if (nrow(submap_return$ht_select) == 0 || 
+            ncol(submap_return$ht_select) == 0) {
+          submap_return <- NULL
+        }
+      }
+      
+      return(submap_return)
     })
 
     sub_heatmap_object <- reactive({
-      if (is.null(input$ht_brush)) {
+      if (is.null(input$ht_brush) || is.null(sub_heatmap_calc())) {
         grid::grid.newpage()
         grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
       } else {
