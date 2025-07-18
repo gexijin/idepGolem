@@ -883,15 +883,31 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       }
       return(gene_lists)
     })
+    
+    k_means_list <- eventReactive(input$submit_model_button, {
+      req(!is.null(gene_lists()))
+      gene_lists()
+    })
+    
+    gene_list_clust <- reactive({
+      req(!is.null(input$cluster_meth))
+      
+      if (current_method() == 1){
+        gene_lists()
+      } else {
+        req(!is.null(k_means_list()))
+        k_means_list()
+      }
+    })
 
     output$cloud_ui <- renderUI({
-      req(!is.null(cloud_genes()))
+      req(!is.null(k_means_list()))
       tagList(
         selectInput(
           label = "Select Cluster:",
           inputId = ns("select_cluster"),
-          choices = unique(names(cloud_genes())),
-          selected = unique(names(cloud_genes()))[1]
+          choices = unique(names(k_means_list())),
+          selected = unique(names(k_means_list()))[1]
         ),
         selectInput(
           label = "Select GO:",
@@ -1030,7 +1046,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         pre_process$gmt_choices()
       }),
       gene_lists = reactive({
-        gene_lists()
+        gene_list_clust()
       }),
       processed_data = reactive({
         pre_process$data()
@@ -1061,23 +1077,19 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         strsplit(load_data$heatmap_color_select(), "-")[[1]][c(1,3)]
       })
     )
-
-    cloud_genes <- eventReactive(input$submit_model_button, {
-      gene_lists()
-    })
     
     # Generate word/frequency data for word cloud
     word_cloud_data <- reactive({
       req(!is.na(input$select_cluster))
       req(!is.null(input$cloud_go))
-      req(!is.null(cloud_genes()))
+      req(!is.null(k_means_list()))
       
       shinybusy::show_modal_spinner(
         spin = "orbit",
         text = "Creating Word Cloud",
         color = "#000000"
       )
-      prep_cloud_data(gene_lists = cloud_genes(), 
+      prep_cloud_data(gene_lists = k_means_list(), 
                       cluster = input$select_cluster,
                       cloud_go = input$cloud_go,
                       select_org = pre_process$select_org(),
