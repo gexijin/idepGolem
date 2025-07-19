@@ -280,17 +280,24 @@ find_overlap <- function(pathway_table,
   } else {
     pathway_table <- pathway_table[which(pathway_table$fdr < min_fdr), ]
 
+    cols <- c(
+      "fdr",
+      "overlap",
+      "n",
+      "fold",
+      "description",
+      "memo",
+      "gene_sets"
+    )
+    
+    if (go == "All") {
+      cols <- c(cols, "Database")
+    } else {
+      cols <- cols
+    }
     pathway_table <- subset(
       pathway_table,
-      select = c(
-        fdr,
-        overlap,
-        n,
-        fold,
-        description,
-        memo,
-        gene_sets
-      )
+      select = cols
     )
 
     if (sort_by_fold) {
@@ -319,11 +326,17 @@ find_overlap <- function(pathway_table,
 
     pathway_table$n <- as.numeric(pathway_table$n)
     pathway_table$fdr <- formatC(pathway_table$fdr, format = "e", digits = 2)
-    colnames(pathway_table) <- c(
+    
+    cols <- c(
       "FDR", "nGenes", "Pathway size", "Fold enriched",
       "Pathway", "URL", "Genes"
     )
-
+    if (go == "All") {
+      colnames(pathway_table) <- c(cols, "Database")
+    } else {
+      colnames(pathway_table) <- cols
+    }
+    
     # Remove redudant gene sets; only do it when there are more than 5.
     # Error when there is only 1 or 2.
     if (reduced != FALSE && dim(pathway_table)[1] > 5) {

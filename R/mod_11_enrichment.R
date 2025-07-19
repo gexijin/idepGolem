@@ -454,6 +454,7 @@ mod_11_enrichment_server <- function(id,
     # returns a list object
     pathway_table <- reactive({
       req(!is.null(gene_lists()))
+
       withProgress(message = "Enrichment Analysis", {
         incProgress(0.2)
         pathway_info <- list()
@@ -471,6 +472,7 @@ mod_11_enrichment_server <- function(id,
             idep_data = idep_data,
             gene_info = gene_info()
           )
+
           pathway_info[[names(gene_lists())[i]]] <- find_overlap(
             pathway_table = gene_sets$pathway_table,
             query_set = gene_sets$query_set,
@@ -648,7 +650,7 @@ mod_11_enrichment_server <- function(id,
     # returns a data frame
     enrichment_dataframe <- reactive({
       req(!is.null(pathway_table()))
-
+      
       results_all <- do.call(
         rbind,
         # combine multiple data frames that are elements of a list
@@ -818,7 +820,11 @@ mod_11_enrichment_server <- function(id,
         colnames(res) <- gsub("group", "Grp.", colnames(res))
         res <- subset(res, select = -PathwaySize)
 
-        colnames(res)[ncol(res)] <- "Pathway (Click for more info)"
+        if (input$select_go != "All"){
+          colnames(res)[ncol(res)] <- "Pathway (Click for more info)"
+        } else {
+          colnames(res)[ncol(res) - 1]
+        }
         res <- subset(res, select = -nGenes)
         return(res)
       },

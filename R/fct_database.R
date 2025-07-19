@@ -440,7 +440,6 @@ read_pathway_sets <- function(all_gene_names_query,
   }
 
 
-
   #  if (!is.null(gene_info)) {
   #    if (dim(gene_info)[1] > 1) {
   #      gene_info <- gene_info[which(
@@ -486,14 +485,23 @@ read_pathway_sets <- function(all_gene_names_query,
     return(pathway_table <- NULL)
   }
 
-  # List pathways and frequency of genes
-  pathway_ids <- stats::aggregate(
-    result$pathwayID,
-    by = list(unique_values = result$pathwayID),
-    FUN = length
-  )
-  colnames(pathway_ids) <- c("pathway_id", "overlap")
-
+  if (go != "All"){
+    # List pathways and frequency of genes
+    pathway_ids <- stats::aggregate(
+      result$pathwayID,
+      by = list(unique_values = result$pathwayID),
+      FUN = length
+    )
+    colnames(pathway_ids) <- c("pathway_id", "overlap")
+  } else {
+    pathway_ids <- stats::aggregate(
+      result$pathwayID,
+      by = list(unique_values = result$pathwayID, category = result$category),
+      FUN = length
+    )
+    colnames(pathway_ids) <- c("pathway_id", "Database", "overlap")
+  }
+  
   if (dim(pathway_ids)[1] == 0) {
     return(pathway_table <- NULL)
   } else {
@@ -974,6 +982,12 @@ build_pathway_query <- function(go, query_set) {
   # faster if category is first
   if (go != "All") {
     sql_query <- paste0(sql_query, " category = '", go, "' AND ")
+  } else {
+    sql_query <- paste0(
+      substr(sql_query, 0, 22),
+      ", category", 
+      substr(sql_query, 23, nchar(sql_query))
+    )
   }
 
   # Get Gene sets
