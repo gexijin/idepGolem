@@ -82,10 +82,10 @@ enrichment_tree_plot <- function(go_table,
   # Permutated order of leaves
   ix <- dend$order
   leaf_type <- as.factor(data$Direction[ix])
-  if(!is.null(leaf_color_choices)) {
+  if(!is.null(leaf_color_choices) && length(unique(leaf_type)) < 3) {
     leaf_colors <- leaf_color_choices
     }
-  else{
+  else {
     leaf_colors <- rev(gg_color_hue(length(unique(data$Direction))))
   }
 
@@ -483,6 +483,11 @@ enrich_net <- function(data,
   list_edges <- list_edges[!is.na(list_edges[, 1]), ]
   g <- igraph::graph.data.frame(list_edges[, -1], directed = FALSE)
   igraph::E(g)$width <- edge_width(as.numeric(list_edges[, 1]))
+  
+  graph_data <- igraph::as_data_frame(g, what = "vertices")
+  ix <- match(unique(graph_data[,1]), names(gene_sets_list))
+  gene_sets_list <- gene_sets_list[ix]
+  
   igraph::V(g)$size <- node_size(lengths(gene_sets_list))
   g <- igraph::delete.edges(g, igraph::E(g)[as.numeric(list_edges[, 1]) < edge_cutoff])
   index_deg <- igraph::degree(g) >= degree_cutoff
@@ -495,10 +500,17 @@ enrich_net <- function(data,
   n <- min(nrow(data), n)
   data <- data[1:n, ]
   group_level <- sort(unique(group))
-  p_values <- log10(as.numeric(data[, "adj_p_val"]))
+  
+  # Remove indices for pathways repeated throughout clusters
+  ix <- match(unique(graph_data[,1]), data$Pathways)
+  p_values <- log10(as.numeric(data[ix, "adj_p_val"]))
 
+  if (length(unique(data$Group)) > 2) {
+    group_color <- rev(gg_color_hue(length(unique(data$Group))))
+  }
+  
   for (i in 1:length(group_level)) {
-    index <- data[, "Group"] == group_level[i]
+    index <- data[ix, "Group"] == group_level[i]
     igraph::V(g)$shape[index] <- group_shape[1] # group_shape[i]
     group_p_values <- p_values[index]
 
