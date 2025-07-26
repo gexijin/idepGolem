@@ -11,7 +11,7 @@ app_server <- function(input, output, session) {
   pdf(file = NULL)
 
   # define where database is located
-  db_ver <<- "data107"
+  db_ver <<- "data113"
   db_url <<- "http://bioinformatics.sdstate.edu/data/"
 
   # if environmental variable is not set, use relative path

@@ -35,6 +35,7 @@ mod_03_clustering_ui <- function(id) {
           "Run Cluster analysis",
           theme = "light-border"
         ),
+        br(),
         # Select Clustering Method ----------
         conditionalPanel(
           condition = "input.cluster_panels == 'Heatmap' |
