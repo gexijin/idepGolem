@@ -648,7 +648,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
       ) {
         tagList(
-            tags$span("First Steps", style = "font-size: 18px;"),
+            tags$span("Quick Start:", style = "font-size: 18px;"),
             tags$ul(
               tags$li(
                 "Watch a ",
