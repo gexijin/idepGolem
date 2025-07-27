@@ -551,17 +551,17 @@ sub_heat_ann <- function(data,
                          group_pal = NULL,
                          sample_color = NULL) {
   groups <- detect_groups(colnames(data))
-  
+
   if (select_factors_heatmap == "All factors") {
-    
-    group_colors <- group_pal
+
+    group_colors <- group_pal[[1]]
     
     heat_sub_ann <- ComplexHeatmap::HeatmapAnnotation(
-      df = sample_info,
-      col = group_pal,
+      df = sample_info[, 1, drop = FALSE],
+      col = group_pal[1],
       show_legend = TRUE
     )
-    groups <- names(group_pal)
+    groups <- sample_info[, 1]
     
   } else {
     

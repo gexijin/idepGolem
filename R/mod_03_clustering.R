@@ -630,6 +630,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
 
     # Heatmap Click Value ---------
     output$ht_click_content <- renderUI({
+      req(!is.null(current_method()))
       # zoomed in, but not clicked
       if (is.null(input$ht_click) &&
         !is.null(shiny_env$ht_sub) &&
@@ -654,7 +655,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         ht_pos_sub = shiny_env$ht_pos_sub,
         sub_groups = shiny_env$sub_groups,
         group_colors = shiny_env$group_colors,
-        cluster_meth = input$cluster_meth,
+        cluster_meth = current_method(),
         click_data = shiny_env$click_data
       )
     })
