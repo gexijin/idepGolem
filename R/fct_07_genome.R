@@ -119,12 +119,12 @@ chromosome_plotly <- function(limma,
         ggplot2::aes(
           x = x,
           y = y,
-          color = R,
+          color = Regulation,
           text = paste0(
             "Symbol: ",
             symbol,
             "\nRegulation: ",
-            R,
+            Regulation,
             "\nChr Pos: ",
             x
           )
@@ -402,13 +402,13 @@ chromosome_data <- function(limma,
 
     x$y <- x$chNum * chD + x$Fold
     ch_total <- dim(ch_length_table)[1]
-    x$R <- as.factor(sign(x$Fold))
+    x$Regulation <- as.factor(sign(x$Fold))
 
     colnames(x)[which(colnames(x) == "start_position")] <- "x"
-    x$R <- as.character(x$R)
-    x$R[x$R == "-1"] <- "Down"
-    x$R[x$R == "1"] <- "Up"
-    x$R <- as.factor(x$R)
+    x$Regulation <- as.character(x$Regulation)
+    x$Regulation[x$Regulation == "-1"] <- "Down"
+    x$Regulation[x$Regulation == "1"] <- "Up"
+    x$Regulation <- as.factor(x$Regulation)
     
     # remove chromosomes with no genes left
     x <- droplevels(x)
@@ -527,7 +527,7 @@ chr_filter <- function(chr_data,
                        chr_select){
   
   if (regulation != "All"){
-    chr_data <- dplyr::filter(chr_data, R == regulation)
+    chr_data <- dplyr::filter(chr_data, Regulation == regulation)
   }
   
   if (!("All" %in% chr_select)){
