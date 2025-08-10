@@ -562,7 +562,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
             independent_filtering <- input$independent_filtering
           }
           
-          if (is.null(input$select_model_comprions)) {
+          if (is.null(input$select_model_comprions) && 
+              pre_process$data_file_format() != "3") {
             warning_type("NoComparison")
             deg$limma <- NULL
           } else {
