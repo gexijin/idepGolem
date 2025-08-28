@@ -1024,7 +1024,7 @@ hyperText <- function(textVector, urlVector) {
 
 
   # first see if URL is contained in memo
-  ix <- grepl("http:", urlVector, ignore.case = TRUE)
+  ix <- grepl("https:", urlVector, ignore.case = TRUE)
   if (sum(ix) > 0) { # at least one has http?
     tem <- paste0(
       "<a href='",
