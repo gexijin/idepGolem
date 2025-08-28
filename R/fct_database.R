@@ -1037,7 +1037,7 @@ pathway_source_info <- function(pathway_file, go, select_org, idep_data) {
     conn_db,
     # table.file is an SQL keyword, so use []
     paste0(
-      "SELECT * FROM source WHERE [Subtype.Database.name] = '",
+      "SELECT * FROM source WHERE [Database] = '",
       go,
       "';"
     )
