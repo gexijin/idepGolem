@@ -13,14 +13,6 @@ mod_07_genome_ui <- function(id) {
     title = "Genome",
     sidebarLayout(
       sidebarPanel(
-        div(
-          style = "text-align: right;",
-          actionButton(
-            inputId = ns("submit_button"),
-            label = "Submit",
-            style = "font-size: 16px; color: red;"
-          )
-        ),
         htmlOutput(outputId = ns("list_comparisons_genome")),
         tags$style(
           type = "text/css",
@@ -217,7 +209,7 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data) {
       }
     })
     
-    genome_plot <- eventReactive(input$submit_button, {
+    genome_plot <- reactive({
       req(!is.null(deg$limma()))
       req(!is.null(pre_process$all_gene_info()))
       req(!is.null(chr_data()))
@@ -300,7 +292,7 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data) {
     })
     
     # Get chromosome data using user-entered parameters
-    chr_data <- eventReactive(input$submit_button, {
+    chr_data <- reactive({
       req(!is.null(deg$limma()))
       req(!is.null(input$select_contrast))
       req(!is.null(pre_process$all_gene_info()))

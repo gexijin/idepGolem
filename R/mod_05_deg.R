@@ -237,14 +237,6 @@ mod_05_deg_2_ui <- function(id) {
     sidebarLayout(
       sidebarPanel(
         style = "height: 90vh; overflow-y: auto;",
-        div(
-          style = "text-align: right;",
-          actionButton(
-            inputId = ns("submit_deg2"),
-            label = "Submit",
-            style = "font-size: 16px; color: red;"
-          )
-        ),
         htmlOutput(outputId = ns("list_comparisons")),
         p("Select a comparison to examine the associated DEGs.
           \"A-B\" means A vs. B (See heatmap).
@@ -562,7 +554,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
             independent_filtering <- input$independent_filtering
           }
           
-          if (is.null(input$select_model_comprions)) {
+          if (is.null(input$select_model_comprions) && 
+              pre_process$data_file_format() != "3") {
             warning_type("NoComparison")
             deg$limma <- NULL
           } else {
@@ -1018,7 +1011,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       heat_data()$bar
     })
     
-    deg2_heat_bar <- eventReactive(input$submit_deg2, {
+    deg2_heat_bar <- reactive({
       req(!is.null(heatmap_bar()))
       req(!is.null(input$heatmap_gene_number))
       
@@ -1032,7 +1025,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       }
     })
     
-    deg2_heat_data <- eventReactive(input$submit_deg2, {
+    deg2_heat_data <- reactive({
       req(!is.null(heat_data()))
       req(!is.null(input$heatmap_gene_number))
       
@@ -1122,7 +1115,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     )
 
     # volcano plot -----
-    vol_data <- eventReactive(input$submit_deg2, {
+    vol_data <- reactive({
       req(input$select_contrast, deg$limma, input$limma_p_val, input$limma_fc)
 
       volcano_data(
@@ -1220,7 +1213,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     )
 
     ## scatter plot-----------
-    scatter_plot <- eventReactive(input$submit_deg2, {
+    scatter_plot <- reactive({
       req(!is.null(deg$limma$top_genes))
 
       p <- plot_deg_scatter(
@@ -1273,7 +1266,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     })
 
     # enrichment analysis results for both up and down regulated gene
-    pathway_deg <- eventReactive(input$submit_deg2, {
+    pathway_deg <- reactive({
       req(!is.null(up_reg_data()))
       withProgress(message = "Enrichment analysis for DEGs.", {
         incProgress(0.1)

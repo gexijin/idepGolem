@@ -422,6 +422,16 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         showTab(inputId = "pathway_tabs", target = "KEGG")
       }
     })
+    
+    observe({
+      req(!is.null(input$select_go))
+      
+      if (input$select_go != "KEGG") {
+        hideTab(inputId = "pathway_tabs", target = "KEGG")
+      } else {
+        showTab(inputId = "pathway_tabs", target = "KEGG")
+      }
+    })
 
     # If data is uploaded, but DEG1 is not run
     observe({
@@ -803,8 +813,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     output$gage_pathway_table <- renderTable(
       {
         input$submit_pathway_button
+
         isolate({ 
-          
           req(!is.null(gage_pathway_data()))
           req(input$pathway_method == 1)
           
@@ -1017,7 +1027,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
            "PLAGE")
     })
     
-    res_pathway <- reactive({
+    res_pathway <- eventReactive(input$submit_pathway_button, {
       req(!is.null(input$pathway_method))
       
       res <- switch(
