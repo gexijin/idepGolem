@@ -70,7 +70,7 @@ Other pathway functions:
 \code{\link{plot_gsva}()},
 \code{\link{plot_pgsea}()},
 \code{\link{reactome_data}()},
-\code{\link{remove_pathway_id_second}()},
-\code{\link{remove_pathway_id}()}
+\code{\link{remove_pathway_id}()},
+\code{\link{remove_pathway_id_second}()}
 }
 \concept{pathway functions}
