@@ -37,10 +37,10 @@ mod_01_load_data_ui <- function(id) {
         selectInput(
           inputId = ns("select_org"),
           label = NULL,
-          choices = setNames(c(99, 999), c("Human", "None")), 
+          choices = "None", 
           multiple = FALSE,
           selectize = TRUE,
-          selected = setNames(999, "None")
+          selected = "None"
         ),
         
         fluidRow(
@@ -77,7 +77,7 @@ mod_01_load_data_ui <- function(id) {
             # Species list and genome assemblies ----------
             actionButton(
               inputId = ns("upload_gmt_button"),
-              label = "Custom"
+              label = "Custom/New"
             ),
             tippy::tippy_this(
               ns("upload_gmt_button"),
@@ -129,7 +129,7 @@ mod_01_load_data_ui <- function(id) {
         # Includes load demo action button, demo data dropdown, and expression
         # file upload box
         conditionalPanel(
-          condition = "input.data_file_format != 0 && input.select_org != 999",
+          condition = "input.data_file_format != 0 && input.select_org != 'None'",
           uiOutput(ns("load_data_ui")),
           ns = ns
         ),
@@ -144,7 +144,7 @@ mod_01_load_data_ui <- function(id) {
         
         # Experiment design file input ----------
         conditionalPanel(
-          condition = "input.data_file_format != 0 && input.select_org != 999",
+          condition = "input.data_file_format != 0 && input.select_org != 'None'",
           uiOutput(ns("design_file_ui")),
           ns = ns
         ),
@@ -426,14 +426,19 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         )
       )
     })
+    
+    selected_species_name <- reactiveVal("None")
 
     # Pop-up modal for uploading GMT file ----
     observeEvent(input$upload_gmt_button, {
       shiny::showModal(
         shiny::modalDialog(
           size = "l",
-          p("Upload a custom pathway .GMT file to perform pathway analysis. 
-          This enables you to analyze data for species not annotated in our database."),
+          p("This enables you to analyze data for species not annotated in our 
+            database. Upload a custom pathway .GMT file to perform pathway 
+            analysis for new\\custom species."),
+          p("If pathway analysis is not needed, proceed without a .GMT file.",
+            style = "color: red;"),
           fileInput(
             inputId = ns("gmt_file"),
             label =
@@ -449,11 +454,33 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             ),
             placeholder = ""
           ),
+          footer = actionButton(
+            inputId = ns("custom_species"),
+            label = strong("Continue")
+          ),
           easyClose = TRUE
         )
       )
     })
 
+    observeEvent(input$custom_species, {
+      removeModal()
+      
+      updateSelectizeInput(
+        session = session,
+        inputId = "select_org",
+        choices = "NEW",
+        selected = "NEW",
+        server = TRUE
+      )
+      updateCheckboxInput(
+        inputId = "no_id_conversion",
+        label = "Do not convert gene IDs",
+        value = TRUE
+      )
+      
+      selected_species_name("Custom")
+    })
 
     observeEvent(input$gmt_file, {
       req(!is.null(input$gmt_file))
@@ -469,6 +496,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         label = "Do not convert gene IDs",
         value = TRUE
       )
+      
+      selected_species_name("Custom")
     })
 
     output$show_gmt <- renderUI({
@@ -498,8 +527,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     })
     shinyjs::hideElement(id = "select_org")
     
-    selected_species_name <- reactiveVal("None")
-    
     observeEvent(input$clicked_row, {
       
       # find species ID from ensembl_dataset
@@ -527,11 +554,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     })
 
     output$selected_species <- renderText({
-      if(is.null(input$gmt_file)){
-        selected_species_name() 
-      } else {
-        return("Custom")
-      }
+      selected_species_name()
     })
     
     observeEvent(input$data_file_format, {
@@ -820,7 +843,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # Notification for data type and species selection
     observe({
       req(tab() == "Load Data")
-      req(input$select_org == 999 || input$data_file_format == 0)
+      req(input$select_org == "None" || input$data_file_format == 0)
         
         showNotification(
           "Select a species and a data type before uploading data.",
@@ -831,7 +854,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     })
     
     observe({
-      req((input$select_org != 999 && input$data_file_format != 0) ||
+      req((input$select_org != "None" && input$data_file_format != 0) ||
           (tab() != "Load Data"))
       
       removeNotification("select_first")
