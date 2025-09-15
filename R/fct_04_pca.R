@@ -728,7 +728,7 @@ PCA_biplot <- function(data,
     legendLabSize = 16,
     legendIconSize = 8.0,
     pointSize = point_size,
-    title = "Principal Component Scores"
+    title = NULL
   )
 }
 
