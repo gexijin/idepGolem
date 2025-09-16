@@ -749,7 +749,7 @@ PCA_biplot <- function(data,
 #'
 PCA_Scree <- function(processed_data) {
   suppressWarnings(
-    pca_obj <- PCAtools::pca(mat = processed_data, removeVar = 0.1)
+    pca_obj <- PCAtools::pca(mat = processed_data, removeVar = 0.2)
   )
 
   suppressWarnings(
@@ -760,17 +760,6 @@ PCA_Scree <- function(processed_data) {
     pca_obj,
     vline = c(elbow)
   )
-  p <- p +
-    ggplot2::geom_label(
-      ggplot2::aes(
-        x = horn$n + .1,
-        y = 60,
-        label = "Horn's",
-        vjust = .5,
-        hjust = .5,
-        size = 8
-      )
-    )
   p <- p + ggplot2::geom_label(ggplot2::aes(
     x = elbow + .1,
     y = 70,
