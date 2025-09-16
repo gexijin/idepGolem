@@ -318,21 +318,23 @@ mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
     # reactive part -----
     pca_plot <- reactive({
       req(!is.null(pre_process$data()))
-
-      p <- PCA_plot(
-        data = pre_process$data(),
-        sample_info = pre_process$sample_info(),
-        PCAx = input$PCAx,
-        PCAy = input$PCAy,
-        selected_shape = input$selectFactors2,
-        selected_color = input$selectFactors1,
-        plots_color_select = load_data$plots_color_select()
-      )
-      refine_ggplot2(
-        p = p,
-        gridline = pre_process$plot_grid_lines(),
-        ggplot2_theme = pre_process$ggplot2_theme()
-      )
+      withProgress(message = "Generating plot ...", {
+        incProgress(0.2)
+        p <- PCA_plot(
+          data = pre_process$data(),
+          sample_info = pre_process$sample_info(),
+          PCAx = input$PCAx,
+          PCAy = input$PCAy,
+          selected_shape = input$selectFactors2,
+          selected_color = input$selectFactors1,
+          plots_color_select = load_data$plots_color_select()
+        )
+        refine_ggplot2(
+          p = p,
+          gridline = pre_process$plot_grid_lines(),
+          ggplot2_theme = pre_process$ggplot2_theme()
+        )
+      })
     })
     output$interactive_pca_plot_obj <- plotly::renderPlotly({
       # remove legend titles for the interactive plot
@@ -372,17 +374,19 @@ mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
     # reactive part -----
     pca_plot_3d <- reactive({
       req(!is.null(pre_process$data()))
-
-      p <- PCA_plot_3d(
-        data = pre_process$data(),
-        sample_info = pre_process$sample_info(),
-        PCAx = input$PCAx3d,
-        PCAy = input$PCAy3d,
-        PCAz = input$PCAz3d,
-        selected_shape = input$selectFactors2,
-        selected_color = input$selectFactors1,
-        plots_color_select = load_data$plots_color_select()
-      )
+      withProgress(message = "Generating plot ...", {
+        incProgress(0.2)
+        p <- PCA_plot_3d(
+          data = pre_process$data(),
+          sample_info = pre_process$sample_info(),
+          PCAx = input$PCAx3d,
+          PCAy = input$PCAy3d,
+          PCAz = input$PCAz3d,
+          selected_shape = input$selectFactors2,
+          selected_color = input$selectFactors1,
+          plots_color_select = load_data$plots_color_select()
+        )
+      })
     })
     output$pca_plot_obj_3d <- plotly::renderPlotly({
       pca_plot_3d()
@@ -402,19 +406,21 @@ mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
       req(!is.null(pre_process$data()))
 
       input$seedTSNE
-
-      p <- t_SNE_plot(
-        data = pre_process$data(),
-        sample_info = pre_process$sample_info(),
-        selected_shape = input$selectFactors2,
-        selected_color = input$selectFactors1,
-        plots_color_select = load_data$plots_color_select()
-      )
-      refine_ggplot2(
-        p = p,
-        gridline = pre_process$plot_grid_lines(),
-        ggplot2_theme = pre_process$ggplot2_theme()
-      )
+      withProgress(message = "Generating plot ...", {
+        incProgress(0.2)
+        p <- t_SNE_plot(
+          data = pre_process$data(),
+          sample_info = pre_process$sample_info(),
+          selected_shape = input$selectFactors2,
+          selected_color = input$selectFactors1,
+          plots_color_select = load_data$plots_color_select()
+        )
+        refine_ggplot2(
+          p = p,
+          gridline = pre_process$plot_grid_lines(),
+          ggplot2_theme = pre_process$ggplot2_theme()
+        )
+      })
     })
     output$t_sne <- plotly::renderPlotly({
       req(t_SNE_plot_obj())
@@ -437,19 +443,21 @@ mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
 
     mds_plot <- reactive({
       req(!is.null(pre_process$data()))
-
-      p <- MDS_plot(
-        data = pre_process$data(),
-        sample_info = pre_process$sample_info(),
-        selected_shape = input$selectFactors2,
-        selected_color = input$selectFactors1,
-        plots_color_select = load_data$plots_color_select()
-      )
-      refine_ggplot2(
-        p = p,
-        gridline = pre_process$plot_grid_lines(),
-        ggplot2_theme = pre_process$ggplot2_theme()
-      )
+      withProgress(message = "Generating plot ...", {
+        incProgress(0.2)
+        p <- MDS_plot(
+          data = pre_process$data(),
+          sample_info = pre_process$sample_info(),
+          selected_shape = input$selectFactors2,
+          selected_color = input$selectFactors1,
+          plots_color_select = load_data$plots_color_select()
+        )
+        refine_ggplot2(
+          p = p,
+          gridline = pre_process$plot_grid_lines(),
+          ggplot2_theme = pre_process$ggplot2_theme()
+        )
+      })
     })
     
     output$mds_plot_obj <- plotly::renderPlotly({
@@ -470,9 +478,8 @@ mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
     # PCAtools biplot  ---------------------
     biplot <- reactive({
       req(!is.null(pre_process$data()))
-      withProgress(message = "Generating Plots", {
+      withProgress(message = "Generating biplot", {
         incProgress(0.2)
-
         p <- PCA_biplot(
           data = pre_process$data(),
           sample_info = pre_process$sample_info(),
@@ -510,10 +517,12 @@ mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
     # PCAtools Scree Plot --------------------
     scree <- reactive({
       req(!is.null(pre_process$data()))
-
-      p <- PCA_Scree(
-        processed_data = pre_process$data()
-      )
+      withProgress(message = "Generating Scree Plot", {
+        incProgress(0.2)
+        p <- PCA_Scree(
+          processed_data = pre_process$data()
+        )
+      })
       #      refine_ggplot2(p, gridline = pre_process$plot_grid_lines())
     })
     output$pcatools_scree <- renderPlot({
@@ -535,16 +544,18 @@ mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
     # PCAtools Eigencor Plot --------------------
     eigencor <- reactive({
       req(!is.null(pre_process$data()))
-
-      p <- PCAtools_eigencorplot(
-        processed_data = pre_process$data(),
-        sample_info = pre_process$sample_info()
-      )
-      refine_ggplot2(
-        p = p,
-        gridline = pre_process$plot_grid_lines(),
-        ggplot2_theme = pre_process$ggplot2_theme()
-      )
+      withProgress(message = "Generating Eigencor Plot", {
+        incProgress(0.2)
+        p <- PCAtools_eigencorplot(
+          processed_data = pre_process$data(),
+          sample_info = pre_process$sample_info()
+        )
+        refine_ggplot2(
+          p = p,
+          gridline = pre_process$plot_grid_lines(),
+          ggplot2_theme = pre_process$ggplot2_theme()
+        )
+      })
     })
     output$pcatools_eigencor <- renderPlot({
       req(eigencor())
@@ -564,10 +575,12 @@ mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
     # Variable importance for 1st selected PC
     var_plot1 <- reactive({
       req(!is.null(pre_process$data()))
-      
-      var_imp_plots(pre_process$data(),
-                    pre_process$all_gene_names(),
-                    input$x_axis_pc)
+      withProgress(message = "Generating Gene Plot for PC1", {
+        incProgress(0.3)
+        var_imp_plots(pre_process$data(),
+                      pre_process$all_gene_names(),
+                      input$x_axis_pc)
+      })
     })
     
     output$var_imp_x <- renderPlot({
@@ -591,10 +604,12 @@ mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
     # Variable importance for 2nd selected PC
     var_plot2 <- reactive({
       req(!is.null(pre_process$data()))
-      
-      var_imp_plots(pre_process$data(),
-                    pre_process$all_gene_names(),
-                    input$y_axis_pc)
+      withProgress(message = "Generating Gene Plot for PC2", {
+        incProgress(0.4)
+        var_imp_plots(pre_process$data(),
+                      pre_process$all_gene_names(),
+                      input$y_axis_pc)
+      })
     })
     
     output$var_imp_y <- renderPlot({

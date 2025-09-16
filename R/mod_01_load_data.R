@@ -895,8 +895,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # Message for the status of the app ---------
     output$file_format <- renderUI({
       shinyjs::hideElement(id = "load_message")
-      i <- "<h4>Ready to load data files.</h4>"
-      htmltools::HTML(paste(i, collapse = "<br/>"))
     })
 
     # Change demo data based on selected format ----

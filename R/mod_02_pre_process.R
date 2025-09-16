@@ -684,18 +684,20 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     # Counts barplot ------------
     raw_counts <- reactive({
       req(!is.null(processed_data()$raw_counts))
-      
-      p <- total_counts_ggplot(
-        counts_data = processed_data()$raw_counts,
-        sample_info = load_data$sample_info(),
-        type = "Raw",
-        plots_color_select = load_data$plots_color_select()
-      )
-      refine_ggplot2(
-        p = p,
-        gridline = load_data$plot_grid_lines(),
-        ggplot2_theme = load_data$ggplot2_theme()
-      )
+      withProgress(message = "Generating plot ...", {
+        incProgress(0.2)
+        p <- total_counts_ggplot(
+          counts_data = processed_data()$raw_counts,
+          sample_info = load_data$sample_info(),
+          type = "Raw",
+          plots_color_select = load_data$plots_color_select()
+        )
+        refine_ggplot2(
+          p = p,
+          gridline = load_data$plot_grid_lines(),
+          ggplot2_theme = load_data$ggplot2_theme()
+        )
+      })
     })
     
     output$raw_counts_gg <- renderPlot({
@@ -879,17 +881,19 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     # Scatter eda plot ----------
     scatter <- reactive({
       req(!is.null(processed_data()$data))
-
-      p <- eda_scatter(
-        processed_data = processed_data()$data,
-        plot_xaxis = input$scatter_x,
-        plot_yaxis = input$scatter_y
-      )
-      refine_ggplot2(
-        p = p,
-        gridline = load_data$plot_grid_lines(),
-        ggplot2_theme = load_data$ggplot2_theme()
-      )
+      withProgress(message = "Generating plot ...", {
+        incProgress(0.2)
+        p <- eda_scatter(
+          processed_data = processed_data()$data,
+          plot_xaxis = input$scatter_x,
+          plot_yaxis = input$scatter_y
+        )
+        refine_ggplot2(
+          p = p,
+          gridline = load_data$plot_grid_lines(),
+          ggplot2_theme = load_data$ggplot2_theme()
+        )
+      })
     })
     output$eda_scatter <- renderPlot({
       print(scatter())
@@ -906,17 +910,19 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     # Box eda plot ----------
     eda_box <- reactive({
       req(!is.null(processed_data()$data))
-
-      p <- eda_boxplot(
-        processed_data = processed_data()$data,
-        sample_info = load_data$sample_info(),
-        plots_color_select = load_data$plots_color_select()
-      )
-      refine_ggplot2(
-        p = p,
-        gridline = load_data$plot_grid_lines(),
-        ggplot2_theme = load_data$ggplot2_theme()
-      )
+      withProgress(message = "Generating boxplot", {
+        incProgress(0.2)
+        p <- eda_boxplot(
+          processed_data = processed_data()$data,
+          sample_info = load_data$sample_info(),
+          plots_color_select = load_data$plots_color_select()
+        )
+        refine_ggplot2(
+          p = p,
+          gridline = load_data$plot_grid_lines(),
+          ggplot2_theme = load_data$ggplot2_theme()
+        )
+      })
     })
     output$eda_boxplot <- renderPlot({
       print(eda_box())
@@ -933,17 +939,19 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     # Density eda plot ----------
     density <- reactive({
       req(!is.null(processed_data()$data))
-
-      p <- eda_density(
-        processed_data = processed_data()$data,
-        sample_info = load_data$sample_info(),
-        plots_color_select = load_data$plots_color_select()
-      )
-      refine_ggplot2(
-        p = p,
-        gridline = load_data$plot_grid_lines(),
-        ggplot2_theme = load_data$ggplot2_theme()
-      )
+      withProgress(message = "Generating density plot", {
+        incProgress(0.2)
+        p <- eda_density(
+          processed_data = processed_data()$data,
+          sample_info = load_data$sample_info(),
+          plots_color_select = load_data$plots_color_select()
+        )
+        refine_ggplot2(
+          p = p,
+          gridline = load_data$plot_grid_lines(),
+          ggplot2_theme = load_data$ggplot2_theme()
+        )
+      })
     })
     output$eda_density <- renderPlot({
       print(density())
@@ -984,17 +992,19 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     # Mean vs SD plot --------
     dev <- reactive({
       req(!is.null(processed_data()$data))
-
-      p <- mean_sd_plot(
-        processed_data = processed_data()$data,
-        heat_cols = heat_colors[[input$heat_color_select]],
-        rank = input$rank
-      )
-      refine_ggplot2(
-        p = p,
-        gridline = load_data$plot_grid_lines(),
-        ggplot2_theme = load_data$ggplot2_theme()
-      )
+      withProgress(message = "Generating plot ...", {
+        incProgress(0.2)
+        p <- mean_sd_plot(
+          processed_data = processed_data()$data,
+          heat_cols = heat_colors[[input$heat_color_select]],
+          rank = input$rank
+        )
+        refine_ggplot2(
+          p = p,
+          gridline = load_data$plot_grid_lines(),
+          ggplot2_theme = load_data$ggplot2_theme()
+        )
+      })
     })
     output$dev_transfrom <- renderPlot({
       print(dev())
@@ -1149,23 +1159,25 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       req(!is.null(input$plot_tukey))
       req(input$angle_ind_axis_lab)
       req(input$plot_raw != TRUE || input$plot_tukey != TRUE)
-
-      p <- individual_plots(
-        individual_data = individual_data(),
-        sample_info = load_data$sample_info(),
-        selected_gene = input$selected_gene,
-        gene_plot_box = input$gene_plot_box,
-        use_sd = input$use_sd,
-        lab_rotate = input$angle_ind_axis_lab,
-        plots_color_select = load_data$plots_color_select(),
-        plot_raw = input$plot_raw,
-        plot_tukey = input$plot_tukey
-      )
-      refine_ggplot2(
-        p = p,
-        gridline = load_data$plot_grid_lines(),
-        ggplot2_theme = load_data$ggplot2_theme()
-      )
+      withProgress(message = "Generating plot ...", {
+        incProgress(0.2)
+        p <- individual_plots(
+          individual_data = individual_data(),
+          sample_info = load_data$sample_info(),
+          selected_gene = input$selected_gene,
+          gene_plot_box = input$gene_plot_box,
+          use_sd = input$use_sd,
+          lab_rotate = input$angle_ind_axis_lab,
+          plots_color_select = load_data$plots_color_select(),
+          plot_raw = input$plot_raw,
+          plot_tukey = input$plot_tukey
+        )
+        refine_ggplot2(
+          p = p,
+          gridline = load_data$plot_grid_lines(),
+          ggplot2_theme = load_data$ggplot2_theme()
+        )
+      })
     })
   
     output$gene_plot <- renderPlot({
