@@ -751,9 +751,6 @@ PCA_Scree <- function(processed_data) {
   suppressWarnings(
     pca_obj <- PCAtools::pca(mat = processed_data, removeVar = 0.1)
   )
-  suppressWarnings(
-    horn <- PCAtools::parallelPCA(processed_data)
-  )
 
   suppressWarnings(
     elbow <- PCAtools::findElbowPoint(pca_obj$variance)
@@ -761,7 +758,7 @@ PCA_Scree <- function(processed_data) {
 
   p <- PCAtools::screeplot(
     pca_obj,
-    vline = c(horn$n, elbow)
+    vline = c(elbow)
   )
   p <- p +
     ggplot2::geom_label(
