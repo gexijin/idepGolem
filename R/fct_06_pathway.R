@@ -485,23 +485,23 @@ gsva_data <- function(processed_data,
   }
   
   # # Modern Syntax for current GSVA versions
-  # if (algorithm == "gsva"){
-  # 
-  #   param <- GSVA::gsvaParam(processed_data, gene_sets)
-  # 
-  # } else if (algorithm == "ssgsea") {
-  # 
-  #   param <- GSVA::ssgseaParam(processed_data, gene_sets)
-  # 
-  # } else if (algorithm == "plage") {
-  # 
-  #   param <- GSVA::plageParam(processed_data, gene_sets)
-  # }
-  # 
-  # pg_results <- GSVA::gsva(param = param, verbose = FALSE)
-  # 
+  if (algorithm == "gsva"){
+   
+     param <- GSVA::gsvaParam(processed_data, gene_sets)
+   
+  } else if (algorithm == "ssgsea") {
+   
+    param <- GSVA::ssgseaParam(processed_data, gene_sets)
+   
+  } else if (algorithm == "plage") {
+   
+    param <- GSVA::plageParam(processed_data, gene_sets)
+  }
+   
+  pg_results <- GSVA::gsva(param = param, verbose = FALSE)
+   
  # Deprecated syntax for old versions
- pg_results <- GSVA::gsva(processed_data, gene_sets, verbose = FALSE, method = algorithm)
+ #pg_results <- GSVA::gsva(processed_data, gene_sets, verbose = FALSE, method = algorithm)
 
   # Remove se/wrts with all missing(non-signficant)
   pg_results <- pg_results[rowSums(is.na(pg_results)) < ncol(pg_results), ]
