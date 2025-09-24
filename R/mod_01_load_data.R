@@ -61,7 +61,7 @@ mod_01_load_data_ui <- function(id) {
             # Species list and genome assemblies ----------
             actionButton(
               inputId = ns("genome_assembl_button"),
-              label = strong("Select")
+              label = "Select"
             )
           ),
           column(
@@ -322,6 +322,9 @@ mod_01_load_data_ui <- function(id) {
         DT::dataTableOutput(ns("sample_info_table")),
         br(),
         br(),
+
+        # Default species notification ----------
+        uiOutput(ns("default_species_message")),
 
         # Display first 20 rows of the data ----------
         DT::dataTableOutput(ns("sample_20")),
@@ -591,6 +594,29 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
     output$selected_species <- renderText({
       selected_species_name()
+    })
+
+    # Default species message when user hasn't clicked Select ----------
+    output$default_species_message <- renderUI({
+      req(!is.null(loaded_data()$data))
+      req(!is.null(idep_data$org_info) && nrow(idep_data$org_info) > 0)
+      req(input$genome_assembl_button == 0 || is.null(input$genome_assembl_button))
+      # Check if user is still using the first species (default)
+      first_species_id <- idep_data$org_info$id[1]
+      first_species_name <- idep_data$org_info$name2[1]
+
+      # Only show message if using default species and not in NEW mode
+      if(input$select_org == first_species_id && input$select_org != "NEW") {
+        div(
+          style = "background-color: #d1ecf1; border: 1px solid #bee5eb;
+                   border-radius: 4px; padding: 10px; margin: 10px 0;
+                   color: #0c5460;",
+          h5(
+            icon("info-circle"),
+            paste0(" Using ", first_species_name, " genome annotations and pathways.")
+          )
+        )
+      }
     })
     
     observeEvent(input$data_file_format, {
@@ -1107,17 +1133,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       }
     })
 
-    # Species match table ----------
-    output$species_match <- renderTable({
-      species_match_data()
-      },
-      digits = -1,
-      spacing = "s",
-      striped = TRUE,
-      bordered = TRUE,
-      width = "auto",
-      hover = TRUE
-    )
 
     species_match_data <- reactive({
       req(!is.null(input$go_button))
@@ -1152,7 +1167,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           species_match_data()[1,1] == "ID not recognized." &&
           input$select_org != "NEW"
       )
-
 
       showModal(modalDialog(
         title = "Please double check the selected species",
