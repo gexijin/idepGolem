@@ -34,14 +34,7 @@ mod_01_load_data_ui <- function(id) {
       sidebarPanel(
         uiOutput(ns("reset_button")),
         # Species Match Drop Down ------------
-        selectInput(
-          inputId = ns("select_org"),
-          label = NULL,
-          choices = "None", 
-          multiple = FALSE,
-          selectize = TRUE,
-          selected = "None"
-        ),
+        uiOutput(ns("species_dropdown")),
         
         fluidRow(
           column(
@@ -129,7 +122,7 @@ mod_01_load_data_ui <- function(id) {
         # Includes load demo action button, demo data dropdown, and expression
         # file upload box
         conditionalPanel(
-          condition = "input.data_file_format != 0 && input.select_org != 'None'",
+          condition = "input.data_file_format != 0 && input.select_org != null && input.select_org != ''",
           uiOutput(ns("load_data_ui")),
           ns = ns
         ),
@@ -144,7 +137,7 @@ mod_01_load_data_ui <- function(id) {
         
         # Experiment design file input ----------
         conditionalPanel(
-          condition = "input.data_file_format != 0 && input.select_org != 'None'",
+          condition = "input.data_file_format != 0 && input.select_org != null && input.select_org != ''",
           uiOutput(ns("design_file_ui")),
           ns = ns
         ),
@@ -336,7 +329,33 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     
     # increase max input file size
     options(shiny.maxRequestSize = 2001024^2)
-    
+
+    # Initialize hidden species selection with first species as default
+    output$species_dropdown <- renderUI({
+      # Get first species from org_info (ordered by 'top' field)
+      first_species_id <- idep_data$org_info$id[1]
+
+      # Create hidden selectInput with first species pre-selected
+      div(
+        style = "display: none;",
+        selectInput(
+          inputId = ns("select_org"),
+          label = NULL,
+          choices = setNames(first_species_id, idep_data$org_info$name2[1]),
+          multiple = FALSE,
+          selectize = FALSE,
+          selected = first_species_id
+        )
+      )
+    })
+
+    # Set initial selected species name
+    observe({
+      if(!is.null(idep_data$org_info) && nrow(idep_data$org_info) > 0) {
+        selected_species_name(idep_data$org_info$name2[1])
+      }
+    })
+
     observe({
       shinyjs::toggle(id = "plots_color_select", condition = input$customize_button)
       shinyjs::toggle(id = "heatmap_color_select", condition = input$customize_button)
@@ -427,7 +446,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       )
     })
     
-    selected_species_name <- reactiveVal("None")
+    selected_species_name <- reactiveVal()
 
     # Pop-up modal for uploading GMT file ----
     observeEvent(input$upload_gmt_button, {
@@ -525,7 +544,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
 
     })
-    shinyjs::hideElement(id = "select_org")
+    # Species selection is now hidden via CSS in the UI
     
     observeEvent(input$clicked_row, {
       
@@ -840,23 +859,22 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       shinyjs::disable("experiment_file")
     })
     
-    # Notification for data type and species selection
+    # Notification for data type selection (species is now always selected)
     observe({
       req(tab() == "Load Data")
-      req(input$select_org == "None" || input$data_file_format == 0)
-        
+      req(input$data_file_format == 0)
+
         showNotification(
-          "Select a species and a data type before uploading data.",
+          "Select a data type before uploading data.",
           duration = 30,
           type = "error",
           id = "select_first"
           )
     })
-    
+
     observe({
-      req((input$select_org != "None" && input$data_file_format != 0) ||
-          (tab() != "Load Data"))
-      
+      req(input$data_file_format != 0 || tab() != "Load Data")
+
       removeNotification("select_first")
     })
 
