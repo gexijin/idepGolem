@@ -695,7 +695,7 @@ gmt_category <- function(converted,
                          gmt_file,
                          idep_data) {
   if (!is.null(gmt_file)) {
-    return(list(custom_gene_set = "Custom"))
+    return(list(custom_gene_set = "NEW"))
   }
 
   id_not_recognized <- as.data.frame("ID not recognized!")

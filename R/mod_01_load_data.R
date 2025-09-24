@@ -67,19 +67,46 @@ mod_01_load_data_ui <- function(id) {
           column(
             width = 6,
             align = "center",
-            # Species list and genome assemblies ----------
-            actionButton(
-              inputId = ns("upload_gmt_button"),
-              label = "Custom/New"
+            checkboxInput(
+              inputId = ns("new_species"),
+              label = "New",
+              value = FALSE
             ),
             tippy::tippy_this(
-              ns("upload_gmt_button"),
-              "Upload a custom pathway .GMT file to perform pathway analysis for any genome.",
+              ns("new_species"),
+              "Check this to analyze a new/custom species not in our database.",
               theme = "light-border"
             )
           )
         ),
-        
+
+        # Conditional GMT file upload for new species ----------
+        conditionalPanel(
+          condition = "input.new_species == true",
+          br(),
+          p("Custom pathway file (optional)"),
+          fileInput(
+            inputId = ns("gmt_file"),
+            label = NULL,
+            accept = c(
+              "text/csv",
+              "text/comma-separated-values",
+              "text/tab-separated-values",
+              "text/plain",
+              ".csv",
+              ".tsv",
+              ".gmt"
+            ),
+            placeholder = "Upload a .GMT file for pathway analysis"
+          ),
+          tippy::tippy_this(
+            ns("gmt_file"),
+            "Upload a custom pathway .GMT file to perform pathway analysis for your new species. This is optional - you can proceed without it.",
+            theme = "light-border"
+          ),
+          ns = ns
+        ),
+
         br(),
         # Dropdown for data file format ----------
         strong("2. Data type"),
@@ -122,7 +149,7 @@ mod_01_load_data_ui <- function(id) {
         # Includes load demo action button, demo data dropdown, and expression
         # file upload box
         conditionalPanel(
-          condition = "input.data_file_format != 0 && input.select_org != null && input.select_org != ''",
+          condition = "input.data_file_format != 0",
           uiOutput(ns("load_data_ui")),
           ns = ns
         ),
@@ -137,7 +164,7 @@ mod_01_load_data_ui <- function(id) {
         
         # Experiment design file input ----------
         conditionalPanel(
-          condition = "input.data_file_format != 0 && input.select_org != null && input.select_org != ''",
+          condition = "input.data_file_format != 0",
           uiOutput(ns("design_file_ui")),
           ns = ns
         ),
@@ -334,6 +361,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     output$species_dropdown <- renderUI({
       # Get first species from org_info (ordered by 'top' field)
       first_species_id <- idep_data$org_info$id[1]
+      first_species_name <- idep_data$org_info$name2[1]
 
       # Create hidden selectInput with first species pre-selected
       div(
@@ -341,7 +369,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         selectInput(
           inputId = ns("select_org"),
           label = NULL,
-          choices = setNames(first_species_id, idep_data$org_info$name2[1]),
+          choices = setNames(first_species_id, first_species_name),
           multiple = FALSE,
           selectize = FALSE,
           selected = first_species_id
@@ -349,7 +377,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       )
     })
 
-    # Set initial selected species name
+    # Set initial selected species name to first species (not NEW)
     observe({
       if(!is.null(idep_data$org_info) && nrow(idep_data$org_info) > 0) {
         selected_species_name(idep_data$org_info$name2[1])
@@ -448,75 +476,52 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     
     selected_species_name <- reactiveVal()
 
-    # Pop-up modal for uploading GMT file ----
-    observeEvent(input$upload_gmt_button, {
-      shiny::showModal(
-        shiny::modalDialog(
-          size = "l",
-          p("This enables you to analyze data for species not annotated in our 
-            database. Upload a custom pathway .GMT file to perform pathway 
-            analysis for new\\custom species."),
-          p("If pathway analysis is not needed, proceed without a .GMT file.",
-            style = "color: red;"),
-          fileInput(
-            inputId = ns("gmt_file"),
-            label =
-              "Upload a custom pathway .GMT file",
-            accept = c(
-              "text/csv",
-              "text/comma-separated-values",
-              "text/tab-separated-values",
-              "text/plain",
-              ".csv",
-              ".tsv",
-              ".gmt"
-            ),
-            placeholder = ""
-          ),
-          footer = actionButton(
-            inputId = ns("custom_species"),
-            label = strong("Continue")
-          ),
-          easyClose = TRUE
+    # Handle new species checkbox ----
+    observeEvent(input$new_species, {
+      if (input$new_species) {
+        updateSelectizeInput(
+          session = session,
+          inputId = "select_org",
+          choices = "NEW",
+          selected = "NEW",
+          server = TRUE
         )
-      )
+        updateCheckboxInput(
+          inputId = "no_id_conversion",
+          label = "Do not convert gene IDs",
+          value = TRUE
+        )
+        selected_species_name("NEW")
+      } else {
+        # Reset to first species when unchecked
+        first_species_id <- idep_data$org_info$id[1]
+        first_species_name <- idep_data$org_info$name2[1]
+
+        updateSelectizeInput(
+          session = session,
+          inputId = "select_org",
+          choices = setNames(first_species_id, first_species_name),
+          selected = first_species_id,
+          server = TRUE
+        )
+        updateCheckboxInput(
+          inputId = "no_id_conversion",
+          label = "Do not convert gene IDs",
+          value = FALSE
+        )
+        selected_species_name(first_species_name)
+      }
     })
 
-    observeEvent(input$custom_species, {
-      removeModal()
-      
-      updateSelectizeInput(
-        session = session,
-        inputId = "select_org",
-        choices = "NEW",
-        selected = "NEW",
-        server = TRUE
-      )
-      updateCheckboxInput(
-        inputId = "no_id_conversion",
-        label = "Do not convert gene IDs",
-        value = TRUE
-      )
-      
-      selected_species_name("Custom")
-    })
-
+    # Handle GMT file upload ----
     observeEvent(input$gmt_file, {
       req(!is.null(input$gmt_file))
-      updateSelectizeInput(
-        session = session,
-        inputId = "select_org",
-        choices = "NEW",
-        selected = "NEW",
-        server = TRUE
-      )
+      # Automatically check the new species checkbox when GMT is uploaded
       updateCheckboxInput(
-        inputId = "no_id_conversion",
-        label = "Do not convert gene IDs",
+        session = session,
+        inputId = "new_species",
         value = TRUE
       )
-      
-      selected_species_name("Custom")
     })
 
     output$show_gmt <- renderUI({
@@ -530,8 +535,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         lines <- lines[1:3]
       }
       tagList(
-        h4("The uploaded GMT file has ", total, " gene-sets. 
-        Data will be analyzed in a custom mode, not using our database.  
+        h4("The uploaded GMT file has ", total, " gene-sets.
+        Data will be analyzed in a custom mode, not using our database.
         The gene IDs in the GMT file must match those in the expression data."),
         br(),
         tags$pre(
@@ -541,16 +546,14 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           ifelse(length(lines) > 2, lines[2], ""),
         )
       )
-
-
     })
     # Species selection is now hidden via CSS in the UI
     
     observeEvent(input$clicked_row, {
-      
+
       # find species ID from ensembl_dataset
       selected <- find_species_id_by_ensembl(
-        input$clicked_row, 
+        input$clicked_row,
         idep_data$org_info
       )
       # assign name
@@ -565,6 +568,20 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         choices = selected,
         selected = selected,
         server = TRUE
+      )
+
+      # Uncheck new species when selecting from database
+      updateCheckboxInput(
+        session = session,
+        inputId = "new_species",
+        value = FALSE
+      )
+
+      # Reset no_id_conversion to FALSE for database species
+      updateCheckboxInput(
+        inputId = "no_id_conversion",
+        label = "Do not convert gene IDs",
+        value = FALSE
       )
 
       selected_species_name(
