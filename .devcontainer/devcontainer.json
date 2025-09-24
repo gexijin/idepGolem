@@ -1,0 +1,25 @@
+{
+  "name": "R in Docker",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "REditorSupport.r",
+        "RDebugger.r-debugger",
+        "ms-azuretools.vscode-docker"
+      ],
+      "settings": {
+        "r.rterm.linux": "/usr/bin/R",
+        "r.alwaysUseActiveTerminal": true
+      }
+    }
+  },
+  
+  "remoteUser": "shiny",
+  "forwardPorts": [3838],
+  "portsAttributes": {
+    "3838": { "label": "Shiny app", "onAutoForward": "openBrowser" }
+  }
+}
