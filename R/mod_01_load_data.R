@@ -34,7 +34,14 @@ mod_01_load_data_ui <- function(id) {
       sidebarPanel(
         uiOutput(ns("reset_button")),
         # Species Match Drop Down ------------
-        uiOutput(ns("species_dropdown")),
+        selectInput(
+          inputId = ns("select_org"),
+          label = NULL,
+          choices = list(),
+          multiple = FALSE,
+          selectize = TRUE,
+          selected = NULL
+        ),
         
         fluidRow(
           column(
@@ -360,32 +367,30 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # increase max input file size
     options(shiny.maxRequestSize = 2001024^2)
 
-    # Initialize hidden species selection with first species as default
-    output$species_dropdown <- renderUI({
-      # Get first species from org_info (ordered by 'top' field)
-      first_species_id <- idep_data$org_info$id[1]
-      first_species_name <- idep_data$org_info$name2[1]
-
-      # Create hidden selectInput with first species pre-selected
-      div(
-        style = "display: none;",
-        selectInput(
-          inputId = ns("select_org"),
-          label = NULL,
-          choices = setNames(first_species_id, first_species_name),
-          multiple = FALSE,
-          selectize = FALSE,
-          selected = first_species_id
-        )
-      )
-    })
-
-    # Set initial selected species name to first species (not NEW)
+    # Initialize species selection with first species as default
     observe({
       if(!is.null(idep_data$org_info) && nrow(idep_data$org_info) > 0) {
+        # Get first species from org_info (ordered by 'top' field)
+        first_species_id <- idep_data$org_info$id[1]
+
+        # Create all species choices including NEW for custom species
+        all_choices <- setNames(as.list(idep_data$org_info$id), idep_data$org_info$name2)
+        all_choices <- c(all_choices, setNames("NEW", "**NEW SPECIES**"))
+
+        updateSelectInput(
+          session = session,
+          inputId = "select_org",
+          choices = all_choices,
+          selected = first_species_id
+        )
+
+        # Set initial selected species name
         selected_species_name(idep_data$org_info$name2[1])
       }
     })
+
+    # Hide the species dropdown
+    shinyjs::hideElement(id = "select_org")
 
     observe({
       shinyjs::toggle(id = "plots_color_select", condition = input$customize_button)
@@ -482,12 +487,10 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # Handle new species checkbox ----
     observeEvent(input$new_species, {
       if (input$new_species) {
-        updateSelectizeInput(
+        updateSelectInput(
           session = session,
           inputId = "select_org",
-          choices = "NEW",
-          selected = "NEW",
-          server = TRUE
+          selected = "NEW"
         )
         updateCheckboxInput(
           inputId = "no_id_conversion",
@@ -500,12 +503,10 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         first_species_id <- idep_data$org_info$id[1]
         first_species_name <- idep_data$org_info$name2[1]
 
-        updateSelectizeInput(
+        updateSelectInput(
           session = session,
           inputId = "select_org",
-          choices = setNames(first_species_id, first_species_name),
-          selected = first_species_id,
-          server = TRUE
+          selected = first_species_id
         )
         updateCheckboxInput(
           inputId = "no_id_conversion",
@@ -550,27 +551,20 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         )
       )
     })
-    # Species selection is now hidden via CSS in the UI
-    
     observeEvent(input$clicked_row, {
 
       # find species ID from ensembl_dataset
-      selected <- find_species_id_by_ensembl(
+      selected_id <- find_species_id_by_ensembl(
         input$clicked_row,
         idep_data$org_info
       )
-      # assign name
-      selected <- setNames(
-        selected,
-        find_species_by_id_name(selected, idep_data$org_info)
-      )
+      selected_name <- find_species_by_id_name(selected_id, idep_data$org_info)
 
-      updateSelectizeInput(
+      # Update species selection
+      updateSelectInput(
         session = session,
         inputId = "select_org",
-        choices = selected,
-        selected = selected,
-        server = TRUE
+        selected = selected_id
       )
 
       # Uncheck new species when selecting from database
@@ -587,9 +581,10 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         value = FALSE
       )
 
-      selected_species_name(
-        find_species_by_id_name(selected, idep_data$org_info)
-      )
+      selected_species_name(selected_name)
+
+      # Close the modal after selection
+      removeModal()
     })
 
     output$selected_species <- renderText({
@@ -1043,7 +1038,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # Get converted IDs ----------
     conversion_info <- reactive({
       req(!is.null(loaded_data()$data))
-
 
       req(!(min(loaded_data()$data, na.rm = TRUE) < 0 && input$data_file_format == 1))
 
