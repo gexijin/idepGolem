@@ -438,7 +438,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       shiny::showModal(
         shiny::modalDialog(
           size = "l",
-          h3("Click on a row to select a species"),
+          h3("Click on a species to select"),
           p("Search by common or scientific names,
           or NCBI taxonomy id. 
           Use STRING-db annotation as a last resort."),
@@ -461,7 +461,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
               options = list(
                 lengthChange = FALSE,
                 pageLength = 10,
-                scrollY = "400px"
+                scrollY = "400px",
+                columnDefs = list(list(visible = FALSE, targets = 0))
               ),
               callback = DT::JS(
                 paste0(
