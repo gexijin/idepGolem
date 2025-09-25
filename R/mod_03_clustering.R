@@ -450,7 +450,18 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           factors,
           "All factors"
         )
-        selected <- choices[length(choices)]
+        # Only set to "All factors" if input doesn't exist yet or is NULL
+        # This prevents unnecessary re-triggering when sample_info changes
+        if (is.null(input$select_factors_heatmap) || is.na(input$select_factors_heatmap)) {
+          selected <- choices[length(choices)]
+        } else {
+          # Keep current selection if it's still valid
+          selected <- if (input$select_factors_heatmap %in% choices) {
+            input$select_factors_heatmap
+          } else {
+            choices[length(choices)]
+          }
+        }
       }
       selectInput(
         inputId = ns("select_factors_heatmap"),
@@ -535,7 +546,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     output$heatmap_main <- renderPlot(
       {
         req(!is.null(heatmap_data()))
-        #      req(input$selected_genes)
+        req(!is.null(input$select_factors_heatmap))
 
         shinybusy::show_modal_spinner(
           spin = "orbit",
@@ -545,8 +556,17 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
 
         shiny_env$ht <- heatmap_main_object()
 
-        # Use heatmap position in multiple components
-        shiny_env$ht_pos_main <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht)
+        # Ensure heatmap object is valid before getting positions
+        if (!is.null(shiny_env$ht)) {
+          tryCatch({
+            # Use heatmap position in multiple components
+            shiny_env$ht_pos_main <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht)
+          }, error = function(e) {
+            # If position detection fails, set to NULL and continue
+            shiny_env$ht_pos_main <- NULL
+          })
+        }
+
         shinybusy::remove_modal_spinner()
         return(shiny_env$ht)
       },
@@ -558,26 +578,37 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     group_pal <- reactive({
       req(!is.null(pre_process$sample_info()))
       req(!is.na(input$sample_color))
-      
+
       groups <- as.vector(as.matrix(pre_process$sample_info()))
       pal <- setNames(
-        colorspace::qualitative_hcl(length(unique(groups)), 
+        colorspace::qualitative_hcl(length(unique(groups)),
                                     palette = input$sample_color,
                                     c = 70),
         unique(groups)
       )
       sample_list <- as.list(as.data.frame(pre_process$sample_info()))
-      
+
       lapply(sample_list, function(x){
         setNames(
-          pal[unique(x)], 
+          pal[unique(x)],
           unique(x)
         )
       })
     })
     
+    # Reactive for heatmap generation with double-render prevention
     heatmap_main_object <- reactive({
       req(!is.null(heatmap_data()))
+      req(!is.null(input$select_factors_heatmap))
+      req(input$select_factors_heatmap != "")
+
+      # Ensure stable state before proceeding
+      if (!is.null(pre_process$sample_info())) {
+        # For "All factors", ensure group_pal is ready
+        if (input$select_factors_heatmap == "All factors") {
+          req(!is.null(group_pal()))
+        }
+      }
 
       # Assign heatmap to be used in multiple components
       try(
@@ -596,7 +627,11 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           k_clusters = input$k_clusters,
           re_run = input$k_means_re_run,
           selected_genes = input$selected_genes,
-          group_pal = group_pal(),
+          group_pal = if (input$select_factors_heatmap == "All factors") {
+            group_pal()
+          } else {
+            NULL
+          },
           sample_color = input$sample_color
         )
       )
