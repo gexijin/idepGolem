@@ -22,19 +22,6 @@ mod_03_clustering_ui <- function(id) {
       # Heatmap Panel Sidebar ----------
       sidebarPanel(
         width = 3,
-        div(
-          style = "text-align: right;",
-          actionButton(
-            inputId = ns("submit_model_button"),
-            label = "Submit",
-            style = "font-size: 16px; color: red;"
-          )
-        ),
-        tippy::tippy_this(
-          ns("submit_model_button"),
-          "Run Cluster analysis",
-          theme = "light-border"
-        ),
         br(),
         # Select Clustering Method ----------
         conditionalPanel(
@@ -404,6 +391,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     # Interactive heatmap environment
     shiny_env <- new.env()
 
+
     # Update Slider Input ---------
     observe({
       req(tab() == "Clustering")
@@ -472,8 +460,9 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       )
     })
 
+
     # Standard Deviation Density Plot ----------
-    sd_density_plot <- eventReactive(input$submit_model_button, {
+    sd_density_plot <- reactive({
       req(!is.null(pre_process$data()))
 
       p <- sd_density(
@@ -503,7 +492,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
 
 
     # Heatmap Data -----------
-    heatmap_data <- eventReactive(input$submit_model_button, {
+    heatmap_data <- reactive({
       req(!is.null(pre_process$data()))
 
       process_heatmap_data(
@@ -520,7 +509,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
 
 
     # Heatmap Click Value ---------
-    observeEvent(input$submit_model_button, {
+    observe({
       req(!is.null(pre_process$all_gene_names()))
       req(!is.null(pre_process$data()))
       req(!is.null(heatmap_data()))
@@ -566,7 +555,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     )
     
     # Color palette for experiment groups on heatmap
-    group_pal <- eventReactive(input$submit_model_button, {
+    group_pal <- reactive({
       req(!is.null(pre_process$sample_info()))
       req(!is.na(input$sample_color))
       
@@ -587,7 +576,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       })
     })
     
-    heatmap_main_object <- eventReactive(input$submit_model_button, {
+    heatmap_main_object <- reactive({
       req(!is.null(heatmap_data()))
 
       # Assign heatmap to be used in multiple components
@@ -737,16 +726,16 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     )
 
     # Reactive input versions to store values every submit press
-    selected_factors_heatmap <- eventReactive(input$submit_model_button, {
+    selected_factors_heatmap <- reactive({
       req(!is.na(input$select_factors_heatmap))
       input$select_factors_heatmap
     })
     
-    submitted_pal <- eventReactive(input$submit_model_button, {
+    submitted_pal <- reactive({
       input$sample_color
     })
 
-    current_method <- eventReactive(input$submit_model_button, {
+    current_method <- reactive({
       input$cluster_meth
     })
     
@@ -886,7 +875,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       return(gene_lists)
     })
     
-    k_means_list <- eventReactive(input$submit_model_button, {
+    k_means_list <- reactive({
       req(!is.null(gene_lists()))
       gene_lists()
     })
@@ -926,7 +915,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     })
     
     # Sample Tree ----------
-    sample_tree <- eventReactive(input$submit_model_button, {
+    sample_tree <- reactive({
       req(!is.null(pre_process$data()), input$cluster_meth == 1)
 
       draw_sample_tree(
