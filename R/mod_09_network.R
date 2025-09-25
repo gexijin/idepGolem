@@ -13,14 +13,6 @@ mod_09_network_ui <- function(id) {
     title = "Network",
     sidebarLayout(
       sidebarPanel(
-        div(
-          style = "text-align: right;",
-          actionButton(
-            inputId = ns("submit_button"),
-            label = "Submit",
-            style = "font-size: 16px; color: red;"
-          )
-        ),
         h5(
           "Identify co-expression networks and sub-modules using",
           a(
@@ -215,7 +207,7 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
       )
     })
 
-    wgcna <- eventReactive(input$submit_button, {
+    wgcna <- reactive({
       req(!is.na(input$n_genes_network))
       req(!is.na(input$min_module_size))
       req(!is.na(input$soft_power))
