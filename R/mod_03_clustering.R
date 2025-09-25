@@ -288,8 +288,6 @@ mod_03_clustering_ui <- function(id) {
               ),
               column(
                 width = 8,
-                # align = "right",
-                p("Broaden your browser window if there is overlap -->"),
                 conditionalPanel(
                   condition = paste0(
                     "input.cluster_meth == 2 || ",
@@ -575,6 +573,23 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         }
 
         shinybusy::remove_modal_spinner()
+
+        # Show guidance notification for 5 seconds
+        showNotification(
+          ui = div(
+            style = "text-align: center; font-size: 14px;",
+            "Select a region on the heatmap to zoom in.",
+            br(),
+            "Selection can be adjusted from the sides or dragged around.",
+            br(),
+            "Broaden your browser window if there is overlap."
+          ),
+          duration = 15,
+          closeButton = TRUE,
+          type = "message",
+          id = "heatmap_guidance"
+        )
+
         return(shiny_env$ht)
       },
       width = 240 # , # this avoids the heatmap being redraw
@@ -729,10 +744,6 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         
         if (is.null(input$ht_brush) || is.null(heatmap_sub_object_calc())) {
           grid::grid.newpage()
-          grid::grid.text("Select a region on the heatmap to zoom in.
-        Selection can be adjusted from the sides.
-        It can also be dragged around.
-        ", 0.5, 0.5)
         } else {
           shinybusy::show_modal_spinner(
             spin = "orbit",
