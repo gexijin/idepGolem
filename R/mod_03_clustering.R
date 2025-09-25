@@ -290,19 +290,26 @@ mod_03_clustering_ui <- function(id) {
                 width = 8,
                 # align = "right",
                 p("Broaden your browser window if there is overlap -->"),
-                checkboxInput(
-                  inputId = ns("cluster_enrichment"),
-                  label = strong("Show enrichment"),
-                  value = FALSE
-                ),
-                tippy::tippy_this(
-                  ns("cluster_enrichment"),
-                  "Conducts GO enrichment on the selected genes.
-                  For hierarchical clustering, users need to select a
-                  region to zoom in first.
-                  When k-means is used, enrichment analyses are
-                  conducted on all clusters, regardless of your selection.",
-                  theme = "light-border"
+                conditionalPanel(
+                  condition = paste0(
+                    "input.cluster_meth == 2 || ",
+                    "(input.cluster_meth == 1 && input.ht_brush != null)"
+                  ),
+                  checkboxInput(
+                    inputId = ns("cluster_enrichment"),
+                    label = strong("Show enrichment"),
+                    value = FALSE
+                  ),
+                  tippy::tippy_this(
+                    ns("cluster_enrichment"),
+                    "Conducts GO enrichment on the selected genes.
+                    For hierarchical clustering, users need to select a
+                    region to zoom in first.
+                    When k-means is used, enrichment analyses are
+                    conducted on all clusters, regardless of your selection.",
+                    theme = "light-border"
+                  ),
+                  ns = ns
                 ),
                 conditionalPanel(
                   condition = "input.cluster_enrichment == 1 ",
@@ -1004,6 +1011,22 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           inputId = "cluster_panels",
           target = "word_cloud"
         )
+      }
+    })
+
+    # Auto-uncheck enrichment checkbox when it should be hidden ----------
+    observe({
+      # If hierarchical clustering is selected and no region is brushed,
+      # uncheck the enrichment checkbox to prevent it from staying checked
+      # while hidden
+      if (input$cluster_meth == 1 && is.null(input$ht_brush)) {
+        if (!is.null(input$cluster_enrichment) && input$cluster_enrichment) {
+          updateCheckboxInput(
+            session = session,
+            inputId = "cluster_enrichment",
+            value = FALSE
+          )
+        }
       }
     })
 
