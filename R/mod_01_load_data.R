@@ -438,16 +438,58 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
     # Pop-up modal for gene assembl information ----
     observeEvent(input$genome_assembl_button, {
+      # Create species count summary by source
+      org_info_df <- idep_data$org_info
+      source_counts <- table(org_info_df$group)
+
+      # Categorize sources according to requirements
+      ensembl_sources <- source_counts[!grepl("^newSpecies_|^STRING", names(source_counts))]
+      custom_count <- sum(source_counts[grepl("^newSpecies_", names(source_counts))])
+      string_count <- sum(source_counts[grepl("^STRING", names(source_counts))])
+
+      # Create Ensembl breakdown
+      ensembl_parts <- character(0)
+      if("ENSEMBL" %in% names(ensembl_sources)) {
+        ensembl_parts <- c(ensembl_parts, paste0("main (", ensembl_sources["ENSEMBL"], ")"))
+      }
+      if("plants" %in% names(ensembl_sources)) {
+        ensembl_parts <- c(ensembl_parts, paste0("plants (", ensembl_sources["plants"], ")"))
+      }
+      if("bacteria" %in% names(ensembl_sources)) {
+        ensembl_parts <- c(ensembl_parts, paste0("bacteria (", ensembl_sources["bacteria"], ")"))
+      }
+      if("fungi" %in% names(ensembl_sources)) {
+        ensembl_parts <- c(ensembl_parts, paste0("fungi (", ensembl_sources["fungi"], ")"))
+      }
+      if("protists" %in% names(ensembl_sources)) {
+        ensembl_parts <- c(ensembl_parts, paste0("protists (", ensembl_sources["protists"], ")"))
+      }
+      if("metazoa" %in% names(ensembl_sources)) {
+        ensembl_parts <- c(ensembl_parts, paste0("metazoa (", ensembl_sources["metazoa"], ")"))
+      }
+
+      # Create count summary text
+      all_parts <- character(0)
+      if(length(ensembl_parts) > 0) {
+        all_parts <- c(all_parts, paste("Ensembl:", paste(ensembl_parts, collapse = ", ")))
+      }
+      if(string_count > 0) {
+        all_parts <- c(all_parts, paste0("STRING-db (", string_count, ")"))
+      }
+      if(custom_count > 0) {
+        all_parts <- c(all_parts, paste0("Custom (", custom_count, ")."))
+      }
+
+      count_text <- paste(paste(all_parts, collapse = "; "), " Use STRING-db annotations as a last resort.")
+
       shiny::showModal(
         shiny::modalDialog(
           size = "l",
           h3("Click on a species to select"),
-          p("Search by common or scientific names,
-          or NCBI taxonomy id. 
-          Use STRING-db annotation as a last resort."),
+          p(count_text, style = "font-style: italic; color: #666;"),
           easyClose = TRUE,
           DT::renderDataTable({
-            df <- idep_data$org_info[, 
+            df <- idep_data$org_info[,
               c("ensembl_dataset", "name", "academicName", "taxon_id", "group")
             ]
             colnames(df) <- c(
@@ -465,7 +507,15 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
                 lengthChange = FALSE,
                 pageLength = 10,
                 scrollY = "400px",
-                columnDefs = list(list(visible = FALSE, targets = 0))
+                columnDefs = list(list(visible = FALSE, targets = 0)),
+                dom = "frtip",
+                initComplete = DT::JS(
+                  "function(settings, json) {",
+                  "  $('.dataTables_filter input')",
+                  "    .css('width', '300px')",
+                  "    .attr('placeholder', 'Human, Homo sapiens, 9606');",
+                  "}"
+                )
               ),
               callback = DT::JS(
                 paste0(

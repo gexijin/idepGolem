@@ -11,7 +11,7 @@ app_ui <- function(request) {
     # Your application UI logic
 
     navbarPage(
-      "iDEP 2.10",
+      "iDEP 2.11",
 
       id = "navbar",
       mod_01_load_data_ui(id = "load_data"),
