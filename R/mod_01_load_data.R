@@ -333,6 +333,9 @@ mod_01_load_data_ui <- function(id) {
         # Default species notification ----------
         uiOutput(ns("default_species_message")),
 
+        # Gene ID conversion statistics ----------
+        uiOutput(ns("conversion_stats_message")),
+
         # Display first 20 rows of the data ----------
         DT::dataTableOutput(ns("sample_20")),
         div(
@@ -612,7 +615,45 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         )
       }
     })
-    
+
+    # Gene ID conversion statistics message ----------
+    output$conversion_stats_message <- renderUI({
+      req(!is.null(conversion_info()$converted))
+      req(input$select_org != "NEW")
+      req(!is.null(loaded_data()$data))
+
+      original_count <- length(conversion_info()$converted$origninal_ids)
+      converted_count <- length(conversion_info()$converted$ids)
+      conversion_rate <- round((converted_count / original_count) * 100, 1)
+
+      # Determine styling and icon based on conversion rate
+      if (conversion_rate < 80) {
+        bg_color <- "#fff3cd"
+        border_color <- "#ffeaa7"
+        text_color <- "#856404"
+        icon_name <- "exclamation-triangle"
+        message_type <- "Warning: Low conversion rate!"
+      } else {
+        bg_color <- "#d4edda"
+        border_color <- "#c3e6cb"
+        text_color <- "#155724"
+        icon_name <- "check-circle"
+        message_type <- "Gene ID conversion:"
+      }
+
+      div(
+        style = paste0("background-color: ", bg_color, "; border: 1px solid ",
+                       border_color, "; border-radius: 4px; padding: 10px; margin: 10px 0;
+                       color: ", text_color, ";"),
+        h5(
+          icon(icon_name),
+          paste0(" ", message_type, " ", converted_count, " out of ",
+                 original_count, " genes (", conversion_rate,
+                 "%) converted to Ensembl/STRING IDs.")
+        )
+      )
+    })
+
     observeEvent(input$data_file_format, {
       
       req(input$data_file_format != 0)
