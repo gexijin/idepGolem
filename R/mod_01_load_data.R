@@ -30,6 +30,9 @@ mod_01_load_data_ui <- function(id) {
              .more-options[open] summary::before { content: '\u2212'; }
              .more-options-body { margin-top: 10px; padding: 10px 0; background-color: #f7f9fc; border-radius: 0; width: 100%; }
              .more-options-body .shiny-input-container > label { font-weight: 400; }
+             .load-data-info-icon { padding: 0; border: none; background: transparent; color: #6c757d; font-size: 18px; line-height: 1; }
+             .load-data-info-icon:hover { color: #343a40; text-decoration: none; }
+             .load-data-info-icon:focus { outline: none; box-shadow: none; }
               "
         )
       )
@@ -182,7 +185,7 @@ mod_01_load_data_ui <- function(id) {
         ),
         tags$details(
           class = "more-options",
-          tags$summary(span("Settings", id = ns("global_settings_summary"))),
+          tags$summary(span(strong("Settings"), id = ns("global_settings_summary"))),
           tippy::tippy_this(
             ns("global_settings_summary"),
             "Reveal appearance and ID-conversion settings shared across the app.",
@@ -821,9 +824,12 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           ),
           column(
             width = 2,
-            actionButton(
+            align = "center",
+            actionLink(
               inputId = ns("data_format_help"),
-              label = tagList(icon("info-circle"))
+              label = NULL,
+              icon = icon("info-circle"),
+              class = "load-data-info-icon"
             ),
             tippy::tippy_this(
               ns("data_format_help"),
@@ -970,14 +976,17 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
                 ".xlsx",
                 ".xls"
               ),
-              placeholder = ""
+              placeholder = "CSV or text"
             )
           ),
           column(
             width = 2,
-            actionButton(
+            align = "center",
+            actionLink(
               inputId = ns("data_format_help"),
-              label = icon("info-circle")
+              label = NULL,
+              icon = icon("info-circle"),
+              class = "load-data-info-icon"
             ),
             tippy::tippy_this(
               ns("data_format_help"),
