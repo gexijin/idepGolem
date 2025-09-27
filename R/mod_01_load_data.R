@@ -122,7 +122,6 @@ mod_01_load_data_ui <- function(id) {
           ns = ns
         ),
 
-        br(),
         # Dropdown for data file format ----------
         strong("2. Data type"),
         
@@ -159,7 +158,6 @@ mod_01_load_data_ui <- function(id) {
           ),
           ns = ns
         ),
-        br(),
         # Load expression data options ----------
         # Includes load demo action button, demo data dropdown, and expression
         # file upload box
@@ -175,7 +173,6 @@ mod_01_load_data_ui <- function(id) {
         #     }
         #   ")
         # ),
-        br(),
         
         # Experiment design file input ----------
         conditionalPanel(
@@ -183,10 +180,9 @@ mod_01_load_data_ui <- function(id) {
           uiOutput(ns("design_file_ui")),
           ns = ns
         ),
-        br(),
         tags$details(
           class = "more-options",
-          tags$summary(span("Global settings", id = ns("global_settings_summary"))),
+          tags$summary(span("Settings", id = ns("global_settings_summary"))),
           tippy::tippy_this(
             ns("global_settings_summary"),
             "Reveal appearance and ID-conversion settings shared across the app.",
@@ -311,7 +307,6 @@ mod_01_load_data_ui <- function(id) {
               which is used as a central id type in pathway databases.",
               theme = "light-border"
             ),
-            br(),
             uiOutput(ns("example_genes_ui"))
           )
         ),
@@ -401,6 +396,16 @@ mod_01_load_data_ui <- function(id) {
 mod_01_load_data_server <- function(id, idep_data, tab) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    go_button_count <- reactive({
+      if (is.null(input$go_button)) {
+        0
+      } else {
+        input$go_button
+      }
+    })
+
+    selected_demo <- reactiveVal(NULL)
     
     # increase max input file size
     options(shiny.maxRequestSize = 2001024^2)
@@ -738,28 +743,50 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         )
     })
 
+    # Available demo data files for current data format ----
+    demo_choices <- reactive({
+      req(input$data_file_format)
+
+      if (input$data_file_format > 0) {
+        files <- idep_data$demo_file_info
+        files <- files[files$type == input$data_file_format, ]
+        setNames(as.list(files$ID), files$name)
+      } else {
+        NULL
+      }
+    })
+
+    observeEvent(demo_choices(), {
+      choices <- demo_choices()
+      values <- unlist(choices, use.names = FALSE)
+
+      if (length(values) == 0) {
+        selected_demo(NULL)
+      } else {
+        current <- selected_demo()
+        if (is.null(current) || !(current %in% values)) {
+          selected_demo(values[[1]])
+        }
+      }
+    }, ignoreNULL = FALSE)
+
+    observeEvent(input$select_demo, {
+      req(!is.null(input$select_demo))
+      selected_demo(input$select_demo)
+    }, ignoreNULL = TRUE)
+
     # UI elements for load demo action button, demo data drop down, and -----
     # expression file upload
     output$load_data_ui <- renderUI({
-      req(
-        (is.null(input$go_button) || input$go_button == 0)
-      )
+      req(go_button_count() == 0)
       req(input$data_file_format)
-      
-      if (input$data_file_format > 0){
-      # get demo data files based on specified format
-      files <- idep_data$demo_file_info
-      files <- files[files$type == input$data_file_format, ]
-      choices <- setNames(as.list(files$ID), files$name)
-      } else {
-        files <- NULL
-        choices <- NULL
-      }
+
+      choices <- demo_choices()
       tagList(
         strong("3. Expression matrix (CSV, text, or xlsx)"),
         fluidRow(
           column(
-            width = 9,
+            width = 6,
             # Expression data file input
             fileInput(
               inputId = ns("expression_file"),
@@ -774,14 +801,29 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
                 ".xlsx",
                 ".xls"
               ),
-              placeholder = ""
+              placeholder = "",
+              width = "100%"
+            )
+          ),
+
+          column(
+            width = 4,
+            actionButton(
+              inputId = ns("demo_modal_button"),
+              label = tags$span("Demo", style = "color: red;"),
+              class = "btn-default"
+            ),
+            tippy::tippy_this(
+              ns("demo_modal_button"),
+              "Open demo data options",
+              theme = "light-border"
             )
           ),
           column(
-            width = 3,
+            width = 2,
             actionButton(
               inputId = ns("data_format_help"),
-              label = "Info"
+              label = tagList(icon("info-circle"))
             ),
             tippy::tippy_this(
               ns("data_format_help"),
@@ -789,55 +831,68 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
               theme = "light-border"
             )
           )
-        ),
-        fluidRow(
-          column(
-            width = 4,
-            actionButton(
-              inputId = ns("go_button"),
-              label = "Load Demo"
-            ),
-            align = "right",
-            tippy::tippy_this(
-              ns("go_button"),
-              "Load the selected demo file",
-              theme = "light-border"
-            )
-          ),
-          column(
-            width = 8,
-            align = "left",
+        )
+      )
+    })
+
+    observeEvent(input$demo_modal_button, {
+      choices <- demo_choices()
+      req(!is.null(choices), length(choices) > 0)
+
+      selected_choice <- isolate({
+        current <- selected_demo()
+        values <- unlist(choices, use.names = FALSE)
+        if (!is.null(current) && current %in% values) {
+          current
+        } else if (length(values) > 0) {
+          values[[1]]
+        } else {
+          NULL
+        }
+      })
+
+      shiny::showModal(
+        shiny::modalDialog(
+          title = "Demo Data",
+          easyClose = TRUE,
+          size = "s",
+          footer = NULL,
+          tagList(
             selectInput(
               inputId = ns("select_demo"),
               label = NULL,
               choices = choices,
-              selected = choices[[1]],
+              selected = selected_choice,
               selectize = FALSE
             ),
             tippy::tippy_this(
               ns("select_demo"),
-              "Select a demo file then click the \"Demo\" button",
+              "Select a demo file then click the \"Load Demo\" button",
               theme = "light-border"
             ),
-            tags$style(
-              type = "text/css",
-              "#load_data-go_button { margin-top:-25px; color: red;}"
+            br(),
+            actionButton(
+              inputId = ns("go_button"),
+              label = "Load Demo",
+              class = "btn-primary"
             ),
-            tags$style(
-              type = "text/css",
-              "#load_data-select_demo { margin-top:-20px}"
+            tippy::tippy_this(
+              ns("go_button"),
+              "Load the selected demo file",
+              theme = "light-border"
             )
           )
         )
       )
     })
 
+    observeEvent(input$go_button, {
+      shiny::removeModal()
+    })
+
     # Alternate ui message to reset app once data is loaded ----
     output$load_data_alt <- renderUI({
-      if (
-        is.null(input$go_button) || input$go_button == 0 && is.null(input$expression_file)
-
-      ) {
+      if (go_button_count() == 0 && is.null(input$expression_file)) {
         tagList(
             tags$span("Quick Start:", style = "font-size: 18px;"),
             tags$ul(
@@ -852,7 +907,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
               ),
               tags$li("Select a Species & Data Type"),
               tags$li("Upload data or click ",
-                      tags$span("Load Demo", id = "load-demo"),
+                      tags$span("Demo", id = "load-demo"),
                       " to try a sample data set!"
               )
           ),
@@ -866,9 +921,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     })
 
     output$reset_button <- renderUI({
-      if (
-        is.null(input$go_button) || input$go_button == 0 && is.null(input$expression_file)
-      ) {
+      if (go_button_count() == 0 && is.null(input$expression_file)) {
         NULL
       } else {
         # reset message and action button
@@ -896,14 +949,14 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
     # UI element for design file upload ----
     output$design_file_ui <- renderUI({
-      req(is.null(input$go_button) || input$go_button == 0)
+      req(go_button_count() == 0)
       
       tagList(
 
         strong("4. Optional: Exp. Design (CSV or text)"),
         fluidRow(
           column(
-            width = 9,
+            width = 10,
             fileInput(
               inputId = ns("experiment_file"),
               label = NULL,
@@ -921,10 +974,10 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             )
           ),
           column(
-            width = 3,
+            width = 2,
             actionButton(
               inputId = ns("data_format_help"),
-              label = "Info"
+              label = icon("info-circle")
             ),
             tippy::tippy_this(
               ns("data_format_help"),
@@ -1067,10 +1120,12 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # Change demo data based on selected format ----
     # returns a vector with file names  c(data, design)
     demo_data_file <- reactive({
-      req(input$select_demo)
+      choice <- selected_demo()
+      req(choice)
 
       files <- idep_data$demo_file_info
-      ix <- which(files$ID == input$select_demo)
+      ix <- which(files$ID == choice)
+      req(length(ix) > 0)
       return(c(
         files$expression[ix],
         files$design[ix]
@@ -1079,11 +1134,10 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
     # Reactive element to load the data from the user or demo data ---------
     loaded_data <- reactive({
-      req(!is.null(input$go_button))
       input_data(
         expression_file = input$expression_file,
         experiment_file = input$experiment_file,
-        go_button = input$go_button,
+        go_button = go_button_count(),
         demo_data_file = demo_data_file()[1],
         demo_metadata_file = demo_data_file()[2]
       )
@@ -1240,9 +1294,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
 
     species_match_data <- reactive({
-      req(!is.null(input$go_button))
       req(input$select_org)
-      if (is.null(input$expression_file) && input$go_button == 0) {
+      if (is.null(input$expression_file) && go_button_count() == 0) {
         return(NULL)
       }
       req(input$data_file_format)
@@ -1295,11 +1348,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     })
 
     output$welcome_ui <- renderUI({
-      req(
-        input$go_button == 0 &
-          !is.null(input$go_button) &
-          input$data_format_help == 0
-      )
+      req(go_button_count() == 0)
+      req(input$data_format_help == 0)
 
       tagList(
         fluidRow(
