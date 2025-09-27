@@ -16,7 +16,16 @@ mod_03_clustering_ui <- function(id) {
     # input IDs should be defined by namespace
     tags$style(
       type = "text/css",
-      paste0("#", ns("cluster_meth"), " .radio label { font-weight: bold; color: red;}")
+      paste(
+        paste0("#", ns("cluster_meth"), " .radio label { font-weight: bold; color: red;}"),
+        ".more-options { display: block; width: 100%; }",
+        ".more-options summary { display: flex; align-items: center; cursor: pointer; font-weight: 600; margin: 0; }",
+        ".more-options summary::marker, .more-options summary::-webkit-details-marker { display: none; }",
+        ".more-options summary::before { content: '+'; margin-right: 6px; font-size: 14px; line-height: 1; }",
+        ".more-options[open] summary::before { content: '\\2212'; }",
+        ".more-options-body { margin-top: 10px; padding: 10px 0; background-color: #f7f9fc; border-radius: 0; width: 100%; }",
+        sep = "\n"
+      )
     ),
     sidebarLayout(
 
@@ -189,11 +198,11 @@ mod_03_clustering_ui <- function(id) {
               )
             )
           ),
-          checkboxInput(ns("customize_button"), "More options"),
-          conditionalPanel(
-            condition = "input.customize_button",
-            ns = ns,
+          tags$details(
+            class = "more-options",
+            tags$summary("More options"),
             div(
+              class = "more-options-body",
               checkboxInput(
                 inputId = ns("gene_centering"),
                 label = "Center genes (substract mean)",
