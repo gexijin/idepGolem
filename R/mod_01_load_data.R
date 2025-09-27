@@ -20,8 +20,15 @@ mod_01_load_data_ui <- function(id) {
               top: calc(85%);
               left: calc(5%);
                }
-              
+             
              .dis_gray { background-color: gray; }
+             
+             .more-options { display: block; width: 100%; }
+             .more-options summary { display: flex; align-items: center; cursor: pointer; font-weight: 600; margin: 0; }
+             .more-options summary::marker, .more-options summary::-webkit-details-marker { display: none; }
+             .more-options summary::before { content: '+'; margin-right: 6px; font-size: 14px; line-height: 1; }
+             .more-options[open] summary::before { content: '\u2212'; }
+             .more-options-body { margin-top: 10px; padding: 10px 0; background-color: #f7f9fc; border-radius: 0; width: 100%; }
               "
         )
       )
@@ -177,108 +184,134 @@ mod_01_load_data_ui <- function(id) {
         ),
         uiOutput(ns("example_genes_ui")),
         br(),
-        checkboxInput(
-          inputId = ns("customize_button"),
-          label = strong("Global Settings",
-                         style = "color: red;"),
-          value = FALSE
-        ),
-        selectInput(
-          inputId = ns("multiple_map"),
-          label = "Multiple mapped IDs:",
-          choices = list(
-            "Sum" = "sum",
-            "Average" = "mean",
-            "Median" = "median",
-            "Max" = "max",
-            "Max SD" = "max_sd"
+        tags$details(
+          class = "more-options",
+          tags$summary(span("Global settings", id = ns("global_settings_summary"))),
+          tippy::tippy_this(
+            ns("global_settings_summary"),
+            "Reveal appearance and ID-conversion settings shared across the app.",
+            theme = "light-border"
           ),
-          selected = "Sum",
-          selectize = FALSE
-        ),
-        tippy::tippy_this(
-          ns("multiple_map"),
-          "When multiple IDs map to the same gene, we can summerize
-          data in a certain way (sum, mean, median, max),
-          or just keep the rows with the the most variation (max SD).
-          When uploading transcript level counts, choose \"sum\" to aggregate gene level counts. ",
-          theme = "light-border"
-        ),
-        selectInput(
-          inputId = ns("plots_color_select"),
-          label = "Plots Color scheme (PCA/Pre-Process):",
-          choices = c(
-            "Set1",
-            "Set2",
-            "Set3",
-            "Paired",
-            "Dark2",
-            "Accent",
-            "Pastel1",
-            "Pastel2",
-            "Spectral"
-          ),
-          selected = "Set1",
-          width = "100%"
-        ),
-        selectInput(
-          inputId = ns("heatmap_color_select"),
-          label = "Heatmap/Tree/Network Color scheme:",
-          choices = c(
-            "Green-Black-Red",
-            "Red-Black-Green",
-            "Blue-White-Red",
-            "Green-Black-Magenta",
-            "Blue-Yellow-Red",
-            "Blue-White-Brown",
-            "Orange-White-Blue"
-          ),
-          selected = "Green-Black-Red",
-          width = "100%"
-        ),
-        selectInput(
-          inputId = ns("select_gene_id"),
-          label = "Gene ID type for plots:",
-          choices = c("symbol", "ensembl_ID", "User_ID"),
-          selected = "symbol"
-        ),
-        selectInput(
-          inputId = ns("ggplot2_theme"),
-          label = "ggplot2 theme:",
-          choices = c(
-            "default", # no change
-            "gray",
-            "bw",
-            "light",
-            "dark",
-            "classic",
-            "minimal",
-            "linedraw"
-          ),
-          selected = "default",
-          width = "100%",
-          selectize = FALSE
-        ),
-        tippy::tippy_this(
-          ns("ggplot2_theme"),
-          "Changes the styles for all 20 ggplot2 plots.",
-          theme = "light-border"
-        ),
-        checkboxInput(
-          inputId = ns("plot_grid_lines"),
-          label = "Add grid lines to plots",
-          value = FALSE
-        ),
-        checkboxInput(
-          inputId = ns("no_id_conversion"),
-          label = "Do not convert gene IDs",
-          value = FALSE
-        ),
-        tippy::tippy_this(
-          ns("no_id_conversion"),
-          "If selected, uploaded gene IDs will not be converted to ENSEMBL gene IDs,
-          which is used as a central id type in pathway databases.",
-          theme = "light-border"
+          div(
+            class = "more-options-body",
+            selectInput(
+              inputId = ns("multiple_map"),
+              label = "Multiple mapped IDs:",
+              choices = list(
+                "Sum" = "sum",
+                "Average" = "mean",
+                "Median" = "median",
+                "Max" = "max",
+                "Max SD" = "max_sd"
+              ),
+              selected = "Sum",
+              selectize = FALSE
+            ),
+            tippy::tippy_this(
+              ns("multiple_map"),
+              "When multiple IDs map to the same gene, we can summerize
+              data in a certain way (sum, mean, median, max),
+              or just keep the rows with the the most variation (max SD).
+              When uploading transcript level counts, choose \"sum\" to aggregate gene level counts. ",
+              theme = "light-border"
+            ),
+            selectInput(
+              inputId = ns("plots_color_select"),
+              label = "Plots Color scheme (PCA/Pre-Process):",
+              choices = c(
+                "Set1",
+                "Set2",
+                "Set3",
+                "Paired",
+                "Dark2",
+                "Accent",
+                "Pastel1",
+                "Pastel2",
+                "Spectral"
+              ),
+              selected = "Set1",
+              width = "100%"
+            ),
+            tippy::tippy_this(
+              ns("plots_color_select"),
+              "Palette applied to PCA and QC plots so sample groups stand out.",
+              theme = "light-border"
+            ),
+            selectInput(
+              inputId = ns("heatmap_color_select"),
+              label = "Heatmap/Tree/Network Color scheme:",
+              choices = c(
+                "Green-Black-Red",
+                "Red-Black-Green",
+                "Blue-White-Red",
+                "Green-Black-Magenta",
+                "Blue-Yellow-Red",
+                "Blue-White-Brown",
+                "Orange-White-Blue"
+              ),
+              selected = "Green-Black-Red",
+              width = "100%"
+            ),
+            tippy::tippy_this(
+              ns("heatmap_color_select"),
+              "Choose the color palette used for heatmaps, sample trees, and networks.",
+              theme = "light-border"
+            ),
+            selectInput(
+              inputId = ns("select_gene_id"),
+              label = "Gene ID type for plots:",
+              choices = c("symbol", "ensembl_ID", "User_ID"),
+              selected = "symbol"
+            ),
+            tippy::tippy_this(
+              ns("select_gene_id"),
+              "Pick which gene identifier appears on plots and tables.",
+              theme = "light-border"
+            ),
+            selectInput(
+              inputId = ns("ggplot2_theme"),
+              label = "ggplot2 theme:",
+              choices = c(
+                "default", # no change
+                "gray",
+                "bw",
+                "light",
+                "dark",
+                "classic",
+                "minimal",
+                "linedraw"
+              ),
+              selected = "default",
+              width = "100%",
+              selectize = FALSE
+            ),
+            tippy::tippy_this(
+              ns("ggplot2_theme"),
+              "Changes the styles for all 20 ggplot2 plots.",
+              theme = "light-border"
+            ),
+            checkboxInput(
+              inputId = ns("plot_grid_lines"),
+              label = "Add grid lines to plots",
+              value = FALSE
+            ),
+            tippy::tippy_this(
+              ns("plot_grid_lines"),
+              "Overlay light grid lines to help compare values across samples.",
+              theme = "light-border"
+            ),
+            checkboxInput(
+              inputId = ns("no_id_conversion"),
+              label = "Do not convert gene IDs",
+              value = FALSE
+            ),
+            tippy::tippy_this(
+              ns("no_id_conversion"),
+              "If selected, uploaded gene IDs will not be converted to ENSEMBL gene IDs,
+              which is used as a central id type in pathway databases.",
+              theme = "light-border"
+            )
+          )
         ),
         br(),
         fluidRow(
@@ -394,20 +427,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
     # Hide the species dropdown
     shinyjs::hideElement(id = "select_org")
-
-    observe({
-      shinyjs::toggle(id = "plots_color_select", condition = input$customize_button)
-      shinyjs::toggle(id = "heatmap_color_select", condition = input$customize_button)
-      shinyjs::toggle(id = "select_gene_id", condition = input$customize_button)
-      shinyjs::toggle(id = "multiple_map", condition = input$customize_button)
-      shinyjs::toggle(
-        id = "no_id_conversion", 
-        condition = (input$customize_button && !grepl("STRING", input$clicked_row))
-      )
-      shinyjs::toggle(id = "plot_grid_lines", condition = input$customize_button)
-      shinyjs::toggle(id = "ggplot2_theme", condition = input$customize_button)
-    })
-
 
     welcome_modal <- shiny::modalDialog(
       title = "iDEP: Empower all scientists!",
