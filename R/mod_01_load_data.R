@@ -310,7 +310,6 @@ mod_01_load_data_ui <- function(id) {
               which is used as a central id type in pathway databases.",
               theme = "light-border"
             ),
-            uiOutput(ns("example_genes_ui"))
           )
         ),
         br(),
@@ -336,11 +335,10 @@ mod_01_load_data_ui <- function(id) {
           column(
             width = 4,
             align = "right",
-            # Action button for Gene ID examples -----------
-            a(
-              "Questions?",
-              href = "https://idepsite.wordpress.com/data-format/",
-              target = "_blank"
+            # Action link to reveal Gene ID examples -----------
+            actionLink(
+              inputId = ns("gene_ids_link"),
+              label = "Gene IDs"
             )
           )
         ),
@@ -998,22 +996,15 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       )
     })
     
-    #name variables like this: gene_ids_example_popup, not GeneIDsExamplePopup.
-    output$example_genes_ui <- renderUI({
-      actionButton(ns("gene_ids_example_popup"), "Gene IDs")
-    })
-
-
     # Disables expression_file input to prevent multiple uploads
     observeEvent(input$expression_file, {
       shinyjs::disable("expression_file")
     })
 
-    # Define the content of the basic modal
-    observeEvent(input$gene_ids_example_popup, {
+    show_gene_ids_modal <- function() {
       shiny::showModal(
         shiny::modalDialog(
-          title = "What do the gene IDs in our database look like?",
+          title = "Example Gene IDs",
           tags$style(
             HTML(
               "#DataTables_Table_0_wrapper #DataTables_Table_0_filter label{
@@ -1028,14 +1019,18 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             choices = c("--Select species--", names(idep_data$species_choice))
           ),
           DT::dataTableOutput(ns("showGeneIDs4Species")),
-          size = "l", # size is large
-          easyClose = FALSE   # disabled: click outside the modal to close
+          size = "l",
+          easyClose = FALSE
         )
       )
+    }
+
+    observeEvent(input$gene_ids_link, {
+      show_gene_ids_modal()
     })
-    
+
     geneIDs <- reactiveVal(NULL)
-    
+
     observeEvent(input$gene_id_examples, {
       req(input$gene_id_examples != "--Select species--")
       ix <- which(idep_data$org_info$name2 == input$gene_id_examples)
@@ -1048,13 +1043,12 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         )
       )
     })
-    
+
     # Render Gene ID example table in gene example Modal
     output$showGeneIDs4Species <- DT::renderDataTable({
       req(!is.null(geneIDs()))
       req(input$gene_id_examples != "--Select species--")
       removeNotification("ExampleIDDataQuery")
-      
       DT::datatable(
         geneIDs(),
         rownames = FALSE,
