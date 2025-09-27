@@ -14,7 +14,8 @@ mod_03_clustering_ui <- function(id) {
     # Change the style of radio labels
     # Note that the name https://groups.google.com/g/shiny-discuss/c/ugNEaHizlck
     # input IDs should be defined by namespace
-    tags$style(type = "text/css",
+    tags$style(
+      type = "text/css",
       paste0("#", ns("cluster_meth"), " .radio label { font-weight: bold; color: red;}")
     ),
     sidebarLayout(
@@ -62,6 +63,27 @@ mod_03_clustering_ui <- function(id) {
                 this give us a big picture view of the general pattern of
                 gene expression.",
                 theme = "light-border"
+              )
+            )
+          ),
+          ns = ns
+        ),
+        conditionalPanel(
+          condition = "input.cluster_panels == 'Heatmap'",
+          fluidRow(
+            column(width = 4, p("Dendrogram")),
+            column(
+              width = 8,
+              selectInput(
+                inputId = ns("dendrogram_display"),
+                label = NULL,
+                choices = c(
+                  "Row" = "row",
+                  "Column" = "column",
+                  "Both" = "both",
+                  "None" = "none"
+                ),
+                selected = "row"
               )
             )
           ),
@@ -149,23 +171,6 @@ mod_03_clustering_ui <- function(id) {
         conditionalPanel(
           condition = "input.cluster_panels == 'Heatmap'",
           fluidRow(
-            column(width = 4, p("Dendrogram")),
-            column(
-              width = 8,
-              selectInput(
-                inputId = ns("dendrogram_display"),
-                label = NULL,
-                choices = c(
-                  "Row" = "row",
-                  "Row & Column" = "both",
-                  "Column" = "column",
-                  "None" = "none"
-                ),
-                selected = "row"
-              )
-            )
-          ),
-          fluidRow(
             column(width = 4, p("Samples color")),
             column(
               width = 8,
@@ -185,33 +190,52 @@ mod_03_clustering_ui <- function(id) {
             )
           ),
           checkboxInput(ns("customize_button"), "More options"),
-          checkboxInput(
-            inputId = ns("gene_centering"),
-            label = "Center genes (substract mean)",
-            value = TRUE
-          ),
-          checkboxInput(
-            inputId = ns("gene_normalize"),
-            label = "Normalize genes (divide by SD)",
-            value = FALSE
-          ),
-          selectInput(
-            inputId = ns("sample_color"),
-            label = "Experiment Group Colors",
-            choices = c("Pastel 1", "Dark 2", "Dark 3", 
-                        "Set 2", "Set 3", "Warm",
-                        "Cold", "Harmonic", "Dynamic"),
-            selected = "Dynamic"
-          ),
-          numericInput(
-            inputId = ns("heatmap_cutoff"),
-            label = "Max Z score:",
-            value = 3,
-            min = 2,
-            step = 1
+          conditionalPanel(
+            condition = "input.customize_button",
+            ns = ns,
+            div(
+              checkboxInput(
+                inputId = ns("gene_centering"),
+                label = "Center genes (substract mean)",
+                value = TRUE
+              ),
+              checkboxInput(
+                inputId = ns("gene_normalize"),
+                label = "Normalize genes (divide by SD)",
+                value = FALSE
+              ),
+              fluidRow(
+                column(width = 4, p("Sample Colors")),
+                column(
+                  width = 8,
+                  selectInput(
+                    inputId = ns("sample_color"),
+                    label = NULL,
+                    choices = c("Pastel 1", "Dark 2", "Dark 3", 
+                                "Set 2", "Set 3", "Warm",
+                                "Cold", "Harmonic", "Dynamic"),
+                    selected = "Dynamic"
+                  )
+                )
+              ),
+              fluidRow(
+                column(width = 4, p("Max Z score")),
+                column(
+                  width = 8,
+                  numericInput(
+                    inputId = ns("heatmap_cutoff"),
+                    label = NULL,
+                    value = 3,
+                    min = 2,
+                    step = 1
+                  )
+                )
+              )
+            )
           ),
           ns = ns
         ),
+
         conditionalPanel(
           condition = "input.cluster_panels == 'word_cloud'",
           uiOutput(
@@ -417,17 +441,6 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         max = max_genes
       )
     })
-    observe({
-      shinyjs::toggle(id = "heatmap_cutoff",
-                      condition = input$customize_button)
-      shinyjs::toggle(id = "gene_normalize", 
-                      condition = input$customize_button)
-      shinyjs::toggle(id = "gene_centering", 
-                      condition = input$customize_button)
-      shinyjs::toggle(id = "sample_color", 
-                      condition = input$customize_button)
-    })
-
     # Distance functions -----------
     dist_funs <- dist_functions()
     dist_choices <- setNames(
