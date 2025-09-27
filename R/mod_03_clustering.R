@@ -22,7 +22,6 @@ mod_03_clustering_ui <- function(id) {
       # Heatmap Panel Sidebar ----------
       sidebarPanel(
         width = 3,
-        br(),
         # Select Clustering Method ----------
         conditionalPanel(
           condition = "input.cluster_panels == 'Heatmap' |
