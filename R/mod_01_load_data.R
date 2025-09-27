@@ -29,6 +29,7 @@ mod_01_load_data_ui <- function(id) {
              .more-options summary::before { content: '+'; margin-right: 6px; font-size: 14px; line-height: 1; }
              .more-options[open] summary::before { content: '\u2212'; }
              .more-options-body { margin-top: 10px; padding: 10px 0; background-color: #f7f9fc; border-radius: 0; width: 100%; }
+             .more-options-body .shiny-input-container > label { font-weight: 400; }
               "
         )
       )
@@ -182,7 +183,6 @@ mod_01_load_data_ui <- function(id) {
           uiOutput(ns("design_file_ui")),
           ns = ns
         ),
-        uiOutput(ns("example_genes_ui")),
         br(),
         tags$details(
           class = "more-options",
@@ -310,7 +310,9 @@ mod_01_load_data_ui <- function(id) {
               "If selected, uploaded gene IDs will not be converted to ENSEMBL gene IDs,
               which is used as a central id type in pathway databases.",
               theme = "light-border"
-            )
+            ),
+            br(),
+            uiOutput(ns("example_genes_ui"))
           )
         ),
         br(),
