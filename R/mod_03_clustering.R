@@ -149,6 +149,23 @@ mod_03_clustering_ui <- function(id) {
         conditionalPanel(
           condition = "input.cluster_panels == 'Heatmap'",
           fluidRow(
+            column(width = 4, p("Dendrogram")),
+            column(
+              width = 8,
+              selectInput(
+                inputId = ns("dendrogram_display"),
+                label = NULL,
+                choices = c(
+                  "Row" = "row",
+                  "Row & Column" = "both",
+                  "Column" = "column",
+                  "None" = "none"
+                ),
+                selected = "row"
+              )
+            )
+          ),
+          fluidRow(
             column(width = 4, p("Samples color")),
             column(
               width = 8,
@@ -168,16 +185,6 @@ mod_03_clustering_ui <- function(id) {
             )
           ),
           checkboxInput(ns("customize_button"), "More options"),
-          checkboxInput(
-            inputId = ns("sample_clustering"),
-            label = "Cluster samples",
-            value = FALSE
-          ),
-          checkboxInput(
-            inputId = ns("show_row_dend"),
-            label = "Show Row Dendogram",
-            value = TRUE
-          ),
           checkboxInput(
             inputId = ns("gene_centering"),
             label = "Center genes (substract mean)",
@@ -411,12 +418,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       )
     })
     observe({
-
-      shinyjs::toggle(id = "sample_clustering", 
-                      condition = input$customize_button)
-      shinyjs::toggle(id = "show_row_dend", 
-                      condition = input$customize_button)
-      shinyjs::toggle(id = "heatmap_cutoff", 
+      shinyjs::toggle(id = "heatmap_cutoff",
                       condition = input$customize_button)
       shinyjs::toggle(id = "gene_normalize", 
                       condition = input$customize_button)
@@ -437,6 +439,14 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         session = session,
         inputId = "dist_function",
         choices = dist_choices
+      )
+    })
+
+    dendrogram_selection <- reactive({
+      selection <- req(input$dendrogram_display)
+      list(
+        sample = selection %in% c("column", "both"),
+        row = selection %in% c("row", "both")
       )
     })
 
@@ -642,9 +652,9 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           dist_funs = dist_funs,
           dist_function = input$dist_function,
           hclust_function = input$hclust_function,
-          sample_clustering = input$sample_clustering,
+          sample_clustering = dendrogram_selection()$sample,
           heatmap_color_select = heatmap_color_select(),
-          row_dend = input$show_row_dend,
+          row_dend = dendrogram_selection()$row,
           k_clusters = input$k_clusters,
           re_run = input$k_means_re_run,
           selected_genes = input$selected_genes,
@@ -1233,8 +1243,8 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
             heatmap_cutoff = input$heatmap_cutoff,
             gene_centering = input$gene_centering,
             gene_normalize = input$gene_normalize,
-            sample_clustering = input$sample_clustering,
-            show_row_dend = input$show_row_dend,
+            sample_clustering = dendrogram_selection()$sample,
+            show_row_dend = dendrogram_selection()$row,
             selected_genes = input$selected_genes
           )
 
