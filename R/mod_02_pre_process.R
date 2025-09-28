@@ -19,7 +19,7 @@ mod_02_pre_process_ui <- function(id) {
         # Conditional panel for read count data -----------
         conditionalPanel(
           condition = "output.data_file_format == 1",
-          p("Filter: Keep genes with counts per million in at
+          p("Keep genes with counts per million in at
                   least n libraries:"),
           fluidRow(
             column(

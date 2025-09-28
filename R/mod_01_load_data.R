@@ -21,8 +21,7 @@ mod_01_load_data_ui <- function(id) {
               left: calc(5%);
                }
              
-             .dis_gray { background-color: gray; }
-             
+             .dis_gray { background-color: gray; }             
              .more-options { display: block; width: 100%; }
              .more-options summary { display: flex; align-items: center; cursor: pointer; font-weight: 600; margin: 0; }
              .more-options summary::marker, .more-options summary::-webkit-details-marker { display: none; }
@@ -38,7 +37,7 @@ mod_01_load_data_ui <- function(id) {
       )
     ),
     sidebarLayout(
-      
+
       ##################################################################
       #       Load Data sidebar panel ----
       ##################################################################
@@ -53,14 +52,14 @@ mod_01_load_data_ui <- function(id) {
           selectize = TRUE,
           selected = NULL
         ),
-        
+
         fluidRow(
           column(
-            width = 4, 
+            width = 5,
             strong("1. Species"),
           ),
           column(
-            width = 8,
+            width = 7,
             textOutput(ns("selected_species"))
           )
         ),
@@ -193,6 +192,30 @@ mod_01_load_data_ui <- function(id) {
           ),
           div(
             class = "more-options-body",
+            div(
+              id = ns("heatmap_color_select_container"),
+              style = "cursor: help;",
+              selectInput(
+                inputId = ns("heatmap_color_select"),
+                label = "Heatmap color:",
+                choices = c(
+                  "Green-Black-Red",
+                  "Red-Black-Green",
+                  "Blue-White-Red",
+                  "Green-Black-Magenta",
+                  "Blue-Yellow-Red",
+                  "Blue-White-Brown",
+                  "Orange-White-Blue"
+                ),
+                selected = "Green-Black-Red",
+                width = "100%"
+              )
+            ),
+            tippy::tippy_this(
+              ns("heatmap_color_select_container"),
+              "Choose the color palette used for heatmaps, sample trees, and networks.",
+              theme = "light-border"
+            ),
             selectInput(
               inputId = ns("multiple_map"),
               label = "Multiple mapped IDs:",
@@ -214,46 +237,30 @@ mod_01_load_data_ui <- function(id) {
               When uploading transcript level counts, choose \"sum\" to aggregate gene level counts. ",
               theme = "light-border"
             ),
-            selectInput(
-              inputId = ns("plots_color_select"),
-              label = "Plots Color scheme (PCA/Pre-Process):",
-              choices = c(
-                "Set1",
-                "Set2",
-                "Set3",
-                "Paired",
-                "Dark2",
-                "Accent",
-                "Pastel1",
-                "Pastel2",
-                "Spectral"
-              ),
-              selected = "Set1",
-              width = "100%"
+            div(
+              id = ns("plots_color_select_container"),
+              style = "cursor: help;",
+              selectInput(
+                inputId = ns("plots_color_select"),
+                label = "Plots Color:",
+                choices = c(
+                  "Set1",
+                  "Set2",
+                  "Set3",
+                  "Paired",
+                  "Dark2",
+                  "Accent",
+                  "Pastel1",
+                  "Pastel2",
+                  "Spectral"
+                ),
+                selected = "Set1",
+                width = "100%"
+              )
             ),
             tippy::tippy_this(
-              ns("plots_color_select"),
+              ns("plots_color_select_container"),
               "Palette applied to PCA and QC plots so sample groups stand out.",
-              theme = "light-border"
-            ),
-            selectInput(
-              inputId = ns("heatmap_color_select"),
-              label = "Heatmap/Tree/Network Color scheme:",
-              choices = c(
-                "Green-Black-Red",
-                "Red-Black-Green",
-                "Blue-White-Red",
-                "Green-Black-Magenta",
-                "Blue-Yellow-Red",
-                "Blue-White-Brown",
-                "Orange-White-Blue"
-              ),
-              selected = "Green-Black-Red",
-              width = "100%"
-            ),
-            tippy::tippy_this(
-              ns("heatmap_color_select"),
-              "Choose the color palette used for heatmaps, sample trees, and networks.",
               theme = "light-border"
             ),
             selectInput(
@@ -341,11 +348,7 @@ mod_01_load_data_ui <- function(id) {
               label = "Gene IDs"
             )
           )
-        ),
-        # Table output for species loading progress -----------
-        #br(),
-        #br(),
-        #tableOutput(ns("species_match"))
+        )
       ),
       
       
@@ -354,18 +357,13 @@ mod_01_load_data_ui <- function(id) {
       ##################################################################
       mainPanel(
         shinyjs::useShinyjs(),
-        # connection issue button
-        #actionButton(ns("server_connection"), "Server Connection Tips"),
-        # Table output for sample tissue type ----------
-        DT::dataTableOutput(ns("sample_info_table")),
-        br(),
-        br(),
-
         # Default species notification ----------
         uiOutput(ns("default_species_message")),
 
         # Gene ID conversion statistics ----------
         uiOutput(ns("conversion_stats_message")),
+
+        DT::dataTableOutput(ns("sample_info_table")),
 
         # Display first 20 rows of the data ----------
         DT::dataTableOutput(ns("sample_20")),
@@ -877,7 +875,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             br(),
             actionButton(
               inputId = ns("go_button"),
-              label = "Load Demo",
+              label = "Load",
               class = "btn-primary"
             ),
             tippy::tippy_this(
@@ -1396,50 +1394,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       includeHTML(app_sys("app/www/format.html"))
     })
 
-observeEvent(input$server_connection, {
-  showModal(
-    modalDialog(
-      title = "Server Connection Tips",
-      p("The iDEP webserver uses a load balancer to distribute incoming traffic across 125 virtual 
-      servers, which are hosted on three physical servers(SDSU, Azure, & JetStream2). Each virtual server is capable of 
-      serving multiple users simultaneously, provided it is not operating at full CPU capacity. 
-      The assignment of users to specific virtual servers is determined by 
-      their browser session and IP address."),
-      tags$h4("Slow Performance:"),
-      tags$ul(
-        tags$li("Trying using iDEP in a new browser window (not just a new tab)."),
-        tags$li("Using a different browser (Chrome, Edge, Safari, Firefox, etc.) to be assigned a different virtual server.")
-      ),
-      
-      tags$h4("Connection Issues:"),
-      tags$p("If you can't connect, try accessing iDEP directly using these mirror server URLs like this:"),
-      tags$ul(
-        tags$li(tags$a(href="http://149.165.173.123:55011/idep/", target="_blank", "JetStream2 (http://149.165.173.123:55011/idep/)")),
-        tags$li(tags$a(href="http://4.236.179.243:55011/idep/", target="_blank", "Azure (http://4.236.179.243:55011/idep/)"))
-      ),
-      tags$p("Note: The port number (55011 in this example) can vary between 55001 and 55050, each pointing to a different virtual server."),
-      
-      tags$h4("Frequent Crashing:"),
-      tags$p("There are several reasons iDEP might crash:"),
-      tags$ul(
-        tags$li("Problems with your data."),
-        tags$li("Running a large analysis."),
-        tags$li("The assigned virtual server overload (100% CPU).")
-      ),
-      tags$p("Try from a new browser window. Try again later. If issues persist, email us."),
-      
-      tags$h4("Insecure Connection (http):"),
-      tags$p("We are transitioning to a secure https protocol. For now, you can:"),
-      tags$ul(
-        tags$li("Trust the current http connection."),
-        tags$li("Download and run iDEP on your laptop.")
-      ),
-      easyClose = TRUE
-    )
-  )
-})
-
-
     # Return data used in the following panels --------
     list(
       data_file_format = reactive(input$data_file_format),
@@ -1463,10 +1417,3 @@ observeEvent(input$server_connection, {
     )
   })
 }
-
-## To be copied in the UI
-# mod_01_load_data_ui("load_data") # nolint
-
-## To be copied in the server
-# mod_01_load_data_server("load_data") # nolint
-
