@@ -306,18 +306,15 @@ mod_03_clustering_ui <- function(id) {
                                     delayType = "debounce",
                                     clip = TRUE)
                 ),
+                br(),
                 fluidRow(
                   column(
                     width = 6,
-                    ottoPlots::mod_download_figure_ui(
-                      ns("dl_heatmap_main")
-                    )
+                    uiOutput(ns("dl_heatmap_main_download_ui"))
                   ),
                   column(
                     width = 6,
-                    ottoPlots::mod_download_figure_ui(
-                      ns("dl_heatmap_sub")
-                    )
+                    uiOutput(ns("dl_heatmap_sub_download_ui"))
                   )
                 ),
                 br(),
@@ -693,17 +690,137 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     })
 
 
-    dl_heatmap_main <- ottoPlots::mod_download_figure_server(
-      id = "dl_heatmap_main",
-      filename = "heatmap_main",
-      figure = reactive({
-        heatmap_main_object()
-      }),
-      width = 6,
-      height = 16,
-      label = "Above"
-    )
+    # Replace default download button with actionLink/tooltip for heatmaps
+    setup_download_link <- function(
+        ui_id,
+        trigger_id,
+        figure,
+        filename,
+        default_width,
+        default_height,
+        label_tag = NULL,
+        icon_tag = NULL,
+        tooltip_text = "Click to download plot in preferred format and size.") {
+      min_size <- 2
+      max_size <- 30
+      width_id <- paste0(trigger_id, "_width")
+      height_id <- paste0(trigger_id, "_height")
+      pdf_id <- paste0(trigger_id, "_pdf")
+      png_id <- paste0(trigger_id, "_png")
+      svg_id <- paste0(trigger_id, "_svg")
 
+      output[[ui_id]] <- renderUI({
+        req(figure())
+        tagList(
+          actionLink(
+            inputId = ns(trigger_id),
+            label = label_tag,
+            icon = icon_tag,
+            title = tooltip_text,
+            `aria-label` = tooltip_text
+          ),
+          tippy::tippy_this(
+            ns(trigger_id),
+            tooltip_text,
+            theme = "light-border"
+          )
+        )
+      })
+
+      width_value <- reactive({
+        value <- input[[width_id]]
+        if (is.numeric(value)) {
+          return(max(min_size, min(max_size, value, na.rm = TRUE)))
+        }
+        default_width
+      })
+
+      height_value <- reactive({
+        value <- input[[height_id]]
+        if (is.numeric(value)) {
+          return(max(min_size, min(max_size, value, na.rm = TRUE)))
+        }
+        default_height
+      })
+
+      observeEvent(input[[trigger_id]], {
+        req(figure())
+        showModal(modalDialog(
+          numericInput(
+            inputId = ns(width_id),
+            label = "Width (in)",
+            value = default_width,
+            min = min_size,
+            max = max_size
+          ),
+          numericInput(
+            inputId = ns(height_id),
+            label = "Height (in)",
+            value = default_height,
+            min = min_size,
+            max = max_size
+          ),
+          h5("The plot will be rendered differently depending on size.\n            When the dimensions are too small, error or blank plot\n               will be generated."),
+          downloadButton(outputId = ns(pdf_id), label = "PDF"),
+          downloadButton(outputId = ns(png_id), label = "PNG"),
+          downloadButton(outputId = ns(svg_id), label = "SVG"),
+          size = "s"
+        ))
+      })
+
+      output[[pdf_id]] <- downloadHandler(
+        filename = paste0(filename, ".pdf"),
+        content = function(file) {
+          plot_obj <- figure()
+          req(plot_obj)
+          on.exit(removeModal(), add = TRUE)
+          pdf(file, width = width_value(), height = height_value())
+          print(plot_obj)
+          dev.off()
+        }
+      )
+
+      output[[png_id]] <- downloadHandler(
+        filename = paste0(filename, ".png"),
+        content = function(file) {
+          plot_obj <- figure()
+          req(plot_obj)
+          on.exit(removeModal(), add = TRUE)
+          png(
+            filename = file,
+            res = 360,
+            width = width_value(),
+            height = height_value(),
+            units = "in"
+          )
+          print(plot_obj)
+          dev.off()
+        }
+      )
+
+      output[[svg_id]] <- downloadHandler(
+        filename = paste0(filename, ".svg"),
+        content = function(file) {
+          plot_obj <- figure()
+          req(plot_obj)
+          on.exit(removeModal(), add = TRUE)
+          svg(file, width = width_value(), height = height_value())
+          print(plot_obj)
+          dev.off()
+        }
+      )
+    }
+
+    setup_download_link(
+      ui_id = "dl_heatmap_main_download_ui",
+      trigger_id = "dl_heatmap_main_download",
+      figure = heatmap_main_object,
+      filename = "heatmap_main",
+      default_width = 6,
+      default_height = 16,
+      label_tag = NULL,
+      icon_tag = icon("download")
+    )
 
     # Heatmap Click Value ---------
     output$ht_click_content <- renderUI({
@@ -882,15 +999,15 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       }
     })
 
-    dl_heatmap_sub <- ottoPlots::mod_download_figure_server(
-      id = "dl_heatmap_sub",
+    setup_download_link(
+      ui_id = "dl_heatmap_sub_download_ui",
+      trigger_id = "dl_heatmap_sub_download",
+      figure = heatmap_sub_object,
       filename = "heatmap_zoom",
-      figure = reactive({
-        heatmap_sub_object()
-      }),
-      width = 8,
-      height = 12,
-      label = "Right"
+      default_width = 8,
+      default_height = 12,
+      label_tag = tags$span(icon("download"), "\u2192"),
+      icon_tag = NULL
     )
 
     # gene lists for enrichment analysis
