@@ -350,7 +350,7 @@ mod_05_deg_2_ui <- function(id) {
             )
           ),
           tabPanel(
-            title = "Info",
+            title = icon("info-circle"),
             includeHTML(app_sys("app/www/help_deg2.html"))
           )
         )

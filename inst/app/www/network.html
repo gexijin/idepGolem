@@ -1,0 +1,133 @@
+<h3>
+    Overview
+</h3>
+<p>
+    The Network tab identifies co-expression modules using Weighted Gene Co-expression
+    Network Analysis (WGCNA). Genes that track together across samples are grouped into
+    modules, which may correspond to biological pathways or cell-type signatures.
+    Because WGCNA relies on correlation patterns, having at least 15 samples and multiple
+    conditions yields the most reliable results.
+</p>
+<p>
+    This implementation is based on the original
+    <a href="https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-9-559" target="_blank">WGCNA publication</a>.
+</p>
+<h3>
+    Sidebar Options
+</h3>
+<ul>
+    <li>
+        <strong>Most variable genes to include:</strong> limits the analysis to the top
+        variable genes. Using 1000–2000 genes balances computation time and module
+        stability.
+    </li>
+    <li>
+        <strong>Soft Threshold:</strong> power used to raise correlation values, ensuring
+        the resulting network approximates a scale-free topology. Use the “Scale
+        Independence” plot to verify an appropriate choice; values between 4 and 8 often
+        work well.
+    </li>
+    <li>
+        <strong>Min. Module Size:</strong> minimum number of genes allowed in a module. Small
+        modules may capture niche patterns; larger values enforce broader clusters.
+    </li>
+    <li>
+        <strong>Colour palette:</strong> choose the heatmap palette (generated via the
+        Pre-Process tab) used for module heatmaps.
+    </li>
+    <li>
+        <strong>Select module:</strong> after WGCNA finishes, pick a module to inspect.
+        Summary statistics (gene count, eigengene correlations) appear beneath the
+        selector. Download buttons export either all modules or the currently selected one.
+    </li>
+</ul>
+<h3>
+    Network Plot Tab
+</h3>
+<p>
+    Visualises the selected module as a gene co-expression network.
+</p>
+<ul>
+    <li>
+        <strong>Edge threshold:</strong> filters edges by correlation strength; higher values
+        keep only the strongest connections.
+    </li>
+    <li>
+        <strong>Top genes:</strong> limits the number of genes displayed (ranked by
+        connectivity) to keep the network interpretable.
+    </li>
+    <li>
+        <strong>Change network layout:</strong> cycles through layouts to reveal structure.
+    </li>
+    <li>
+        Download the plot or export a network file that can be opened in Cytoscape or
+        VisANT for deeper exploration.
+    </li>
+</ul>
+<h3>
+    Module Plot Tab
+</h3>
+<p>
+    Plots module eigengenes (the first principal component of each module) across samples,
+    helping you relate modules to experimental factors. Use this to spot modules that track
+    with treatments, time points, or other covariates.
+</p>
+<h3>
+    Heatmap Tab
+</h3>
+<p>
+    Shows the expression of genes within the selected module. The heatmap follows the colour
+    palette chosen in Pre-Process, and the “Heatmap Data” download provides the underlying
+    matrix.
+</p>
+<h3>
+    Enrichment Tab
+</h3>
+<p>
+    Runs enrichment analysis for the genes in the module, pointing to pathways, GO terms, or
+    transcription factor targets that may explain the co-expression pattern.
+</p>
+<h3>
+    Scale Independence & Mean Connectivity Tabs
+</h3>
+<p>
+    Diagnostic plots from WGCNA:
+</p>
+<ul>
+    <li>
+        <strong>Scale Independence:</strong> displays how well different soft-threshold powers
+        approximate a scale-free topology. Aim for a high scale-free fit (>0.8) while
+        maintaining reasonable mean connectivity.
+    </li>
+    <li>
+        <strong>Mean Connectivity:</strong> shows network connectivity for each candidate
+        power. Use both plots together to justify the soft threshold selected in the sidebar.
+    </li>
+</ul>
+<h3>
+    Practical Tips
+</h3>
+<ul>
+    <li>
+        Start with a moderate number of genes (for example, 1000). If modules are too broad,
+        increase the filter to include more genes; if modules are noisy, reduce it.
+    </li>
+    <li>
+        Modules are labelled by colour names (turquoise, blue, etc.). These labels are
+        arbitrary—always read the gene list and enrichment results to interpret them.
+    </li>
+    <li>
+        If no modules appear, check that you have enough samples and variance in the data, or
+        relax the soft-threshold and module-size parameters.
+    </li>
+    <li>
+        Download module gene lists to cross-validate with DEG results or external datasets.
+    </li>
+</ul>
+<h3>
+    Additional Resources
+</h3>
+<p>
+    For background and tutorials, visit the
+    <a href="https://idepsite.wordpress.com/network/" target="_blank">iDEP network analysis guide</a>.
+</p>

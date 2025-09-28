@@ -1,0 +1,120 @@
+<h3>
+    Overview
+</h3>
+<p>
+    The Genome tab shows where your fold-changes of genes along
+    each chromosome. It also scans for genomic regions where many neighbouring genes
+    change together, highlighting potential co-regulation or shared copy-number
+    events. The controls on the left let you choose the comparison, gene filters, and
+    window settings used in these plots.
+</p>
+<h3>
+    Gene-Level Filters
+</h3>
+<ul>
+    <li>
+        <strong>Comparison selector:</strong> choose a DEG1 contrast (formatted as
+        “B-A”, meaning fold change relative to A). “All” combines all genes regardless
+        of contrast for quick exploration.
+    </li>
+    <li>
+        <strong>Genes: FDR</strong> and <strong>Min. Fold Change:</strong> set the
+        adjusted p-value and fold-change cutoffs that determine which genes appear as
+        coloured points on the chromosome plot. Red dots mark up-regulated genes, blue
+        dots mark down-regulated genes.
+    </li>
+    <li>
+        <strong>Label genes:</strong> check to display gene symbols as you hover over or
+        zoom into the plot.
+    </li>
+    <li>
+        <strong>Coding genes only:</strong> include or exclude non-coding genes depending
+        on whether you want to focus on protein-coding events.
+    </li>
+    <li>
+        <strong>Hide patch chromosomes:</strong> removes alternative assemblies (patches)
+        so the plot focuses on primary chromosomes.
+    </li>
+    <li>
+        <strong>Hide chromosomes with 4 or fewer genes:</strong> suppresses sparsely
+        populated chromosomes to keep the figure tidy.
+    </li>
+</ul>
+<h3>
+    Sliding-Window Analysis
+</h3>
+<p>
+    Beneath the basic filters you can search for chromosomal regions where many genes
+    change together.
+</p>
+<ul>
+    <li>
+        <strong>Window Size (Mb):</strong> width of the sliding window used to scan the
+        genome (for example, 6 Mb).
+    </li>
+    <li>
+        <strong>Steps:</strong> number of sub-steps within each window. A larger value
+        increases overlap between windows (for example, window 0–6 Mb, then 2–8 Mb when
+        steps=3).
+    </li>
+    <li>
+        <strong>FDR cutoff for window:</strong> significance threshold applied to the
+        average fold-change t-test performed within each window. Windows passing this
+        cutoff are drawn as red (up) or blue (down) line segments alongside the
+        chromosome.
+    </li>
+    <li>
+        <strong>Download Plot Data:</strong> export the table of windows and gene
+        statistics for offline use.
+    </li>
+</ul>
+<h3>
+    Plot Interaction
+</h3>
+<ul>
+    <li>
+        <strong>Zoom:</strong> drag across a chromosome to zoom; double-click to reset.
+    </li>
+    <li>
+        <strong>Hover:</strong> mouse over points to see gene ID, symbol, strand, and
+        exact coordinates.
+    </li>
+    <li>
+        <strong>Menu:</strong> use the Plotly toolbar (upper-right) to download PNG/SVG
+        images or reset the view.
+    </li>
+</ul>
+<h3>
+    Interpretation Tips
+</h3>
+<ul>
+    <li>
+        Window-based enrichment treats a genomic segment like a gene set. Significant
+        segments suggest coordinated regulation and are independent of the DEG cutoffs
+        above because all analysed genes contribute to the t-test.
+    </li>
+    <li>
+        Look for clusters of red or blue segments—they often correspond to known loci
+        (for example, immune clusters, chromosomal amplifications, or deletions).
+    </li>
+    <li>
+        Adjust window size and steps: large windows capture broad trends, while smaller
+        windows detect focal events.
+    </li>
+    <li>
+        If no regions appear, try relaxing the FDR cutoff or fold-change filters.
+    </li>
+</ul>
+<h3>
+    Limitations
+</h3>
+<ul>
+    <li>
+        Chromosome lengths are based on the coordinates of the last gene in the dataset;
+        telomeres or centromeres are not drawn explicitly.
+    </li>
+    <li>
+        Results depend on annotation quality. If gene IDs did not map cleanly during
+        preprocessing, affected loci may be under-represented.
+    </li>
+</ul>

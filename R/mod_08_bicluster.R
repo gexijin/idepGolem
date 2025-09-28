@@ -13,20 +13,6 @@ mod_08_bicluster_ui <- function(id) {
     title = "Bicluster",
     sidebarLayout(
       sidebarPanel(
-        h5(
-          "Biclustering can discover genes correlated on subset of samples.
-           Only useful when sample size is large(N>15)
-           and more than 2 sample groups.
-           Based on the",
-          a("biclust",
-            href = "https://cran.r-project.org/web/packages/biclust/index.html"
-          ),
-          " and ",
-          a("QUBIC",
-            href = "https://www.bioconductor.org/packages/release/bioc/html/QUBIC.html"
-          ),
-          " R packages."
-        ),
         numericInput(
           inputId = ns("n_genes"),
           label = "Most variable genes to include: ",
@@ -50,15 +36,7 @@ mod_08_bicluster_ui <- function(id) {
           selected = "BCCC()"
         ),
         htmlOutput(outputId = ns("list_biclusters")),
-        textOutput(ns("bicluster_info")),
-        a(
-          h5(
-            "Questions?",
-            align = "right"
-          ),
-          href = "https://idepsite.wordpress.com/biclustering/",
-          target = "_blank"
-        )
+        textOutput(ns("bicluster_info"))
       ),
       mainPanel(
         tabsetPanel(
@@ -78,6 +56,10 @@ mod_08_bicluster_ui <- function(id) {
             ),
             br(),
             uiOutput(ns("download_biclust_button"))
+          ),
+          tabPanel(
+            title = icon("info-circle"),
+            includeHTML(app_sys("app/www/bicluster.html"))
           )
         )
       )

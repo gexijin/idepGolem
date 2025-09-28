@@ -162,12 +162,6 @@ mod_06_pathway_ui <- function(id) {
                  )
           )
         ),
-        h6("Beware of P-hacking! If you try all the combinations, you can find evidence for anything."),
-        a(
-          h5("Questions?", align = "right"),
-          href = "https://idepsite.wordpress.com/pathways/",
-          target = "_blank"
-        ),
         conditionalPanel(
           condition = "input.pathway_method == 2 || input.pathway_method == 4",
           selectInput(
@@ -369,7 +363,7 @@ mod_06_pathway_ui <- function(id) {
             )
           ),
           tabPanel(
-            title = "Info",
+            title = icon("info-circle"),
             includeHTML(app_sys("app/www/pathway.html"))
           )
         )

@@ -13,15 +13,6 @@ mod_09_network_ui <- function(id) {
     title = "Network",
     sidebarLayout(
       sidebarPanel(
-        h5(
-          "Identify co-expression networks and sub-modules using",
-          a(
-            "WGCNA.",
-            href = "https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-9-559",
-            target = "_blank"
-          ),
-          "WGCNA requires at least 15 samples to be meaningful."
-        ),
         numericInput(
           inputId = ns("n_genes_network"),
           label = "Most variable genes to include (< 3001)",
@@ -80,12 +71,7 @@ mod_09_network_ui <- function(id) {
           "Download gene information for the selected module",
           theme = "light-border"
         ),
-        textOutput(ns("module_statistic")),
-        a(
-          h5("Questions?", align = "right"),
-          href = "https://idepsite.wordpress.com/network/",
-          target = "_blank"
-        )
+        textOutput(ns("module_statistic"))
       ),
       mainPanel(
         tabsetPanel(
@@ -179,6 +165,10 @@ mod_09_network_ui <- function(id) {
               width = "100%",
               height = "500px"
             )
+          ),
+          tabPanel(
+            title = icon("info-circle"),
+            includeHTML(app_sys("app/www/network.html"))
           )
         )
       )
