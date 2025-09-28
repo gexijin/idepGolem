@@ -435,7 +435,7 @@ gene_counts_ggplot <- function(counts_data,
     ggplot2::geom_bar(stat = "identity") +
     ggplot2::scale_y_log10(limits = c(1, 2 * max(data$value))) +
     ggplot2::coord_flip() +
-    ggplot2::labs(x = NULL, y = "Number of genes", title = "Number of genes by type") +       
+    ggplot2::labs(x = NULL, y = "Number of genes") +       
     ggplot2::geom_text(ggplot2::aes(label = value), hjust = -0.1, vjust = 0.5) 
 
   plot <- plot +

@@ -340,7 +340,7 @@ mod_02_pre_process_ui <- function(id) {
                 width = 4,
                 selectInput(
                   inputId = ns("scatter_x"),
-                  label = "Select a sample for x-axis",
+                  label = tags$span("Sample for x-axis", style = "font-weight: normal;"),
                   choices = 1:5,
                   selected = 1
                 )
@@ -349,7 +349,7 @@ mod_02_pre_process_ui <- function(id) {
                 width = 4,
                 selectInput(
                   inputId = ns("scatter_y"),
-                  label = "Select a sample for y-axis",
+                  label = tags$span("Sample for y-axis", style = "font-weight: normal;"),
                   choices = 1:5,
                   selected = 2
                 )
@@ -455,7 +455,7 @@ mod_02_pre_process_ui <- function(id) {
                   column(
                     10,
                     align = "right",
-                    p("Higher proportions of rRNA indicuate ineffective rRNA-removal.")
+                    p("Higher rRNA content may indicuate ineffective rRNA-removal.")
                   )
                 ),
                 br(),
@@ -500,7 +500,7 @@ mod_02_pre_process_ui <- function(id) {
                 column(
                   10,
                   align = "right",
-                  p("A tall bar means genes on this chromosome are expressed at higher levels in a sample, as indicated by the 75th percentile.")
+                  p("A tall bar means genes on this chromosome are expressed at higher levels in a sample.")
                 )
               ),
             ns = ns
@@ -560,9 +560,7 @@ mod_02_pre_process_ui <- function(id) {
                 )
               )
             ),
-            uiOutput(
-              outputId = ns("signif_text")
-            ),
+
             plotOutput(
               outputId = ns("gene_plot"),
               width = "100%",
@@ -576,7 +574,8 @@ mod_02_pre_process_ui <- function(id) {
               downloadButton(
                 outputId = ns("tukey_download"),
                 label = "TukeyHSD Results"
-              )
+              ),
+              uiOutput(ns("signif_text"))
             )
           ),
 
@@ -1438,8 +1437,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
 
       tags$div(
         class = "mapping-statistics",
-        tags$strong("Mapping statistics"),
-        tags$p(converted_message())
+        br(),
+        tags$p(converted_message(), style = "color: #B8860B;")
       )
     })
 
