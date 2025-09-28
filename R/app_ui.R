@@ -11,7 +11,7 @@ app_ui <- function(request) {
     # Your application UI logic
 
     navbarPage(
-      "iDEP 2.11",
+      "iDEP 2.20",
 
       id = "navbar",
       mod_01_load_data_ui(id = "load_data"),
@@ -53,7 +53,7 @@ golem_add_external_resources <- function() {
     ),
     bundle_resources(
       path = app_sys("app/www"),
-      app_title = "iDEP 2.1"
+      app_title = "iDEP"
     )
     # Add here other external resources
     # for example, you can add shinyalert::useShinyalert()
