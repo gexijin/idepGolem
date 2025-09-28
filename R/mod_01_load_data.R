@@ -1079,7 +1079,10 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     })
 
     observe({
-      req(!is.null(loaded_data()$data) && any(apply(loaded_data()$data, 2, function(col) all(col == 0))))
+      req(!is.null(loaded_data()$data) && any(apply(loaded_data()$data, 2, function(col) {
+        values <- col[!is.na(col)]
+        length(values) > 0 && all(values == 0)
+      })))
 
       showNotification(
         ui = paste("A sample has all values as zero. It is recommended to remove that sample."),
@@ -1235,9 +1238,27 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
     # download database for selected species
     observeEvent(input$select_org, {
+      req(!is.null(input$select_org))
+      if (identical(input$select_org, "NEW")) {
+        return()
+      }
+
       ix <- which(idep_data$org_info$id == input$select_org)
+      if (length(ix) == 0) {
+        return()
+      }
+
       db_file <- idep_data$org_info[ix, "file"]
-      dbname <- paste0(DATAPATH, "db/", db_file)
+      if (length(db_file) == 0) {
+        return()
+      }
+
+      db_file <- db_file[[1]]
+      if (is.na(db_file) || !nzchar(db_file)) {
+        return()
+      }
+
+      dbname <- file.path(DATAPATH, "db", db_file)
       if (!file.exists(dbname)) {
         withProgress(
           message = paste(
