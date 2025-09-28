@@ -19,13 +19,13 @@ mod_02_pre_process_ui <- function(id) {
         # Conditional panel for read count data -----------
         conditionalPanel(
           condition = "output.data_file_format == 1",
-              p("Filter genes with low counts:"),          
+          strong("1. Filter genes with low counts"),
           fluidRow(
             column(
               width = 6,
               numericInput(
                 inputId = ns("min_counts"),
-                label = "Min. CPM",
+                label = tags$span("Min. CPM", style = "font-weight: normal;"),
                 value = 0.5
               ),
               tippy::tippy_this(
@@ -40,7 +40,7 @@ mod_02_pre_process_ui <- function(id) {
               # Min samples per row to have min CPM
               numericInput(
                 inputId = ns("n_min_samples_count"),
-                label = "n libraries",
+                label = tags$span("n libraries", style = "font-weight: normal;"),
                 value = 1
               ),
               tippy::tippy_this(
@@ -50,7 +50,7 @@ mod_02_pre_process_ui <- function(id) {
               )
             )
           ),
-          p("Transform counts data:"),
+          strong("2. Transform counts data"),
           selectInput(
             inputId = ns("counts_transform"),
             label = NULL,
