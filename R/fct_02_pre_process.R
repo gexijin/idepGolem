@@ -1218,7 +1218,6 @@ individual_plots <- function(individual_data,
       ggplot2::geom_line() +
       ggplot2::geom_point(size = 5, fill = "white") +
       ggplot2::labs(
-        title = "Expression Level",
         y = ifelse(plot_raw, "Raw counts", "Normalized Expression")
       ) +
       ggplot2::coord_cartesian(ylim = c(0, max(plot_data$value))) +
@@ -1266,7 +1265,6 @@ individual_plots <- function(individual_data,
       position = ggplot2::position_dodge()
       ) +
     ggplot2::labs(
-      title = "Expression Level",
       y = ifelse(plot_raw, "Raw counts", "Normalized Expression")
     ) +
     ggplot2::geom_dotplot(
