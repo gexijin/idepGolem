@@ -19,17 +19,19 @@ mod_02_pre_process_ui <- function(id) {
         # Conditional panel for read count data -----------
         conditionalPanel(
           condition = "output.data_file_format == 1",
-          p("Keep genes with counts per million in at
-                  least n libraries:"),
+              p("Filter genes with low counts:"),          
           fluidRow(
             column(
               width = 6,
-
-              # Min counts per million (works with min samples)
               numericInput(
                 inputId = ns("min_counts"),
                 label = "Min. CPM",
                 value = 0.5
+              ),
+              tippy::tippy_this(
+                ns("min_counts"),
+                "Counts Per Million (CPM) = (read count / total counts) * 1,000,000",
+                theme = "light-border"
               )
             ),
             column(
@@ -40,11 +42,15 @@ mod_02_pre_process_ui <- function(id) {
                 inputId = ns("n_min_samples_count"),
                 label = "n libraries",
                 value = 1
+              ),
+              tippy::tippy_this(
+                ns("n_min_samples_count"),
+                "Number of samples (libraries) that must have at least the min CPM",
+                theme = "light-border"
               )
             )
           ),
-          p("Transform counts data for clustering & PCA:"),
-          # Type of transformation to perform on the counts data
+          p("Transform counts data:"),
           selectInput(
             inputId = ns("counts_transform"),
             label = NULL,
@@ -55,23 +61,36 @@ mod_02_pre_process_ui <- function(id) {
             ),
             selected = 1
           ),
+          tippy::tippy_this(
+            ns("counts_transform"),
+            "Transformed data is used in all analyses except differential expression with DESeq2.",
+            theme = "light-border"
+          ),
 
           # Conditional panel for EdgeR transformation -----------
           conditionalPanel(
             condition = "input.counts_transform == 1",
             fluidRow(
               column(
-                width = 5,
+                width = 2,
+              ),              
+              column(
+                width = 7,
                 "Pseudo count c:"
               ),
               column(
-                width = 7,
+                width = 3,
 
                 # Constant to add for a log transform
                 numericInput(
                   inputId = ns("counts_log_start"),
                   label = NULL,
                   value = 4
+                ),
+                tippy::tippy_this(
+                  ns("counts_log_start"),
+                  "Constant c for log2(CPM+c). A larger c shrinks log-values towards log2(c).",
+                  theme = "light-border"
                 )
               )
             ),
@@ -83,26 +102,34 @@ mod_02_pre_process_ui <- function(id) {
         # Conditional panel for FPKM data (2)----------
         conditionalPanel(
           condition = "output.data_file_format == 2",
-          strong("Only keep genes above this level in at least n samples:"),
+          p("Filter genes with low expression:"),
           fluidRow(
             column(
               width = 6,
-
               # Fold counts min (works with min samples)
               numericInput(
                 inputId = ns("low_filter_fpkm"),
                 label = "Min. level",
                 value = -1000
+              ),
+              tippy::tippy_this(
+                ns("low_filter_fpkm"),
+                "Minimum expression level, e.g. FPKM, RPKM, TPM, or other normalized values.",
+                theme = "light-border"
               )
             ),
             column(
               width = 6,
-
               # Min samples per row to have the low filter
               numericInput(
                 inputId = ns("n_min_samples_fpkm"),
                 label = "n samples",
                 value = 1
+              ),
+              tippy::tippy_this(
+                ns("n_min_samples_fpkm"),
+                "Number of samples that must have at least the min expression level.",
+                theme = "light-border"
               )
             )
           ),
@@ -122,15 +149,18 @@ mod_02_pre_process_ui <- function(id) {
             choices = c("No" = FALSE, "Yes" = TRUE)
           ),
 
-          # Constant to add if yes to a log transform
-          numericInput(
-            inputId = ns("log_start_fpkm"),
-            label = "Constant c for started log: log(x+c)",
-            value = 1
-          ),
-          tags$style(
-            type = "text/css",
-            "#pre_process-log_start { width:100%;   margin-top:-12px}"
+          conditionalPanel(
+            condition = "input.log_transform_fpkm == TRUE",
+            numericInput(
+              inputId = ns("log_start_fpkm"),
+              label = "Constant c for started log: log(x+c)",
+              value = 1
+            ),
+            tags$style(
+              type = "text/css",
+              "#pre_process-log_start_fpkm { width:100%;   margin-top:-12px}"
+            ),
+            ns = ns
           ),
           ns = ns
         ),
@@ -151,9 +181,14 @@ mod_02_pre_process_ui <- function(id) {
               choices = list(
                 "Use gene median" = "geneMedian",
                 "Treat as zero" = "treatAsZero",
-                "Use group median" = "geneMedianInGroup"
+                "Use gene median in group" = "geneMedianInGroup"
               ),
               selected = "geneMedian"
+            ),
+            tippy::tippy_this(
+              ns("missing_value"),
+              "How to handle missing values in the data matrix.",
+              theme = "light-border"
             )
           )
         ),
