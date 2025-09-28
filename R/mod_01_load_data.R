@@ -231,9 +231,9 @@ mod_01_load_data_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("multiple_map"),
-              "When multiple IDs map to the same gene, we can summerize
+              "When multiple IDs map to the same gene, we can summarize
               data in a certain way (sum, mean, median, max),
-              or just keep the rows with the the most variation (max SD).
+              or just keep the rows with the most variation (max SD).
               When uploading transcript level counts, choose \"sum\" to aggregate gene level counts. ",
               theme = "light-border"
             ),
@@ -407,7 +407,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     selected_demo <- reactiveVal(NULL)
     
     # increase max input file size
-    options(shiny.maxRequestSize = 2001024^2)
+    options(shiny.maxRequestSize = 200 * 1024^2)
 
     # Initialize species selection with first species as default
     observe({
@@ -543,6 +543,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           selected = "NEW"
         )
         updateCheckboxInput(
+          session = session,
           inputId = "no_id_conversion",
           label = "Do not convert gene IDs",
           value = TRUE
@@ -559,6 +560,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           selected = first_species_id
         )
         updateCheckboxInput(
+          session = session,
           inputId = "no_id_conversion",
           label = "Do not convert gene IDs",
           value = FALSE
@@ -596,8 +598,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         tags$pre(
           style = "font-size: 12px;",
           lines[1],
-          ifelse(length(lines) > 1, lines[2], ""),
-          ifelse(length(lines) > 2, lines[2], ""),
+          if (length(lines) > 1) lines[2] else "",
+          if (length(lines) > 2) lines[3] else ""
         )
       )
     })
@@ -626,6 +628,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
       # Reset no_id_conversion to FALSE for database species
       updateCheckboxInput(
+        session = session,
         inputId = "no_id_conversion",
         label = "Do not convert gene IDs",
         value = FALSE
@@ -1057,7 +1060,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # Show messages when on the Network tab or button is clicked ----
     observe({
       req(is.null(loaded_data()$data) && (
-        tab() != "Load Data" || tab() != "About"
+        tab() != "Load Data" && tab() != "About"
       ))
 
       showNotification(
@@ -1079,7 +1082,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       req(!is.null(loaded_data()$data) && any(apply(loaded_data()$data, 2, function(col) all(col == 0))))
 
       showNotification(
-        ui = paste("A sample has all values as zero. it is recommended to remove that sample."),
+        ui = paste("A sample has all values as zero. It is recommended to remove that sample."),
         id = "sample_remove_error",
         duration = NULL,
         type = "error"
@@ -1288,16 +1291,17 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     })
     # Species match message ----------
     observe({
-      req(
-        tab() == "Load Data" &&
-          #!is.null(conversion_info()$converted)
-          species_match_data()[1,1] == "ID not recognized." &&
-          input$select_org != "NEW"
-      )
+      req(tab() == "Load Data")
+
+      match_data <- species_match_data()
+      req(!is.null(match_data))
+      req(nrow(match_data) > 0)
+      req(match_data[1, 1] == "ID not recognized.")
+      req(input$select_org != "NEW")
 
       showModal(modalDialog(
         title = "Please double check the selected species",
-        tags$p("None of the gene IDs are recognzied. Possible causes: 1. Wrong species is selected. 
+        tags$p("None of the gene IDs are recognized. Possible causes: 1. Wrong species is selected. 
         2. Correct species is selected but we cannot map your gene IDs to Ensembl gene IDs. 
         3. Your species is not included in our database.  
         You can still run many analyses except pathway and enrichment."),
