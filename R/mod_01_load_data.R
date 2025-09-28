@@ -872,31 +872,22 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     output$load_data_alt <- renderUI({
       if (go_button_count() == 0 && is.null(input$expression_file)) {
         tagList(
-            tags$span("Quick Start:", style = "font-size: 18px;"),
-            tags$ul(
-              tags$li(
-                "Watch a ",
-                a(
-                  "video",
-                  href = "https://youtu.be/Hs5SamHHG9s",
-                  target = "_blank"
-                ),
-                "tutorial!"
-              ),
-              tags$li("Select a Species & Data Type"),
-              tags$li("Upload data or click ",
-                      tags$span("Demo", id = "load-demo"),
-                      " to try a sample data set!"
-              )
-          ),
-          tags$script("
-            document.getElementById('load-demo').style.color = 'red';
-          ")
+          tags$span("Quick Start:", style = "font-size: 18px;"),
+          tags$ul(
+            tags$li(
+              "Watch a ",
+              a("video", href = "https://youtu.be/Hs5SamHHG9s", target = "_blank"),
+              " tutorial!"
+            ),
+            tags$li(
+              "Try it with demo data. After selecting a data type, just click ",
+              tags$span("Load Demo.", id = "load-demo", style = "color: red;")
+            )
+          )
         )
-      } else {
-        NULL
       }
     })
+    
 
     output$reset_button <- renderUI({
       if (go_button_count() == 0 && is.null(input$expression_file)) {
