@@ -125,12 +125,7 @@ mod_05_deg_1_ui <- function(id) {
         tags$br(),
         tags$br(),
         uiOutput(ns("download_lfc_button")),
-        uiOutput(ns("note_download_lfc_button")),
-        a(
-          h5("Questions?", align = "right"),
-          href = "https://idepsite.wordpress.com/degs/",
-          target = "_blank"
-        )
+        uiOutput(ns("note_download_lfc_button"))
       ),
       mainPanel(
         tabsetPanel(
@@ -156,13 +151,7 @@ mod_05_deg_1_ui <- function(id) {
             tags$head(tags$style(
               "#deg-experiment_design{color: red;font-size: 16px;}"
             )),
-            htmlOutput(outputId = ns("list_model_comparisons")),
-
-            a(
-              h5("More info on DESeq2 experiment design", align = "right"),
-              href = "http://rpubs.com/ge600/deseq2",
-              target = "_blank"
-            )
+            htmlOutput(outputId = ns("list_model_comparisons"))
           ),
           tabPanel(
             title = "Results",
@@ -462,8 +451,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       checkboxGroupInput(
         inputId = ns("select_interactions"),
         label = h5(
-          "Interaction terms between factors(e.g. genotypes repond differently
-          to treatment?):"
+          "Interaction terms:"
         ),
         choices = interactions,
         selected = NULL
@@ -533,7 +521,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
                   which(names(select_choices) == x)
                 )
               ),
-              label = h5(paste0("Reference/baseline level for ", x)),
+              label = h5(paste0("Reference level for ", x)),
               choices = setNames(
                 as.list(paste0(x, ":", select_choices[[x]])),
                 select_choices[[x]]
@@ -558,6 +546,47 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     )
 
     deg <- reactiveValues(limma = NULL)
+    deg_help_notification_active <- reactiveVal(FALSE)
+
+    observe({
+      current_tab <- tab()
+      sample_info <- pre_process$sample_info()
+      message_needed <- identical(current_tab, "DEG1") && is.null(sample_info)
+
+      if (isTRUE(message_needed) && !deg_help_notification_active()) {
+        message_ui <- shiny::tags$div(
+          shiny::tags$strong("Tip:"),
+          " An ",
+          shiny::tags$a(
+            href = "https://idepsite.wordpress.com/data-format/",
+            target = "_blank",
+            class = "alert-link",
+            "experimental design file"
+          ),
+          " can be uploaded to build a linear model according to experiment design.",
+          shiny::tags$br(),
+          shiny::tags$a(
+            href = "http://rpubs.com/ge600/deseq2",
+            target = "_blank",
+            class = "alert-link",
+            "More info on DESeq2 experiment design"
+          )
+        )
+
+        shiny::showNotification(
+          ui = message_ui,
+          type = "warning",
+          duration = 10,
+          closeButton = TRUE,
+          id = "deg1-design-notification"
+        )
+        deg_help_notification_active(TRUE)
+      } else if (!isTRUE(message_needed) && deg_help_notification_active()) {
+        shiny::removeNotification("deg1-design-notification")
+        deg_help_notification_active(FALSE)
+      }
+    })
+
     warning_type <- reactiveVal(NULL)
     # Observe submit button ------
     observeEvent(

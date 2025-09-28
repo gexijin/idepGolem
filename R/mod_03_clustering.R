@@ -10,7 +10,7 @@
 mod_03_clustering_ui <- function(id) {
   ns <- NS(id)
   tabPanel(
-    title = "Clustering",
+    title = "Cluster",
     # Change the style of radio labels
     # Note that the name https://groups.google.com/g/shiny-discuss/c/ugNEaHizlck
     # input IDs should be defined by namespace

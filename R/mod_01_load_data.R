@@ -10,7 +10,7 @@
 mod_01_load_data_ui <- function(id) {
   ns <- shiny::NS(id)
   tabPanel(
-    title = "Load Data",
+    title = "Data",
     # move notifications and progress bar to the center of screen
     tags$head(
       tags$style(
@@ -371,7 +371,7 @@ mod_01_load_data_ui <- function(id) {
           id = ns("load_message"),
           h4("Loading R packages, please wait ... ... ...")
         ),
-        uiOutput(ns("show_gmt")),        
+        uiOutput(ns("show_gmt")),
         # Display file format help html document when prompted ----
         uiOutput(ns("format_help_ui")),
         # Hide welcome screen after data is loaded -----
@@ -1331,7 +1331,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         fluidRow(
           column(
             width = 9,
-            h4("iDEP: integrated Differential Expression & Pathway analysis")
+            h4("iDEP v2.20: integrated Differential Expression & Pathway analysis")
           ),
           column(
             width = 3,

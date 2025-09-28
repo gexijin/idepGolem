@@ -10,7 +10,7 @@
 mod_02_pre_process_ui <- function(id) {
   ns <- NS(id)
   tabPanel(
-    title = "Pre-Process",
+    title = "Prep",
     sidebarLayout(
 
       # Pre-Process Panel Sidebar ----------
