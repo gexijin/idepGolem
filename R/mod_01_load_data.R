@@ -785,12 +785,12 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             width = 4,
             actionButton(
               inputId = ns("demo_modal_button"),
-              label = tags$span("Demo", style = "color: red;"),
+              label = tags$span("Demo Data", style = "color: red;"),
               class = "btn-default"
             ),
             tippy::tippy_this(
               ns("demo_modal_button"),
-              "Open demo data options",
+              "Load demo data",
               theme = "light-border"
             )
           ),
