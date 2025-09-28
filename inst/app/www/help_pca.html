@@ -2,140 +2,147 @@
     Overview
 </h3>
 <p>
-    The PCA tab summarizes sample-to-sample relationships using principal
-    component analysis and complementary ordination methods. Select axes,
-    overlay sample annotations, and download figures or the underlying scores
-    to document trends discovered during exploratory analysis.
+    The PCA tab is a quick way to see which samples behave alike and which ones
+    stand out. It condenses the thousands of genes measured in your experiment
+    into easy-to-read plots, so you can spot patterns without any coding or
+    statistics.
 </p>
 <p>
-    Principal component analysis projects the high-dimensional gene expression
-    matrix into new orthogonal axes (principal components) that capture as much
-    variance as possible. Samples that cluster together in the plot share
-    similar expression patterns, while samples that fall far apart differ in
-    the combination of genes that separate them. Each axis is labeled with the
-    percentage of total variance it explains, indicating how much of the data’s
-    structure is summarized along that direction.
+    Principal component analysis (PCA) works by re-arranging the data so that
+    the biggest differences between samples appear on the horizontal and
+    vertical axes. When two samples sit close together on the plot they share
+    similar gene-expression profiles. Samples that land far apart are reacting
+    differently to the conditions in your study. Each axis label includes the
+    percentage of "variation" it captures—higher percentages mean that axis is
+    explaining more of the overall differences between samples.
 </p>
 <h3>
     2D PCA Plot
 </h3>
 <p>
-    The main PCA panel shows an interactive two-dimensional scatter plot built
-    with Plotly. Choose the principal components for each axis using the
-    dropdown menus in the sidebar. Sample color and shape can be mapped to any
-    metadata column that was supplied during preprocessing, making it easy to
-    highlight experimental factors.
+    The first panel shows an interactive two-dimensional scatter plot. Use the
+    drop-down menus in the sidebar to choose which axes (principal components)
+    you want to view. You can color or shape the points by any sample
+    annotation, such as treatment group, time point, or tissue type, to check
+    whether your experimental design explains the separation you see.
 </p>
 <p>
-    Interpretation tips: look for separation of experimental groups along the
-    axes, check whether replicates cluster tightly, and inspect outliers that
-    may represent mislabeled samples or technical artifacts. The direction of
-    separation hints at which genes (loadings) contribute to the variation, and
-    additional plots in the PCAtools tab can be used to inspect those genes in
-    detail.
+    How to interpret the plot:
 </p>
 <ul>
     <li>
-        Hover to inspect individual samples; the tooltip displays sample name
-        and group membership.
+        Samples that cluster together likely responded similarly and can be
+        considered consistent replicates.
     </li>
     <li>
-        The correlation text beneath the plot reports which factors align most
-        strongly with the selected principal components.
+        If a supposed replicate falls far from the others, double-check that
+        sample for labeling or quality issues.
     </li>
     <li>
-        Use the download control under the plot to export publication-quality
-        images with custom dimensions.
+        Separation between treatment groups suggests that the intervention had a
+        measurable effect on global expression patterns.
+    </li>
+</ul>
+<ul>
+    <li>
+        Hover your mouse over a point to see the sample name and group.
+    </li>
+    <li>
+        The text below the plot highlights which sample annotations align most
+        strongly with the current axes.
+    </li>
+    <li>
+        Use the download button to save the plot with custom dimensions for
+        presentations or reports.
     </li>
 </ul>
 <h3>
     3D PCA
 </h3>
 <p>
-    The 3D tab renders an interactive three-dimensional PCA view. Select the
-    three components of interest and rotate the plot to reveal sample
-    separation patterns that may not be obvious in two dimensions.
+    The 3D tab shows a rotating three-dimensional version of the PCA plot. Pick
+    any three components and drag the plot to view it from different angles. The
+    color and shape options you chose in the sidebar carry over automatically.
 </p>
 <ul>
     <li>
-        The same color and shape mappings apply, so factor selections made in
-        the sidebar stay in sync across tabs.
+        Use the toolbar inside the plot to rotate, zoom, or capture a snapshot.
     </li>
     <li>
-        Since the plot is fully interactive, use the Plotly toolbar to orbit,
-        zoom, and capture static images.
+        3D views are especially helpful when two groups overlap in 2D but separate
+        when a third axis is added.
     </li>
 </ul>
 <h3>
     PCAtools Suite
 </h3>
 <p>
-    The PCAtools tab provides additional diagnostics generated by the
-    <em>PCAtools</em> package. Configure X and Y axes, point aesthetics, and
-    optional loadings overlays directly from the sidebar.
+    Additional tabs powered by the <em>PCAtools</em> package provide deeper
+    diagnostics:
 </p>
 <ul>
     <li>
-        The biplot overlays feature loadings when enabled, illustrating which
-        genes drive the separation between samples.
+        <strong>Biplot:</strong> adds arrows showing which genes influence sample
+        placement. Enable loadings in the sidebar to reveal these drivers.
     </li>
     <li>
-        Scree and variance importance plots display how much variation each
-        component explains, helping decide how many PCs to interpret.
+        <strong>Scree and variance plots:</strong> display how much variation each
+        principal component explains, helping you decide how many components to
+        keep in downstream work.
     </li>
     <li>
-        Eigencor plots correlate principal components with sample annotations
-        to highlight biologically meaningful axes.
+        <strong>Eigencor plot:</strong> compares each component against your sample
+        annotations (for example, treatment or batch) and highlights strong
+        relationships.
     </li>
 </ul>
 <h3>
     MDS and t-SNE
 </h3>
 <p>
-    Alternative ordination methods are available on the MDS and t-SNE tabs.
-    They use the same processed expression matrix but reveal structure with
-    distance-based (MDS) or nonlinear (t-SNE) embeddings.
+    The MDS and t-SNE tabs offer alternative views of the same processed data.
+    MDS (multidimensional scaling) focuses on overall distances, while t-SNE is a
+    nonlinear method that can uncover tight clusters.
 </p>
 <ul>
     <li>
-        In t-SNE, use the <strong>Re-calculate</strong> button to run the
-        algorithm with a new random seed when clusters appear unstable.
+        Click <strong>Re-calculate</strong> on the t-SNE tab to try a new random
+        seed if the clusters look unstable.
     </li>
     <li>
-        Download controls under each plot provide quick access to the
-        underlying data or figure.
+        Download options under each plot let you save the figures or the data
+        points for further exploration.
     </li>
 </ul>
 <h3>
     Reports and Data
 </h3>
 <p>
-    The sidebar includes buttons to generate an HTML report summarizing the PCA
-    analyses and to download the PCA scores data table for offline inspection
-    or custom plotting.
+    Buttons in the sidebar generate an HTML summary of the PCA results and let
+    you download the PCA scores table. The table is useful for custom plots or
+    for cross-checking how individual samples load onto each component.
 </p>
 <h3>
     Quick Tips
 </h3>
 <ul>
     <li>
-        Explore multiple component pairs; secondary PCs often capture batch or
-        condition effects that PC1/PC2 miss.
+        Try several axis combinations—important biology can appear on later
+        components, not just PC1 vs PC2.
     </li>
     <li>
-        Align color and shape selections with your experimental design to make
-        group separation easier to interpret.
+        Match colors and shapes with your experimental design so clusters are
+        easier to explain to collaborators.
     </li>
     <li>
-        Switch to the PCAtools scree plot when deciding how many PCs to retain
-        for downstream analysis.
+        Use the PCAtools scree plot to justify how many components you keep in
+        downstream analysis or presentations.
     </li>
     <li>
-        Use the correlation summaries to confirm that observed clusters match
-        known sample annotations.
+        If clusters are unclear, consider returning to the Pre-Process tab to
+        adjust filtering or transformations and re-run PCA.
     </li>
     <li>
-        Remember to widen the browser window or collapse the sidebar when
-        plots feel cramped.
+        Widen your browser window or collapse the sidebar if plots feel crowded.
     </li>
 </ul>
