@@ -275,11 +275,6 @@ mod_02_pre_process_ui <- function(id) {
           "Generate HTML report of pre-processing tab",
           theme = "light-border"
         ),
-        a(
-          h5("Questions?", align = "right"),
-          href = "https://idepsite.wordpress.com/pre-process/",
-          target = "_blank"
-        ),
         uiOutput(ns("mapping_statistics_container")),
       ),
 
@@ -302,10 +297,6 @@ mod_02_pre_process_ui <- function(id) {
               id = ns("dl_raw_counts_gg")
             ),
             br(),
-            h5(
-              "Figure width can be adjusted by changing
-             the width of browser window."
-            ),
             tableOutput(
               outputId = ns("counts_table")
             )
@@ -336,10 +327,6 @@ mod_02_pre_process_ui <- function(id) {
             ),
             ottoPlots::mod_download_figure_ui(
               id = ns("dl_eda_density")
-            ),
-            h5(
-              "Figure width can be adjusted by changing
-             the width of browser window."
             )
           ),
 
@@ -376,10 +363,6 @@ mod_02_pre_process_ui <- function(id) {
             ),
             ottoPlots::mod_download_figure_ui(
               id = ns("dl_eda_scatter")
-            ),
-            h5(
-              "Figure width can be adjusted by changing
-             the width of browser window."
             )
           ),
 
@@ -411,10 +394,6 @@ mod_02_pre_process_ui <- function(id) {
             ),
             ottoPlots::mod_download_figure_ui(
               id = ns("dl_dev_transform")
-            ),
-            h5(
-              "Figure width can be adjusted by changing
-             the width of browser window."
             )
           ),
 
@@ -598,10 +577,6 @@ mod_02_pre_process_ui <- function(id) {
                 outputId = ns("tukey_download"),
                 label = "TukeyHSD Results"
               )
-            ),
-            h5(
-              "Figure width can be adjusted by changing
-             the width of browser window."
             )
           ),
 
@@ -638,6 +613,7 @@ mod_02_pre_process_ui <- function(id) {
 mod_02_pre_process_server <- function(id, load_data, tab) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+    density_tip_shown <- reactiveVal(FALSE)
     
     # Data file format for conditional panels ----------
     # outputOptions required otherwise the value can only be used
@@ -675,12 +651,25 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     observe({
       if (load_data$data_file_format() != 1) {
         hideTab(inputId = "eda_tabs", target = "Barplot")
-        updateTabsetPanel(session, "eda_tabs", selected = "Scatterplot")
+        updateTabsetPanel(session, "eda_tabs", selected = "Boxplot")
       } else if (load_data$data_file_format() == 1) {
         showTab(inputId = "eda_tabs", target = "Barplot")
         updateTabsetPanel(session, "eda_tabs", selected = "Barplot")
       }
     })
+
+    observeEvent(input$eda_tabs, {
+      req(input$eda_tabs == "Density Plot")
+      if (!density_tip_shown()) {
+        showNotification(
+          "Figure width can be adjusted by changing the width of browser window.",
+          id = "boxplot_width_tip",
+          duration = 15,
+          type = "message"
+        )
+        density_tip_shown(TRUE)
+      }
+    }, ignoreNULL = TRUE)
 
     # Process the data with user defined criteria ----------
     processed_data <- reactive({
@@ -1449,7 +1438,6 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
 
       tags$div(
         class = "mapping-statistics",
-        tags$hr(),
         tags$strong("Mapping statistics"),
         tags$p(converted_message())
       )

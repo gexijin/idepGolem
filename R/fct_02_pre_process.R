@@ -1498,10 +1498,11 @@ counts_bias_message <- function(raw_counts,
     message <- NULL
   } else if (pval < 0.05) {
     message <- paste(
-      "Warning! Sequencing depth bias detected. Total read counts are
+      "Warning! Total read counts are
        significantly different among sample groups
        (p=", sprintf("%-3.2e", pval), ") based on ANOVA.
-       Total read counts max/min =", round(max_min_ratio, 2)
+       Total read counts max/min =", round(max_min_ratio, 2),
+       "Some groups were sequenced deeper than others. Proceed analysis with caution."
     )
   }
   # ANOVA of total read counts vs factors in experiment design

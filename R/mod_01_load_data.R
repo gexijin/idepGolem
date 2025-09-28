@@ -1043,12 +1043,12 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       req(tab() == "Load Data")
       req(input$data_file_format == 0)
 
-        showNotification(
-          "Select a data type before uploading data.",
-          duration = 30,
-          type = "error",
-          id = "select_first"
-          )
+      showNotification(
+        "Select a data type before uploading data or loading demo data.",
+        duration = 30,
+        type = "error",
+        id = "select_first"
+      )
     })
 
     observe({
