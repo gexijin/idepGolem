@@ -275,21 +275,12 @@ mod_02_pre_process_ui <- function(id) {
           "Generate HTML report of pre-processing tab",
           theme = "light-border"
         ),
-        # Show transform messages
-        actionButton(
-          inputId = ns("show_messages"),
-          label = "Messages"
-        ),
-        tippy::tippy_this(
-          ns("show_messages"),
-          "Display all messages",
-          theme = "light-border"
-        ),
         a(
           h5("Questions?", align = "right"),
           href = "https://idepsite.wordpress.com/pre-process/",
           target = "_blank"
         ),
+        uiOutput(ns("mapping_statistics_container")),
       ),
 
 
@@ -1453,28 +1444,32 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       )
     })
 
-    # Show messages when on the Pre-Process tab or button is clicked
-    observe({
-      req(input$show_messages || tab() == "Pre-Process")
+    output$mapping_statistics_container <- renderUI({
+      req(converted_message())
 
-      showNotification(
-        ui = converted_message(),
-        id = "conversion_counts",
-        duration = NULL,
-        type = "default"
+      tags$div(
+        class = "mapping-statistics",
+        tags$hr(),
+        tags$strong("Mapping statistics"),
+        tags$p(converted_message())
       )
+    })
 
+    # Sequencing depth warning -------
+    observe({
+      req(tab() == "Pre-Process")
       req(!is.null(read_counts_bias()))
+
       showNotification(
         ui = read_counts_bias(),
         id = "read_counts_message",
         duration = NULL,
-        type = "error"
+        type = "warning"
       )
     })
     # Data type warning -------
     observe({
-      req(input$show_messages || tab() == "Pre-Process")
+      req(tab() == "Pre-Process")
       req(processed_data()$data_type_warning != 0)
 
       message <- switch(as.character(processed_data()$data_type_warning),
@@ -1496,7 +1491,6 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     observe({
       req(tab() != "Pre-Process")
 
-      removeNotification("conversion_counts")
       removeNotification("read_counts_message")
       removeNotification("data_type_warning")
     })
