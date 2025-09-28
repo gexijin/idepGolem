@@ -434,33 +434,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # Hide the species dropdown
     shinyjs::hideElement(id = "select_org")
 
-    welcome_modal <- shiny::modalDialog(
-      title = "iDEP: Empower all scientists!",
-  
-      tags$br(),
-      tags$p(" If iDEP is used,
-      even for preliminrary analysis, please cite: ",
-        a(
-          " BMC Bioinformatics 19:1-24, 2018, ",
-          href = "https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-018-2486-6",
-          target = "_blank"
-        ),
-        "  which has been cited ",
-        a("890 times.",
-          href = "https://scholar.google.com/scholar?oi=bibs&hl=en&cites=6502699637682046008,17999801138713500070,11001860275874506471",
-          target = "_blank"
-        )
-      ),
-      tags$h5("By citing the iDEP paper properly, you will help make this service
-      available in the future. Just including the URL is not enough.",
-        style = "color:#6B1518"
-      ),
-      easyClose = TRUE,
-      size = "l"
-    )
-
-    #shiny::showModal(welcome_modal)
-
     # Pop-up modal for gene assembl information ----
     observeEvent(input$genome_assembl_button, {
       # Create species count summary by source
@@ -993,7 +966,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         )
       )
     })
-    
+
     # Disables expression_file input to prevent multiple uploads
     observeEvent(input$expression_file, {
       shinyjs::disable("expression_file")
@@ -1207,59 +1180,54 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
       req(!(min(loaded_data()$data, na.rm = TRUE) < 0 && input$data_file_format == 1))
 
-        shinybusy::show_modal_spinner(
-          spin = "orbit",
-          text = "Loading Data",
-          color = "#000000"
-        )
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Loading Data",
+        color = "#000000"
+      )
 
-        converted <- convert_id(
-          rownames(loaded_data()$data),
-          idep_data = idep_data,
-          select_org = input$select_org,
-          max_sample_ids = 200
-        )
+      converted <- convert_id(
+        rownames(loaded_data()$data),
+        idep_data = idep_data,
+        select_org = input$select_org,
+        max_sample_ids = 200
+      )
 
-        all_gene_info <- gene_info(
-          converted = converted,
-          select_org = input$select_org,
-          idep_data = idep_data
-        )
+      all_gene_info <- gene_info(
+        converted = converted,
+        select_org = input$select_org,
+        idep_data = idep_data
+      )
 
-        converted_data <- convert_data(
-          converted = converted,
-          no_id_conversion = input$no_id_conversion,
-          data = loaded_data()$data,
-          multiple_map = input$multiple_map
-        )
+      converted_data <- convert_data(
+        converted = converted,
+        no_id_conversion = input$no_id_conversion,
+        data = loaded_data()$data,
+        multiple_map = input$multiple_map
+      )
 
-        all_gene_names <- get_all_gene_names(
-          mapped_ids = converted_data$mapped_ids,
-          all_gene_info = all_gene_info
-        )
+      all_gene_names <- get_all_gene_names(
+        mapped_ids = converted_data$mapped_ids,
+        all_gene_info = all_gene_info
+      )
 
-        gmt_choices <- gmt_category(
-          converted = converted,
-          converted_data = converted_data$data,
-          select_org = input$select_org,
-          gmt_file = input$gmt_file,
-          idep_data = idep_data
-        )
+      gmt_choices <- gmt_category(
+        converted = converted,
+        converted_data = converted_data$data,
+        select_org = input$select_org,
+        gmt_file = input$gmt_file,
+        idep_data = idep_data
+      )
 
-        shinybusy::remove_modal_spinner()
+      shinybusy::remove_modal_spinner()
 
-        return(list(
-          converted = converted,
-          all_gene_info = all_gene_info,
-          converted_data = converted_data$data,
-          all_gene_names = all_gene_names,
-          gmt_choices = gmt_choices
-        ))
-      
-    })
-
-    observeEvent(input$reset_app, {
-      session$reload()
+      return(list(
+        converted = converted,
+        all_gene_info = all_gene_info,
+        converted_data = converted_data$data,
+        all_gene_names = all_gene_names,
+        gmt_choices = gmt_choices
+      ))
     })
 
     # download database for selected species
@@ -1339,15 +1307,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     })
 
 
-
-
-    # Remove message if the tab changes --------
-    observe({
-      req(tab() != "Load Data")
-
-      removeNotification("species_match")
-    })
-
     output$welcome_ui <- renderUI({
       req(go_button_count() == 0)
       req(input$data_format_help == 0)
@@ -1394,7 +1353,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       includeHTML(app_sys("app/www/format.html"))
     })
 
-    # Return data used in the following panels --------
     list(
       data_file_format = reactive(input$data_file_format),
       no_fdr = reactive(input$no_fdr),
