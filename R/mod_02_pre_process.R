@@ -102,14 +102,14 @@ mod_02_pre_process_ui <- function(id) {
         # Conditional panel for FPKM data (2)----------
         conditionalPanel(
           condition = "output.data_file_format == 2",
-          p("Filter genes with low expression:"),
+          strong("1. Filter genes with low expression:"),
           fluidRow(
             column(
               width = 6,
               # Fold counts min (works with min samples)
               numericInput(
                 inputId = ns("low_filter_fpkm"),
-                label = "Min. level",
+                label = tags$span("Min. level", style = "font-weight: normal;"),
                 value = -1000
               ),
               tippy::tippy_this(
@@ -123,7 +123,7 @@ mod_02_pre_process_ui <- function(id) {
               # Min samples per row to have the low filter
               numericInput(
                 inputId = ns("n_min_samples_fpkm"),
-                label = "n samples",
+                label = tags$span("n samples", style = "font-weight: normal;"),
                 value = 1
               ),
               tippy::tippy_this(
@@ -135,30 +135,61 @@ mod_02_pre_process_ui <- function(id) {
           ),
           tags$style(
             type = "text/css",
-            "#pre_process-low_filter_fpkm { width:100%;margin-top:-12px}"
+            "#pre_process-low_filter_fpkm { width:100%;margin-top:-5px}"
           ),
           tags$style(
             type = "text/css",
-            "#pre_process-n_min_samples_fpkm { width:100%;margin-top:-12px}"
+            "#pre_process-n_min_samples_fpkm { width:100%;margin-top:-5px}"
           ),
 
           # Perform a log transform or not
-          radioButtons(
-            inputId = ns("log_transform_fpkm"),
-            label = "Log Transformation",
-            choices = c("No" = FALSE, "Yes" = TRUE)
+
+
+          fluidRow(
+            column(
+              width = 2,
+              strong("2.")
+            ),
+            column(
+              width = 10,
+              align = "left",
+              style = "margin-top: -10px;",
+              checkboxInput(
+                inputId = ns("log_transform_fpkm"),
+                label = strong("Log Transformation"),
+                value = FALSE
+              ),
+              tippy::tippy_this(
+                ns("log_transform_fpkm"),
+                "Log transformed data is used in all analyses.",
+                theme = "light-border"
+              )
+            )
           ),
 
           conditionalPanel(
-            condition = "input.log_transform_fpkm == TRUE",
-            numericInput(
-              inputId = ns("log_start_fpkm"),
-              label = "Constant c for started log: log(x+c)",
-              value = 1
-            ),
-            tags$style(
-              type = "text/css",
-              "#pre_process-log_start_fpkm { width:100%;   margin-top:-12px}"
+            condition = "input.log_transform_fpkm",
+            fluidRow(
+              column(
+                width = 1,
+              ),
+              column(
+                width = 8,
+                "constant c in log2(x+c):"
+              ),
+              column(
+                width = 3,
+                # Constant to add for a log transform
+                numericInput(
+                  inputId = ns("log_start_fpkm"),
+                  label = NULL,
+                  value = 1
+                ),
+                tags$style(
+                  type = "text/css",
+                  "#pre_process-log_start_fpkm { width:100%;   margin-top:-5px}"
+                )
+              )
             ),
             ns = ns
           ),
@@ -169,7 +200,7 @@ mod_02_pre_process_ui <- function(id) {
         fluidRow(
           column(
             width = 5,
-            p("Missing values:")
+            strong("3. Missing values:")
           ),
           column(
             width = 7,
