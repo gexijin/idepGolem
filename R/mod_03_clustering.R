@@ -272,14 +272,8 @@ mod_03_clustering_ui <- function(id) {
           ns("report"),
           "Generate HTML report of clustering tab",
           theme = "light-border"
-        ),
-        a(
-          h5("Questions?", align = "right"),
-          href = "https://idepsite.wordpress.com/heatmap/",
-          target = "_blank"
         )
       ),
-
 
 
 
@@ -404,6 +398,10 @@ mod_03_clustering_ui <- function(id) {
               height = "400px"
             ),
             ottoPlots::mod_download_figure_ui(ns("dl_sample_tree"))
+          ),
+          tabPanel(
+            title = icon("info-circle"),
+            includeHTML(app_sys("app/www/help_clustering.html"))
           )
         )
       )

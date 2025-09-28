@@ -1,0 +1,146 @@
+<h3>
+    Overview
+</h3>
+<p>
+    The Clustering tab offers several tools to explore overall expression
+    patterns. Genes are ranked by their across-sample variability, and the top
+    genes enter a heatmap that supports both hierarchical clustering and
+    k-means clustering. Sample-level dendrograms, pathway word clouds, and
+    gene standard deviation plots help interpret the dominant trends in the
+    dataset.
+</p>
+<h3>
+    Heatmap
+</h3>
+<p>
+    The interactive heatmap displays the standardized expression matrix for the
+    selected number of high-variance genes. Switch between hierarchical and
+    k-means clustering to reorganize the rows and columns. When hierarchical
+    clustering is active, the sidebar controls let you tune several parts of
+    the algorithm:
+</p>
+<ul>
+    <li>
+        <strong>Distance metric:</strong> choose among Euclidean, Pearson, and
+        other options to decide how similarity between genes or samples is
+        measured before clustering.
+    </li>
+    <li>
+        <strong>Linkage method:</strong> adjust how clusters merge (average,
+        complete, single, etc.). Tight clusters often emerge with complete or
+        average linkage, whereas single linkage can highlight chain-like
+        relationships.
+    </li>
+    <li>
+        <strong>Dendrogram visibility:</strong> pick whether to display sample
+        branches, gene branches, both, or hide them entirely when you already
+        know the ordering.
+    </li>
+    <li>
+        <strong>Gene centering/normalizing:</strong> enabling centering
+        subtracts each gene’s mean, while normalization divides by its
+        standard deviation. Together these settings emphasize relative changes
+        and ensure genes with large absolute counts do not dominate the color
+        scale.
+    </li>
+    <li>
+        <strong>More Options panel:</strong> expand this section to adjust the
+        color palette for sample annotations and to cap the heatmap at a
+        chosen maximum Z-score. Palette changes help align figures with your
+        publication style, while lowering the Z-score cap prevents a few
+        extreme values from washing out moderate differences elsewhere in the
+        map.
+    </li>
+</ul>
+<p>
+    For k-means clustering choose the desired number of clusters and, if the
+    results are unstable, re-run the algorithm with a new random seed. Use the
+    brush tool to zoom into a portion of the heatmap, or click on rows to view
+    gene-level expression details beneath the heatmap. Optional enrichment
+    analysis summarizes the functional themes within the selected cluster.
+</p>
+<ul>
+    <li>
+        <strong>Number of clusters:</strong> move the slider to adjust how many
+        k-means groups are formed. Small values reveal broad trends, while
+        larger values expose finer substructures.
+    </li>
+    <li>
+        <strong>New Seed:</strong> rerun the algorithm with a different random
+        initialization to check whether clusters are stable.
+    </li>
+    <li>
+        <strong>How many clusters?</strong> open the elbow plot to inspect the
+        within-cluster sum of squares across k values. Look for the elbow point
+        where additional clusters bring diminishing returns.
+    </li>
+</ul>
+<h3>
+    Sample Colors and Annotations
+</h3>
+<p>
+    Sample annotations imported during preprocessing appear as colored bars on
+    the heatmap. Choose a single factor or display all available annotations,
+    and change the color palette to match your figures. Adjusting the maximum
+    Z-score truncates extreme values so that subtle expression differences are
+    more visible.
+</p>
+<h3>
+    Word Cloud
+</h3>
+<p>
+    After generating the heatmap, open the Word Cloud sub-tab to visualize the
+    pathways associated with a selected cluster. Words are sized by frequency
+    across pathway descriptions, highlighting enriched biological themes.
+</p>
+<h3>
+    Gene SD Distribution
+</h3>
+<p>
+    The Gene SD Distribution panel plots the distribution of gene-level
+    standard deviations. This helps assess whether the current variance filter
+    is too strict or too permissive, and provides a quick check for highly
+    variable genes that might influence clustering results.
+</p>
+<h3>
+    Sample Tree
+</h3>
+<p>
+    The Sample Tree tab clusters samples using genes with expression above the
+    75th percentile. It uses the same distance metric and transformation
+    options selected for the heatmap, making it a complementary view of how
+    samples segregate under the current preprocessing choices.
+</p>
+<h3>
+    Tips
+</h3>
+<ul>
+    <li>
+        Increase the number of genes when broad patterns are unclear; decrease
+        it to focus on the strongest signals.
+    </li>
+    <li>
+        Turn on gene centering and scaling to emphasize relative changes when
+        absolute expression levels vary widely across genes.
+    </li>
+    <li>
+        Use the enrichment toggle after selecting clusters to quickly assess
+        biological relevance.
+    </li>
+    <li>
+        Export figures or underlying data from each panel with the download
+        controls located near the plots.
+    </li>
+    <li>
+        Zoom in on the main heatmap to inspect a subset of genes before running
+        enrichment on the selected region.
+    </li>
+    <li>
+        After zooming, use the enrichment toggle to summarize pathways for the
+        highlighted cluster.
+    </li>
+    <li>
+        If the main and sub heatmaps overlap, widen your browser window to give
+        each plot more room.
+    </li>
+</ul>

@@ -296,6 +296,10 @@ mod_04_pca_ui <- function(id) {
             br(),
             ottoPlots::mod_download_figure_ui(ns("download_t_sne")),
             br()
+          ),
+          tabPanel(
+            title = icon("info-circle"),
+            includeHTML(app_sys("app/www/help_pca.html"))
           )
           # tabPanel(
           #   "Pathway Analysis of PCA",

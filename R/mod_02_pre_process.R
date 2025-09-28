@@ -597,7 +597,7 @@ mod_02_pre_process_ui <- function(id) {
             DT::dataTableOutput(outputId = ns("examine_data"))
           ),
           tabPanel(
-            title = "Info",
+            title = icon("info-circle"),
             includeHTML(app_sys("app/www/help_preprocess.html"))
           ),
         )
