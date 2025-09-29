@@ -1312,7 +1312,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       req(input$select_org != "NEW")
 
       showModal(modalDialog(
-        title = "Please double check the selected species",
+        title = "Gene ID not recognized",
         tags$p("None of the gene IDs are recognized. Possible causes: 1. Wrong species is selected. 
         2. Correct species is selected but we cannot map your gene IDs to Ensembl gene IDs. 
         3. Your species is not included in our database.  
