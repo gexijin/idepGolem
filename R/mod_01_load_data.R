@@ -1051,7 +1051,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # Show messages when on the Network tab or button is clicked ----
     observe({
       req(is.null(loaded_data()$data) && (
-        tab() != "Data" && tab() != "About"
+        tab() != "Data" && tab() != icon("info")
       ))
 
       showNotification(
@@ -1065,7 +1065,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # Remove messages if the tab changes --------
     observe({
       req(!is.null(loaded_data()$data) ||
-        tab() == "Data" || tab() == "About")
+        tab() == "Data" || tab() == icon("info"))
       removeNotification("load_data_first")
     })
 
