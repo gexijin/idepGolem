@@ -130,7 +130,7 @@ Search this list for the desired portion, and specify it with either
 would be "GOBP". The next parameter, `select_org`, should be the same as the
 chunk above. The input  `gmt_file` is only used if you are working with a
 species that is not in the iDEP database. If this is the case, and there is a
-GMT file that goes with the species, the input will be the datapath stored in a data frame. For details on this, see the first instruction `Load_Data`. The next inputs are objects that are also covered in the first instruction. With all the correct inputs, we are now going to actually subset `gene_names` and create a query. We will use the `process_heatmap_data` function which is described in the "Clustering" instruction. This final workflow is demonstrated in the chunk
+GMT file that goes with the species, the input will be the datapath stored in a data frame. For details on this, see the first instruction `Load_Data`. The next inputs are objects that are also covered in the first instruction. With all the correct inputs, we are now going to actually subset `gene_names` and create a query. We will use the `process_heatmap_data` function which is described in the "Cluster" instruction. This final workflow is demonstrated in the chunk
 below.
 
 ```{r}

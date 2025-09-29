@@ -10,7 +10,7 @@
 mod_02_pre_process_ui <- function(id) {
   ns <- NS(id)
   tabPanel(
-    title = "Pre-Process",
+    title = "Prep",
     sidebarLayout(
 
       # Pre-Process Panel Sidebar ----------
@@ -19,17 +19,19 @@ mod_02_pre_process_ui <- function(id) {
         # Conditional panel for read count data -----------
         conditionalPanel(
           condition = "output.data_file_format == 1",
-          p("Keep genes with minimal counts per million (CPM) in at
-                  least n libraries:"),
+          strong("1. Filter genes with low counts"),
           fluidRow(
             column(
               width = 6,
-
-              # Min counts per million (works with min samples)
               numericInput(
                 inputId = ns("min_counts"),
-                label = "Min. CPM",
+                label = tags$span("Min. CPM", style = "font-weight: normal;"),
                 value = 0.5
+              ),
+              tippy::tippy_this(
+                ns("min_counts"),
+                "Counts Per Million (CPM) = (read count / total counts) * 1,000,000",
+                theme = "light-border"
               )
             ),
             column(
@@ -38,13 +40,17 @@ mod_02_pre_process_ui <- function(id) {
               # Min samples per row to have min CPM
               numericInput(
                 inputId = ns("n_min_samples_count"),
-                label = "n libraries",
+                label = tags$span("n libraries", style = "font-weight: normal;"),
                 value = 1
+              ),
+              tippy::tippy_this(
+                ns("n_min_samples_count"),
+                "Number of samples (libraries) that must have at least the min CPM",
+                theme = "light-border"
               )
             )
           ),
-          p("Transform counts data for clustering & PCA:"),
-          # Type of transformation to perform on the counts data
+          strong("2. Transform counts data"),
           selectInput(
             inputId = ns("counts_transform"),
             label = NULL,
@@ -55,23 +61,36 @@ mod_02_pre_process_ui <- function(id) {
             ),
             selected = 1
           ),
+          tippy::tippy_this(
+            ns("counts_transform"),
+            "Transformed data is used in all analyses except differential expression with DESeq2.",
+            theme = "light-border"
+          ),
 
           # Conditional panel for EdgeR transformation -----------
           conditionalPanel(
             condition = "input.counts_transform == 1",
             fluidRow(
               column(
-                width = 5,
+                width = 2,
+              ),              
+              column(
+                width = 7,
                 "Pseudo count c:"
               ),
               column(
-                width = 7,
+                width = 3,
 
                 # Constant to add for a log transform
                 numericInput(
                   inputId = ns("counts_log_start"),
                   label = NULL,
                   value = 4
+                ),
+                tippy::tippy_this(
+                  ns("counts_log_start"),
+                  "Constant c for log2(CPM+c). A larger c shrinks log-values towards log2(c).",
+                  theme = "light-border"
                 )
               )
             ),
@@ -83,54 +102,96 @@ mod_02_pre_process_ui <- function(id) {
         # Conditional panel for FPKM data (2)----------
         conditionalPanel(
           condition = "output.data_file_format == 2",
-          strong("Only keep genes above this level in at least n samples:"),
+          strong("1. Filter genes with low expression:"),
           fluidRow(
             column(
               width = 6,
-
               # Fold counts min (works with min samples)
               numericInput(
                 inputId = ns("low_filter_fpkm"),
-                label = "Min. level",
+                label = tags$span("Min. level", style = "font-weight: normal;"),
                 value = -1000
+              ),
+              tippy::tippy_this(
+                ns("low_filter_fpkm"),
+                "Minimum expression level, e.g. FPKM, RPKM, TPM, or other normalized values.",
+                theme = "light-border"
               )
             ),
             column(
               width = 6,
-
               # Min samples per row to have the low filter
               numericInput(
                 inputId = ns("n_min_samples_fpkm"),
-                label = "n samples",
+                label = tags$span("n samples", style = "font-weight: normal;"),
                 value = 1
+              ),
+              tippy::tippy_this(
+                ns("n_min_samples_fpkm"),
+                "Number of samples that must have at least the min expression level.",
+                theme = "light-border"
               )
             )
           ),
           tags$style(
             type = "text/css",
-            "#pre_process-low_filter_fpkm { width:100%;margin-top:-12px}"
+            "#pre_process-low_filter_fpkm { width:100%;margin-top:-5px}"
           ),
           tags$style(
             type = "text/css",
-            "#pre_process-n_min_samples_fpkm { width:100%;margin-top:-12px}"
+            "#pre_process-n_min_samples_fpkm { width:100%;margin-top:-5px}"
           ),
 
           # Perform a log transform or not
-          radioButtons(
-            inputId = ns("log_transform_fpkm"),
-            label = "Log Transformation",
-            choices = c("No" = FALSE, "Yes" = TRUE)
+
+
+          fluidRow(
+            column(
+              width = 2,
+              strong("2.")
+            ),
+            column(
+              width = 10,
+              align = "left",
+              style = "margin-top: -10px;",
+              checkboxInput(
+                inputId = ns("log_transform_fpkm"),
+                label = strong("Log Transformation"),
+                value = FALSE
+              ),
+              tippy::tippy_this(
+                ns("log_transform_fpkm"),
+                "Log transformed data is used in all analyses.",
+                theme = "light-border"
+              )
+            )
           ),
 
-          # Constant to add if yes to a log transform
-          numericInput(
-            inputId = ns("log_start_fpkm"),
-            label = "Constant c for started log: log(x+c)",
-            value = 1
-          ),
-          tags$style(
-            type = "text/css",
-            "#pre_process-log_start { width:100%;   margin-top:-12px}"
+          conditionalPanel(
+            condition = "input.log_transform_fpkm",
+            fluidRow(
+              column(
+                width = 1,
+              ),
+              column(
+                width = 8,
+                "constant c in log2(x+c):"
+              ),
+              column(
+                width = 3,
+                # Constant to add for a log transform
+                numericInput(
+                  inputId = ns("log_start_fpkm"),
+                  label = NULL,
+                  value = 1
+                ),
+                tags$style(
+                  type = "text/css",
+                  "#pre_process-log_start_fpkm { width:100%;   margin-top:-5px}"
+                )
+              )
+            ),
+            ns = ns
           ),
           ns = ns
         ),
@@ -139,7 +200,7 @@ mod_02_pre_process_ui <- function(id) {
         fluidRow(
           column(
             width = 5,
-            p("Missing values:")
+            strong("3. Missing values:")
           ),
           column(
             width = 7,
@@ -151,9 +212,14 @@ mod_02_pre_process_ui <- function(id) {
               choices = list(
                 "Use gene median" = "geneMedian",
                 "Treat as zero" = "treatAsZero",
-                "Use group median" = "geneMedianInGroup"
+                "Use gene median in group" = "geneMedianInGroup"
               ),
               selected = "geneMedian"
+            ),
+            tippy::tippy_this(
+              ns("missing_value"),
+              "How to handle missing values in the data matrix.",
+              theme = "light-border"
             )
           )
         ),
@@ -209,21 +275,7 @@ mod_02_pre_process_ui <- function(id) {
           "Generate HTML report of pre-processing tab",
           theme = "light-border"
         ),
-        # Show transform messages
-        actionButton(
-          inputId = ns("show_messages"),
-          label = "Messages"
-        ),
-        tippy::tippy_this(
-          ns("show_messages"),
-          "Display all messages",
-          theme = "light-border"
-        ),
-        a(
-          h5("Questions?", align = "right"),
-          href = "https://idepsite.wordpress.com/pre-process/",
-          target = "_blank"
-        ),
+        uiOutput(ns("mapping_statistics_container")),
       ),
 
 
@@ -245,10 +297,6 @@ mod_02_pre_process_ui <- function(id) {
               id = ns("dl_raw_counts_gg")
             ),
             br(),
-            h5(
-              "Figure width can be adjusted by changing
-             the width of browser window."
-            ),
             tableOutput(
               outputId = ns("counts_table")
             )
@@ -279,10 +327,6 @@ mod_02_pre_process_ui <- function(id) {
             ),
             ottoPlots::mod_download_figure_ui(
               id = ns("dl_eda_density")
-            ),
-            h5(
-              "Figure width can be adjusted by changing
-             the width of browser window."
             )
           ),
 
@@ -296,7 +340,7 @@ mod_02_pre_process_ui <- function(id) {
                 width = 4,
                 selectInput(
                   inputId = ns("scatter_x"),
-                  label = "Select a sample for x-axis",
+                  label = tags$span("Sample for x-axis", style = "font-weight: normal;"),
                   choices = 1:5,
                   selected = 1
                 )
@@ -305,7 +349,7 @@ mod_02_pre_process_ui <- function(id) {
                 width = 4,
                 selectInput(
                   inputId = ns("scatter_y"),
-                  label = "Select a sample for y-axis",
+                  label = tags$span("Sample for y-axis", style = "font-weight: normal;"),
                   choices = 1:5,
                   selected = 2
                 )
@@ -319,10 +363,6 @@ mod_02_pre_process_ui <- function(id) {
             ),
             ottoPlots::mod_download_figure_ui(
               id = ns("dl_eda_scatter")
-            ),
-            h5(
-              "Figure width can be adjusted by changing
-             the width of browser window."
             )
           ),
 
@@ -354,10 +394,6 @@ mod_02_pre_process_ui <- function(id) {
             ),
             ottoPlots::mod_download_figure_ui(
               id = ns("dl_dev_transform")
-            ),
-            h5(
-              "Figure width can be adjusted by changing
-             the width of browser window."
             )
           ),
 
@@ -419,7 +455,7 @@ mod_02_pre_process_ui <- function(id) {
                   column(
                     10,
                     align = "right",
-                    p("Higher proportions of rRNA indicuate ineffective rRNA-removal.")
+                    p("Higher rRNA content may indicuate ineffective rRNA-removal.")
                   )
                 ),
                 br(),
@@ -464,7 +500,7 @@ mod_02_pre_process_ui <- function(id) {
                 column(
                   10,
                   align = "right",
-                  p("A tall bar means genes on this chromosome are expressed at higher levels in a sample, as indicated by the 75th percentile.")
+                  p("A tall bar means genes on this chromosome are expressed at higher levels in a sample.")
                 )
               ),
             ns = ns
@@ -480,53 +516,76 @@ mod_02_pre_process_ui <- function(id) {
                 # Gene ID Selection -----------
                 selectizeInput(
                   inputId = ns("selected_gene"),
-                  label = "Select/Search for Gene(s)",
+                  label = "Search for Gene(s)",
                   choices = "",
                   selected = NULL,
                   multiple = TRUE
+                ),
+                tippy::tippy_this(
+                  ns("selected_gene"),
+                  "Type to search for gene ID, gene symbol, or gene name.",
+                  theme = "light-border"
                 )
               ),
               column(
                 4,
                 selectInput(
                   inputId = ns("gene_plot_box"),
-                  label = "Plot Type:",
+                  label = "Plot Type",
                   choices = setNames(
-                    c(1,2), 
-                    c("Sample Group Expression",
-                      "Individual Sample Expression")
+                    c(1,2),
+                    c("Sample Groups",
+                      "Individual Samples")
                   ),
                   selected = 1
+                ),
+                tippy::tippy_this(
+                  ns("gene_plot_box"),
+                  "Plot by sample groups or individual samples.",
+                  theme = "light-border"
                 ),
                 uiOutput(ns("sd_checkbox")),
                 conditionalPanel(
                   condition = "output.data_file_format == 1",
                   checkboxInput(
                     inputId = ns("plot_raw"),
-                    label = "Plot raw counts",
+                    label = "Raw counts",
                     value = FALSE
+                  ),
+                  tippy::tippy_this(
+                    ns("plot_raw"),
+                    "Plot raw counts or transformed data.",
+                    theme = "light-border"
                   ),
                   ns = ns
                 ),
                 checkboxInput(
                   inputId = ns("plot_tukey"),
-                  label = "Run TukeyHSD test",
+                  label = "TukeyHSD test",
                   value = FALSE
+                ),
+                tippy::tippy_this(
+                  ns("plot_tukey"),
+                  "Perform TukeyHSD test for pairwise comparisons between sample groups. Only available when plotting transformed data by sample groups.",
+                  theme = "light-border"
                 )
               ),
               column(
                 4,
                 radioButtons(
                   inputId = ns("angle_ind_axis_lab"),
-                  label = "Angle Axis Labels",
+                  label = "Rotate Labels",
                   choices = c(0, 45, 90),
                   selected = 45
+                ),
+                tippy::tippy_this(
+                  ns("angle_ind_axis_lab"),
+                  "Angle of x-axis labels.",
+                  theme = "light-border"
                 )
               )
             ),
-            uiOutput(
-              outputId = ns("signif_text")
-            ),
+
             plotOutput(
               outputId = ns("gene_plot"),
               width = "100%",
@@ -540,11 +599,8 @@ mod_02_pre_process_ui <- function(id) {
               downloadButton(
                 outputId = ns("tukey_download"),
                 label = "TukeyHSD Results"
-              )
-            ),
-            h5(
-              "Figure width can be adjusted by changing
-             the width of browser window."
+              ),
+              uiOutput(ns("signif_text"))
             )
           ),
 
@@ -557,7 +613,7 @@ mod_02_pre_process_ui <- function(id) {
               condition = "output.data_file_format == 1",
               checkboxInput(
                 inputId = ns("show_raw"),
-                label = "Show raw counts, not transformed data",
+                label = "Show raw counts",
                 value = FALSE
               ),
               ns = ns
@@ -566,7 +622,7 @@ mod_02_pre_process_ui <- function(id) {
             DT::dataTableOutput(outputId = ns("examine_data"))
           ),
           tabPanel(
-            title = "Info",
+            title = icon("info-circle"),
             includeHTML(app_sys("app/www/help_preprocess.html"))
           ),
         )
@@ -581,6 +637,7 @@ mod_02_pre_process_ui <- function(id) {
 mod_02_pre_process_server <- function(id, load_data, tab) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+    density_tip_shown <- reactiveVal(FALSE)
     
     # Data file format for conditional panels ----------
     # outputOptions required otherwise the value can only be used
@@ -618,12 +675,25 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     observe({
       if (load_data$data_file_format() != 1) {
         hideTab(inputId = "eda_tabs", target = "Barplot")
-        updateTabsetPanel(session, "eda_tabs", selected = "Scatterplot")
+        updateTabsetPanel(session, "eda_tabs", selected = "Boxplot")
       } else if (load_data$data_file_format() == 1) {
         showTab(inputId = "eda_tabs", target = "Barplot")
         updateTabsetPanel(session, "eda_tabs", selected = "Barplot")
       }
     })
+
+    observeEvent(input$eda_tabs, {
+      req(input$eda_tabs == "Density Plot")
+      if (!density_tip_shown()) {
+        showNotification(
+          "Figure width can be adjusted by changing the width of browser window.",
+          id = "boxplot_width_tip",
+          duration = 15,
+          type = "message"
+        )
+        density_tip_shown(TRUE)
+      }
+    }, ignoreNULL = TRUE)
 
     # Process the data with user defined criteria ----------
     processed_data <- reactive({
@@ -674,9 +744,9 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     })
     
     observe({
-      req(!tab() %in% c("Clustering", "Load Data", 
-                        "Network", "Bicluster", 
-                        "DEG2"))
+      req(!tab() %in% c("Cluster", "Data",
+                        "Network", "Bicluster",
+                        "DEG"))
       removeNotification(id = "filter_warning",
                          session = session)
     })
@@ -1107,10 +1177,17 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     output$sd_checkbox <- renderUI({
       req(input$gene_plot_box != 2)
 
-      checkboxInput(
-        inputId = ns("use_sd"),
-        label = "Use standard deviation",
-        value = FALSE
+      tagList(
+        checkboxInput(
+          inputId = ns("use_sd"),
+          label = "Standard deviation",
+          value = FALSE
+        ),
+        tippy::tippy_this(
+          ns("use_sd"),
+          "Show standard deviation (SD) or standard error (SE) when plotting by sample groups.",
+          theme = "light-border"
+        )
       )
     })
 
@@ -1387,18 +1464,21 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       )
     })
 
-    # Show messages when on the Pre-Process tab or button is clicked
-    observe({
-      req(input$show_messages || tab() == "Pre-Process")
+    output$mapping_statistics_container <- renderUI({
+      req(converted_message())
 
-      showNotification(
-        ui = converted_message(),
-        id = "conversion_counts",
-        duration = NULL,
-        type = "default"
+      tags$div(
+        class = "mapping-statistics",
+        br(),
+        tags$p(converted_message(), style = "color: #B8860B;")
       )
+    })
 
+    # Sequencing depth warning -------
+    observe({
+      req(tab() == "Prep")
       req(!is.null(read_counts_bias()))
+
       showNotification(
         ui = read_counts_bias(),
         id = "read_counts_message",
@@ -1408,7 +1488,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     })
     # Data type warning -------
     observe({
-      req(input$show_messages || tab() == "Pre-Process")
+      req(tab() == "Prep")
       req(processed_data()$data_type_warning != 0)
 
       message <- switch(as.character(processed_data()$data_type_warning),
@@ -1428,9 +1508,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
 
     # Remove messages if the tab changes --------
     observe({
-      req(tab() != "Pre-Process")
+      req(tab() != "Prep")
 
-      removeNotification("conversion_counts")
       removeNotification("read_counts_message")
       removeNotification("data_type_warning")
     })

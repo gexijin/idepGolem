@@ -435,7 +435,7 @@ gene_counts_ggplot <- function(counts_data,
     ggplot2::geom_bar(stat = "identity") +
     ggplot2::scale_y_log10(limits = c(1, 2 * max(data$value))) +
     ggplot2::coord_flip() +
-    ggplot2::labs(x = NULL, y = "Number of genes", title = "Number of genes by type") +       
+    ggplot2::labs(x = NULL, y = "Number of genes") +       
     ggplot2::geom_text(ggplot2::aes(label = value), hjust = -0.1, vjust = 0.5) 
 
   plot <- plot +
@@ -1218,7 +1218,6 @@ individual_plots <- function(individual_data,
       ggplot2::geom_line() +
       ggplot2::geom_point(size = 5, fill = "white") +
       ggplot2::labs(
-        title = "Expression Level",
         y = ifelse(plot_raw, "Raw counts", "Normalized Expression")
       ) +
       ggplot2::coord_cartesian(ylim = c(0, max(plot_data$value))) +
@@ -1266,7 +1265,6 @@ individual_plots <- function(individual_data,
       position = ggplot2::position_dodge()
       ) +
     ggplot2::labs(
-      title = "Expression Level",
       y = ifelse(plot_raw, "Raw counts", "Normalized Expression")
     ) +
     ggplot2::geom_dotplot(
@@ -1498,10 +1496,11 @@ counts_bias_message <- function(raw_counts,
     message <- NULL
   } else if (pval < 0.05) {
     message <- paste(
-      "Warning! Sequencing depth bias detected. Total read counts are
+      "Warning! Total read counts are
        significantly different among sample groups
        (p=", sprintf("%-3.2e", pval), ") based on ANOVA.
-       Total read counts max/min =", round(max_min_ratio, 2)
+       Total read counts max/min =", round(max_min_ratio, 2),
+       "Some groups were sequenced deeper than others. Proceed analysis with caution."
     )
   }
   # ANOVA of total read counts vs factors in experiment design

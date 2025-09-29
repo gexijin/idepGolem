@@ -162,12 +162,6 @@ mod_06_pathway_ui <- function(id) {
                  )
           )
         ),
-        h6("Beware of P-hacking! If you try all the combinations, you can find evidence for anything."),
-        a(
-          h5("Questions?", align = "right"),
-          href = "https://idepsite.wordpress.com/pathways/",
-          target = "_blank"
-        ),
         conditionalPanel(
           condition = "input.pathway_method == 2 || input.pathway_method == 4",
           selectInput(
@@ -369,7 +363,7 @@ mod_06_pathway_ui <- function(id) {
             )
           ),
           tabPanel(
-            title = "Info",
+            title = icon("info-circle"),
             includeHTML(app_sys("app/www/pathway.html"))
           )
         )
@@ -433,18 +427,18 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       }
     })
 
-    # If data is uploaded, but DEG1 is not run
+    # If data is uploaded, but Stats is not run
     observe({
       req(!is.null(pre_process$data()) && is.null(deg$limma()) && (
-        tab() == "DEG2" ||
+        tab() == "DEG" ||
           tab() == "Pathway" || tab() == "Genome"
       ))
 
       showNotification(
         ui = paste("Differentially expressed genes need to
         be identified first. Please select factors and comparisons and
-        click Submit on the DEG1 tab."),
-        id = "click_submit_DEG1",
+        click Submit on the Stats tab."),
+        id = "click_submit_Stats",
         duration = NULL,
         type = "error"
       )
@@ -453,10 +447,10 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     # Remove messages if the tab changes --------
     observe({
       req(!is.null(deg$limma()) || (
-        tab() != "DEG1" && tab() != "DEG2" &&
+        tab() != "Stats" && tab() != "DEG" &&
           tab() != "Pathway" && tab() != "Genome"
       ))
-      removeNotification("click_submit_DEG1")
+      removeNotification("click_submit_Stats")
     })
 
     observe({

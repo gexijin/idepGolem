@@ -64,22 +64,12 @@ list_factors_ui <- function(sample_info,
                             counts_deg_method) {
   if (is.null(sample_info)) {
     return(
-      HTML(
-        "<h3>Select comparisons</h3>
-       <br><font size = \"2\">An <a href=\"https://idepsite.wordpress.com/data-format/\">
-        experiment design file</a> can be uploaded to build a linear model according
-        to experiment design. </font>"
-      )
+      shiny::tagList(shiny::tags$br())
     )
   } else {
     factors <- colnames(sample_info)
     choices <- setNames(factors, factors)
-    title <- "1. Select main factors (3+ factors are not tested). Or leave it blank and just choose pairs
-              of sample groups below."
-    if (data_file_format == 1 & counts_deg_method == 3) {
-      title <- "1. Select 6 or less main factors. Or skip this step and just choose
-                pairs of sample groups below."
-    }
+    title <- "1. Select main factors (optional)"
     return(list(
       title = title,
       choices = choices
@@ -173,7 +163,7 @@ list_model_comparisons_ui <- function(sample_info,
     )
     comparisons <- sort(comparisons)
     choices <- stats::setNames(gsub(" vs\\. ", "-", comparisons), comparisons)
-    title <- "Select comparisons among sample groups:"
+    title <- "Define comparisons:"
 
     return(list(
       choices = choices,
@@ -206,7 +196,7 @@ list_model_comparisons_ui <- function(sample_info,
       comparisons <- sort(comparisons)
       comparisons <- paste0(selected_factors, ": ", comparisons)
       choices <- append(choices, stats::setNames(comparisons, comparisons))
-      title <- "2. Select one or more comparisons:"
+      title <- "2. Select at least one comparison:"
     }
 
     if (length(choices) == 0) {

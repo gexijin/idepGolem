@@ -10,7 +10,7 @@
 mod_05_deg_1_ui <- function(id) {
   ns <- NS(id)
   tabPanel(
-    title = "DEG1",
+    title = "Stats",
     sidebarLayout(
       sidebarPanel(
         style = "height: 90vh; overflow-y: auto;", 
@@ -106,10 +106,26 @@ mod_05_deg_1_ui <- function(id) {
             label = "Threshold-based Wald Test",
             value = FALSE
           ),
+          tippy::tippy_this(
+            ns("threshold_wald_test"),
+            "If checked, DESeq2 will use a threshold-based Wald test to
+            determine whether the absolute value of the log2 fold change
+            is greater than the threshold (log2 of min fold-change).
+            If unchecked, DESeq2 will use the standard Wald test to
+            determine whether the log2 fold change is significantly
+            different from zero.",
+            theme = "light-border"
+          ),
           checkboxInput(
             inputId = ns("independent_filtering"),
             label = "Independent filtering of lower counts",
             value = TRUE
+          ),
+          tippy::tippy_this(
+            ns("independent_filtering"),
+            "If checked, DESeq2 will filter out genes with very low counts
+            before adjusting p-values to increase detection power.",
+            theme = "light-border"
           ),
           ns = ns
         ),
@@ -125,12 +141,7 @@ mod_05_deg_1_ui <- function(id) {
         tags$br(),
         tags$br(),
         uiOutput(ns("download_lfc_button")),
-        uiOutput(ns("note_download_lfc_button")),
-        a(
-          h5("Questions?", align = "right"),
-          href = "https://idepsite.wordpress.com/degs/",
-          target = "_blank"
-        )
+        uiOutput(ns("note_download_lfc_button"))
       ),
       mainPanel(
         tabsetPanel(
@@ -138,16 +149,8 @@ mod_05_deg_1_ui <- function(id) {
           tabPanel(
             title = "Experiment Design",
             value = "experiment_design",
-            fluidRow(
-              column(
-                width = 6,
-                htmlOutput(outputId = ns("list_factors_deg"))
-              ),
-              column(
-                width = 6,
-                htmlOutput(outputId = ns("list_block_factors_deg"))
-              )
-            ),
+            htmlOutput(outputId = ns("list_factors_deg")),
+            htmlOutput(outputId = ns("list_block_factors_deg")),
             fluidRow(
               htmlOutput(outputId = ns("select_reference_levels"))
             ),
@@ -156,13 +159,8 @@ mod_05_deg_1_ui <- function(id) {
             tags$head(tags$style(
               "#deg-experiment_design{color: red;font-size: 16px;}"
             )),
-            htmlOutput(outputId = ns("list_model_comparisons")),
-
-            a(
-              h5("More info on DESeq2 experiment design", align = "right"),
-              href = "http://rpubs.com/ge600/deseq2",
-              target = "_blank"
-            )
+            br(),
+            htmlOutput(outputId = ns("list_model_comparisons"))
           ),
           tabPanel(
             title = "Results",
@@ -183,7 +181,7 @@ mod_05_deg_1_ui <- function(id) {
             uiOutput(ns("sig_genes_download_button"))
           ),
           tabPanel(
-            title = "Venn Diagram & UpSet plot",
+            title = "Venn Diagram",
             value = "venn_diagram",
             checkboxInput(
               inputId = ns("up_down_regulated"),
@@ -223,6 +221,10 @@ mod_05_deg_1_ui <- function(id) {
               "Download .R file of DEG code",
               theme = "light-border"
             )
+          ),
+          tabPanel(
+            title = icon("info-circle"),
+            includeHTML(app_sys("app/www/help_deg1.html"))
           )
         )
       )
@@ -233,14 +235,11 @@ mod_05_deg_1_ui <- function(id) {
 mod_05_deg_2_ui <- function(id) {
   ns <- NS(id)
   tabPanel(
-    title = "DEG2",
+    title = "DEG",
     sidebarLayout(
       sidebarPanel(
         style = "height: 90vh; overflow-y: auto;",
         htmlOutput(outputId = ns("list_comparisons")),
-        p("Select a comparison to examine the associated DEGs.
-          \"A-B\" means A vs. B (See heatmap).
-            Interaction terms start with \"I:\""),
         conditionalPanel("input.step_2 == 'Heatmap'",
             selectInput(
               inputId = ns("heatmap_gene_number"),
@@ -328,6 +327,26 @@ mod_05_deg_2_ui <- function(id) {
             title = "Enrichment",
             br(),
             mod_11_enrichment_ui(ns("enrichment_table_cluster")),
+          ),
+          tabPanel(
+            title = "R Code",
+            verbatimTextOutput(
+              ns("deg_code_2")
+            ),
+            br(),
+            downloadButton(
+              outputId = ns("dl_deg_code_2"),
+              label = "Code"
+            ),
+            tippy::tippy_this(
+              ns("dl_deg_code_2"),
+              "Download .R file of DEG code",
+              theme = "light-border"
+            )
+          ),
+          tabPanel(
+            title = icon("info-circle"),
+            includeHTML(app_sys("app/www/help_deg2.html"))
           )
         )
       )
@@ -346,7 +365,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     deg_env <- new.env()
 
     output$submit_ui <- renderUI({
-      # req(model_comparisons()) # this is stopping LCF data from getting through DEG1
+      # req(model_comparisons()) # this is stopping LCF data from getting through Stats
       tagList(
         actionButton(
           inputId = ns("submit_model_button"),
@@ -383,7 +402,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         return(
           checkboxGroupInput(
             inputId = ns("select_factors_model"),
-            h5(list_factors$title),
+            strong(list_factors$title),
             choices = list_factors$choices,
             selected = list_factors$choices[1]
           )
@@ -402,7 +421,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       return(
         checkboxGroupInput(
           inputId = ns("select_block_factors_model"),
-          h5("Select a factor for batch effect or paired samples, if needed."),
+          strong("Select a batch/block factor (optional)"),
           choices = choices,
           selected = NULL
         )
@@ -423,7 +442,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       req(model_comparisons())
       checkboxGroupInput(
         inputId = ns("select_model_comprions"),
-        label = h5(model_comparisons()$title),
+        label = strong(model_comparisons()$title),
         choices = model_comparisons()$choices,
         selected = model_comparisons()$choices[[1]]
       )
@@ -437,9 +456,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       req(!is.null(interactions))
       checkboxGroupInput(
         inputId = ns("select_interactions"),
-        label = h5(
-          "Interaction terms between factors(e.g. genotypes repond differently
-          to treatment?):"
+        label = strong(
+          "Interaction terms:"
         ),
         choices = interactions,
         selected = NULL
@@ -509,7 +527,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
                   which(names(select_choices) == x)
                 )
               ),
-              label = h5(paste0("Reference/baseline level for ", x)),
+              label = h5(paste0("Reference level for ", x)),
               choices = setNames(
                 as.list(paste0(x, ":", select_choices[[x]])),
                 select_choices[[x]]
@@ -534,6 +552,120 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     )
 
     deg <- reactiveValues(limma = NULL)
+    deg_help_notification_active <- reactiveVal(FALSE)
+
+    observe({
+      current_tab <- tab()
+      sample_info <- pre_process$sample_info()
+      message_needed <- identical(current_tab, "Stats") && is.null(sample_info)
+
+      if (isTRUE(message_needed) && !deg_help_notification_active()) {
+        message_ui <- shiny::tags$div(
+          shiny::tags$strong("Tip:"),
+          " An ",
+          shiny::tags$a(
+            href = "https://idepsite.wordpress.com/data-format/",
+            target = "_blank",
+            class = "alert-link",
+            "experimental design file"
+          ),
+          " can be uploaded to build a linear model according to experiment design.",
+          shiny::tags$br(),
+          shiny::tags$a(
+            href = "http://rpubs.com/ge600/deseq2",
+            target = "_blank",
+            class = "alert-link",
+            "More info on DESeq2 experiment design"
+          )
+        )
+
+        shiny::showNotification(
+          ui = message_ui,
+          type = "warning",
+          duration = 10,
+          closeButton = TRUE,
+          id = "deg1-design-notification"
+        )
+        deg_help_notification_active(TRUE)
+      } else if (!isTRUE(message_needed) && deg_help_notification_active()) {
+        shiny::removeNotification("deg1-design-notification")
+        deg_help_notification_active(FALSE)
+      }
+    })
+
+    observe({
+      method <- input$counts_deg_method
+      selected_factors <- input$select_factors_model
+      sample_info <- pre_process$sample_info()
+
+      needs_factor_warning <- !is.null(method) && method %in% c(1, 2) &&
+        length(selected_factors) > 3
+
+      if (isTRUE(needs_factor_warning)) {
+        shiny::showNotification(
+          ui = shiny::tags$div(
+            shiny::tags$strong("Model warning:"),
+            " limma-trend and limma-voom support up to three main factors in iDEP."
+          ),
+          type = "warning",
+          id = "deg1-factor-limit-warning",
+          duration = NULL,
+          closeButton = TRUE
+        )
+      } else {
+        shiny::removeNotification("deg1-factor-limit-warning")
+      }
+
+      needs_rank_warning <- FALSE
+      if (!is.null(method) && method %in% c(1, 2) &&
+          !is.null(sample_info) && length(selected_factors) > 0) {
+        valid_factors <- intersect(selected_factors, colnames(sample_info))
+
+        if (length(valid_factors) > 0) {
+          level_counts <- vapply(
+            valid_factors,
+            function(factor_col) {
+              length(unique(stats::na.omit(sample_info[[factor_col]])))
+            },
+            integer(1)
+          )
+
+          if (any(level_counts == 0)) {
+            possible_combos <- 0
+          } else {
+            possible_combos <- prod(as.numeric(level_counts))
+          }
+          n_samples <- nrow(sample_info)
+          needs_rank_warning <- possible_combos > n_samples
+
+          if (isTRUE(needs_rank_warning)) {
+            warning_text <- sprintf(
+              " selected factors create up to %d combinations but only %d samples are available. Reduce factors or ensure sufficient replication.",
+              possible_combos,
+              n_samples
+            )
+
+            shiny::showNotification(
+              ui = shiny::tags$div(
+                shiny::tags$strong("Model may be rank-deficient:"),
+                warning_text
+              ),
+              type = "warning",
+              id = "deg1-rank-warning",
+              duration = NULL,
+              closeButton = TRUE
+            )
+          } else {
+            shiny::removeNotification("deg1-rank-warning")
+          }
+        } else {
+          shiny::removeNotification("deg1-rank-warning")
+        }
+      } else {
+        shiny::removeNotification("deg1-rank-warning")
+      }
+    })
+
     warning_type <- reactiveVal(NULL)
     # Observe submit button ------
     observeEvent(
@@ -599,7 +731,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       }
     )
 
-    # Dynamic modal for different error types in DEG1
+    # Dynamic modal for different error types in Stats
     observe({
       req(!is.null(warning_type()))
         modal_title <- switch(
@@ -617,7 +749,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
             accounted for and have entries in your data.'
           ),
           "NoComparison" = paste(
-          "No comparisons selected to perform DEG1 analysis on. Please select 
+          "No comparisons selected to perform Stats analysis on. Please select 
           group comparisons (checkboxes) before submitting again."
           ), 
           "UnknownError" = paste(
@@ -911,15 +1043,24 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       if (is.null(deg$limma$comparisons)) {
         selectInput(
           inputId = ns("select_contrast"),
-          label = "Comparisons",
+          label = "Comparisons:",
           choices = list("All" = "All"),
           selected = "All"
         )
       } else {
-        selectInput(
-          inputId = ns("select_contrast"),
-          label = "Comparisons",
-          choices = deg$limma$comparisons
+        tagList(
+          selectInput(
+            inputId = ns("select_contrast"),
+            label = "Comparisons:",
+            choices = deg$limma$comparisons
+          ),
+          tippy::tippy_this(
+            ns("select_contrast"),
+            "Select a comparison to examine the associated DEGs.
+            \"A-B\" means A vs. B (See heatmap).
+            Interaction terms start with \"I:\"",
+            theme = "light-border"
+          )
         )
       }
     })
@@ -1092,7 +1233,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     
     output$download_heat_data <- downloadHandler(
       filename = function() {
-        "DEG2_Heatmap_Data.csv"
+        "DEG_Heatmap_Data.csv"
       },
       content = function(file) {
         req(!is.null(deg2_heat_data()))

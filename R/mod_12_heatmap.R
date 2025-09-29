@@ -141,10 +141,6 @@ mod_12_heatmap_server <- function(id,
       {
         if (is.null(input$ht_brush) || is.null(sub_heatmap_calc())) {
           grid::grid.newpage()
-          grid::grid.text("Select a region on the heatmap to zoom in.
-
-        Selection can be adjusted from the sides.
-        It can also be dragged around.", 0.5, 0.5)
         } else {
           shinybusy::show_modal_spinner(
             spin = "orbit",

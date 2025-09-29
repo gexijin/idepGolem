@@ -10,32 +10,28 @@
 mod_03_clustering_ui <- function(id) {
   ns <- NS(id)
   tabPanel(
-    title = "Clustering",
+    title = "Cluster",
     # Change the style of radio labels
     # Note that the name https://groups.google.com/g/shiny-discuss/c/ugNEaHizlck
     # input IDs should be defined by namespace
-    tags$style(type = "text/css",
-      paste0("#", ns("cluster_meth"), " .radio label { font-weight: bold; color: red;}")
+    tags$style(
+      type = "text/css",
+      paste(
+        paste0("#", ns("cluster_meth"), " .radio label { font-weight: bold; color: red;}"),
+        ".more-options { display: block; width: 100%; }",
+        ".more-options summary { display: flex; align-items: center; cursor: pointer; font-weight: 600; margin: 0; }",
+        ".more-options summary::marker, .more-options summary::-webkit-details-marker { display: none; }",
+        ".more-options summary::before { content: '+'; margin-right: 6px; font-size: 14px; line-height: 1; }",
+        ".more-options[open] summary::before { content: '\\2212'; }",
+        ".more-options-body { margin-top: 10px; padding: 10px 0; background-color: #f7f9fc; border-radius: 0; width: 100%; }",
+        sep = "\n"
+      )
     ),
     sidebarLayout(
 
       # Heatmap Panel Sidebar ----------
       sidebarPanel(
         width = 3,
-        div(
-          style = "text-align: right;",
-          actionButton(
-            inputId = ns("submit_model_button"),
-            label = "Submit",
-            style = "font-size: 16px; color: red;"
-          )
-        ),
-        tippy::tippy_this(
-          ns("submit_model_button"),
-          "Run Cluster analysis",
-          theme = "light-border"
-        ),
-        br(),
         # Select Clustering Method ----------
         conditionalPanel(
           condition = "input.cluster_panels == 'Heatmap' |
@@ -76,6 +72,27 @@ mod_03_clustering_ui <- function(id) {
                 this give us a big picture view of the general pattern of
                 gene expression.",
                 theme = "light-border"
+              )
+            )
+          ),
+          ns = ns
+        ),
+        conditionalPanel(
+          condition = "input.cluster_panels == 'Heatmap'",
+          fluidRow(
+            column(width = 4, p("Dendrogram")),
+            column(
+              width = 8,
+              selectInput(
+                inputId = ns("dendrogram_display"),
+                label = NULL,
+                choices = c(
+                  "Row" = "row",
+                  "Column" = "column",
+                  "Both" = "both",
+                  "None" = "none"
+                ),
+                selected = "row"
               )
             )
           ),
@@ -181,44 +198,53 @@ mod_03_clustering_ui <- function(id) {
               )
             )
           ),
-          checkboxInput(ns("customize_button"), "More options"),
-          checkboxInput(
-            inputId = ns("sample_clustering"),
-            label = "Cluster samples",
-            value = FALSE
-          ),
-          checkboxInput(
-            inputId = ns("show_row_dend"),
-            label = "Show Row Dendogram",
-            value = TRUE
-          ),
-          checkboxInput(
-            inputId = ns("gene_centering"),
-            label = "Center genes (substract mean)",
-            value = TRUE
-          ),
-          checkboxInput(
-            inputId = ns("gene_normalize"),
-            label = "Normalize genes (divide by SD)",
-            value = FALSE
-          ),
-          selectInput(
-            inputId = ns("sample_color"),
-            label = "Experiment Group Colors",
-            choices = c("Pastel 1", "Dark 2", "Dark 3", 
-                        "Set 2", "Set 3", "Warm",
-                        "Cold", "Harmonic", "Dynamic"),
-            selected = "Dynamic"
-          ),
-          numericInput(
-            inputId = ns("heatmap_cutoff"),
-            label = "Max Z score:",
-            value = 3,
-            min = 2,
-            step = 1
+          tags$details(
+            class = "more-options",
+            tags$summary("More options"),
+            div(
+              class = "more-options-body",
+              checkboxInput(
+                inputId = ns("gene_centering"),
+                label = "Center genes (substract mean)",
+                value = TRUE
+              ),
+              checkboxInput(
+                inputId = ns("gene_normalize"),
+                label = "Normalize genes (divide by SD)",
+                value = FALSE
+              ),
+              fluidRow(
+                column(width = 4, p("Sample Colors")),
+                column(
+                  width = 8,
+                  selectInput(
+                    inputId = ns("sample_color"),
+                    label = NULL,
+                    choices = c("Pastel 1", "Dark 2", "Dark 3", 
+                                "Set 2", "Set 3", "Warm",
+                                "Cold", "Harmonic", "Dynamic"),
+                    selected = "Dynamic"
+                  )
+                )
+              ),
+              fluidRow(
+                column(width = 4, p("Max Z score")),
+                column(
+                  width = 8,
+                  numericInput(
+                    inputId = ns("heatmap_cutoff"),
+                    label = NULL,
+                    value = 3,
+                    min = 2,
+                    step = 1
+                  )
+                )
+              )
+            )
           ),
           ns = ns
         ),
+
         conditionalPanel(
           condition = "input.cluster_panels == 'word_cloud'",
           uiOutput(
@@ -246,14 +272,8 @@ mod_03_clustering_ui <- function(id) {
           ns("report"),
           "Generate HTML report of clustering tab",
           theme = "light-border"
-        ),
-        a(
-          h5("Questions?", align = "right"),
-          href = "https://idepsite.wordpress.com/heatmap/",
-          target = "_blank"
         )
       ),
-
 
 
 
@@ -280,18 +300,15 @@ mod_03_clustering_ui <- function(id) {
                                     delayType = "debounce",
                                     clip = TRUE)
                 ),
+                br(),
                 fluidRow(
                   column(
                     width = 6,
-                    ottoPlots::mod_download_figure_ui(
-                      ns("dl_heatmap_main")
-                    )
+                    uiOutput(ns("dl_heatmap_main_download_ui"))
                   ),
                   column(
                     width = 6,
-                    ottoPlots::mod_download_figure_ui(
-                      ns("dl_heatmap_sub")
-                    )
+                    uiOutput(ns("dl_heatmap_sub_download_ui"))
                   )
                 ),
                 br(),
@@ -301,21 +318,26 @@ mod_03_clustering_ui <- function(id) {
               ),
               column(
                 width = 8,
-                # align = "right",
-                p("Broaden your browser window if there is overlap -->"),
-                checkboxInput(
-                  inputId = ns("cluster_enrichment"),
-                  label = strong("Show enrichment"),
-                  value = FALSE
-                ),
-                tippy::tippy_this(
-                  ns("cluster_enrichment"),
-                  "Conducts GO enrichment on the selected genes.
-                  For hierarchical clustering, users need to select a
-                  region to zoom in first.
-                  When k-means is used, enrichment analyses are
-                  conducted on all clusters, regardless of your selection.",
-                  theme = "light-border"
+                conditionalPanel(
+                  condition = paste0(
+                    "input.cluster_meth == 2 || ",
+                    "(input.cluster_meth == 1 && input.ht_brush != null)"
+                  ),
+                  checkboxInput(
+                    inputId = ns("cluster_enrichment"),
+                    label = strong("Show enrichment"),
+                    value = FALSE
+                  ),
+                  tippy::tippy_this(
+                    ns("cluster_enrichment"),
+                    "Conducts GO enrichment on the selected genes.
+                    For hierarchical clustering, users need to select a
+                    region to zoom in first.
+                    When k-means is used, enrichment analyses are
+                    conducted on all clusters, regardless of your selection.",
+                    theme = "light-border"
+                  ),
+                  ns = ns
                 ),
                 conditionalPanel(
                   condition = "input.cluster_enrichment == 1 ",
@@ -376,6 +398,10 @@ mod_03_clustering_ui <- function(id) {
               height = "400px"
             ),
             ottoPlots::mod_download_figure_ui(ns("dl_sample_tree"))
+          ),
+          tabPanel(
+            title = icon("info-circle"),
+            includeHTML(app_sys("app/www/help_clustering.html"))
           )
         )
       )
@@ -404,9 +430,22 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     # Interactive heatmap environment
     shiny_env <- new.env()
 
+    # Reset to Heatmap whenever the Cluster tab becomes active again
+    observeEvent(tab(), {
+      req(tab())
+      if (tab() == "Cluster") {
+        updateTabsetPanel(
+          session = session,
+          inputId = "cluster_panels",
+          selected = "Heatmap"
+        )
+      }
+    })
+
+
     # Update Slider Input ---------
     observe({
-      req(tab() == "Clustering")
+      req(tab() == "Cluster")
       req(!is.null(pre_process$data()))
       if (nrow(pre_process$data()) > 12000) {
         max_genes <- 12000
@@ -418,22 +457,6 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         max = max_genes
       )
     })
-    observe({
-
-      shinyjs::toggle(id = "sample_clustering", 
-                      condition = input$customize_button)
-      shinyjs::toggle(id = "show_row_dend", 
-                      condition = input$customize_button)
-      shinyjs::toggle(id = "heatmap_cutoff", 
-                      condition = input$customize_button)
-      shinyjs::toggle(id = "gene_normalize", 
-                      condition = input$customize_button)
-      shinyjs::toggle(id = "gene_centering", 
-                      condition = input$customize_button)
-      shinyjs::toggle(id = "sample_color", 
-                      condition = input$customize_button)
-    })
-
     # Distance functions -----------
     dist_funs <- dist_functions()
     dist_choices <- setNames(
@@ -445,6 +468,14 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         session = session,
         inputId = "dist_function",
         choices = dist_choices
+      )
+    })
+
+    dendrogram_selection <- reactive({
+      selection <- req(input$dendrogram_display)
+      list(
+        sample = selection %in% c("column", "both"),
+        row = selection %in% c("row", "both")
       )
     })
 
@@ -462,7 +493,18 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           factors,
           "All factors"
         )
-        selected <- choices[length(choices)]
+        # Only set to "All factors" if input doesn't exist yet or is NULL
+        # This prevents unnecessary re-triggering when sample_info changes
+        if (is.null(input$select_factors_heatmap) || is.na(input$select_factors_heatmap)) {
+          selected <- choices[length(choices)]
+        } else {
+          # Keep current selection if it's still valid
+          selected <- if (input$select_factors_heatmap %in% choices) {
+            input$select_factors_heatmap
+          } else {
+            choices[length(choices)]
+          }
+        }
       }
       selectInput(
         inputId = ns("select_factors_heatmap"),
@@ -472,8 +514,9 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       )
     })
 
+
     # Standard Deviation Density Plot ----------
-    sd_density_plot <- eventReactive(input$submit_model_button, {
+    sd_density_plot <- reactive({
       req(!is.null(pre_process$data()))
 
       p <- sd_density(
@@ -503,7 +546,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
 
 
     # Heatmap Data -----------
-    heatmap_data <- eventReactive(input$submit_model_button, {
+    heatmap_data <- reactive({
       req(!is.null(pre_process$data()))
 
       process_heatmap_data(
@@ -520,7 +563,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
 
 
     # Heatmap Click Value ---------
-    observeEvent(input$submit_model_button, {
+    observe({
       req(!is.null(pre_process$all_gene_names()))
       req(!is.null(pre_process$data()))
       req(!is.null(heatmap_data()))
@@ -546,7 +589,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     output$heatmap_main <- renderPlot(
       {
         req(!is.null(heatmap_data()))
-        #      req(input$selected_genes)
+        req(!is.null(input$select_factors_heatmap))
 
         shinybusy::show_modal_spinner(
           spin = "orbit",
@@ -556,9 +599,35 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
 
         shiny_env$ht <- heatmap_main_object()
 
-        # Use heatmap position in multiple components
-        shiny_env$ht_pos_main <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht)
+        # Ensure heatmap object is valid before getting positions
+        if (!is.null(shiny_env$ht)) {
+          tryCatch({
+            # Use heatmap position in multiple components
+            shiny_env$ht_pos_main <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht)
+          }, error = function(e) {
+            # If position detection fails, set to NULL and continue
+            shiny_env$ht_pos_main <- NULL
+          })
+        }
+
         shinybusy::remove_modal_spinner()
+
+        # Show guidance notification for 5 seconds
+        showNotification(
+          ui = div(
+            style = "text-align: center; font-size: 14px;",
+            "Select a region on the heatmap to zoom in.",
+            br(),
+            "Selection can be adjusted from the sides or dragged around.",
+            br(),
+            "Broaden your browser window if there is overlap."
+          ),
+          duration = 15,
+          closeButton = TRUE,
+          type = "message",
+          id = "heatmap_guidance"
+        )
+
         return(shiny_env$ht)
       },
       width = 240 # , # this avoids the heatmap being redraw
@@ -566,29 +635,40 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     )
     
     # Color palette for experiment groups on heatmap
-    group_pal <- eventReactive(input$submit_model_button, {
+    group_pal <- reactive({
       req(!is.null(pre_process$sample_info()))
       req(!is.na(input$sample_color))
-      
+
       groups <- as.vector(as.matrix(pre_process$sample_info()))
       pal <- setNames(
-        colorspace::qualitative_hcl(length(unique(groups)), 
+        colorspace::qualitative_hcl(length(unique(groups)),
                                     palette = input$sample_color,
                                     c = 70),
         unique(groups)
       )
       sample_list <- as.list(as.data.frame(pre_process$sample_info()))
-      
+
       lapply(sample_list, function(x){
         setNames(
-          pal[unique(x)], 
+          pal[unique(x)],
           unique(x)
         )
       })
     })
     
-    heatmap_main_object <- eventReactive(input$submit_model_button, {
+    # Reactive for heatmap generation with double-render prevention
+    heatmap_main_object <- reactive({
       req(!is.null(heatmap_data()))
+      req(!is.null(input$select_factors_heatmap))
+      req(input$select_factors_heatmap != "")
+
+      # Ensure stable state before proceeding
+      if (!is.null(pre_process$sample_info())) {
+        # For "All factors", ensure group_pal is ready
+        if (input$select_factors_heatmap == "All factors") {
+          req(!is.null(group_pal()))
+        }
+      }
 
       # Assign heatmap to be used in multiple components
       try(
@@ -601,13 +681,17 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           dist_funs = dist_funs,
           dist_function = input$dist_function,
           hclust_function = input$hclust_function,
-          sample_clustering = input$sample_clustering,
+          sample_clustering = dendrogram_selection()$sample,
           heatmap_color_select = heatmap_color_select(),
-          row_dend = input$show_row_dend,
+          row_dend = dendrogram_selection()$row,
           k_clusters = input$k_clusters,
           re_run = input$k_means_re_run,
           selected_genes = input$selected_genes,
-          group_pal = group_pal(),
+          group_pal = if (input$select_factors_heatmap == "All factors") {
+            group_pal()
+          } else {
+            NULL
+          },
           sample_color = input$sample_color
         )
       )
@@ -616,17 +700,137 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     })
 
 
-    dl_heatmap_main <- ottoPlots::mod_download_figure_server(
-      id = "dl_heatmap_main",
-      filename = "heatmap_main",
-      figure = reactive({
-        heatmap_main_object()
-      }),
-      width = 6,
-      height = 16,
-      label = "Above"
-    )
+    # Replace default download button with actionLink/tooltip for heatmaps
+    setup_download_link <- function(
+        ui_id,
+        trigger_id,
+        figure,
+        filename,
+        default_width,
+        default_height,
+        label_tag = NULL,
+        icon_tag = NULL,
+        tooltip_text = "Click to download plot in preferred format and size.") {
+      min_size <- 2
+      max_size <- 30
+      width_id <- paste0(trigger_id, "_width")
+      height_id <- paste0(trigger_id, "_height")
+      pdf_id <- paste0(trigger_id, "_pdf")
+      png_id <- paste0(trigger_id, "_png")
+      svg_id <- paste0(trigger_id, "_svg")
 
+      output[[ui_id]] <- renderUI({
+        req(figure())
+        tagList(
+          actionLink(
+            inputId = ns(trigger_id),
+            label = label_tag,
+            icon = icon_tag,
+            title = tooltip_text,
+            `aria-label` = tooltip_text
+          ),
+          tippy::tippy_this(
+            ns(trigger_id),
+            tooltip_text,
+            theme = "light-border"
+          )
+        )
+      })
+
+      width_value <- reactive({
+        value <- input[[width_id]]
+        if (is.numeric(value)) {
+          return(max(min_size, min(max_size, value, na.rm = TRUE)))
+        }
+        default_width
+      })
+
+      height_value <- reactive({
+        value <- input[[height_id]]
+        if (is.numeric(value)) {
+          return(max(min_size, min(max_size, value, na.rm = TRUE)))
+        }
+        default_height
+      })
+
+      observeEvent(input[[trigger_id]], {
+        req(figure())
+        showModal(modalDialog(
+          numericInput(
+            inputId = ns(width_id),
+            label = "Width (in)",
+            value = default_width,
+            min = min_size,
+            max = max_size
+          ),
+          numericInput(
+            inputId = ns(height_id),
+            label = "Height (in)",
+            value = default_height,
+            min = min_size,
+            max = max_size
+          ),
+          h5("The plot will be rendered differently depending on size.\n            When the dimensions are too small, error or blank plot\n               will be generated."),
+          downloadButton(outputId = ns(pdf_id), label = "PDF"),
+          downloadButton(outputId = ns(png_id), label = "PNG"),
+          downloadButton(outputId = ns(svg_id), label = "SVG"),
+          size = "s"
+        ))
+      })
+
+      output[[pdf_id]] <- downloadHandler(
+        filename = paste0(filename, ".pdf"),
+        content = function(file) {
+          plot_obj <- figure()
+          req(plot_obj)
+          on.exit(removeModal(), add = TRUE)
+          pdf(file, width = width_value(), height = height_value())
+          print(plot_obj)
+          dev.off()
+        }
+      )
+
+      output[[png_id]] <- downloadHandler(
+        filename = paste0(filename, ".png"),
+        content = function(file) {
+          plot_obj <- figure()
+          req(plot_obj)
+          on.exit(removeModal(), add = TRUE)
+          png(
+            filename = file,
+            res = 360,
+            width = width_value(),
+            height = height_value(),
+            units = "in"
+          )
+          print(plot_obj)
+          dev.off()
+        }
+      )
+
+      output[[svg_id]] <- downloadHandler(
+        filename = paste0(filename, ".svg"),
+        content = function(file) {
+          plot_obj <- figure()
+          req(plot_obj)
+          on.exit(removeModal(), add = TRUE)
+          svg(file, width = width_value(), height = height_value())
+          print(plot_obj)
+          dev.off()
+        }
+      )
+    }
+
+    setup_download_link(
+      ui_id = "dl_heatmap_main_download_ui",
+      trigger_id = "dl_heatmap_main_download",
+      figure = heatmap_main_object,
+      filename = "heatmap_main",
+      default_width = 6,
+      default_height = 16,
+      label_tag = NULL,
+      icon_tag = icon("download")
+    )
 
     # Heatmap Click Value ---------
     output$ht_click_content <- renderUI({
@@ -698,10 +902,6 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         
         if (is.null(input$ht_brush) || is.null(heatmap_sub_object_calc())) {
           grid::grid.newpage()
-          grid::grid.text("Select a region on the heatmap to zoom in.
-        Selection can be adjusted from the sides.
-        It can also be dragged around.
-        ", 0.5, 0.5)
         } else {
           shinybusy::show_modal_spinner(
             spin = "orbit",
@@ -737,16 +937,16 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     )
 
     # Reactive input versions to store values every submit press
-    selected_factors_heatmap <- eventReactive(input$submit_model_button, {
+    selected_factors_heatmap <- reactive({
       req(!is.na(input$select_factors_heatmap))
       input$select_factors_heatmap
     })
     
-    submitted_pal <- eventReactive(input$submit_model_button, {
+    submitted_pal <- reactive({
       input$sample_color
     })
 
-    current_method <- eventReactive(input$submit_model_button, {
+    current_method <- reactive({
       input$cluster_meth
     })
     
@@ -809,15 +1009,15 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       }
     })
 
-    dl_heatmap_sub <- ottoPlots::mod_download_figure_server(
-      id = "dl_heatmap_sub",
+    setup_download_link(
+      ui_id = "dl_heatmap_sub_download_ui",
+      trigger_id = "dl_heatmap_sub_download",
+      figure = heatmap_sub_object,
       filename = "heatmap_zoom",
-      figure = reactive({
-        heatmap_sub_object()
-      }),
-      width = 8,
-      height = 12,
-      label = "Right"
+      default_width = 8,
+      default_height = 12,
+      label_tag = tags$span(icon("download"), "\u2192"),
+      icon_tag = NULL
     )
 
     # gene lists for enrichment analysis
@@ -886,7 +1086,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       return(gene_lists)
     })
     
-    k_means_list <- eventReactive(input$submit_model_button, {
+    k_means_list <- reactive({
       req(!is.null(gene_lists()))
       gene_lists()
     })
@@ -926,7 +1126,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     })
     
     # Sample Tree ----------
-    sample_tree <- eventReactive(input$submit_model_button, {
+    sample_tree <- reactive({
       req(!is.null(pre_process$data()), input$cluster_meth == 1)
 
       draw_sample_tree(
@@ -980,6 +1180,22 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           inputId = "cluster_panels",
           target = "word_cloud"
         )
+      }
+    })
+
+    # Auto-uncheck enrichment checkbox when it should be hidden ----------
+    observe({
+      # If hierarchical clustering is selected and no region is brushed,
+      # uncheck the enrichment checkbox to prevent it from staying checked
+      # while hidden
+      if (input$cluster_meth == 1 && is.null(input$ht_brush)) {
+        if (!is.null(input$cluster_enrichment) && input$cluster_enrichment) {
+          updateCheckboxInput(
+            session = session,
+            inputId = "cluster_enrichment",
+            value = FALSE
+          )
+        }
       }
     })
 
@@ -1176,8 +1392,8 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
             heatmap_cutoff = input$heatmap_cutoff,
             gene_centering = input$gene_centering,
             gene_normalize = input$gene_normalize,
-            sample_clustering = input$sample_clustering,
-            show_row_dend = input$show_row_dend,
+            sample_clustering = dendrogram_selection()$sample,
+            show_row_dend = dendrogram_selection()$row,
             selected_genes = input$selected_genes
           )
 

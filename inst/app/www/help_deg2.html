@@ -1,0 +1,83 @@
+<h3>
+    Overview
+</h3>
+<p>
+    The DEG tab helps you inspect each contrast produced in Stats. Select a
+    comparison to review significant genes, visualize fold changes, and run
+    enrichment analyses. Stats defines the comparisons; DEG explains what each
+    comparison means biologically.
+</p>
+<h3>
+    Selecting a Contrast
+</h3>
+<p>
+    Use the menu on the left to pick any contrast from Stats. Labels follow the
+    “B-A” convention (for example, “Drug-Control”), meaning fold changes are
+    calculated relative to the baseline group (Control in this example).
+    Interaction contrasts start with “I:” and test whether the effect of one
+    factor depends on another.
+</p>
+<h3>
+    Heatmap
+</h3>
+<p>
+    The default view is a clustered heatmap of differentially expressed genes.
+    Choose how many genes to display and whether to sort them by fold change or
+    FDR. Download buttons provide both the image and the underlying expression
+    matrix for custom plots or reporting.
+</p>
+<h3>
+    Volcano, MA, and Scatter Plots
+</h3>
+<ul>
+    <li>
+        <strong>Volcano plot:</strong> highlights genes with large fold changes and
+        strong statistical support. Use the labeling controls to tag genes of
+        interest.
+    </li>
+    <li>
+        <strong>MA plot:</strong> shows fold change versus mean expression, making it
+        easy to spot intensity-dependent effects.
+    </li>
+    <li>
+        <strong>Scatter plot:</strong> compares fold changes between two contrasts
+        when both are available, helping you see shared responses.
+    </li>
+</ul>
+<p>
+    Each plot offers download options so you can save high-resolution figures or
+    export the data points behind them.
+</p>
+<h3>
+    Enrichment
+</h3>
+<p>
+    The Enrichment tab connects directly to the pathway analysis module. For the
+    selected contrast, you can run GO, pathway, and TF/miRNA target enrichment.
+    This helps translate lists of DEGs into biological processes and regulatory
+    themes. Adjust settings exactly as you would elsewhere in iDEP.
+</p>
+<h3>
+    R Code
+    </h3>
+<p>
+    DEG also provides the R script used to generate plots and tables. Download
+    it if you want to customize visualizations or rerun the analysis offline.
+</p>
+<h3>
+    Tips
+</h3>
+<ul>
+    <li>
+        If a contrast is missing, return to Stats and confirm it was selected in the
+        Experiment Design page before rerunning the analysis.
+    </li>
+    <li>
+        Interpret fold changes with the baseline in mind; “Drug-Control” reports
+        expression in Drug relative to Control.
+    </li>
+    <li>
+        Use the heatmap download to share gene clusters with collaborators or feed
+        selected genes into downstream pathway tools.
+    </li>
+</ul>

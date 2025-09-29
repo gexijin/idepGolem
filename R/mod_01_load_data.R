@@ -10,7 +10,7 @@
 mod_01_load_data_ui <- function(id) {
   ns <- shiny::NS(id)
   tabPanel(
-    title = "Load Data",
+    title = "Data",
     # move notifications and progress bar to the center of screen
     tags$head(
       tags$style(
@@ -20,14 +20,24 @@ mod_01_load_data_ui <- function(id) {
               top: calc(85%);
               left: calc(5%);
                }
-              
-             .dis_gray { background-color: gray; }
+             
+             .dis_gray { background-color: gray; }             
+             .more-options { display: block; width: 100%; }
+             .more-options summary { display: flex; align-items: center; cursor: pointer; font-weight: 600; margin: 0; }
+             .more-options summary::marker, .more-options summary::-webkit-details-marker { display: none; }
+             .more-options summary::before { content: '+'; margin-right: 6px; font-size: 14px; line-height: 1; }
+             .more-options[open] summary::before { content: '\u2212'; }
+             .more-options-body { margin-top: 10px; padding: 10px 0; background-color: #f7f9fc; border-radius: 0; width: 100%; }
+             .more-options-body .shiny-input-container > label { font-weight: 400; }
+             .load-data-info-icon { padding: 0; border: none; background: transparent; color: #6c757d; font-size: 18px; line-height: 1; }
+             .load-data-info-icon:hover { color: #343a40; text-decoration: none; }
+             .load-data-info-icon:focus { outline: none; box-shadow: none; }
               "
         )
       )
     ),
     sidebarLayout(
-      
+
       ##################################################################
       #       Load Data sidebar panel ----
       ##################################################################
@@ -37,19 +47,19 @@ mod_01_load_data_ui <- function(id) {
         selectInput(
           inputId = ns("select_org"),
           label = NULL,
-          choices = "None", 
+          choices = list(),
           multiple = FALSE,
           selectize = TRUE,
-          selected = "None"
+          selected = NULL
         ),
-        
+
         fluidRow(
           column(
-            width = 4, 
+            width = 5,
             strong("1. Species"),
           ),
           column(
-            width = 8,
+            width = 7,
             textOutput(ns("selected_species"))
           )
         ),
@@ -68,26 +78,52 @@ mod_01_load_data_ui <- function(id) {
             # Species list and genome assemblies ----------
             actionButton(
               inputId = ns("genome_assembl_button"),
-              label = strong("Select")
+              label = "Select"
             )
           ),
           column(
             width = 6,
             align = "center",
-            # Species list and genome assemblies ----------
-            actionButton(
-              inputId = ns("upload_gmt_button"),
-              label = "Custom/New"
+            checkboxInput(
+              inputId = ns("new_species"),
+              label = "New",
+              value = FALSE
             ),
             tippy::tippy_this(
-              ns("upload_gmt_button"),
-              "Upload a custom pathway .GMT file to perform pathway analysis for any genome.",
+              ns("new_species"),
+              "Check this to analyze a new/custom species not in our database.",
               theme = "light-border"
             )
           )
         ),
-        
-        br(),
+
+        # Conditional GMT file upload for new species ----------
+        conditionalPanel(
+          condition = "input.new_species == true",
+          br(),
+          p("Custom pathway file (optional)"),
+          fileInput(
+            inputId = ns("gmt_file"),
+            label = NULL,
+            accept = c(
+              "text/csv",
+              "text/comma-separated-values",
+              "text/tab-separated-values",
+              "text/plain",
+              ".csv",
+              ".tsv",
+              ".gmt"
+            ),
+            placeholder = "Upload a .GMT file for pathway analysis"
+          ),
+          tippy::tippy_this(
+            ns("gmt_file"),
+            "Upload a custom pathway .GMT file to perform pathway analysis for your new species. This is optional - you can proceed without it.",
+            theme = "light-border"
+          ),
+          ns = ns
+        ),
+
         # Dropdown for data file format ----------
         strong("2. Data type"),
         
@@ -124,12 +160,11 @@ mod_01_load_data_ui <- function(id) {
           ),
           ns = ns
         ),
-        br(),
         # Load expression data options ----------
         # Includes load demo action button, demo data dropdown, and expression
         # file upload box
         conditionalPanel(
-          condition = "input.data_file_format != 0 && input.select_org != 'None'",
+          condition = "input.data_file_format != 0",
           uiOutput(ns("load_data_ui")),
           ns = ns
         ),
@@ -140,118 +175,149 @@ mod_01_load_data_ui <- function(id) {
         #     }
         #   ")
         # ),
-        br(),
         
         # Experiment design file input ----------
         conditionalPanel(
-          condition = "input.data_file_format != 0 && input.select_org != 'None'",
+          condition = "input.data_file_format != 0",
           uiOutput(ns("design_file_ui")),
           ns = ns
         ),
-        uiOutput(ns("example_genes_ui")),
-        br(),
-        checkboxInput(
-          inputId = ns("customize_button"),
-          label = strong("Global Settings",
-                         style = "color: red;"),
-          value = FALSE
-        ),
-        selectInput(
-          inputId = ns("multiple_map"),
-          label = "Multiple mapped IDs:",
-          choices = list(
-            "Sum" = "sum",
-            "Average" = "mean",
-            "Median" = "median",
-            "Max" = "max",
-            "Max SD" = "max_sd"
+        tags$details(
+          class = "more-options",
+          tags$summary(span(strong("Settings"), id = ns("global_settings_summary"))),
+          tippy::tippy_this(
+            ns("global_settings_summary"),
+            "Reveal appearance and ID-conversion settings shared across the app.",
+            theme = "light-border"
           ),
-          selected = "Sum",
-          selectize = FALSE
-        ),
-        tippy::tippy_this(
-          ns("multiple_map"),
-          "When multiple IDs map to the same gene, we can summerize
-          data in a certain way (sum, mean, median, max),
-          or just keep the rows with the the most variation (max SD).
-          When uploading transcript level counts, choose \"sum\" to aggregate gene level counts. ",
-          theme = "light-border"
-        ),
-        selectInput(
-          inputId = ns("plots_color_select"),
-          label = "Plots Color scheme (PCA/Pre-Process):",
-          choices = c(
-            "Set1",
-            "Set2",
-            "Set3",
-            "Paired",
-            "Dark2",
-            "Accent",
-            "Pastel1",
-            "Pastel2",
-            "Spectral"
-          ),
-          selected = "Set1",
-          width = "100%"
-        ),
-        selectInput(
-          inputId = ns("heatmap_color_select"),
-          label = "Heatmap/Tree/Network Color scheme:",
-          choices = c(
-            "Green-Black-Red",
-            "Red-Black-Green",
-            "Blue-White-Red",
-            "Green-Black-Magenta",
-            "Blue-Yellow-Red",
-            "Blue-White-Brown",
-            "Orange-White-Blue"
-          ),
-          selected = "Green-Black-Red",
-          width = "100%"
-        ),
-        selectInput(
-          inputId = ns("select_gene_id"),
-          label = "Gene ID type for plots:",
-          choices = c("symbol", "ensembl_ID", "User_ID"),
-          selected = "symbol"
-        ),
-        selectInput(
-          inputId = ns("ggplot2_theme"),
-          label = "ggplot2 theme:",
-          choices = c(
-            "default", # no change
-            "gray",
-            "bw",
-            "light",
-            "dark",
-            "classic",
-            "minimal",
-            "linedraw"
-          ),
-          selected = "default",
-          width = "100%",
-          selectize = FALSE
-        ),
-        tippy::tippy_this(
-          ns("ggplot2_theme"),
-          "Changes the styles for all 20 ggplot2 plots.",
-          theme = "light-border"
-        ),
-        checkboxInput(
-          inputId = ns("plot_grid_lines"),
-          label = "Add grid lines to plots",
-          value = FALSE
-        ),
-        checkboxInput(
-          inputId = ns("no_id_conversion"),
-          label = "Do not convert gene IDs",
-          value = FALSE
-        ),
-        tippy::tippy_this(
-          ns("no_id_conversion"),
-          "If selected, uploaded gene IDs will not be converted to ENSEMBL gene IDs,
-          which is used as a central id type in pathway databases.",
-          theme = "light-border"
+          div(
+            class = "more-options-body",
+            div(
+              id = ns("heatmap_color_select_container"),
+              style = "cursor: help;",
+              selectInput(
+                inputId = ns("heatmap_color_select"),
+                label = "Heatmap color:",
+                choices = c(
+                  "Green-Black-Red",
+                  "Red-Black-Green",
+                  "Blue-White-Red",
+                  "Green-Black-Magenta",
+                  "Blue-Yellow-Red",
+                  "Blue-White-Brown",
+                  "Orange-White-Blue"
+                ),
+                selected = "Green-Black-Red",
+                width = "100%"
+              )
+            ),
+            tippy::tippy_this(
+              ns("heatmap_color_select_container"),
+              "Choose the color palette used for heatmaps, sample trees, and networks.",
+              theme = "light-border"
+            ),
+            selectInput(
+              inputId = ns("multiple_map"),
+              label = "Multiple mapped IDs:",
+              choices = list(
+                "Sum" = "sum",
+                "Average" = "mean",
+                "Median" = "median",
+                "Max" = "max",
+                "Max SD" = "max_sd"
+              ),
+              selected = "Sum",
+              selectize = FALSE
+            ),
+            tippy::tippy_this(
+              ns("multiple_map"),
+              "When multiple IDs map to the same gene, we can summarize
+              data in a certain way (sum, mean, median, max),
+              or just keep the rows with the most variation (max SD).
+              When uploading transcript level counts, choose \"sum\" to aggregate gene level counts. ",
+              theme = "light-border"
+            ),
+            div(
+              id = ns("plots_color_select_container"),
+              style = "cursor: help;",
+              selectInput(
+                inputId = ns("plots_color_select"),
+                label = "Plots Color:",
+                choices = c(
+                  "Set1",
+                  "Set2",
+                  "Set3",
+                  "Paired",
+                  "Dark2",
+                  "Accent",
+                  "Pastel1",
+                  "Pastel2",
+                  "Spectral"
+                ),
+                selected = "Set1",
+                width = "100%"
+              )
+            ),
+            tippy::tippy_this(
+              ns("plots_color_select_container"),
+              "Palette applied to PCA and QC plots so sample groups stand out.",
+              theme = "light-border"
+            ),
+            selectInput(
+              inputId = ns("select_gene_id"),
+              label = "Gene ID type for plots:",
+              choices = c("symbol", "ensembl_ID", "User_ID"),
+              selected = "symbol"
+            ),
+            tippy::tippy_this(
+              ns("select_gene_id"),
+              "Pick which gene identifier appears on plots and tables.",
+              theme = "light-border"
+            ),
+            selectInput(
+              inputId = ns("ggplot2_theme"),
+              label = "ggplot2 theme:",
+              choices = c(
+                "default", # no change
+                "gray",
+                "bw",
+                "light",
+                "dark",
+                "classic",
+                "minimal",
+                "linedraw"
+              ),
+              selected = "default",
+              width = "100%",
+              selectize = FALSE
+            ),
+            tippy::tippy_this(
+              ns("ggplot2_theme"),
+              "Changes the styles for all 20 ggplot2 plots.",
+              theme = "light-border"
+            ),
+            checkboxInput(
+              inputId = ns("plot_grid_lines"),
+              label = "Add grid lines to plots",
+              value = FALSE
+            ),
+            tippy::tippy_this(
+              ns("plot_grid_lines"),
+              "Overlay light grid lines to help compare values across samples.",
+              theme = "light-border"
+            ),
+            checkboxInput(
+              inputId = ns("no_id_conversion"),
+              label = "Do not convert gene IDs",
+              value = FALSE
+            ),
+            tippy::tippy_this(
+              ns("no_id_conversion"),
+              "If selected, uploaded gene IDs will not be converted to ENSEMBL gene IDs,
+              which is used as a central id type in pathway databases.",
+              theme = "light-border"
+            ),
+          )
         ),
         br(),
         fluidRow(
@@ -276,18 +342,13 @@ mod_01_load_data_ui <- function(id) {
           column(
             width = 4,
             align = "right",
-            # Action button for Gene ID examples -----------
-            a(
-              "Questions?",
-              href = "https://idepsite.wordpress.com/data-format/",
-              target = "_blank"
+            # Action link to reveal Gene ID examples -----------
+            actionLink(
+              inputId = ns("gene_ids_link"),
+              label = "Gene IDs"
             )
           )
-        ),
-        # Table output for species loading progress -----------
-        #br(),
-        #br(),
-        #tableOutput(ns("species_match"))
+        )
       ),
       
       
@@ -296,20 +357,28 @@ mod_01_load_data_ui <- function(id) {
       ##################################################################
       mainPanel(
         shinyjs::useShinyjs(),
-        # connection issue button
-        #actionButton(ns("server_connection"), "Server Connection Tips"),
-        # Table output for sample tissue type ----------
+        # Default species notification ----------
+        uiOutput(ns("default_species_message")),
+
+        # Gene ID conversion statistics ----------
+        uiOutput(ns("conversion_stats_message")),
+
         DT::dataTableOutput(ns("sample_info_table")),
-        br(),
-        br(),
 
         # Display first 20 rows of the data ----------
         DT::dataTableOutput(ns("sample_20")),
         div(
           id = ns("load_message"),
-          h4("Loading R packages, please wait ... ... ...")
+          h3("iDEP — from data to discoveries", style = "color: #d9534f; font-weight: 700;"),
+          br(),
+          h4("Upload, visualize, run stats, and unveil pathways — in minutes.", style = "color: green;"),
+          br(),
+          br(),
+          br(),
+          br(),
+          h4("Loading R packages, please wait ... ... ..."),
         ),
-        uiOutput(ns("show_gmt")),        
+        uiOutput(ns("show_gmt")),
         # Display file format help html document when prompted ----
         uiOutput(ns("format_help_ui")),
         # Hide welcome screen after data is loaded -----
@@ -333,65 +402,99 @@ mod_01_load_data_ui <- function(id) {
 mod_01_load_data_server <- function(id, idep_data, tab) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
-    # increase max input file size
-    options(shiny.maxRequestSize = 2001024^2)
-    
-    observe({
-      shinyjs::toggle(id = "plots_color_select", condition = input$customize_button)
-      shinyjs::toggle(id = "heatmap_color_select", condition = input$customize_button)
-      shinyjs::toggle(id = "select_gene_id", condition = input$customize_button)
-      shinyjs::toggle(id = "multiple_map", condition = input$customize_button)
-      shinyjs::toggle(
-        id = "no_id_conversion", 
-        condition = (input$customize_button && !grepl("STRING", input$clicked_row))
-      )
-      shinyjs::toggle(id = "plot_grid_lines", condition = input$customize_button)
-      shinyjs::toggle(id = "ggplot2_theme", condition = input$customize_button)
+
+    go_button_count <- reactive({
+      if (is.null(input$go_button)) {
+        0
+      } else {
+        input$go_button
+      }
     })
 
+    selected_demo <- reactiveVal(NULL)
+    
+    # increase max input file size
+    options(shiny.maxRequestSize = 200 * 1024^2)
 
-    welcome_modal <- shiny::modalDialog(
-      title = "iDEP: Empower all scientists!",
-  
-      tags$br(),
-      tags$p(" If iDEP is used,
-      even for preliminrary analysis, please cite: ",
-        a(
-          " BMC Bioinformatics 19:1-24, 2018, ",
-          href = "https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-018-2486-6",
-          target = "_blank"
-        ),
-        "  which has been cited ",
-        a("890 times.",
-          href = "https://scholar.google.com/scholar?oi=bibs&hl=en&cites=6502699637682046008,17999801138713500070,11001860275874506471",
-          target = "_blank"
+    # Initialize species selection with first species as default
+    observe({
+      if(!is.null(idep_data$org_info) && nrow(idep_data$org_info) > 0) {
+        # Get first species from org_info (ordered by 'top' field)
+        first_species_id <- idep_data$org_info$id[1]
+
+        # Create all species choices including NEW for custom species
+        all_choices <- setNames(as.list(idep_data$org_info$id), idep_data$org_info$name2)
+        all_choices <- c(all_choices, setNames("NEW", "**NEW SPECIES**"))
+
+        updateSelectInput(
+          session = session,
+          inputId = "select_org",
+          choices = all_choices,
+          selected = first_species_id
         )
-      ),
-      tags$h5("By citing the iDEP paper properly, you will help make this service
-      available in the future. Just including the URL is not enough.",
-        style = "color:#6B1518"
-      ),
-      easyClose = TRUE,
-      size = "l"
-    )
 
-    #shiny::showModal(welcome_modal)
+        # Set initial selected species name
+        selected_species_name(idep_data$org_info$name2[1])
+      }
+    })
+
+    # Hide the species dropdown
+    shinyjs::hideElement(id = "select_org")
 
     # Pop-up modal for gene assembl information ----
     observeEvent(input$genome_assembl_button, {
+      # Create species count summary by source
+      org_info_df <- idep_data$org_info
+      source_counts <- table(org_info_df$group)
+
+      # Categorize sources according to requirements
+      ensembl_sources <- source_counts[!grepl("^newSpecies_|^STRING", names(source_counts))]
+      custom_count <- sum(source_counts[grepl("^newSpecies_", names(source_counts))])
+      string_count <- sum(source_counts[grepl("^STRING", names(source_counts))])
+
+      # Create Ensembl breakdown
+      ensembl_parts <- character(0)
+      if("ENSEMBL" %in% names(ensembl_sources)) {
+        ensembl_parts <- c(ensembl_parts, paste0("main (", ensembl_sources["ENSEMBL"], ")"))
+      }
+      if("plants" %in% names(ensembl_sources)) {
+        ensembl_parts <- c(ensembl_parts, paste0("plants (", ensembl_sources["plants"], ")"))
+      }
+      if("bacteria" %in% names(ensembl_sources)) {
+        ensembl_parts <- c(ensembl_parts, paste0("bacteria (", ensembl_sources["bacteria"], ")"))
+      }
+      if("fungi" %in% names(ensembl_sources)) {
+        ensembl_parts <- c(ensembl_parts, paste0("fungi (", ensembl_sources["fungi"], ")"))
+      }
+      if("protists" %in% names(ensembl_sources)) {
+        ensembl_parts <- c(ensembl_parts, paste0("protists (", ensembl_sources["protists"], ")"))
+      }
+      if("metazoa" %in% names(ensembl_sources)) {
+        ensembl_parts <- c(ensembl_parts, paste0("metazoa (", ensembl_sources["metazoa"], ")"))
+      }
+
+      # Create count summary text
+      all_parts <- character(0)
+      if(length(ensembl_parts) > 0) {
+        all_parts <- c(all_parts, paste("Ensembl:", paste(ensembl_parts, collapse = ", ")))
+      }
+      if(string_count > 0) {
+        all_parts <- c(all_parts, paste0("STRING-db (", string_count, ")"))
+      }
+      if(custom_count > 0) {
+        all_parts <- c(all_parts, paste0("Custom (", custom_count, ")."))
+      }
+
+      count_text <- paste(paste(all_parts, collapse = "; "), " Use STRING-db annotations as a last resort.")
+
       shiny::showModal(
         shiny::modalDialog(
           size = "l",
-          h3("Click on a row to select. Then close this window."),
-          p("Search annotated species by common or scientific names,
-          or NCBI taxonomy id. Click on a row to select. 
-          Use ENSEMBL annotation if available. Use STRING-db annotation as a last resort.  
-           If your species cannot be found here,
-          you can still use iDEP without pathway analysis."),
+          h3("Click on a species to select"),
+          p(count_text, style = "font-style: italic; color: #666;"),
           easyClose = TRUE,
           DT::renderDataTable({
-            df <- idep_data$org_info[, 
+            df <- idep_data$org_info[,
               c("ensembl_dataset", "name", "academicName", "taxon_id", "group")
             ]
             colnames(df) <- c(
@@ -408,7 +511,16 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
               options = list(
                 lengthChange = FALSE,
                 pageLength = 10,
-                scrollY = "400px"
+                scrollY = "400px",
+                columnDefs = list(list(visible = FALSE, targets = 0)),
+                dom = "frtip",
+                initComplete = DT::JS(
+                  "function(settings, json) {",
+                  "  $('.dataTables_filter input')",
+                  "    .css('width', '300px')",
+                  "    .attr('placeholder', 'Human, Homo sapiens, 9606');",
+                  "}"
+                )
               ),
               callback = DT::JS(
                 paste0(
@@ -427,77 +539,52 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       )
     })
     
-    selected_species_name <- reactiveVal("None")
+    selected_species_name <- reactiveVal()
 
-    # Pop-up modal for uploading GMT file ----
-    observeEvent(input$upload_gmt_button, {
-      shiny::showModal(
-        shiny::modalDialog(
-          size = "l",
-          p("This enables you to analyze data for species not annotated in our 
-            database. Upload a custom pathway .GMT file to perform pathway 
-            analysis for new\\custom species."),
-          p("If pathway analysis is not needed, proceed without a .GMT file.",
-            style = "color: red;"),
-          fileInput(
-            inputId = ns("gmt_file"),
-            label =
-              "Upload a custom pathway .GMT file",
-            accept = c(
-              "text/csv",
-              "text/comma-separated-values",
-              "text/tab-separated-values",
-              "text/plain",
-              ".csv",
-              ".tsv",
-              ".gmt"
-            ),
-            placeholder = ""
-          ),
-          footer = actionButton(
-            inputId = ns("custom_species"),
-            label = strong("Continue")
-          ),
-          easyClose = TRUE
+    # Handle new species checkbox ----
+    observeEvent(input$new_species, {
+      if (input$new_species) {
+        updateSelectInput(
+          session = session,
+          inputId = "select_org",
+          selected = "NEW"
         )
-      )
+        updateCheckboxInput(
+          session = session,
+          inputId = "no_id_conversion",
+          label = "Do not convert gene IDs",
+          value = TRUE
+        )
+        selected_species_name("NEW")
+      } else {
+        # Reset to first species when unchecked
+        first_species_id <- idep_data$org_info$id[1]
+        first_species_name <- idep_data$org_info$name2[1]
+
+        updateSelectInput(
+          session = session,
+          inputId = "select_org",
+          selected = first_species_id
+        )
+        updateCheckboxInput(
+          session = session,
+          inputId = "no_id_conversion",
+          label = "Do not convert gene IDs",
+          value = FALSE
+        )
+        selected_species_name(first_species_name)
+      }
     })
 
-    observeEvent(input$custom_species, {
-      removeModal()
-      
-      updateSelectizeInput(
-        session = session,
-        inputId = "select_org",
-        choices = "NEW",
-        selected = "NEW",
-        server = TRUE
-      )
-      updateCheckboxInput(
-        inputId = "no_id_conversion",
-        label = "Do not convert gene IDs",
-        value = TRUE
-      )
-      
-      selected_species_name("Custom")
-    })
-
+    # Handle GMT file upload ----
     observeEvent(input$gmt_file, {
       req(!is.null(input$gmt_file))
-      updateSelectizeInput(
-        session = session,
-        inputId = "select_org",
-        choices = "NEW",
-        selected = "NEW",
-        server = TRUE
-      )
+      # Automatically check the new species checkbox when GMT is uploaded
       updateCheckboxInput(
-        inputId = "no_id_conversion",
-        label = "Do not convert gene IDs",
+        session = session,
+        inputId = "new_species",
         value = TRUE
       )
-      
-      selected_species_name("Custom")
     })
 
     output$show_gmt <- renderUI({
@@ -511,52 +598,120 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         lines <- lines[1:3]
       }
       tagList(
-        h4("The uploaded GMT file has ", total, " gene-sets. 
-        Data will be analyzed in a custom mode, not using our database.  
+        h4("The uploaded GMT file has ", total, " gene-sets.
+        Data will be analyzed in a custom mode, not using our database.
         The gene IDs in the GMT file must match those in the expression data."),
         br(),
         tags$pre(
           style = "font-size: 12px;",
           lines[1],
-          ifelse(length(lines) > 1, lines[2], ""),
-          ifelse(length(lines) > 2, lines[2], ""),
+          if (length(lines) > 1) lines[2] else "",
+          if (length(lines) > 2) lines[3] else ""
         )
       )
-
-
     })
-    shinyjs::hideElement(id = "select_org")
-    
     observeEvent(input$clicked_row, {
-      
+
       # find species ID from ensembl_dataset
-      selected <- find_species_id_by_ensembl(
-        input$clicked_row, 
+      selected_id <- find_species_id_by_ensembl(
+        input$clicked_row,
         idep_data$org_info
       )
-      # assign name
-      selected <- setNames(
-        selected,
-        find_species_by_id_name(selected, idep_data$org_info)
-      )
+      selected_name <- find_species_by_id_name(selected_id, idep_data$org_info)
 
-      updateSelectizeInput(
+      # Update species selection
+      updateSelectInput(
         session = session,
         inputId = "select_org",
-        choices = selected,
-        selected = selected,
-        server = TRUE
+        selected = selected_id
       )
 
-      selected_species_name(
-        find_species_by_id_name(selected, idep_data$org_info)
+      # Uncheck new species when selecting from database
+      updateCheckboxInput(
+        session = session,
+        inputId = "new_species",
+        value = FALSE
       )
+
+      # Reset no_id_conversion to FALSE for database species
+      updateCheckboxInput(
+        session = session,
+        inputId = "no_id_conversion",
+        label = "Do not convert gene IDs",
+        value = FALSE
+      )
+
+      selected_species_name(selected_name)
+
+      # Close the modal after selection
+      removeModal()
     })
 
     output$selected_species <- renderText({
       selected_species_name()
     })
-    
+
+    # Default species message when user hasn't clicked Select ----------
+    output$default_species_message <- renderUI({
+      req(!is.null(loaded_data()$data))
+      req(!is.null(idep_data$org_info) && nrow(idep_data$org_info) > 0)
+      req(input$genome_assembl_button == 0 || is.null(input$genome_assembl_button))
+      # Check if user is still using the first species (default)
+      first_species_id <- idep_data$org_info$id[1]
+      first_species_name <- idep_data$org_info$name2[1]
+
+      # Only show message if using default species and not in NEW mode
+      if(input$select_org == first_species_id && input$select_org != "NEW") {
+        div(
+          style = "background-color: #d1ecf1; border: 1px solid #bee5eb;
+                   border-radius: 4px; padding: 10px; margin: 10px 0;
+                   color: #0c5460;",
+          h5(
+            icon("info-circle"),
+            paste0(" Using ", first_species_name, " genome annotations and pathways.")
+          )
+        )
+      }
+    })
+
+    # Gene ID conversion statistics message ----------
+    output$conversion_stats_message <- renderUI({
+      req(!is.null(conversion_info()$converted))
+      req(input$select_org != "NEW")
+      req(!is.null(loaded_data()$data))
+
+      original_count <- length(conversion_info()$converted$origninal_ids)
+      converted_count <- length(conversion_info()$converted$ids)
+      conversion_rate <- round((converted_count / original_count) * 100, 1)
+
+      # Determine styling and icon based on conversion rate
+      if (conversion_rate < 80) {
+        bg_color <- "#fff3cd"
+        border_color <- "#ffeaa7"
+        text_color <- "#856404"
+        icon_name <- "exclamation-triangle"
+        message_type <- "Warning: Low conversion rate!"
+      } else {
+        bg_color <- "#d4edda"
+        border_color <- "#c3e6cb"
+        text_color <- "#155724"
+        icon_name <- "check-circle"
+        message_type <- "Gene ID conversion:"
+      }
+
+      div(
+        style = paste0("background-color: ", bg_color, "; border: 1px solid ",
+                       border_color, "; border-radius: 4px; padding: 10px; margin: 10px 0;
+                       color: ", text_color, ";"),
+        h5(
+          icon(icon_name),
+          paste0(" ", message_type, " ", converted_count, " out of ",
+                 original_count, " genes (", conversion_rate,
+                 "%) converted to Ensembl/STRING IDs.")
+        )
+      )
+    })
+
     observeEvent(input$data_file_format, {
       
       req(input$data_file_format != 0)
@@ -570,28 +725,50 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         )
     })
 
+    # Available demo data files for current data format ----
+    demo_choices <- reactive({
+      req(input$data_file_format)
+
+      if (input$data_file_format > 0) {
+        files <- idep_data$demo_file_info
+        files <- files[files$type == input$data_file_format, ]
+        setNames(as.list(files$ID), files$name)
+      } else {
+        NULL
+      }
+    })
+
+    observeEvent(demo_choices(), {
+      choices <- demo_choices()
+      values <- unlist(choices, use.names = FALSE)
+
+      if (length(values) == 0) {
+        selected_demo(NULL)
+      } else {
+        current <- selected_demo()
+        if (is.null(current) || !(current %in% values)) {
+          selected_demo(values[[1]])
+        }
+      }
+    }, ignoreNULL = FALSE)
+
+    observeEvent(input$select_demo, {
+      req(!is.null(input$select_demo))
+      selected_demo(input$select_demo)
+    }, ignoreNULL = TRUE)
+
     # UI elements for load demo action button, demo data drop down, and -----
     # expression file upload
     output$load_data_ui <- renderUI({
-      req(
-        (is.null(input$go_button) || input$go_button == 0)
-      )
+      req(go_button_count() == 0)
       req(input$data_file_format)
-      
-      if (input$data_file_format > 0){
-      # get demo data files based on specified format
-      files <- idep_data$demo_file_info
-      files <- files[files$type == input$data_file_format, ]
-      choices <- setNames(as.list(files$ID), files$name)
-      } else {
-        files <- NULL
-        choices <- NULL
-      }
+
+      choices <- demo_choices()
       tagList(
         strong("3. Expression matrix (CSV, text, or xlsx)"),
         fluidRow(
           column(
-            width = 9,
+            width = 6,
             # Expression data file input
             fileInput(
               inputId = ns("expression_file"),
@@ -606,14 +783,32 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
                 ".xlsx",
                 ".xls"
               ),
-              placeholder = ""
+              placeholder = "",
+              width = "100%"
+            )
+          ),
+
+          column(
+            width = 4,
+            actionButton(
+              inputId = ns("demo_modal_button"),
+              label = tags$span("Demo Data", style = "color: red;"),
+              class = "btn-default"
+            ),
+            tippy::tippy_this(
+              ns("demo_modal_button"),
+              "Load demo data",
+              theme = "light-border"
             )
           ),
           column(
-            width = 3,
-            actionButton(
+            width = 2,
+            align = "center",
+            actionLink(
               inputId = ns("data_format_help"),
-              label = "Info"
+              label = NULL,
+              icon = icon("info-circle"),
+              class = "load-data-info-icon"
             ),
             tippy::tippy_this(
               ns("data_format_help"),
@@ -621,86 +816,88 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
               theme = "light-border"
             )
           )
-        ),
-        fluidRow(
-          column(
-            width = 4,
-            actionButton(
-              inputId = ns("go_button"),
-              label = "Load Demo"
-            ),
-            align = "right",
-            tippy::tippy_this(
-              ns("go_button"),
-              "Load the selected demo file",
-              theme = "light-border"
-            )
-          ),
-          column(
-            width = 8,
-            align = "left",
+        )
+      )
+    })
+
+    observeEvent(input$demo_modal_button, {
+      choices <- demo_choices()
+      req(!is.null(choices), length(choices) > 0)
+
+      selected_choice <- isolate({
+        current <- selected_demo()
+        values <- unlist(choices, use.names = FALSE)
+        if (!is.null(current) && current %in% values) {
+          current
+        } else if (length(values) > 0) {
+          values[[1]]
+        } else {
+          NULL
+        }
+      })
+
+      shiny::showModal(
+        shiny::modalDialog(
+          title = "Demo Data",
+          easyClose = TRUE,
+          size = "s",
+          footer = NULL,
+          tagList(
             selectInput(
               inputId = ns("select_demo"),
               label = NULL,
               choices = choices,
-              selected = choices[[1]],
+              selected = selected_choice,
               selectize = FALSE
             ),
             tippy::tippy_this(
               ns("select_demo"),
-              "Select a demo file then click the \"Demo\" button",
+              "Select a demo file then click the \"Load Demo\" button",
               theme = "light-border"
             ),
-            tags$style(
-              type = "text/css",
-              "#load_data-go_button { margin-top:-25px; color: red;}"
+            br(),
+            actionButton(
+              inputId = ns("go_button"),
+              label = "Load",
+              class = "btn-primary"
             ),
-            tags$style(
-              type = "text/css",
-              "#load_data-select_demo { margin-top:-20px}"
+            tippy::tippy_this(
+              ns("go_button"),
+              "Load the selected demo file",
+              theme = "light-border"
             )
           )
         )
       )
     })
 
-    # Alternate ui message to reset app once data is loaded ----
-    output$load_data_alt <- renderUI({
-      if (
-        is.null(input$go_button) || input$go_button == 0 && is.null(input$expression_file)
-
-      ) {
-        tagList(
-            tags$span("Quick Start:", style = "font-size: 18px;"),
-            tags$ul(
-              tags$li(
-                "Watch a ",
-                a(
-                  "video",
-                  href = "https://youtu.be/Hs5SamHHG9s",
-                  target = "_blank"
-                ),
-                "tutorial!"
-              ),
-              tags$li("Select a Species & Data Type"),
-              tags$li("Upload data or click ",
-                      tags$span("Load Demo", id = "load-demo"),
-                      " to try a sample data set!"
-              )
-          ),
-          tags$script("
-            document.getElementById('load-demo').style.color = 'red';
-          ")
-        )
-      } else {
-        NULL
-      }
+    observeEvent(input$go_button, {
+      shiny::removeModal()
     })
 
+    # Alternate ui message to reset app once data is loaded ----
+    output$load_data_alt <- renderUI({
+      if (go_button_count() == 0 && is.null(input$expression_file)) {
+        tagList(
+          tags$span("Quick Start:", style = "font-size: 18px;"),
+          tags$ul(
+            tags$li(
+              "Watch a ",
+              a("video", href = "https://youtu.be/Hs5SamHHG9s", target = "_blank"),
+              " tutorial!"
+            ),
+            tags$li(
+              "Try it with demo data. After selecting a data type, just click ",
+              tags$span("Load Demo.", id = "load-demo", style = "color: red;")
+            )
+          )
+        )
+      }
+    })
+    
+
     output$reset_button <- renderUI({
-      if (
-        is.null(input$go_button) || input$go_button == 0 && is.null(input$expression_file)
-      ) {
+      if (go_button_count() == 0 && is.null(input$expression_file)) {
         NULL
       } else {
         # reset message and action button
@@ -728,14 +925,14 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
     # UI element for design file upload ----
     output$design_file_ui <- renderUI({
-      req(is.null(input$go_button) || input$go_button == 0)
+      req(go_button_count() == 0)
       
       tagList(
 
         strong("4. Optional: Exp. Design (CSV or text)"),
         fluidRow(
           column(
-            width = 9,
+            width = 10,
             fileInput(
               inputId = ns("experiment_file"),
               label = NULL,
@@ -749,14 +946,17 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
                 ".xlsx",
                 ".xls"
               ),
-              placeholder = ""
+              placeholder = "CSV or text"
             )
           ),
           column(
-            width = 3,
-            actionButton(
+            width = 2,
+            align = "center",
+            actionLink(
               inputId = ns("data_format_help"),
-              label = "Info"
+              label = NULL,
+              icon = icon("info-circle"),
+              class = "load-data-info-icon"
             ),
             tippy::tippy_this(
               ns("data_format_help"),
@@ -767,23 +967,16 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         )
       )
     })
-    
-    #name variables like this: gene_ids_example_popup, not GeneIDsExamplePopup.
-    output$example_genes_ui <- renderUI({
-      actionButton(ns("gene_ids_example_popup"), "Gene IDs")
-    })
-
 
     # Disables expression_file input to prevent multiple uploads
     observeEvent(input$expression_file, {
       shinyjs::disable("expression_file")
     })
 
-    # Define the content of the basic modal
-    observeEvent(input$gene_ids_example_popup, {
+    show_gene_ids_modal <- function() {
       shiny::showModal(
         shiny::modalDialog(
-          title = "What do the gene IDs in our database look like?",
+          title = "Example Gene IDs",
           tags$style(
             HTML(
               "#DataTables_Table_0_wrapper #DataTables_Table_0_filter label{
@@ -798,14 +991,18 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             choices = c("--Select species--", names(idep_data$species_choice))
           ),
           DT::dataTableOutput(ns("showGeneIDs4Species")),
-          size = "l", # size is large
-          easyClose = FALSE   # disabled: click outside the modal to close
+          size = "l",
+          easyClose = FALSE
         )
       )
+    }
+
+    observeEvent(input$gene_ids_link, {
+      show_gene_ids_modal()
     })
-    
+
     geneIDs <- reactiveVal(NULL)
-    
+
     observeEvent(input$gene_id_examples, {
       req(input$gene_id_examples != "--Select species--")
       ix <- which(idep_data$org_info$name2 == input$gene_id_examples)
@@ -818,13 +1015,12 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         )
       )
     })
-    
+
     # Render Gene ID example table in gene example Modal
     output$showGeneIDs4Species <- DT::renderDataTable({
       req(!is.null(geneIDs()))
       req(input$gene_id_examples != "--Select species--")
       removeNotification("ExampleIDDataQuery")
-      
       DT::datatable(
         geneIDs(),
         rownames = FALSE,
@@ -839,35 +1035,34 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     observeEvent(input$experiment_file, {
       shinyjs::disable("experiment_file")
     })
-    
-    # Notification for data type and species selection
+
+    # Notification for data type selection (species is now always selected)
     observe({
-      req(tab() == "Load Data")
-      req(input$select_org == "None" || input$data_file_format == 0)
-        
-        showNotification(
-          "Select a species and a data type before uploading data.",
-          duration = 30,
-          type = "error",
-          id = "select_first"
-          )
+      req(tab() == "Data")
+      req(input$data_file_format == 0)
+
+      showNotification(
+        "Select a data type before uploading data or loading demo data.",
+        duration = 30,
+        type = "error",
+        id = "select_first"
+      )
     })
-    
+
     observe({
-      req((input$select_org != "None" && input$data_file_format != 0) ||
-          (tab() != "Load Data"))
-      
+      req(input$data_file_format != 0 || tab() != "Data")
+
       removeNotification("select_first")
     })
 
     # Show messages when on the Network tab or button is clicked ----
     observe({
       req(is.null(loaded_data()$data) && (
-        tab() != "Load Data" || tab() != "About"
+        tab() != "Data" && tab() != "Doc"
       ))
 
       showNotification(
-        ui = paste("Please load a demo file or your own data first."),
+        ui = paste("Load a demo file or your own data first."),
         id = "load_data_first",
         duration = NULL,
         type = "error"
@@ -877,15 +1072,18 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # Remove messages if the tab changes --------
     observe({
       req(!is.null(loaded_data()$data) ||
-        tab() == "Load Data" || tab() == "About")
+        tab() == "Data" || tab() == "Doc")
       removeNotification("load_data_first")
     })
 
     observe({
-      req(!is.null(loaded_data()$data) && any(apply(loaded_data()$data, 2, function(col) all(col == 0))))
+      req(!is.null(loaded_data()$data) && any(apply(loaded_data()$data, 2, function(col) {
+        values <- col[!is.na(col)]
+        length(values) > 0 && all(values == 0)
+      })))
 
       showNotification(
-        ui = paste("A sample has all values as zero. it is recommended to remove that sample."),
+        ui = paste("A sample has all values as zero. It is recommended to remove that sample."),
         id = "sample_remove_error",
         duration = NULL,
         type = "error"
@@ -900,10 +1098,12 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # Change demo data based on selected format ----
     # returns a vector with file names  c(data, design)
     demo_data_file <- reactive({
-      req(input$select_demo)
+      choice <- selected_demo()
+      req(choice)
 
       files <- idep_data$demo_file_info
-      ix <- which(files$ID == input$select_demo)
+      ix <- which(files$ID == choice)
+      req(length(ix) > 0)
       return(c(
         files$expression[ix],
         files$design[ix]
@@ -912,11 +1112,10 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
     # Reactive element to load the data from the user or demo data ---------
     loaded_data <- reactive({
-      req(!is.null(input$go_button))
       input_data(
         expression_file = input$expression_file,
         experiment_file = input$experiment_file,
-        go_button = input$go_button,
+        go_button = go_button_count(),
         demo_data_file = demo_data_file()[1],
         demo_metadata_file = demo_data_file()[2]
       )
@@ -983,69 +1182,81 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     conversion_info <- reactive({
       req(!is.null(loaded_data()$data))
 
-
       req(!(min(loaded_data()$data, na.rm = TRUE) < 0 && input$data_file_format == 1))
 
-        shinybusy::show_modal_spinner(
-          spin = "orbit",
-          text = "Loading Data",
-          color = "#000000"
-        )
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Loading Data",
+        color = "#000000"
+      )
 
-        converted <- convert_id(
-          rownames(loaded_data()$data),
-          idep_data = idep_data,
-          select_org = input$select_org,
-          max_sample_ids = 200
-        )
+      converted <- convert_id(
+        rownames(loaded_data()$data),
+        idep_data = idep_data,
+        select_org = input$select_org,
+        max_sample_ids = 200
+      )
 
-        all_gene_info <- gene_info(
-          converted = converted,
-          select_org = input$select_org,
-          idep_data = idep_data
-        )
+      all_gene_info <- gene_info(
+        converted = converted,
+        select_org = input$select_org,
+        idep_data = idep_data
+      )
 
-        converted_data <- convert_data(
-          converted = converted,
-          no_id_conversion = input$no_id_conversion,
-          data = loaded_data()$data,
-          multiple_map = input$multiple_map
-        )
+      converted_data <- convert_data(
+        converted = converted,
+        no_id_conversion = input$no_id_conversion,
+        data = loaded_data()$data,
+        multiple_map = input$multiple_map
+      )
 
-        all_gene_names <- get_all_gene_names(
-          mapped_ids = converted_data$mapped_ids,
-          all_gene_info = all_gene_info
-        )
+      all_gene_names <- get_all_gene_names(
+        mapped_ids = converted_data$mapped_ids,
+        all_gene_info = all_gene_info
+      )
 
-        gmt_choices <- gmt_category(
-          converted = converted,
-          converted_data = converted_data$data,
-          select_org = input$select_org,
-          gmt_file = input$gmt_file,
-          idep_data = idep_data
-        )
+      gmt_choices <- gmt_category(
+        converted = converted,
+        converted_data = converted_data$data,
+        select_org = input$select_org,
+        gmt_file = input$gmt_file,
+        idep_data = idep_data
+      )
 
-        shinybusy::remove_modal_spinner()
+      shinybusy::remove_modal_spinner()
 
-        return(list(
-          converted = converted,
-          all_gene_info = all_gene_info,
-          converted_data = converted_data$data,
-          all_gene_names = all_gene_names,
-          gmt_choices = gmt_choices
-        ))
-      
-    })
-
-    observeEvent(input$reset_app, {
-      session$reload()
+      return(list(
+        converted = converted,
+        all_gene_info = all_gene_info,
+        converted_data = converted_data$data,
+        all_gene_names = all_gene_names,
+        gmt_choices = gmt_choices
+      ))
     })
 
     # download database for selected species
     observeEvent(input$select_org, {
+      req(!is.null(input$select_org))
+      if (identical(input$select_org, "NEW")) {
+        return()
+      }
+
       ix <- which(idep_data$org_info$id == input$select_org)
+      if (length(ix) == 0) {
+        return()
+      }
+
       db_file <- idep_data$org_info[ix, "file"]
-      dbname <- paste0(DATAPATH, "db/", db_file)
+      if (length(db_file) == 0) {
+        return()
+      }
+
+      db_file <- db_file[[1]]
+      if (is.na(db_file) || !nzchar(db_file)) {
+        return()
+      }
+
+      dbname <- file.path(DATAPATH, "db", db_file)
       if (!file.exists(dbname)) {
         withProgress(
           message = paste(
@@ -1072,22 +1283,10 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       }
     })
 
-    # Species match table ----------
-    output$species_match <- renderTable({
-      species_match_data()
-      },
-      digits = -1,
-      spacing = "s",
-      striped = TRUE,
-      bordered = TRUE,
-      width = "auto",
-      hover = TRUE
-    )
 
     species_match_data <- reactive({
-      req(!is.null(input$go_button))
       req(input$select_org)
-      if (is.null(input$expression_file) && input$go_button == 0) {
+      if (is.null(input$expression_file) && go_button_count() == 0) {
         return(NULL)
       }
       req(input$data_file_format)
@@ -1109,49 +1308,57 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         }
       })
     })
-    # Species match message ----------
-    observe({
-      req(
-        tab() == "Load Data" &&
-          #!is.null(conversion_info()$converted)
-          species_match_data()[1,1] == "ID not recognized." &&
-          input$select_org != "NEW"
-      )
 
+    # Track when we've shown the modal to prevent multiple displays
+    modal_shown <- reactiveVal(FALSE)
+
+    # Reset modal flag when new data is loaded
+    observeEvent(list(input$expression_file, input$go_button), {
+      modal_shown(FALSE)
+    }, ignoreInit = TRUE)
+
+    # Show gene ID error modal when IDs are not recognized
+    observe({
+      req(tab() == "Data")
+      req(input$select_org != "NEW")
+      req(!modal_shown())  # Only show once per data load
+
+      # Check if we have species match data indicating ID not recognized
+      match_data <- species_match_data()
+      req(!is.null(match_data))
+      req(nrow(match_data) > 0)
+      req(match_data[1, 1] == "ID not recognized.")
+
+      # Mark that we've shown the modal
+      modal_shown(TRUE)
 
       showModal(modalDialog(
-        title = "Please double check the selected species",
-        tags$p("None of the gene IDs are recognzied. Possible causes: 1. Wrong species is selected. 
-        2. Correct species is selected but we cannot map your gene IDs to Ensembl gene IDs. 
-        3. Your species is not included in our database.  
-        You can still run many analyses except pathway and enrichment."),
-        size = "s",
-        easyClose = TRUE
+        title = "Gene IDs not recognized",
+        tags$p("Possible causes:"),
+        tags$ul(
+          tags$li("Wrong species is selected."),
+          tags$li("Correct species is selected but we cannot map your ",
+                  "gene IDs to Ensembl gene IDs or STRING protein IDs."),
+          tags$li("Your species is not included in our database.")
+        ),
+        tags$p("You can still run many analyses except pathway and ",
+               "enrichment."),
+        size = "m",
+        easyClose = FALSE,
+        footer = modalButton("OK")
       ))
     })
 
 
-
-
-    # Remove message if the tab changes --------
-    observe({
-      req(tab() != "Load Data")
-
-      removeNotification("species_match")
-    })
-
     output$welcome_ui <- renderUI({
-      req(
-        input$go_button == 0 &
-          !is.null(input$go_button) &
-          input$data_format_help == 0
-      )
+      req(go_button_count() == 0)
+      req(input$data_format_help == 0)
 
       tagList(
         fluidRow(
           column(
             width = 9,
-            h4("iDEP: integrated Differential Expression & Pathway analysis")
+            h4("iDEP: integrated Differential Expression & Pathway analysis (v2.20)")
           ),
           column(
             width = 3,
@@ -1189,51 +1396,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       includeHTML(app_sys("app/www/format.html"))
     })
 
-observeEvent(input$server_connection, {
-  showModal(
-    modalDialog(
-      title = "Server Connection Tips",
-      p("The iDEP webserver uses a load balancer to distribute incoming traffic across 125 virtual 
-      servers, which are hosted on three physical servers(SDSU, Azure, & JetStream2). Each virtual server is capable of 
-      serving multiple users simultaneously, provided it is not operating at full CPU capacity. 
-      The assignment of users to specific virtual servers is determined by 
-      their browser session and IP address."),
-      tags$h4("Slow Performance:"),
-      tags$ul(
-        tags$li("Trying using iDEP in a new browser window (not just a new tab)."),
-        tags$li("Using a different browser (Chrome, Edge, Safari, Firefox, etc.) to be assigned a different virtual server.")
-      ),
-      
-      tags$h4("Connection Issues:"),
-      tags$p("If you can't connect, try accessing iDEP directly using these mirror server URLs like this:"),
-      tags$ul(
-        tags$li(tags$a(href="http://149.165.173.123:55011/idep/", target="_blank", "JetStream2 (http://149.165.173.123:55011/idep/)")),
-        tags$li(tags$a(href="http://4.236.179.243:55011/idep/", target="_blank", "Azure (http://4.236.179.243:55011/idep/)"))
-      ),
-      tags$p("Note: The port number (55011 in this example) can vary between 55001 and 55050, each pointing to a different virtual server."),
-      
-      tags$h4("Frequent Crashing:"),
-      tags$p("There are several reasons iDEP might crash:"),
-      tags$ul(
-        tags$li("Problems with your data."),
-        tags$li("Running a large analysis."),
-        tags$li("The assigned virtual server overload (100% CPU).")
-      ),
-      tags$p("Try from a new browser window. Try again later. If issues persist, email us."),
-      
-      tags$h4("Insecure Connection (http):"),
-      tags$p("We are transitioning to a secure https protocol. For now, you can:"),
-      tags$ul(
-        tags$li("Trust the current http connection."),
-        tags$li("Download and run iDEP on your laptop.")
-      ),
-      easyClose = TRUE
-    )
-  )
-})
-
-
-    # Return data used in the following panels --------
     list(
       data_file_format = reactive(input$data_file_format),
       no_fdr = reactive(input$no_fdr),
@@ -1256,10 +1418,3 @@ observeEvent(input$server_connection, {
     )
   })
 }
-
-## To be copied in the UI
-# mod_01_load_data_ui("load_data") # nolint
-
-## To be copied in the server
-# mod_01_load_data_server("load_data") # nolint
-

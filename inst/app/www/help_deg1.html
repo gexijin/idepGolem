@@ -1,0 +1,204 @@
+<h3>
+    Overview
+</h3>
+<p>
+    The Stats tab is where you define statistical comparisons (contrasts) and run
+    differential expression analysis. After Stats finishes, the DEG tab lets you
+    explore each contrast in detail using tables, plots, and enrichment tools.
+    Think of Stats as the engine that creates the comparison results, and DEG as
+    the dashboard that helps you interpret them.
+</p>
+<h3>
+    Getting Started
+</h3>
+<p>
+    Begin on the <strong>Experiment Design</strong> sub-tab. If you uploaded only a
+    gene expression matrix, iDEP infers sample groups directly from the column
+    names (for example, <em>Control_1</em>, <em>Treat_1</em>). If you also provided a
+    design file, the additional columns appear as selectable factors. Use the
+    drop-down lists to choose which annotations define your contrasts and, when
+    needed, specify reference levels or block factors (paired samples, batches,
+    donors). The model formula shown on this page is exactly what will be sent to
+    DESeq2 or limma, so you can confirm it matches your experimental plan.
+</p>
+<ul>
+    <li>
+        <strong>Factors:</strong> choose categorical variables such as treatment,
+        genotype, tissue, or timepoint. These determine the comparisons that will
+        be generated automatically.
+    </li>
+    <li>
+        <strong>Block factors:</strong> optional; use them for paired or repeated
+        measurements so subject-to-subject variability is accounted for.
+    </li>
+    <li>
+        <strong>Reference levels:</strong> pick the baseline category (for example,
+        <em>Control</em>). Contrasts are expressed as “B vs A”, which means A is the
+        denominator/baseline and positive fold changes indicate higher expression in
+        B relative to A.
+    </li>
+    <li>
+        <strong>Interaction terms:</strong> enable them if you want to test whether
+        the effect of one factor depends on another (e.g., genotype × treatment).
+    </li>
+</ul>
+<h3>
+    Building and Interpreting Contrasts
+</h3>
+<p>
+    Contrasts define the specific comparisons you want to test. Once you choose a
+    factor, iDEP automatically creates pairwise contrasts between its levels. For
+    example, if <strong>Treatment</strong> includes <em>Control</em> and <em>Drug</em>,
+    Stats will compute “Drug vs Control”. When only two groups exist, that is the
+    sole contrast and Stats models the fold change of Drug relative to Control. If
+    you include two factors and enable their interaction, DESeq2/limma can also test
+    whether the effect of one factor depends on the other.
+</p>
+<p>
+    <strong>Example: genotype × treatment (2×2).</strong> Suppose you measure gene
+    expression in wild-type and mutant cells, each with and without drug exposure.
+    Select both <strong>Genotype</strong> and <strong>Treatment</strong> as factors. Stats
+    generates contrasts such as “Mutant vs WT” (averaged across treatments), “Drug vs
+    Control” (averaged across genotypes), and—if you turn on the interaction—
+    “I:Genotype:Treatment”. A significant interaction indicates the drug response in
+    mutants differs from wild type, a common question in pharmacogenomics studies.
+</p>
+<p>
+    For simpler studies with only a few sample groups, use the <strong>Model comparisons</strong>
+    list on the Experiment Design page to pick exactly which pairs you want. For
+    instance, with three groups (Control, DrugA, DrugB) you can uncheck unwanted
+    contrasts and keep only “DrugA vs Control”. Remember that “DrugA vs Control”
+    reports fold change relative to Control, so positive values indicate higher
+    expression in DrugA.
+</p>
+<p>
+    <strong>Controlling batch effects.</strong> Add columns such as <strong>Batch</strong>,
+    <strong>Patient</strong>, or <strong>SequencingRun</strong> to your design file and
+    select them as block factors. The model (~ Batch + Treatment) accounts for these
+    systematic differences without producing separate contrasts for them, reducing
+    false positives caused by technical variation.
+</p>
+<p>
+    <strong>Other real-world scenarios.</strong> Time-course experiments can treat
+    <strong>Time</strong> and <strong>Treatment</strong> as factors, enabling contrasts
+    such as “12h vs 0h” and interaction terms that reveal time-dependent treatment
+    effects. For paired clinical samples (tumor vs matched normal), include the
+    patient ID as a block factor so inter-patient variability is removed before
+    testing the tumor vs normal contrast.
+</p>
+<h3>
+    Choosing a Method
+</h3>
+<p>
+    The <strong>Method</strong> menu appears when you uploaded raw counts. Select:
+</p>
+<ul>
+    <li>
+        <strong>DESeq2</strong> (default): robust for most RNA-seq experiments and
+        recommended whenever you have access to raw counts. Modelling counts directly
+        gives the method full information about sequencing depth and dispersion.
+    </li>
+    <li>
+        <strong>limma-voom:</strong> useful for larger studies or when mean–variance
+        trends need extra modeling.
+    </li>
+    <li>
+        <strong>limma-trend:</strong> recommended for already normalized expression
+        data such as microarrays. Avoid it when library sizes differ by more than
+        ~3×.
+    </li>
+</ul>
+<p>
+    If you only have normalized values (FPKM, TPM, log ratios), Stats can still run
+    using limma-trend, but you lose some sensitivity compared with modelling raw
+    counts. Whenever possible, upload the original count matrix and analyze it with
+    DESeq2.
+</p>
+<p>
+    Additional switches appear based on the method:
+</p>
+<ul>
+    <li>
+        <strong>Threshold-based Wald Test:</strong> DESeq2 option that tests whether
+        fold changes exceed the value entered in <strong>Min fold-change</strong>.
+    </li>
+    <li>
+        <strong>Independent filtering:</strong> removes very low-count genes so more
+        truly regulated genes pass the FDR cutoff.
+    </li>
+</ul>
+<h3>
+    Significance Filters
+</h3>
+<ul>
+    <li>
+        <strong>FDR cutoff:</strong> sets the maximum adjusted p-value for calling a
+        gene significant. Common choices are 0.05 or 0.1.
+    </li>
+    <li>
+        <strong>Min fold-change:</strong> requires genes to change by at least the
+        specified factor (not log scale). Enter 2 to focus on genes with ≥2-fold
+        shifts.
+    </li>
+</ul>
+<p>
+    After configuring options, click <strong>Submit</strong> to run Stats. A
+    notification appears when results are ready. If you make changes, submit again
+    to refresh the analysis.
+</p>
+<h3>
+    Results Summary
+</h3>
+<p>
+    Once Stats finishes, switch to the <strong>Results</strong> sub-tab to review the
+    number of up- and down-regulated genes for every contrast. Download the table
+    or the summary graphic for reports. These contrasts feed directly into DEG.
+</p>
+<p>
+    The <strong>Venn Diagram</strong> sub-tab visualizes gene list
+    overlaps across contrasts. Use the check box to split results into upregulated
+    and downregulated sets before exporting figures with the download buttons.
+</p>
+<p>
+    The <strong>Venn Diagram</strong> view is best when you have two to four contrasts
+    and want to see shared genes quickly. If you selected more contrasts, the
+    <strong>UpSet plot</strong> (displayed underneath) summarizes the same overlaps in a
+    bar-chart layout that stays readable for larger numbers of comparisons.
+</p>
+<p>
+    The <strong>R Code</strong> sub-tab reveals the exact DESeq2/limma commands used
+    so you can reproduce the analysis offline.
+</p>
+<p>
+    Copy the script from <strong>R Code</strong> or use the download button to save it as
+    an <code>.R</code> file. Running this script locally lets you tweak advanced
+    settings beyond the graphical interface while keeping your analysis fully
+    documented.
+</p>
+
+
+<h3>
+    Quick Tips
+</h3>
+<ul>
+    <li>
+        Keep factor names short and meaningful; they appear in contrast labels and
+        plots.
+    </li>
+    <li>
+        When you only care about one or two contrasts, uncheck the others in the
+        model comparison list to speed up Stats and keep reports focused.
+    </li>
+    <li>
+        Use block factors whenever samples are matched pairs (before/after,
+        left/right, repeated donors).
+    </li>
+    <li>
+        If Stats errors out, double-check that every factor level has sufficient
+        replicates and that interaction terms are supported by the sample size.
+    </li>
+    <li>
+        Save time by downloading Stats results once and reusing them in DEG,
+        pathway, and enrichment tabs without rerunning the model.
+    </li>
+</ul>

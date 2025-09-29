@@ -715,7 +715,6 @@ showGeneIDs <- function(species, db, nGenes = 10){
     duration = NULL,
     type = "message"
   )
-
   idTypes <- DBI::dbGetQuery(
     conn = converted,   
     paste0( 
