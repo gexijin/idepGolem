@@ -433,7 +433,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
 
     # Update Slider Input ---------
     observe({
-      req(tab() == "Clustering")
+      req(tab() == "Cluster")
       req(!is.null(pre_process$data()))
       if (nrow(pre_process$data()) > 12000) {
         max_genes <- 12000

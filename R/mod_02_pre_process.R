@@ -1444,7 +1444,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
 
     # Sequencing depth warning -------
     observe({
-      req(tab() == "Pre-Process")
+      req(tab() == "Prep")
       req(!is.null(read_counts_bias()))
 
       showNotification(
@@ -1456,7 +1456,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     })
     # Data type warning -------
     observe({
-      req(tab() == "Pre-Process")
+      req(tab() == "Prep")
       req(processed_data()$data_type_warning != 0)
 
       message <- switch(as.character(processed_data()$data_type_warning),
@@ -1476,7 +1476,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
 
     # Remove messages if the tab changes --------
     observe({
-      req(tab() != "Pre-Process")
+      req(tab() != "Prep")
 
       removeNotification("read_counts_message")
       removeNotification("data_type_warning")

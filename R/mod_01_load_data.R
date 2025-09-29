@@ -1031,7 +1031,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     
     # Notification for data type selection (species is now always selected)
     observe({
-      req(tab() == "Load Data")
+      req(tab() == "Data")
       req(input$data_file_format == 0)
 
       showNotification(
@@ -1043,7 +1043,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     })
 
     observe({
-      req(input$data_file_format != 0 || tab() != "Load Data")
+      req(input$data_file_format != 0 || tab() != "Data")
 
       removeNotification("select_first")
     })
@@ -1051,7 +1051,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # Show messages when on the Network tab or button is clicked ----
     observe({
       req(is.null(loaded_data()$data) && (
-        tab() != "Load Data" && tab() != "About"
+        tab() != "Data" && tab() != "About"
       ))
 
       showNotification(
@@ -1065,7 +1065,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # Remove messages if the tab changes --------
     observe({
       req(!is.null(loaded_data()$data) ||
-        tab() == "Load Data" || tab() == "About")
+        tab() == "Data" || tab() == "About")
       removeNotification("load_data_first")
     })
 
@@ -1303,7 +1303,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     })
     # Species match message ----------
     observe({
-      req(tab() == "Load Data")
+      req(tab() == "Data")
 
       match_data <- species_match_data()
       req(!is.null(match_data))
