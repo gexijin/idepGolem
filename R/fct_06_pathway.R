@@ -1147,13 +1147,13 @@ get_pgsea_plot_all_samples_data <- function(data,
 #' Transform data from various pathway methods for uniform download format
 #'
 #' @param data Pathway data from selected method
-#' @param contrast Selected contrast from DEG1 tab
+#' @param contrast Selected contrast from Stats tab
 #' @param method  Selected pathway method
 #' @param genes Gene data
 #' @param org  Selected org from pre-process step
 #' @param path_id Show pathway ID toggle
 #' @param go Selected pathway database
-#' @param deg Up/Down-regulation results from DEG1
+#' @param deg Up/Down-regulation results from Stats
 #'
 #' @return Data frame with hyperlinks and urls for pathways
 #' 
@@ -1270,7 +1270,7 @@ pathway_data_transform <- function(data,
 #' @param select_org String designating the organism being analyzed
 #' @param all_gene_names Matrix of all the matched and converted
 #'  gene IDs from \code{\link{get_all_gene_names}()}
-#' @param deg data frame of DEG1 gene regulation results - i.e.-1, 0 , 1 for
+#' @param deg data frame of Stats gene regulation results - i.e.-1, 0 , 1 for
 #' every gene
 #'
 #' @export

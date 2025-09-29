@@ -2,10 +2,10 @@
     Overview
 </h3>
 <p>
-    The DEG1 tab is where you define statistical comparisons (contrasts) and run
-    differential expression analysis. After DEG1 finishes, the DEG2 tab lets you
+    The Stats tab is where you define statistical comparisons (contrasts) and run
+    differential expression analysis. After Stats finishes, the DEG tab lets you
     explore each contrast in detail using tables, plots, and enrichment tools.
-    Think of DEG1 as the engine that creates the comparison results, and DEG2 as
+    Think of Stats as the engine that creates the comparison results, and DEG as
     the dashboard that helps you interpret them.
 </p>
 <h3>
@@ -49,15 +49,15 @@
     Contrasts define the specific comparisons you want to test. Once you choose a
     factor, iDEP automatically creates pairwise contrasts between its levels. For
     example, if <strong>Treatment</strong> includes <em>Control</em> and <em>Drug</em>,
-    DEG1 will compute “Drug vs Control”. When only two groups exist, that is the
-    sole contrast and DEG1 models the fold change of Drug relative to Control. If
+    Stats will compute “Drug vs Control”. When only two groups exist, that is the
+    sole contrast and Stats models the fold change of Drug relative to Control. If
     you include two factors and enable their interaction, DESeq2/limma can also test
     whether the effect of one factor depends on the other.
 </p>
 <p>
     <strong>Example: genotype × treatment (2×2).</strong> Suppose you measure gene
     expression in wild-type and mutant cells, each with and without drug exposure.
-    Select both <strong>Genotype</strong> and <strong>Treatment</strong> as factors. DEG1
+    Select both <strong>Genotype</strong> and <strong>Treatment</strong> as factors. Stats
     generates contrasts such as “Mutant vs WT” (averaged across treatments), “Drug vs
     Control” (averaged across genotypes), and—if you turn on the interaction—
     “I:Genotype:Treatment”. A significant interaction indicates the drug response in
@@ -109,7 +109,7 @@
     </li>
 </ul>
 <p>
-    If you only have normalized values (FPKM, TPM, log ratios), DEG1 can still run
+    If you only have normalized values (FPKM, TPM, log ratios), Stats can still run
     using limma-trend, but you lose some sensitivity compared with modelling raw
     counts. Whenever possible, upload the original count matrix and analyze it with
     DESeq2.
@@ -142,7 +142,7 @@
     </li>
 </ul>
 <p>
-    After configuring options, click <strong>Submit</strong> to run DEG1. A
+    After configuring options, click <strong>Submit</strong> to run Stats. A
     notification appears when results are ready. If you make changes, submit again
     to refresh the analysis.
 </p>
@@ -150,9 +150,9 @@
     Results Summary
 </h3>
 <p>
-    Once DEG1 finishes, switch to the <strong>Results</strong> sub-tab to review the
+    Once Stats finishes, switch to the <strong>Results</strong> sub-tab to review the
     number of up- and down-regulated genes for every contrast. Download the table
-    or the summary graphic for reports. These contrasts feed directly into DEG2.
+    or the summary graphic for reports. These contrasts feed directly into DEG.
 </p>
 <p>
     The <strong>Venn Diagram</strong> sub-tab visualizes gene list
@@ -187,18 +187,18 @@
     </li>
     <li>
         When you only care about one or two contrasts, uncheck the others in the
-        model comparison list to speed up DEG1 and keep reports focused.
+        model comparison list to speed up Stats and keep reports focused.
     </li>
     <li>
         Use block factors whenever samples are matched pairs (before/after,
         left/right, repeated donors).
     </li>
     <li>
-        If DEG1 errors out, double-check that every factor level has sufficient
+        If Stats errors out, double-check that every factor level has sufficient
         replicates and that interaction terms are supported by the sample size.
     </li>
     <li>
-        Save time by downloading DEG1 results once and reusing them in DEG2,
+        Save time by downloading Stats results once and reusing them in DEG,
         pathway, and enrichment tabs without rerunning the model.
     </li>
 </ul>

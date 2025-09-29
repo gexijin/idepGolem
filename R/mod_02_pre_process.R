@@ -746,7 +746,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     observe({
       req(!tab() %in% c("Cluster", "Data",
                         "Network", "Bicluster",
-                        "DEG2"))
+                        "DEG"))
       removeNotification(id = "filter_warning",
                          session = session)
     })

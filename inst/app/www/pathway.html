@@ -2,13 +2,13 @@
     Overview
 </h3>
 <p>
-    The Pathway tab reuses the fold-change values generated in DEG1 to score every
+    The Pathway tab reuses the fold-change values generated in Stats to score every
     pathway or gene set in the selected database. Because it analyses the full set of
     genes (not just the significant list), it can reveal coordinated but modest
-    expression shifts that DEG2 enrichment might miss.
+    expression shifts that DEG enrichment might miss.
 </p>
 <p>
-    This approach differs from the enrichment tools under DEG2, which only examine
+    This approach differs from the enrichment tools under DEG, which only examine
     genes classified as up- or down-regulated. Pathway analysis here considers the
     entire ranked list of genes, so pathways may surface even when individual genes do
     not pass DEG thresholds.
@@ -22,7 +22,7 @@
         update only when the button is pressed.
     </li>
     <li>
-        Use the <strong>Comparison</strong> selector to pick a DEG1 contrast (“B-A”
+        Use the <strong>Comparison</strong> selector to pick a Stats contrast (“B-A”
         indicates fold change relative to A) or choose “All samples” for PGSEA with all
         groups.
     </li>
@@ -57,7 +57,7 @@
         summary tables and plots.
     </li>
     <li>
-        <strong>Remove genes with big FDR:</strong> discards genes whose DEG1 adjusted
+        <strong>Remove genes with big FDR:</strong> discards genes whose Stats adjusted
         p-values exceed the specified threshold before pathway scoring.
     </li>
     <li>
@@ -83,7 +83,7 @@
 </h3>
 <ul>
     <li>
-        <strong>GAGE:</strong> evaluates pathway-level fold changes using either DEG1 fold
+        <strong>GAGE:</strong> evaluates pathway-level fold changes using either Stats fold
         changes or expression values. It can contrast up- and down-regulated pathways
         separately via the Network tab filters.
     </li>

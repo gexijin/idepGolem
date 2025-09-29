@@ -120,7 +120,7 @@ mod_10_doc_ui <- function(id) {
       h3("Reproducibility"),
       p("Download the reports in the multiple
        tabs, which has the parameters and results. Also download and try
-       the the R code on the DEG1 tab."),
+       the the R code on the Stats tab."),
       h4("Previous versions of iDEP are still useable:"),
        a("iDEP 2.01 with Ensembl Release 107, archived Sept 5, 2025 ",
         href = "http://bioinformatics.sdstate.edu/idep20"

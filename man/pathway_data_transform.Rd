@@ -9,7 +9,7 @@ pathway_data_transform(data, contrast, method, genes, org, path_id, go, deg)
 \arguments{
 \item{data}{Pathway data from selected method}
 
-\item{contrast}{Selected contrast from DEG1 tab}
+\item{contrast}{Selected contrast from Stats tab}
 
 \item{method}{Selected pathway method}
 
@@ -21,7 +21,7 @@ pathway_data_transform(data, contrast, method, genes, org, path_id, go, deg)
 
 \item{go}{Selected pathway database}
 
-\item{deg}{Up/Down-regulation results from DEG1}
+\item{deg}{Up/Down-regulation results from Stats}
 }
 \value{
 Data frame with hyperlinks and urls for pathways

@@ -34,7 +34,7 @@ selected comparison}
 \item{all_gene_names}{Matrix of all the matched and converted
 gene IDs from \code{\link{get_all_gene_names}()}}
 
-\item{deg}{data frame of DEG1 gene regulation results - i.e.-1, 0 , 1 for
+\item{deg}{data frame of Stats gene regulation results - i.e.-1, 0 , 1 for
 every gene}
 }
 \value{

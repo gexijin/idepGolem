@@ -10,7 +10,7 @@
 mod_05_deg_1_ui <- function(id) {
   ns <- NS(id)
   tabPanel(
-    title = "DEG1",
+    title = "Stats",
     sidebarLayout(
       sidebarPanel(
         style = "height: 90vh; overflow-y: auto;", 
@@ -235,7 +235,7 @@ mod_05_deg_1_ui <- function(id) {
 mod_05_deg_2_ui <- function(id) {
   ns <- NS(id)
   tabPanel(
-    title = "DEG2",
+    title = "DEG",
     sidebarLayout(
       sidebarPanel(
         style = "height: 90vh; overflow-y: auto;",
@@ -365,7 +365,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     deg_env <- new.env()
 
     output$submit_ui <- renderUI({
-      # req(model_comparisons()) # this is stopping LCF data from getting through DEG1
+      # req(model_comparisons()) # this is stopping LCF data from getting through Stats
       tagList(
         actionButton(
           inputId = ns("submit_model_button"),
@@ -557,7 +557,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     observe({
       current_tab <- tab()
       sample_info <- pre_process$sample_info()
-      message_needed <- identical(current_tab, "DEG1") && is.null(sample_info)
+      message_needed <- identical(current_tab, "Stats") && is.null(sample_info)
 
       if (isTRUE(message_needed) && !deg_help_notification_active()) {
         message_ui <- shiny::tags$div(
@@ -731,7 +731,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       }
     )
 
-    # Dynamic modal for different error types in DEG1
+    # Dynamic modal for different error types in Stats
     observe({
       req(!is.null(warning_type()))
         modal_title <- switch(
@@ -749,7 +749,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
             accounted for and have entries in your data.'
           ),
           "NoComparison" = paste(
-          "No comparisons selected to perform DEG1 analysis on. Please select 
+          "No comparisons selected to perform Stats analysis on. Please select 
           group comparisons (checkboxes) before submitting again."
           ), 
           "UnknownError" = paste(
@@ -1233,7 +1233,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     
     output$download_heat_data <- downloadHandler(
       filename = function() {
-        "DEG2_Heatmap_Data.csv"
+        "DEG_Heatmap_Data.csv"
       },
       content = function(file) {
         req(!is.null(deg2_heat_data()))
