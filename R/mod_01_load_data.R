@@ -1028,7 +1028,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     observeEvent(input$experiment_file, {
       shinyjs::disable("experiment_file")
     })
-    
+
     # Notification for data type selection (species is now always selected)
     observe({
       req(tab() == "Data")
@@ -1055,7 +1055,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       ))
 
       showNotification(
-        ui = paste("Please load a demo file or your own data first."),
+        ui = paste("Load a demo file or your own data first."),
         id = "load_data_first",
         duration = NULL,
         type = "error"
@@ -1312,7 +1312,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       req(input$select_org != "NEW")
 
       showModal(modalDialog(
-        title = "Gene ID not recognized",
+        title = "Gene IDs not recognized",
         tags$p("None of the gene IDs are recognized. Possible causes: 1. Wrong species is selected. 
         2. Correct species is selected but we cannot map your gene IDs to Ensembl gene IDs. 
         3. Your species is not included in our database.  
