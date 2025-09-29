@@ -516,47 +516,72 @@ mod_02_pre_process_ui <- function(id) {
                 # Gene ID Selection -----------
                 selectizeInput(
                   inputId = ns("selected_gene"),
-                  label = "Select/Search for Gene(s)",
+                  label = "Search for Gene(s)",
                   choices = "",
                   selected = NULL,
                   multiple = TRUE
+                ),
+                tippy::tippy_this(
+                  ns("selected_gene"),
+                  "Type to search for gene ID, gene symbol, or gene name.",
+                  theme = "light-border"
                 )
               ),
               column(
                 4,
                 selectInput(
                   inputId = ns("gene_plot_box"),
-                  label = "Plot Type:",
+                  label = "Plot Type",
                   choices = setNames(
-                    c(1,2), 
-                    c("Sample Group Expression",
-                      "Individual Sample Expression")
+                    c(1,2),
+                    c("Sample Groups",
+                      "Individual Samples")
                   ),
                   selected = 1
+                ),
+                tippy::tippy_this(
+                  ns("gene_plot_box"),
+                  "Plot by sample groups or individual samples.",
+                  theme = "light-border"
                 ),
                 uiOutput(ns("sd_checkbox")),
                 conditionalPanel(
                   condition = "output.data_file_format == 1",
                   checkboxInput(
                     inputId = ns("plot_raw"),
-                    label = "Plot raw counts",
+                    label = "Raw counts",
                     value = FALSE
+                  ),
+                  tippy::tippy_this(
+                    ns("plot_raw"),
+                    "Plot raw counts or transformed data.",
+                    theme = "light-border"
                   ),
                   ns = ns
                 ),
                 checkboxInput(
                   inputId = ns("plot_tukey"),
-                  label = "Run TukeyHSD test",
+                  label = "TukeyHSD test",
                   value = FALSE
+                ),
+                tippy::tippy_this(
+                  ns("plot_tukey"),
+                  "Perform TukeyHSD test for pairwise comparisons between sample groups. Only available when plotting transformed data by sample groups.",
+                  theme = "light-border"
                 )
               ),
               column(
                 4,
                 radioButtons(
                   inputId = ns("angle_ind_axis_lab"),
-                  label = "Angle Axis Labels",
+                  label = "Rotate Labels",
                   choices = c(0, 45, 90),
                   selected = 45
+                ),
+                tippy::tippy_this(
+                  ns("angle_ind_axis_lab"),
+                  "Angle of x-axis labels.",
+                  theme = "light-border"
                 )
               )
             ),
@@ -588,7 +613,7 @@ mod_02_pre_process_ui <- function(id) {
               condition = "output.data_file_format == 1",
               checkboxInput(
                 inputId = ns("show_raw"),
-                label = "Show raw counts, not transformed data",
+                label = "Show raw counts",
                 value = FALSE
               ),
               ns = ns
@@ -1152,10 +1177,17 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     output$sd_checkbox <- renderUI({
       req(input$gene_plot_box != 2)
 
-      checkboxInput(
-        inputId = ns("use_sd"),
-        label = "Use standard deviation",
-        value = FALSE
+      tagList(
+        checkboxInput(
+          inputId = ns("use_sd"),
+          label = "Standard deviation",
+          value = FALSE
+        ),
+        tippy::tippy_this(
+          ns("use_sd"),
+          "Show standard deviation (SD) or standard error (SE) when plotting by sample groups.",
+          theme = "light-border"
+        )
       )
     })
 

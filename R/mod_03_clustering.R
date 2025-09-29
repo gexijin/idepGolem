@@ -430,6 +430,18 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     # Interactive heatmap environment
     shiny_env <- new.env()
 
+    # Reset to Heatmap whenever the Cluster tab becomes active again
+    observeEvent(tab(), {
+      req(tab())
+      if (tab() == "Cluster") {
+        updateTabsetPanel(
+          session = session,
+          inputId = "cluster_panels",
+          selected = "Heatmap"
+        )
+      }
+    })
+
 
     # Update Slider Input ---------
     observe({

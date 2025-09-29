@@ -10,7 +10,7 @@
 mod_10_doc_ui <- function(id) {
   ns <- NS(id)
   tabPanel(
-    title = "About",
+    title = icon("info"),
     fluidPage(
       h3(
         "If you find iDEP helpful, please ",
