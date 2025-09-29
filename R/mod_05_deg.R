@@ -106,10 +106,26 @@ mod_05_deg_1_ui <- function(id) {
             label = "Threshold-based Wald Test",
             value = FALSE
           ),
+          tippy::tippy_this(
+            ns("threshold_wald_test"),
+            "If checked, DESeq2 will use a threshold-based Wald test to
+            determine whether the absolute value of the log2 fold change
+            is greater than the threshold (log2 of min fold-change).
+            If unchecked, DESeq2 will use the standard Wald test to
+            determine whether the log2 fold change is significantly
+            different from zero.",
+            theme = "light-border"
+          ),
           checkboxInput(
             inputId = ns("independent_filtering"),
             label = "Independent filtering of lower counts",
             value = TRUE
+          ),
+          tippy::tippy_this(
+            ns("independent_filtering"),
+            "If checked, DESeq2 will filter out genes with very low counts
+            before adjusting p-values to increase detection power.",
+            theme = "light-border"
           ),
           ns = ns
         ),
@@ -133,16 +149,8 @@ mod_05_deg_1_ui <- function(id) {
           tabPanel(
             title = "Experiment Design",
             value = "experiment_design",
-            fluidRow(
-              column(
-                width = 6,
-                htmlOutput(outputId = ns("list_factors_deg"))
-              ),
-              column(
-                width = 6,
-                htmlOutput(outputId = ns("list_block_factors_deg"))
-              )
-            ),
+            htmlOutput(outputId = ns("list_factors_deg")),
+            htmlOutput(outputId = ns("list_block_factors_deg")),
             fluidRow(
               htmlOutput(outputId = ns("select_reference_levels"))
             ),
@@ -151,6 +159,7 @@ mod_05_deg_1_ui <- function(id) {
             tags$head(tags$style(
               "#deg-experiment_design{color: red;font-size: 16px;}"
             )),
+            br(),
             htmlOutput(outputId = ns("list_model_comparisons"))
           ),
           tabPanel(
@@ -396,7 +405,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         return(
           checkboxGroupInput(
             inputId = ns("select_factors_model"),
-            h5(list_factors$title),
+            strong(list_factors$title),
             choices = list_factors$choices,
             selected = list_factors$choices[1]
           )
@@ -415,7 +424,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       return(
         checkboxGroupInput(
           inputId = ns("select_block_factors_model"),
-          h5("Select a factor for batch effect or paired samples, if needed."),
+          strong("Select a batch/block factor (optional)"),
           choices = choices,
           selected = NULL
         )
@@ -436,7 +445,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       req(model_comparisons())
       checkboxGroupInput(
         inputId = ns("select_model_comprions"),
-        label = h5(model_comparisons()$title),
+        label = strong(model_comparisons()$title),
         choices = model_comparisons()$choices,
         selected = model_comparisons()$choices[[1]]
       )
@@ -450,7 +459,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       req(!is.null(interactions))
       checkboxGroupInput(
         inputId = ns("select_interactions"),
-        label = h5(
+        label = strong(
           "Interaction terms:"
         ),
         choices = interactions,
@@ -584,6 +593,79 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       } else if (!isTRUE(message_needed) && deg_help_notification_active()) {
         shiny::removeNotification("deg1-design-notification")
         deg_help_notification_active(FALSE)
+      }
+    })
+
+    observe({
+      method <- input$counts_deg_method
+      selected_factors <- input$select_factors_model
+      sample_info <- pre_process$sample_info()
+
+      needs_factor_warning <- !is.null(method) && method %in% c(1, 2) &&
+        length(selected_factors) > 3
+
+      if (isTRUE(needs_factor_warning)) {
+        shiny::showNotification(
+          ui = shiny::tags$div(
+            shiny::tags$strong("Model warning:"),
+            " limma-trend and limma-voom support up to three main factors in iDEP."
+          ),
+          type = "warning",
+          id = "deg1-factor-limit-warning",
+          duration = NULL,
+          closeButton = TRUE
+        )
+      } else {
+        shiny::removeNotification("deg1-factor-limit-warning")
+      }
+
+      needs_rank_warning <- FALSE
+      if (!is.null(method) && method %in% c(1, 2) &&
+          !is.null(sample_info) && length(selected_factors) > 0) {
+        valid_factors <- intersect(selected_factors, colnames(sample_info))
+
+        if (length(valid_factors) > 0) {
+          level_counts <- vapply(
+            valid_factors,
+            function(factor_col) {
+              length(unique(stats::na.omit(sample_info[[factor_col]])))
+            },
+            integer(1)
+          )
+
+          if (any(level_counts == 0)) {
+            possible_combos <- 0
+          } else {
+            possible_combos <- prod(as.numeric(level_counts))
+          }
+          n_samples <- nrow(sample_info)
+          needs_rank_warning <- possible_combos > n_samples
+
+          if (isTRUE(needs_rank_warning)) {
+            warning_text <- sprintf(
+              " selected factors create up to %d combinations but only %d samples are available. Reduce factors or ensure sufficient replication.",
+              possible_combos,
+              n_samples
+            )
+
+            shiny::showNotification(
+              ui = shiny::tags$div(
+                shiny::tags$strong("Model may be rank-deficient:"),
+                warning_text
+              ),
+              type = "warning",
+              id = "deg1-rank-warning",
+              duration = NULL,
+              closeButton = TRUE
+            )
+          } else {
+            shiny::removeNotification("deg1-rank-warning")
+          }
+        } else {
+          shiny::removeNotification("deg1-rank-warning")
+        }
+      } else {
+        shiny::removeNotification("deg1-rank-warning")
       }
     })
 

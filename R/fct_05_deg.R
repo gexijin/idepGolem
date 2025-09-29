@@ -69,12 +69,7 @@ list_factors_ui <- function(sample_info,
   } else {
     factors <- colnames(sample_info)
     choices <- setNames(factors, factors)
-    title <- "1. Select main factors (3+ factors are not tested). Or leave it blank and just choose pairs
-              of sample groups below."
-    if (data_file_format == 1 & counts_deg_method == 3) {
-      title <- strong("1. Select 6 or less main factors. Or skip this step and just choose
-                pairs of sample groups below."
-    }
+    title <- "1. Select main factors (optional)"
     return(list(
       title = title,
       choices = choices
@@ -201,7 +196,7 @@ list_model_comparisons_ui <- function(sample_info,
       comparisons <- sort(comparisons)
       comparisons <- paste0(selected_factors, ": ", comparisons)
       choices <- append(choices, stats::setNames(comparisons, comparisons))
-      title <- "2. Select one or more comparisons:"
+      title <- "2. Select at least one comparison:"
     }
 
     if (length(choices) == 0) {
