@@ -1277,14 +1277,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     })
 
 
-    # Track if we've shown the gene ID error modal for current data
-    shown_id_error_modal <- reactiveVal(FALSE)
-
-    # Reset modal flag when new data is loaded
-    observeEvent(list(input$expression_file, input$go_button), {
-      shown_id_error_modal(FALSE)
-    })
-
     species_match_data <- reactive({
       req(input$select_org)
       if (is.null(input$expression_file) && go_button_count() == 0) {
@@ -1309,30 +1301,43 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         }
       })
     })
-    # Species match message ----------
+
+    # Track when we've shown the modal to prevent multiple displays
+    modal_shown <- reactiveVal(FALSE)
+
+    # Reset modal flag when new data is loaded
+    observeEvent(list(input$expression_file, input$go_button), {
+      modal_shown(FALSE)
+    }, ignoreInit = TRUE)
+
+    # Show gene ID error modal when IDs are not recognized
     observe({
       req(tab() == "Data")
-      req(!shown_id_error_modal())  # Only show if we haven't shown it yet
+      req(input$select_org != "NEW")
+      req(!modal_shown())  # Only show once per data load
 
+      # Check if we have species match data indicating ID not recognized
       match_data <- species_match_data()
       req(!is.null(match_data))
       req(nrow(match_data) > 0)
       req(match_data[1, 1] == "ID not recognized.")
-      req(input$select_org != "NEW")
 
       # Mark that we've shown the modal
-      shown_id_error_modal(TRUE)
+      modal_shown(TRUE)
 
       showModal(modalDialog(
         title = "Gene IDs not recognized",
-        tags$p("None of the gene IDs are recognized. Possible causes: ",
-               "1. Wrong species is selected. ",
-               "2. Correct species is selected but we cannot map your gene IDs ",
-               "to Ensembl gene IDs. ",
-               "3. Your species is not included in our database. ",
-               "You can still run many analyses except pathway and enrichment."),
-        size = "s",
-        easyClose = FALSE,  # Prevent accidental dismissal
+        tags$p("Possible causes:"),
+        tags$ul(
+          tags$li("Wrong species is selected."),
+          tags$li("Correct species is selected but we cannot map your ",
+                  "gene IDs to Ensembl gene IDs or STRING protein IDs."),
+          tags$li("Your species is not included in our database.")
+        ),
+        tags$p("You can still run many analyses except pathway and ",
+               "enrichment."),
+        size = "m",
+        easyClose = FALSE,
         footer = modalButton("OK")
       ))
     })

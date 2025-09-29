@@ -1451,7 +1451,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         ui = read_counts_bias(),
         id = "read_counts_message",
         duration = NULL,
-        type = "warning"
+        type = "error"
       )
     })
     # Data type warning -------
