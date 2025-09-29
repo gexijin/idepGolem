@@ -240,9 +240,6 @@ mod_05_deg_2_ui <- function(id) {
       sidebarPanel(
         style = "height: 90vh; overflow-y: auto;",
         htmlOutput(outputId = ns("list_comparisons")),
-        p("Select a comparison to examine the associated DEGs.
-          \"A-B\" means A vs. B (See heatmap).
-            Interaction terms start with \"I:\""),
         conditionalPanel("input.step_2 == 'Heatmap'",
             selectInput(
               inputId = ns("heatmap_gene_number"),
@@ -1046,15 +1043,24 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       if (is.null(deg$limma$comparisons)) {
         selectInput(
           inputId = ns("select_contrast"),
-          label = "Comparisons",
+          label = "Comparisons:",
           choices = list("All" = "All"),
           selected = "All"
         )
       } else {
-        selectInput(
-          inputId = ns("select_contrast"),
-          label = "Comparisons",
-          choices = deg$limma$comparisons
+        tagList(
+          selectInput(
+            inputId = ns("select_contrast"),
+            label = "Comparisons:",
+            choices = deg$limma$comparisons
+          ),
+          tippy::tippy_this(
+            ns("select_contrast"),
+            "Select a comparison to examine the associated DEGs.
+            \"A-B\" means A vs. B (See heatmap).
+            Interaction terms start with \"I:\"",
+            theme = "light-border"
+          )
         )
       }
     })

@@ -156,9 +156,7 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data) {
       } else {
         selectInput(
           inputId = ns("select_contrast"),
-          label =
-            "Select a comparison to examine. \"A-B\" means A vs. B (See heatmap).
-            Interaction terms start with \"I:\"",
+          label = "Select a comparison:",
           choices = deg$limma()$comparisons
         )
       }
