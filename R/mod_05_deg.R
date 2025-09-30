@@ -40,10 +40,6 @@ mod_05_deg_1_ui <- function(id) {
             "Pick the method used to detect differentially expressed genes.",
             theme = "light-border"
           ),
-          tags$style(
-            type = "text/css",
-            "#deg-counts_deg_method {width:100%;   margin-top:-12px}"
-          ),
           ns = ns
         ),
         # Label when the limma method is selected
@@ -149,6 +145,10 @@ mod_05_deg_1_ui <- function(id) {
         uiOutput(ns("download_lfc_button")),
         uiOutput(ns("note_download_lfc_button"))
       ),
+
+
+
+
       mainPanel(
         tabsetPanel(
           id = ns("step_1"),
@@ -318,9 +318,11 @@ mod_05_deg_2_ui <- function(id) {
           condition = "input.step_2 == 'Scatter Plot' ",
           mod_label_ui(ns("label_scatter")),
           ns = ns
-        ),
-        width = 3
+        )
+
       ),
+
+
       mainPanel(
         tabsetPanel(
           id = ns("step_2"),

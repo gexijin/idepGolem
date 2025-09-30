@@ -98,17 +98,13 @@ mod_07_genome_ui <- function(id) {
             width = 6,
             checkboxInput(
               inputId = ns("hide_chr"),
-              label = "Hide sparse chrs.",
+              label = "Hide Sparse Chrs.",
               value = FALSE
             ),
             tippy::tippy_this(
               ns("hide_chr"),
               "Hide chromosomes that contain four or fewer genes in your dataset.",
-              placement = "top",
-              options = list(
-                theme = "light-border",
-                size = "small"
-              )
+              theme = "light-border"
             )
           )
         ),

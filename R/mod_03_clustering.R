@@ -209,16 +209,19 @@ mod_03_clustering_ui <- function(id) {
             column(width = 4, p("Label Genes:")),
             column(
               width = 8,
-              selectizeInput(
+              div(
+                id = ns("selected_genes_wrapper"),
+                selectizeInput(
                 inputId = ns("selected_genes"),
                 label = NULL,
                 choices = c("Top 5", "Top 10", "Top 15"),
                 multiple = TRUE
-              ),
-              tippy::tippy_this(
-                ns("selected_genes"),
+                ),
+                tippy::tippy_this(
+                ns("selected_genes_wrapper"),
                 "Add labels for the top genes you want to highlight on the heatmap.",
                 theme = "light-border"
+                )
               )
             )
           ),
@@ -552,12 +555,19 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           }
         }
       }
-      selectInput(
-        inputId = ns("select_factors_heatmap"),
-        label = NULL,
-        choices = choices,
-        selected = selected,
-        selectize = FALSE
+      tagList(
+        selectInput(
+          inputId = ns("select_factors_heatmap"),
+          label = NULL,
+          choices = choices,
+          selected = selected,
+          selectize = FALSE
+        ),
+        tippy::tippy_this(
+          ns("select_factors_heatmap"),
+          "Color bar for sample groups. Choose which sample annotation to display on the top of heatmap.",
+          theme = "light-border"
+        )
       )
     })
 

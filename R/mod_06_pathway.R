@@ -444,12 +444,19 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       if ("KEGG" %in% pre_process$gmt_choices()) {
         selected <- "KEGG"
       }
-      selectInput(
-        inputId = ns("select_go"),
-        label = "Pathway database:",
-        choices = pre_process$gmt_choices(),
-        selected = selected,
-        selectize = FALSE
+      tagList(
+        selectInput(
+          inputId = ns("select_go"),
+          label = "Pathway database:",
+          choices = pre_process$gmt_choices(),
+          selected = selected,
+          selectize = FALSE
+        ),
+        tippy::tippy_this(
+          ns("select_go"),
+          "Select which pathway database to use for enrichment analysis.",
+          theme = "light-border"
+        )
       )
     })
 
@@ -757,12 +764,18 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           selectize = FALSE
         )
       } else {
-        selectInput(
-          inputId = ns("select_contrast"),
-          label =
-            "Select a comparison:",
-          choices = deg$limma()$comparisons,
-          selectize = FALSE
+        tagList(
+          selectInput(
+            inputId = ns("select_contrast"),
+            label = "Select a comparison:",
+            choices = deg$limma()$comparisons,
+            selectize = FALSE
+          ),
+          tippy::tippy_this(
+            ns("select_contrast"),
+            "Select which comparison to use for pathway analysis.",
+            theme = "light-border"
+          )
         )
       }
     })

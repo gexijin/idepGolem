@@ -27,6 +27,11 @@ mod_04_pca_ui <- function(id) {
                 choices = 1:5,
                 selected = 1,
                 selectize = FALSE
+              ),
+              tippy::tippy_this(
+                ns("PCAx"),
+                "Choose which principal component is shown on the x-axis.",
+                theme = "light-border"
               )
             ),
             column(
@@ -37,6 +42,11 @@ mod_04_pca_ui <- function(id) {
                 choices = 1:5,
                 selected = 2,
                 selectize = FALSE
+              ),
+              tippy::tippy_this(
+                ns("PCAy"),
+                "Choose which principal component is shown on the y-axis.",
+                theme = "light-border"
               )
             )
           ),

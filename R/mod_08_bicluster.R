@@ -15,10 +15,16 @@ mod_08_bicluster_ui <- function(id) {
       sidebarPanel(
         numericInput(
           inputId = ns("n_genes"),
-          label = "Most variable genes to include: ",
+          label = "Top genes: ",
           min = 10,
           max = 2000,
           value = 1000
+        ),
+        tippy::tippy_this(
+          ns("n_genes"),
+          "Number of most variable genes (based on standard deviation) to use for biclustering. 
+          Increase this number if you have too few biclusters.",
+          theme = "light-border"
         ),
         selectInput(
           inputId = ns("biclust_method"),
@@ -35,6 +41,11 @@ mod_08_bicluster_ui <- function(id) {
           ),
           selected = "BCCC()",
           selectize = FALSE
+        ),
+        tippy::tippy_this(
+          ns("biclust_method"),
+          "Biclustering method. See the documentation for details.",
+          theme = "light-border"
         ),
         htmlOutput(outputId = ns("list_biclusters")),
         textOutput(ns("bicluster_info"))
@@ -103,12 +114,19 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab) {
       req(!is.null(biclustering()))
       req(biclustering()$res@Number != 0)
 
-      selectInput(
-        inputId = ns("select_bicluster"),
-        label = "Select a cluster",
-        selected = 1,
-        choices = 1:biclustering()$res@Number,
-        selectize = FALSE
+      tagList(
+        selectInput(
+          inputId = ns("select_bicluster"),
+          label = "Select a cluster",
+          selected = 1,
+          choices = seq_len(biclustering()$res@Number),
+          selectize = FALSE
+        ),
+        tippy::tippy_this(
+          ns("select_bicluster"),
+          "Choose a bicluster to view its heatmap, enrichment and gene list.",
+          theme = "light-border"
+        )
       )
     })
 
