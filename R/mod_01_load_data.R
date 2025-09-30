@@ -869,6 +869,10 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
               "Pick a demo dataset, then click Load.",
               theme = "light-border"
             ),
+            div(
+              style = "margin-top: 8px;",
+              textOutput(ns("demo_memo"))
+            ),
             br(),
 
             fluidRow(
@@ -1173,8 +1177,20 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       list(
         expression = entry$expression[[1]],
         design = entry$design[[1]],
-        name = entry$name[[1]]
+        name = entry$name[[1]],
+        memo = if ("memo" %in% names(entry)) entry$memo[[1]] else NULL
       )
+    })
+
+    output$demo_memo <- renderText({
+      info <- selected_demo_info()
+      memo <- info$memo
+
+      if (is.null(memo) || is.na(memo) || !nzchar(memo)) {
+        return(NULL)
+      }
+
+      memo
     })
 
     output$demo_design_download_ui <- renderUI({
