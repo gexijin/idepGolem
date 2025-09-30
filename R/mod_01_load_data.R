@@ -1174,12 +1174,26 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       entry <- files[files$ID == choice, , drop = FALSE]
       req(nrow(entry) == 1)
 
+      safe_entry_value <- function(df, column) {
+        if (!column %in% names(df)) {
+          return(NULL)
+        }
+
+        value <- df[[column]][[1]]
+
+        if (length(value) == 0) {
+          return(NULL)
+        }
+
+        value
+      }
+
       list(
         expression = entry$expression[[1]],
         design = entry$design[[1]],
         name = entry$name[[1]],
-        memo = if ("memo" %in% names(entry)) entry$memo[[1]] else NULL,
-        ncbi = if ("ncbi" %in% names(entry)) entry$ncbi[[1]] else NULL
+        memo = safe_entry_value(entry, "memo"),
+        ncbi = safe_entry_value(entry, "ncbi")
       )
     })
 
