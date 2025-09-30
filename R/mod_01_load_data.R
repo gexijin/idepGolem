@@ -379,9 +379,9 @@ mod_01_load_data_ui <- function(id) {
         DT::dataTableOutput(ns("sample_20")),
         div(
           id = ns("load_message"),
-          h3("From data to discoveries, for all biologists", style = "color: #d9534f; font-weight: 700;"),
+          h3("From data to discoveries", style = "color: #d9534f; font-weight: 700;"),
           br(),
-          h4("Visualize, analyze, and unveil pathways — in minutes!", style = "color: green;"),
+          h4("Visualize, analyze, & unveil pathways — in minutes!", style = "color: green;"),
           br(),
           br(),
           br(),
