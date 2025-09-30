@@ -852,7 +852,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
       shiny::showModal(
         shiny::modalDialog(
-          title = "Demo Data",
+          title = "Demo Datasets",
           easyClose = TRUE,
           size = "s",
           footer = NULL,
@@ -871,7 +871,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             ),
             div(
               style = "margin-top: 8px;",
-              textOutput(ns("demo_memo"))
+              uiOutput(ns("demo_memo"))
             ),
             br(),
 
@@ -1178,19 +1178,38 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         expression = entry$expression[[1]],
         design = entry$design[[1]],
         name = entry$name[[1]],
-        memo = if ("memo" %in% names(entry)) entry$memo[[1]] else NULL
+        memo = if ("memo" %in% names(entry)) entry$memo[[1]] else NULL,
+        ncbi = if ("ncbi" %in% names(entry)) entry$ncbi[[1]] else NULL
       )
     })
 
-    output$demo_memo <- renderText({
+    output$demo_memo <- renderUI({
       info <- selected_demo_info()
       memo <- info$memo
+      ncbi_id <- info$ncbi
 
       if (is.null(memo) || is.na(memo) || !nzchar(memo)) {
         return(NULL)
       }
 
-      memo
+      memo_link <- NULL
+      if (!is.null(ncbi_id) && !is.na(ncbi_id)) {
+        ncbi_clean <- trimws(ncbi_id)
+        if (nzchar(ncbi_clean) && nchar(ncbi_clean) >= 4 && startsWith(tolower(ncbi_clean), "gse")) {
+          memo_link <- tags$a(
+            href = paste0("https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=", ncbi_clean),
+            target = "_blank",
+            rel = "noopener noreferrer",
+            "NCBI"
+          )
+        }
+      }
+
+      if (is.null(memo_link)) {
+        return(tags$span(memo))
+      }
+
+      tags$span(memo, " ", memo_link)
     })
 
     output$demo_design_download_ui <- renderUI({
@@ -1204,7 +1223,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         tagList(
           downloadButton(
             outputId = ns("download_demo_design"),
-            label = "Design",
+            label = NULL,
             class = "btn-default"
           ),
           tippy::tippy_this(
@@ -1221,7 +1240,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     output$download_demo_expression <- downloadHandler(
       filename = function() {
         info <- selected_demo_info()
-        basename(info$expression)
+        paste0("iDEP demo data ", basename(info$expression))
       },
       content = function(file) {
         info <- selected_demo_info()
@@ -1238,7 +1257,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         design_path <- info$design
         req(!is.null(design_path), length(design_path) > 0, !is.na(design_path), nzchar(design_path))
 
-        basename(design_path)
+        paste0("iDEP demo data ", basename(design_path))
       },
       content = function(file) {
         info <- selected_demo_info()
