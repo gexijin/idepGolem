@@ -379,10 +379,9 @@ mod_01_load_data_ui <- function(id) {
         DT::dataTableOutput(ns("sample_20")),
         div(
           id = ns("load_message"),
-          h3("iDEP — from data to discoveries", style = "color: #d9534f; font-weight: 700;"),
+          h3("From data to discoveries, for all biologists", style = "color: #d9534f; font-weight: 700;"),
           br(),
-          h4("Visualize, analyze, and unveil pathways. In minutes!", style = "color: green;"),
-          br(),
+          h4("Visualize, analyze, and unveil pathways — in minutes!", style = "color: green;"),
           br(),
           br(),
           br(),
@@ -1384,7 +1383,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           column(
             width = 9,
             h4("iDEP: integrated Differential Expression & Pathway analysis (v2.20)"),
-            h5("The power of 100s of R packages and annotation databases at your fingertips!")
+            h5("The power of 100s of R packages and annotation databases, at your fingertips!")
           ),
           column(
             width = 3,
