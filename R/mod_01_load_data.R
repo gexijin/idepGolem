@@ -870,15 +870,43 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
               theme = "light-border"
             ),
             br(),
-            actionButton(
-              inputId = ns("go_button"),
-              label = "Load",
-              class = "btn-primary"
-            ),
-            tippy::tippy_this(
-              ns("go_button"),
-              "Load the selected demo dataset.",
-              theme = "light-border"
+
+            fluidRow(
+              column(
+                width = 4,
+                align = "left",
+                actionButton(
+                  inputId = ns("go_button"),
+                  label = "Load",
+                  class = "btn-primary"
+                ),
+                tippy::tippy_this(
+                  ns("go_button"),
+                  "Load the selected demo dataset.",
+                  theme = "light-border"
+                )
+              ),
+              column(
+                width = 8,
+                align = "left",
+                div(
+                  class = "demo-download-actions",
+                  style = "display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; align-items: center;",
+                  tagList(
+                    downloadButton(
+                      outputId = ns("download_demo_expression"),
+                      label = NULL,
+                      class = "btn-default"
+                    ),
+                    tippy::tippy_this(
+                      ns("download_demo_expression"),
+                      "Download the expression matrix for the selected demo dataset.",
+                      theme = "light-border"
+                    )
+                  ),
+                  uiOutput(ns("demo_design_download_ui"))
+                )
+              )
             )
           )
         )
@@ -1133,6 +1161,78 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         files$design[ix]
       ))
     })
+
+    selected_demo_info <- reactive({
+      choice <- selected_demo()
+      req(choice)
+
+      files <- idep_data$demo_file_info
+      entry <- files[files$ID == choice, , drop = FALSE]
+      req(nrow(entry) == 1)
+
+      list(
+        expression = entry$expression[[1]],
+        design = entry$design[[1]],
+        name = entry$name[[1]]
+      )
+    })
+
+    output$demo_design_download_ui <- renderUI({
+      info <- selected_demo_info()
+
+      design_path <- info$design
+      has_design <- !is.null(design_path) && length(design_path) > 0 &&
+        !is.na(design_path) && nzchar(design_path)
+
+      if (has_design) {
+        tagList(
+          downloadButton(
+            outputId = ns("download_demo_design"),
+            label = "Design",
+            class = "btn-default"
+          ),
+          tippy::tippy_this(
+            ns("download_demo_design"),
+            "Download the experimental design file for the selected demo dataset.",
+            theme = "light-border"
+          )
+        )
+      } else {
+        NULL
+      }
+    })
+
+    output$download_demo_expression <- downloadHandler(
+      filename = function() {
+        info <- selected_demo_info()
+        basename(info$expression)
+      },
+      content = function(file) {
+        info <- selected_demo_info()
+        req(!is.null(info$expression), nzchar(info$expression), file.exists(info$expression))
+
+        success <- file.copy(info$expression, file, overwrite = TRUE)
+        req(success)
+      }
+    )
+
+    output$download_demo_design <- downloadHandler(
+      filename = function() {
+        info <- selected_demo_info()
+        design_path <- info$design
+        req(!is.null(design_path), length(design_path) > 0, !is.na(design_path), nzchar(design_path))
+
+        basename(design_path)
+      },
+      content = function(file) {
+        info <- selected_demo_info()
+        design_path <- info$design
+        req(!is.null(design_path), length(design_path) > 0, !is.na(design_path), nzchar(design_path), file.exists(design_path))
+
+        success <- file.copy(design_path, file, overwrite = TRUE)
+        req(success)
+      }
+    )
 
     # Reactive element to load the data from the user or demo data ---------
     loaded_data <- reactive({
