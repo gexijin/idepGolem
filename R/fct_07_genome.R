@@ -398,8 +398,9 @@ chromosome_data <- function(limma,
 
     if (hide_patches) {
       tem <- nchar(ch)
+      all_genes <- nchar(x$chromosome_name)
       # only keep within 2 MAD from the median
-      ix <- which(tem <= median(tem) + 2 * mad(tem) + 0.0001)
+      ix <- which(tem <= median(all_genes) + 2 * mad(all_genes) + 0.0001)
       ch <- ch[ix]
       # ch. name less than 10 characters
       #    ch <- ch[nchar(ch) <= 12]
