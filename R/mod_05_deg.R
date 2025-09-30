@@ -60,7 +60,7 @@ mod_05_deg_1_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("limma_p_val"),
-              "Cutoff for adjusted p-value. ",
+              "Adjusted p-value (FDR) threshold.",
               theme = "light-border"
             )
           ),
@@ -94,7 +94,7 @@ mod_05_deg_1_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("limma_fc"),
-              "Entering 2 selects genes that are upregulated or downregulated by at least 2-fold. Must be bigger than 1, which means no change. This is not log fold change.",
+              "Set the minimum fold-change (not log2). For example, 2 keeps genes with at least 2-fold up- or down-regulation and values must be greater than 1.",
               theme = "light-border"
             )
           )
@@ -108,12 +108,7 @@ mod_05_deg_1_ui <- function(id) {
           ),
           tippy::tippy_this(
             ns("threshold_wald_test"),
-            "If checked, DESeq2 will use a threshold-based Wald test to
-            determine whether the absolute value of the log2 fold change
-            is greater than the threshold (log2 of min fold-change).
-            If unchecked, DESeq2 will use the standard Wald test to
-            determine whether the log2 fold change is significantly
-            different from zero.",
+            "Use a threshold-based Wald test in DESeq2 to require the absolute log2 fold change to exceed the chosen cutoff (log2 of the minimum fold-change). Leave unchecked for the standard Wald test against zero.",
             theme = "light-border"
           ),
           checkboxInput(
@@ -123,8 +118,7 @@ mod_05_deg_1_ui <- function(id) {
           ),
           tippy::tippy_this(
             ns("independent_filtering"),
-            "If checked, DESeq2 will filter out genes with very low counts
-            before adjusting p-values to increase detection power.",
+            "Let DESeq2 drop very low-count genes before p-value adjustment to improve power.",
             theme = "light-border"
           ),
           ns = ns
@@ -218,7 +212,7 @@ mod_05_deg_1_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("dl_deg_code"),
-              "Download .R file of DEG code",
+              "Download the R script used for DEG analysis.",
               theme = "light-border"
             )
           ),
@@ -340,7 +334,7 @@ mod_05_deg_2_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("dl_deg_code_2"),
-              "Download .R file of DEG code",
+              "Download the R script used for DEG analysis.",
               theme = "light-border"
             )
           ),
@@ -374,7 +368,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         ),
         tippy::tippy_this(
           ns("submit_model_button"),
-          "Run DEG analysis",
+          "Run the differential expression analysis.",
           theme = "light-border"
         )
       )
@@ -817,8 +811,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       req(!is.null(deg_info()))
       tippy::tippy_this(
         elementId = ns("download_lfc"),
-        tooltip = "This data includes log fold change, adjusted p-value and
-            processed data from Pre-Process tab.",
+        tooltip = "Download log fold-change, adjusted p-values, and the processed data from the Pre-processing tab.",
         theme = "light-border"
       )
     })
@@ -1056,9 +1049,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
           ),
           tippy::tippy_this(
             ns("select_contrast"),
-            "Select a comparison to examine the associated DEGs.
-            \"A-B\" means A vs. B (See heatmap).
-            Interaction terms start with \"I:\"",
+            "Choose a comparison to review its DEGs. Formats like A-B mean A vs. B (see heatmap). Interaction terms are labeled with I:.",
             theme = "light-border"
           )
         )

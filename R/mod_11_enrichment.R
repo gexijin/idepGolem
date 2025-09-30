@@ -91,7 +91,7 @@ mod_11_enrichment_ui <- function(id) {
         ),
         tippy::tippy_this(
           ns("show_pathway_id"),
-          "If selected, pathway IDs, such as Path:mmu04115 and GO:0042770,  will be appended to pathway name.",
+          "Append pathway IDs (e.g., Path:mmu04115 or GO:0042770) to each pathway name.",
           theme = "light-border"
         )
       )
@@ -110,7 +110,7 @@ mod_11_enrichment_ui <- function(id) {
         ),
         tippy::tippy_this(
           ns("download_enrichment"),
-          "Download enrichment analysis",
+          "Download the enrichment results table.",
           theme = "light-border"
         ),
       ),
@@ -308,7 +308,7 @@ mod_11_enrichment_ui <- function(id) {
           ),
           tippy::tippy_this(
             ns("download_gene_info"),
-            "Download enrichment analysis results",
+            "Download the enrichment results table.",
             theme = "light-border"
           ),
           column(

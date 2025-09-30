@@ -68,7 +68,7 @@ mod_09_network_ui <- function(id) {
         ),
         tippy::tippy_this(
           ns("download_selected_WGCNA_module"),
-          "Download gene information for the selected module",
+          "Download gene details for the selected module.",
           theme = "light-border"
         ),
         textOutput(ns("module_statistic"))
@@ -119,7 +119,7 @@ mod_09_network_ui <- function(id) {
               downloadButton(outputId = ns("download_module_network"), "Network file"),
               tippy::tippy_this(
                 ns("download_module_network"),
-                "This file can be imported to CytoScape or VisANT for further analysis.",
+                "Import this file into Cytoscape or VisANT for further analysis.",
                 theme = "light-border"
               ),
               ottoPlots::mod_download_figure_ui(

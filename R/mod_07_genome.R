@@ -78,7 +78,7 @@ mod_07_genome_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("hide_chr"),
-              "Hide chromosomes with 4 or less genes in the dataset.",
+              "Hide chromosomes that contain four or fewer genes in your dataset.",
               placement = "top",
               options = list(
                 theme = "light-border",

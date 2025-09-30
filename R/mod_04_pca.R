@@ -185,7 +185,7 @@ mod_04_pca_ui <- function(id) {
           ),
           tippy::tippy_this(
             ns("report"),
-            "Generate HTML report of PCA tab",
+            "Create an HTML report summarizing the PCA tab.",
             theme = "light-border"
           ),
         )

@@ -20,7 +20,7 @@ mod_06_pathway_ui <- function(id) {
         ),
         tippy::tippy_this(
           ns("submit_pathway_button"),
-         "Run pathway analysis",
+         "Run the pathway enrichment analysis.",
           theme = "light-border"
         ),
         tags$head(tags$style(
@@ -130,7 +130,7 @@ mod_06_pathway_ui <- function(id) {
         ),
         tippy::tippy_this(
           ns("show_pathway_id"),
-          "If selected, pathway IDs, such as Path:mmu04115 and GO:0042770,  will be appended to pathway name.",
+          "Append pathway IDs (e.g., Path:mmu04115 or GO:0042770) to each pathway name.",
           theme = "light-border"
         ),
         fluidRow(
@@ -142,7 +142,7 @@ mod_06_pathway_ui <- function(id) {
                  ),
                  tippy::tippy_this(
                    ns("report"),
-                   "Generate HTML report of pathway tab",
+                   "Create an HTML report summarizing the Pathway tab.",
                    theme = "light-border"
                  )
           ),
@@ -155,7 +155,7 @@ mod_06_pathway_ui <- function(id) {
                    ),
                    tippy::tippy_this(
                      ns("download_heat_data"),
-                     "Download Heatmap Dataset",
+                     "Download the heatmap data table.",
                      theme = "light-border"
                     ),
                    ns = ns
@@ -196,7 +196,7 @@ mod_06_pathway_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("download_sig_paths"),
-              "Download Significant Pathways",
+              "Download the table of significant pathways.",
               theme = "light-border"
             ),
             actionButton(
@@ -206,7 +206,7 @@ mod_06_pathway_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("gene_list_popup"),
-              "Download Gene List",
+              "Download the gene list for the selected pathway.",
               theme = "light-border"
             )
           ),
@@ -354,7 +354,7 @@ mod_06_pathway_ui <- function(id) {
               downloadButton(ns('download_kegg'),''),
               tippy::tippy_this(
                 ns("download_kegg"),
-                "Download KEGG plot",
+                "Download the KEGG pathway plot.",
                 theme = "light-border"
               ),
               br(),
@@ -553,7 +553,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           ),
           downloadButton(
             outputId = ns("download_gene_list"), 
-            label = "Download Gene List"
+            label = "Download the gene list for the selected pathway."
           ),
           easyClose = TRUE,
           size = "s",

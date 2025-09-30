@@ -91,7 +91,7 @@ mod_01_load_data_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("new_species"),
-              "Check this to analyze a new/custom species not in our database.",
+              "Select this to analyze a species that is not in the built-in list.",
               theme = "light-border"
             )
           )
@@ -118,7 +118,7 @@ mod_01_load_data_ui <- function(id) {
           ),
           tippy::tippy_this(
             ns("gmt_file"),
-            "Upload a custom pathway .GMT file to perform pathway analysis for your new species. This is optional - you can proceed without it.",
+            "Optional. Upload a pathway .GMT file tailored to your species; skip this if you do not have one.",
             theme = "light-border"
           ),
           ns = ns
@@ -141,11 +141,7 @@ mod_01_load_data_ui <- function(id) {
         ),
         tippy::tippy_this(
           ns("data_file_format"),
-          "We recommend uploading Read Counts Data, which can be analyzed using DESeq2.
-          Choose Normalized Expression Data if your data is derived from 
-          RNA-Seq(FPKM, RPKM, TPM), DNA microarray, proteomics data, etc. 
-          Select Fold Change and Adjusted P-value, if you have already conducted D.E.G. analysis.
-            ",
+          "We recommend raw read counts so iDEP can run DESeq2. Choose normalized expression if you have TPM/FPKM, microarray, or proteomics values. Select fold change plus adjusted P-values when differential expression was done elsewhere.",
           theme = "light-border"
         ),
         
@@ -187,7 +183,7 @@ mod_01_load_data_ui <- function(id) {
           tags$summary(span(strong("Settings"), id = ns("global_settings_summary"))),
           tippy::tippy_this(
             ns("global_settings_summary"),
-            "Reveal appearance and ID-conversion settings shared across the app.",
+            "Show shared display and ID-conversion settings for the entire app.",
             theme = "light-border"
           ),
           div(
@@ -213,7 +209,7 @@ mod_01_load_data_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("heatmap_color_select_container"),
-              "Choose the color palette used for heatmaps, sample trees, and networks.",
+              "Select the color palette for heatmaps, sample trees, and network plots.",
               theme = "light-border"
             ),
             selectInput(
@@ -231,10 +227,7 @@ mod_01_load_data_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("multiple_map"),
-              "When multiple IDs map to the same gene, we can summarize
-              data in a certain way (sum, mean, median, max),
-              or just keep the rows with the most variation (max SD).
-              When uploading transcript level counts, choose \"sum\" to aggregate gene level counts. ",
+              "When several IDs match one gene, choose how to combine them (sum, average, median, max, or most variable). For transcript counts, select sum to get gene-level totals.",
               theme = "light-border"
             ),
             div(
@@ -260,7 +253,7 @@ mod_01_load_data_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("plots_color_select_container"),
-              "Palette applied to PCA and QC plots so sample groups stand out.",
+              "Pick the color set for PCA and QC plots so sample groups are easy to see.",
               theme = "light-border"
             ),
             selectInput(
@@ -271,7 +264,7 @@ mod_01_load_data_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("select_gene_id"),
-              "Pick which gene identifier appears on plots and tables.",
+              "Choose which gene identifier appears in plots and tables.",
               theme = "light-border"
             ),
             selectInput(
@@ -293,7 +286,7 @@ mod_01_load_data_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("ggplot2_theme"),
-              "Changes the styles for all 20 ggplot2 plots.",
+              "Apply a different overall style to every ggplot2 plot.",
               theme = "light-border"
             ),
             checkboxInput(
@@ -303,7 +296,7 @@ mod_01_load_data_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("plot_grid_lines"),
-              "Overlay light grid lines to help compare values across samples.",
+              "Add light grid lines so sample values are easier to compare.",
               theme = "light-border"
             ),
             checkboxInput(
@@ -313,8 +306,7 @@ mod_01_load_data_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("no_id_conversion"),
-              "If selected, uploaded gene IDs will not be converted to ENSEMBL gene IDs,
-              which is used as a central id type in pathway databases.",
+              "Keep your original gene IDs. By default we convert to Ensembl IDs used by pathway databases.",
               theme = "light-border"
             ),
           )
@@ -797,7 +789,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             ),
             tippy::tippy_this(
               ns("demo_modal_button"),
-              "Load demo data",
+              "Preview the available demo datasets.",
               theme = "light-border"
             )
           ),
@@ -812,7 +804,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             ),
             tippy::tippy_this(
               ns("data_format_help"),
-              "Additional info on accepted data types",
+              "Learn more about the data types iDEP accepts.",
               theme = "light-border"
             )
           )
@@ -852,7 +844,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             ),
             tippy::tippy_this(
               ns("select_demo"),
-              "Select a demo file then click the \"Load Demo\" button",
+              "Pick a demo dataset, then click Load.",
               theme = "light-border"
             ),
             br(),
@@ -863,7 +855,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             ),
             tippy::tippy_this(
               ns("go_button"),
-              "Load the selected demo file",
+              "Load the selected demo dataset.",
               theme = "light-border"
             )
           )
@@ -960,7 +952,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             ),
             tippy::tippy_this(
               ns("data_format_help"),
-              "Additional info on accepted data types",
+              "Learn more about the data types iDEP accepts.",
               theme = "light-border"
             )
           )

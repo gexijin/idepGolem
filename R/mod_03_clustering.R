@@ -66,11 +66,7 @@ mod_03_clustering_ui <- function(id) {
               ),
               tippy::tippy_this(
                 ns("n_genes"),
-                "Genes are ranked by standard deviations across samples
-                based on the transformed data.
-                By showing the patterns of the genes with most varability,
-                this give us a big picture view of the general pattern of
-                gene expression.",
+                "Genes are ranked by how much they vary across samples in the transformed data. Showing the most variable genes highlights overall expression patterns.",
                 theme = "light-border"
               )
             )
@@ -121,7 +117,7 @@ mod_03_clustering_ui <- function(id) {
           ),
           tippy::tippy_this(
             ns("k_means_re_run"),
-            "Re-run the k-Means algorithm using different seeds for random number generator.",
+            "Re-run k-means with a new random seed.",
             theme = "light-border"
           ),
           # Elbow plot pop-up
@@ -131,7 +127,7 @@ mod_03_clustering_ui <- function(id) {
           ),
           tippy::tippy_this(
             ns("elbow_pop_up"),
-            "k-Means elbow plot",
+            "Show the k-means elbow plot to help choose the number of clusters.",
             theme = "light-border"
           ),
           # Line break ---------
@@ -270,7 +266,7 @@ mod_03_clustering_ui <- function(id) {
         ),
         tippy::tippy_this(
           ns("report"),
-          "Generate HTML report of clustering tab",
+          "Create an HTML report summarizing the Clustering tab.",
           theme = "light-border"
         )
       ),
@@ -330,11 +326,7 @@ mod_03_clustering_ui <- function(id) {
                   ),
                   tippy::tippy_this(
                     ns("cluster_enrichment"),
-                    "Conducts GO enrichment on the selected genes.
-                    For hierarchical clustering, users need to select a
-                    region to zoom in first.
-                    When k-means is used, enrichment analyses are
-                    conducted on all clusters, regardless of your selection.",
+                    "Run GO enrichment for the selected genes. For hierarchical clustering, zoom into a region first. For k-means, all clusters are analyzed.",
                     theme = "light-border"
                   ),
                   ns = ns
