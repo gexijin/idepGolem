@@ -248,8 +248,8 @@ pre_process <- function(data,
       if (ncol(data) == 1) {
         placeholder <- rep(1, dim(data)[1])
         results$p_vals <- cbind(results$p_vals, placeholder)
-        zero_placeholder <- rep(0, dim(data)[1])
-        data <- cbind(data, zero_placeholder)
+        Ctrl <- rep(0, dim(data)[1])
+        data <- cbind(data, Ctrl)
       }
     }
   }
