@@ -79,6 +79,11 @@ mod_01_load_data_ui <- function(id) {
             actionButton(
               inputId = ns("genome_assembl_button"),
               label = "Select"
+            ),
+            tippy::tippy_this(
+              ns("genome_assembl_button"),
+              "Browse the list of supported genomes and assemblies.",
+              theme = "light-border"
             )
           ),
           column(
@@ -154,6 +159,11 @@ mod_01_load_data_ui <- function(id) {
             label = "Fold-changes only",
             value = FALSE
           ),
+          tippy::tippy_this(
+            ns("no_fdr"),
+            "Select this if your file lists fold changes but no adjusted p-values.",
+            theme = "light-border"
+          ),
           ns = ns
         ),
         # Load expression data options ----------
@@ -204,7 +214,8 @@ mod_01_load_data_ui <- function(id) {
                   "Orange-White-Blue"
                 ),
                 selected = "Green-Black-Red",
-                width = "100%"
+                width = "100%",
+                selectize = FALSE
               )
             ),
             tippy::tippy_this(
@@ -248,7 +259,8 @@ mod_01_load_data_ui <- function(id) {
                   "Spectral"
                 ),
                 selected = "Set1",
-                width = "100%"
+                width = "100%",
+                selectize = FALSE
               )
             ),
             tippy::tippy_this(
@@ -260,7 +272,8 @@ mod_01_load_data_ui <- function(id) {
               inputId = ns("select_gene_id"),
               label = "Gene ID type for plots:",
               choices = c("symbol", "ensembl_ID", "User_ID"),
-              selected = "symbol"
+              selected = "symbol",
+              selectize = FALSE
             ),
             tippy::tippy_this(
               ns("select_gene_id"),
@@ -338,6 +351,11 @@ mod_01_load_data_ui <- function(id) {
             actionLink(
               inputId = ns("gene_ids_link"),
               label = "Gene IDs"
+            ),
+            tippy::tippy_this(
+              ns("gene_ids_link"),
+              "See examples of the accepted gene identifiers for each species.",
+              theme = "light-border"
             )
           )
         )
@@ -777,6 +795,11 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
               ),
               placeholder = "",
               width = "100%"
+            ),
+            tippy::tippy_this(
+              ns("expression_file"),
+              "Upload your expression matrix in CSV, TSV, or Excel format.",
+              theme = "light-border"
             )
           ),
 
@@ -902,6 +925,11 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
                 inputId = ns("reset_app_new_data"),
                 label = strong("Reset"),
                 align = "right"
+              ),
+              tippy::tippy_this(
+                ns("reset_app_new_data"),
+                "Clear the current data and start a fresh analysis.",
+                theme = "light-border"
               )
             )
           ),
@@ -939,6 +967,11 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
                 ".xls"
               ),
               placeholder = "CSV or text"
+            ),
+            tippy::tippy_this(
+              ns("experiment_file"),
+              "Upload a sample information table to define experimental groups.",
+              theme = "light-border"
             )
           ),
           column(

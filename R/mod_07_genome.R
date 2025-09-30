@@ -28,6 +28,11 @@ mod_07_genome_ui <- function(id) {
               min = 1e-5,
               max = 1,
               step = .05
+            ),
+            tippy::tippy_this(
+              ns("limma_p_val_viz"),
+              "Set the FDR cutoff for showing genes on the chromosome plot.",
+              theme = "light-border"
             )
           ),
           column(
@@ -39,6 +44,11 @@ mod_07_genome_ui <- function(id) {
               min = 1,
               max = 100,
               step = 0.5
+            ),
+            tippy::tippy_this(
+              ns("limma_fc_viz"),
+              "Only plot genes changing at least this many fold.",
+              theme = "light-border"
             )
           )
         ),
@@ -49,6 +59,11 @@ mod_07_genome_ui <- function(id) {
               inputId = ns("label_gene_symbol"),
               label = "Label Genes",
               value = FALSE
+            ),
+            tippy::tippy_this(
+              ns("label_gene_symbol"),
+              "Show gene symbols next to highlighted loci.",
+              theme = "light-border"
             )
           ),
           column(
@@ -57,6 +72,11 @@ mod_07_genome_ui <- function(id) {
               inputId = ns("ignore_non_coding"),
               label = "Coding genes only",
               value = TRUE
+            ),
+            tippy::tippy_this(
+              ns("ignore_non_coding"),
+              "Keep only protein-coding genes in the plot.",
+              theme = "light-border"
             )
           )
         ),
@@ -67,6 +87,11 @@ mod_07_genome_ui <- function(id) {
               inputId = ns("hide_patches"),
               label = "Hide Patch Chr. ",
               value = TRUE
+            ),
+            tippy::tippy_this(
+              ns("hide_patches"),
+              "Hide alternate patch chromosomes from the view.",
+              theme = "light-border"
             )
           ),
           column(
@@ -99,7 +124,13 @@ mod_07_genome_ui <- function(id) {
               inputId = ns("ma_window_size"),
               label = "Window Size (Mb)",
               selected = 6,
-              choices = c(1, 2, 4, 6, 8, 10, 15, 20)
+              choices = c(1, 2, 4, 6, 8, 10, 15, 20),
+              selectize = FALSE
+            ),
+            tippy::tippy_this(
+              ns("ma_window_size"),
+              "Set the width of the sliding window used to detect enriched regions.",
+              theme = "light-border"
             )
           ),
           column(
@@ -108,7 +139,13 @@ mod_07_genome_ui <- function(id) {
               inputId = ns("ma_window_steps"),
               label = "Steps",
               selected = 2,
-              choices = c(1, 2, 3, 4)
+              choices = c(1, 2, 3, 4),
+              selectize = FALSE
+            ),
+            tippy::tippy_this(
+              ns("ma_window_steps"),
+              "Choose the spacing between adjacent sliding windows.",
+              theme = "light-border"
             )
           )
         ),
@@ -116,12 +153,23 @@ mod_07_genome_ui <- function(id) {
           inputId = ns("ch_region_p_val"),
           label = "FDR cutoff for window",
           selected = 0.0001,
-          choices = c(0.1, 0.05, 0.01, 0.001, 0.0001, 0.00001)
+          choices = c(0.1, 0.05, 0.01, 0.001, 0.0001, 0.00001),
+          selectize = FALSE
+        ),
+        tippy::tippy_this(
+          ns("ch_region_p_val"),
+          "Threshold for calling genomic windows significantly enriched.",
+          theme = "light-border"
         ),
         actionButton(
           inputId = ns("chr_data_popup"),
           label = "Download Plot Data",
           icon = icon("download")
+        ),
+        tippy::tippy_this(
+          ns("chr_data_popup"),
+          "Download the gene-level data behind the chromosome plot.",
+          theme = "light-border"
         )
       ),
       mainPanel(
@@ -156,17 +204,33 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data) {
 
     output$list_comparisons_genome <- renderUI({
       if (is.null(deg$limma()$comparisons)) {
-        selectInput(
-          inputId = ns("select_contrast"),
-          label = NULL,
-          choices = list("All" = "All"),
-          selected = "All"
+        tagList(
+          selectInput(
+            inputId = ns("select_contrast"),
+            label = NULL,
+            choices = list("All" = "All"),
+            selected = "All",
+            selectize = FALSE
+          ),
+          tippy::tippy_this(
+            ns("select_contrast"),
+            "Choose which comparison to display on the genome plots.",
+            theme = "light-border"
+          )
         )
       } else {
-        selectInput(
-          inputId = ns("select_contrast"),
-          label = "Select a comparison:",
-          choices = deg$limma()$comparisons
+        tagList(
+          selectInput(
+            inputId = ns("select_contrast"),
+            label = "Select a comparison:",
+            choices = deg$limma()$comparisons,
+            selectize = FALSE
+          ),
+          tippy::tippy_this(
+            ns("select_contrast"),
+            "Choose which comparison to display on the genome plots.",
+            theme = "light-border"
+          )
         )
       }
     })
@@ -220,7 +284,8 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data) {
             label = "Select Dataset",
             choices = c("Enriched Genes" = "enriched_genes",
                         "Chromosome Data" = "chr_data",
-                        "Enriched Region Boundaries" = "enriched_regions")
+                        "Enriched Region Boundaries" = "enriched_regions"),
+                        selectize = FALSE
           ),
           # Chromosome data filtering options
           conditionalPanel(
@@ -230,7 +295,8 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data) {
               inputId = ns("gene_regulation"),
               label = "Select Gene Regulation",
               choices = c("All", "Up", "Down"),
-              selected = "All"
+              selected = "All",
+              selectize = FALSE
             ),
             # Chromosome selection
             selectizeInput(

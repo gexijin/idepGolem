@@ -59,7 +59,8 @@ mod_02_pre_process_ui <- function(id) {
               "rlog: regularized log (slow) " = 3,
               "EdgeR: log2(CPM+c)" = 1
             ),
-            selected = 1
+            selected = 1,
+            selectize = FALSE
           ),
           tippy::tippy_this(
             ns("counts_transform"),
@@ -214,7 +215,8 @@ mod_02_pre_process_ui <- function(id) {
                 "Treat as zero" = "treatAsZero",
                 "Use gene median in group" = "geneMedianInGroup"
               ),
-              selected = "geneMedian"
+              selected = "geneMedian",
+              selectize = FALSE
             ),
             tippy::tippy_this(
               ns("missing_value"),
@@ -342,7 +344,8 @@ mod_02_pre_process_ui <- function(id) {
                   inputId = ns("scatter_x"),
                   label = tags$span("Sample for x-axis", style = "font-weight: normal;"),
                   choices = 1:5,
-                  selected = 1
+                  selected = 1,
+                  selectize = FALSE
                 )
               ),
               column(
@@ -351,7 +354,8 @@ mod_02_pre_process_ui <- function(id) {
                   inputId = ns("scatter_y"),
                   label = tags$span("Sample for y-axis", style = "font-weight: normal;"),
                   choices = 1:5,
-                  selected = 2
+                  selected = 2,
+                  selectize = FALSE
                 )
               )
             ),
@@ -376,7 +380,13 @@ mod_02_pre_process_ui <- function(id) {
                 selectInput(
                   inputId = ns("heat_color_select"),
                   label = "Select Heat Colors",
-                  choices = NULL
+                  choices = NULL,
+                  selectize = FALSE
+                ),
+                tippy::tippy_this(
+                  ns("heat_color_select"),
+                  "Pick the color palette for the dispersion heatmap.",
+                  theme = "light-border"
                 )
               ),
               column(
@@ -384,6 +394,11 @@ mod_02_pre_process_ui <- function(id) {
                 checkboxInput(
                   inputId = ns("rank"),
                   label = "Use rank of mean values"
+                ),
+                tippy::tippy_this(
+                  ns("rank"),
+                  "Rank genes by mean expression before plotting dispersion.",
+                  theme = "light-border"
                 )
               ),
             ),
@@ -537,7 +552,8 @@ mod_02_pre_process_ui <- function(id) {
                     c("Sample Groups",
                       "Individual Samples")
                   ),
-                  selected = 1
+                  selected = 1,
+                  selectize = FALSE
                 ),
                 tippy::tippy_this(
                   ns("gene_plot_box"),
@@ -615,6 +631,11 @@ mod_02_pre_process_ui <- function(id) {
                 inputId = ns("show_raw"),
                 label = "Show raw counts",
                 value = FALSE
+              ),
+              tippy::tippy_this(
+                ns("show_raw"),
+                "Display the original count matrix instead of transformed values.",
+                theme = "light-border"
               ),
               ns = ns
             ),

@@ -33,7 +33,8 @@ mod_08_bicluster_ui <- function(id) {
             "BCBimax" = "biclust::BCBimax()",
             "BCQuest" = "biclust::BCQuest()"
           ),
-          selected = "BCCC()"
+          selected = "BCCC()",
+          selectize = FALSE
         ),
         htmlOutput(outputId = ns("list_biclusters")),
         textOutput(ns("bicluster_info"))
@@ -106,7 +107,8 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab) {
         inputId = ns("select_bicluster"),
         label = "Select a cluster",
         selected = 1,
-        choices = 1:biclustering()$res@Number
+        choices = 1:biclustering()$res@Number,
+        selectize = FALSE
       )
     })
 

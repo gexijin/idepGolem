@@ -20,6 +20,11 @@ mod_09_network_ui <- function(id) {
           max = 3000,
           value = 1000
         ),
+        tippy::tippy_this(
+          ns("n_genes_network"),
+          "Select how many highly variable genes feed into the network.",
+          theme = "light-border"
+        ),
         fluidRow(
           column(
             width = 6,
@@ -29,6 +34,11 @@ mod_09_network_ui <- function(id) {
               min = 1,
               max = 20,
               value = 5
+            ),
+            tippy::tippy_this(
+              ns("soft_power"),
+              "Adjust the WGCNA soft-thresholding power.",
+              theme = "light-border"
             )
           ),
           column(
@@ -39,6 +49,11 @@ mod_09_network_ui <- function(id) {
               min = 10,
               max = 100,
               value = 20
+            ),
+            tippy::tippy_this(
+              ns("min_module_size"),
+              "Set the minimum number of genes allowed per module.",
+              theme = "light-border"
             )
           )
         ),
@@ -67,8 +82,18 @@ mod_09_network_ui <- function(id) {
           )
         ),
         tippy::tippy_this(
+          ns("download_all_WGCNA_module"),
+          "Download gene lists for every detected module.",
+          theme = "light-border"
+        ),
+        tippy::tippy_this(
           ns("download_selected_WGCNA_module"),
           "Download gene details for the selected module.",
+          theme = "light-border"
+        ),
+        tippy::tippy_this(
+          ns("download_heat_data"),
+          "Download the data used in the module heatmap.",
           theme = "light-border"
         ),
         textOutput(ns("module_statistic"))
@@ -82,36 +107,51 @@ mod_09_network_ui <- function(id) {
             fluidRow(
               column(
                 width = 4,
-                numericInput(
-                  inputId = ns("edge_threshold"),
-                  label = "Edge Threshold",
-                  min = 0,
-                  max = 1,
-                  value = .4,
-                  step = .1
-                )
+              numericInput(
+                inputId = ns("edge_threshold"),
+                label = "Edge Threshold",
+                min = 0,
+                max = 1,
+                value = .4,
+                step = .1
               ),
-              column(
-                width = 4,
-                numericInput(
-                  inputId = ns("top_genes_network"),
-                  label = "Top genes",
-                  min = 10,
-                  max = 2000,
-                  value = 10,
-                  step = 10
-                )
-              ),
-              column(
-                width = 4,
-                style = "margin-top: 25px;",
-                actionButton(
-                  inputId = ns("network_layout"),
-                  label = "Change network layout",
-                  style = "float:center"
-                )
+              tippy::tippy_this(
+                ns("edge_threshold"),
+                "Filter network edges below this connection strength.",
+                theme = "light-border"
               )
             ),
+            column(
+              width = 4,
+              numericInput(
+                inputId = ns("top_genes_network"),
+                label = "Top genes",
+                min = 10,
+                max = 2000,
+                value = 10,
+                step = 10
+              ),
+              tippy::tippy_this(
+                ns("top_genes_network"),
+                "Limit the network display to this many hub genes.",
+                theme = "light-border"
+              )
+            ),
+            column(
+              width = 4,
+              style = "margin-top: 25px;",
+              actionButton(
+                inputId = ns("network_layout"),
+                label = "Change network layout",
+                style = "float:center"
+              ),
+              tippy::tippy_this(
+                ns("network_layout"),
+                "Shuffle the network layout for a different view.",
+                theme = "light-border"
+              )
+            )
+          ),
             br(),
             plotOutput(outputId = ns("module_network")),
             div(
@@ -137,6 +177,11 @@ mod_09_network_ui <- function(id) {
             downloadButton(
               outputId = ns("dl_module_plot"),
               label = "Module Plot"
+            ),
+            tippy::tippy_this(
+              ns("dl_module_plot"),
+              "Download the module eigengene plot.",
+              theme = "light-border"
             )
           ),
           tabPanel(
@@ -190,10 +235,18 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
       req(!is.null(wgcna()))
       module_list <- get_wgcna_modules(wgcna = wgcna())
       req(!is.null(module_list))
-      selectInput(
-        inputId = ns("select_wgcna_module"),
-        label = "Select a module",
-        choices = module_list
+      tagList(
+        selectInput(
+          inputId = ns("select_wgcna_module"),
+          label = "Select a module",
+          choices = module_list,
+          selectize = FALSE
+        ),
+        tippy::tippy_this(
+          ns("select_wgcna_module"),
+          "Pick which WGCNA module to explore in the panels below.",
+          theme = "light-border"
+        )
       )
     })
 
@@ -329,8 +382,7 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
      filename = "module_network_plot",
      figure = reactive({
        network$network_plot
-     })
-     ,
+     }),
      label = "Network plot",
      width = 10,
      height = 6

@@ -32,7 +32,13 @@ mod_05_deg_1_ui <- function(id) {
               "limma-voom" = 2,
               "limma-trend" = 1
             ),
-            selected = 3
+            selected = 3,
+            selectize = FALSE
+          ),
+          tippy::tippy_this(
+            ns("counts_deg_method"),
+            "Pick the method used to detect differentially expressed genes.",
+            theme = "light-border"
           ),
           tags$style(
             type = "text/css",
@@ -128,7 +134,13 @@ mod_05_deg_1_ui <- function(id) {
           selectInput(
             inputId = ns("plot_color_select_1"),
             label = NULL,
-            choices = "Red-Green"
+            choices = "Red-Green",
+            selectize = FALSE
+          ),
+          tippy::tippy_this(
+            ns("plot_color_select_1"),
+            "Change the color palette for DEG summary plots.",
+            theme = "light-border"
           ),
           ns = ns
         ),
@@ -172,16 +184,22 @@ mod_05_deg_1_ui <- function(id) {
             tableOutput(
               outputId = ns("sig_gene_stats_table")
             ),
-            uiOutput(ns("sig_genes_download_button"))
+            uiOutput(ns("sig_genes_download_button")),
+            uiOutput(ns("note_sig_genes_download"))
           ),
           tabPanel(
             title = "Venn Diagram",
             value = "venn_diagram",
-            checkboxInput(
-              inputId = ns("up_down_regulated"),
-              label = "Split gene lists by up- or down-regulation",
-              value = TRUE
-            ),
+          checkboxInput(
+            inputId = ns("up_down_regulated"),
+            label = "Split gene lists by up- or down-regulation",
+            value = TRUE
+          ),
+          tippy::tippy_this(
+            ns("up_down_regulated"),
+            "Separate gene lists into up- and down-regulated sets for exports and plots.",
+            theme = "light-border"
+          ),
             htmlOutput(outputId = ns("list_comparisons_venn")),
             plotOutput(outputId = ns("venn_plot")),
             ottoPlots::mod_download_figure_ui(
@@ -239,16 +257,33 @@ mod_05_deg_2_ui <- function(id) {
               inputId = ns("heatmap_gene_number"),
               label = "Number of genes displayed",
               choices = c("All DEGs"),
-              selected = "All DEGs"
+              selected = "All DEGs",
+              selectize = FALSE
+            ),
+            tippy::tippy_this(
+              ns("heatmap_gene_number"),
+              "Pick how many genes appear in the DEG heatmap.",
+              theme = "light-border"
             ),
             selectInput(
               inputId = ns("heatmap_fdr_fold"),
               label = "Sort by Fold Change or FDR",
-              choices = c("Fold Change", "FDR")
+              choices = c("Fold Change", "FDR"),
+              selectize = FALSE
+            ),
+            tippy::tippy_this(
+              ns("heatmap_fdr_fold"),
+              "Choose whether genes are ordered by fold-change or FDR.",
+              theme = "light-border"
             ),
             downloadButton(
               outputId = ns("download_heat_data"),
               label = "Heatmap Data"
+            ),
+            tippy::tippy_this(
+              ns("download_heat_data"),
+              "Download the data underlying the DEG heatmap.",
+              theme = "light-border"
             ),
             ns = ns
             ),
@@ -259,7 +294,13 @@ mod_05_deg_2_ui <- function(id) {
           selectInput(
             inputId = ns("plot_color_select"),
             label = NULL,
-            choices = "Red-Green"
+            choices = "Red-Green",
+            selectize = FALSE
+          ),
+          tippy::tippy_this(
+            ns("plot_color_select"),
+            "Switch the color palette for the selected plot.",
+            theme = "light-border"
           ),
           ns = ns
         ),
@@ -525,7 +566,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
               choices = setNames(
                 as.list(paste0(x, ":", select_choices[[x]])),
                 select_choices[[x]]
-              )
+              ),
+              selectize = FALSE
             )
           )
         )
@@ -900,8 +942,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         list_genes_df$gene_id <- rownames(list_genes_df)
 
         # Make gene_id the first column
-        list_genes_df <- list_genes_df[
-          ,
+        list_genes_df <- list_genes_df[,
           c("gene_id", setdiff(names(list_genes_df), "gene_id"))
         ]
         
@@ -920,6 +961,15 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       downloadButton(
         outputId = ns("sig_genes_download"),
         "Enriched Gene List"
+      )
+    })
+
+    output$note_sig_genes_download <- renderUI({
+      req(!is.null(deg$limma$results))
+      tippy::tippy_this(
+        elementId = ns("sig_genes_download"),
+        tooltip = "Download the up- and down-regulated gene lists for each comparison.",
+        theme = "light-border"
       )
     })
 
@@ -950,11 +1000,19 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         up_down_regulated = input$up_down_regulated
       )
       if (is.null(venn_comp$choices)) {
-        selectInput(
-          inputId = ns("select_comparisons_venn"),
-          label = NULL,
-          choices = list("All" = "All"),
-          selected = "All"
+        tagList(
+          selectInput(
+            inputId = ns("select_comparisons_venn"),
+            label = NULL,
+            choices = list("All" = "All"),
+            selected = "All",
+            selectize = FALSE
+          ),
+          tippy::tippy_this(
+            ns("select_comparisons_venn"),
+            "Choose which comparisons to include in the Venn diagram.",
+            theme = "light-border"
+          )
         )
       } else {
         tagList(
@@ -965,6 +1023,11 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
             label = NULL,
             choices = venn_comp$choices,
             selected = venn_comp$choices_first_three
+          ),
+          tippy::tippy_this(
+            ns("select_comparisons_venn"),
+            "Select up to five comparisons to visualize in the Venn diagram.",
+            theme = "light-border"
           )
         )
       }
@@ -1038,14 +1101,16 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
           inputId = ns("select_contrast"),
           label = "Comparisons:",
           choices = list("All" = "All"),
-          selected = "All"
+          selected = "All",
+          selectize = FALSE
         )
       } else {
         tagList(
           selectInput(
             inputId = ns("select_contrast"),
             label = "Comparisons:",
-            choices = deg$limma$comparisons
+            choices = deg$limma$comparisons,
+            selectize = FALSE
           ),
           tippy::tippy_this(
             ns("select_contrast"),

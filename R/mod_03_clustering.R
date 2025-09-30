@@ -88,7 +88,13 @@ mod_03_clustering_ui <- function(id) {
                   "Both" = "both",
                   "None" = "none"
                 ),
-                selected = "row"
+                selected = "row",
+                selectize = FALSE
+              ),
+              tippy::tippy_this(
+                ns("dendrogram_display"),
+                "Choose whether to display row, column, or both dendrograms on the heatmap.",
+                theme = "light-border"
               )
             )
           ),
@@ -108,6 +114,11 @@ mod_03_clustering_ui <- function(id) {
             max = 20,
             value = 6,
             step = 1
+          ),
+          tippy::tippy_this(
+            ns("k_clusters"),
+            "Set how many clusters to form when running k-means.",
+            theme = "light-border"
           ),
 
           # Re-run k-means with a different seed
@@ -152,7 +163,13 @@ mod_03_clustering_ui <- function(id) {
                 inputId = ns("dist_function"),
                 label = NULL,
                 choices = NULL,
-                width = "100%"
+                width = "100%",
+                selectize = FALSE
+              ),
+              tippy::tippy_this(
+                ns("dist_function"),
+                "Pick the distance metric used for hierarchical clustering.",
+                theme = "light-border"
               )
             )
           ),
@@ -167,7 +184,13 @@ mod_03_clustering_ui <- function(id) {
                   "average", "complete", "single",
                   "median", "centroid", "mcquitty"
                 ),
-                width = "100%"
+                width = "100%",
+                selectize = FALSE
+              ),
+              tippy::tippy_this(
+                ns("hclust_function"),
+                "Choose how clusters are merged when building the dendrogram.",
+                theme = "light-border"
               )
             )
           ),
@@ -191,6 +214,11 @@ mod_03_clustering_ui <- function(id) {
                 label = NULL,
                 choices = c("Top 5", "Top 10", "Top 15"),
                 multiple = TRUE
+              ),
+              tippy::tippy_this(
+                ns("selected_genes"),
+                "Add labels for the top genes you want to highlight on the heatmap.",
+                theme = "light-border"
               )
             )
           ),
@@ -204,10 +232,20 @@ mod_03_clustering_ui <- function(id) {
                 label = "Center genes (substract mean)",
                 value = TRUE
               ),
+              tippy::tippy_this(
+                ns("gene_centering"),
+                "Subtract each gene's mean value before clustering.",
+                theme = "light-border"
+              ),
               checkboxInput(
                 inputId = ns("gene_normalize"),
                 label = "Normalize genes (divide by SD)",
                 value = FALSE
+              ),
+              tippy::tippy_this(
+                ns("gene_normalize"),
+                "Scale genes by their standard deviation before clustering.",
+                theme = "light-border"
               ),
               fluidRow(
                 column(width = 4, p("Sample Colors")),
@@ -219,7 +257,13 @@ mod_03_clustering_ui <- function(id) {
                     choices = c("Pastel 1", "Dark 2", "Dark 3", 
                                 "Set 2", "Set 3", "Warm",
                                 "Cold", "Harmonic", "Dynamic"),
-                    selected = "Dynamic"
+                    selected = "Dynamic",
+                    selectize = FALSE
+                  ),
+                  tippy::tippy_this(
+                    ns("sample_color"),
+                    "Control the color palette for sample annotations.",
+                    theme = "light-border"
                   )
                 )
               ),
@@ -233,6 +277,11 @@ mod_03_clustering_ui <- function(id) {
                     value = 3,
                     min = 2,
                     step = 1
+                  ),
+                  tippy::tippy_this(
+                    ns("heatmap_cutoff"),
+                    "Cap extreme Z scores at this value when plotting.",
+                    theme = "light-border"
                   )
                 )
               )
@@ -260,6 +309,11 @@ mod_03_clustering_ui <- function(id) {
             downloadButton(
               outputId = ns("download_heatmap_data"),
               label = "Heatmap data"
+            ),
+            tippy::tippy_this(
+              ns("download_heatmap_data"),
+              "Download the data currently displayed in the heatmap.",
+              theme = "light-border"
             ),
             ns = ns
           )
@@ -502,7 +556,8 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         inputId = ns("select_factors_heatmap"),
         label = NULL,
         choices = choices,
-        selected = selected
+        selected = selected,
+        selectize = FALSE
       )
     })
 
@@ -1101,7 +1156,8 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           label = "Select Cluster:",
           inputId = ns("select_cluster"),
           choices = unique(names(k_means_list())),
-          selected = unique(names(k_means_list()))[1]
+          selected = unique(names(k_means_list()))[1],
+          selectize = FALSE
         ),
         selectInput(
           label = "Select GO:",
@@ -1112,7 +1168,8 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
               "GO Biological Process",
               "GO Cellular Component",
               "GO Molecular Function")
-          )
+          ),
+          selectize = FALSE
         )
       )
     })

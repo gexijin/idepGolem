@@ -44,7 +44,13 @@ mod_06_pathway_ui <- function(id) {
             "ssGSEA" = 7,
             "PLAGE" = 8
           ),
-          selected = 3
+          selected = 3,
+          selectize = FALSE
+        ),
+        tippy::tippy_this(
+          ns("pathway_method"),
+          "Select which pathway enrichment algorithm to run.",
+          theme = "light-border"
         ),
         conditionalPanel(
           condition = "input.pathway_method == 1",
@@ -55,7 +61,13 @@ mod_06_pathway_ui <- function(id) {
               "Fold Change" = 1,
               "Expression" = 2
             ),
-            selected = 1
+            selected = 1,
+            selectize = FALSE
+          ),
+          tippy::tippy_this(
+            ns("gage_data"),
+            "Choose whether GAGE uses fold changes or expression values.",
+            theme = "light-border"
           ),
           ns = ns
         ),
@@ -71,12 +83,22 @@ mod_06_pathway_ui <- function(id) {
           max = 1,
           step = .05
         ),
+        tippy::tippy_this(
+          ns("pathway_p_val_cutoff"),
+          "Set the FDR threshold for calling pathways significant.",
+          theme = "light-border"
+        ),
         tags$style(
           type = "text/css",
           "#pathway-pathway_p_val_cutoff { width:100%;}"
         ),
 
         checkboxInput(ns("customize_button"), strong("More options")),
+        tippy::tippy_this(
+          ns("customize_button"),
+          "Expand additional pathway filtering and display settings.",
+          theme = "light-border"
+        ),
 
         fluidRow(
           column(
@@ -88,6 +110,11 @@ mod_06_pathway_ui <- function(id) {
               max = 30,
               value = 5,
               step = 1
+            ),
+            tippy::tippy_this(
+              ns("min_set_size"),
+              "Exclude pathways smaller than this number of genes.",
+              theme = "light-border"
             )
           ),
           column(
@@ -99,6 +126,11 @@ mod_06_pathway_ui <- function(id) {
               max = 2000,
               value = 2000,
               step = 100
+            ),
+            tippy::tippy_this(
+              ns("max_set_size"),
+              "Exclude pathways larger than this number of genes.",
+              theme = "light-border"
             )
           )
         ),
@@ -110,6 +142,11 @@ mod_06_pathway_ui <- function(id) {
           max = 100,
           step = 5
         ),
+        tippy::tippy_this(
+          ns("n_pathway_show"),
+          "Control how many top pathways appear in the results tables and plots.",
+          theme = "light-border"
+        ),
         numericInput(
           inputId = ns("gene_p_val_cutoff"),
           label = "Remove genes with big FDR before pathway analysis:",
@@ -118,10 +155,20 @@ mod_06_pathway_ui <- function(id) {
           max = 1,
           step = .05
         ),
+        tippy::tippy_this(
+          ns("gene_p_val_cutoff"),
+          "Filter out genes with FDR above this value before running pathway analysis.",
+          theme = "light-border"
+        ),
         checkboxInput(
           inputId = ns("absolute_fold"),
           label = "Use absolute values of fold changes for GSEA and GAGE",
           value = FALSE
+        ),
+        tippy::tippy_this(
+          ns("absolute_fold"),
+          "Treat up- and down-regulated genes the same by using absolute fold changes.",
+          theme = "light-border"
         ),
         checkboxInput(
           inputId = ns("show_pathway_id"),
@@ -168,6 +215,7 @@ mod_06_pathway_ui <- function(id) {
             inputId = ns("pgsea_plot_color_select"),
             label = "Select PGSEA plot colors",
             choices = "Blue_Red",
+            selectize = FALSE
           ),
           ns = ns
         )
@@ -273,7 +321,8 @@ mod_06_pathway_ui <- function(id) {
                       "Both Up & Down" = "All Groups",
                       "Up regulated" = "Up",
                       "Down regulated" = "Down"
-                    )
+                    ),
+                    selectize = FALSE
                   ),
                   ns = ns
                 )
@@ -338,7 +387,8 @@ mod_06_pathway_ui <- function(id) {
                     inputId = ns("kegg_color_select"),
                     label = "Colors (low-high)",
                     choices = "green-red",
-                    width = "100%"
+                    width = "100%",
+                    selectize = FALSE
                   )
                 )
               ),
@@ -398,7 +448,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         inputId = ns("select_go"),
         label = "Pathway database:",
         choices = pre_process$gmt_choices(),
-        selected = selected
+        selected = selected,
+        selectize = FALSE
       )
     })
 
@@ -549,7 +600,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           selectInput(
             inputId = ns("pathway_select"),
             label = "Select a significant pathway:",
-            choices = path_choices()
+            choices = path_choices(),
+            selectize = FALSE
           ),
           downloadButton(
             outputId = ns("download_gene_list"), 
@@ -701,14 +753,16 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           inputId = ns("select_contrast"),
           label = NULL,
           choices = list("All" = "All"),
-          selected = "All"
+          selected = "All",
+          selectize = FALSE
         )
       } else {
         selectInput(
           inputId = ns("select_contrast"),
           label =
             "Select a comparison:",
-          choices = deg$limma()$comparisons
+          choices = deg$limma()$comparisons,
+          selectize = FALSE
         )
       }
     })
@@ -720,7 +774,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       selectInput(
         inputId = ns("sig_pathways"),
         label = "Select a significant pathway:",
-        choices = path_choices()
+        choices = path_choices(),
+        selectize = FALSE
       )
     })
 
@@ -737,7 +792,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       selectInput(
         inputId = ns("sig_pathways_kegg"),
         label = "Select a KEGG pathway:",
-        choices = choices
+        choices = choices,
+        selectize = FALSE
       )
     })
     gene_sets <- eventReactive(input$submit_pathway_button, {
