@@ -145,12 +145,43 @@ chromosome_plotly <- function(limma,
       )
     }
     # Label y with ch names
+    fallback_labels <- names(ch[ch_length_table$chNum])
+    fallback_missing <- is.na(fallback_labels) | fallback_labels == ""
+    if (any(fallback_missing)) {
+      fallback_labels[fallback_missing] <- paste0("chr", ch_length_table$chNum[fallback_missing])
+    }
+
+    chr_labels <- if ("chromosome_name" %in% colnames(ch_length_table)) {
+      as.character(ch_length_table$chromosome_name)
+    } else {
+      character(0)
+    }
+
+    if (!length(chr_labels)) {
+      chr_labels <- fallback_labels
+    } else {
+      needs_fill <- is.na(chr_labels) | chr_labels == ""
+      if (length(fallback_labels) == length(chr_labels)) {
+        chr_labels[needs_fill] <- fallback_labels[needs_fill]
+      } else if (any(needs_fill)) {
+        chr_labels[needs_fill] <- paste0("chr", ch_length_table$chNum[needs_fill])
+      }
+    }
+
+    if (!length(chr_labels)) {
+      chr_labels <- paste0("chr", ch_length_table$chNum)
+    }
+
+    chr_labels <- ifelse(
+      grepl("^(?i)chr", chr_labels),
+      chr_labels,
+      paste0("chr", chr_labels)
+    )
+
+    chr_label_lookup <- stats::setNames(chr_labels, as.character(ch_length_table$chNum))
+
     p <- p + ggplot2::scale_y_continuous(
-      labels = paste(
-        "chr",
-        names(ch[ch_length_table$chNum]),
-        sep = ""
-      ),
+      labels = chr_labels,
       breaks = chD * (1:ch_total),
       limits = c(0, chD * (ch_total + 1) + 5)
     )
@@ -210,13 +241,16 @@ chromosome_plotly <- function(limma,
 
       # Label significant regions
       sig_ch <- sort(table(moving_average$chNum), decreasing = TRUE)
-      sig_ch <- names(ch)[as.numeric(names(sig_ch))]
-      if (length(sig_ch) <= 5) {
+      sig_ch_names <- chr_label_lookup[names(sig_ch)]
+      sig_missing <- is.na(sig_ch_names) | sig_ch_names == ""
+      if (any(sig_missing)) {
+        sig_ch_names[sig_missing] <- paste0("chr", names(sig_ch)[sig_missing])
+      }
+      if (length(sig_ch_names) <= 5) {
         # More than 5 just show 5
-        sig_ch <- paste0("chr", sig_ch, collapse = ", ")
+        sig_ch <- paste(sig_ch_names, collapse = ", ")
       } else {
-        sig_ch <- sig_ch[1:5]
-        sig_ch <- paste0("chr", sig_ch, collapse = ", ")
+        sig_ch <- paste(sig_ch_names[1:5], collapse = ", ")
         sig_ch <- paste0(sig_ch, ", ...")
       }
 
@@ -326,7 +360,11 @@ chromosome_data <- function(limma,
     ix3 <- which(duplicated(x$symbol))
     ix <- unique(c(ix, ix2, ix3))
     x$symbol[ix] <- x$ensembl_gene_id[ix]
-
+    x$chromosome_name <- trimws(as.character(x$chromosome_name))
+    missing_chr <- is.na(x$chromosome_name) |
+      x$chromosome_name == "" |
+      toupper(x$chromosome_name) == "NA"
+    x$chromosome_name[missing_chr] <- NA
     x <- x[!is.na(x$chromosome_name), ]
     x <- x[!is.na(x$start_position), ]
 
@@ -383,8 +421,9 @@ chromosome_data <- function(limma,
     # Add chr. numer
     ch_length_table$chNum <- ch[ch_length_table$chromosome_name]
     ch_length_table <- ch_length_table[!is.na(ch_length_table$chNum), ]
-    ch_length_table <- ch_length_table[order(ch_length_table$chNum), c(3, 2)]
-    ch_length_table <- ch_length_table[order(ch_length_table$chNum), ]
+    ch_length_table <- ch_length_table[order(ch_length_table$chNum),
+                                       c("chNum", "chromosome_name", "start_position")]
+    ch_length_table$chromosome_name <- as.character(ch_length_table$chromosome_name)
     ch_length_table$start_position <- ch_length_table$start_position / 1e6
 
     # Prepare coordinates

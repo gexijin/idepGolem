@@ -371,7 +371,7 @@ mod_01_load_data_ui <- function(id) {
           id = ns("load_message"),
           h3("iDEP — from data to discoveries", style = "color: #d9534f; font-weight: 700;"),
           br(),
-          h4("Upload, visualize, run stats, and unveil pathways — in minutes.", style = "color: green;"),
+          h4("Visualize, analyze, and unveil pathways. In minutes!", style = "color: green;"),
           br(),
           br(),
           br(),
@@ -1042,7 +1042,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       req(input$data_file_format == 0)
 
       showNotification(
-        "Select a data type before uploading data or loading demo data.",
+        "Select a data type before uploading data. Try w/ demo data.",
         duration = 30,
         type = "error",
         id = "select_first"
@@ -1358,7 +1358,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         fluidRow(
           column(
             width = 9,
-            h4("iDEP: integrated Differential Expression & Pathway analysis (v2.20)")
+            h4("iDEP: integrated Differential Expression & Pathway analysis (v2.20)"),
+            h5("The power of 100s of R packages and annotation databases at your fingertips!")
           ),
           column(
             width = 3,

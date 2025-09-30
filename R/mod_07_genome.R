@@ -62,7 +62,7 @@ mod_07_genome_ui <- function(id) {
         ),
         fluidRow(
           column(
-            width = 5,
+            width = 6,
             checkboxInput(
               inputId = ns("hide_patches"),
               label = "Hide Patch Chr. ",
@@ -70,11 +70,20 @@ mod_07_genome_ui <- function(id) {
             )
           ),
           column(
-            width = 7,
+            width = 6,
             checkboxInput(
               inputId = ns("hide_chr"),
-              label = "Hide Chr. w/ 4 or less genes",
-              value = TRUE
+              label = "Hide sparse chrs.",
+              value = FALSE
+            ),
+            tippy::tippy_this(
+              ns("hide_chr"),
+              "Hide chromosomes with 4 or less genes in the dataset.",
+              placement = "top",
+              options = list(
+                theme = "light-border",
+                size = "small"
+              )
             )
           )
         ),
