@@ -20,8 +20,18 @@ mod_01_load_data_ui <- function(id) {
               top: calc(85%);
               left: calc(5%);
                }
-             
-             .dis_gray { background-color: gray; }             
+
+             #shiny-notification-load_prompt {
+               width: 600px;
+               max-width: 60vw;
+               top: calc(10%);
+               right: 20px;
+               left: auto;
+               background-color: #f8f9fa;
+               opacity: 1;
+             }
+
+             .dis_gray { background-color: gray; }
              .more-options { display: block; width: 100%; }
              .more-options summary { display: flex; align-items: center; cursor: pointer; font-weight: 600; margin: 0; }
              .more-options summary::marker, .more-options summary::-webkit-details-marker { display: none; }
@@ -459,7 +469,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         as.character(type),
         `1` = list(
           title = "Read Counts",
-          notification = "Upload a read count matrix or click Load demo.",
           body = tagList(
             p("Raw gene-by-sample count matrix. Values indicate the number of sequencing reads assigned to each gene. Counts are typically integers, but estimated counts (e.g., from kallisto or Salmon) may be non-integer and should still be treated as count data."),
             tags$ul(
@@ -470,7 +479,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         ),
         `2` = list(
           title = "Normalized Expression Matrix",
-          notification = "Upload a normalized expression matrix or click Load demo.",
           body = tagList(
             p("Provide a gene-by-sample matrix with normalized values such as TPM/FPKM, microarray intensities, proteomics, etc."),
             tags$ul(
@@ -481,7 +489,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         ),
         `3` = list(
           title = "Fold Change & Adjusted P-values",
-          notification = "Upload fold-change plus adjusted P-values or click Load demo.",
           body = tagList(
             p("Upload summary statistics for one or more contrasts."),
             tags$ul(
@@ -493,20 +500,10 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         ),
         list(
           title = "Upload Data",
-          notification = "Upload a data file or click Load demo.",
           body = p("Upload the appropriate file for the selected data type.")
         )
       )
     }
-
-    output$demo_preview_table <- renderTable({
-      df <- demo_preview_content()
-      req(!is.null(df))
-
-      # Convert all columns to character to preserve exact display
-      df[] <- lapply(df, as.character)
-      df
-    }, rownames = FALSE, colnames = TRUE, align = "c")
 
     # increase max input file size
     options(shiny.maxRequestSize = 200 * 1024^2)
@@ -820,7 +817,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         selected = input$data_file_format
       )
 
-      # Show modal only when on Data tab
+      # Show notification only when on Data tab
       req(tab() == "Data")
 
       details <- get_data_type_details(input$data_file_format)
@@ -828,35 +825,72 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
       demo_preview_content(preview)
 
-      # Build modal body with preview table if available
-      message_body <- if (!is.null(preview)) {
+      # Build notification UI with details and preview
+      notification_ui <- if (!is.null(preview)) {
+        # Convert preview to character to preserve exact display
+        df <- preview
+        df[] <- lapply(df, as.character)
+
+        # Create HTML table manually
+        table_html <- tags$table(
+          style = "width: 100%; border-collapse: collapse; margin-top: 10px;",
+          tags$thead(
+            tags$tr(
+              lapply(names(df), function(col) {
+                tags$th(
+                  style = "border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2;",
+                  col
+                )
+              })
+            )
+          ),
+          tags$tbody(
+            lapply(seq_len(nrow(df)), function(i) {
+              tags$tr(
+                lapply(df[i, ], function(val) {
+                  tags$td(
+                    style = "border: 1px solid #ddd; padding: 8px; text-align: center;",
+                    val
+                  )
+                })
+              )
+            })
+          )
+        )
+
         tagList(
+          tags$strong(details$title),
+          tags$br(),
           details$body,
           div(
-            style = "max-height: 260px; overflow-y: auto; margin-top: 10px;",
-            tableOutput(ns("demo_preview_table"))
+            style = "max-height: 300px; overflow-y: auto; margin-top: 10px;",
+            table_html
           )
         )
       } else {
-        tagList(details$body, tags$p("Preview not available for this demo file."))
+        tagList(
+          tags$strong(details$title),
+          tags$br(),
+          details$body
+        )
       }
 
       showNotification(
-        details$notification,
-        duration = 30,
-        type = "error",
+        ui = notification_ui,
+        duration = 20,
+        type = "message",
         id = "load_prompt"
       )
-
-      showModal(
-        modalDialog(
-          title = details$title,
-          easyClose = TRUE,
-          size = "m",
-          message_body
-        )
-      )
     }, ignoreNULL = TRUE)
+
+    # Dismiss notification when user interacts with file input or demo button
+    observeEvent(input$expression_file, {
+      removeNotification("load_prompt")
+    })
+
+    observeEvent(input$demo_modal_button, {
+      removeNotification("load_prompt")
+    })
 
     observe({
       req(tab() == "Data")
@@ -1239,7 +1273,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       req(input$data_file_format == 0)
 
       showNotification(
-        "Select a data type first.",
+        "Choose a species if not studying human. Then select a data type.",
         duration = 30,
         type = "error",
         id = "select_first"
