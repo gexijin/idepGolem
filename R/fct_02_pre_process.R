@@ -252,6 +252,56 @@ pre_process <- function(data,
         data <- cbind(data, Ctrl)
       }
     }
+
+    # Detect ratio data (fold-changes as ratios instead of log2)
+    # Ratio data characteristics:
+    # 1. No negative values
+    # 2. High right skew (values > 1 for upregulation, 0-1 for downregulation)
+    # If detected, apply log2 transformation
+    fc_cols <- if (!no_fdr) {
+      2 * (1:n2) - 1  # Fold-change columns (odd columns)
+    } else {
+      1:ncol(data)    # All columns are fold-changes
+    }
+
+    # Extract fold-change columns from raw data
+    fc_data_raw <- results$raw_counts[, fc_cols, drop = FALSE]
+
+    # Check each fold-change column for ratio characteristics
+    for (i in seq_along(fc_cols)) {
+      col_data <- fc_data_raw[, i]
+      col_data <- col_data[!is.na(col_data)]  # Remove NAs for analysis
+
+      if (length(col_data) > 0) {
+        # Detect ratio data:
+        # 1. No negative values (or very few, < 1%)
+        # 2. High skewness to the right (indicating ratio scale)
+        has_no_negatives <- sum(col_data < 0) / length(col_data) < 0.01
+
+        # Calculate skewness: ratio data typically has skewness > 1
+        # Ratio data: many values 0-1 (downreg), some values > 1 (upreg)
+        # This creates right skew
+        if (has_no_negatives && length(col_data) >= 10) {
+          skewness <- e1071::skewness(col_data)
+
+          # If skewness > 1 and no negatives, likely ratio data
+          if (skewness > 1) {
+            # Transform this column: log2(ratio)
+            # Add small constant to avoid log(0)
+            data[, i] <- log2(results$raw_counts[, fc_cols[i]] + 0.01)
+
+            # Show notification to user
+            showNotification(
+              paste0("Column ", colnames(results$raw_counts)[fc_cols[i]],
+                     " detected as ratio data (no negatives, right skew = ",
+                     round(skewness, 2), "). Applied log2 transformation."),
+              duration = 10,
+              type = "warning"
+            )
+          }
+        }
+      }
+    }
   }
   results$data_size <- c(results$data_size, dim(data))
 

@@ -1524,6 +1524,76 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           #footer = actionButton(ns("reset_app"), "Start over")
         ))
       }
+
+      # Check for ratio data in fold-change uploads
+      if (input$data_file_format == 3) {
+        data <- loaded_data()$data
+
+        # Determine which columns are fold-changes
+        n2 <- ncol(data) %/% 2
+        fc_cols <- if (!input$no_fdr) {
+          2 * (1:n2) - 1  # Fold-change columns (odd columns)
+        } else {
+          1:ncol(data)    # All columns are fold-changes
+        }
+
+        # Check each fold-change column for ratio characteristics
+        ratio_detected <- FALSE
+        ratio_columns <- c()
+
+        for (i in fc_cols) {
+          col_data <- data[, i]
+          col_data <- col_data[!is.na(col_data)]
+
+          if (length(col_data) >= 10) {
+            has_no_negatives <- sum(col_data < 0) / length(col_data) < 0.01
+
+            if (has_no_negatives) {
+              skewness <- e1071::skewness(col_data)
+
+              if (skewness > 1) {
+                ratio_detected <- TRUE
+                ratio_columns <- c(ratio_columns, colnames(data)[i])
+              }
+            }
+          }
+        }
+
+        # Show warning if ratio data detected
+        if (ratio_detected) {
+          showModal(modalDialog(
+            title = "Ratio Data Detected",
+            tags$p(
+              "The following fold-change column(s) appear to contain ratio data ",
+              "instead of log2 fold-changes:"
+            ),
+            tags$ul(
+              lapply(ratio_columns, function(col) tags$li(tags$strong(col)))
+            ),
+            tags$p(
+              style = "margin-top: 15px;",
+              "Ratio data characteristics detected:"
+            ),
+            tags$ul(
+              tags$li("No negative values (or < 1% negative)"),
+              tags$li("High right skew (upregulated genes > 1, downregulated 0-1)")
+            ),
+            tags$p(
+              style = "margin-top: 15px; color: #d9534f; font-weight: bold;",
+              "iDEP will automatically apply log2 transformation during preprocessing."
+            ),
+            tags$p(
+              "This ensures proper analysis and visualization. If your data is already ",
+              "in log2 scale, please check your input file."
+            ),
+            size = "m",
+            easyClose = TRUE,
+            footer = tagList(
+              modalButton("OK")
+            )
+          ))
+        }
+      }
     })
 
     # Get converted IDs ----------
