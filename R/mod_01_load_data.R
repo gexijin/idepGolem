@@ -436,8 +436,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           ),
           ctrl_1 = c(2, 90, 234, 3222, 9304),
           ctrl_2 = c(11, 66, 765, 2999, 11160),
-          radiation_1 = c(245, 54, 32, 3450, 12608),
-          radiation_2 = c(308, 73, 77, 287, 13041),
+          treat_1 = c(245, 54, 32, 3450, 12608),
+          treat_2 = c(308, 73, 77, 287, 13041),
           stringsAsFactors = FALSE
         )
       ),
@@ -456,8 +456,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         demo_name = "3 comparisons; Mouse",
         data = data.frame(
           genes = c("Gnai3", "Cdc45", "Scml2", "Narf", "Cav2"),
-          radiation_lfc = c(-0.0981, 0.510, 0.545, -0.229, -0.592),
-          radiation_FDR = c(0.99, 0.001, 0.021, 0.120, 1e-10),
+          treat_lfc = c(-0.0981, 0.510, 0.545, -0.229, -0.592),
+          treat_FDR = c(0.99, 0.001, 0.021, 0.120, 1e-10),
           stringsAsFactors = FALSE
         )
       )
@@ -517,8 +517,12 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       preview <- demo_preview_content()
       req(!is.null(preview))
       req(!is.null(preview$data))
-      preview$data
-    }, rownames = FALSE)
+
+      # Convert all columns to character to preserve exact display
+      df <- preview$data
+      df[] <- lapply(df, as.character)
+      df
+    }, rownames = FALSE, colnames = TRUE, align = "c")
 
     # increase max input file size
     options(shiny.maxRequestSize = 200 * 1024^2)
