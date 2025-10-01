@@ -367,22 +367,6 @@ mod_05_deg_2_ui <- function(id) {
             mod_11_enrichment_ui(ns("enrichment_table_cluster")),
           ),
           tabPanel(
-            title = "R Code",
-            verbatimTextOutput(
-              ns("deg_code_2")
-            ),
-            br(),
-            downloadButton(
-              outputId = ns("dl_deg_code_2"),
-              label = "Code"
-            ),
-            tippy::tippy_this(
-              ns("dl_deg_code_2"),
-              "Download the R script used for DEG analysis.",
-              theme = "light"
-            )
-          ),
-          tabPanel(
             title = icon("info-circle"),
             includeHTML(app_sys("app/www/help_deg2.html"))
           )
