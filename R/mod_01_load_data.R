@@ -423,6 +423,50 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     selected_demo <- reactiveVal(NULL)
     demo_preview_content <- reactiveVal(NULL)
 
+    demo_preview_tables <- list(
+      `1` = list(
+        demo_name = "2 groups; Human",
+        data = data.frame(
+          Ensembl = c(
+            "ENSG00000198888",
+            "ENSG00000198763",
+            "ENSG00000198804",
+            "ENSG00000198712",
+            "ENSG00000228253"
+          ),
+          ctrl_1 = c(2, 90, 234, 3222, 9304),
+          ctrl_2 = c(11, 66, 765, 2999, 11160),
+          radiation_1 = c(245, 54, 32, 3450, 12608),
+          radiation_2 = c(308, 73, 77, 287, 13041),
+          stringsAsFactors = FALSE
+        )
+      ),
+      `2` = list(
+        demo_name = "2 groups normalized; Human",
+        data = data.frame(
+          symbol = c("A2M", "A4GALT", "AAAS", "AACS", "AADAC"),
+          wt_1 = c(7.7757, 1.5048, 8.9854, 2.6064, 2.9547),
+          wt_2 = c(7.8172, 1.6626, 9.0822, 3.7765, 2.3480),
+          mutant_1 = c(8.5988, 3.9233, 8.8083, 3.9611, 3.8708),
+          mutant_2 = c(8.6342, 2.8120, 8.6981, 2.9102, 4.3300),
+          stringsAsFactors = FALSE
+        )
+      ),
+      `3` = list(
+        demo_name = "3 comparisons; Mouse",
+        data = data.frame(
+          genes = c("Gnai3", "Cdc45", "Scml2", "Narf", "Cav2"),
+          radiation_lfc = c(-0.0981, 0.510, 0.545, -0.229, -0.592),
+          radiation_FDR = c(0.99, 0.001, 0.021, 0.120, 1e-10),
+          stringsAsFactors = FALSE
+        )
+      )
+    )
+
+    get_demo_preview <- function(type) {
+      demo_preview_tables[[as.character(type)]]
+    }
+
     get_data_type_details <- function(type) {
       type_char <- as.character(type)
 
@@ -432,25 +476,26 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           title = "Read Counts",
           notification = "Upload a read count matrix or click Load demo.",
           body = tagList(
-            p("Gene-by-sample count matrix (usually integers). Recommended for RNA-seq data so iDEP can run DESeq2."),
+            p("Upload a raw gene-by-sample count matrixintegers). Recommended for RNA-seq so iDEP can run DESeq2."),
             tags$ul(
               tags$li("First column: gene IDs (Ensembl, symbols, etc.)."),
-              tags$li("Column headers: sample names"),
+              tags$li("Column headers: sample names; avoid spaces and '-' characters.")
             )
           ),
-          footnote = "Here 17 menas 17 reads mapped to a gene; avoid TPM/RPKM in this mode."
+          footnote = "Counts should be raw integers; avoid TPM/RPKM in this mode."
         ),
         `2` = list(
           title = "Normalized Expression Matrix",
           notification = "Upload a normalized expression matrix or click Load demo.",
           body = tagList(
-            p("Gene-by-sample matrix with normalized values such as TPM/FPKM, microarray intensities, proteomics, etc."),
+            p("Provide a gene-by-sample matrix with normalized values (e.g., log2 TPM/FPKM, microarray intensities, proteomics)."),
             tags$ul(
-              tags$li("First column: gene IDs (Ensembl, symbols, etc.)."),
-              tags$li("Column headers: sample names. Awoid space and '-' characters."),
+              tags$li("Gene identifiers stay in the first column."),
+              tags$li("Use consistent scaling across samples."),
+              tags$li("Do not mix raw counts with normalized values.")
             )
           ),
-          footnote = "Values may be log-scale or not."
+          footnote = "Values may already be logged or not; iDEP respects the scale you upload."
         ),
         `3` = list(
           title = "Fold Change & Adjusted P-values",
@@ -466,60 +511,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           footnote = "At minimum include one logFC column and its matching FDR/adj.P.Val column."
         ),
         NULL
-      )
-    }
-
-    read_demo_preview <- function(type, n = 5) {
-      files <- idep_data$demo_file_info
-      entry <- files[files$type == type, , drop = FALSE]
-      if (nrow(entry) == 0) {
-        return(NULL)
-      }
-
-      expression_path <- entry$expression[[1]]
-      if (!file.exists(expression_path)) {
-        return(NULL)
-      }
-
-      preview_data <- tryCatch({
-        ext <- tolower(tools::file_ext(expression_path))
-        if (ext %in% c("csv")) {
-          utils::read.csv(
-            expression_path,
-            nrows = n,
-            check.names = FALSE,
-            stringsAsFactors = FALSE
-          )
-        } else if (ext %in% c("tsv", "txt")) {
-          utils::read.delim(
-            expression_path,
-            nrows = n,
-            check.names = FALSE,
-            stringsAsFactors = FALSE
-          )
-        } else if (ext %in% c("xlsx", "xls")) {
-          if (!requireNamespace("readxl", quietly = TRUE)) {
-            return(NULL)
-          }
-          as.data.frame(readxl::read_excel(expression_path, n_max = n))
-        } else {
-          utils::read.csv(
-            expression_path,
-            nrows = n,
-            check.names = FALSE,
-            stringsAsFactors = FALSE
-          )
-        }
-      }, error = function(e) NULL)
-
-      if (is.null(preview_data)) {
-        return(NULL)
-      }
-
-      list(
-        data = preview_data,
-        demo_name = entry$name[[1]],
-        file_name = basename(expression_path)
       )
     }
 
@@ -847,7 +838,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       req(input$data_file_format != 0)
 
       details <- get_data_type_details(input$data_file_format)
-      preview <- read_demo_preview(input$data_file_format)
+      preview <- get_demo_preview(input$data_file_format)
 
       if (is.null(details)) {
         details <- list(
@@ -863,7 +854,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       message_body <- tagList(details$body)
 
       if (!is.null(preview) && !is.null(preview$data)) {
-        row_count <- nrow(preview$data)
+
         message_body <- tagList(
           message_body,
           div(
@@ -878,15 +869,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         )
       }
 
-      if (!is.null(details$footnote)) {
-        message_body <- tagList(
-          message_body,
-          tags$p(
-            style = "font-size: 12px; color: #6c757d; margin-top: 10px;",
-            details$footnote
-          )
-        )
-      }
 
       showNotification(
         details$notification,
