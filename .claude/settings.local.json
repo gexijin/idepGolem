@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(R:*)"
+      "Bash(R:*)",
+      "Bash(Rscript:*)"
     ],
     "deny": [],
     "ask": []

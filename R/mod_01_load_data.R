@@ -1184,14 +1184,14 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             width = 2,
             align = "center",
             actionLink(
-              inputId = ns("data_format_help"),
+              inputId = ns("design_format_help"),
               label = NULL,
               icon = icon("info-circle"),
               class = "load-data-info-icon"
             ),
             tippy::tippy_this(
-              ns("data_format_help"),
-              "Learn more about the data types iDEP accepts.",
+              ns("design_format_help"),
+              "Learn more about experimental design file format.",
               theme = "light-border"
             )
           )
@@ -1700,7 +1700,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
     output$welcome_ui <- renderUI({
       req(go_button_count() == 0)
-      req(input$data_format_help == 0)
+      req(input$data_format_help == 0 && input$design_format_help == 0)
 
       tagList(
         fluidRow(
@@ -1739,10 +1739,37 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       )
     })
 
-    output$format_help_ui <- renderUI({
-      req(input$data_format_help != 0)
+    # Track which help button was clicked last
+    last_help_clicked <- reactiveVal("none")
 
-      includeHTML(app_sys("app/www/format.html"))
+    observeEvent(input$data_format_help, {
+      last_help_clicked("data")
+    })
+
+    observeEvent(input$design_format_help, {
+      last_help_clicked("design")
+    })
+
+    output$format_help_ui <- renderUI({
+      req(input$data_format_help != 0 || input$design_format_help != 0)
+
+      # Scroll to section 2 only if design_format_help was clicked last
+      should_scroll_to_section2 <- last_help_clicked() == "design"
+
+      tagList(
+        includeHTML(app_sys("app/www/format.html")),
+        # Scroll to section 2 only if design_format_help was clicked
+        if (should_scroll_to_section2) {
+          tags$script(HTML("
+            setTimeout(function() {
+              var anchor = document.querySelector('a[name=\"LFCs\"]');
+              if (anchor) {
+                anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+            }, 100);
+          "))
+        }
+      )
     })
 
     list(
