@@ -424,102 +424,86 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     demo_preview_content <- reactiveVal(NULL)
 
     demo_preview_tables <- list(
-      `1` = list(
-        demo_name = "2 groups; Human",
-        data = data.frame(
-          Ensembl = c(
-            "ENSG00000198888",
-            "ENSG00000198763",
-            "ENSG00000198804",
-            "ENSG00000198712",
-            "ENSG00000228253"
-          ),
-          ctrl_1 = c(2, 90, 234, 3222, 9304),
-          ctrl_2 = c(11, 66, 765, 2999, 11160),
-          treat_1 = c(245, 54, 32, 3450, 12608),
-          treat_2 = c(308, 73, 77, 287, 13041),
-          stringsAsFactors = FALSE
-        )
+      `1` = data.frame(
+        Ensembl = c(
+          "ENSG00000198888",
+          "ENSG00000198763",
+          "ENSG00000198804",
+          "ENSG00000198712",
+          "ENSG00000228253"
+        ),
+        ctrl_1 = c(2, 90, 234, 3222, 9304),
+        ctrl_2 = c(11, 66, 765, 2999, 11160),
+        treat_1 = c(245, 54, 32, 3450, 12608),
+        treat_2 = c(308, 73, 77, 287, 13041),
+        stringsAsFactors = FALSE
       ),
-      `2` = list(
-        demo_name = "2 groups normalized; Human",
-        data = data.frame(
-          symbol = c("A2M", "A4GALT", "AAAS", "AACS", "AADAC"),
-          wt_1 = c(7.7757, 1.5048, 8.9854, 2.6064, 2.9547),
-          wt_2 = c(7.8172, 1.6626, 9.0822, 3.7765, 2.3480),
-          mutant_1 = c(8.5988, 3.9233, 8.8083, 3.9611, 3.8708),
-          mutant_2 = c(8.6342, 2.8120, 8.6981, 2.9102, 4.3300),
-          stringsAsFactors = FALSE
-        )
+      `2` = data.frame(
+        symbol = c("A2M", "A4GALT", "AAAS", "AACS", "AADAC"),
+        wt_1 = c(7.7757, 1.5048, 8.9854, 2.6064, 2.9547),
+        wt_2 = c(7.8172, 1.6626, 9.0822, 3.7765, 2.3480),
+        mutant_1 = c(8.5988, 3.9233, 8.8083, 3.9611, 3.8708),
+        mutant_2 = c(8.6342, 2.8120, 8.6981, 2.9102, 4.3300),
+        stringsAsFactors = FALSE
       ),
-      `3` = list(
-        demo_name = "3 comparisons; Mouse",
-        data = data.frame(
-          genes = c("Gnai3", "Cdc45", "Scml2", "Narf", "Cav2"),
-          treat_lfc = c(-0.0981, 0.510, 0.545, -0.229, -0.592),
-          treat_FDR = c(0.99, 0.001, 0.021, 0.120, 1e-10),
-          stringsAsFactors = FALSE
-        )
+      `3` = data.frame(
+        genes = c("Gnai3", "Cdc45", "Scml2", "Narf", "Cav2"),
+        treat_lfc = c(-0.0981, 0.510, 0.545, -0.229, -0.592),
+        treat_FDR = c(0.99, 0.001, 0.021, 0.120, 1e-10),
+        stringsAsFactors = FALSE
       )
     )
 
-    get_demo_preview <- function(type) {
-      demo_preview_tables[[as.character(type)]]
-    }
-
     get_data_type_details <- function(type) {
-      type_char <- as.character(type)
-
       switch(
-        type_char,
+        as.character(type),
         `1` = list(
           title = "Read Counts",
           notification = "Upload a read count matrix or click Load demo.",
           body = tagList(
-            p("Upload a raw gene-by-sample count matrixintegers). Recommended for RNA-seq so iDEP can run DESeq2."),
+            p("Raw gene-by-sample count matrix. Values indicate the number of sequencing reads assigned to each gene. Counts are typically integers, but estimated counts (e.g., from kallisto or Salmon) may be non-integer and should still be treated as count data."),
             tags$ul(
               tags$li("First column: gene IDs, such as Ensembl, Entrez, symbols, etc."),
               tags$li("Column headers: sample names; avoid spaces and '-' characters.")
             )
-          ),
-          footnote = "Counts should be raw integers; avoid TPM/RPKM in this mode."
+          )
         ),
         `2` = list(
           title = "Normalized Expression Matrix",
           notification = "Upload a normalized expression matrix or click Load demo.",
           body = tagList(
-            p("Provide a gene-by-sample matrix with normalized values (e.g., log2 TPM/FPKM, microarray intensities, proteomics)."),
+            p("Provide a gene-by-sample matrix with normalized values such as TPM/FPKM, microarray intensities, proteomics, etc."),
             tags$ul(
               tags$li("First column: gene IDs such as Ensembl, Entrez, symbols, etc."),
               tags$li("Column headers: sample names; avoid spaces and '-' characters.")
             )
-          ),
-          footnote = "Values may already be logged or not; iDEP respects the scale you upload."
+          )
         ),
         `3` = list(
           title = "Fold Change & Adjusted P-values",
           notification = "Upload fold-change plus adjusted P-values or click Load demo.",
           body = tagList(
-            p("Upload a table summarizing differential expression results for one or more contrasts."),
+            p("Upload summary statistics for one or more contrasts."),
             tags$ul(
-              tags$li("First column: gene IDs (Ensembl, symbols, etc.)."),
-              tags$li("Then log fold-change column and its matching adjusted P-value/FDR column."),
+              tags$li("First column: gene IDs (Ensembl, symbols, ...)"),
+              tags$li("Log2 fold-change and its matching adjusted P-value/FDR"),
               tags$li("Pair each contrast with an adjusted P-value/FDR column.")
             )
-          ),
-          footnote = "At minimum include one logFC column and its matching FDR/adj.P.Val column."
+          )
         ),
-        NULL
+        list(
+          title = "Upload Data",
+          notification = "Upload a data file or click Load demo.",
+          body = p("Upload the appropriate file for the selected data type.")
+        )
       )
     }
 
     output$demo_preview_table <- renderTable({
-      preview <- demo_preview_content()
-      req(!is.null(preview))
-      req(!is.null(preview$data))
+      df <- demo_preview_content()
+      req(!is.null(df))
 
       # Convert all columns to character to preserve exact display
-      df <- preview$data
       df[] <- lapply(df, as.character)
       df
     }, rownames = FALSE, colnames = TRUE, align = "c")
@@ -824,8 +808,9 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     })
 
     observeEvent(input$data_file_format, {
-      
       req(input$data_file_format != 0)
+
+      # Update dropdown text
       updateSelectInput(
         session = session,
         inputId = "data_file_format",
@@ -833,45 +818,28 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
                        "Normalized Expression data" = 2,
                        "Fold-change & adjusted P-val" = 3),
         selected = input$data_file_format
-        )
-    })
+      )
 
-    observeEvent(input$data_file_format, {
+      # Show modal only when on Data tab
       req(tab() == "Data")
-      req(input$data_file_format != 0)
 
       details <- get_data_type_details(input$data_file_format)
-      preview <- get_demo_preview(input$data_file_format)
-
-      if (is.null(details)) {
-        details <- list(
-          title = "Upload Data",
-          notification = "Upload a data file or click Load demo.",
-          body = tagList(p("Upload the appropriate file for the selected data type.")),
-          footnote = NULL
-        )
-      }
+      preview <- demo_preview_tables[[as.character(input$data_file_format)]]
 
       demo_preview_content(preview)
 
-      message_body <- tagList(details$body)
-
-      if (!is.null(preview) && !is.null(preview$data)) {
-
-        message_body <- tagList(
-          message_body,
+      # Build modal body with preview table if available
+      message_body <- if (!is.null(preview)) {
+        tagList(
+          details$body,
           div(
             style = "max-height: 260px; overflow-y: auto; margin-top: 10px;",
             tableOutput(ns("demo_preview_table"))
           )
         )
       } else {
-        message_body <- tagList(
-          message_body,
-          tags$p("Preview not available for this demo file.")
-        )
+        tagList(details$body, tags$p("Preview not available for this demo file."))
       }
-
 
       showNotification(
         details$notification,
@@ -884,7 +852,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         modalDialog(
           title = details$title,
           easyClose = TRUE,
-          size = "l",
+          size = "m",
           message_body
         )
       )
