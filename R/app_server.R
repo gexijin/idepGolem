@@ -46,6 +46,60 @@ app_server <- function(input, output, session) {
     load_data = load_data,
     tab = tab
   )
+  single_column_notice_shown <- reactiveVal(FALSE)
+  single_column_notice_id <- "single_column_notice"
+  observe({
+    data_format <- load_data$data_file_format()
+    prep_data <- pre_process$data()
+    placeholder_present <- !is.null(prep_data) && "Ctrl" %in% colnames(prep_data)
+    placeholder_is_zero <- placeholder_present && all(prep_data[, "Ctrl"] == 0)
+    hide_prep <- isTRUE(data_format == 3) && placeholder_is_zero
+
+    top_targets <- c("Prep", "Cluster", "PCA", "Bicluster", "Network")
+    venn_input_id <- "deg-step_1"
+    venn_target <- "venn_diagram"
+    deg_plots_input_id <- "deg-step_2"
+    deg_plots_targets <- c("Heatmap", "MA Plot", "Scatter Plot", "R Code")
+    deg_plots_fallback <- "Volcano Plot"
+
+    if (hide_prep) {
+      lapply(top_targets, function(tab_name) hideTab(inputId = "navbar", target = tab_name))
+      hideTab(inputId = venn_input_id, target = venn_target)
+      lapply(deg_plots_targets, function(tab_name) hideTab(inputId = deg_plots_input_id, target = tab_name))
+
+      if (isolate(input$navbar) %in% top_targets) {
+        updateNavbarPage(session, inputId = "navbar", selected = "Data")
+      }
+      if (identical(isolate(input[[venn_input_id]]), venn_target)) {
+        updateTabsetPanel(session, inputId = venn_input_id, selected = "results")
+      }
+      if (isolate(input[[deg_plots_input_id]]) %in% deg_plots_targets) {
+        updateTabsetPanel(session, inputId = deg_plots_input_id, selected = deg_plots_fallback)
+      }
+      if (!single_column_notice_shown()) {
+        showNotification(
+          ui = HTML(paste(
+            "Use the Stats tab to choose a cutoff to define differentially expressed genes,",
+            "then visit the DEG tab for enrichment analysis based on those genes.",
+            "Switch to the Pathway tab for pathway analysis using the fold-changes of all genes."
+          )),
+          id = single_column_notice_id,
+          duration = 30,
+          type = "message"
+        )
+        single_column_notice_shown(TRUE)
+      }
+    } else {
+      lapply(top_targets, function(tab_name) showTab(inputId = "navbar", target = tab_name))
+      showTab(inputId = venn_input_id, target = venn_target)
+      lapply(deg_plots_targets, function(tab_name) showTab(inputId = deg_plots_input_id, target = tab_name))
+      if (single_column_notice_shown()) {
+        removeNotification(id = single_column_notice_id)
+        single_column_notice_shown(FALSE)
+      }
+    }
+  })
+
   mod_03_clustering_server(
     id = "clustering",
     pre_process = pre_process,
