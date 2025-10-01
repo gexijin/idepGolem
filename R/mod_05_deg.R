@@ -20,7 +20,6 @@ mod_05_deg_1_ui <- function(id) {
           "#deg-submit_model_button{font-size: 16px;color: red}"
         )),
         br(),
-        br(),
         # DEG analysis methods for read counts data
         conditionalPanel(
           condition = "output.data_file_format == 1",
@@ -251,42 +250,44 @@ mod_05_deg_2_ui <- function(id) {
     sidebarLayout(
       sidebarPanel(
         style = "height: 90vh; overflow-y: auto;",
+        h4("Investigate DEGs"),
+        br(),
         htmlOutput(outputId = ns("list_comparisons")),
         conditionalPanel("input.step_2 == 'Heatmap'",
-            selectInput(
-              inputId = ns("heatmap_gene_number"),
-              label = "Number of genes displayed",
-              choices = c("All DEGs"),
-              selected = "All DEGs",
-              selectize = FALSE
-            ),
-            tippy::tippy_this(
-              ns("heatmap_gene_number"),
-              "Pick how many genes appear in the DEG heatmap.",
-              theme = "light-border"
-            ),
-            selectInput(
-              inputId = ns("heatmap_fdr_fold"),
-              label = "Sort by Fold Change or FDR",
-              choices = c("Fold Change", "FDR"),
-              selectize = FALSE
-            ),
-            tippy::tippy_this(
-              ns("heatmap_fdr_fold"),
-              "Choose whether genes are ordered by fold-change or FDR.",
-              theme = "light-border"
-            ),
-            downloadButton(
-              outputId = ns("download_heat_data"),
-              label = "Heatmap Data"
-            ),
-            tippy::tippy_this(
-              ns("download_heat_data"),
-              "Download the data underlying the DEG heatmap.",
-              theme = "light-border"
-            ),
-            ns = ns
-            ),
+          selectInput(
+            inputId = ns("heatmap_gene_number"),
+            label = "Number of genes displayed",
+            choices = c("All DEGs"),
+            selected = "All DEGs",
+            selectize = FALSE
+          ),
+          tippy::tippy_this(
+            ns("heatmap_gene_number"),
+            "Pick how many genes appear in the DEG heatmap.",
+            theme = "light-border"
+          ),
+          selectInput(
+            inputId = ns("heatmap_fdr_fold"),
+            label = "Sort by Fold Change or FDR",
+            choices = c("Fold Change", "FDR"),
+            selectize = FALSE
+          ),
+          tippy::tippy_this(
+            ns("heatmap_fdr_fold"),
+            "Choose whether genes are ordered by fold-change or FDR.",
+            theme = "light-border"
+          ),
+          downloadButton(
+            outputId = ns("download_heat_data"),
+            label = "Heatmap Data"
+          ),
+          tippy::tippy_this(
+            ns("download_heat_data"),
+            "Download the data underlying the DEG heatmap.",
+            theme = "light-border"
+          ),
+          ns = ns
+        ),
         conditionalPanel(
           condition = "input.step_2 == 'Volcano Plot' |
             input.step_2 == 'MA Plot' |
@@ -404,15 +405,24 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     output$submit_ui <- renderUI({
       # req(model_comparisons()) # this is stopping LCF data from getting through Stats
       tagList(
-        actionButton(
-          inputId = ns("submit_model_button"),
-          label = "Submit",
-          style = "float:right"
-        ),
-        tippy::tippy_this(
-          ns("submit_model_button"),
-          "Run the differential expression analysis.",
-          theme = "light-border"
+        fluidRow(
+          column(
+            width = 7,
+            h4("Identify DEGs")
+          ),
+          column(
+            width = 5,
+            actionButton(
+              inputId = ns("submit_model_button"),
+              label = "Submit",
+              style = "float:right"
+            ),
+            tippy::tippy_this(
+              ns("submit_model_button"),
+              "Run the differential expression analysis.",
+              theme = "light-border"
+            )
+          )
         )
       )
     })

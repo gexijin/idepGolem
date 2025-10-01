@@ -201,7 +201,7 @@ mod_02_pre_process_ui <- function(id) {
         fluidRow(
           column(
             width = 5,
-            strong("3. Missing values:")
+            strong("Missing values:")
           ),
           column(
             width = 7,

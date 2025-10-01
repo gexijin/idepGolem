@@ -20,7 +20,7 @@ mod_06_pathway_ui <- function(id) {
         ),
         tippy::tippy_this(
           ns("submit_pathway_button"),
-         "Run the pathway enrichment analysis.",
+          "Run the pathway enrichment analysis using the fold-changes of all.",
           theme = "light-border"
         ),
         tags$head(tags$style(

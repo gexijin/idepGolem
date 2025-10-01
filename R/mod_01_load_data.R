@@ -137,9 +137,9 @@ mod_01_load_data_ui <- function(id) {
           label = NULL,
           choices = list(
             "..." = 0,
-            "Read counts data (recommended)" = 1,
+            "Read counts data" = 1,
             "Normalized Expression data" = 2,
-            "Fold-changes & adjusted P-values" = 3
+            "Fold-changes & adjusted P-vals" = 3
           ),
           selected = 0,
           selectize = FALSE
@@ -421,6 +421,116 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     })
 
     selected_demo <- reactiveVal(NULL)
+    demo_preview_content <- reactiveVal(NULL)
+
+    get_data_type_details <- function(type) {
+      type_char <- as.character(type)
+
+      switch(
+        type_char,
+        `1` = list(
+          title = "Read Count Matrix",
+          notification = "Upload a read count matrix or click Load demo.",
+          body = tagList(
+            p("Upload a raw gene-by-sample count matrix (integers)."),
+            tags$ul(
+              tags$li("First column: gene IDs (Ensembl, symbols, etc.)."),
+              tags$li("Column headers: sample names; no log transform needed."),
+              tags$li("iDEP will handle normalization and differential analysis.")
+            )
+          ),
+          footnote = "Counts should be raw integers; avoid TPM/RPKM in this mode."
+        ),
+        `2` = list(
+          title = "Normalized Expression Matrix",
+          notification = "Upload a normalized expression matrix or click Load demo.",
+          body = tagList(
+            p("Provide a gene-by-sample matrix with normalized values (e.g., log2 TPM/FPKM, microarray intensities, proteomics)."),
+            tags$ul(
+              tags$li("Gene identifiers stay in the first column."),
+              tags$li("Use consistent scaling across samples."),
+              tags$li("Do not mix raw counts with normalized values.")
+            )
+          ),
+          footnote = "Values may be log-scale or not; iDEP will respect the scale you upload."
+        ),
+        `3` = list(
+          title = "Fold Change & Adjusted P-values",
+          notification = "Upload fold-change plus adjusted P-values or click Load demo.",
+          body = tagList(
+            p("Upload a table summarizing differential expression results for one or more contrasts."),
+            tags$ul(
+              tags$li("Include log fold-change columns (e.g., logFC, lfc)."),
+              tags$li("Pair each contrast with an adjusted P-value/FDR column."),
+              tags$li("Gene identifiers remain in the first column.")
+            )
+          ),
+          footnote = "At minimum include one logFC column and its matching FDR/adj.P.Val column."
+        ),
+        NULL
+      )
+    }
+
+    read_demo_preview <- function(type, n = 5) {
+      files <- idep_data$demo_file_info
+      entry <- files[files$type == type, , drop = FALSE]
+      if (nrow(entry) == 0) {
+        return(NULL)
+      }
+
+      expression_path <- entry$expression[[1]]
+      if (!file.exists(expression_path)) {
+        return(NULL)
+      }
+
+      preview_data <- tryCatch({
+        ext <- tolower(tools::file_ext(expression_path))
+        if (ext %in% c("csv")) {
+          utils::read.csv(
+            expression_path,
+            nrows = n,
+            check.names = FALSE,
+            stringsAsFactors = FALSE
+          )
+        } else if (ext %in% c("tsv", "txt")) {
+          utils::read.delim(
+            expression_path,
+            nrows = n,
+            check.names = FALSE,
+            stringsAsFactors = FALSE
+          )
+        } else if (ext %in% c("xlsx", "xls")) {
+          if (!requireNamespace("readxl", quietly = TRUE)) {
+            return(NULL)
+          }
+          as.data.frame(readxl::read_excel(expression_path, n_max = n))
+        } else {
+          utils::read.csv(
+            expression_path,
+            nrows = n,
+            check.names = FALSE,
+            stringsAsFactors = FALSE
+          )
+        }
+      }, error = function(e) NULL)
+
+      if (is.null(preview_data)) {
+        return(NULL)
+      }
+
+      list(
+        data = preview_data,
+        demo_name = entry$name[[1]],
+        file_name = basename(expression_path)
+      )
+    }
+
+    output$demo_preview_table <- renderTable({
+      preview <- demo_preview_content()
+      req(!is.null(preview))
+      req(!is.null(preview$data))
+      preview$data
+    }, rownames = FALSE)
     
     # increase max input file size
     options(shiny.maxRequestSize = 200 * 1024^2)
@@ -727,11 +837,102 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       updateSelectInput(
         session = session,
         inputId = "data_file_format",
-        choices = list("Read counts data (recommended)" = 1,
+        choices = list("Read counts data" = 1,
                        "Normalized Expression data" = 2,
-                       "Fold-changes & adjusted P-values" = 3),
+                       "Fold-change & adjusted P-val" = 3),
         selected = input$data_file_format
         )
+    })
+
+    observeEvent(input$data_file_format, {
+      req(tab() == "Data")
+      req(input$data_file_format != 0)
+
+      details <- get_data_type_details(input$data_file_format)
+      preview <- read_demo_preview(input$data_file_format)
+
+      if (is.null(details)) {
+        details <- list(
+          title = "Upload Data",
+          notification = "Upload a data file or click Load demo.",
+          body = tagList(p("Upload the appropriate file for the selected data type.")),
+          footnote = NULL
+        )
+      }
+
+      demo_preview_content(preview)
+
+      message_body <- tagList(details$body)
+
+      if (!is.null(preview) && !is.null(preview$demo_name)) {
+        message_body <- tagList(
+          message_body,
+          tags$p(tags$strong("Demo dataset:"), paste0(" ", preview$demo_name))
+        )
+      }
+
+      if (!is.null(preview) && !is.null(preview$data)) {
+        row_count <- nrow(preview$data)
+        message_body <- tagList(
+          message_body,
+          div(
+            style = "max-height: 260px; overflow-y: auto; margin-top: 10px;",
+            tableOutput(ns("demo_preview_table"))
+          ),
+          tags$p(
+            style = "font-size: 12px; color: #6c757d; margin-top: 8px;",
+            paste0("Showing first ", row_count, " rows from ", preview$file_name, ".")
+          )
+        )
+      } else {
+        message_body <- tagList(
+          message_body,
+          tags$p("Preview not available for this demo file.")
+        )
+      }
+
+      if (!is.null(details$footnote)) {
+        message_body <- tagList(
+          message_body,
+          tags$p(
+            style = "font-size: 12px; color: #6c757d; margin-top: 10px;",
+            details$footnote
+          )
+        )
+      }
+
+      showNotification(
+        details$notification,
+        duration = 30,
+        type = "error",
+        id = "load_prompt"
+      )
+
+      showModal(
+        modalDialog(
+          title = details$title,
+          easyClose = TRUE,
+          size = "l",
+          message_body
+        )
+      )
+    }, ignoreNULL = TRUE)
+
+    observe({
+      req(tab() == "Data")
+      req(input$data_file_format == 0)
+
+      removeNotification("load_prompt")
+      demo_preview_content(NULL)
+      removeModal()
+    })
+
+    observeEvent(tab(), {
+      if (tab() != "Data") {
+        removeNotification("load_prompt")
+        demo_preview_content(NULL)
+        removeModal()
+      }
     })
 
     # Available demo data files for current data format ----
@@ -1098,7 +1299,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       req(input$data_file_format == 0)
 
       showNotification(
-        "Select a data type before uploading data. Try w/ demo data.",
+        "Select a data type first.",
         duration = 30,
         type = "error",
         id = "select_first"
