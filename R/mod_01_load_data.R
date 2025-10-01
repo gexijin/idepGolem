@@ -478,7 +478,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           body = tagList(
             p("Upload a raw gene-by-sample count matrixintegers). Recommended for RNA-seq so iDEP can run DESeq2."),
             tags$ul(
-              tags$li("First column: gene IDs (Ensembl, symbols, etc.)."),
+              tags$li("First column: gene IDs, such as Ensembl, Entrez, symbols, etc."),
               tags$li("Column headers: sample names; avoid spaces and '-' characters.")
             )
           ),
@@ -490,9 +490,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           body = tagList(
             p("Provide a gene-by-sample matrix with normalized values (e.g., log2 TPM/FPKM, microarray intensities, proteomics)."),
             tags$ul(
-              tags$li("Gene identifiers stay in the first column."),
-              tags$li("Use consistent scaling across samples."),
-              tags$li("Do not mix raw counts with normalized values.")
+              tags$li("First column: gene IDs such as Ensembl, Entrez, symbols, etc."),
+              tags$li("Column headers: sample names; avoid spaces and '-' characters.")
             )
           ),
           footnote = "Values may already be logged or not; iDEP respects the scale you upload."
@@ -504,7 +503,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             p("Upload a table summarizing differential expression results for one or more contrasts."),
             tags$ul(
               tags$li("First column: gene IDs (Ensembl, symbols, etc.)."),
-              tags$li("Include log fold-change columns (e.g., logFC, lfc)."),
+              tags$li("Then log fold-change column and its matching adjusted P-value/FDR column."),
               tags$li("Pair each contrast with an adjusted P-value/FDR column.")
             )
           ),
