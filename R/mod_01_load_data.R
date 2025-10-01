@@ -429,30 +429,28 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       switch(
         type_char,
         `1` = list(
-          title = "Read Count Matrix",
+          title = "Read Counts",
           notification = "Upload a read count matrix or click Load demo.",
           body = tagList(
-            p("Upload a raw gene-by-sample count matrix (integers)."),
+            p("Gene-by-sample count matrix (usually integers). Recommended for RNA-seq data so iDEP can run DESeq2."),
             tags$ul(
               tags$li("First column: gene IDs (Ensembl, symbols, etc.)."),
-              tags$li("Column headers: sample names; no log transform needed."),
-              tags$li("iDEP will handle normalization and differential analysis.")
+              tags$li("Column headers: sample names"),
             )
           ),
-          footnote = "Counts should be raw integers; avoid TPM/RPKM in this mode."
+          footnote = "Here 17 menas 17 reads mapped to a gene; avoid TPM/RPKM in this mode."
         ),
         `2` = list(
           title = "Normalized Expression Matrix",
           notification = "Upload a normalized expression matrix or click Load demo.",
           body = tagList(
-            p("Provide a gene-by-sample matrix with normalized values (e.g., log2 TPM/FPKM, microarray intensities, proteomics)."),
+            p("Gene-by-sample matrix with normalized values such as TPM/FPKM, microarray intensities, proteomics, etc."),
             tags$ul(
-              tags$li("Gene identifiers stay in the first column."),
-              tags$li("Use consistent scaling across samples."),
-              tags$li("Do not mix raw counts with normalized values.")
+              tags$li("First column: gene IDs (Ensembl, symbols, etc.)."),
+              tags$li("Column headers: sample names. Awoid space and '-' characters."),
             )
           ),
-          footnote = "Values may be log-scale or not; iDEP will respect the scale you upload."
+          footnote = "Values may be log-scale or not."
         ),
         `3` = list(
           title = "Fold Change & Adjusted P-values",
@@ -460,9 +458,9 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           body = tagList(
             p("Upload a table summarizing differential expression results for one or more contrasts."),
             tags$ul(
+              tags$li("First column: gene IDs (Ensembl, symbols, etc.)."),
               tags$li("Include log fold-change columns (e.g., logFC, lfc)."),
-              tags$li("Pair each contrast with an adjusted P-value/FDR column."),
-              tags$li("Gene identifiers remain in the first column.")
+              tags$li("Pair each contrast with an adjusted P-value/FDR column.")
             )
           ),
           footnote = "At minimum include one logFC column and its matching FDR/adj.P.Val column."
@@ -531,7 +529,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       req(!is.null(preview$data))
       preview$data
     }, rownames = FALSE)
-    
+
     # increase max input file size
     options(shiny.maxRequestSize = 200 * 1024^2)
 
@@ -864,13 +862,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
       message_body <- tagList(details$body)
 
-      if (!is.null(preview) && !is.null(preview$demo_name)) {
-        message_body <- tagList(
-          message_body,
-          tags$p(tags$strong("Demo dataset:"), paste0(" ", preview$demo_name))
-        )
-      }
-
       if (!is.null(preview) && !is.null(preview$data)) {
         row_count <- nrow(preview$data)
         message_body <- tagList(
@@ -878,10 +869,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           div(
             style = "max-height: 260px; overflow-y: auto; margin-top: 10px;",
             tableOutput(ns("demo_preview_table"))
-          ),
-          tags$p(
-            style = "font-size: 12px; color: #6c757d; margin-top: 8px;",
-            paste0("Showing first ", row_count, " rows from ", preview$file_name, ".")
           )
         )
       } else {
