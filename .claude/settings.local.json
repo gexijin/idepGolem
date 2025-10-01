@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(R:*)"
+      "Bash(R:*)",
+      "Bash(Rscript:*)",
+      "Bash(for:*)",
+      "Bash(do echo \"Processing: $file\")",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []

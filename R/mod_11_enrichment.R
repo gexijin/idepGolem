@@ -35,6 +35,11 @@ mod_11_enrichment_ui <- function(id) {
           inputId = ns("customize_button"),
           label = "More options",
           value = FALSE
+        ),
+        tippy::tippy_this(
+          ns("customize_button"),
+          "Reveal additional settings for sorting and display.",
+          theme = "light"
         )
       )
     ),
@@ -48,7 +53,13 @@ mod_11_enrichment_ui <- function(id) {
             "Sort by FDR" = "FDR",
             "Sort by fold enriched" = "Fold"
           ),
-          selected = "FDR"
+          selected = "FDR",
+          selectize = FALSE
+        ),
+        tippy::tippy_this(
+          ns("sort_by"),
+          "Order pathways by FDR or fold enrichment.",
+          theme = "light"
         )
       ),
       column(
@@ -57,6 +68,11 @@ mod_11_enrichment_ui <- function(id) {
           inputId = ns("filtered_background"),
           label = "Use filtered genes as background.",
           value = TRUE
+        ),
+        tippy::tippy_this(
+          ns("filtered_background"),
+          "Use only filtered genes as the background universe for enrichment.",
+          theme = "light"
         )
       ),
       column(
@@ -65,6 +81,11 @@ mod_11_enrichment_ui <- function(id) {
           inputId = ns("remove_redudant"),
           label = "Remove Redudant Gene Sets",
           value = FALSE
+        ),
+        tippy::tippy_this(
+          ns("remove_redudant"),
+          "Collapse overlapping pathways to reduce redundancy.",
+          theme = "light"
         )
       )
     ),
@@ -79,6 +100,11 @@ mod_11_enrichment_ui <- function(id) {
           min = 1,
           max = 30,
           value = 10
+        ),
+        tippy::tippy_this(
+          ns("top_pathways"),
+          "Choose how many pathways to display across the outputs.",
+          theme = "light"
         )
       ),
       column(
@@ -91,8 +117,8 @@ mod_11_enrichment_ui <- function(id) {
         ),
         tippy::tippy_this(
           ns("show_pathway_id"),
-          "If selected, pathway IDs, such as Path:mmu04115 and GO:0042770,  will be appended to pathway name.",
-          theme = "light-border"
+          "Append pathway IDs (e.g., Path:mmu04115 or GO:0042770) to each pathway name.",
+          theme = "light"
         )
       )
 
@@ -110,8 +136,8 @@ mod_11_enrichment_ui <- function(id) {
         ),
         tippy::tippy_this(
           ns("download_enrichment"),
-          "Download enrichment analysis",
-          theme = "light-border"
+          "Download the enrichment results table.",
+          theme = "light"
         ),
       ),
       tabPanel(
@@ -142,6 +168,11 @@ mod_11_enrichment_ui <- function(id) {
               max = 1,
               step = .1
             ),
+            tippy::tippy_this(
+              ns("edge_cutoff_deg"),
+              "Filter network edges by overlap strength.",
+              theme = "light"
+            ),
             align = "left"
           ),
           column(
@@ -149,6 +180,11 @@ mod_11_enrichment_ui <- function(id) {
             actionButton(
               inputId = ns("layout_vis_deg"),
               label = "Change layout"
+            ),
+            tippy::tippy_this(
+              ns("layout_vis_deg"),
+              "Rearrange the enrichment network layout.",
+              theme = "light"
             )
           ),
           column(
@@ -157,6 +193,11 @@ mod_11_enrichment_ui <- function(id) {
               inputId = ns("wrap_text_network_deg"),
               label = "Wrap text",
               value = TRUE
+            ),
+            tippy::tippy_this(
+              ns("wrap_text_network_deg"),
+              "Wrap long pathway names on the network nodes.",
+              theme = "light"
             )
           )
         ),
@@ -193,7 +234,13 @@ mod_11_enrichment_ui <- function(id) {
               inputId = ns("pathway_order"),
               label = h5("Sort Pathway by"),
               choices = column_selection,
-              selected = column_selection[1]
+              selected = column_selection[1],
+              selectize = FALSE
+            ),
+            tippy::tippy_this(
+              ns("pathway_order"),
+              "Choose how pathways are ordered in the bar chart.",
+              theme = "light"
             )
           ),
           column(
@@ -202,7 +249,13 @@ mod_11_enrichment_ui <- function(id) {
               inputId = ns("order_x"),
               label = h5("x-axis"),
               choices = column_selection[1:3],
-              selected = column_selection[1]
+              selected = column_selection[1],
+              selectize = FALSE
+            ),
+            tippy::tippy_this(
+              ns("order_x"),
+              "Select the metric displayed on the x-axis.",
+              theme = "light"
             )
           ),
           column(
@@ -211,7 +264,13 @@ mod_11_enrichment_ui <- function(id) {
               inputId = ns("plot_color"),
               label = h5("Color"),
               choices = column_selection[1:3],
-              selected = column_selection[2]
+              selected = column_selection[2],
+              selectize = FALSE
+            ),
+            tippy::tippy_this(
+              ns("plot_color"),
+              "Choose which metric controls point color.",
+              theme = "light"
             )
           ),
           column(
@@ -220,7 +279,13 @@ mod_11_enrichment_ui <- function(id) {
               inputId = ns("plot_size"),
               label = h5("Size"),
               choices = column_selection[1:3],
-              selected = column_selection[3]
+              selected = column_selection[3],
+              selectize = FALSE
+            ),
+            tippy::tippy_this(
+              ns("plot_size"),
+              "Choose which metric controls point size.",
+              theme = "light"
             )
           )
         ),
@@ -234,6 +299,11 @@ mod_11_enrichment_ui <- function(id) {
               min = 3,
               max = 18,
               step = 1
+            ),
+            tippy::tippy_this(
+              ns("font_size"),
+              "Adjust label text size on the chart.",
+              theme = "light"
             )
           ),
           column(
@@ -245,6 +315,11 @@ mod_11_enrichment_ui <- function(id) {
               min = 0,
               max = 10,
               step = 1
+            ),
+            tippy::tippy_this(
+              ns("marker_size"),
+              "Control the marker size for each pathway.",
+              theme = "light"
             )
           ),
           column(
@@ -253,7 +328,13 @@ mod_11_enrichment_ui <- function(id) {
               inputId = ns("high_color"),
               label = h5("Color:High"),
               choices = c("red", "orange", "yellow", "green", "blue", "purple"),
-              selected = "red"
+              selected = "red",
+              selectize = FALSE
+            ),
+            tippy::tippy_this(
+              ns("high_color"),
+              "Set the color for high values.",
+              theme = "light"
             )
           ),
           column(
@@ -262,7 +343,13 @@ mod_11_enrichment_ui <- function(id) {
               inputId = ns("log_color"),
               label = h5("Color:Low"),
               choices = c("red", "orange", "yellow", "green", "blue", "purple"),
-              selected = "blue"
+              selected = "blue",
+              selectize = FALSE
+            ),
+            tippy::tippy_this(
+              ns("log_color"),
+              "Set the color for low values.",
+              theme = "light"
             )
           )
         ),
@@ -273,7 +360,13 @@ mod_11_enrichment_ui <- function(id) {
               inputId = ns("chart_type"),
               label = h5("Chart type"),
               choices = c("lollipop", "dotplot", "barplot"),
-              selected = "lollipop"
+              selected = "lollipop",
+              selectize = FALSE
+            ),
+            tippy::tippy_this(
+              ns("chart_type"),
+              "Switch between lollipop, dot, or bar chart styles.",
+              theme = "light"
             )
           ),
           column(
@@ -282,7 +375,13 @@ mod_11_enrichment_ui <- function(id) {
               inputId = ns("aspect_ratio"),
               label = h5("Aspect Ratio"),
               choices = .1 * (5:30),
-              selected = 2
+              selected = 2,
+              selectize = FALSE
+            ),
+            tippy::tippy_this(
+              ns("aspect_ratio"),
+              "Adjust the height-to-width ratio of the chart.",
+              theme = "light"
             )
           ),
           column(
@@ -308,8 +407,8 @@ mod_11_enrichment_ui <- function(id) {
           ),
           tippy::tippy_this(
             ns("download_gene_info"),
-            "Download enrichment analysis results",
-            theme = "light-border"
+            "Download the enrichment results table.",
+            theme = "light"
           ),
           column(
             width = 3,
@@ -317,6 +416,11 @@ mod_11_enrichment_ui <- function(id) {
               ns("show_detail"),
               "Detailed Desc.",
               value = FALSE
+            ),
+            tippy::tippy_this(
+              ns("show_detail"),
+              "Toggle detailed descriptions for each pathway.",
+              theme = "light"
             )
           )
         ),
@@ -378,7 +482,8 @@ mod_11_enrichment_server <- function(id,
         inputId = ns("select_go"),
         label = NULL,
         choices = gmt_choices(),
-        selected = selected
+        selected = selected,
+        selectize = FALSE
       )
     })
 
@@ -435,7 +540,8 @@ mod_11_enrichment_server <- function(id,
         inputId = ns("select_cluster"),
         label = NULL,
         choices = choices,
-        selected = selected
+        selected = selected,
+        selectize = FALSE
       )
     })
 
@@ -669,8 +775,7 @@ mod_11_enrichment_server <- function(id,
 
       if (!is.null(results_all)) {
         if (ncol(results_all) > 1) {
-          results_all <- results_all[
-            ,
+          results_all <- results_all[,
             c(
               "group",
               colnames(results_all)[1:(ncol(results_all) - 1)]
@@ -704,8 +809,7 @@ mod_11_enrichment_server <- function(id,
 
       if (!is.null(results_all)) {
         if (ncol(results_all) > 1) {
-          results_all <- results_all[
-            ,
+          results_all <- results_all[,
             c(
               "group",
               colnames(results_all)[1:(ncol(results_all) - 1)]

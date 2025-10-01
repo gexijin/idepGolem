@@ -66,12 +66,8 @@ mod_03_clustering_ui <- function(id) {
               ),
               tippy::tippy_this(
                 ns("n_genes"),
-                "Genes are ranked by standard deviations across samples
-                based on the transformed data.
-                By showing the patterns of the genes with most varability,
-                this give us a big picture view of the general pattern of
-                gene expression.",
-                theme = "light-border"
+                "Genes are ranked by how much they vary across samples in the transformed data. Showing the most variable genes highlights overall expression patterns.",
+                theme = "light"
               )
             )
           ),
@@ -92,7 +88,13 @@ mod_03_clustering_ui <- function(id) {
                   "Both" = "both",
                   "None" = "none"
                 ),
-                selected = "row"
+                selected = "row",
+                selectize = FALSE
+              ),
+              tippy::tippy_this(
+                ns("dendrogram_display"),
+                "Choose whether to display row, column, or both dendrograms on the heatmap.",
+                theme = "light"
               )
             )
           ),
@@ -113,6 +115,11 @@ mod_03_clustering_ui <- function(id) {
             value = 6,
             step = 1
           ),
+          tippy::tippy_this(
+            ns("k_clusters"),
+            "Set how many clusters to form when running k-means.",
+            theme = "light"
+          ),
 
           # Re-run k-means with a different seed
           actionButton(
@@ -121,8 +128,8 @@ mod_03_clustering_ui <- function(id) {
           ),
           tippy::tippy_this(
             ns("k_means_re_run"),
-            "Re-run the k-Means algorithm using different seeds for random number generator.",
-            theme = "light-border"
+            "Re-run k-means with a new random seed.",
+            theme = "light"
           ),
           # Elbow plot pop-up
           actionButton(
@@ -131,8 +138,8 @@ mod_03_clustering_ui <- function(id) {
           ),
           tippy::tippy_this(
             ns("elbow_pop_up"),
-            "k-Means elbow plot",
-            theme = "light-border"
+            "Show the k-means elbow plot to help choose the number of clusters.",
+            theme = "light"
           ),
           # Line break ---------
           HTML(
@@ -156,7 +163,13 @@ mod_03_clustering_ui <- function(id) {
                 inputId = ns("dist_function"),
                 label = NULL,
                 choices = NULL,
-                width = "100%"
+                width = "100%",
+                selectize = FALSE
+              ),
+              tippy::tippy_this(
+                ns("dist_function"),
+                "Pick the distance metric used for hierarchical clustering.",
+                theme = "light"
               )
             )
           ),
@@ -171,7 +184,13 @@ mod_03_clustering_ui <- function(id) {
                   "average", "complete", "single",
                   "median", "centroid", "mcquitty"
                 ),
-                width = "100%"
+                width = "100%",
+                selectize = FALSE
+              ),
+              tippy::tippy_this(
+                ns("hclust_function"),
+                "Choose how clusters are merged when building the dendrogram.",
+                theme = "light"
               )
             )
           ),
@@ -190,11 +209,19 @@ mod_03_clustering_ui <- function(id) {
             column(width = 4, p("Label Genes:")),
             column(
               width = 8,
-              selectizeInput(
+              div(
+                id = ns("selected_genes_wrapper"),
+                selectizeInput(
                 inputId = ns("selected_genes"),
                 label = NULL,
                 choices = c("Top 5", "Top 10", "Top 15"),
                 multiple = TRUE
+                ),
+                tippy::tippy_this(
+                ns("selected_genes_wrapper"),
+                "Add labels for the top genes you want to highlight on the heatmap.",
+                theme = "light"
+                )
               )
             )
           ),
@@ -208,10 +235,20 @@ mod_03_clustering_ui <- function(id) {
                 label = "Center genes (substract mean)",
                 value = TRUE
               ),
+              tippy::tippy_this(
+                ns("gene_centering"),
+                "Subtract each gene's mean value before clustering.",
+                theme = "light"
+              ),
               checkboxInput(
                 inputId = ns("gene_normalize"),
                 label = "Normalize genes (divide by SD)",
                 value = FALSE
+              ),
+              tippy::tippy_this(
+                ns("gene_normalize"),
+                "Scale genes by their standard deviation before clustering.",
+                theme = "light"
               ),
               fluidRow(
                 column(width = 4, p("Sample Colors")),
@@ -223,7 +260,13 @@ mod_03_clustering_ui <- function(id) {
                     choices = c("Pastel 1", "Dark 2", "Dark 3", 
                                 "Set 2", "Set 3", "Warm",
                                 "Cold", "Harmonic", "Dynamic"),
-                    selected = "Dynamic"
+                    selected = "Dynamic",
+                    selectize = FALSE
+                  ),
+                  tippy::tippy_this(
+                    ns("sample_color"),
+                    "Control the color palette for sample annotations.",
+                    theme = "light"
                   )
                 )
               ),
@@ -237,6 +280,11 @@ mod_03_clustering_ui <- function(id) {
                     value = 3,
                     min = 2,
                     step = 1
+                  ),
+                  tippy::tippy_this(
+                    ns("heatmap_cutoff"),
+                    "Cap extreme Z scores at this value when plotting.",
+                    theme = "light"
                   )
                 )
               )
@@ -265,13 +313,18 @@ mod_03_clustering_ui <- function(id) {
               outputId = ns("download_heatmap_data"),
               label = "Heatmap data"
             ),
+            tippy::tippy_this(
+              ns("download_heatmap_data"),
+              "Download the data currently displayed in the heatmap.",
+              theme = "light"
+            ),
             ns = ns
           )
         ),
         tippy::tippy_this(
           ns("report"),
-          "Generate HTML report of clustering tab",
-          theme = "light-border"
+          "Create an HTML report summarizing the Clustering tab.",
+          theme = "light"
         )
       ),
 
@@ -330,12 +383,8 @@ mod_03_clustering_ui <- function(id) {
                   ),
                   tippy::tippy_this(
                     ns("cluster_enrichment"),
-                    "Conducts GO enrichment on the selected genes.
-                    For hierarchical clustering, users need to select a
-                    region to zoom in first.
-                    When k-means is used, enrichment analyses are
-                    conducted on all clusters, regardless of your selection.",
-                    theme = "light-border"
+                    "Run GO enrichment for the selected genes. For hierarchical clustering, zoom into a region first. For k-means, all clusters are analyzed.",
+                    theme = "light"
                   ),
                   ns = ns
                 ),
@@ -506,11 +555,19 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           }
         }
       }
-      selectInput(
-        inputId = ns("select_factors_heatmap"),
-        label = NULL,
-        choices = choices,
-        selected = selected
+      tagList(
+        selectInput(
+          inputId = ns("select_factors_heatmap"),
+          label = NULL,
+          choices = choices,
+          selected = selected,
+          selectize = FALSE
+        ),
+        tippy::tippy_this(
+          ns("select_factors_heatmap"),
+          "Color bar for sample groups. Choose which sample annotation to display on the top of heatmap.",
+          theme = "light"
+        )
       )
     })
 
@@ -732,7 +789,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           tippy::tippy_this(
             ns(trigger_id),
             tooltip_text,
-            theme = "light-border"
+            theme = "light"
           )
         )
       })
@@ -1109,7 +1166,8 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           label = "Select Cluster:",
           inputId = ns("select_cluster"),
           choices = unique(names(k_means_list())),
-          selected = unique(names(k_means_list()))[1]
+          selected = unique(names(k_means_list()))[1],
+          selectize = FALSE
         ),
         selectInput(
           label = "Select GO:",
@@ -1120,7 +1178,8 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
               "GO Biological Process",
               "GO Cellular Component",
               "GO Molecular Function")
-          )
+          ),
+          selectize = FALSE
         )
       )
     })

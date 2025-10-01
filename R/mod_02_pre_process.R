@@ -30,8 +30,8 @@ mod_02_pre_process_ui <- function(id) {
               ),
               tippy::tippy_this(
                 ns("min_counts"),
-                "Counts Per Million (CPM) = (read count / total counts) * 1,000,000",
-                theme = "light-border"
+                "Counts per million (CPM) adjusts for library size: (gene count / total reads) * 1,000,000.",
+                theme = "light"
               )
             ),
             column(
@@ -45,8 +45,8 @@ mod_02_pre_process_ui <- function(id) {
               ),
               tippy::tippy_this(
                 ns("n_min_samples_count"),
-                "Number of samples (libraries) that must have at least the min CPM",
-                theme = "light-border"
+                "How many samples must meet the minimum CPM.",
+                theme = "light"
               )
             )
           ),
@@ -59,12 +59,13 @@ mod_02_pre_process_ui <- function(id) {
               "rlog: regularized log (slow) " = 3,
               "EdgeR: log2(CPM+c)" = 1
             ),
-            selected = 1
+            selected = 1,
+            selectize = FALSE
           ),
           tippy::tippy_this(
             ns("counts_transform"),
-            "Transformed data is used in all analyses except differential expression with DESeq2.",
-            theme = "light-border"
+            "iDEP uses this transformed data for every analysis except the DESeq2 differential expression step.",
+            theme = "light"
           ),
 
           # Conditional panel for EdgeR transformation -----------
@@ -89,8 +90,8 @@ mod_02_pre_process_ui <- function(id) {
                 ),
                 tippy::tippy_this(
                   ns("counts_log_start"),
-                  "Constant c for log2(CPM+c). A larger c shrinks log-values towards log2(c).",
-                  theme = "light-border"
+                  "Constant c in log2(CPM + c); higher values pull small counts toward log2(c).",
+                  theme = "light"
                 )
               )
             ),
@@ -114,8 +115,8 @@ mod_02_pre_process_ui <- function(id) {
               ),
               tippy::tippy_this(
                 ns("low_filter_fpkm"),
-                "Minimum expression level, e.g. FPKM, RPKM, TPM, or other normalized values.",
-                theme = "light-border"
+                "Minimum expression value (FPKM, RPKM, TPM, or similar normalized units).",
+                theme = "light"
               )
             ),
             column(
@@ -128,8 +129,8 @@ mod_02_pre_process_ui <- function(id) {
               ),
               tippy::tippy_this(
                 ns("n_min_samples_fpkm"),
-                "Number of samples that must have at least the min expression level.",
-                theme = "light-border"
+                "How many samples must reach the minimum expression level.",
+                theme = "light"
               )
             )
           ),
@@ -161,8 +162,8 @@ mod_02_pre_process_ui <- function(id) {
               ),
               tippy::tippy_this(
                 ns("log_transform_fpkm"),
-                "Log transformed data is used in all analyses.",
-                theme = "light-border"
+                "Use log-transformed values for all downstream analyses.",
+                theme = "light"
               )
             )
           ),
@@ -200,7 +201,7 @@ mod_02_pre_process_ui <- function(id) {
         fluidRow(
           column(
             width = 5,
-            strong("3. Missing values:")
+            strong("Missing values:")
           ),
           column(
             width = 7,
@@ -214,12 +215,13 @@ mod_02_pre_process_ui <- function(id) {
                 "Treat as zero" = "treatAsZero",
                 "Use gene median in group" = "geneMedianInGroup"
               ),
-              selected = "geneMedian"
+              selected = "geneMedian",
+              selectize = FALSE
             ),
             tippy::tippy_this(
               ns("missing_value"),
-              "How to handle missing values in the data matrix.",
-              theme = "light-border"
+              "Choose how iDEP fills in missing values.",
+              theme = "light"
             )
           )
         ),
@@ -232,8 +234,8 @@ mod_02_pre_process_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("download_processed_data"),
-              "Download transformed data",
-              theme = "light-border"
+              "Download the transformed data table.",
+              theme = "light"
             )
           ),
           column(
@@ -249,8 +251,8 @@ mod_02_pre_process_ui <- function(id) {
               ),
               tippy::tippy_this(
                 ns("download_converted_counts"),
-                "Download counts data with converted IDs",
-                theme = "light-border"
+                "Download counts with gene IDs converted to Ensembl.",
+                theme = "light"
               ),
               ns = ns
             )
@@ -263,8 +265,8 @@ mod_02_pre_process_ui <- function(id) {
         ),
         tippy::tippy_this(
           ns("rds"),
-          "Download converted data as .Rdata format",
-          theme = "light-border"
+          "Download the converted data as an .RData file.",
+          theme = "light"
         ),
         downloadButton(
           outputId = ns("report"),
@@ -272,8 +274,8 @@ mod_02_pre_process_ui <- function(id) {
         ),
         tippy::tippy_this(
           ns("report"),
-          "Generate HTML report of pre-processing tab",
-          theme = "light-border"
+          "Create an HTML report summarizing the Pre-processing tab.",
+          theme = "light"
         ),
         uiOutput(ns("mapping_statistics_container")),
       ),
@@ -342,7 +344,8 @@ mod_02_pre_process_ui <- function(id) {
                   inputId = ns("scatter_x"),
                   label = tags$span("Sample for x-axis", style = "font-weight: normal;"),
                   choices = 1:5,
-                  selected = 1
+                  selected = 1,
+                  selectize = FALSE
                 )
               ),
               column(
@@ -351,7 +354,8 @@ mod_02_pre_process_ui <- function(id) {
                   inputId = ns("scatter_y"),
                   label = tags$span("Sample for y-axis", style = "font-weight: normal;"),
                   choices = 1:5,
-                  selected = 2
+                  selected = 2,
+                  selectize = FALSE
                 )
               )
             ),
@@ -376,7 +380,13 @@ mod_02_pre_process_ui <- function(id) {
                 selectInput(
                   inputId = ns("heat_color_select"),
                   label = "Select Heat Colors",
-                  choices = NULL
+                  choices = NULL,
+                  selectize = FALSE
+                ),
+                tippy::tippy_this(
+                  ns("heat_color_select"),
+                  "Pick the color palette for the dispersion heatmap.",
+                  theme = "light"
                 )
               ),
               column(
@@ -384,6 +394,11 @@ mod_02_pre_process_ui <- function(id) {
                 checkboxInput(
                   inputId = ns("rank"),
                   label = "Use rank of mean values"
+                ),
+                tippy::tippy_this(
+                  ns("rank"),
+                  "Rank genes by mean expression before plotting dispersion.",
+                  theme = "light"
                 )
               ),
             ),
@@ -523,8 +538,8 @@ mod_02_pre_process_ui <- function(id) {
                 ),
                 tippy::tippy_this(
                   ns("selected_gene"),
-                  "Type to search for gene ID, gene symbol, or gene name.",
-                  theme = "light-border"
+                  "Type to search by gene ID, symbol, or name.",
+                  theme = "light"
                 )
               ),
               column(
@@ -537,12 +552,13 @@ mod_02_pre_process_ui <- function(id) {
                     c("Sample Groups",
                       "Individual Samples")
                   ),
-                  selected = 1
+                  selected = 1,
+                  selectize = FALSE
                 ),
                 tippy::tippy_this(
                   ns("gene_plot_box"),
-                  "Plot by sample groups or individual samples.",
-                  theme = "light-border"
+                  "Choose whether to plot sample groups or individual samples.",
+                  theme = "light"
                 ),
                 uiOutput(ns("sd_checkbox")),
                 conditionalPanel(
@@ -554,8 +570,8 @@ mod_02_pre_process_ui <- function(id) {
                   ),
                   tippy::tippy_this(
                     ns("plot_raw"),
-                    "Plot raw counts or transformed data.",
-                    theme = "light-border"
+                    "Toggle between raw counts and transformed values.",
+                    theme = "light"
                   ),
                   ns = ns
                 ),
@@ -566,8 +582,8 @@ mod_02_pre_process_ui <- function(id) {
                 ),
                 tippy::tippy_this(
                   ns("plot_tukey"),
-                  "Perform TukeyHSD test for pairwise comparisons between sample groups. Only available when plotting transformed data by sample groups.",
-                  theme = "light-border"
+                  "Run Tukey's post-hoc test for pairwise group comparisons (only works for transformed group plots).",
+                  theme = "light"
                 )
               ),
               column(
@@ -580,8 +596,8 @@ mod_02_pre_process_ui <- function(id) {
                 ),
                 tippy::tippy_this(
                   ns("angle_ind_axis_lab"),
-                  "Angle of x-axis labels.",
-                  theme = "light-border"
+                  "Set the rotation angle of the x-axis labels.",
+                  theme = "light"
                 )
               )
             ),
@@ -615,6 +631,11 @@ mod_02_pre_process_ui <- function(id) {
                 inputId = ns("show_raw"),
                 label = "Show raw counts",
                 value = FALSE
+              ),
+              tippy::tippy_this(
+                ns("show_raw"),
+                "Display the original count matrix instead of transformed values.",
+                theme = "light"
               ),
               ns = ns
             ),
@@ -1185,8 +1206,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         ),
         tippy::tippy_this(
           ns("use_sd"),
-          "Show standard deviation (SD) or standard error (SE) when plotting by sample groups.",
-          theme = "light-border"
+          "Show standard deviation (SD) or standard error (SE) for grouped samples.",
+          theme = "light"
         )
       )
     })

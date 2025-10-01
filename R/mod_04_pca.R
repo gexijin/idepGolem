@@ -25,7 +25,13 @@ mod_04_pca_ui <- function(id) {
                 inputId = ns("PCAx"),
                 label = "X-axis",
                 choices = 1:5,
-                selected = 1
+                selected = 1,
+                selectize = FALSE
+              ),
+              tippy::tippy_this(
+                ns("PCAx"),
+                "Choose which principal component is shown on the x-axis.",
+                theme = "light"
               )
             ),
             column(
@@ -34,7 +40,13 @@ mod_04_pca_ui <- function(id) {
                 inputId = ns("PCAy"),
                 label = "Y-axis",
                 choices = 1:5,
-                selected = 2
+                selected = 2,
+                selectize = FALSE
+              ),
+              tippy::tippy_this(
+                ns("PCAy"),
+                "Choose which principal component is shown on the y-axis.",
+                theme = "light"
               )
             )
           ),
@@ -49,7 +61,8 @@ mod_04_pca_ui <- function(id) {
                 inputId = ns("PCAx3d"),
                 label = "X-axis",
                 choices = 1:5,
-                selected = 1
+                selected = 1,
+                selectize = FALSE
               )
             ),
             column(
@@ -58,7 +71,8 @@ mod_04_pca_ui <- function(id) {
                 inputId = ns("PCAy3d"),
                 label = "Y-axis",
                 choices = 1:5,
-                selected = 2
+                selected = 2,
+                selectize = FALSE
               )
             ),
             column(
@@ -67,7 +81,8 @@ mod_04_pca_ui <- function(id) {
                 inputId = ns("PCAz3d"),
                 label = "Z-axis",
                 choices = 1:5,
-                selected = 3
+                selected = 3,
+                selectize = FALSE
               )
             )
           ),
@@ -99,6 +114,11 @@ mod_04_pca_ui <- function(id) {
             inputId = ns("seedTSNE"),
             label = "Re-calculate"
           ),
+          tippy::tippy_this(
+            ns("seedTSNE"),
+            "Run t-SNE again with a fresh random seed.",
+            theme = "light"
+          ),
           br(),
           br(),
           ns = ns
@@ -113,7 +133,13 @@ mod_04_pca_ui <- function(id) {
                 inputId = ns("x_axis_pc"),
                 label = "X-axis",
                 choices = c("PC1", "PC2", "PC3", "PC4", "PC5"),
-                selected = "PC1"
+                selected = "PC1",
+                selectize = FALSE
+              ),
+              tippy::tippy_this(
+                ns("x_axis_pc"),
+                "Choose which principal component is shown on the x-axis.",
+                theme = "light"
               )
             ),
             column(
@@ -122,7 +148,13 @@ mod_04_pca_ui <- function(id) {
                 inputId = ns("y_axis_pc"),
                 label = "Y-axis",
                 choices = c("PC1", "PC2", "PC3", "PC4", "PC5"),
-                selected = "PC2"
+                selected = "PC2",
+                selectize = FALSE
+              ),
+              tippy::tippy_this(
+                ns("y_axis_pc"),
+                "Choose which principal component is shown on the y-axis.",
+                theme = "light"
               )
             )
           ),
@@ -148,15 +180,30 @@ mod_04_pca_ui <- function(id) {
             label = "Show Loadings",
             value = FALSE
           ),
+          tippy::tippy_this(
+            ns("showLoadings"),
+            "Overlay gene loadings as arrows on the PCA plot.",
+            theme = "light"
+          ),
           checkboxInput(
             inputId = ns("encircle"),
             label = "Encircle",
             value = FALSE
           ),
+          tippy::tippy_this(
+            ns("encircle"),
+            "Draw outlines around the selected sample groups.",
+            theme = "light"
+          ),
           checkboxInput(
             inputId = ns("pointLabs"),
             label = "Point Labels",
             value = TRUE
+          ),
+          tippy::tippy_this(
+            ns("pointLabs"),
+            "Show sample labels next to each point.",
+            theme = "light"
           ),
           numericInput(
             inputId = ns("pointSize"),
@@ -164,6 +211,11 @@ mod_04_pca_ui <- function(id) {
             value = 3.0,
             min = 1,
             max = 15
+          ),
+          tippy::tippy_this(
+            ns("pointSize"),
+            "Adjust the marker size for samples in the plot.",
+            theme = "light"
           ),
           ns = ns
         ),
@@ -181,12 +233,17 @@ mod_04_pca_ui <- function(id) {
             downloadButton(
               outputId = ns("pca_data"),
               label = "PCA data"
+            ),
+            tippy::tippy_this(
+              ns("pca_data"),
+              "Download the PCA scores and loadings table.",
+              theme = "light"
             )
           ),
           tippy::tippy_this(
             ns("report"),
-            "Generate HTML report of PCA tab",
-            theme = "light-border"
+            "Create an HTML report summarizing the PCA tab.",
+            theme = "light"
           ),
         )
       ),
@@ -640,7 +697,8 @@ mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
           inputId = ns("selectFactors1"),
           label = "Color ",
           choices = c(colnames(pre_process$sample_info()), "Names"),
-          selected = "Names"
+          selected = "Names",
+          selectize = FALSE
         )
       }
     })
@@ -657,7 +715,8 @@ mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
           inputId = ns("selectFactors2"),
           label = "Shape",
           choices = tem,
-          selected = "Names"
+          selected = "Names",
+          selectize = FALSE
         )
       }
     })
@@ -673,7 +732,8 @@ mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
         inputId = ns("selectColor"),
         label = "Color",
         choices = colnames(pre_process$sample_info()),
-        selected = colnames(pre_process$sample_info())[1]
+        selected = colnames(pre_process$sample_info())[1],
+        selectize = FALSE
       )
     })
     output$pcatools_shape <- renderUI({
@@ -686,7 +746,8 @@ mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
         inputId = ns("selectShape"),
         label = "Shape",
         choices = colnames(pre_process$sample_info()),
-        selected = colnames(pre_process$sample_info())[1]
+        selected = colnames(pre_process$sample_info())[1],
+        selectize = FALSE
       )
     })
 

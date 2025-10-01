@@ -20,7 +20,6 @@ mod_05_deg_1_ui <- function(id) {
           "#deg-submit_model_button{font-size: 16px;color: red}"
         )),
         br(),
-        br(),
         # DEG analysis methods for read counts data
         conditionalPanel(
           condition = "output.data_file_format == 1",
@@ -32,11 +31,13 @@ mod_05_deg_1_ui <- function(id) {
               "limma-voom" = 2,
               "limma-trend" = 1
             ),
-            selected = 3
+            selected = 3,
+            selectize = FALSE
           ),
-          tags$style(
-            type = "text/css",
-            "#deg-counts_deg_method {width:100%;   margin-top:-12px}"
+          tippy::tippy_this(
+            ns("counts_deg_method"),
+            "Pick the method used to detect differentially expressed genes.",
+            theme = "light"
           ),
           ns = ns
         ),
@@ -60,8 +61,8 @@ mod_05_deg_1_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("limma_p_val"),
-              "Cutoff for adjusted p-value. ",
-              theme = "light-border"
+              "Adjusted p-value (FDR) threshold.",
+              theme = "light"
             )
           ),
           column(
@@ -94,8 +95,8 @@ mod_05_deg_1_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("limma_fc"),
-              "Entering 2 selects genes that are upregulated or downregulated by at least 2-fold. Must be bigger than 1, which means no change. This is not log fold change.",
-              theme = "light-border"
+              "Set the minimum fold-change (not log2). For example, 2 keeps genes with at least 2-fold up- or down-regulation and values must be greater than 1.",
+              theme = "light"
             )
           )
         ),
@@ -108,13 +109,8 @@ mod_05_deg_1_ui <- function(id) {
           ),
           tippy::tippy_this(
             ns("threshold_wald_test"),
-            "If checked, DESeq2 will use a threshold-based Wald test to
-            determine whether the absolute value of the log2 fold change
-            is greater than the threshold (log2 of min fold-change).
-            If unchecked, DESeq2 will use the standard Wald test to
-            determine whether the log2 fold change is significantly
-            different from zero.",
-            theme = "light-border"
+            "Use a threshold-based Wald test in DESeq2 to require the absolute log2 fold change to exceed the chosen cutoff (log2 of the minimum fold-change). Leave unchecked for the standard Wald test against zero.",
+            theme = "light"
           ),
           checkboxInput(
             inputId = ns("independent_filtering"),
@@ -123,9 +119,8 @@ mod_05_deg_1_ui <- function(id) {
           ),
           tippy::tippy_this(
             ns("independent_filtering"),
-            "If checked, DESeq2 will filter out genes with very low counts
-            before adjusting p-values to increase detection power.",
-            theme = "light-border"
+            "Let DESeq2 drop very low-count genes before p-value adjustment to improve power.",
+            theme = "light"
           ),
           ns = ns
         ),
@@ -134,7 +129,13 @@ mod_05_deg_1_ui <- function(id) {
           selectInput(
             inputId = ns("plot_color_select_1"),
             label = NULL,
-            choices = "Red-Green"
+            choices = "Red-Green",
+            selectize = FALSE
+          ),
+          tippy::tippy_this(
+            ns("plot_color_select_1"),
+            "Change the color palette for DEG summary plots.",
+            theme = "light"
           ),
           ns = ns
         ),
@@ -143,6 +144,10 @@ mod_05_deg_1_ui <- function(id) {
         uiOutput(ns("download_lfc_button")),
         uiOutput(ns("note_download_lfc_button"))
       ),
+
+
+
+
       mainPanel(
         tabsetPanel(
           id = ns("step_1"),
@@ -178,16 +183,22 @@ mod_05_deg_1_ui <- function(id) {
             tableOutput(
               outputId = ns("sig_gene_stats_table")
             ),
-            uiOutput(ns("sig_genes_download_button"))
+            uiOutput(ns("sig_genes_download_button")),
+            uiOutput(ns("note_sig_genes_download"))
           ),
           tabPanel(
             title = "Venn Diagram",
             value = "venn_diagram",
-            checkboxInput(
-              inputId = ns("up_down_regulated"),
-              label = "Split gene lists by up- or down-regulation",
-              value = TRUE
-            ),
+          checkboxInput(
+            inputId = ns("up_down_regulated"),
+            label = "Split gene lists by up- or down-regulation",
+            value = TRUE
+          ),
+          tippy::tippy_this(
+            ns("up_down_regulated"),
+            "Separate gene lists into up- and down-regulated sets for exports and plots.",
+            theme = "light"
+          ),
             htmlOutput(outputId = ns("list_comparisons_venn")),
             plotOutput(outputId = ns("venn_plot")),
             ottoPlots::mod_download_figure_ui(
@@ -218,8 +229,8 @@ mod_05_deg_1_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("dl_deg_code"),
-              "Download .R file of DEG code",
-              theme = "light-border"
+              "Download the R script used for DEG analysis.",
+              theme = "light"
             )
           ),
           tabPanel(
@@ -239,25 +250,44 @@ mod_05_deg_2_ui <- function(id) {
     sidebarLayout(
       sidebarPanel(
         style = "height: 90vh; overflow-y: auto;",
+        h4("Investigate DEGs"),
+        br(),
         htmlOutput(outputId = ns("list_comparisons")),
         conditionalPanel("input.step_2 == 'Heatmap'",
-            selectInput(
-              inputId = ns("heatmap_gene_number"),
-              label = "Number of genes displayed",
-              choices = c("All DEGs"),
-              selected = "All DEGs"
-            ),
-            selectInput(
-              inputId = ns("heatmap_fdr_fold"),
-              label = "Sort by Fold Change or FDR",
-              choices = c("Fold Change", "FDR")
-            ),
-            downloadButton(
-              outputId = ns("download_heat_data"),
-              label = "Heatmap Data"
-            ),
-            ns = ns
-            ),
+          selectInput(
+            inputId = ns("heatmap_gene_number"),
+            label = "Number of genes displayed",
+            choices = c("All DEGs"),
+            selected = "All DEGs",
+            selectize = FALSE
+          ),
+          tippy::tippy_this(
+            ns("heatmap_gene_number"),
+            "Pick how many genes appear in the DEG heatmap.",
+            theme = "light"
+          ),
+          selectInput(
+            inputId = ns("heatmap_fdr_fold"),
+            label = "Sort by Fold Change or FDR",
+            choices = c("Fold Change", "FDR"),
+            selectize = FALSE
+          ),
+          tippy::tippy_this(
+            ns("heatmap_fdr_fold"),
+            "Choose whether genes are ordered by fold-change or FDR.",
+            theme = "light"
+          ),
+          downloadButton(
+            outputId = ns("download_heat_data"),
+            label = "Heatmap Data"
+          ),
+          tippy::tippy_this(
+            ns("download_heat_data"),
+            "Download the data underlying the DEG heatmap.",
+            theme = "light"
+          ),
+          ns = ns
+        ),
         conditionalPanel(
           condition = "input.step_2 == 'Volcano Plot' |
             input.step_2 == 'MA Plot' |
@@ -265,7 +295,13 @@ mod_05_deg_2_ui <- function(id) {
           selectInput(
             inputId = ns("plot_color_select"),
             label = NULL,
-            choices = "Red-Green"
+            choices = "Red-Green",
+            selectize = FALSE
+          ),
+          tippy::tippy_this(
+            ns("plot_color_select"),
+            "Switch the color palette for the selected plot.",
+            theme = "light"
           ),
           ns = ns
         ),
@@ -283,9 +319,11 @@ mod_05_deg_2_ui <- function(id) {
           condition = "input.step_2 == 'Scatter Plot' ",
           mod_label_ui(ns("label_scatter")),
           ns = ns
-        ),
-        width = 3
+        )
+
       ),
+
+
       mainPanel(
         tabsetPanel(
           id = ns("step_2"),
@@ -340,8 +378,8 @@ mod_05_deg_2_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("dl_deg_code_2"),
-              "Download .R file of DEG code",
-              theme = "light-border"
+              "Download the R script used for DEG analysis.",
+              theme = "light"
             )
           ),
           tabPanel(
@@ -367,15 +405,24 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     output$submit_ui <- renderUI({
       # req(model_comparisons()) # this is stopping LCF data from getting through Stats
       tagList(
-        actionButton(
-          inputId = ns("submit_model_button"),
-          label = "Submit",
-          style = "float:right"
-        ),
-        tippy::tippy_this(
-          ns("submit_model_button"),
-          "Run DEG analysis",
-          theme = "light-border"
+        fluidRow(
+          column(
+            width = 7,
+            h4("Identify DEGs")
+          ),
+          column(
+            width = 5,
+            actionButton(
+              inputId = ns("submit_model_button"),
+              label = "Submit",
+              style = "float:right"
+            ),
+            tippy::tippy_this(
+              ns("submit_model_button"),
+              "Run the differential expression analysis.",
+              theme = "light"
+            )
+          )
         )
       )
     })
@@ -531,7 +578,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
               choices = setNames(
                 as.list(paste0(x, ":", select_choices[[x]])),
                 select_choices[[x]]
-              )
+              ),
+              selectize = FALSE
             )
           )
         )
@@ -817,9 +865,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       req(!is.null(deg_info()))
       tippy::tippy_this(
         elementId = ns("download_lfc"),
-        tooltip = "This data includes log fold change, adjusted p-value and
-            processed data from Pre-Process tab.",
-        theme = "light-border"
+        tooltip = "Download log fold-change, adjusted p-values, and the processed data from the Pre-processing tab.",
+        theme = "light"
       )
     })
 
@@ -907,8 +954,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         list_genes_df$gene_id <- rownames(list_genes_df)
 
         # Make gene_id the first column
-        list_genes_df <- list_genes_df[
-          ,
+        list_genes_df <- list_genes_df[,
           c("gene_id", setdiff(names(list_genes_df), "gene_id"))
         ]
         
@@ -927,6 +973,15 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       downloadButton(
         outputId = ns("sig_genes_download"),
         "Enriched Gene List"
+      )
+    })
+
+    output$note_sig_genes_download <- renderUI({
+      req(!is.null(deg$limma$results))
+      tippy::tippy_this(
+        elementId = ns("sig_genes_download"),
+        tooltip = "Download the up- and down-regulated gene lists for each comparison.",
+        theme = "light"
       )
     })
 
@@ -957,11 +1012,19 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         up_down_regulated = input$up_down_regulated
       )
       if (is.null(venn_comp$choices)) {
-        selectInput(
-          inputId = ns("select_comparisons_venn"),
-          label = NULL,
-          choices = list("All" = "All"),
-          selected = "All"
+        tagList(
+          selectInput(
+            inputId = ns("select_comparisons_venn"),
+            label = NULL,
+            choices = list("All" = "All"),
+            selected = "All",
+            selectize = FALSE
+          ),
+          tippy::tippy_this(
+            ns("select_comparisons_venn"),
+            "Choose which comparisons to include in the Venn diagram.",
+            theme = "light"
+          )
         )
       } else {
         tagList(
@@ -972,6 +1035,11 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
             label = NULL,
             choices = venn_comp$choices,
             selected = venn_comp$choices_first_three
+          ),
+          tippy::tippy_this(
+            ns("select_comparisons_venn"),
+            "Select up to five comparisons to visualize in the Venn diagram.",
+            theme = "light"
           )
         )
       }
@@ -1045,21 +1113,21 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
           inputId = ns("select_contrast"),
           label = "Comparisons:",
           choices = list("All" = "All"),
-          selected = "All"
+          selected = "All",
+          selectize = FALSE
         )
       } else {
         tagList(
           selectInput(
             inputId = ns("select_contrast"),
             label = "Comparisons:",
-            choices = deg$limma$comparisons
+            choices = deg$limma$comparisons,
+            selectize = FALSE
           ),
           tippy::tippy_this(
             ns("select_contrast"),
-            "Select a comparison to examine the associated DEGs.
-            \"A-B\" means A vs. B (See heatmap).
-            Interaction terms start with \"I:\"",
-            theme = "light-border"
+            "Choose a comparison to review its DEGs. Formats like A-B mean A vs. B (see heatmap). Interaction terms are labeled with I:.",
+            theme = "light"
           )
         )
       }

@@ -3069,7 +3069,8 @@ mod_label_server <- function(id, data_list, method = c("volcano", "ma", "scatter
               "Label top n genes" = 3,
               "Label genes above a certain threshold" = 4
             ),
-            selected = 3
+            selected = 3,
+            selectize = FALSE
           ),
           conditionalPanel(
             condition = "input.gene_label_type == 2",
@@ -3101,7 +3102,8 @@ mod_label_server <- function(id, data_list, method = c("volcano", "ma", "scatter
                   inputId = ns("sort_type"),
                   label = "By",
                   choices = choice_list,
-                  selected = 1
+                  selected = 1,
+                  selectize = FALSE
                 )
               )
             ),

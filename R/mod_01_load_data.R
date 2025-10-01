@@ -20,8 +20,18 @@ mod_01_load_data_ui <- function(id) {
               top: calc(85%);
               left: calc(5%);
                }
-             
-             .dis_gray { background-color: gray; }             
+
+             #shiny-notification-load_prompt {
+               width: 600px;
+               max-width: 60vw;
+               top: calc(10%);
+               right: 20px;
+               left: auto;
+               background-color: #f8f9fa;
+               opacity: 1;
+             }
+
+             .dis_gray { background-color: gray; }
              .more-options { display: block; width: 100%; }
              .more-options summary { display: flex; align-items: center; cursor: pointer; font-weight: 600; margin: 0; }
              .more-options summary::marker, .more-options summary::-webkit-details-marker { display: none; }
@@ -79,6 +89,11 @@ mod_01_load_data_ui <- function(id) {
             actionButton(
               inputId = ns("genome_assembl_button"),
               label = "Select"
+            ),
+            tippy::tippy_this(
+              ns("genome_assembl_button"),
+              "Browse the list of supported genomes and assemblies.",
+              theme = "light"
             )
           ),
           column(
@@ -91,8 +106,8 @@ mod_01_load_data_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("new_species"),
-              "Check this to analyze a new/custom species not in our database.",
-              theme = "light-border"
+              "Select this to analyze a species that is not in the built-in list.",
+              theme = "light"
             )
           )
         ),
@@ -118,8 +133,8 @@ mod_01_load_data_ui <- function(id) {
           ),
           tippy::tippy_this(
             ns("gmt_file"),
-            "Upload a custom pathway .GMT file to perform pathway analysis for your new species. This is optional - you can proceed without it.",
-            theme = "light-border"
+            "Optional. Upload a pathway .GMT file tailored to your species; skip this if you do not have one.",
+            theme = "light"
           ),
           ns = ns
         ),
@@ -132,21 +147,17 @@ mod_01_load_data_ui <- function(id) {
           label = NULL,
           choices = list(
             "..." = 0,
-            "Read counts data (recommended)" = 1,
+            "Read counts data" = 1,
             "Normalized Expression data" = 2,
-            "Fold-changes & adjusted P-values" = 3
+            "Fold-changes & adjusted P-vals" = 3
           ),
           selected = 0,
           selectize = FALSE
         ),
         tippy::tippy_this(
           ns("data_file_format"),
-          "We recommend uploading Read Counts Data, which can be analyzed using DESeq2.
-          Choose Normalized Expression Data if your data is derived from 
-          RNA-Seq(FPKM, RPKM, TPM), DNA microarray, proteomics data, etc. 
-          Select Fold Change and Adjusted P-value, if you have already conducted D.E.G. analysis.
-            ",
-          theme = "light-border"
+          "We recommend raw read counts so iDEP can run DESeq2. Choose normalized expression if you have TPM/FPKM, microarray, or proteomics values. Select fold change plus adjusted P-values when differential expression was done elsewhere.",
+          theme = "light"
         ),
         
         
@@ -157,6 +168,11 @@ mod_01_load_data_ui <- function(id) {
             inputId = ns("no_fdr"),
             label = "Fold-changes only",
             value = FALSE
+          ),
+          tippy::tippy_this(
+            ns("no_fdr"),
+            "Select this if your file lists fold changes but no adjusted p-values.",
+            theme = "light"
           ),
           ns = ns
         ),
@@ -187,8 +203,8 @@ mod_01_load_data_ui <- function(id) {
           tags$summary(span(strong("Settings"), id = ns("global_settings_summary"))),
           tippy::tippy_this(
             ns("global_settings_summary"),
-            "Reveal appearance and ID-conversion settings shared across the app.",
-            theme = "light-border"
+            "Show shared display and ID-conversion settings for the entire app.",
+            theme = "light"
           ),
           div(
             class = "more-options-body",
@@ -208,13 +224,14 @@ mod_01_load_data_ui <- function(id) {
                   "Orange-White-Blue"
                 ),
                 selected = "Green-Black-Red",
-                width = "100%"
+                width = "100%",
+                selectize = FALSE
               )
             ),
             tippy::tippy_this(
               ns("heatmap_color_select_container"),
-              "Choose the color palette used for heatmaps, sample trees, and networks.",
-              theme = "light-border"
+              "Select the color palette for heatmaps, sample trees, and network plots.",
+              theme = "light"
             ),
             selectInput(
               inputId = ns("multiple_map"),
@@ -231,11 +248,8 @@ mod_01_load_data_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("multiple_map"),
-              "When multiple IDs map to the same gene, we can summarize
-              data in a certain way (sum, mean, median, max),
-              or just keep the rows with the most variation (max SD).
-              When uploading transcript level counts, choose \"sum\" to aggregate gene level counts. ",
-              theme = "light-border"
+              "When several IDs match one gene, choose how to combine them (sum, average, median, max, or most variable). For transcript counts, select sum to get gene-level totals.",
+              theme = "light"
             ),
             div(
               id = ns("plots_color_select_container"),
@@ -255,24 +269,26 @@ mod_01_load_data_ui <- function(id) {
                   "Spectral"
                 ),
                 selected = "Set1",
-                width = "100%"
+                width = "100%",
+                selectize = FALSE
               )
             ),
             tippy::tippy_this(
               ns("plots_color_select_container"),
-              "Palette applied to PCA and QC plots so sample groups stand out.",
-              theme = "light-border"
+              "Pick the color set for PCA and QC plots so sample groups are easy to see.",
+              theme = "light"
             ),
             selectInput(
               inputId = ns("select_gene_id"),
               label = "Gene ID type for plots:",
               choices = c("symbol", "ensembl_ID", "User_ID"),
-              selected = "symbol"
+              selected = "symbol",
+              selectize = FALSE
             ),
             tippy::tippy_this(
               ns("select_gene_id"),
-              "Pick which gene identifier appears on plots and tables.",
-              theme = "light-border"
+              "Choose which gene identifier appears in plots and tables.",
+              theme = "light"
             ),
             selectInput(
               inputId = ns("ggplot2_theme"),
@@ -293,8 +309,8 @@ mod_01_load_data_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("ggplot2_theme"),
-              "Changes the styles for all 20 ggplot2 plots.",
-              theme = "light-border"
+              "Apply a different overall style to every ggplot2 plot.",
+              theme = "light"
             ),
             checkboxInput(
               inputId = ns("plot_grid_lines"),
@@ -303,8 +319,8 @@ mod_01_load_data_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("plot_grid_lines"),
-              "Overlay light grid lines to help compare values across samples.",
-              theme = "light-border"
+              "Add light grid lines so sample values are easier to compare.",
+              theme = "light"
             ),
             checkboxInput(
               inputId = ns("no_id_conversion"),
@@ -313,9 +329,8 @@ mod_01_load_data_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("no_id_conversion"),
-              "If selected, uploaded gene IDs will not be converted to ENSEMBL gene IDs,
-              which is used as a central id type in pathway databases.",
-              theme = "light-border"
+              "Keep your original gene IDs. By default we convert to Ensembl IDs used by pathway databases.",
+              theme = "light"
             ),
           )
         ),
@@ -346,6 +361,11 @@ mod_01_load_data_ui <- function(id) {
             actionLink(
               inputId = ns("gene_ids_link"),
               label = "Gene IDs"
+            ),
+            tippy::tippy_this(
+              ns("gene_ids_link"),
+              "See examples of the accepted gene identifiers for each species.",
+              theme = "light"
             )
           )
         )
@@ -369,10 +389,9 @@ mod_01_load_data_ui <- function(id) {
         DT::dataTableOutput(ns("sample_20")),
         div(
           id = ns("load_message"),
-          h3("iDEP — from data to discoveries", style = "color: #d9534f; font-weight: 700;"),
+          h3("From data to discoveries", style = "color: #d9534f; font-weight: 700;"),
           br(),
-          h4("Upload, visualize, run stats, and unveil pathways — in minutes.", style = "color: green;"),
-          br(),
+          h4("Visualize, analyze, & unveil pathways — in minutes!", style = "color: green;"),
           br(),
           br(),
           br(),
@@ -412,7 +431,80 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     })
 
     selected_demo <- reactiveVal(NULL)
-    
+    demo_preview_content <- reactiveVal(NULL)
+
+    demo_preview_tables <- list(
+      `1` = data.frame(
+        Ensembl = c(
+          "ENSG00000198888",
+          "ENSG00000198763",
+          "ENSG00000198804",
+          "ENSG00000198712",
+          "ENSG00000228253"
+        ),
+        ctrl_1 = c(2, 90, 234, 3222, 9304),
+        ctrl_2 = c(11, 66, 765, 2999, 11160),
+        treat_1 = c(245, 54, 32, 3450, 12608),
+        treat_2 = c(308, 73, 77, 287, 13041),
+        stringsAsFactors = FALSE
+      ),
+      `2` = data.frame(
+        symbol = c("A2M", "A4GALT", "AAAS", "AACS", "AADAC"),
+        wt_1 = c(7.7757, 1.5048, 8.9854, 2.6064, 2.9547),
+        wt_2 = c(7.8172, 1.6626, 9.0822, 3.7765, 2.3480),
+        mutant_1 = c(8.5988, 3.9233, 8.8083, 3.9611, 3.8708),
+        mutant_2 = c(8.6342, 2.8120, 8.6981, 2.9102, 4.3300),
+        stringsAsFactors = FALSE
+      ),
+      `3` = data.frame(
+        genes = c("Gnai3", "Cdc45", "Scml2", "Narf", "Cav2"),
+        treat_lfc = c(-0.0981, 0.510, 0.545, -0.229, -0.592),
+        treat_FDR = c(0.99, 0.001, 0.021, 0.120, 1e-10),
+        stringsAsFactors = FALSE
+      )
+    )
+
+    get_data_type_details <- function(type) {
+      switch(
+        as.character(type),
+        `1` = list(
+          title = "Read Counts",
+          body = tagList(
+            p("Raw gene-by-sample count matrix. Values indicate the number of sequencing reads assigned to each gene. Counts are typically integers, but estimated counts (e.g., from kallisto or Salmon) may be non-integer and should still be treated as count data."),
+            tags$ul(
+              tags$li("First column: gene IDs, such as Ensembl, Entrez, symbols, etc."),
+              tags$li("Column headers: sample names; avoid spaces and '-' characters.")
+            )
+          )
+        ),
+        `2` = list(
+          title = "Normalized Expression Matrix",
+          body = tagList(
+            p("Provide a gene-by-sample matrix with normalized values such as TPM/FPKM, microarray intensities, proteomics, etc."),
+            tags$ul(
+              tags$li("First column: gene IDs such as Ensembl, Entrez, symbols, etc."),
+              tags$li("Column headers: sample names; avoid spaces and '-' characters.")
+            )
+          )
+        ),
+        `3` = list(
+          title = "Fold Change & Adjusted P-values",
+          body = tagList(
+            p("Upload summary statistics for one or more contrasts."),
+            tags$ul(
+              tags$li("First column: gene IDs (Ensembl, symbols, ...)"),
+              tags$li("Log2 fold-change and its matching adjusted P-value/FDR"),
+              tags$li("Pair each contrast with an adjusted P-value/FDR column.")
+            )
+          )
+        ),
+        list(
+          title = "Upload Data",
+          body = p("Upload the appropriate file for the selected data type.")
+        )
+      )
+    }
+
     # increase max input file size
     options(shiny.maxRequestSize = 200 * 1024^2)
 
@@ -713,16 +805,108 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     })
 
     observeEvent(input$data_file_format, {
-      
       req(input$data_file_format != 0)
+
+      # Update dropdown text
       updateSelectInput(
         session = session,
         inputId = "data_file_format",
-        choices = list("Read counts data (recommended)" = 1,
+        choices = list("Read counts data" = 1,
                        "Normalized Expression data" = 2,
-                       "Fold-changes & adjusted P-values" = 3),
+                       "Fold-change & adjusted P-val" = 3),
         selected = input$data_file_format
+      )
+
+      # Show notification only when on Data tab
+      req(tab() == "Data")
+
+      details <- get_data_type_details(input$data_file_format)
+      preview <- demo_preview_tables[[as.character(input$data_file_format)]]
+
+      demo_preview_content(preview)
+
+      # Build notification UI with details and preview
+      notification_ui <- if (!is.null(preview)) {
+        # Convert preview to character to preserve exact display
+        df <- preview
+        df[] <- lapply(df, as.character)
+
+        # Create HTML table manually
+        table_html <- tags$table(
+          style = "width: 100%; border-collapse: collapse; margin-top: 10px;",
+          tags$thead(
+            tags$tr(
+              lapply(names(df), function(col) {
+                tags$th(
+                  style = "border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2;",
+                  col
+                )
+              })
+            )
+          ),
+          tags$tbody(
+            lapply(seq_len(nrow(df)), function(i) {
+              tags$tr(
+                lapply(df[i, ], function(val) {
+                  tags$td(
+                    style = "border: 1px solid #ddd; padding: 8px; text-align: center;",
+                    val
+                  )
+                })
+              )
+            })
+          )
         )
+
+        tagList(
+          tags$strong(details$title),
+          tags$br(),
+          details$body,
+          div(
+            style = "max-height: 300px; overflow-y: auto; margin-top: 10px;",
+            table_html
+          )
+        )
+      } else {
+        tagList(
+          tags$strong(details$title),
+          tags$br(),
+          details$body
+        )
+      }
+
+      showNotification(
+        ui = notification_ui,
+        duration = 20,
+        type = "message",
+        id = "load_prompt"
+      )
+    }, ignoreNULL = TRUE)
+
+    # Dismiss notification when user interacts with file input or demo button
+    observeEvent(input$expression_file, {
+      removeNotification("load_prompt")
+    })
+
+    observeEvent(input$demo_modal_button, {
+      removeNotification("load_prompt")
+    })
+
+    observe({
+      req(tab() == "Data")
+      req(input$data_file_format == 0)
+
+      removeNotification("load_prompt")
+      demo_preview_content(NULL)
+      removeModal()
+    })
+
+    observeEvent(tab(), {
+      if (tab() != "Data") {
+        removeNotification("load_prompt")
+        demo_preview_content(NULL)
+        removeModal()
+      }
     })
 
     # Available demo data files for current data format ----
@@ -785,6 +969,11 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
               ),
               placeholder = "",
               width = "100%"
+            ),
+            tippy::tippy_this(
+              ns("expression_file"),
+              "Upload your expression matrix in CSV, TSV, or Excel format.",
+              theme = "light"
             )
           ),
 
@@ -797,8 +986,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             ),
             tippy::tippy_this(
               ns("demo_modal_button"),
-              "Load demo data",
-              theme = "light-border"
+              "Preview the available demo datasets.",
+              theme = "light"
             )
           ),
           column(
@@ -812,8 +1001,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             ),
             tippy::tippy_this(
               ns("data_format_help"),
-              "Additional info on accepted data types",
-              theme = "light-border"
+              "Learn more about the data types iDEP accepts.",
+              theme = "light"
             )
           )
         )
@@ -838,7 +1027,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
       shiny::showModal(
         shiny::modalDialog(
-          title = "Demo Data",
+          title = "Demo Datasets",
           easyClose = TRUE,
           size = "s",
           footer = NULL,
@@ -852,19 +1041,51 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             ),
             tippy::tippy_this(
               ns("select_demo"),
-              "Select a demo file then click the \"Load Demo\" button",
-              theme = "light-border"
+              "Pick a demo dataset, then click Load.",
+              theme = "light"
+            ),
+            div(
+              style = "margin-top: 8px;",
+              uiOutput(ns("demo_memo"))
             ),
             br(),
-            actionButton(
-              inputId = ns("go_button"),
-              label = "Load",
-              class = "btn-primary"
-            ),
-            tippy::tippy_this(
-              ns("go_button"),
-              "Load the selected demo file",
-              theme = "light-border"
+
+            fluidRow(
+              column(
+                width = 4,
+                align = "left",
+                actionButton(
+                  inputId = ns("go_button"),
+                  label = "Load",
+                  class = "btn-primary"
+                ),
+                tippy::tippy_this(
+                  ns("go_button"),
+                  "Load the selected demo dataset.",
+                  theme = "light"
+                )
+              ),
+              column(
+                width = 8,
+                align = "left",
+                div(
+                  class = "demo-download-actions",
+                  style = "display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; align-items: center;",
+                  tagList(
+                    downloadButton(
+                      outputId = ns("download_demo_expression"),
+                      label = NULL,
+                      class = "btn-default"
+                    ),
+                    tippy::tippy_this(
+                      ns("download_demo_expression"),
+                      "Download the expression matrix for the selected demo dataset.",
+                      theme = "light"
+                    )
+                  ),
+                  uiOutput(ns("demo_design_download_ui"))
+                )
+              )
             )
           )
         )
@@ -910,6 +1131,11 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
                 inputId = ns("reset_app_new_data"),
                 label = strong("Reset"),
                 align = "right"
+              ),
+              tippy::tippy_this(
+                ns("reset_app_new_data"),
+                "Clear the current data and start a fresh analysis.",
+                theme = "light"
               )
             )
           ),
@@ -947,21 +1173,26 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
                 ".xls"
               ),
               placeholder = "CSV or text"
+            ),
+            tippy::tippy_this(
+              ns("experiment_file"),
+              "Upload a sample information table to define experimental groups.",
+              theme = "light"
             )
           ),
           column(
             width = 2,
             align = "center",
             actionLink(
-              inputId = ns("data_format_help"),
+              inputId = ns("design_format_help"),
               label = NULL,
               icon = icon("info-circle"),
               class = "load-data-info-icon"
             ),
             tippy::tippy_this(
-              ns("data_format_help"),
-              "Additional info on accepted data types",
-              theme = "light-border"
+              ns("design_format_help"),
+              "Learn more about experimental design file format.",
+              theme = "light"
             )
           )
         )
@@ -1042,7 +1273,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       req(input$data_file_format == 0)
 
       showNotification(
-        "Select a data type before uploading data or loading demo data.",
+        "Choose a species if not studying human. Then select a data type.",
         duration = 30,
         type = "error",
         id = "select_first"
@@ -1110,6 +1341,123 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       ))
     })
 
+    selected_demo_info <- reactive({
+      choice <- selected_demo()
+      req(choice)
+
+      files <- idep_data$demo_file_info
+      entry <- files[files$ID == choice, , drop = FALSE]
+      req(nrow(entry) == 1)
+
+      safe_entry_value <- function(df, column) {
+        if (!column %in% names(df)) {
+          return(NULL)
+        }
+
+        value <- df[[column]][[1]]
+
+        if (length(value) == 0) {
+          return(NULL)
+        }
+
+        value
+      }
+
+      list(
+        expression = entry$expression[[1]],
+        design = entry$design[[1]],
+        name = entry$name[[1]],
+        memo = safe_entry_value(entry, "memo"),
+        ncbi = safe_entry_value(entry, "ncbi")
+      )
+    })
+
+    output$demo_memo <- renderUI({
+      info <- selected_demo_info()
+      memo <- info$memo
+      ncbi_id <- info$ncbi
+
+      if (is.null(memo) || is.na(memo) || !nzchar(memo)) {
+        return(NULL)
+      }
+
+      memo_link <- NULL
+      if (!is.null(ncbi_id) && !is.na(ncbi_id)) {
+        ncbi_clean <- trimws(ncbi_id)
+        if (nzchar(ncbi_clean) && nchar(ncbi_clean) >= 4 && startsWith(tolower(ncbi_clean), "gse")) {
+          memo_link <- tags$a(
+            href = paste0("https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=", ncbi_clean),
+            target = "_blank",
+            rel = "noopener noreferrer",
+            "NCBI"
+          )
+        }
+      }
+
+      if (is.null(memo_link)) {
+        return(tags$span(memo))
+      }
+
+      tags$span(memo, " ", memo_link)
+    })
+
+    output$demo_design_download_ui <- renderUI({
+      info <- selected_demo_info()
+
+      design_path <- info$design
+      has_design <- !is.null(design_path) && length(design_path) > 0 &&
+        !is.na(design_path) && nzchar(design_path)
+
+      if (has_design) {
+        tagList(
+          downloadButton(
+            outputId = ns("download_demo_design"),
+            label = NULL,
+            class = "btn-default"
+          ),
+          tippy::tippy_this(
+            ns("download_demo_design"),
+            "Download the experimental design file for the selected demo dataset.",
+            theme = "light"
+          )
+        )
+      } else {
+        NULL
+      }
+    })
+
+    output$download_demo_expression <- downloadHandler(
+      filename = function() {
+        info <- selected_demo_info()
+        paste0("iDEP demo data ", basename(info$expression))
+      },
+      content = function(file) {
+        info <- selected_demo_info()
+        req(!is.null(info$expression), nzchar(info$expression), file.exists(info$expression))
+
+        success <- file.copy(info$expression, file, overwrite = TRUE)
+        req(success)
+      }
+    )
+
+    output$download_demo_design <- downloadHandler(
+      filename = function() {
+        info <- selected_demo_info()
+        design_path <- info$design
+        req(!is.null(design_path), length(design_path) > 0, !is.na(design_path), nzchar(design_path))
+
+        paste0("iDEP demo data ", basename(design_path))
+      },
+      content = function(file) {
+        info <- selected_demo_info()
+        design_path <- info$design
+        req(!is.null(design_path), length(design_path) > 0, !is.na(design_path), nzchar(design_path), file.exists(design_path))
+
+        success <- file.copy(design_path, file, overwrite = TRUE)
+        req(success)
+      }
+    )
+
     # Reactive element to load the data from the user or demo data ---------
     loaded_data <- reactive({
       input_data(
@@ -1175,6 +1523,76 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           easyClose = TRUE
           #footer = actionButton(ns("reset_app"), "Start over")
         ))
+      }
+
+      # Check for ratio data in fold-change uploads
+      if (input$data_file_format == 3) {
+        data <- loaded_data()$data
+
+        # Determine which columns are fold-changes
+        n2 <- ncol(data) %/% 2
+        fc_cols <- if (!input$no_fdr) {
+          2 * (1:n2) - 1  # Fold-change columns (odd columns)
+        } else {
+          1:ncol(data)    # All columns are fold-changes
+        }
+
+        # Check each fold-change column for ratio characteristics
+        ratio_detected <- FALSE
+        ratio_columns <- c()
+
+        for (i in fc_cols) {
+          col_data <- data[, i]
+          col_data <- col_data[!is.na(col_data)]
+
+          if (length(col_data) >= 10) {
+            has_no_negatives <- sum(col_data < 0) / length(col_data) < 0.01
+
+            if (has_no_negatives) {
+              skewness <- e1071::skewness(col_data)
+
+              if (skewness > 1) {
+                ratio_detected <- TRUE
+                ratio_columns <- c(ratio_columns, colnames(data)[i])
+              }
+            }
+          }
+        }
+
+        # Show warning if ratio data detected
+        if (ratio_detected) {
+          showModal(modalDialog(
+            title = "Ratio Data Detected",
+            tags$p(
+              "The following fold-change column(s) appear to contain ratio data ",
+              "instead of log2 fold-changes:"
+            ),
+            tags$ul(
+              lapply(ratio_columns, function(col) tags$li(tags$strong(col)))
+            ),
+            tags$p(
+              style = "margin-top: 15px;",
+              "Ratio data characteristics detected:"
+            ),
+            tags$ul(
+              tags$li("No negative values (or < 1% negative)"),
+              tags$li("High right skew (upregulated genes > 1, downregulated 0-1)")
+            ),
+            tags$p(
+              style = "margin-top: 15px; color: #d9534f; font-weight: bold;",
+              "iDEP will automatically apply log2 transformation during preprocessing."
+            ),
+            tags$p(
+              "This ensures proper analysis and visualization. If your data is already ",
+              "in log2 scale, please check your input file."
+            ),
+            size = "m",
+            easyClose = TRUE,
+            footer = tagList(
+              modalButton("OK")
+            )
+          ))
+        }
       }
     })
 
@@ -1352,13 +1770,14 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
     output$welcome_ui <- renderUI({
       req(go_button_count() == 0)
-      req(input$data_format_help == 0)
+      req(input$data_format_help == 0 && input$design_format_help == 0)
 
       tagList(
         fluidRow(
           column(
             width = 9,
-            h4("iDEP: integrated Differential Expression & Pathway analysis (v2.20)")
+            h4("iDEP: integrated Differential Expression & Pathway analysis (v2.20)"),
+            h5("The power of 100s of R packages and annotation databases, at your fingertips!")
           ),
           column(
             width = 3,
@@ -1390,10 +1809,37 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       )
     })
 
-    output$format_help_ui <- renderUI({
-      req(input$data_format_help != 0)
+    # Track which help button was clicked last
+    last_help_clicked <- reactiveVal("none")
 
-      includeHTML(app_sys("app/www/format.html"))
+    observeEvent(input$data_format_help, {
+      last_help_clicked("data")
+    })
+
+    observeEvent(input$design_format_help, {
+      last_help_clicked("design")
+    })
+
+    output$format_help_ui <- renderUI({
+      req(input$data_format_help != 0 || input$design_format_help != 0)
+
+      # Scroll to section 2 only if design_format_help was clicked last
+      should_scroll_to_section2 <- last_help_clicked() == "design"
+
+      tagList(
+        includeHTML(app_sys("app/www/format.html")),
+        # Scroll to section 2 only if design_format_help was clicked
+        if (should_scroll_to_section2) {
+          tags$script(HTML("
+            setTimeout(function() {
+              var anchor = document.querySelector('a[name=\"LFCs\"]');
+              if (anchor) {
+                anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+            }, 100);
+          "))
+        }
+      )
     })
 
     list(
