@@ -37,7 +37,7 @@ mod_05_deg_1_ui <- function(id) {
           tippy::tippy_this(
             ns("counts_deg_method"),
             "Pick the method used to detect differentially expressed genes.",
-            theme = "light-border"
+            theme = "light"
           ),
           ns = ns
         ),
@@ -62,7 +62,7 @@ mod_05_deg_1_ui <- function(id) {
             tippy::tippy_this(
               ns("limma_p_val"),
               "Adjusted p-value (FDR) threshold.",
-              theme = "light-border"
+              theme = "light"
             )
           ),
           column(
@@ -96,7 +96,7 @@ mod_05_deg_1_ui <- function(id) {
             tippy::tippy_this(
               ns("limma_fc"),
               "Set the minimum fold-change (not log2). For example, 2 keeps genes with at least 2-fold up- or down-regulation and values must be greater than 1.",
-              theme = "light-border"
+              theme = "light"
             )
           )
         ),
@@ -110,7 +110,7 @@ mod_05_deg_1_ui <- function(id) {
           tippy::tippy_this(
             ns("threshold_wald_test"),
             "Use a threshold-based Wald test in DESeq2 to require the absolute log2 fold change to exceed the chosen cutoff (log2 of the minimum fold-change). Leave unchecked for the standard Wald test against zero.",
-            theme = "light-border"
+            theme = "light"
           ),
           checkboxInput(
             inputId = ns("independent_filtering"),
@@ -120,7 +120,7 @@ mod_05_deg_1_ui <- function(id) {
           tippy::tippy_this(
             ns("independent_filtering"),
             "Let DESeq2 drop very low-count genes before p-value adjustment to improve power.",
-            theme = "light-border"
+            theme = "light"
           ),
           ns = ns
         ),
@@ -135,7 +135,7 @@ mod_05_deg_1_ui <- function(id) {
           tippy::tippy_this(
             ns("plot_color_select_1"),
             "Change the color palette for DEG summary plots.",
-            theme = "light-border"
+            theme = "light"
           ),
           ns = ns
         ),
@@ -197,7 +197,7 @@ mod_05_deg_1_ui <- function(id) {
           tippy::tippy_this(
             ns("up_down_regulated"),
             "Separate gene lists into up- and down-regulated sets for exports and plots.",
-            theme = "light-border"
+            theme = "light"
           ),
             htmlOutput(outputId = ns("list_comparisons_venn")),
             plotOutput(outputId = ns("venn_plot")),
@@ -230,7 +230,7 @@ mod_05_deg_1_ui <- function(id) {
             tippy::tippy_this(
               ns("dl_deg_code"),
               "Download the R script used for DEG analysis.",
-              theme = "light-border"
+              theme = "light"
             )
           ),
           tabPanel(
@@ -264,7 +264,7 @@ mod_05_deg_2_ui <- function(id) {
           tippy::tippy_this(
             ns("heatmap_gene_number"),
             "Pick how many genes appear in the DEG heatmap.",
-            theme = "light-border"
+            theme = "light"
           ),
           selectInput(
             inputId = ns("heatmap_fdr_fold"),
@@ -275,7 +275,7 @@ mod_05_deg_2_ui <- function(id) {
           tippy::tippy_this(
             ns("heatmap_fdr_fold"),
             "Choose whether genes are ordered by fold-change or FDR.",
-            theme = "light-border"
+            theme = "light"
           ),
           downloadButton(
             outputId = ns("download_heat_data"),
@@ -284,7 +284,7 @@ mod_05_deg_2_ui <- function(id) {
           tippy::tippy_this(
             ns("download_heat_data"),
             "Download the data underlying the DEG heatmap.",
-            theme = "light-border"
+            theme = "light"
           ),
           ns = ns
         ),
@@ -301,7 +301,7 @@ mod_05_deg_2_ui <- function(id) {
           tippy::tippy_this(
             ns("plot_color_select"),
             "Switch the color palette for the selected plot.",
-            theme = "light-border"
+            theme = "light"
           ),
           ns = ns
         ),
@@ -379,7 +379,7 @@ mod_05_deg_2_ui <- function(id) {
             tippy::tippy_this(
               ns("dl_deg_code_2"),
               "Download the R script used for DEG analysis.",
-              theme = "light-border"
+              theme = "light"
             )
           ),
           tabPanel(
@@ -420,7 +420,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
             tippy::tippy_this(
               ns("submit_model_button"),
               "Run the differential expression analysis.",
-              theme = "light-border"
+              theme = "light"
             )
           )
         )
@@ -866,7 +866,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       tippy::tippy_this(
         elementId = ns("download_lfc"),
         tooltip = "Download log fold-change, adjusted p-values, and the processed data from the Pre-processing tab.",
-        theme = "light-border"
+        theme = "light"
       )
     })
 
@@ -981,7 +981,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       tippy::tippy_this(
         elementId = ns("sig_genes_download"),
         tooltip = "Download the up- and down-regulated gene lists for each comparison.",
-        theme = "light-border"
+        theme = "light"
       )
     })
 
@@ -1023,7 +1023,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
           tippy::tippy_this(
             ns("select_comparisons_venn"),
             "Choose which comparisons to include in the Venn diagram.",
-            theme = "light-border"
+            theme = "light"
           )
         )
       } else {
@@ -1039,7 +1039,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
           tippy::tippy_this(
             ns("select_comparisons_venn"),
             "Select up to five comparisons to visualize in the Venn diagram.",
-            theme = "light-border"
+            theme = "light"
           )
         )
       }
@@ -1127,7 +1127,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
           tippy::tippy_this(
             ns("select_contrast"),
             "Choose a comparison to review its DEGs. Formats like A-B mean A vs. B (see heatmap). Interaction terms are labeled with I:.",
-            theme = "light-border"
+            theme = "light"
           )
         )
       }

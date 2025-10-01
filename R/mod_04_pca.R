@@ -31,7 +31,7 @@ mod_04_pca_ui <- function(id) {
               tippy::tippy_this(
                 ns("PCAx"),
                 "Choose which principal component is shown on the x-axis.",
-                theme = "light-border"
+                theme = "light"
               )
             ),
             column(
@@ -46,7 +46,7 @@ mod_04_pca_ui <- function(id) {
               tippy::tippy_this(
                 ns("PCAy"),
                 "Choose which principal component is shown on the y-axis.",
-                theme = "light-border"
+                theme = "light"
               )
             )
           ),
@@ -117,7 +117,7 @@ mod_04_pca_ui <- function(id) {
           tippy::tippy_this(
             ns("seedTSNE"),
             "Run t-SNE again with a fresh random seed.",
-            theme = "light-border"
+            theme = "light"
           ),
           br(),
           br(),
@@ -139,7 +139,7 @@ mod_04_pca_ui <- function(id) {
               tippy::tippy_this(
                 ns("x_axis_pc"),
                 "Choose which principal component is shown on the x-axis.",
-                theme = "light-border"
+                theme = "light"
               )
             ),
             column(
@@ -154,7 +154,7 @@ mod_04_pca_ui <- function(id) {
               tippy::tippy_this(
                 ns("y_axis_pc"),
                 "Choose which principal component is shown on the y-axis.",
-                theme = "light-border"
+                theme = "light"
               )
             )
           ),
@@ -183,7 +183,7 @@ mod_04_pca_ui <- function(id) {
           tippy::tippy_this(
             ns("showLoadings"),
             "Overlay gene loadings as arrows on the PCA plot.",
-            theme = "light-border"
+            theme = "light"
           ),
           checkboxInput(
             inputId = ns("encircle"),
@@ -193,7 +193,7 @@ mod_04_pca_ui <- function(id) {
           tippy::tippy_this(
             ns("encircle"),
             "Draw outlines around the selected sample groups.",
-            theme = "light-border"
+            theme = "light"
           ),
           checkboxInput(
             inputId = ns("pointLabs"),
@@ -203,7 +203,7 @@ mod_04_pca_ui <- function(id) {
           tippy::tippy_this(
             ns("pointLabs"),
             "Show sample labels next to each point.",
-            theme = "light-border"
+            theme = "light"
           ),
           numericInput(
             inputId = ns("pointSize"),
@@ -215,7 +215,7 @@ mod_04_pca_ui <- function(id) {
           tippy::tippy_this(
             ns("pointSize"),
             "Adjust the marker size for samples in the plot.",
-            theme = "light-border"
+            theme = "light"
           ),
           ns = ns
         ),
@@ -237,13 +237,13 @@ mod_04_pca_ui <- function(id) {
             tippy::tippy_this(
               ns("pca_data"),
               "Download the PCA scores and loadings table.",
-              theme = "light-border"
+              theme = "light"
             )
           ),
           tippy::tippy_this(
             ns("report"),
             "Create an HTML report summarizing the PCA tab.",
-            theme = "light-border"
+            theme = "light"
           ),
         )
       ),

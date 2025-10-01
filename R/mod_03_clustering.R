@@ -67,7 +67,7 @@ mod_03_clustering_ui <- function(id) {
               tippy::tippy_this(
                 ns("n_genes"),
                 "Genes are ranked by how much they vary across samples in the transformed data. Showing the most variable genes highlights overall expression patterns.",
-                theme = "light-border"
+                theme = "light"
               )
             )
           ),
@@ -94,7 +94,7 @@ mod_03_clustering_ui <- function(id) {
               tippy::tippy_this(
                 ns("dendrogram_display"),
                 "Choose whether to display row, column, or both dendrograms on the heatmap.",
-                theme = "light-border"
+                theme = "light"
               )
             )
           ),
@@ -118,7 +118,7 @@ mod_03_clustering_ui <- function(id) {
           tippy::tippy_this(
             ns("k_clusters"),
             "Set how many clusters to form when running k-means.",
-            theme = "light-border"
+            theme = "light"
           ),
 
           # Re-run k-means with a different seed
@@ -129,7 +129,7 @@ mod_03_clustering_ui <- function(id) {
           tippy::tippy_this(
             ns("k_means_re_run"),
             "Re-run k-means with a new random seed.",
-            theme = "light-border"
+            theme = "light"
           ),
           # Elbow plot pop-up
           actionButton(
@@ -139,7 +139,7 @@ mod_03_clustering_ui <- function(id) {
           tippy::tippy_this(
             ns("elbow_pop_up"),
             "Show the k-means elbow plot to help choose the number of clusters.",
-            theme = "light-border"
+            theme = "light"
           ),
           # Line break ---------
           HTML(
@@ -169,7 +169,7 @@ mod_03_clustering_ui <- function(id) {
               tippy::tippy_this(
                 ns("dist_function"),
                 "Pick the distance metric used for hierarchical clustering.",
-                theme = "light-border"
+                theme = "light"
               )
             )
           ),
@@ -190,7 +190,7 @@ mod_03_clustering_ui <- function(id) {
               tippy::tippy_this(
                 ns("hclust_function"),
                 "Choose how clusters are merged when building the dendrogram.",
-                theme = "light-border"
+                theme = "light"
               )
             )
           ),
@@ -220,7 +220,7 @@ mod_03_clustering_ui <- function(id) {
                 tippy::tippy_this(
                 ns("selected_genes_wrapper"),
                 "Add labels for the top genes you want to highlight on the heatmap.",
-                theme = "light-border"
+                theme = "light"
                 )
               )
             )
@@ -238,7 +238,7 @@ mod_03_clustering_ui <- function(id) {
               tippy::tippy_this(
                 ns("gene_centering"),
                 "Subtract each gene's mean value before clustering.",
-                theme = "light-border"
+                theme = "light"
               ),
               checkboxInput(
                 inputId = ns("gene_normalize"),
@@ -248,7 +248,7 @@ mod_03_clustering_ui <- function(id) {
               tippy::tippy_this(
                 ns("gene_normalize"),
                 "Scale genes by their standard deviation before clustering.",
-                theme = "light-border"
+                theme = "light"
               ),
               fluidRow(
                 column(width = 4, p("Sample Colors")),
@@ -266,7 +266,7 @@ mod_03_clustering_ui <- function(id) {
                   tippy::tippy_this(
                     ns("sample_color"),
                     "Control the color palette for sample annotations.",
-                    theme = "light-border"
+                    theme = "light"
                   )
                 )
               ),
@@ -284,7 +284,7 @@ mod_03_clustering_ui <- function(id) {
                   tippy::tippy_this(
                     ns("heatmap_cutoff"),
                     "Cap extreme Z scores at this value when plotting.",
-                    theme = "light-border"
+                    theme = "light"
                   )
                 )
               )
@@ -316,7 +316,7 @@ mod_03_clustering_ui <- function(id) {
             tippy::tippy_this(
               ns("download_heatmap_data"),
               "Download the data currently displayed in the heatmap.",
-              theme = "light-border"
+              theme = "light"
             ),
             ns = ns
           )
@@ -324,7 +324,7 @@ mod_03_clustering_ui <- function(id) {
         tippy::tippy_this(
           ns("report"),
           "Create an HTML report summarizing the Clustering tab.",
-          theme = "light-border"
+          theme = "light"
         )
       ),
 
@@ -384,7 +384,7 @@ mod_03_clustering_ui <- function(id) {
                   tippy::tippy_this(
                     ns("cluster_enrichment"),
                     "Run GO enrichment for the selected genes. For hierarchical clustering, zoom into a region first. For k-means, all clusters are analyzed.",
-                    theme = "light-border"
+                    theme = "light"
                   ),
                   ns = ns
                 ),
@@ -566,7 +566,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         tippy::tippy_this(
           ns("select_factors_heatmap"),
           "Color bar for sample groups. Choose which sample annotation to display on the top of heatmap.",
-          theme = "light-border"
+          theme = "light"
         )
       )
     })
@@ -789,7 +789,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           tippy::tippy_this(
             ns(trigger_id),
             tooltip_text,
-            theme = "light-border"
+            theme = "light"
           )
         )
       })

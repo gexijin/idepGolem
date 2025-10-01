@@ -32,7 +32,7 @@ mod_07_genome_ui <- function(id) {
             tippy::tippy_this(
               ns("limma_p_val_viz"),
               "Set the FDR cutoff for showing genes on the chromosome plot.",
-              theme = "light-border"
+              theme = "light"
             )
           ),
           column(
@@ -48,7 +48,7 @@ mod_07_genome_ui <- function(id) {
             tippy::tippy_this(
               ns("limma_fc_viz"),
               "Only plot genes changing at least this many fold.",
-              theme = "light-border"
+              theme = "light"
             )
           )
         ),
@@ -63,7 +63,7 @@ mod_07_genome_ui <- function(id) {
             tippy::tippy_this(
               ns("label_gene_symbol"),
               "Show gene symbols next to highlighted loci.",
-              theme = "light-border"
+              theme = "light"
             )
           ),
           column(
@@ -76,7 +76,7 @@ mod_07_genome_ui <- function(id) {
             tippy::tippy_this(
               ns("ignore_non_coding"),
               "Keep only protein-coding genes in the plot.",
-              theme = "light-border"
+              theme = "light"
             )
           )
         ),
@@ -91,7 +91,7 @@ mod_07_genome_ui <- function(id) {
             tippy::tippy_this(
               ns("hide_patches"),
               "Hide alternate patch chromosomes from the view.",
-              theme = "light-border"
+              theme = "light"
             )
           ),
           column(
@@ -104,7 +104,7 @@ mod_07_genome_ui <- function(id) {
             tippy::tippy_this(
               ns("hide_chr"),
               "Hide chromosomes that contain four or fewer genes in your dataset.",
-              theme = "light-border"
+              theme = "light"
             )
           )
         ),
@@ -126,7 +126,7 @@ mod_07_genome_ui <- function(id) {
             tippy::tippy_this(
               ns("ma_window_size"),
               "Set the width of the sliding window used to detect enriched regions.",
-              theme = "light-border"
+              theme = "light"
             )
           ),
           column(
@@ -141,7 +141,7 @@ mod_07_genome_ui <- function(id) {
             tippy::tippy_this(
               ns("ma_window_steps"),
               "Choose the spacing between adjacent sliding windows.",
-              theme = "light-border"
+              theme = "light"
             )
           )
         ),
@@ -155,7 +155,7 @@ mod_07_genome_ui <- function(id) {
         tippy::tippy_this(
           ns("ch_region_p_val"),
           "Threshold for calling genomic windows significantly enriched.",
-          theme = "light-border"
+          theme = "light"
         ),
         actionButton(
           inputId = ns("chr_data_popup"),
@@ -165,7 +165,7 @@ mod_07_genome_ui <- function(id) {
         tippy::tippy_this(
           ns("chr_data_popup"),
           "Download the gene-level data behind the chromosome plot.",
-          theme = "light-border"
+          theme = "light"
         )
       ),
       mainPanel(
@@ -211,7 +211,7 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data) {
           tippy::tippy_this(
             ns("select_contrast"),
             "Choose which comparison to display on the genome plots.",
-            theme = "light-border"
+            theme = "light"
           )
         )
       } else {
@@ -225,7 +225,7 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data) {
           tippy::tippy_this(
             ns("select_contrast"),
             "Choose which comparison to display on the genome plots.",
-            theme = "light-border"
+            theme = "light"
           )
         )
       }

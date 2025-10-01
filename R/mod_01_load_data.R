@@ -93,7 +93,7 @@ mod_01_load_data_ui <- function(id) {
             tippy::tippy_this(
               ns("genome_assembl_button"),
               "Browse the list of supported genomes and assemblies.",
-              theme = "light-border"
+              theme = "light"
             )
           ),
           column(
@@ -107,7 +107,7 @@ mod_01_load_data_ui <- function(id) {
             tippy::tippy_this(
               ns("new_species"),
               "Select this to analyze a species that is not in the built-in list.",
-              theme = "light-border"
+              theme = "light"
             )
           )
         ),
@@ -134,7 +134,7 @@ mod_01_load_data_ui <- function(id) {
           tippy::tippy_this(
             ns("gmt_file"),
             "Optional. Upload a pathway .GMT file tailored to your species; skip this if you do not have one.",
-            theme = "light-border"
+            theme = "light"
           ),
           ns = ns
         ),
@@ -157,7 +157,7 @@ mod_01_load_data_ui <- function(id) {
         tippy::tippy_this(
           ns("data_file_format"),
           "We recommend raw read counts so iDEP can run DESeq2. Choose normalized expression if you have TPM/FPKM, microarray, or proteomics values. Select fold change plus adjusted P-values when differential expression was done elsewhere.",
-          theme = "light-border"
+          theme = "light"
         ),
         
         
@@ -172,7 +172,7 @@ mod_01_load_data_ui <- function(id) {
           tippy::tippy_this(
             ns("no_fdr"),
             "Select this if your file lists fold changes but no adjusted p-values.",
-            theme = "light-border"
+            theme = "light"
           ),
           ns = ns
         ),
@@ -204,7 +204,7 @@ mod_01_load_data_ui <- function(id) {
           tippy::tippy_this(
             ns("global_settings_summary"),
             "Show shared display and ID-conversion settings for the entire app.",
-            theme = "light-border"
+            theme = "light"
           ),
           div(
             class = "more-options-body",
@@ -231,7 +231,7 @@ mod_01_load_data_ui <- function(id) {
             tippy::tippy_this(
               ns("heatmap_color_select_container"),
               "Select the color palette for heatmaps, sample trees, and network plots.",
-              theme = "light-border"
+              theme = "light"
             ),
             selectInput(
               inputId = ns("multiple_map"),
@@ -249,7 +249,7 @@ mod_01_load_data_ui <- function(id) {
             tippy::tippy_this(
               ns("multiple_map"),
               "When several IDs match one gene, choose how to combine them (sum, average, median, max, or most variable). For transcript counts, select sum to get gene-level totals.",
-              theme = "light-border"
+              theme = "light"
             ),
             div(
               id = ns("plots_color_select_container"),
@@ -276,7 +276,7 @@ mod_01_load_data_ui <- function(id) {
             tippy::tippy_this(
               ns("plots_color_select_container"),
               "Pick the color set for PCA and QC plots so sample groups are easy to see.",
-              theme = "light-border"
+              theme = "light"
             ),
             selectInput(
               inputId = ns("select_gene_id"),
@@ -288,7 +288,7 @@ mod_01_load_data_ui <- function(id) {
             tippy::tippy_this(
               ns("select_gene_id"),
               "Choose which gene identifier appears in plots and tables.",
-              theme = "light-border"
+              theme = "light"
             ),
             selectInput(
               inputId = ns("ggplot2_theme"),
@@ -310,7 +310,7 @@ mod_01_load_data_ui <- function(id) {
             tippy::tippy_this(
               ns("ggplot2_theme"),
               "Apply a different overall style to every ggplot2 plot.",
-              theme = "light-border"
+              theme = "light"
             ),
             checkboxInput(
               inputId = ns("plot_grid_lines"),
@@ -320,7 +320,7 @@ mod_01_load_data_ui <- function(id) {
             tippy::tippy_this(
               ns("plot_grid_lines"),
               "Add light grid lines so sample values are easier to compare.",
-              theme = "light-border"
+              theme = "light"
             ),
             checkboxInput(
               inputId = ns("no_id_conversion"),
@@ -330,7 +330,7 @@ mod_01_load_data_ui <- function(id) {
             tippy::tippy_this(
               ns("no_id_conversion"),
               "Keep your original gene IDs. By default we convert to Ensembl IDs used by pathway databases.",
-              theme = "light-border"
+              theme = "light"
             ),
           )
         ),
@@ -365,7 +365,7 @@ mod_01_load_data_ui <- function(id) {
             tippy::tippy_this(
               ns("gene_ids_link"),
               "See examples of the accepted gene identifiers for each species.",
-              theme = "light-border"
+              theme = "light"
             )
           )
         )
@@ -973,7 +973,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             tippy::tippy_this(
               ns("expression_file"),
               "Upload your expression matrix in CSV, TSV, or Excel format.",
-              theme = "light-border"
+              theme = "light"
             )
           ),
 
@@ -987,7 +987,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             tippy::tippy_this(
               ns("demo_modal_button"),
               "Preview the available demo datasets.",
-              theme = "light-border"
+              theme = "light"
             )
           ),
           column(
@@ -1002,7 +1002,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             tippy::tippy_this(
               ns("data_format_help"),
               "Learn more about the data types iDEP accepts.",
-              theme = "light-border"
+              theme = "light"
             )
           )
         )
@@ -1042,7 +1042,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             tippy::tippy_this(
               ns("select_demo"),
               "Pick a demo dataset, then click Load.",
-              theme = "light-border"
+              theme = "light"
             ),
             div(
               style = "margin-top: 8px;",
@@ -1062,7 +1062,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
                 tippy::tippy_this(
                   ns("go_button"),
                   "Load the selected demo dataset.",
-                  theme = "light-border"
+                  theme = "light"
                 )
               ),
               column(
@@ -1080,7 +1080,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
                     tippy::tippy_this(
                       ns("download_demo_expression"),
                       "Download the expression matrix for the selected demo dataset.",
-                      theme = "light-border"
+                      theme = "light"
                     )
                   ),
                   uiOutput(ns("demo_design_download_ui"))
@@ -1135,7 +1135,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
               tippy::tippy_this(
                 ns("reset_app_new_data"),
                 "Clear the current data and start a fresh analysis.",
-                theme = "light-border"
+                theme = "light"
               )
             )
           ),
@@ -1177,7 +1177,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             tippy::tippy_this(
               ns("experiment_file"),
               "Upload a sample information table to define experimental groups.",
-              theme = "light-border"
+              theme = "light"
             )
           ),
           column(
@@ -1192,7 +1192,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             tippy::tippy_this(
               ns("design_format_help"),
               "Learn more about experimental design file format.",
-              theme = "light-border"
+              theme = "light"
             )
           )
         )
@@ -1418,7 +1418,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           tippy::tippy_this(
             ns("download_demo_design"),
             "Download the experimental design file for the selected demo dataset.",
-            theme = "light-border"
+            theme = "light"
           )
         )
       } else {

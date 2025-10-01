@@ -24,7 +24,7 @@ mod_08_bicluster_ui <- function(id) {
           ns("n_genes"),
           "Number of most variable genes (based on standard deviation) to use for biclustering. 
           Increase this number if you have too few biclusters.",
-          theme = "light-border"
+          theme = "light"
         ),
         selectInput(
           inputId = ns("biclust_method"),
@@ -45,7 +45,7 @@ mod_08_bicluster_ui <- function(id) {
         tippy::tippy_this(
           ns("biclust_method"),
           "Biclustering method. See the documentation for details.",
-          theme = "light-border"
+          theme = "light"
         ),
         htmlOutput(outputId = ns("list_biclusters")),
         textOutput(ns("bicluster_info"))
@@ -125,7 +125,7 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab) {
         tippy::tippy_this(
           ns("select_bicluster"),
           "Choose a bicluster to view its heatmap, enrichment and gene list.",
-          theme = "light-border"
+          theme = "light"
         )
       )
     })

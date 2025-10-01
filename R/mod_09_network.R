@@ -23,7 +23,7 @@ mod_09_network_ui <- function(id) {
         tippy::tippy_this(
           ns("n_genes_network"),
           "Select how many highly variable genes feed into the network.",
-          theme = "light-border"
+          theme = "light"
         ),
         fluidRow(
           column(
@@ -38,7 +38,7 @@ mod_09_network_ui <- function(id) {
             tippy::tippy_this(
               ns("soft_power"),
               "Adjust the WGCNA soft-thresholding power.",
-              theme = "light-border"
+              theme = "light"
             )
           ),
           column(
@@ -53,7 +53,7 @@ mod_09_network_ui <- function(id) {
             tippy::tippy_this(
               ns("min_module_size"),
               "Set the minimum number of genes allowed per module.",
-              theme = "light-border"
+              theme = "light"
             )
           )
         ),
@@ -84,17 +84,17 @@ mod_09_network_ui <- function(id) {
         tippy::tippy_this(
           ns("download_all_WGCNA_module"),
           "Download gene lists for every detected module.",
-          theme = "light-border"
+          theme = "light"
         ),
         tippy::tippy_this(
           ns("download_selected_WGCNA_module"),
           "Download gene details for the selected module.",
-          theme = "light-border"
+          theme = "light"
         ),
         tippy::tippy_this(
           ns("download_heat_data"),
           "Download the data used in the module heatmap.",
-          theme = "light-border"
+          theme = "light"
         ),
         textOutput(ns("module_statistic"))
       ),
@@ -118,7 +118,7 @@ mod_09_network_ui <- function(id) {
               tippy::tippy_this(
                 ns("edge_threshold"),
                 "Filter network edges below this connection strength.",
-                theme = "light-border"
+                theme = "light"
               )
             ),
             column(
@@ -134,7 +134,7 @@ mod_09_network_ui <- function(id) {
               tippy::tippy_this(
                 ns("top_genes_network"),
                 "Limit the network display to this many hub genes.",
-                theme = "light-border"
+                theme = "light"
               )
             ),
             column(
@@ -148,7 +148,7 @@ mod_09_network_ui <- function(id) {
               tippy::tippy_this(
                 ns("network_layout"),
                 "Shuffle the network layout for a different view.",
-                theme = "light-border"
+                theme = "light"
               )
             )
           ),
@@ -160,7 +160,7 @@ mod_09_network_ui <- function(id) {
               tippy::tippy_this(
                 ns("download_module_network"),
                 "Import this file into Cytoscape or VisANT for further analysis.",
-                theme = "light-border"
+                theme = "light"
               ),
               ottoPlots::mod_download_figure_ui(
                 id = ns("dl_network_plot")
@@ -181,7 +181,7 @@ mod_09_network_ui <- function(id) {
             tippy::tippy_this(
               ns("dl_module_plot"),
               "Download the module eigengene plot.",
-              theme = "light-border"
+              theme = "light"
             )
           ),
           tabPanel(
@@ -245,7 +245,7 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
         tippy::tippy_this(
           ns("select_wgcna_module"),
           "Pick which WGCNA module to explore in the panels below.",
-          theme = "light-border"
+          theme = "light"
         )
       )
     })

@@ -39,7 +39,7 @@ mod_11_enrichment_ui <- function(id) {
         tippy::tippy_this(
           ns("customize_button"),
           "Reveal additional settings for sorting and display.",
-          theme = "light-border"
+          theme = "light"
         )
       )
     ),
@@ -59,7 +59,7 @@ mod_11_enrichment_ui <- function(id) {
         tippy::tippy_this(
           ns("sort_by"),
           "Order pathways by FDR or fold enrichment.",
-          theme = "light-border"
+          theme = "light"
         )
       ),
       column(
@@ -72,7 +72,7 @@ mod_11_enrichment_ui <- function(id) {
         tippy::tippy_this(
           ns("filtered_background"),
           "Use only filtered genes as the background universe for enrichment.",
-          theme = "light-border"
+          theme = "light"
         )
       ),
       column(
@@ -85,7 +85,7 @@ mod_11_enrichment_ui <- function(id) {
         tippy::tippy_this(
           ns("remove_redudant"),
           "Collapse overlapping pathways to reduce redundancy.",
-          theme = "light-border"
+          theme = "light"
         )
       )
     ),
@@ -104,7 +104,7 @@ mod_11_enrichment_ui <- function(id) {
         tippy::tippy_this(
           ns("top_pathways"),
           "Choose how many pathways to display across the outputs.",
-          theme = "light-border"
+          theme = "light"
         )
       ),
       column(
@@ -118,7 +118,7 @@ mod_11_enrichment_ui <- function(id) {
         tippy::tippy_this(
           ns("show_pathway_id"),
           "Append pathway IDs (e.g., Path:mmu04115 or GO:0042770) to each pathway name.",
-          theme = "light-border"
+          theme = "light"
         )
       )
 
@@ -137,7 +137,7 @@ mod_11_enrichment_ui <- function(id) {
         tippy::tippy_this(
           ns("download_enrichment"),
           "Download the enrichment results table.",
-          theme = "light-border"
+          theme = "light"
         ),
       ),
       tabPanel(
@@ -171,7 +171,7 @@ mod_11_enrichment_ui <- function(id) {
             tippy::tippy_this(
               ns("edge_cutoff_deg"),
               "Filter network edges by overlap strength.",
-              theme = "light-border"
+              theme = "light"
             ),
             align = "left"
           ),
@@ -184,7 +184,7 @@ mod_11_enrichment_ui <- function(id) {
             tippy::tippy_this(
               ns("layout_vis_deg"),
               "Rearrange the enrichment network layout.",
-              theme = "light-border"
+              theme = "light"
             )
           ),
           column(
@@ -197,7 +197,7 @@ mod_11_enrichment_ui <- function(id) {
             tippy::tippy_this(
               ns("wrap_text_network_deg"),
               "Wrap long pathway names on the network nodes.",
-              theme = "light-border"
+              theme = "light"
             )
           )
         ),
@@ -240,7 +240,7 @@ mod_11_enrichment_ui <- function(id) {
             tippy::tippy_this(
               ns("pathway_order"),
               "Choose how pathways are ordered in the bar chart.",
-              theme = "light-border"
+              theme = "light"
             )
           ),
           column(
@@ -255,7 +255,7 @@ mod_11_enrichment_ui <- function(id) {
             tippy::tippy_this(
               ns("order_x"),
               "Select the metric displayed on the x-axis.",
-              theme = "light-border"
+              theme = "light"
             )
           ),
           column(
@@ -270,7 +270,7 @@ mod_11_enrichment_ui <- function(id) {
             tippy::tippy_this(
               ns("plot_color"),
               "Choose which metric controls point color.",
-              theme = "light-border"
+              theme = "light"
             )
           ),
           column(
@@ -285,7 +285,7 @@ mod_11_enrichment_ui <- function(id) {
             tippy::tippy_this(
               ns("plot_size"),
               "Choose which metric controls point size.",
-              theme = "light-border"
+              theme = "light"
             )
           )
         ),
@@ -303,7 +303,7 @@ mod_11_enrichment_ui <- function(id) {
             tippy::tippy_this(
               ns("font_size"),
               "Adjust label text size on the chart.",
-              theme = "light-border"
+              theme = "light"
             )
           ),
           column(
@@ -319,7 +319,7 @@ mod_11_enrichment_ui <- function(id) {
             tippy::tippy_this(
               ns("marker_size"),
               "Control the marker size for each pathway.",
-              theme = "light-border"
+              theme = "light"
             )
           ),
           column(
@@ -334,7 +334,7 @@ mod_11_enrichment_ui <- function(id) {
             tippy::tippy_this(
               ns("high_color"),
               "Set the color for high values.",
-              theme = "light-border"
+              theme = "light"
             )
           ),
           column(
@@ -349,7 +349,7 @@ mod_11_enrichment_ui <- function(id) {
             tippy::tippy_this(
               ns("log_color"),
               "Set the color for low values.",
-              theme = "light-border"
+              theme = "light"
             )
           )
         ),
@@ -366,7 +366,7 @@ mod_11_enrichment_ui <- function(id) {
             tippy::tippy_this(
               ns("chart_type"),
               "Switch between lollipop, dot, or bar chart styles.",
-              theme = "light-border"
+              theme = "light"
             )
           ),
           column(
@@ -381,7 +381,7 @@ mod_11_enrichment_ui <- function(id) {
             tippy::tippy_this(
               ns("aspect_ratio"),
               "Adjust the height-to-width ratio of the chart.",
-              theme = "light-border"
+              theme = "light"
             )
           ),
           column(
@@ -408,7 +408,7 @@ mod_11_enrichment_ui <- function(id) {
           tippy::tippy_this(
             ns("download_gene_info"),
             "Download the enrichment results table.",
-            theme = "light-border"
+            theme = "light"
           ),
           column(
             width = 3,
@@ -420,7 +420,7 @@ mod_11_enrichment_ui <- function(id) {
             tippy::tippy_this(
               ns("show_detail"),
               "Toggle detailed descriptions for each pathway.",
-              theme = "light-border"
+              theme = "light"
             )
           )
         ),

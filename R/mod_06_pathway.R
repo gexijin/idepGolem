@@ -21,7 +21,7 @@ mod_06_pathway_ui <- function(id) {
         tippy::tippy_this(
           ns("submit_pathway_button"),
           "Run the pathway enrichment analysis using the fold-changes of all.",
-          theme = "light-border"
+          theme = "light"
         ),
         tags$head(tags$style(
           "#pathway-submit_pathway_button{font-size: 16px;color: red}"
@@ -50,7 +50,7 @@ mod_06_pathway_ui <- function(id) {
         tippy::tippy_this(
           ns("pathway_method"),
           "Select which pathway enrichment algorithm to run.",
-          theme = "light-border"
+          theme = "light"
         ),
         conditionalPanel(
           condition = "input.pathway_method == 1",
@@ -67,7 +67,7 @@ mod_06_pathway_ui <- function(id) {
           tippy::tippy_this(
             ns("gage_data"),
             "Choose whether GAGE uses fold changes or expression values.",
-            theme = "light-border"
+            theme = "light"
           ),
           ns = ns
         ),
@@ -86,7 +86,7 @@ mod_06_pathway_ui <- function(id) {
         tippy::tippy_this(
           ns("pathway_p_val_cutoff"),
           "Set the FDR threshold for calling pathways significant.",
-          theme = "light-border"
+          theme = "light"
         ),
         tags$style(
           type = "text/css",
@@ -97,7 +97,7 @@ mod_06_pathway_ui <- function(id) {
         tippy::tippy_this(
           ns("customize_button"),
           "Expand additional pathway filtering and display settings.",
-          theme = "light-border"
+          theme = "light"
         ),
 
         fluidRow(
@@ -114,7 +114,7 @@ mod_06_pathway_ui <- function(id) {
             tippy::tippy_this(
               ns("min_set_size"),
               "Exclude pathways smaller than this number of genes.",
-              theme = "light-border"
+              theme = "light"
             )
           ),
           column(
@@ -130,7 +130,7 @@ mod_06_pathway_ui <- function(id) {
             tippy::tippy_this(
               ns("max_set_size"),
               "Exclude pathways larger than this number of genes.",
-              theme = "light-border"
+              theme = "light"
             )
           )
         ),
@@ -145,7 +145,7 @@ mod_06_pathway_ui <- function(id) {
         tippy::tippy_this(
           ns("n_pathway_show"),
           "Control how many top pathways appear in the results tables and plots.",
-          theme = "light-border"
+          theme = "light"
         ),
         numericInput(
           inputId = ns("gene_p_val_cutoff"),
@@ -158,7 +158,7 @@ mod_06_pathway_ui <- function(id) {
         tippy::tippy_this(
           ns("gene_p_val_cutoff"),
           "Filter out genes with FDR above this value before running pathway analysis.",
-          theme = "light-border"
+          theme = "light"
         ),
         checkboxInput(
           inputId = ns("absolute_fold"),
@@ -168,7 +168,7 @@ mod_06_pathway_ui <- function(id) {
         tippy::tippy_this(
           ns("absolute_fold"),
           "Treat up- and down-regulated genes the same by using absolute fold changes.",
-          theme = "light-border"
+          theme = "light"
         ),
         checkboxInput(
           inputId = ns("show_pathway_id"),
@@ -178,7 +178,7 @@ mod_06_pathway_ui <- function(id) {
         tippy::tippy_this(
           ns("show_pathway_id"),
           "Append pathway IDs (e.g., Path:mmu04115 or GO:0042770) to each pathway name.",
-          theme = "light-border"
+          theme = "light"
         ),
         fluidRow(
           column(3,
@@ -190,7 +190,7 @@ mod_06_pathway_ui <- function(id) {
                  tippy::tippy_this(
                    ns("report"),
                    "Create an HTML report summarizing the Pathway tab.",
-                   theme = "light-border"
+                   theme = "light"
                  )
           ),
           column(9,
@@ -203,7 +203,7 @@ mod_06_pathway_ui <- function(id) {
                    tippy::tippy_this(
                      ns("download_heat_data"),
                      "Download the heatmap data table.",
-                     theme = "light-border"
+                     theme = "light"
                     ),
                    ns = ns
                  )
@@ -245,7 +245,7 @@ mod_06_pathway_ui <- function(id) {
             tippy::tippy_this(
               ns("download_sig_paths"),
               "Download the table of significant pathways.",
-              theme = "light-border"
+              theme = "light"
             ),
             actionButton(
               inputId = ns("gene_list_popup"),
@@ -255,7 +255,7 @@ mod_06_pathway_ui <- function(id) {
             tippy::tippy_this(
               ns("gene_list_popup"),
               "Download the gene list for the selected pathway.",
-              theme = "light-border"
+              theme = "light"
             )
           ),
 
@@ -405,7 +405,7 @@ mod_06_pathway_ui <- function(id) {
               tippy::tippy_this(
                 ns("download_kegg"),
                 "Download the KEGG pathway plot.",
-                theme = "light-border"
+                theme = "light"
               ),
               br(),
 
@@ -455,7 +455,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         tippy::tippy_this(
           ns("select_go"),
           "Select which pathway database to use for enrichment analysis.",
-          theme = "light-border"
+          theme = "light"
         )
       )
     })
@@ -774,7 +774,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           tippy::tippy_this(
             ns("select_contrast"),
             "Select which comparison to use for pathway analysis.",
-            theme = "light-border"
+            theme = "light"
           )
         )
       }
