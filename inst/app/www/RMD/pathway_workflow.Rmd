@@ -94,37 +94,24 @@ library(idepGolem)
 
 ## Gene Sets
 ```{r}
-gene_sets <- read_gene_sets(
-  converted = params$converted,
-  all_gene_names = params$all_gene_names,
-  go = params$go,
-  select_org = params$select_org,
-  idep_data = params$idep_data,
-  my_range = params$my_range
-)
-
-gene_sets$gene_lists[1:2]
+# Display gene sets information from params
+if (!is.null(params$gene_sets) && length(params$gene_sets) > 0) {
+  print(paste("Loaded", length(params$gene_sets), "gene sets from", params$go))
+} else {
+  print("No gene sets available.")
+}
 ```
 
 
 ## Pathway analysis for contrast: `r params$select_contrast`
 
 ```{r }
-if (params$pathway_method == 1) {
-  gage <- idepGolem::gage_data(
-    select_go = params$go,
-    select_contrast = params$select_contrast,
-    min_set_size = params$min_set_size,
-    max_set_size = params$max_set_size,
-    limma = params$limma,
-    gene_p_val_cutoff = params$gene_p_val_cutoff,
-    gene_sets = params$gene_sets,
-    absolute_fold = params$absolute_fold,
-    pathway_p_val_cutoff = params$pathway_p_val_cutoff,
-    n_pathway_show = params$n_pathway_show
-  )
-  kbl(gage) %>% 
-    kable_classic(full_width = F, html_font = "Cambria")  
+# Display GAGE results from pre-computed data
+if (params$pathway_method == 1 && !is.null(params$pathway_list_data) && nrow(params$pathway_list_data) > 0) {
+  kbl(params$pathway_list_data) %>%
+    kable_classic(full_width = F, html_font = "Cambria")
+} else if (params$pathway_method == 1) {
+  print("No GAGE pathway data available.")
 }
 ```
 
@@ -209,19 +196,12 @@ if (params$pathway_method %in% c(6:8)) {
 
 
 ```{r FGSEA, message = F, quiet = TRUE}
-if (params$pathway_method == 3) {
-  fgsea_pathway_data <- fgsea_data(
-    select_contrast = params$select_contrast,
-    my_range = c(params$min_set_size, params$max_set_size),
-    limma = params$limma,
-    gene_p_val_cutoff = params$gene_p_val_cutoff,
-    gene_sets = params$gene_sets,
-    absolute_fold = params$absolute_fold,
-    pathway_p_val_cutoff = params$pathway_p_val_cutoff,
-    n_pathway_show = params$n_pathway_show
-  )
-  kbl(fgsea_pathway_data) %>% 
+# Display FGSEA results from pre-computed data
+if (params$pathway_method == 3 && !is.null(params$pathway_list_data) && nrow(params$pathway_list_data) > 0) {
+  kbl(params$pathway_list_data) %>%
     kable_classic(full_width = F, html_font = "Cambria")
+} else if (params$pathway_method == 3) {
+  print("No FGSEA pathway data available.")
 }
 ```
 
@@ -231,34 +211,44 @@ if (params$pathway_method == 3) {
 
 ## Tree
 ```{r echo=FALSE}
-idepGolem::enrichment_tree_plot(
-  go_table = params$pathway_list_data,
-  group = "All Groups",
-  right_margin = 10
-)
+if (!is.null(params$pathway_list_data) && nrow(params$pathway_list_data) > 0) {
+  idepGolem::enrichment_tree_plot(
+    go_table = params$pathway_list_data,
+    group = "All Groups",
+    right_margin = 10
+  )
+} else {
+  print("No pathway data available for tree plot.")
+}
 ```
 
 ## Network plot
 ```{r network}
-network_data <- idepGolem::network_data(
-  network = params$pathway_list_data,
-  up_down_reg_deg = params$up_down_reg_deg,
-  wrap_text_network_deg = params$wrap_text_network_deg,
-  layout_vis_deg = params$layout_vis_deg,
-  edge_cutoff_deg = params$edge_cutoff_deg
-)
-idepGolem::vis_network_plot(
-  network_data = network_data
- )
+if (!is.null(params$pathway_list_data) && nrow(params$pathway_list_data) > 0) {
+  network_data <- idepGolem::network_data(
+    network = params$pathway_list_data,
+    up_down_reg_deg = params$up_down_reg_deg,
+    wrap_text_network_deg = params$wrap_text_network_deg,
+    layout_vis_deg = params$layout_vis_deg,
+    edge_cutoff_deg = params$edge_cutoff_deg
+  )
+  idepGolem::vis_network_plot(
+    network_data = network_data
+  )
+} else {
+  print("No pathway data available for network plot.")
+}
 ```
 
 ## Heatmap
 
 ```{r pathway-name}
-params$sig_pathways
+if (!is.null(params$sig_pathways)) {
+  params$sig_pathways
+}
 ```
 ```{r heatmap, fig.width = 6, fig.height = 8}
-if(!is.null(params$sig_pathways)) {
+if(!is.null(params$sig_pathways) && !is.null(params$selected_pathway_data)) {
   deg_heatmap(
     df = params$selected_pathway_data,
     bar = NULL,
@@ -266,31 +256,37 @@ if(!is.null(params$sig_pathways)) {
     cluster_rows = TRUE
   )
 } else {
-  print("Click on the Heatmap tab to do the analysis first.")
+  print("Heatmap not available (select a pathway on the Heatmap tab first).")
 }
 ```
 
 ## KEGG pathway
 
 ```{r, message = FALSE}
-out_image <- kegg_pathway(
-  go = params$go,
-  gage_pathway_data = params$pathway_list_data[, 1:5],
-  sig_pathways = params$sig_pathways_kegg, 
-  select_contrast = params$select_contrast,
-  limma = params$limma,
-  converted = params$converted,
-  idep_data = params$idep_data,
-  select_org = params$select_org,
-  low_color = params$kegg_colors[[params$kegg_color_select]][1],
-  high_color = params$kegg_colors[[params$kegg_color_select]][2]
-)
-
-```
-<!-- The png file is written to a temp folder. The file path and name is shown -->
-\centering
-`r params$sig_pathways_kegg`
-![](`r out_image$src`){width=100%} 
+if (!is.null(params$pathway_list_data) &&
+    ncol(params$pathway_list_data) >= 5 &&
+    !is.null(params$sig_pathways_kegg) &&
+    params$go == "KEGG") {
+  out_image <- kegg_pathway(
+    go = params$go,
+    gage_pathway_data = params$pathway_list_data[, 1:5],
+    sig_pathways = params$sig_pathways_kegg,
+    select_contrast = params$select_contrast,
+    limma = params$limma,
+    converted = params$converted,
+    idep_data = params$idep_data,
+    select_org = params$select_org,
+    low_color = params$kegg_colors[[params$kegg_color_select]][1],
+    high_color = params$kegg_colors[[params$kegg_color_select]][2]
+  )
+  cat("\n<!-- The png file is written to a temp folder -->\n")
+  cat("\\centering\n")
+  cat(params$sig_pathways_kegg, "\n")
+  cat("![](", out_image$src, "){width=100%}\n", sep = "")
+} else {
+  print("KEGG pathway visualization not available (requires KEGG database selection).")
+}
+``` 
 
 
 
@@ -306,32 +302,8 @@ out_image <- kegg_pathway(
 
 
 ```{r}
-# GAGE Method
-if (params$pathway_method == 0) {
-  gene_sets <- read_gene_sets(
-    converted = params$converted,
-    all_gene_names = params$all_gene_names,
-    go = params$go,
-    select_org = params$select_org,
-    idep_data = params$idep_data,
-    my_range = params$my_range
-  )
-
-  gage <- gage_data(
-    select_go = params$go,
-    select_contrast = params$select_contrast,
-    min_set_size = params$min_set_size,
-    max_set_size = params$max_set_size,
-    limma = params$limma,
-    gene_p_val_cutoff = params$gene_p_val_cutoff,
-    gene_sets = params$gene_sets,
-    absolute_fold = params$absolute_fold,
-    pathway_p_val_cutoff = params$pathway_p_val_cutoff,
-    n_pathway_show = params$n_pathway_show
-  )
-
-   gage
-}
+# This chunk is deprecated - pathway results are displayed above
+# pathway_method == 0 is not used in current version
 ```
 
 ```{r eval=FALSE, include=FALSE}

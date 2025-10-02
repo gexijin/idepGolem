@@ -1273,7 +1273,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       req(input$data_file_format == 0)
 
       showNotification(
-        "Choose a species if not studying human. Then select a data type.",
+        "Choose a species first (default is human). Then select a data type.",
         duration = 30,
         type = "error",
         id = "select_first"
