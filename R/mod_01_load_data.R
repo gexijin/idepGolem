@@ -458,7 +458,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       ),
       `3` = data.frame(
         genes = c("Gnai3", "Cdc45", "Scml2", "Narf", "Cav2"),
-        treat_lfc = c(-0.0981, 0.510, 0.545, -0.229, -0.592),
+        treat_LFC = c(-0.0981, 0.510, 0.545, -0.229, -0.592),
         treat_FDR = c(0.99, 0.001, 0.021, 0.120, 1e-10),
         stringsAsFactors = FALSE
       )
