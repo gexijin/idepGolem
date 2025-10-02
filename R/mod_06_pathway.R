@@ -1530,98 +1530,30 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
               ".html"
             ),
       content = function(file) {
-        message("=== DOWNLOAD REPORT STARTED ===")
         # Validate that pathway analysis has been run
         req(input$submit_pathway_button > 0)
-        message("Submit button clicked: ", input$submit_pathway_button, " times")
 
-        # Use isolate to access eventReactive values without triggering
-        gene_sets_data <- isolate({
-          if (is.null(gene_sets())) {
-            showNotification(
-              "Please run pathway analysis first by clicking the Submit button.",
-              type = "error",
-              duration = 5
-            )
-            req(FALSE)
-          }
-          gene_sets()$gene_lists
-        })
-        message("Gene sets loaded: ", length(gene_sets_data), " sets")
+        # Use pathway_list_data() which already handles all pathway methods
+        pathway_list <- pathway_list_data()
 
-        # Get pathway data for the selected method only
-        # Store pathway_method to use consistently
-        current_method <- input$pathway_method
-        message("Current pathway method: ", current_method)
-
-        # Get the method-specific data OUTSIDE of isolate so req() works properly
-        method_data <- tryCatch({
-          result <- switch(
-            as.character(current_method),
-            "1" = gage_pathway_data(),
-            "2" = pgsea_plot_data(),
-            "3" = fgsea_pathway_data(),
-            "4" = pgsea_plot_all_samples_data(),
-            "5" = reactome_pa_pathway_data(),
-            "6" = gsva_plot_data(),
-            "7" = gsva_plot_data(),
-            "8" = gsva_plot_data(),
-            NULL
-          )
-          message("Method ", current_method, " data: ",
-                  ifelse(is.null(result), "NULL",
-                         paste("has", nrow(result), "rows")))
-          result
-        }, error = function(e) {
-          message("Error getting pathway data for method ", current_method, ": ", e$message)
-          NULL
-        })
-
-        if (is.null(method_data)) {
+        # Validate we have pathway data
+        if (is.null(pathway_list)) {
           showNotification(
-            paste("Pathway analysis data not available for method",
-                  current_method, ". Please run analysis again."),
+            "No pathway data available. Please run pathway analysis first.",
             type = "error",
             duration = 5
           )
           req(FALSE)
         }
 
-        pathway_list <- isolate({
-          # Now call get_pathway_list_data with only the needed method data
-          # Note: ReactomePA (method 5) is not handled by get_pathway_list_data
-          # and will return NULL, which is handled by the NULL check below
-          tryCatch({
-            get_pathway_list_data(
-              pathway_method = current_method,
-              gage_pathway_data = if (current_method == 1) method_data else NULL,
-              fgsea_pathway_data = if (current_method == 3) method_data else NULL,
-              pgsea_plot_data = if (current_method == 2) method_data else NULL,
-              pgsea_plot_all_samples_data = if (current_method == 4) method_data else NULL,
-              gsva_plot_data = if (current_method %in% c(6, 7, 8)) method_data else NULL,
-              go = input$select_go,
-              select_org = pre_process$select_org(),
-              gene_info = pre_process$all_gene_info(),
-              gene_sets = gene_sets_data,
-              show_pathway_id = input$show_pathway_id
-            )
-          }, error = function(e) {
-            showNotification(
-              paste("Error generating pathway list:", e$message),
-              type = "error",
-              duration = 5
-            )
-            req(FALSE)
-          })
-        })
+        # Get gene sets data
+        gene_sets_data <- gene_sets()$gene_lists
 
-        # Safely get selected_pathway_data with isolate
-        selected_pathway <- isolate({
-          tryCatch({
-            selected_pathway_data()
-          }, error = function(e) {
-            NULL  # This is optional data, so just return NULL if not available
-          })
+        # Get selected pathway data if available
+        selected_pathway <- tryCatch({
+          selected_pathway_data()
+        }, error = function(e) {
+          NULL
         })
 
         # Set up parameters to pass to Rmd document
@@ -1655,6 +1587,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           edge_cutoff_deg = input$edge_cutoff_deg,
           selected_pathway_data = selected_pathway,
           heatmap_color_select = pre_process$heatmap_color_select(),
+          group_color = strsplit(pre_process$heatmap_color_select(), "-")[[1]][c(1, 3)],
           sig_pathways_kegg = input$sig_pathways_kegg,
           kegg_color_select = input$kegg_color_select,
           kegg_colors = kegg_colors,

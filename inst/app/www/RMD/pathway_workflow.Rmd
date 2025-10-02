@@ -33,6 +33,7 @@ params:
   edge_cutoff_deg:
   selected_pathway_data:
   heatmap_color_select:
+  group_color:
   sig_pathways_kegg:
   kegg_color_select:
   kegg_colors:
@@ -230,7 +231,8 @@ if (!is.null(params$pathway_list_data) && nrow(params$pathway_list_data) > 0) {
     up_down_reg_deg = params$up_down_reg_deg,
     wrap_text_network_deg = params$wrap_text_network_deg,
     layout_vis_deg = params$layout_vis_deg,
-    edge_cutoff_deg = params$edge_cutoff_deg
+    edge_cutoff_deg = params$edge_cutoff_deg,
+    group_color = params$group_color
   )
   idepGolem::vis_network_plot(
     network_data = network_data
