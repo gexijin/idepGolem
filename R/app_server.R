@@ -51,11 +51,16 @@ app_server <- function(input, output, session) {
   observe({
     data_format <- load_data$data_file_format()
     prep_data <- pre_process$data()
-    placeholder_present <- !is.null(prep_data) && "Ctrl" %in% colnames(prep_data)
+    placeholder_present <- !is.null(prep_data) && "Ctrl" %in% colnames(prep_data) && ncol(prep_data) == 2
     placeholder_is_zero <- placeholder_present && all(prep_data[, "Ctrl"] == 0)
+
+    # Hide tabs for type 3 data (fold-change & P-values) regardless of number of comparisons
+    # This includes both single comparison (with dummy Ctrl) and multiple comparisons
     hide_prep <- isTRUE(data_format == 3) && placeholder_is_zero
+    hide_analysis_tabs <- isTRUE(data_format == 3)  # Hide PCA, Bicluster, Network for all type 3 data
 
     top_targets <- c("Prep", "Cluster", "PCA", "Bicluster", "Network")
+    analysis_only_targets <- c("PCA", "Bicluster", "Network")  # Tabs to hide for type 3 with multiple comparisons
     venn_input_id <- "deg-step_1"
     venn_target <- "venn_diagram"
     deg_plots_input_id <- "deg-step_2"
@@ -63,6 +68,7 @@ app_server <- function(input, output, session) {
     deg_plots_fallback <- "Volcano Plot"
 
     if (hide_prep) {
+      # Single comparison: hide all tabs (original behavior)
       lapply(top_targets, function(tab_name) hideTab(inputId = "navbar", target = tab_name))
       hideTab(inputId = venn_input_id, target = venn_target)
       lapply(deg_plots_targets, function(tab_name) hideTab(inputId = deg_plots_input_id, target = tab_name))
@@ -89,7 +95,23 @@ app_server <- function(input, output, session) {
         )
         single_column_notice_shown(TRUE)
       }
+    } else if (hide_analysis_tabs) {
+      # Multiple comparisons: hide only PCA, Bicluster, Network (keep Prep and Cluster visible)
+      lapply(analysis_only_targets, function(tab_name) hideTab(inputId = "navbar", target = tab_name))
+
+      # Show Prep and Cluster tabs
+      showTab(inputId = "navbar", target = "Prep")
+      showTab(inputId = "navbar", target = "Cluster")
+
+      # Show venn diagram and deg plot tabs
+      showTab(inputId = venn_input_id, target = venn_target)
+      lapply(deg_plots_targets, function(tab_name) showTab(inputId = deg_plots_input_id, target = tab_name))
+
+      if (isolate(input$navbar) %in% analysis_only_targets) {
+        updateNavbarPage(session, inputId = "navbar", selected = "Data")
+      }
     } else {
+      # Not type 3 data: show all tabs
       lapply(top_targets, function(tab_name) showTab(inputId = "navbar", target = tab_name))
       showTab(inputId = venn_input_id, target = venn_target)
       lapply(deg_plots_targets, function(tab_name) showTab(inputId = deg_plots_input_id, target = tab_name))
