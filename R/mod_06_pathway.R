@@ -113,7 +113,7 @@ mod_06_pathway_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("min_set_size"),
-              "Exclude pathways smaller than this number of genes.",
+              "Exclude pathways smaller than this number of genes. Smaller pathways are more likely to be significant by chance. Normally set to 5-20.",
               theme = "light"
             )
           ),
@@ -123,7 +123,7 @@ mod_06_pathway_ui <- function(id) {
               inputId = ns("max_set_size"),
               label = "Max.",
               min = 1000,
-              max = 2000,
+              max = 10000,
               value = 2000,
               step = 100
             ),
@@ -454,7 +454,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         ),
         tippy::tippy_this(
           ns("select_go"),
-          "Select which pathway database to use for enrichment analysis.",
+          "Select which pathway database to use. KEGG is a small (100s of pathways), manually curated database of pathways. Gene Ontology (GO) is mostly computationall derived and large (10,000+).",
           theme = "light"
         )
       )
@@ -773,7 +773,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           ),
           tippy::tippy_this(
             ns("select_contrast"),
-            "Select which comparison to use for pathway analysis.",
+            "Select which comparison to use for pathway analysis. The comparisons are defined on the Stats tab.",
             theme = "light"
           )
         )

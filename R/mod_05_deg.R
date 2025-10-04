@@ -36,7 +36,7 @@ mod_05_deg_1_ui <- function(id) {
           ),
           tippy::tippy_this(
             ns("counts_deg_method"),
-            "Pick the method used to detect differentially expressed genes.",
+            "Pick the method to detect differentially expressed genes. DESEq2 is recommended for read count data. limma-voom and limma-trend can be used for read counts or normalized expression data.",
             theme = "light"
           ),
           ns = ns
@@ -61,7 +61,7 @@ mod_05_deg_1_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("limma_p_val"),
-              "Adjusted p-value (FDR) threshold.",
+              "Adjusted p-value (FDR) threshold for differentially expressed genes.",
               theme = "light"
             )
           ),
@@ -95,7 +95,7 @@ mod_05_deg_1_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("limma_fc"),
-              "Set the minimum fold-change (not log2). For example, 2 keeps genes with at least 2-fold up- or down-regulation and values must be greater than 1.",
+              "Set the minimum fold-change. For example, setting it to 2 identifys genes with at least 2-fold up- or down-regulation. ",
               theme = "light"
             )
           )
@@ -109,7 +109,7 @@ mod_05_deg_1_ui <- function(id) {
           ),
           tippy::tippy_this(
             ns("threshold_wald_test"),
-            "Use a threshold-based Wald test in DESeq2 to require the absolute log2 fold change to exceed the chosen cutoff (log2 of the minimum fold-change). Leave unchecked for the standard Wald test against zero.",
+            "Use a threshold-based Wald test in DESeq2 to test the hypothesis that the absolute log2 fold change to exceed the chosen cutoff (log2 of the minimum fold-change). Leave unchecked for the standard Wald test against zero.",
             theme = "light"
           ),
           checkboxInput(
@@ -196,7 +196,7 @@ mod_05_deg_1_ui <- function(id) {
           ),
           tippy::tippy_this(
             ns("up_down_regulated"),
-            "Separate gene lists into up- and down-regulated sets for exports and plots.",
+            "Separate gene lists into up- and down-regulated sets for venn diagram and upset plot.",
             theme = "light"
           ),
             htmlOutput(outputId = ns("list_comparisons_venn")),
@@ -849,7 +849,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       req(!is.null(deg_info()))
       tippy::tippy_this(
         elementId = ns("download_lfc"),
-        tooltip = "Download log fold-change, adjusted p-values, and the processed data from the Pre-processing tab.",
+        tooltip = "Download log fold-change, adjusted p-values, and the processed data.",
         theme = "light"
       )
     })
@@ -1110,7 +1110,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
           ),
           tippy::tippy_this(
             ns("select_contrast"),
-            "Choose a comparison to review its DEGs. Formats like A-B mean A vs. B (see heatmap). Interaction terms are labeled with I:.",
+            "Choose a comparison to review its DEGs. For comparison labeled 'Treat vs. Ctrl', positive log fold-change means genes are upregulated in 'Treat'.  Interaction terms start with 'I:', indicating, for example, mutatant specific responses to a treatment.",
             theme = "light"
           )
         )
