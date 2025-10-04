@@ -30,7 +30,7 @@ mod_02_pre_process_ui <- function(id) {
               ),
               tippy::tippy_this(
                 ns("min_counts"),
-                "Counts per million (CPM) adjusts for library size: (gene count / total reads) * 1,000,000.",
+                "Minimum counts per million. CPM adjusts for library size: (gene count / total reads) * 1,000,000.",
                 theme = "light"
               )
             ),
@@ -45,7 +45,7 @@ mod_02_pre_process_ui <- function(id) {
               ),
               tippy::tippy_this(
                 ns("n_min_samples_count"),
-                "How many samples must meet the minimum CPM.",
+                "A gene must reach minimum CPM in this many samples to be kept for further analysis.",
                 theme = "light"
               )
             )
@@ -64,7 +64,7 @@ mod_02_pre_process_ui <- function(id) {
           ),
           tippy::tippy_this(
             ns("counts_transform"),
-            "iDEP uses this transformed data for every analysis except the DESeq2 differential expression step.",
+            "Transformed data is used for clustering, PCA, network analysis. Differentialy analysis with DESeq2 uses raw counts.",
             theme = "light"
           ),
 
@@ -90,7 +90,7 @@ mod_02_pre_process_ui <- function(id) {
                 ),
                 tippy::tippy_this(
                   ns("counts_log_start"),
-                  "Constant c in log2(CPM + c); higher values pull small counts toward log2(c).",
+                  "Constant c in log2(CPM + c) transformation; higher values reduces noises but loses sensitivity. Normally between 1 and 10.",
                   theme = "light"
                 )
               )
@@ -115,7 +115,7 @@ mod_02_pre_process_ui <- function(id) {
               ),
               tippy::tippy_this(
                 ns("low_filter_fpkm"),
-                "Minimum expression value (FPKM, RPKM, TPM, or similar normalized units).",
+                "Minimum expression value (FPKM, RPKM, TPM, or similar normalized units). Defaults to -1000 effectively bypass this filter for most datasets.",
                 theme = "light"
               )
             ),
@@ -129,7 +129,7 @@ mod_02_pre_process_ui <- function(id) {
               ),
               tippy::tippy_this(
                 ns("n_min_samples_fpkm"),
-                "How many samples must reach the minimum expression level.",
+                "A gene must reach the minimum expression level in at least this many samples to be kept for further analysis.",
                 theme = "light"
               )
             )
@@ -162,7 +162,7 @@ mod_02_pre_process_ui <- function(id) {
               ),
               tippy::tippy_this(
                 ns("log_transform_fpkm"),
-                "Use log-transformed values for all downstream analyses.",
+                "Use log2-transformed values for all downstream analyses.",
                 theme = "light"
               )
             )
@@ -220,7 +220,7 @@ mod_02_pre_process_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("missing_value"),
-              "Choose how iDEP fills in missing values.",
+              "You can treat missing values as zero, fill in with median values by gene in all samples, or use gene medians within each sample group.",
               theme = "light"
             )
           )
@@ -234,7 +234,7 @@ mod_02_pre_process_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("download_processed_data"),
-              "Download the transformed data table.",
+              "Download the transformed data. Includes Enembll gene IDs and gene symbols.",
               theme = "light"
             )
           ),
@@ -274,7 +274,7 @@ mod_02_pre_process_ui <- function(id) {
         ),
         tippy::tippy_this(
           ns("report"),
-          "Create an HTML report summarizing the Pre-processing tab.",
+          "Create an HTML report summarizing the Pre-preprocessing step.",
           theme = "light"
         ),
         uiOutput(ns("mapping_statistics_container")),
@@ -385,7 +385,7 @@ mod_02_pre_process_ui <- function(id) {
                 ),
                 tippy::tippy_this(
                   ns("heat_color_select"),
-                  "Pick the color palette for the dispersion heatmap.",
+                  "Pick the color palette for the dispersion plot.",
                   theme = "light"
                 )
               ),
@@ -634,7 +634,7 @@ mod_02_pre_process_ui <- function(id) {
               ),
               tippy::tippy_this(
                 ns("show_raw"),
-                "Display the original count matrix instead of transformed values.",
+                "Display the original uploaded data instead of transformed values.",
                 theme = "light"
               ),
               ns = ns
