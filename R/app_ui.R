@@ -12,7 +12,6 @@ app_ui <- function(request) {
 
     navbarPage(
       "iDEP",
-
       id = "navbar",
       mod_01_load_data_ui(id = "load_data"),
       mod_02_pre_process_ui(id = "pre_process"),

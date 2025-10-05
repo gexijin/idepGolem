@@ -5,7 +5,9 @@
       "Bash(Rscript:*)",
       "Bash(for:*)",
       "Bash(do echo \"Processing: $file\")",
-      "Bash(done)"
+      "Bash(done)",
+      "mcp__ide__getDiagnostics",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []

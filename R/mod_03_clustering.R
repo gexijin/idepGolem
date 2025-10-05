@@ -66,7 +66,7 @@ mod_03_clustering_ui <- function(id) {
               ),
               tippy::tippy_this(
                 ns("n_genes"),
-                "Genes are ranked by how much they vary across samples in the transformed data. Showing the most variable genes highlights overall expression patterns.",
+                "Using the transformed data, genes are ranked by standard deviation across all samples. This highlights overall expression changes without using sample groups, enabling exploratory analysis. Normally 1000-5000.",
                 theme = "light"
               )
             )
@@ -93,7 +93,7 @@ mod_03_clustering_ui <- function(id) {
               ),
               tippy::tippy_this(
                 ns("dendrogram_display"),
-                "Choose whether to display row, column, or both dendrograms on the heatmap.",
+                "Choose whether to display row, column, or both dendrograms.",
                 theme = "light"
               )
             )
@@ -117,7 +117,7 @@ mod_03_clustering_ui <- function(id) {
           ),
           tippy::tippy_this(
             ns("k_clusters"),
-            "Set how many clusters to form when running k-means.",
+            "Set how many clusters for k-means.",
             theme = "light"
           ),
 
@@ -168,7 +168,7 @@ mod_03_clustering_ui <- function(id) {
               ),
               tippy::tippy_this(
                 ns("dist_function"),
-                "Pick the distance metric used for hierarchical clustering.",
+                "Pick the distance metric for hierarchical clustering.",
                 theme = "light"
               )
             )
@@ -189,7 +189,7 @@ mod_03_clustering_ui <- function(id) {
               ),
               tippy::tippy_this(
                 ns("hclust_function"),
-                "Choose how clusters are merged when building the dendrogram.",
+                "Choose how clusters are merged when building the dendrogram. Average linkage uses the average distance between all pairs of items in two clusters. Complete linkage uses the maximum distance between items in the two clusters, while single linkage uses the minimum distance. Ward's method minimizes the total within-cluster variance. Guidance: choose 'single' for chaining-sensitive shapes, 'complete' for compact/furthest linkage, 'average' for a balance between extremes, and 'ward.D'/'ward.D2' when you want variance-based, spherical clusters (requires a Euclidean-like distance).",
                 theme = "light"
               )
             )
@@ -212,15 +212,15 @@ mod_03_clustering_ui <- function(id) {
               div(
                 id = ns("selected_genes_wrapper"),
                 selectizeInput(
-                inputId = ns("selected_genes"),
-                label = NULL,
-                choices = c("Top 5", "Top 10", "Top 15"),
-                multiple = TRUE
+                  inputId = ns("selected_genes"),
+                  label = NULL,
+                  choices = c("Top 5", "Top 10", "Top 15"),
+                  multiple = TRUE
                 ),
                 tippy::tippy_this(
-                ns("selected_genes_wrapper"),
-                "Add labels for the top genes you want to highlight on the heatmap.",
-                theme = "light"
+                  ns("selected_genes_wrapper"),
+                  "Add labels for the top genes on the heatmap.",
+                  theme = "light"
                 )
               )
             )
@@ -247,7 +247,7 @@ mod_03_clustering_ui <- function(id) {
               ),
               tippy::tippy_this(
                 ns("gene_normalize"),
-                "Scale genes by their standard deviation before clustering.",
+                "Substract mean and scale by standard deviation before clustering.",
                 theme = "light"
               ),
               fluidRow(
@@ -265,7 +265,7 @@ mod_03_clustering_ui <- function(id) {
                   ),
                   tippy::tippy_this(
                     ns("sample_color"),
-                    "Control the color palette for sample annotations.",
+                    "Color palette for sample annotations.",
                     theme = "light"
                   )
                 )
@@ -283,7 +283,7 @@ mod_03_clustering_ui <- function(id) {
                   ),
                   tippy::tippy_this(
                     ns("heatmap_cutoff"),
-                    "Cap extreme Z scores at this value when plotting.",
+                    "Cap extremely large or small values on the heatmap. This improves color contrast for most values. Normally 2-4. ",
                     theme = "light"
                   )
                 )
@@ -383,7 +383,7 @@ mod_03_clustering_ui <- function(id) {
                   ),
                   tippy::tippy_this(
                     ns("cluster_enrichment"),
-                    "Run GO enrichment for the selected genes. For hierarchical clustering, zoom into a region first. For k-means, all clusters are analyzed.",
+                    "Run GO enrichment for the selected genes (hierarchical clustering). For k-means, all clusters are analyzed.",
                     theme = "light"
                   ),
                   ns = ns

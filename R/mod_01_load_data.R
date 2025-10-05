@@ -79,7 +79,7 @@ mod_01_load_data_ui <- function(id) {
                                  }"
         )
         ),
-        
+
         # .GMT file input bar ----------
         fluidRow(
           column(
@@ -92,7 +92,7 @@ mod_01_load_data_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("genome_assembl_button"),
-              "Browse the list of supported genomes and assemblies.",
+              "Select your study organism. Human is the default.",
               theme = "light"
             )
           ),
@@ -106,7 +106,7 @@ mod_01_load_data_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("new_species"),
-              "Select this to analyze a species that is not in the built-in list.",
+              "Analyze data for a species not in our list. You can still do most analyses. For pathway analysis, upload a custom GMT file (below).",
               theme = "light"
             )
           )
@@ -156,7 +156,7 @@ mod_01_load_data_ui <- function(id) {
         ),
         tippy::tippy_this(
           ns("data_file_format"),
-          "We recommend raw read counts so iDEP can run DESeq2. Choose normalized expression if you have TPM/FPKM, microarray, or proteomics values. Select fold change plus adjusted P-values when differential expression was done elsewhere.",
+          "We recommend raw read counts so iDEP can run DESeq2. Choose normalized expression if you have TPM/FPKM, microarray, or proteomics values. Select Fold-change plus P-values when statistical analysis was done elsewhere.",
           theme = "light"
         ),
         
@@ -171,7 +171,7 @@ mod_01_load_data_ui <- function(id) {
           ),
           tippy::tippy_this(
             ns("no_fdr"),
-            "Select this if your file lists fold changes but no adjusted p-values.",
+            "Your data contains fold changes but not adjusted p-values.",
             theme = "light"
           ),
           ns = ns
@@ -184,14 +184,7 @@ mod_01_load_data_ui <- function(id) {
           uiOutput(ns("load_data_ui")),
           ns = ns
         ),
-        # tags$style(
-        #   HTML("
-        #     #load_data-ui {
-        #       display: block !important;
-        #     }
-        #   ")
-        # ),
-        
+
         # Experiment design file input ----------
         conditionalPanel(
           condition = "input.data_file_format != 0",
@@ -370,8 +363,7 @@ mod_01_load_data_ui <- function(id) {
           )
         )
       ),
-      
-      
+
       ##################################################################
       #       Load Data panel main ----
       ##################################################################
@@ -458,8 +450,10 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       ),
       `3` = data.frame(
         genes = c("Gnai3", "Cdc45", "Scml2", "Narf", "Cav2"),
-        treat_lfc = c(-0.0981, 0.510, 0.545, -0.229, -0.592),
-        treat_FDR = c(0.99, 0.001, 0.021, 0.120, 1e-10),
+        treatA_LFC = c(-0.0981, 0.510, 0.545, -0.229, -0.592),
+        treatA_Pval = c(0.99, 0.001, 0.021, 0.120, 1e-10),
+        treatB_LFC = c(-1.81, 0.10, 1.98, -0.02, 0.13),
+        treatB_Pval = c(0.001, 0.25, 0.0001, 0.02, 0.001),
         stringsAsFactors = FALSE
       )
     )
@@ -986,7 +980,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             ),
             tippy::tippy_this(
               ns("demo_modal_button"),
-              "Preview the available demo datasets.",
+              "Load demo datasets.",
               theme = "light"
             )
           ),
@@ -1041,7 +1035,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             ),
             tippy::tippy_this(
               ns("select_demo"),
-              "Pick a demo dataset, then click Load.",
+              "Pick a demo dataset, then click Load to analyze it.",
               theme = "light"
             ),
             div(
@@ -1061,7 +1055,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
                 ),
                 tippy::tippy_this(
                   ns("go_button"),
-                  "Load the selected demo dataset.",
+                  "Load the selected dataset.",
                   theme = "light"
                 )
               ),
@@ -1079,7 +1073,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
                     ),
                     tippy::tippy_this(
                       ns("download_demo_expression"),
-                      "Download the expression matrix for the selected demo dataset.",
+                      "Download the selected demo dataset.",
                       theme = "light"
                     )
                   ),
@@ -1176,7 +1170,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             ),
             tippy::tippy_this(
               ns("experiment_file"),
-              "Upload a sample information table to define experimental groups.",
+              "Upload a sample information table to define experimental design.",
               theme = "light"
             )
           ),
@@ -1273,7 +1267,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       req(input$data_file_format == 0)
 
       showNotification(
-        "Choose a species if not studying human. Then select a data type.",
+        "Choose a species first (default is human). Then select a data type.",
         duration = 30,
         type = "error",
         id = "select_first"
@@ -1776,7 +1770,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         fluidRow(
           column(
             width = 9,
-            h4("iDEP: integrated Differential Expression & Pathway analysis (v2.20)"),
+            h4("iDEP: integrated Differential Expression & Pathway analysis"),
+            h4(paste("v", as.character(packageVersion("idepGolem")))),
             h5("The power of 100s of R packages and annotation databases, at your fingertips!")
           ),
           column(

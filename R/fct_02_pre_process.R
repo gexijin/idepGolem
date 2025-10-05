@@ -1497,14 +1497,16 @@ conversion_counts_message <- function(data_size,
                                       n_matched) {
   if (ncol(all_gene_names) == 1) {
     return(paste(
-      data_size[1], "genes in", data_size[4], "samples.",
+      "After mapping, there are",
+      data_size[1], "unique gene in", data_size[4], "samples. Of the",
       data_size[3], " genes passed filter. Original gene IDs used."
     ))
   } else {
     return(paste(
-      data_size[1], "genes in", data_size[4], "samples.",
+      "After mapping, there are",
+      data_size[1], "uniqe genes in", data_size[4], "samples. Of the",
       data_size[3], " genes passed filter, ", n_matched,
-      " were converted to Ensembl gene IDs in our database.
+      " were converted to Ensembl/STRING gene IDs in our database.
       The remaining ", data_size[3] - n_matched, " genes were
       kept in the data using original IDs."
     ))

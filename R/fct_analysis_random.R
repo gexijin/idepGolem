@@ -646,3 +646,78 @@ get_gene_info <- function(converted,
     return(cbind(x, Set))
   }
 }
+
+
+
+
+#' Check for Major/Minor Version Updates from GitHub
+#'
+#' Checks GitHub releases for newer major or minor versions.
+#' Only notifies for changes in first or second version digits (e.g., 2.20 -> 2.21 or 3.0).
+#' Fails silently if GitHub is unreachable or no release info exists.
+#'
+#' @return NULL (displays notification as side effect if update available)
+#' @noRd
+check_version_update <- function() {
+  tryCatch(
+    {
+      # Get current version from package
+      current_ver <- as.character(packageVersion("idepGolem"))
+
+      # Fetch latest release from GitHub API using base R
+      github_url <- "https://api.github.com/repos/gexijin/idepGolem/releases/latest"
+      con <- url(github_url)
+      response_text <- readLines(con, warn = FALSE)
+      close(con)
+
+      # Parse JSON manually for tag_name and html_url
+      tag_match <- regexpr('"tag_name"\\s*:\\s*"([^"]+)"', response_text, perl = TRUE)
+      url_match <- regexpr('"html_url"\\s*:\\s*"([^"]+)"', response_text, perl = TRUE)
+
+      if (tag_match[1] == -1 || url_match[1] == -1) {
+        return(invisible(NULL))
+      }
+
+      # Extract values using capture groups
+      tag_line <- response_text[which(tag_match != -1)[1]]
+      url_line <- response_text[which(url_match != -1)[1]]
+
+      latest_tag <- sub('.*"tag_name"\\s*:\\s*"([^"]+)".*', '\\1', tag_line)
+      release_url <- sub('.*"html_url"\\s*:\\s*"([^"]+)".*', '\\1', url_line)
+
+      # Remove 'v' prefix if present
+      latest_tag <- gsub("^v", "", latest_tag)
+
+      # Parse versions into components
+      current_parts <- as.numeric(strsplit(current_ver, "\\.")[[1]])
+      latest_parts <- as.numeric(strsplit(latest_tag, "\\.")[[1]])
+
+      # Ensure both have at least 2 parts (major.minor)
+      if (length(current_parts) < 2 || length(latest_parts) < 2) {
+        return(invisible(NULL))
+      }
+
+      # Check if major or minor version changed (first or second digit)
+      major_update <- latest_parts[1] > current_parts[1]
+      minor_update <- latest_parts[1] == current_parts[1] && latest_parts[2] > current_parts[2]
+
+      if (major_update || minor_update) {
+        message_html <- sprintf(
+          'New version <strong>%s</strong> is available! <a href="%s" target="_blank">View release</a>',
+          latest_tag,
+          release_url
+        )
+
+        showNotification(
+          ui = HTML(message_html),
+          type = "warning",
+          duration = NULL # Stay until dismissed
+        )
+      }
+    },
+    error = function(e) {
+      # Fail silently - don't show any message if GitHub check fails
+      invisible(NULL)
+    }
+  )
+}
