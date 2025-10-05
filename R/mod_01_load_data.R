@@ -79,7 +79,7 @@ mod_01_load_data_ui <- function(id) {
                                  }"
         )
         ),
-        
+
         # .GMT file input bar ----------
         fluidRow(
           column(

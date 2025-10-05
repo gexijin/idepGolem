@@ -24,7 +24,14 @@ mod_06_pathway_ui <- function(id) {
           theme = "light"
         ),
         tags$head(tags$style(
-          "#pathway-submit_pathway_button{font-size: 16px;color: red}"
+          "#pathway-submit_pathway_button{font-size: 16px;color: red}
+          .more-options { display: block; width: 100%; }
+          .more-options summary { display: flex; align-items: center; cursor: pointer; font-weight: 600; margin: 0; }
+          .more-options summary::marker, .more-options summary::-webkit-details-marker { display: none; }
+          .more-options summary::before { content: '+'; margin-right: 6px; font-size: 14px; line-height: 1; }
+          .more-options[open] summary::before { content: '\\2212'; }
+          .more-options-body { margin-top: 10px; padding: 10px 0; background-color: #f7f9fc; border-radius: 0; width: 100%; }
+          .more-options-body .shiny-input-container > label { font-weight: 400; }"
         )),
         br(),
         br(),
@@ -93,105 +100,106 @@ mod_06_pathway_ui <- function(id) {
           "#pathway-pathway_p_val_cutoff { width:100%;}"
         ),
 
-        checkboxInput(ns("customize_button"), strong("More options")),
-        tippy::tippy_this(
-          ns("customize_button"),
-          "Expand additional pathway filtering and display settings.",
-          theme = "light"
-        ),
-
-        fluidRow(
-          column(
-            width = 6,
+        tags$details(
+          class = "more-options",
+          tags$summary("More options"),
+          div(
+            class = "more-options-body",
+            fluidRow(
+              column(
+                width = 6,
+                numericInput(
+                  inputId = ns("min_set_size"),
+                  label = "Geneset size: Min.",
+                  min = 2,
+                  max = 30,
+                  value = 5,
+                  step = 1
+                ),
+                tippy::tippy_this(
+                  ns("min_set_size"),
+                  "Exclude pathways smaller than this number of genes. Smaller pathways are more likely to be significant by chance. Normally set to 5-20.",
+                  theme = "light"
+                )
+              ),
+              column(
+                width = 6,
+                numericInput(
+                  inputId = ns("max_set_size"),
+                  label = "Max.",
+                  min = 1000,
+                  max = 10000,
+                  value = 2000,
+                  step = 100
+                ),
+                tippy::tippy_this(
+                  ns("max_set_size"),
+                  "Exclude pathways larger than this number of genes.",
+                  theme = "light"
+                )
+              )
+            ),
             numericInput(
-              inputId = ns("min_set_size"),
-              label = "Geneset size: Min.",
-              min = 2,
-              max = 30,
-              value = 5,
-              step = 1
+              inputId = ns("n_pathway_show"),
+              label = "Number of top pathways to show",
+              value = 20,
+              min = 5,
+              max = 100,
+              step = 5
             ),
             tippy::tippy_this(
-              ns("min_set_size"),
-              "Exclude pathways smaller than this number of genes. Smaller pathways are more likely to be significant by chance. Normally set to 5-20.",
+              ns("n_pathway_show"),
+              "Control how many top pathways appear in the results tables and plots.",
               theme = "light"
-            )
-          ),
-          column(
-            width = 6,
+            ),
             numericInput(
-              inputId = ns("max_set_size"),
-              label = "Max.",
-              min = 1000,
-              max = 10000,
-              value = 2000,
-              step = 100
+              inputId = ns("gene_p_val_cutoff"),
+              label = "Remove genes with big FDR before pathway analysis:",
+              value = 1,
+              min = 1e-20,
+              max = 1,
+              step = .05
             ),
             tippy::tippy_this(
-              ns("max_set_size"),
-              "Exclude pathways larger than this number of genes.",
+              ns("gene_p_val_cutoff"),
+              "Filter out genes with FDR above this value before running pathway analysis.",
+              theme = "light"
+            ),
+            checkboxInput(
+              inputId = ns("absolute_fold"),
+              label = "Use absolute values of fold changes for GSEA and GAGE",
+              value = FALSE
+            ),
+            tippy::tippy_this(
+              ns("absolute_fold"),
+              "Treat up- and down-regulated genes the same by using absolute fold changes.",
+              theme = "light"
+            ),
+            checkboxInput(
+              inputId = ns("show_pathway_id"),
+              label = "Show pathway IDs in results",
+              value = FALSE
+            ),
+            tippy::tippy_this(
+              ns("show_pathway_id"),
+              "Append pathway IDs (e.g., Path:mmu04115 or GO:0042770) to each pathway name.",
               theme = "light"
             )
           )
         ),
-        numericInput(
-          inputId = ns("n_pathway_show"),
-          label = "Number of top pathways to show",
-          value = 20,
-          min = 5,
-          max = 100,
-          step = 5
-        ),
-        tippy::tippy_this(
-          ns("n_pathway_show"),
-          "Control how many top pathways appear in the results tables and plots.",
-          theme = "light"
-        ),
-        numericInput(
-          inputId = ns("gene_p_val_cutoff"),
-          label = "Remove genes with big FDR before pathway analysis:",
-          value = 1,
-          min = 1e-20,
-          max = 1,
-          step = .05
-        ),
-        tippy::tippy_this(
-          ns("gene_p_val_cutoff"),
-          "Filter out genes with FDR above this value before running pathway analysis.",
-          theme = "light"
-        ),
-        checkboxInput(
-          inputId = ns("absolute_fold"),
-          label = "Use absolute values of fold changes for GSEA and GAGE",
-          value = FALSE
-        ),
-        tippy::tippy_this(
-          ns("absolute_fold"),
-          "Treat up- and down-regulated genes the same by using absolute fold changes.",
-          theme = "light"
-        ),
-        checkboxInput(
-          inputId = ns("show_pathway_id"),
-          label = "Show pathway IDs in results",
-          value = FALSE
-        ),
-        tippy::tippy_this(
-          ns("show_pathway_id"),
-          "Append pathway IDs (e.g., Path:mmu04115 or GO:0042770) to each pathway name.",
-          theme = "light"
-        ),
+        br(),
         fluidRow(
           column(3,
-                 # Download report button
-                 downloadButton(
-                   outputId = ns("report"),
-                   label = "Report"
-                 ),
-                 tippy::tippy_this(
-                   ns("report"),
-                   "Create an HTML report summarizing the Pathway tab.",
-                   theme = "light"
-                 )
+            # Download report button
+            downloadButton(
+              outputId = ns("report"),
+              label = "Report"
+            ),
+            tippy::tippy_this(
+              ns("report"),
+              "Create an HTML report summarizing the Pathway tab.",
+              theme = "light"
+            )
           ),
           column(9,
                  conditionalPanel(
@@ -509,16 +517,6 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           tab() != "Pathway" && tab() != "Genome"
       ))
       removeNotification("click_submit_Stats")
-    })
-
-    observe({
-      shinyjs::toggle(id = "max_set_size", condition = input$customize_button)
-      shinyjs::toggle(id = "min_set_size", condition = input$customize_button)
-      shinyjs::toggle(id = "n_pathway_show", condition = input$customize_button)
-      shinyjs::toggle(id = "gene_p_val_cutoff", condition = input$customize_button)
-      shinyjs::toggle(id = "absolute_fold", condition = input$customize_button)
-      shinyjs::toggle(id = "show_pathway_id", condition = input$customize_button)
-      shinyjs::toggle(id = "absolute_fold", condition = input$customize_button)
     })
 
     output$main_pathway_result <- renderUI({
