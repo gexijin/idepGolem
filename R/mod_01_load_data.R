@@ -1770,8 +1770,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         fluidRow(
           column(
             width = 9,
-            h4("iDEP: integrated Differential Expression & Pathway analysis"),
             h4(paste("v", as.character(packageVersion("idepGolem")))),
+            h4("iDEP: integrated Differential Expression & Pathway analysis"),
             h5("The power of 100s of R packages and annotation databases, at your fingertips!")
           ),
           column(
