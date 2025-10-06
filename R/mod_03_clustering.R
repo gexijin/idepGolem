@@ -945,7 +945,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       height1 <- max(
         400, # minimum
         min(
-          30000, # maximum
+          1000000, # maximum
           12 * length(row_index)
         )
       )
