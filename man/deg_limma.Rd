@@ -15,7 +15,8 @@ deg_limma(
   selected_comparisons = NULL,
   sample_info = NULL,
   model_factors = NULL,
-  block_factor = NULL
+  block_factor = NULL,
+  reference_levels = NULL
 )
 }
 \arguments{
@@ -46,6 +47,9 @@ in the DEG analysis}
 from the model design}
 
 \item{block_factor}{The selected factors for batch effect}
+
+\item{reference_levels}{Vector of reference levels to use for the
+selected factors (e.g., c("genotype:wt", "treatment:control"))}
 }
 \value{
 The return value is the results of the DEG analysis. These

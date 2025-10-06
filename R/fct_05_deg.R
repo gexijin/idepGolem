@@ -318,7 +318,8 @@ select_reference_levels_ui <- function(sample_info,
     if (length(selected_factors) == 0) {
       return(NULL)
     }
-    if (!(data_file_format == 1 & counts_deg_method == 3)) {
+    # Only enable for read counts data with any DEG method
+    if (data_file_format != 1) {
       return(NULL)
     }
     select_choices <- c()
@@ -435,7 +436,8 @@ limma_value <- function(data_file_format,
           selected_comparisons = select_model_comprions,
           sample_info = sample_info,
           model_factors = c(select_factors_model, select_interactions),
-          block_factor = select_block_factors_model
+          block_factor = select_block_factors_model,
+          reference_levels = factor_reference_levels
         )
       )
     }
@@ -454,7 +456,8 @@ limma_value <- function(data_file_format,
         selected_comparisons = select_model_comprions,
         sample_info = sample_info,
         model_factors = c(select_factors_model, select_interactions),
-        block_factor = select_block_factors_model
+        block_factor = select_block_factors_model,
+        reference_levels = factor_reference_levels
       )
     )
 
@@ -1168,6 +1171,8 @@ deg_deseq2 <- function(raw_counts,
 #' @param model_factors Vector of selected factors and interaction terms
 #'  from the model design
 #' @param block_factor The selected factors for batch effect
+#' @param reference_levels Vector of reference levels to use for the
+#'  selected factors (e.g., c("genotype:wt", "treatment:control"))
 #'
 #' @export
 #' @return The return value is the results of the DEG analysis. These
@@ -1183,7 +1188,8 @@ deg_limma <- function(processed_data,
                       selected_comparisons = NULL,
                       sample_info = NULL,
                       model_factors = NULL,
-                      block_factor = NULL) {
+                      block_factor = NULL,
+                      reference_levels = NULL) {
   # Many different situations:
   # 1. Just use sample names
   # 2. Just one factor
@@ -1287,6 +1293,39 @@ deg_limma <- function(processed_data,
       !grepl(":", selected_factors)
     ]
     sample_info_effective <- sample_info[, selected_factors, drop = FALSE]
+
+    # Set reference levels for factors if specified
+    # Format: c("genotype:wt", "treatment:control")
+    if (!is.null(reference_levels)) {
+      # Ensure sample_info_effective is a data frame
+      if (!is.data.frame(sample_info_effective)) {
+        sample_info_effective <- as.data.frame(
+          sample_info_effective,
+          stringsAsFactors = FALSE
+        )
+      }
+
+      for (refs in reference_levels) {
+        if (!is.null(refs)) {
+          # Extract factor name and reference level
+          # "genotype:wt" -> factor="genotype", ref_level="wt"
+          factor_name <- gsub(":.*", "", refs)
+          ref_level <- gsub(".*:", "", refs)
+
+          # Check if this factor is in sample_info_effective
+          if (factor_name %in% colnames(sample_info_effective)) {
+            # Convert to factor and set reference level
+            sample_info_effective[, factor_name] <- as.factor(
+              sample_info_effective[, factor_name]
+            )
+            sample_info_effective[, factor_name] <- relevel(
+              sample_info_effective[, factor_name],
+              ref = ref_level
+            )
+          }
+        }
+      }
+    }
   }
   groups <- detect_groups(
     colnames(processed_data),
@@ -1575,7 +1614,36 @@ deg_limma <- function(processed_data,
         print_dataframe(sample_info, "sample_info"),
         print_vector(model_factors, "model_factors"),
         print_vector(key_model_factors, "key_model_factors"),
-        "sample_info_filter <- sample_info[, key_model_factors, drop = F]\n",
+        "sample_info_filter <- sample_info[, key_model_factors, drop = F]\n"
+      )
+
+      # Add reference level setting code if specified
+      if (!is.null(reference_levels)) {
+        expr <- paste0(
+          expr,
+          "\n# Set reference levels for factors----------------------------\n"
+        )
+        for (refs in reference_levels) {
+          if (!is.null(refs)) {
+            factor_name <- gsub(":.*", "", refs)
+            ref_level <- gsub(".*:", "", refs)
+            # Check if this factor is in key_model_factors
+            if (factor_name %in% key_model_factors) {
+              ix <- match(factor_name, key_model_factors)
+              expr <- paste0(
+                expr,
+                "sample_info_filter[, ", ix, "] <- as.factor(",
+                "sample_info_filter[, ", ix, "])\n",
+                "sample_info_filter[, ", ix, "] <- relevel(",
+                "sample_info_filter[, ", ix, "], \"", ref_level, "\")\n"
+              )
+            }
+          }
+        }
+      }
+
+      expr <- paste0(
+        expr,
         print_vector(groups, "groups"),
         "unique_groups <- unique(groups)\n",
         "\n# Build model----------------------------\n",
