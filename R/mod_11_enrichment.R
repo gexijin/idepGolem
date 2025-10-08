@@ -632,6 +632,9 @@ mod_11_enrichment_server <- function(id,
             ix <- which(gene_info()$ensembl_gene_id %in%
               gene_lists()[[x]]$ensembl_ID)
             df1 <- gene_info()[ix, ]
+            if (nrow(df1) == 0) {
+              return(NULL)
+            }
             df1$group <- x
             return(df1)
           }

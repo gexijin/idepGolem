@@ -651,6 +651,11 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       needs_rank_warning <- FALSE
       if (!is.null(method) && method %in% c(1, 2) &&
           !is.null(sample_info) && length(selected_factors) > 0) {
+        # Ensure sample_info is a data frame (not a matrix)
+        if (!is.data.frame(sample_info)) {
+          sample_info <- as.data.frame(sample_info, stringsAsFactors = FALSE)
+        }
+
         valid_factors <- intersect(selected_factors, colnames(sample_info))
 
         if (length(valid_factors) > 0) {
