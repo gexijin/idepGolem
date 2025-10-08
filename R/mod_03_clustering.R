@@ -11,6 +11,12 @@ mod_03_clustering_ui <- function(id) {
   ns <- NS(id)
   tabPanel(
     title = "Cluster",
+    # JavaScript to reset brush
+    tags$script(HTML("
+      Shiny.addCustomMessageHandler('resetBrush', function(message) {
+        Shiny.setInputValue(message.brushId, null);
+      });
+    ")),
     # Change the style of radio labels
     # Note that the name https://groups.google.com/g/shiny-discuss/c/ugNEaHizlck
     # input IDs should be defined by namespace
@@ -928,35 +934,43 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         return(400)
       }
 
+      # Ensure we have valid heatmap objects before trying to access positions
+      if (is.null(shiny_env$ht) || is.null(shiny_env$ht_pos_main)) {
+        return(400)
+      }
+
       # Get the row ids of selected genes
-      lt <- InteractiveComplexHeatmap::getPositionFromBrush(input$ht_brush)
-      pos1 <- lt[[1]]
-      pos2 <- lt[[2]]
-      pos <- InteractiveComplexHeatmap::selectArea(
-        shiny_env$ht,
-        mark = FALSE,
-        pos1 = pos1,
-        pos2 = pos2,
-        verbose = FALSE,
-        ht_pos = shiny_env$ht_pos_main
-      )
-      row_index <- unlist(pos[1, "row_index"])
-      # convert to height, pxiels
-      height1 <- max(
-        400, # minimum
-        min(
-          1000000, # maximum
-          12 * length(row_index)
+      tryCatch({
+        lt <- InteractiveComplexHeatmap::getPositionFromBrush(input$ht_brush)
+        pos1 <- lt[[1]]
+        pos2 <- lt[[2]]
+        pos <- InteractiveComplexHeatmap::selectArea(
+          shiny_env$ht,
+          mark = FALSE,
+          pos1 = pos1,
+          pos2 = pos2,
+          verbose = FALSE,
+          ht_pos = shiny_env$ht_pos_main
         )
-      )
-      return(height1) # max width is 1000
+        row_index <- unlist(pos[1, "row_index"])
+        # convert to height, pixels
+        height1 <- max(
+          400, # minimum
+          min(
+            1000000, # maximum
+            12 * length(row_index)
+          )
+        )
+        return(height1)
+      }, error = function(e) {
+        # If there's an error (e.g., viewport not found), return default height
+        return(400)
+      })
     })
 
     # Subheatmap creation ---------
     output$sub_heatmap <- renderPlot(
       {
-        req(!is.null(heatmap_main_object()))
-        
         if (is.null(input$ht_brush) || is.null(heatmap_sub_object_calc())) {
           grid::grid.newpage()
         } else {
@@ -1008,10 +1022,16 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     })
     
     heatmap_sub_object_calc <- reactive({
-      req(!is.null(heatmap_main_object()))
       req(!is.null(submitted_pal()))
       req(!is.null(selected_factors_heatmap()))
-      
+      req(!is.null(input$ht_brush))
+
+      # Ensure we have valid heatmap objects before processing brush
+      # These are set when the main heatmap renders
+      if (is.null(shiny_env$ht) || is.null(shiny_env$ht_pos_main)) {
+        return(NULL)
+      }
+
       submap_return <- tryCatch({ # tolerates error; otherwise stuck with spinner
         heat_sub(
           ht_brush = input$ht_brush,
@@ -1026,13 +1046,13 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         )},
         error = function(e) {e$message}
       )
-      
+
       if ("character" %in% class(submap_return)){
         submap_return <- NULL
       }
-      
+
       if (!is.null(dim(submap_return$ht_select))){
-        if (nrow(submap_return$ht_select) == 0 || 
+        if (nrow(submap_return$ht_select) == 0 ||
             ncol(submap_return$ht_select) == 0) {
           submap_return <- NULL
         }
@@ -1042,7 +1062,6 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     })
     # Subheatmap creation ---------
     heatmap_sub_object <- reactive({
-      req(!is.null(heatmap_main_object()))
       if (is.null(input$ht_brush) || is.null(heatmap_sub_object_calc())) {
         grid::grid.newpage()
         grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
@@ -1216,8 +1235,10 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       label = ""
     )
 
+    # Handle clustering method changes ----------
     observeEvent(input$cluster_meth, {
       if (input$cluster_meth == 1) {
+        # Hierarchical clustering
         showTab(
           inputId = "cluster_panels",
           target = "sample_tab"
@@ -1226,20 +1247,42 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           inputId = "cluster_panels",
           target = "word_cloud"
         )
+      } else if (input$cluster_meth == 2) {
+        # K-means clustering
+        hideTab(
+          inputId = "cluster_panels",
+          target = "sample_tab"
+        )
+        showTab(
+          inputId = "cluster_panels",
+          target = "word_cloud"
+        )
       }
-    })
 
-    observeEvent(input$cluster_meth, {
-      if (input$cluster_meth == 2) {
-        hideTab(
-          inputId = "cluster_panels",
-          target = "sample_tab"
-        )
-        showTab(
-          inputId = "cluster_panels",
-          target = "word_cloud"
-        )
-      }
+      # Reset enrichment checkbox when switching methods
+      updateCheckboxInput(
+        session = session,
+        inputId = "cluster_enrichment",
+        value = FALSE
+      )
+
+      # Clear the brush selection by sending JavaScript to reset it
+      session$sendCustomMessage(
+        type = "resetBrush",
+        message = list(brushId = ns("ht_brush"))
+      )
+
+      # Clear sub-heatmap environment variables to prevent viewport errors
+      # when switching between clustering methods
+      # NOTE: We do NOT clear shiny_env$ht or shiny_env$ht_pos_main here
+      # because the new heatmap will overwrite them when it renders
+      shiny_env$ht_sub <- NULL
+      shiny_env$ht_sub_obj <- NULL
+      shiny_env$ht_pos_sub <- NULL
+      shiny_env$submap_data <- NULL
+      shiny_env$sub_groups <- NULL
+      shiny_env$group_colors <- NULL
+      shiny_env$click_data <- NULL
     })
 
     # Auto-uncheck enrichment checkbox when it should be hidden ----------
