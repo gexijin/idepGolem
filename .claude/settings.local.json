@@ -8,7 +8,9 @@
       "Bash(done)",
       "mcp__ide__getDiagnostics",
       "Bash(grep:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(sed:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

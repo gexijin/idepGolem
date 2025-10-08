@@ -680,10 +680,9 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           ui = div(
             style = "text-align: center; font-size: 14px;",
             "Select a region on the heatmap to zoom in.",
-            br(),
             "Selection can be adjusted from the sides or dragged around.",
-            br(),
-            "Broaden your browser window if there is overlap."
+            "Broaden your browser window if there is overlap.",
+            "Click on the zoomed-in heatmap for gene/cluster details."
           ),
           duration = 15,
           closeButton = TRUE,
