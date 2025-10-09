@@ -141,10 +141,18 @@ mod_05_deg_1_ui <- function(id) {
         ),
         tags$br(),
         tags$br(),
-        uiOutput(ns("download_lfc_button")),
-        uiOutput(ns("note_download_lfc_button")),
-        uiOutput(ns("sig_genes_download_button")),
-        uiOutput(ns("note_sig_genes_download"))
+        fluidRow(
+          column(
+            width = 5,
+            uiOutput(ns("download_lfc_button")),
+            uiOutput(ns("note_download_lfc_button"))
+          ),
+          column(
+            width = 7,
+            uiOutput(ns("sig_genes_download_button")),
+            uiOutput(ns("note_sig_genes_download"))
+          )
+        )
       ),
 
 
@@ -826,16 +834,25 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     )
 
     file_name <- reactive({
-      paste0(
-        "deg_values_",
-        deg_method[as.numeric(input$counts_deg_method)],
-        ".csv"
-      )
+      dfmt <- pre_process$data_file_format()
+      # If normalized data, label as generic "limma"
+      if (!is.null(dfmt) && dfmt == 2) {
+        method_label <- "limma"
+      } else {
+        idx <- as.numeric(input$counts_deg_method)
+        if (is.na(idx) || is.null(idx) || idx < 1 || idx > length(deg_method)) {
+          # Fallback: prefer DESeq2 when raw counts exist, otherwise use limma
+          method_label <- if (!is.null(pre_process$raw_counts())) "DESeq2" else "limma"
+        } else {
+          method_label <- deg_method[idx]
+        }
+      }
+      paste0(method_label, ".csv")
     })
 
     output$download_lfc <- downloadHandler(
       filename = function() {
-        file_name()
+        paste0("Results_LFC_Pval_", file_name())
       },
       content = function(file) {
         write.csv(deg_info(), file, row.names = FALSE)
@@ -846,7 +863,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       req(!is.null(deg_info()))
       downloadButton(
         outputId = ns("download_lfc"),
-        "Results & data"
+        "Results"
       )
     })
 
@@ -916,17 +933,9 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       hover = T
     )
 
-    name_sig_genes_download <- reactive({
-      paste0(
-        "deg_sig_genes_",
-        deg_method[as.numeric(input$counts_deg_method)],
-        ".csv"
-      )
-    })
-
     output$sig_genes_download <- downloadHandler(
       filename = function() {
-        name_sig_genes_download()
+        paste0("Up_and_down_genes_", file_name())
       },
       content = function(file) {
         # Convert the matrix to a data frame and replace values
