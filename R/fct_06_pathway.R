@@ -1210,9 +1210,33 @@ pathway_data_transform <- function(data,
     
     # Combine into one data frame
     result_df <- do.call(rbind, path_match)
-    deg$Gene <- rownames(deg)
-    counts <- merge(x = result_df, y = deg, by = "Gene", all.x = TRUE)
-    colnames(counts)[3] <- "Expr"
+
+    # Extract the specific contrast column from deg results matrix
+    if (is.matrix(deg) || is.data.frame(deg)) {
+      # If deg has multiple columns (comparisons), select the one matching contrast
+      if (!is.null(contrast) && contrast %in% colnames(deg)) {
+        deg_contrast <- data.frame(Gene = rownames(deg),
+                                   Expr = deg[, contrast],
+                                   stringsAsFactors = FALSE)
+      } else if (ncol(deg) == 1) {
+        # If only one column, use it
+        deg_contrast <- data.frame(Gene = rownames(deg),
+                                   Expr = deg[, 1],
+                                   stringsAsFactors = FALSE)
+      } else {
+        # Default to first column if contrast not found
+        deg_contrast <- data.frame(Gene = rownames(deg),
+                                   Expr = deg[, 1],
+                                   stringsAsFactors = FALSE)
+      }
+    } else {
+      # If deg is a vector
+      deg_contrast <- data.frame(Gene = rownames(deg),
+                                 Expr = deg,
+                                 stringsAsFactors = FALSE)
+    }
+
+    counts <- merge(x = result_df, y = deg_contrast, by = "Gene", all.x = TRUE)
     # Find Up/Down Gene count
     counts <- dplyr::group_by(counts, group) |>
       dplyr::summarize(UpGenes = sum(Expr == 1, na.rm = TRUE),
@@ -1272,6 +1296,8 @@ pathway_data_transform <- function(data,
 #'  gene IDs from \code{\link{get_all_gene_names}()}
 #' @param deg data frame of Stats gene regulation results - i.e.-1, 0 , 1 for
 #' every gene
+#' @param select_contrast Selected comparison/contrast name to extract regulation
+#' status from (optional, defaults to first column if deg has multiple columns)
 #'
 #' @export
 #' @return Sub-data matrix from the processed data. Only contains
@@ -1285,11 +1311,12 @@ pathway_select_data <- function(sig_pathways,
                                 data,
                                 select_org,
                                 all_gene_names,
-                                deg) {
+                                deg,
+                                select_contrast = NULL) {
   if (sig_pathways == "All") {
     return(NULL)
   }
-  
+
   # Find the gene set
   ix <- which(names(gene_sets) == sig_pathways)
   if (length(ix) == 0) {
@@ -1301,13 +1328,28 @@ pathway_select_data <- function(sig_pathways,
   # Find related samples
   iz <- contrast_samples
   x <- data[which(rownames(data) %in% genes), iz]
-  x <- merge(x = x, y = deg, by = "row.names")
+
+  # Extract the specific contrast column from deg results matrix
+  if (is.matrix(deg) || (is.data.frame(deg) && ncol(deg) > 1)) {
+    # If deg has multiple columns (comparisons), select the one matching select_contrast
+    if (!is.null(select_contrast) && select_contrast %in% colnames(deg)) {
+      deg_col <- data.frame(Regulation = deg[, select_contrast], row.names = rownames(deg))
+    } else {
+      # Default to first column if select_contrast not found or not provided
+      deg_col <- data.frame(Regulation = deg[, 1], row.names = rownames(deg))
+    }
+  } else {
+    # If deg has only one column or is a vector
+    deg_col <- data.frame(Regulation = deg[, 1], row.names = rownames(deg))
+  }
+
+  x <- merge(x = x, y = deg_col, by = "row.names")
   rownames(x) <- x$Row.names
   x <- dplyr::select(x,-1)
-  x[,ncol(x)] <- dplyr::case_when(x[,ncol(x)] == 1 ~ "Up", 
-                                  x[,ncol(x)] == -1 ~ "Down", 
+  x[,ncol(x)] <- dplyr::case_when(x[,ncol(x)] == 1 ~ "Up",
+                                  x[,ncol(x)] == -1 ~ "Down",
                                   TRUE ~ "None")
-  
+
   return(x)
 }
 

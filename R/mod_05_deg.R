@@ -142,7 +142,9 @@ mod_05_deg_1_ui <- function(id) {
         tags$br(),
         tags$br(),
         uiOutput(ns("download_lfc_button")),
-        uiOutput(ns("note_download_lfc_button"))
+        uiOutput(ns("note_download_lfc_button")),
+        uiOutput(ns("sig_genes_download_button")),
+        uiOutput(ns("note_sig_genes_download"))
       ),
 
 
@@ -182,9 +184,7 @@ mod_05_deg_1_ui <- function(id) {
             ),
             tableOutput(
               outputId = ns("sig_gene_stats_table")
-            ),
-            uiOutput(ns("sig_genes_download_button")),
-            uiOutput(ns("note_sig_genes_download"))
+            )
           ),
           tabPanel(
             title = "Venn Diagram",
@@ -961,7 +961,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       req(!is.null(deg$limma$results))
       downloadButton(
         outputId = ns("sig_genes_download"),
-        "Enriched Gene List"
+        "Gene Lists"
       )
     })
 

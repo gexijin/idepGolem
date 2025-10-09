@@ -262,7 +262,7 @@ mod_06_pathway_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("gene_list_popup"),
-              "Download the gene list for the selected pathway.",
+              "Gene list",
               theme = "light"
             )
           ),
@@ -610,7 +610,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           ),
           downloadButton(
             outputId = ns("download_gene_list"), 
-            label = "Download the gene list for the selected pathway."
+            label = "Gene list"
           ),
           easyClose = TRUE,
           size = "s",
@@ -720,7 +720,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           data = pre_process$data(),
           select_org = pre_process$select_org(),
           all_gene_names = pre_process$all_gene_names(),
-          deg = as.data.frame(deg$limma()$results)
+          deg = as.data.frame(deg$limma()$results),
+          select_contrast = input$select_contrast
         )
         
         # Convert row names to gene symbols, keep Ensembl ID
@@ -1309,7 +1310,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     selected_pathway_data <- reactive({
       req(!is.null(gene_sets()$gene_lists))
       req(!is.null(input$sig_pathways))
-      
+
       df <- pathway_select_data(
         sig_pathways = input$sig_pathways,
         gene_sets = gene_sets()$gene_lists,
@@ -1317,7 +1318,8 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         data = pre_process$data(),
         select_org = pre_process$select_org(),
         all_gene_names = pre_process$all_gene_names(),
-        deg = as.data.frame(deg$limma()$results)
+        deg = as.data.frame(deg$limma()$results),
+        select_contrast = input$select_contrast
       )
       df[,-ncol(df)]
     })

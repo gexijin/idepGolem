@@ -11,7 +11,8 @@ pathway_select_data(
   data,
   select_org,
   all_gene_names,
-  deg
+  deg,
+  select_contrast = NULL
 )
 }
 \arguments{
@@ -36,6 +37,9 @@ gene IDs from \code{\link{get_all_gene_names}()}}
 
 \item{deg}{data frame of Stats gene regulation results - i.e.-1, 0 , 1 for
 every gene}
+
+\item{select_contrast}{Selected comparison/contrast name to extract regulation
+status from (optional, defaults to first column if deg has multiple columns)}
 }
 \value{
 Sub-data matrix from the processed data. Only contains
