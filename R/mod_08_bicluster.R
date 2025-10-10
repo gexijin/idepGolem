@@ -247,7 +247,8 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab) {
         res = biclustering()$res,
         biclust_data = biclust_data(),
         select_org = pre_process$select_org(),
-        all_gene_info = pre_process$all_gene_info()
+        all_gene_info = pre_process$all_gene_info(),
+        original_data = pre_process$data()
       )
     })
 
@@ -279,7 +280,7 @@ mod_08_bicluster_server <- function(id, pre_process, idep_data, tab) {
       req(!is.null(biclustering()) && !is.null(input$select_bicluster))
       downloadButton(
         outputId = ns("download_biclust"),
-        "All genes"
+        NULL
       )
     })
   })
