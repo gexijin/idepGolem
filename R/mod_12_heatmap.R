@@ -30,7 +30,8 @@ mod_12_heatmap_ui <- function(id) {
             width = 6,
             ottoPlots::mod_download_figure_ui(
               ns("dl_heatmap_sub")
-            )
+            ),
+            align = "right"
           )
         ),
         uiOutput(
@@ -102,7 +103,7 @@ mod_12_heatmap_server <- function(id,
       }),
       width = 5,
       height = 8,
-      label = "Above"
+      label = NULL
     )
 
     # depending on the number of genes selected
@@ -240,7 +241,7 @@ mod_12_heatmap_server <- function(id,
       }),
       width = 5,
       height = 7,
-      label = "Right"
+      label = "\u2192"
     )
     # Sub Heatmap Click Value ---------
     output$ht_click_content <- renderUI({

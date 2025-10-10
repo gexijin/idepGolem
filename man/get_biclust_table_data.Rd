@@ -4,7 +4,13 @@
 \alias{get_biclust_table_data}
 \title{Table of biclustering data}
 \usage{
-get_biclust_table_data(res, biclust_data, select_org, all_gene_info)
+get_biclust_table_data(
+  res,
+  biclust_data,
+  select_org,
+  all_gene_info,
+  original_data = NULL
+)
 }
 \arguments{
 \item{res}{The \code{res} object returned in the list output from
@@ -18,6 +24,9 @@ data.}
 
 \item{all_gene_info}{Gene information matched species in iDEP database from
 \code{\link{gene_info}()}}
+
+\item{original_data}{Optional matrix of original (non-centered) data to use
+for calculating gene means. If NULL, uses biclust_data.}
 }
 \value{
 A dataframe of results

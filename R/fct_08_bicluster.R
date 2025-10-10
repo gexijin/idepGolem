@@ -129,6 +129,8 @@ bicluster_summary_message <- function(biclustering,
 #'  data.
 #' @param all_gene_info Gene information matched species in iDEP database from
 #'  \code{\link{gene_info}()}
+#' @param original_data Optional matrix of original (non-centered) data to use
+#'  for calculating gene means. If NULL, uses biclust_data.
 #'
 #' @export
 #' @returns A dataframe of results
@@ -138,7 +140,8 @@ bicluster_summary_message <- function(biclustering,
 get_biclust_table_data <- function(res,
                                    biclust_data,
                                    select_org,
-                                   all_gene_info) {
+                                   all_gene_info,
+                                   original_data = NULL) {
   if (res@Number == 0) {
     return(as.data.frame("No clusters found!"))
   }
@@ -169,7 +172,15 @@ get_biclust_table_data <- function(res,
       )
     }
 
-    gene_mean <- rowMeans(biclust_data)
+    # Use original data for mean calculation if provided, otherwise use biclust_data
+    if (!is.null(original_data)) {
+      # Extract the genes that are in the bicluster from the original data
+      gene_ids <- rownames(biclust_data)
+      original_subset <- original_data[gene_ids, , drop = FALSE]
+      gene_mean <- rowMeans(original_subset)
+    } else {
+      gene_mean <- rowMeans(biclust_data)
+    }
 
     clust_info <- cbind(clust_info, gene_mean)
 
