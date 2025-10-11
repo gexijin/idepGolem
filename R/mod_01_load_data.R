@@ -534,30 +534,17 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       source_counts <- table(org_info_df$group)
 
       # Categorize sources according to requirements
-      ensembl_sources <- source_counts[!grepl("^newSpecies_|^STRING", names(source_counts))]
-      custom_count <- sum(source_counts[grepl("^newSpecies_", names(source_counts))])
+      ensembl_sources <- source_counts[!grepl("^Custom|^STRING", names(source_counts))]
+      custom_count <- sum(source_counts[grepl("^Custom", names(source_counts))])
       string_count <- sum(source_counts[grepl("^STRING", names(source_counts))])
 
       # Create Ensembl breakdown
-      ensembl_parts <- character(0)
-      if("ENSEMBL" %in% names(ensembl_sources)) {
-        ensembl_parts <- c(ensembl_parts, paste0("main (", ensembl_sources["ENSEMBL"], ")"))
-      }
-      if("plants" %in% names(ensembl_sources)) {
-        ensembl_parts <- c(ensembl_parts, paste0("plants (", ensembl_sources["plants"], ")"))
-      }
-      if("bacteria" %in% names(ensembl_sources)) {
-        ensembl_parts <- c(ensembl_parts, paste0("bacteria (", ensembl_sources["bacteria"], ")"))
-      }
-      if("fungi" %in% names(ensembl_sources)) {
-        ensembl_parts <- c(ensembl_parts, paste0("fungi (", ensembl_sources["fungi"], ")"))
-      }
-      if("protists" %in% names(ensembl_sources)) {
-        ensembl_parts <- c(ensembl_parts, paste0("protists (", ensembl_sources["protists"], ")"))
-      }
-      if("metazoa" %in% names(ensembl_sources)) {
-        ensembl_parts <- c(ensembl_parts, paste0("metazoa (", ensembl_sources["metazoa"], ")"))
-      }
+      ensembl_sources <- ensembl_sources[ensembl_sources > 1] # remove singletons 'Bacteria'
+      ix <- which(names(ensembl_sources) == 'ENSEMBL')
+      names(ensembl_sources)[ix] <- 'main'
+
+      names(ensembl_sources) <- gsub("Ensembl", "", names(ensembl_sources)) 
+      ensembl_parts <- paste0(names(ensembl_sources), "(", ensembl_sources, ")", collapse = ", ")
 
       # Create count summary text
       all_parts <- character(0)
