@@ -1,6 +1,6 @@
 Package: idepGolem
 Title: Integrated Differential Expression and Pathway Analysis
-Version: 2.20.2
+Version: 2.20.3
 Authors@R: 
     person(given = "Xijin",
            family = "Ge",

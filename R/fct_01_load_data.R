@@ -312,11 +312,14 @@ input_data <- function(expression_file,
   isolate({
     # Read experiment file ----------
     file_extension <- tolower(tools::file_ext(in_file_expr))
-    if ( file_extension == "xlsx" || 
+    if ( file_extension == "xlsx" ||
          file_extension == "xls"
       )  {
       expr <- readxl::read_excel(in_file_expr)
       expr <- data.frame(expr)
+      # Set the first column as row names for Excel files
+      rownames(expr) <- expr[, 1]
+      expr <- expr[, -1, drop = FALSE]
     } else {
       expr <- read.csv(
         in_file_expr,

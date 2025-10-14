@@ -930,30 +930,34 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
       choices <- demo_choices()
       tagList(
-        strong("3. Expression matrix (CSV, text, or xlsx)"),
+        strong("3. Expression matrix (CSV or text)"),
         fluidRow(
           column(
             width = 6,
             # Expression data file input
-            fileInput(
-              inputId = ns("expression_file"),
-              label = NULL,
-              accept = c(
-                "text/csv",
-                "text/comma-separated-values",
-                "text/tab-separated-values",
-                "text/plain",
-                ".csv",
-                ".tsv",
-                ".xlsx",
-                ".xls"
-              ),
-              placeholder = "",
-              width = "100%"
+            div(
+              id = ns("expression_file_container"),
+              style = "cursor: help;",
+              fileInput(
+                inputId = ns("expression_file"),
+                label = NULL,
+                accept = c(
+                  "text/csv",
+                  "text/comma-separated-values",
+                  "text/tab-separated-values",
+                  "text/plain",
+                  ".csv",
+                  ".tsv",
+                  ".xlsx",
+                  ".xls"
+                ),
+                placeholder = "CSV or text",
+                width = "100%"
+              )
             ),
             tippy::tippy_this(
-              ns("expression_file"),
-              "Upload your expression matrix in CSV, TSV, or Excel format.",
+              ns("expression_file_container"),
+              "Upload your expression data. CSV files and tab- or space- delimited text files are recommended. Excel files are also supported.",
               theme = "light"
             )
           ),
@@ -1136,28 +1140,32 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       
       tagList(
 
-        strong("4. Optional: Exp. Design (CSV or text)"),
+        strong("4. Optional: Experiment Design (CSV or text)"),
         fluidRow(
           column(
             width = 10,
-            fileInput(
-              inputId = ns("experiment_file"),
-              label = NULL,
-              accept = c(
-                "text/csv",
-                "text/comma-separated-values",
-                "text/tab-separated-values",
-                "text/plain",
-                ".csv",
-                ".tsv",
-                ".xlsx",
-                ".xls"
-              ),
-              placeholder = "CSV or text"
+            div(
+              id = ns("experiment_file_container"),
+              style = "cursor: help;",
+              fileInput(
+                inputId = ns("experiment_file"),
+                label = NULL,
+                accept = c(
+                  "text/csv",
+                  "text/comma-separated-values",
+                  "text/tab-separated-values",
+                  "text/plain",
+                  ".csv",
+                  ".tsv",
+                  ".xlsx",
+                  ".xls"
+                ),
+                placeholder = "CSV or text"
+              )
             ),
             tippy::tippy_this(
-              ns("experiment_file"),
-              "Upload a sample information table to define experimental design.",
+              ns("experiment_file_container"),
+              "Upload a sample information table to define experimental design. CSV files and tab- or space- delimited text files are recommended. Excel files are also supported.",
               theme = "light"
             )
           ),
