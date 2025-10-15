@@ -623,12 +623,12 @@ rRNA_counts_ggplot <- function(counts_data,
 
 
 
-#' Creates a barplot of the count data by chr
+#' Creates a barplot or boxplot of the count data by chr
 #'
 #' This function takes in either raw count or processed data and creates a
-#' formatted barplot as a \code{ggplot} object that shows the number
-#' of genes mapped to each sample in millions. This function is only used for
-#' read counts data.
+#' formatted plot as a \code{ggplot} object that shows the percentage of
+#' reads mapped to each chromosome. By default shows barplot; can use boxplot
+#' with jitter when user selects and sample groups are well-defined.
 #'
 #' @param counts_data Matrix of raw counts from gene expression data
 #' @param sample_info Matrix of experiment design information for grouping
@@ -636,8 +636,11 @@ rRNA_counts_ggplot <- function(counts_data,
 #' @param type String designating the type of data to be used in the title.
 #'  Commonly either "Raw" or "Transformed"
 #' @param all_gene_info Gene info, including chr., gene type etc.
+#' @param plots_color_select Vector of colors for plots (used for boxplot groups)
+#' @param use_boxplot Logical indicating whether to use boxplot (TRUE) or
+#'  barplot (FALSE, default)
 #' @export
-#' @return A barplot as a \code{ggplot} object
+#' @return A barplot or boxplot as a \code{ggplot} object
 #'
 #' @family preprocess functions
 #' @family plots
@@ -646,7 +649,9 @@ rRNA_counts_ggplot <- function(counts_data,
 chr_counts_ggplot <- function(counts_data,
                                 sample_info,
                                 type = "",
-                                all_gene_info) {
+                                all_gene_info,
+                                plots_color_select = "Set1",
+                                use_boxplot = FALSE) {
   counts <- counts_data
   memo <- ""
 
@@ -726,10 +731,10 @@ chr_counts_ggplot <- function(counts_data,
   colnames(counts_by_chr)[1] = "Chr"
 
   df <- cbind(
-    Chr = counts_by_chr[, 1], 
+    Chr = counts_by_chr[, 1],
     sweep(
-      counts_by_chr[-1], 
-      2, 
+      counts_by_chr[-1],
+      2,
       0.01 * colSums(counts_by_chr[-1]), "/"
     )
   )
@@ -739,10 +744,32 @@ chr_counts_ggplot <- function(counts_data,
 
   plot_data <- reshape2::melt(df, id.vars = "Chr")
 
-  plot <- ggplot2::ggplot(plot_data, ggplot2::aes(x = variable, y = value)) +
-    ggplot2::geom_bar(stat = "identity") +
-    ggplot2::labs(x = NULL, y = "% Reads", title = "% Reads by Chromosomes") +
-    ggplot2::scale_fill_brewer(palette = "Set1")
+  # Determine if groups are well-defined
+  # Only use boxplot if user requested it AND groups are well-defined
+  n_samples <- ncol(counts)
+  n_groups <- length(unique(groups))
+  groups_well_defined <- (n_groups > 1) && (n_groups <= 20) && (n_samples >= 2 * n_groups)
+  show_boxplot <- use_boxplot && groups_well_defined
+
+  if (show_boxplot) {
+    # Add group information to plot_data
+    plot_data$groups <- groups[match(plot_data$variable, colnames(counts))]
+
+    # Generate color palette for groups
+    color_palette <- generate_colors(n = n_groups, palette_name = plots_color_select)
+
+    plot <- ggplot2::ggplot(plot_data, ggplot2::aes(x = groups, y = value, fill = groups)) +
+      ggplot2::geom_boxplot(outlier.shape = NA) +
+      ggplot2::geom_jitter(width = 0.2, height = 0, alpha = 0.6, size = 2) +
+      ggplot2::labs(x = NULL, y = "% Reads", title = "% Reads by Chromosomes") +
+      ggplot2::scale_fill_manual(values = color_palette)
+  } else {
+    # Use original barplot
+    plot <- ggplot2::ggplot(plot_data, ggplot2::aes(x = variable, y = value)) +
+      ggplot2::geom_bar(stat = "identity") +
+      ggplot2::labs(x = NULL, y = "% Reads", title = "% Reads by Chromosomes") +
+      ggplot2::scale_fill_brewer(palette = "Set1")
+  }
 
   if(ncol(counts_data) < 10) {
     plot <- plot + ggplot2::facet_wrap (. ~ Chr)
@@ -754,8 +781,11 @@ chr_counts_ggplot <- function(counts_data,
     plot <- plot + ggplot2::facet_wrap (. ~ Chr, ncol = 1)
   }
 
+  if (!show_boxplot) {
+    plot <- plot + ggplot2::geom_bar(stat = "identity")
+  }
+
   plot <- plot +
-    ggplot2::geom_bar(stat = "identity") +
     ggplot2::theme_light() +
     ggplot2::theme(
       legend.position = "right",
@@ -782,7 +812,7 @@ chr_counts_ggplot <- function(counts_data,
         color = "black",
         face = "bold"
         )
-    ) 
+    )
 
   return(plot)
 }

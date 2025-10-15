@@ -483,15 +483,28 @@ mod_02_pre_process_ui <- function(id) {
                 br(),
                 fluidRow(
                   column(
-                    2, 
+                    2,
                     ottoPlots::mod_download_figure_ui(
                       id = ns("dl_chr_counts_gg")
-                    ),
+                    )
                   ),
                   column(
-                    10,
+                    3,
+                    checkboxInput(
+                      inputId = ns("chr_use_boxplot"),
+                      label = "Use boxplot",
+                      value = FALSE
+                    ),
+                    tippy::tippy_this(
+                      ns("chr_use_boxplot"),
+                      "Show boxplot grouped by sample groups instead of barplot.",
+                      theme = "light"
+                    )
+                  ),
+                  column(
+                    7,
                     align = "right",
-                    p("Higher bar means more reads map to this chromosome in this sample.")
+                    p("Shows % reads by chromosome.")
                   )
                 ),
                 br(),
@@ -898,6 +911,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     # chr counts barplot ------------
     chr_counts <- reactive({
       req(!is.null(processed_data()$raw_counts))
+      req(!is.null(input$chr_use_boxplot))
       shinybusy::show_modal_spinner(
         spin = "orbit",
         text = "Plotting counts by Chromosome",
@@ -907,7 +921,9 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         counts_data = load_data$converted_data(),
         sample_info = load_data$sample_info(),
         type = "Raw",
-        all_gene_info = load_data$all_gene_info()
+        all_gene_info = load_data$all_gene_info(),
+        plots_color_select = load_data$plots_color_select(),
+        use_boxplot = input$chr_use_boxplot
       )
       p <- refine_ggplot2(
         p = p,
