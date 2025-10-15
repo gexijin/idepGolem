@@ -435,12 +435,12 @@ total_counts_ggplot <- function(counts_data,
 
 #' Creates a barplot of the count of genes by type
 #'
-#' This function takes in either raw count or processed data and creates a
-#' formatted barplot as a \code{ggplot} object that shows the number
-#' of genes mapped to each sample in millions. This function is only used for
-#' read counts data.
+#' This function works with either raw count or normalized expression matrices.
+#' It links the supplied gene metadata to tally how many genes fall into each
+#' gene type and returns the counts as a bar chart.
 #'
-#' @param counts_data Matrix of raw counts from gene expression data
+#' @param counts_data Matrix of expression values used to align genes with
+#'  metadata (values themselves are ignored)
 #' @param sample_info Matrix of experiment design information for grouping
 #'  samples
 #' @param type String designating the type of data to be used in the title.
@@ -459,8 +459,6 @@ gene_counts_ggplot <- function(counts_data,
                                 type = "",
                                 all_gene_info,
                                 plots_color_select) {
-  counts <- counts_data
-
   df <- merge(
     counts_data,
     all_gene_info,

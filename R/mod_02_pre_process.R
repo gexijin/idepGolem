@@ -625,7 +625,7 @@ mod_02_pre_process_ui <- function(id) {
               ),
               downloadButton(
                 outputId = ns("tukey_download"),
-                label = "TukeyHSD Results"
+                label = "TukeyHSD"
               ),
               uiOutput(ns("signif_text"))
             )
@@ -835,7 +835,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
 
     # gene type barplot ------------
     gene_counts <- reactive({
-      req(!is.null(processed_data()$raw_counts))
+      req(!is.null(load_data$converted_data()))
+      req(!is.null(load_data$all_gene_info()))
       shinybusy::show_modal_spinner(
         spin = "orbit",
         text = "Plotting counts by gene type",
