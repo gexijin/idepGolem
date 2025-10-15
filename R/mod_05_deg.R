@@ -1113,7 +1113,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       if (is.null(deg$limma$comparisons)) {
         selectInput(
           inputId = ns("select_contrast"),
-          label = "Comparisons:",
+          label = "Select a comparison:",
           choices = list("All" = "All"),
           selected = "All",
           selectize = FALSE
@@ -1122,7 +1122,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         tagList(
           selectInput(
             inputId = ns("select_contrast"),
-            label = "Comparisons:",
+            label = "Select a comparison:",
             choices = deg$limma$comparisons,
             selectize = FALSE
           ),
@@ -1347,12 +1347,24 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       req(!is.null(deg$limma$top_genes))
       req(input$select_contrast, input$limma_p_val, input$limma_fc)
 
-      empty_tbl <- data.frame(
-        `Gene Symbol` = character(0),
-        `Ensembl ID` = character(0),
-        `log2 Fold Change` = numeric(0),
-        `Adjusted P value` = numeric(0),
-        stringsAsFactors = FALSE
+      empty_tbl <- list(
+        display = data.frame(
+          `Gene Symbol` = character(0),
+          `Ensembl ID` = character(0),
+          `log2 Fold Change` = character(0),
+          `Adjusted P value` = character(0),
+          Description = character(0),
+          stringsAsFactors = FALSE
+        ),
+        meta = data.frame(
+          ensembl_ID = character(0),
+          symbol = character(0),
+          entrezgene_id = character(0),
+          log2FC = numeric(0),
+          Adjusted_P_value = numeric(0),
+          description = character(0),
+          stringsAsFactors = FALSE
+        )
       )
 
       top_list <- deg$limma$top_genes
@@ -1419,64 +1431,105 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
 
       gene_info <- pre_process$all_gene_info()
       if (!is.null(gene_info) &&
-        "ensembl_gene_id" %in% colnames(gene_info) &&
-        "entrezgene_id" %in% colnames(gene_info)) {
+        "ensembl_gene_id" %in% colnames(gene_info)) {
+        keep_cols <- c("ensembl_gene_id", "entrezgene_id", "description")
+        keep_cols <- keep_cols[keep_cols %in% colnames(gene_info)]
         gene_info <- gene_info |>
-          dplyr::select(ensembl_gene_id, entrezgene_id) |>
+          dplyr::select(dplyr::all_of(keep_cols)) |>
           dplyr::distinct(ensembl_gene_id, .keep_all = TRUE)
         top_df <- top_df |>
           dplyr::left_join(
             gene_info,
             by = c("ensembl_ID" = "ensembl_gene_id")
           )
-      } else {
+      }
+
+      if (!"entrezgene_id" %in% colnames(top_df)) {
         top_df$entrezgene_id <- NA_character_
+      }
+      if (!"description" %in% colnames(top_df)) {
+        top_df$description <- NA_character_
       }
 
       top_df <- top_df |>
         dplyr::mutate(
           symbol = dplyr::coalesce(symbol, ensembl_ID),
-          entrezgene_id = as.character(entrezgene_id)
+          entrezgene_id = as.character(entrezgene_id),
+          description = as.character(description),
+          description = gsub(";.*|\\[.*", "", description),
+          description = dplyr::na_if(trimws(description), "")
         ) |>
         dplyr::arrange(
+          dplyr::desc(log2FC),
+          Adjusted_P_value
+        )
+
+      meta_df <- top_df |>
+        dplyr::transmute(
+          ensembl_ID,
+          symbol,
+          entrezgene_id,
+          log2FC,
           Adjusted_P_value,
-          dplyr::desc(abs(log2FC))
-        ) |>
+          description
+        )
+
+      display_df <- top_df |>
         dplyr::mutate(
+          symbol_display = ifelse(
+            is.na(symbol),
+            "",
+            htmltools::htmlEscape(symbol)
+          ),
+          ensembl_display = ifelse(
+            is.na(ensembl_ID),
+            "",
+            htmltools::htmlEscape(ensembl_ID)
+          ),
+          description_display = ifelse(
+            is.na(description),
+            NA_character_,
+            htmltools::htmlEscape(description)
+          ),
           `Gene Symbol` = dplyr::if_else(
             !is.na(entrezgene_id) & entrezgene_id != "",
             sprintf(
               "<a href='https://www.ncbi.nlm.nih.gov/gene/%s' target='_blank'>%s</a>",
               entrezgene_id,
-              symbol
+              symbol_display
             ),
-            symbol
+            symbol_display
           ),
           `Ensembl ID` = dplyr::if_else(
             !is.na(ensembl_ID) & grepl("^ENS", ensembl_ID),
             sprintf(
               "<a href='https://www.ensembl.org/id/%s' target='_blank'>%s</a>",
               ensembl_ID,
-              ensembl_ID
+              ensembl_display
             ),
-            ensembl_ID
+            ensembl_display
           ),
           `log2 Fold Change` = sprintf("%.3f", log2FC),
           `Adjusted P value` = {
             formatted <- formatC(Adjusted_P_value, format = "e", digits = 2)
             formatted <- gsub("e([+-])0*(\\d+)", "e\\1\\2", formatted)
             formatted
-          }
+          },
+          Description = dplyr::coalesce(description_display, "Not available")
         ) |>
         dplyr::transmute(
           `Gene Symbol`,
           `Ensembl ID`,
           `log2 Fold Change`,
-          `Adjusted P value`
+          `Adjusted P value`,
+          Description
         ) |>
         as.data.frame(stringsAsFactors = FALSE)
 
-      top_df
+      list(
+        display = display_df,
+        meta = meta_df
+      )
     })
 
     output$deg_gene_table <- DT::renderDataTable({
@@ -1484,19 +1537,181 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       data <- deg_gene_table_data()
       shiny::validate(
         shiny::need(
-          nrow(data) > 0,
+          nrow(data$display) > 0,
           "No genes meet the significance thresholds for this comparison."
         )
       )
       DT::datatable(
-        data,
+        data$display,
         options = list(
-          pageLength = 25,
-          scrollX = TRUE
+          pageLength = 10,
+          lengthMenu = list(c(10, 25, 50, 100, -1), c("10", "25", "50", "100", "All")),
+          scrollX = TRUE,
+          order = list(list(2, "desc"))
         ),
+        selection = list(mode = "single"),
         escape = FALSE,
         class = "cell-border stripe",
         rownames = FALSE
+      )
+    })
+
+    observeEvent(deg_gene_table_data(), {
+      table_data <- deg_gene_table_data()
+      req(nrow(table_data$display) > 0)
+      selected <- input$deg_gene_table_rows_selected
+      if (!is.null(selected) && length(selected) > 0) {
+        valid_sel <- selected[selected >= 1 & selected <= nrow(table_data$display)]
+        if (!identical(valid_sel, selected)) {
+          DT::selectRows(
+            DT::dataTableProxy("deg_gene_table", session = session),
+            valid_sel
+          )
+        }
+      }
+    }, ignoreNULL = FALSE)
+
+    selected_gene_meta <- reactive({
+      table_data <- deg_gene_table_data()
+      req(nrow(table_data$meta) > 0)
+      sel <- input$deg_gene_table_rows_selected
+      if (is.null(sel) || length(sel) == 0) {
+        return(NULL)
+      }
+      sel <- sel[1]
+      if (sel < 1 || sel > nrow(table_data$meta)) {
+        return(NULL)
+      }
+      table_data$meta[sel, , drop = FALSE]
+    })
+
+    gene_expression_data <- reactive({
+      meta <- selected_gene_meta()
+      if (is.null(meta)) {
+        return(NULL)
+      }
+      expr_matrix <- pre_process$data()
+      req(!is.null(expr_matrix))
+
+      gene_id <- meta$ensembl_ID
+      if (is.null(gene_id) || is.na(gene_id) || gene_id == "" ||
+        !gene_id %in% rownames(expr_matrix)) {
+        alt_id <- meta$symbol
+        if (!is.null(alt_id) && !is.na(alt_id) && alt_id %in% rownames(expr_matrix)) {
+          gene_id <- alt_id
+        } else {
+          return(NULL)
+        }
+      }
+
+      sample_idx <- contrast_samples()
+      if (is.null(sample_idx) || length(sample_idx) == 0) {
+        sample_names <- colnames(expr_matrix)
+      } else if (is.numeric(sample_idx)) {
+        sample_idx <- sample_idx[sample_idx >= 1 & sample_idx <= ncol(expr_matrix)]
+        sample_names <- colnames(expr_matrix)[sample_idx]
+      } else {
+        sample_names <- intersect(sample_idx, colnames(expr_matrix))
+        if (length(sample_names) == 0) {
+          sample_names <- colnames(expr_matrix)
+        }
+      }
+
+      if (!gene_id %in% rownames(expr_matrix) || length(sample_names) == 0) {
+        return(NULL)
+      }
+
+      expr_values <- as.numeric(expr_matrix[gene_id, sample_names, drop = TRUE])
+      if (all(is.na(expr_values))) {
+        return(NULL)
+      }
+
+      sample_groups <- detect_groups(
+        sample_names,
+        pre_process$sample_info()
+      )
+      sample_groups[is.na(sample_groups) | sample_groups == ""] <- sample_names[is.na(sample_groups) | sample_groups == ""]
+
+      data.frame(
+        sample = sample_names,
+        expression = expr_values,
+        group = factor(sample_groups, levels = unique(sample_groups)),
+        stringsAsFactors = FALSE
+      )
+    })
+
+    selected_gene_plot_data <- reactiveVal(NULL)
+
+    observeEvent(input$deg_gene_table_rows_selected, {
+      sel <- input$deg_gene_table_rows_selected
+      if (is.null(sel) || length(sel) == 0) {
+        selected_gene_plot_data(NULL)
+        return()
+      }
+
+      expr_df <- gene_expression_data()
+      if (is.null(expr_df) || nrow(expr_df) == 0) {
+        selected_gene_plot_data(NULL)
+        return()
+      }
+
+      meta <- selected_gene_meta()
+      if (is.null(meta)) {
+        selected_gene_plot_data(NULL)
+        return()
+      }
+
+      display_name <- meta$symbol
+      if (is.null(display_name) || is.na(display_name) || display_name == "") {
+        display_name <- meta$ensembl_ID
+      }
+
+      selected_gene_plot_data(
+        list(
+          data = expr_df,
+          display_name = display_name
+        )
+      )
+
+      showModal(
+        modalDialog(
+          title = paste0(display_name, " Expression"),
+          plotOutput(ns("deg_gene_modal_plot")),
+          easyClose = TRUE,
+          footer = modalButton("Close"),
+          size = "l"
+        )
+      )
+    })
+
+    output$deg_gene_modal_plot <- renderPlot({
+      plot_data <- selected_gene_plot_data()
+      req(plot_data)
+
+      expr_df <- plot_data$data
+      display_name <- plot_data$display_name
+
+      p <- ggplot2::ggplot(
+        expr_df,
+        ggplot2::aes(x = group, y = expression, fill = group)
+      ) +
+        ggplot2::geom_boxplot(alpha = 0.6, outlier.shape = NA) +
+        ggplot2::geom_jitter(width = 0.15, size = 2, alpha = 0.8) +
+        ggplot2::labs(
+          title = paste0(display_name, " normalized expression"),
+          x = NULL,
+          y = "Normalized expression"
+        ) +
+        ggplot2::theme_minimal() +
+        ggplot2::theme(
+          legend.position = "none",
+          plot.title = ggplot2::element_text(face = "bold")
+        )
+
+      refine_ggplot2(
+        p = p,
+        gridline = pre_process$plot_grid_lines(),
+        ggplot2_theme = pre_process$ggplot2_theme()
       )
     })
 
