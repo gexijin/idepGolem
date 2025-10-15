@@ -490,21 +490,12 @@ mod_02_pre_process_ui <- function(id) {
                   ),
                   column(
                     3,
-                    checkboxInput(
-                      inputId = ns("chr_use_boxplot"),
-                      label = "Use boxplot",
-                      value = FALSE
-                    ),
-                    tippy::tippy_this(
-                      ns("chr_use_boxplot"),
-                      "Show boxplot grouped by sample groups instead of barplot.",
-                      theme = "light"
-                    )
+                    uiOutput(ns("chr_boxplot_checkbox"))
                   ),
                   column(
                     7,
                     align = "right",
-                    p("Shows % reads by chromosome.")
+                    p("% reads mapped to a chromosome.")
                   )
                 ),
                 br(),
@@ -907,6 +898,28 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       }),
       label = ""
     )
+
+    # Dynamic checkbox for chr counts plot ------------
+    output$chr_boxplot_checkbox <- renderUI({
+      req(!is.null(load_data$converted_data()))
+
+      # Determine default value based on number of samples
+      n_samples <- ncol(load_data$converted_data())
+      default_value <- n_samples > 50
+
+      tagList(
+        checkboxInput(
+          inputId = ns("chr_use_boxplot"),
+          label = "Use boxplot",
+          value = default_value
+        ),
+        tippy::tippy_this(
+          ns("chr_use_boxplot"),
+          "Show boxplot grouped by sample groups instead of barplot.",
+          theme = "light"
+        )
+      )
+    })
 
     # chr counts barplot ------------
     chr_counts <- reactive({
