@@ -511,15 +511,19 @@ mod_02_pre_process_ui <- function(id) {
               br(),
               fluidRow(
                 column(
-                  2, 
+                  2,
                   ottoPlots::mod_download_figure_ui(
                     id = ns("dl_chr_normalized_gg")
                   )
                 ),
                 column(
-                  10,
+                  3,
+                  uiOutput(ns("chr_normalized_boxplot_checkbox"))
+                ),
+                column(
+                  7,
                   align = "right",
-                  p("A tall bar means genes on this chromosome are expressed at higher levels in a sample.")
+                  p("75th percentile of normalized expression by chromosomes.")
                 )
               ),
             ns = ns
@@ -960,20 +964,44 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       label = ""
     )
 
+    # Dynamic checkbox for chr normalized plot ------------
+    output$chr_normalized_boxplot_checkbox <- renderUI({
+      req(!is.null(processed_data()$data))
+
+      # Determine default value based on number of samples
+      n_samples <- ncol(processed_data()$data)
+      default_value <- n_samples > 50
+
+      tagList(
+        checkboxInput(
+          inputId = ns("chr_normalized_use_boxplot"),
+          label = "Use boxplot",
+          value = default_value
+        ),
+        tippy::tippy_this(
+          ns("chr_normalized_use_boxplot"),
+          "Show boxplot grouped by sample groups instead of barplot.",
+          theme = "light"
+        )
+      )
+    })
 
     # chr normalized barplot ------------
     chr_normalized <- reactive({
       req(!is.null(processed_data()$data))
+      req(!is.null(input$chr_normalized_use_boxplot))
       shinybusy::show_modal_spinner(
         spin = "orbit",
-        text = "Pre-Processing Data",
+        text = "Plotting normalized expression by Chromosome",
         color = "#000000"
       )
       p <- chr_normalized_ggplot(
         counts_data = processed_data()$data,
         sample_info = load_data$sample_info(),
         type = "Raw",
-        all_gene_info = load_data$all_gene_info()
+        all_gene_info = load_data$all_gene_info(),
+        plots_color_select = load_data$plots_color_select(),
+        use_boxplot = input$chr_normalized_use_boxplot
       )
       p <- refine_ggplot2(
         p = p,
