@@ -264,7 +264,7 @@ mod_05_deg_2_ui <- function(id) {
         conditionalPanel("input.step_2 == 'Heatmap'",
           selectInput(
             inputId = ns("heatmap_gene_number"),
-            label = "Number of genes displayed",
+            label = "Number of genes:",
             choices = c("All DEGs"),
             selected = "All DEGs",
             selectize = FALSE
@@ -276,7 +276,7 @@ mod_05_deg_2_ui <- function(id) {
           ),
           selectInput(
             inputId = ns("heatmap_fdr_fold"),
-            label = "Sort by Fold Change or FDR",
+            label = "Sort by:",
             choices = c("Fold Change", "FDR"),
             selectize = FALSE
           ),

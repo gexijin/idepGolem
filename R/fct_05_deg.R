@@ -163,7 +163,7 @@ list_model_comparisons_ui <- function(sample_info,
     )
     comparisons <- sort(comparisons)
     choices <- stats::setNames(gsub(" vs\\. ", "-", comparisons), comparisons)
-    title <- "Define comparisons:"
+    title <- "Define comparisons (For treat vs. ctrl, ctrl is the baseline):"
 
     return(list(
       choices = choices,
