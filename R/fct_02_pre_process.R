@@ -339,7 +339,9 @@ pre_process <- function(data,
 #' @param plots_color_select Vector of colors for plots
 #'
 #' @export
-#' @return A barplot as a \code{ggplot} object
+#' @return A list containing 'plot' (a ggplot object) and 'warning' (a
+#'  character string with ANOVA warning message, or NULL if no significant
+#'  differences detected)
 #'
 #' @family preprocess functions
 #' @family plots
@@ -358,7 +360,7 @@ total_counts_ggplot <- function(counts_data,
     memo <- paste("(only showing 100 samples)")
   }
   groups <- as.factor(
-    detect_groups(colnames(counts), sample_info)
+    detect_groups(colnames(counts_data), sample_info)
   )
 
   if (ncol(counts) < 31) {
@@ -552,7 +554,7 @@ rRNA_counts_ggplot <- function(counts_data,
     memo <- paste("(only showing 100 samples)")
   }
   groups <- as.factor(
-    detect_groups(colnames(counts), sample_info)
+    detect_groups(colnames(counts_data), sample_info)
   )
 
   if (ncol(counts) < 31) {
@@ -586,6 +588,7 @@ rRNA_counts_ggplot <- function(counts_data,
   df <- df[which(apply(df[, -1], 1, max) > 0.5), ]
 
   plot_data <- reshape2::melt(df, id.vars = "Gene_Type")
+  plot_data$groups <- groups[match(plot_data$variable, colnames(counts_data))]
 
   color_palette <- generate_colors(n = nlevels(as.factor(plot_data$Gene_Type)), palette_name = plots_color_select)
   plot <- ggplot2::ggplot(plot_data, ggplot2::aes(x = variable, y = value, fill = Gene_Type)) +
@@ -618,7 +621,51 @@ rRNA_counts_ggplot <- function(counts_data,
       )
     ) 
 
-  return(plot)
+  # Run ANOVA analysis if groups are defined and less than half of samples
+  warning_message <- NULL
+  n_samples <- length(groups)
+  n_groups <- length(unique(groups))
+  groups_well_defined <- (n_groups > 1) && (n_groups <= 20) && (n_samples >= 2 * n_groups)
+
+  if (groups_well_defined && (n_groups < n_samples / 2)) {
+    significant_types <- c()
+
+    for (gene_type in unique(plot_data$Gene_Type)) {
+      type_data <- plot_data[plot_data$Gene_Type == gene_type, ]
+      type_data <- type_data[!is.na(type_data$groups), ]
+
+      if (nrow(type_data) > 0 && length(unique(type_data$groups)) > 1) {
+        tryCatch({
+          anova_result <- summary(aov(value ~ groups, data = type_data))
+          p_value <- anova_result[[1]][["Pr(>F)"]][1]
+
+          group_means <- aggregate(value ~ groups, data = type_data, mean)
+          max_mean <- max(group_means$value)
+          min_mean <- min(group_means$value)
+          diff_percent <- abs(max_mean - min_mean)
+          # at least 5% difference and p < 0.01
+          if (!is.na(p_value) && p_value < 0.01 && diff_percent > 5) {
+            significant_types <- c(
+              significant_types,
+              paste0(gene_type, " (P = ", format(p_value, scientific = TRUE, digits = 2), ")")
+            )
+          }
+        }, error = function(e) {
+          # Skip if ANOVA fails
+        })
+      }
+    }
+
+    if (length(significant_types) > 0) {
+      warning_message <- paste0(
+        "Significant difference detected for % reads mapped across sample groups for gene type(s): ",
+        paste(significant_types, collapse = ", "),
+        "."
+      )
+    }
+  }
+
+  return(list(plot = plot, warning = warning_message))
 }
 
 

@@ -473,6 +473,7 @@ mod_02_pre_process_ui <- function(id) {
                     p("Higher rRNA content may indicuate ineffective rRNA-removal.")
                   )
                 ),
+                uiOutput(ns("gene_type_warning")),
                 br(),
                 hr(),
                 plotOutput(
@@ -870,30 +871,49 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     )
 
     # gene type barplot ------------
-    rRNA_counts <- reactive({
+    rRNA_counts_result <- reactive({
       req(!is.null(processed_data()$raw_counts))
       shinybusy::show_modal_spinner(
         spin = "orbit",
         text = "Plotting counts by gene type",
         color = "#000000"
       )
-      p <- rRNA_counts_ggplot(
+      result <- rRNA_counts_ggplot(
         counts_data = load_data$converted_data(),
         sample_info = load_data$sample_info(),
         type = "Raw",
         all_gene_info = load_data$all_gene_info(),
         plots_color_select = load_data$plots_color_select()
       )
+      shinybusy::remove_modal_spinner()
+      return(result)
+    })
+
+    rRNA_counts <- reactive({
+      req(!is.null(rRNA_counts_result()))
+      result <- rRNA_counts_result()
       p <- refine_ggplot2(
-        p = p,
+        p = result$plot,
         gridline = load_data$plot_grid_lines(),
         ggplot2_theme = load_data$ggplot2_theme()
       )
-      shinybusy::remove_modal_spinner()
       return(p)
     })
     output$rRNA_counts_gg <- renderPlot({
       print(rRNA_counts())
+    })
+
+    output$gene_type_warning <- renderUI({
+      req(!is.null(rRNA_counts_result()))
+      result <- rRNA_counts_result()
+
+      if (!is.null(result$warning)) {
+        tags$div(
+          style = "padding: 10px; margin: 10px 0; background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; color: #856404;",
+          tags$strong("\u26A0 Warning: "),
+          result$warning
+        )
+      }
     })
 
     dl_rRNA_counts_gg <- ottoPlots::mod_download_figure_server(
