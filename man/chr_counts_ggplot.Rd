@@ -30,7 +30,9 @@ Commonly either "Raw" or "Transformed"}
 barplot (FALSE, default)}
 }
 \value{
-A barplot or boxplot as a \code{ggplot} object
+A list containing 'plot' (a ggplot object) and 'warning' (a
+ character string with ANOVA warning message, or NULL if no significant
+ differences detected)
 }
 \description{
 This function takes in either raw count or processed data and creates a

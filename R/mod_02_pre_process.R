@@ -498,6 +498,7 @@ mod_02_pre_process_ui <- function(id) {
                     p("% reads mapped to a chromosome.")
                   )
                 ),
+                uiOutput(ns("chr_counts_warning")),
                 br(),
                 hr(),
                 ns = ns
@@ -926,7 +927,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     })
 
     # chr counts barplot ------------
-    chr_counts <- reactive({
+    chr_counts_result <- reactive({
       req(!is.null(processed_data()$raw_counts))
       req(!is.null(input$chr_use_boxplot))
       shinybusy::show_modal_spinner(
@@ -934,7 +935,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         text = "Plotting counts by Chromosome",
         color = "#000000"
       )
-      p <- chr_counts_ggplot(
+      result <- chr_counts_ggplot(
         counts_data = load_data$converted_data(),
         sample_info = load_data$sample_info(),
         type = "Raw",
@@ -942,18 +943,38 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         plots_color_select = load_data$plots_color_select(),
         use_boxplot = input$chr_use_boxplot
       )
+      shinybusy::remove_modal_spinner()
+      return(result)
+    })
+
+    chr_counts <- reactive({
+      req(!is.null(chr_counts_result()))
+      result <- chr_counts_result()
       p <- refine_ggplot2(
-        p = p,
+        p = result$plot,
         gridline = load_data$plot_grid_lines(),
         ggplot2_theme = load_data$ggplot2_theme()
       )
-      shinybusy::remove_modal_spinner()
       return(p)
     })
     output$chr_counts_gg <- renderPlot({
       print(chr_counts())
     },
     height = 2000)
+
+    # chr counts warning message output
+    output$chr_counts_warning <- renderUI({
+      req(!is.null(chr_counts_result()))
+      result <- chr_counts_result()
+
+      if (!is.null(result$warning)) {
+        tags$div(
+          style = "padding: 10px; margin: 10px 0; background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; color: #856404;",
+          tags$strong("\u26A0 Warning: "),
+          result$warning
+        )
+      }
+    })
 
     dl_chr_counts_gg <- ottoPlots::mod_download_figure_server(
       id = "dl_chr_counts_gg",
