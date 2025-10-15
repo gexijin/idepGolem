@@ -336,6 +336,10 @@ mod_05_deg_2_ui <- function(id) {
         tabsetPanel(
           id = ns("step_2"),
           tabPanel(
+            title = "Genes",
+            DT::dataTableOutput(ns("deg_gene_table"))
+          ),
+          tabPanel(
             title = "Heatmap",
             mod_12_heatmap_ui(ns("12_heatmap_1"))
           ),
@@ -1335,6 +1339,164 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         contrast_samples = contrast_samples(),
         all_gene_names = pre_process$all_gene_names(),
         select_gene_id = load_data$select_gene_id()
+      )
+    })
+
+    deg_gene_table_data <- reactive({
+      req(!is.null(deg$limma))
+      req(!is.null(deg$limma$top_genes))
+      req(input$select_contrast, input$limma_p_val, input$limma_fc)
+
+      empty_tbl <- data.frame(
+        `Gene Symbol` = character(0),
+        `Ensembl ID` = character(0),
+        `log2 Fold Change` = numeric(0),
+        `Adjusted P value` = numeric(0),
+        stringsAsFactors = FALSE
+      )
+
+      top_list <- deg$limma$top_genes
+      if (length(top_list) == 0) {
+        return(empty_tbl)
+      }
+
+      idx <- match(input$select_contrast, names(top_list))
+      if (is.na(idx)) {
+        idx <- 1
+      }
+
+      top_df <- top_list[[idx]]
+
+      if (is.null(top_df) || nrow(top_df) == 0) {
+        return(empty_tbl)
+      }
+
+      top_df <- as.data.frame(top_df)
+
+      if (ncol(top_df) < 2) {
+        return(empty_tbl)
+      }
+
+      top_df <- top_df[, 1:2, drop = FALSE]
+      colnames(top_df) <- c("log2FC", "Adjusted_P_value")
+      top_df$ensembl_ID <- rownames(top_df)
+
+      top_df <- top_df |>
+        dplyr::filter(
+          is.finite(log2FC),
+          is.finite(Adjusted_P_value)
+        )
+
+      fc_cutoff <- input$limma_fc
+      if (is.null(fc_cutoff) || !is.finite(fc_cutoff) || fc_cutoff <= 0) {
+        fc_cutoff <- 1
+      }
+
+      top_df <- top_df |>
+        dplyr::filter(
+          Adjusted_P_value <= input$limma_p_val,
+          abs(log2FC) >= log2(fc_cutoff)
+        )
+
+      if (nrow(top_df) == 0) {
+        return(empty_tbl)
+      }
+
+      gene_names <- pre_process$all_gene_names()
+
+      if (!is.null(gene_names) && "ensembl_ID" %in% colnames(gene_names)) {
+        gene_names <- gene_names |>
+          dplyr::distinct(ensembl_ID, .keep_all = TRUE)
+        top_df <- top_df |>
+          dplyr::left_join(
+            gene_names |>
+              dplyr::select(ensembl_ID, symbol),
+            by = "ensembl_ID"
+          )
+      } else {
+        top_df$symbol <- NA_character_
+      }
+
+      gene_info <- pre_process$all_gene_info()
+      if (!is.null(gene_info) &&
+        "ensembl_gene_id" %in% colnames(gene_info) &&
+        "entrezgene_id" %in% colnames(gene_info)) {
+        gene_info <- gene_info |>
+          dplyr::select(ensembl_gene_id, entrezgene_id) |>
+          dplyr::distinct(ensembl_gene_id, .keep_all = TRUE)
+        top_df <- top_df |>
+          dplyr::left_join(
+            gene_info,
+            by = c("ensembl_ID" = "ensembl_gene_id")
+          )
+      } else {
+        top_df$entrezgene_id <- NA_character_
+      }
+
+      top_df <- top_df |>
+        dplyr::mutate(
+          symbol = dplyr::coalesce(symbol, ensembl_ID),
+          entrezgene_id = as.character(entrezgene_id)
+        ) |>
+        dplyr::arrange(
+          Adjusted_P_value,
+          dplyr::desc(abs(log2FC))
+        ) |>
+        dplyr::mutate(
+          `Gene Symbol` = dplyr::if_else(
+            !is.na(entrezgene_id) & entrezgene_id != "",
+            sprintf(
+              "<a href='https://www.ncbi.nlm.nih.gov/gene/%s' target='_blank'>%s</a>",
+              entrezgene_id,
+              symbol
+            ),
+            symbol
+          ),
+          `Ensembl ID` = dplyr::if_else(
+            !is.na(ensembl_ID) & grepl("^ENS", ensembl_ID),
+            sprintf(
+              "<a href='https://www.ensembl.org/id/%s' target='_blank'>%s</a>",
+              ensembl_ID,
+              ensembl_ID
+            ),
+            ensembl_ID
+          ),
+          `log2 Fold Change` = sprintf("%.3f", log2FC),
+          `Adjusted P value` = {
+            formatted <- formatC(Adjusted_P_value, format = "e", digits = 2)
+            formatted <- gsub("e([+-])0*(\\d+)", "e\\1\\2", formatted)
+            formatted
+          }
+        ) |>
+        dplyr::transmute(
+          `Gene Symbol`,
+          `Ensembl ID`,
+          `log2 Fold Change`,
+          `Adjusted P value`
+        ) |>
+        as.data.frame(stringsAsFactors = FALSE)
+
+      top_df
+    })
+
+    output$deg_gene_table <- DT::renderDataTable({
+      req(deg_gene_table_data())
+      data <- deg_gene_table_data()
+      shiny::validate(
+        shiny::need(
+          nrow(data) > 0,
+          "No genes meet the significance thresholds for this comparison."
+        )
+      )
+      DT::datatable(
+        data,
+        options = list(
+          pageLength = 25,
+          scrollX = TRUE
+        ),
+        escape = FALSE,
+        class = "cell-border stripe",
+        rownames = FALSE
       )
     })
 
