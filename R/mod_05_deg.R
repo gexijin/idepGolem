@@ -261,6 +261,23 @@ mod_05_deg_2_ui <- function(id) {
         h4("Investigate DEGs"),
         br(),
         htmlOutput(outputId = ns("list_comparisons")),
+        conditionalPanel(
+          condition = "input.step_2 == 'Genes'",
+          selectInput(
+            inputId = ns("gene_direction_filter"),
+            label = "Show:",
+            choices = c("Up-regulated genes", "Down-regulated genes"),
+            selected = "Up-regulated genes",
+            selectize = FALSE
+          ),
+          tippy::tippy_this(
+            ns("gene_direction_filter"),
+            "Filter the gene table to view only upregulated or downregulated genes.",
+            theme = "light"
+          ),
+          p("Click on each gene!"),
+          ns = ns
+        ),
         conditionalPanel("input.step_2 == 'Heatmap'",
           selectInput(
             inputId = ns("heatmap_gene_number"),
@@ -1406,7 +1423,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
           Adjusted_P_value = numeric(0),
           description = character(0),
           stringsAsFactors = FALSE
-        )
+        ),
+        order_dir = "desc"
       )
 
       top_list <- deg$limma$top_genes
@@ -1452,7 +1470,23 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
           abs(log2FC) >= log2(fc_cutoff)
         )
 
+      direction <- input$gene_direction_filter
+      if (is.null(direction)) {
+        direction <- "Up-regulated genes"
+      }
+
+      if (identical(direction, "Up-regulated genes")) {
+        top_df <- top_df |>
+          dplyr::filter(log2FC > 0)
+      } else if (identical(direction, "Down-regulated genes")) {
+        top_df <- top_df |>
+          dplyr::filter(log2FC < 0)
+      }
+
+      order_dir <- if (identical(direction, "Down-regulated genes")) "asc" else "desc"
+
       if (nrow(top_df) == 0) {
+        empty_tbl$order_dir <- order_dir
         return(empty_tbl)
       }
 
@@ -1500,11 +1534,21 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
           description = as.character(description),
           description = gsub(";.*|\\[.*", "", description),
           description = dplyr::na_if(trimws(description), "")
-        ) |>
-        dplyr::arrange(
-          dplyr::desc(log2FC),
-          Adjusted_P_value
         )
+
+      if (identical(order_dir, "asc")) {
+        top_df <- top_df |>
+          dplyr::arrange(
+            log2FC,
+            Adjusted_P_value
+          )
+      } else {
+        top_df <- top_df |>
+          dplyr::arrange(
+            dplyr::desc(log2FC),
+            Adjusted_P_value
+          )
+      }
 
       meta_df <- top_df |>
         dplyr::transmute(
@@ -1570,7 +1614,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
 
       list(
         display = display_df,
-        meta = meta_df
+        meta = meta_df,
+        order_dir = order_dir
       )
     })
 
@@ -1583,13 +1628,17 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
           "No genes meet the significance thresholds for this comparison."
         )
       )
+      order_dir <- data$order_dir
+      if (is.null(order_dir)) {
+        order_dir <- "desc"
+      }
       DT::datatable(
         data$display,
         options = list(
           pageLength = 100,
           lengthMenu = list(c(10, 25, 50, 100, -1), c("10", "25", "50", "100", "All")),
           scrollX = TRUE,
-          order = list(list(2, "desc"))
+          order = list(list(2, order_dir))
         ),
         selection = list(mode = "single"),
         escape = FALSE,
