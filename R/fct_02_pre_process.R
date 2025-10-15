@@ -837,10 +837,10 @@ chr_counts_ggplot <- function(counts_data,
           group_means <- aggregate(chr_values, by = list(chr_groups), mean)
           max_mean <- max(group_means$x)
           min_mean <- min(group_means$x)
-          diff_percent <- abs(max_mean - min_mean)
+          diff_expression <- abs(max_mean - min_mean)
 
-          # Check if significant and difference > 5%
-          if (!is.na(p_value) && p_value < 0.01 && diff_percent > 5) {
+          # Check if significant and difference > 5 units (% reads)
+          if (!is.na(p_value) && p_value < 0.01 && diff_expression > 5) {
             significant_chrs <- c(
               significant_chrs,
                 paste0(chr, " (P = ", format(p_value, scientific = TRUE, digits = 2), ")")
@@ -885,7 +885,9 @@ chr_counts_ggplot <- function(counts_data,
 #' @param use_boxplot Logical indicating whether to use boxplot (TRUE) or
 #'  barplot (FALSE, default)
 #' @export
-#' @return A barplot or boxplot as a \code{ggplot} object
+#' @return A list containing 'plot' (a ggplot object) and 'warning' (a
+#'  character string with ANOVA warning message, or NULL if no significant
+#'  differences detected)
 #'
 #' @family preprocess functions
 #' @family plots
@@ -1061,7 +1063,54 @@ chr_normalized_ggplot <- function(counts_data,
         )
     )
 
-  return(plot)
+  # Run ANOVA analysis if groups are defined and less than half of samples
+  warning_message <- NULL
+  if (groups_well_defined && (n_groups < n_samples / 2)) {
+    # Perform ANOVA for each chromosome
+    significant_chrs <- c()
+
+    for (chr in unique(df$Chr)) {
+      chr_data <- df[df$Chr == chr, -1]  # Exclude Chr column
+      chr_values <- as.numeric(chr_data)
+      chr_groups <- rep(groups, each = 1)
+
+      # Only run ANOVA if we have enough data
+      if (length(chr_values) > 0 && length(unique(chr_groups)) > 1) {
+        tryCatch({
+          anova_result <- summary(aov(chr_values ~ chr_groups))
+          p_value <- anova_result[[1]][["Pr(>F)"]][1]
+
+          # Calculate group means
+          group_means <- aggregate(chr_values, by = list(chr_groups), mean)
+          max_mean <- max(group_means$x)
+          min_mean <- min(group_means$x)
+          diff_expression <- abs(max_mean - min_mean)
+
+          # Check if significant and difference > 0.5 units
+          if (!is.na(p_value) && p_value < 0.01 && diff_expression > 0.5) {
+            significant_chrs <- c(
+              significant_chrs,
+                paste0(chr, " (P = ", format(p_value, scientific = TRUE, digits = 2), ")")
+            )
+          }
+        }, error = function(e) {
+          # Skip if ANOVA fails
+        })
+      }
+    }
+
+    # Build warning message if significant chromosomes found
+    if (length(significant_chrs) > 0) {
+      warning_message <- paste0(
+        "Significant difference detected expression levels among genes on chromosome(s): ",
+        "on chromosome(s): ",
+        paste(significant_chrs, collapse = ", "),
+        "."
+      )
+    }
+  }
+
+  return(list(plot = plot, warning = warning_message))
 }
 
 

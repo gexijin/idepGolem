@@ -527,6 +527,7 @@ mod_02_pre_process_ui <- function(id) {
                   p("75th percentile of normalized expression by chromosomes.")
                 )
               ),
+              uiOutput(ns("chr_normalized_warning")),
             ns = ns
             )
           ),
@@ -1008,7 +1009,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     })
 
     # chr normalized barplot ------------
-    chr_normalized <- reactive({
+    chr_normalized_result <- reactive({
       req(!is.null(processed_data()$data))
       req(!is.null(input$chr_normalized_use_boxplot))
       shinybusy::show_modal_spinner(
@@ -1016,7 +1017,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         text = "Plotting normalized expression by Chromosome",
         color = "#000000"
       )
-      p <- chr_normalized_ggplot(
+      result <- chr_normalized_ggplot(
         counts_data = processed_data()$data,
         sample_info = load_data$sample_info(),
         type = "Raw",
@@ -1024,18 +1025,37 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         plots_color_select = load_data$plots_color_select(),
         use_boxplot = input$chr_normalized_use_boxplot
       )
+      shinybusy::remove_modal_spinner()
+      return(result)
+    })
+
+    chr_normalized <- reactive({
+      req(!is.null(chr_normalized_result()))
+      result <- chr_normalized_result()
       p <- refine_ggplot2(
-        p = p,
+        p = result$plot,
         gridline = load_data$plot_grid_lines(),
         ggplot2_theme = load_data$ggplot2_theme()
       )
-      shinybusy::remove_modal_spinner()
       return(p)
     })
     output$chr_normalized_gg <- renderPlot({
       print(chr_normalized())
     },
     height = 2000)
+
+    output$chr_normalized_warning <- renderUI({
+      req(!is.null(chr_normalized_result()))
+      result <- chr_normalized_result()
+
+      if (!is.null(result$warning)) {
+        tags$div(
+          style = "padding: 10px; margin: 10px 0; background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; color: #856404;",
+          tags$strong("\u26A0 Warning: "),
+          result$warning
+        )
+      }
+    })
 
     dl_chr_counts_gg <- ottoPlots::mod_download_figure_server(
       id = "dl_chr_normalized_gg",
