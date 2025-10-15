@@ -1130,9 +1130,51 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
             ns("select_contrast"),
             "Choose a comparison to review its DEGs. For comparison labeled 'Treat vs. Ctrl', positive log fold-change means genes are upregulated in 'Treat'.  Interaction terms start with 'I:', indicating, for example, mutatant specific responses to a treatment.",
             theme = "light"
-          )
+          ),
+          tags$div(
+            style = "margin-top: 0.5rem;",
+            uiOutput(ns("selected_contrast_counts"))
+          ),
+          hr(),
+          br()
         )
       }
+    })
+
+    output$selected_contrast_counts <- renderUI({
+      limma_results <- deg$limma$results
+      req(!is.null(limma_results))
+      req(input$select_contrast)
+
+      limma_results <- as.matrix(limma_results)
+      col_names <- colnames(limma_results)
+      if (is.null(col_names) || !input$select_contrast %in% col_names) {
+        return(NULL)
+      }
+
+      calls <- limma_results[, input$select_contrast, drop = TRUE]
+      if (length(calls) == 0) {
+        return(NULL)
+      }
+
+      calls <- suppressWarnings(as.numeric(calls))
+      up_count <- sum(calls == 1, na.rm = TRUE)
+      down_count <- sum(calls == -1, na.rm = TRUE)
+
+      tags$div(
+        class = "deg-regulation-counts",
+        tags$p(
+          style = "margin-bottom: 0.2rem;",
+          sprintf(
+            "Up genes: %s; ",
+            format(up_count, big.mark = ",", trim = TRUE, scientific = FALSE)
+          ),
+          sprintf(
+            "Down genes: %s",
+            format(down_count, big.mark = ",", trim = TRUE, scientific = FALSE)
+          )
+        )
+      )
     })
 
     contrast_samples <- reactive({
@@ -1349,10 +1391,10 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
 
       empty_tbl <- list(
         display = data.frame(
-          `Gene Symbol` = character(0),
+          `ID` = character(0),
           `Ensembl ID` = character(0),
-          `log2 Fold Change` = character(0),
-          `Adjusted P value` = character(0),
+          `log2 FC` = character(0),
+          `Adj. Pval` = character(0),
           Description = character(0),
           stringsAsFactors = FALSE
         ),
@@ -1491,7 +1533,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
             NA_character_,
             htmltools::htmlEscape(description)
           ),
-          `Gene Symbol` = dplyr::if_else(
+          `ID` = dplyr::if_else(
             !is.na(entrezgene_id) & entrezgene_id != "",
             sprintf(
               "<a href='https://www.ncbi.nlm.nih.gov/gene/%s' target='_blank'>%s</a>",
@@ -1509,8 +1551,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
             ),
             ensembl_display
           ),
-          `log2 Fold Change` = sprintf("%.3f", log2FC),
-          `Adjusted P value` = {
+          `log2 FC` = sprintf("%.3f", log2FC),
+          `Adj. Pval` = {
             formatted <- formatC(Adjusted_P_value, format = "e", digits = 2)
             formatted <- gsub("e([+-])0*(\\d+)", "e\\1\\2", formatted)
             formatted
@@ -1518,10 +1560,10 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
           Description = dplyr::coalesce(description_display, "Not available")
         ) |>
         dplyr::transmute(
-          `Gene Symbol`,
+          `ID`,
           `Ensembl ID`,
-          `log2 Fold Change`,
-          `Adjusted P value`,
+          `log2 FC`,
+          `Adj. Pval`,
           Description
         ) |>
         as.data.frame(stringsAsFactors = FALSE)
@@ -1544,7 +1586,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       DT::datatable(
         data$display,
         options = list(
-          pageLength = 10,
+          pageLength = 100,
           lengthMenu = list(c(10, 25, 50, 100, -1), c("10", "25", "50", "100", "All")),
           scrollX = TRUE,
           order = list(list(2, "desc"))
