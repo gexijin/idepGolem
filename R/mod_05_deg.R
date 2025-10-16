@@ -353,7 +353,12 @@ mod_05_deg_2_ui <- function(id) {
           id = ns("step_2"),
           tabPanel(
             title = "Genes",
-            DT::dataTableOutput(ns("deg_gene_table"))
+            DT::dataTableOutput(ns("deg_gene_table")),
+            tippy::tippy_this(
+              ns("deg_gene_table"),
+              "Click a gene row to open its plot. Cuick column headers to sort.",
+              theme = "light"
+            )
           ),
           tabPanel(
             title = "Heatmap",
