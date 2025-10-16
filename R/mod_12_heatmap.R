@@ -19,6 +19,11 @@ mod_12_heatmap_ui <- function(id) {
           width = "100%",
           brush = ns("ht_brush")
         ),
+        tippy::tippy_this(
+          ns("main_heatmap"),
+          "Tip: Drag over any region of the heatmap to zoom into that selection.",
+          theme = "light"
+        ),
         fluidRow(
           column(
             width = 6,

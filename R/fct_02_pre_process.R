@@ -339,7 +339,9 @@ pre_process <- function(data,
 #' @param plots_color_select Vector of colors for plots
 #'
 #' @export
-#' @return A barplot as a \code{ggplot} object
+#' @return A list containing 'plot' (a ggplot object) and 'warning' (a
+#'  character string with ANOVA warning message, or NULL if no significant
+#'  differences detected)
 #'
 #' @family preprocess functions
 #' @family plots
@@ -358,7 +360,7 @@ total_counts_ggplot <- function(counts_data,
     memo <- paste("(only showing 100 samples)")
   }
   groups <- as.factor(
-    detect_groups(colnames(counts), sample_info)
+    detect_groups(colnames(counts_data), sample_info)
   )
 
   if (ncol(counts) < 31) {
@@ -433,12 +435,12 @@ total_counts_ggplot <- function(counts_data,
 
 #' Creates a barplot of the count of genes by type
 #'
-#' This function takes in either raw count or processed data and creates a
-#' formatted barplot as a \code{ggplot} object that shows the number
-#' of genes mapped to each sample in millions. This function is only used for
-#' read counts data.
+#' This function works with either raw count or normalized expression matrices.
+#' It links the supplied gene metadata to tally how many genes fall into each
+#' gene type and returns the counts as a bar chart.
 #'
-#' @param counts_data Matrix of raw counts from gene expression data
+#' @param counts_data Matrix of expression values used to align genes with
+#'  metadata (values themselves are ignored)
 #' @param sample_info Matrix of experiment design information for grouping
 #'  samples
 #' @param type String designating the type of data to be used in the title.
@@ -457,8 +459,6 @@ gene_counts_ggplot <- function(counts_data,
                                 type = "",
                                 all_gene_info,
                                 plots_color_select) {
-  counts <- counts_data
-
   df <- merge(
     counts_data,
     all_gene_info,
@@ -552,7 +552,7 @@ rRNA_counts_ggplot <- function(counts_data,
     memo <- paste("(only showing 100 samples)")
   }
   groups <- as.factor(
-    detect_groups(colnames(counts), sample_info)
+    detect_groups(colnames(counts_data), sample_info)
   )
 
   if (ncol(counts) < 31) {
@@ -586,6 +586,7 @@ rRNA_counts_ggplot <- function(counts_data,
   df <- df[which(apply(df[, -1], 1, max) > 0.5), ]
 
   plot_data <- reshape2::melt(df, id.vars = "Gene_Type")
+  plot_data$groups <- groups[match(plot_data$variable, colnames(counts_data))]
 
   color_palette <- generate_colors(n = nlevels(as.factor(plot_data$Gene_Type)), palette_name = plots_color_select)
   plot <- ggplot2::ggplot(plot_data, ggplot2::aes(x = variable, y = value, fill = Gene_Type)) +
@@ -618,17 +619,61 @@ rRNA_counts_ggplot <- function(counts_data,
       )
     ) 
 
-  return(plot)
+  # Run ANOVA analysis if groups are defined and less than half of samples
+  warning_message <- NULL
+  n_samples <- length(groups)
+  n_groups <- length(unique(groups))
+  groups_well_defined <- (n_groups > 1) && (n_groups <= 20) && (n_samples >= 2 * n_groups)
+
+  if (groups_well_defined && (n_groups < n_samples / 2)) {
+    significant_types <- c()
+
+    for (gene_type in unique(plot_data$Gene_Type)) {
+      type_data <- plot_data[plot_data$Gene_Type == gene_type, ]
+      type_data <- type_data[!is.na(type_data$groups), ]
+
+      if (nrow(type_data) > 0 && length(unique(type_data$groups)) > 1) {
+        tryCatch({
+          anova_result <- summary(aov(value ~ groups, data = type_data))
+          p_value <- anova_result[[1]][["Pr(>F)"]][1]
+
+          group_means <- aggregate(value ~ groups, data = type_data, mean)
+          max_mean <- max(group_means$value)
+          min_mean <- min(group_means$value)
+          diff_percent <- abs(max_mean - min_mean)
+          # at least 5% difference and p < 0.01
+          if (!is.na(p_value) && p_value < 0.01 && diff_percent > 5) {
+            significant_types <- c(
+              significant_types,
+              paste0(gene_type, " (P = ", format(p_value, scientific = TRUE, digits = 2), ")")
+            )
+          }
+        }, error = function(e) {
+          # Skip if ANOVA fails
+        })
+      }
+    }
+
+    if (length(significant_types) > 0) {
+      warning_message <- paste0(
+        "Significant difference detected for % reads mapped across sample groups for gene type(s): ",
+        paste(significant_types, collapse = ", "),
+        "."
+      )
+    }
+  }
+
+  return(list(plot = plot, warning = warning_message))
 }
 
 
 
-#' Creates a barplot of the count data by chr
+#' Creates a barplot or boxplot of the count data by chr
 #'
 #' This function takes in either raw count or processed data and creates a
-#' formatted barplot as a \code{ggplot} object that shows the number
-#' of genes mapped to each sample in millions. This function is only used for
-#' read counts data.
+#' formatted plot as a \code{ggplot} object that shows the percentage of
+#' reads mapped to each chromosome. By default shows barplot; can use boxplot
+#' with jitter when user selects and sample groups are well-defined.
 #'
 #' @param counts_data Matrix of raw counts from gene expression data
 #' @param sample_info Matrix of experiment design information for grouping
@@ -636,8 +681,13 @@ rRNA_counts_ggplot <- function(counts_data,
 #' @param type String designating the type of data to be used in the title.
 #'  Commonly either "Raw" or "Transformed"
 #' @param all_gene_info Gene info, including chr., gene type etc.
+#' @param plots_color_select Vector of colors for plots (used for boxplot groups)
+#' @param use_boxplot Logical indicating whether to use boxplot (TRUE) or
+#'  barplot (FALSE, default)
 #' @export
-#' @return A barplot as a \code{ggplot} object
+#' @return A list containing 'plot' (a ggplot object) and 'warning' (a
+#'  character string with ANOVA warning message, or NULL if no significant
+#'  differences detected)
 #'
 #' @family preprocess functions
 #' @family plots
@@ -646,7 +696,9 @@ rRNA_counts_ggplot <- function(counts_data,
 chr_counts_ggplot <- function(counts_data,
                                 sample_info,
                                 type = "",
-                                all_gene_info) {
+                                all_gene_info,
+                                plots_color_select = "Set1",
+                                use_boxplot = FALSE) {
   counts <- counts_data
   memo <- ""
 
@@ -726,10 +778,10 @@ chr_counts_ggplot <- function(counts_data,
   colnames(counts_by_chr)[1] = "Chr"
 
   df <- cbind(
-    Chr = counts_by_chr[, 1], 
+    Chr = counts_by_chr[, 1],
     sweep(
-      counts_by_chr[-1], 
-      2, 
+      counts_by_chr[-1],
+      2,
       0.01 * colSums(counts_by_chr[-1]), "/"
     )
   )
@@ -739,10 +791,32 @@ chr_counts_ggplot <- function(counts_data,
 
   plot_data <- reshape2::melt(df, id.vars = "Chr")
 
-  plot <- ggplot2::ggplot(plot_data, ggplot2::aes(x = variable, y = value)) +
-    ggplot2::geom_bar(stat = "identity") +
-    ggplot2::labs(x = NULL, y = "% Reads", title = "% Reads by Chromosomes") +
-    ggplot2::scale_fill_brewer(palette = "Set1")
+  # Determine if groups are well-defined
+  # Only use boxplot if user requested it AND groups are well-defined
+  n_samples <- ncol(counts)
+  n_groups <- length(unique(groups))
+  groups_well_defined <- (n_groups > 1) && (n_groups <= 20) && (n_samples >= 2 * n_groups)
+  show_boxplot <- use_boxplot && groups_well_defined
+
+  if (show_boxplot) {
+    # Add group information to plot_data
+    plot_data$groups <- groups[match(plot_data$variable, colnames(counts))]
+
+    # Generate color palette for groups
+    color_palette <- generate_colors(n = n_groups, palette_name = plots_color_select)
+
+    plot <- ggplot2::ggplot(plot_data, ggplot2::aes(x = groups, y = value, fill = groups)) +
+      ggplot2::geom_boxplot(outlier.shape = NA) +
+      ggplot2::geom_jitter(width = 0.2, height = 0, alpha = 0.6, size = 2) +
+      ggplot2::labs(x = NULL, y = "% Reads", title = "% Reads by Chromosomes") +
+      ggplot2::scale_fill_manual(values = color_palette)
+  } else {
+    # Use original barplot
+    plot <- ggplot2::ggplot(plot_data, ggplot2::aes(x = variable, y = value)) +
+      ggplot2::geom_bar(stat = "identity") +
+      ggplot2::labs(x = NULL, y = "% Reads", title = "% Reads by Chromosomes") +
+      ggplot2::scale_fill_brewer(palette = "Set1")
+  }
 
   if(ncol(counts_data) < 10) {
     plot <- plot + ggplot2::facet_wrap (. ~ Chr)
@@ -754,8 +828,11 @@ chr_counts_ggplot <- function(counts_data,
     plot <- plot + ggplot2::facet_wrap (. ~ Chr, ncol = 1)
   }
 
+  if (!show_boxplot) {
+    plot <- plot + ggplot2::geom_bar(stat = "identity")
+  }
+
   plot <- plot +
-    ggplot2::geom_bar(stat = "identity") +
     ggplot2::theme_light() +
     ggplot2::theme(
       legend.position = "right",
@@ -782,19 +859,66 @@ chr_counts_ggplot <- function(counts_data,
         color = "black",
         face = "bold"
         )
-    ) 
+    )
 
-  return(plot)
+  # Run ANOVA analysis if groups are defined and less than half of samples
+  warning_message <- NULL
+  if (groups_well_defined && (n_groups < n_samples / 2)) {
+    # Perform ANOVA for each chromosome
+    significant_chrs <- c()
+
+    for (chr in unique(df$Chr)) {
+      chr_data <- df[df$Chr == chr, -1]  # Exclude Chr column
+      chr_values <- as.numeric(chr_data)
+      chr_groups <- rep(groups, each = 1)
+
+      # Only run ANOVA if we have enough data
+      if (length(chr_values) > 0 && length(unique(chr_groups)) > 1) {
+        tryCatch({
+          anova_result <- summary(aov(chr_values ~ chr_groups))
+          p_value <- anova_result[[1]][["Pr(>F)"]][1]
+
+          # Calculate group means
+          group_means <- aggregate(chr_values, by = list(chr_groups), mean)
+          max_mean <- max(group_means$x)
+          min_mean <- min(group_means$x)
+          diff_expression <- abs(max_mean - min_mean)
+
+          # Check if significant and difference > 5 units (% reads)
+          if (!is.na(p_value) && p_value < 0.01 && diff_expression > 5) {
+            significant_chrs <- c(
+              significant_chrs,
+                paste0(chr, " (P = ", format(p_value, scientific = TRUE, digits = 2), ")")
+            )
+          }
+        }, error = function(e) {
+          # Skip if ANOVA fails
+        })
+      }
+    }
+
+    # Build warning message if significant chromosomes found
+    if (length(significant_chrs) > 0) {
+      warning_message <- paste0(
+        "Sgnificant difference detected for % reads mapped ",
+        "to chromosome(s): ",
+        paste(significant_chrs, collapse = ", "),
+        "."
+      )
+    }
+  }
+
+  return(list(plot = plot, warning = warning_message))
 }
 
 
 
-#' Creates a barplot of the normalized data by chr
+#' Creates a barplot or boxplot of the normalized data by chr
 #'
 #' This function takes in either raw count or processed data and creates a
-#' formatted barplot as a \code{ggplot} object that shows the number
-#' of genes mapped to each sample in millions. This function is only used for
-#' read counts data.
+#' formatted plot as a \code{ggplot} object that shows the 75th percentile of
+#' normalized expression by chromosome. By default shows barplot; can use boxplot
+#' with jitter when user selects and sample groups are well-defined.
 #'
 #' @param counts_data Matrix of raw counts from gene expression data
 #' @param sample_info Matrix of experiment design information for grouping
@@ -802,8 +926,13 @@ chr_counts_ggplot <- function(counts_data,
 #' @param type String designating the type of data to be used in the title.
 #'  Commonly either "Raw" or "Transformed"
 #' @param all_gene_info Gene info, including chr., gene type etc.
+#' @param plots_color_select Vector of colors for plots (used for boxplot groups)
+#' @param use_boxplot Logical indicating whether to use boxplot (TRUE) or
+#'  barplot (FALSE, default)
 #' @export
-#' @return A barplot as a \code{ggplot} object
+#' @return A list containing 'plot' (a ggplot object) and 'warning' (a
+#'  character string with ANOVA warning message, or NULL if no significant
+#'  differences detected)
 #'
 #' @family preprocess functions
 #' @family plots
@@ -812,7 +941,9 @@ chr_counts_ggplot <- function(counts_data,
 chr_normalized_ggplot <- function(counts_data,
                                 sample_info,
                                 type = "",
-                                all_gene_info) {
+                                all_gene_info,
+                                plots_color_select = "Set1",
+                                use_boxplot = FALSE) {
   counts <- counts_data
   memo <- ""
 
@@ -907,10 +1038,32 @@ chr_normalized_ggplot <- function(counts_data,
 
   plot_data <- reshape2::melt(df, id.vars = "Chr")
 
-  plot <- ggplot2::ggplot(plot_data, ggplot2::aes(x = variable, y = value)) +
-    ggplot2::geom_bar(stat = "identity") +
-    ggplot2::labs(x = NULL, y = "Normalized Expression", title = "75th percentile of normalized expression by chromosomes") +
-    ggplot2::scale_fill_brewer(palette = "Set1")
+  # Determine if groups are well-defined
+  # Only use boxplot if user requested it AND groups are well-defined
+  n_samples <- ncol(counts)
+  n_groups <- length(unique(groups))
+  groups_well_defined <- (n_groups > 1) && (n_groups <= 20) && (n_samples >= 2 * n_groups)
+  show_boxplot <- use_boxplot && groups_well_defined
+
+  if (show_boxplot) {
+    # Add group information to plot_data
+    plot_data$groups <- groups[match(plot_data$variable, colnames(counts))]
+
+    # Generate color palette for groups
+    color_palette <- generate_colors(n = n_groups, palette_name = plots_color_select)
+
+    plot <- ggplot2::ggplot(plot_data, ggplot2::aes(x = groups, y = value, fill = groups)) +
+      ggplot2::geom_boxplot(outlier.shape = NA) +
+      ggplot2::geom_jitter(width = 0.2, height = 0, alpha = 0.6, size = 2) +
+      ggplot2::labs(x = NULL, y = "Normalized Expression", title = "75th percentile of normalized expression by chromosomes") +
+      ggplot2::scale_fill_manual(values = color_palette)
+  } else {
+    # Use original barplot
+    plot <- ggplot2::ggplot(plot_data, ggplot2::aes(x = variable, y = value)) +
+      ggplot2::geom_bar(stat = "identity") +
+      ggplot2::labs(x = NULL, y = "Normalized Expression", title = "75th percentile of normalized expression by chromosomes") +
+      ggplot2::scale_fill_brewer(palette = "Set1")
+  }
 
   if(ncol(counts_data) < 10) {
     plot <- plot + ggplot2::facet_wrap (. ~ Chr)
@@ -922,8 +1075,11 @@ chr_normalized_ggplot <- function(counts_data,
     plot <- plot + ggplot2::facet_wrap (. ~ Chr, ncol = 1)
   }
 
+  if (!show_boxplot) {
+    plot <- plot + ggplot2::geom_bar(stat = "identity")
+  }
+
   plot <- plot +
-    ggplot2::geom_bar(stat = "identity") +
     ggplot2::theme_light() +
     ggplot2::theme(
       legend.position = "right",
@@ -952,7 +1108,54 @@ chr_normalized_ggplot <- function(counts_data,
         )
     )
 
-  return(plot)
+  # Run ANOVA analysis if groups are defined and less than half of samples
+  warning_message <- NULL
+  if (groups_well_defined && (n_groups < n_samples / 2)) {
+    # Perform ANOVA for each chromosome
+    significant_chrs <- c()
+
+    for (chr in unique(df$Chr)) {
+      chr_data <- df[df$Chr == chr, -1]  # Exclude Chr column
+      chr_values <- as.numeric(chr_data)
+      chr_groups <- rep(groups, each = 1)
+
+      # Only run ANOVA if we have enough data
+      if (length(chr_values) > 0 && length(unique(chr_groups)) > 1) {
+        tryCatch({
+          anova_result <- summary(aov(chr_values ~ chr_groups))
+          p_value <- anova_result[[1]][["Pr(>F)"]][1]
+
+          # Calculate group means
+          group_means <- aggregate(chr_values, by = list(chr_groups), mean)
+          max_mean <- max(group_means$x)
+          min_mean <- min(group_means$x)
+          diff_expression <- abs(max_mean - min_mean)
+
+          # Check if significant and difference > 0.5 units
+          if (!is.na(p_value) && p_value < 0.01 && diff_expression > 0.5) {
+            significant_chrs <- c(
+              significant_chrs,
+                paste0(chr, " (P = ", format(p_value, scientific = TRUE, digits = 2), ")")
+            )
+          }
+        }, error = function(e) {
+          # Skip if ANOVA fails
+        })
+      }
+    }
+
+    # Build warning message if significant chromosomes found
+    if (length(significant_chrs) > 0) {
+      warning_message <- paste0(
+        "Significant difference detected expression levels among genes on chromosome(s): ",
+        "on chromosome(s): ",
+        paste(significant_chrs, collapse = ", "),
+        "."
+      )
+    }
+  }
+
+  return(list(plot = plot, warning = warning_message))
 }
 
 

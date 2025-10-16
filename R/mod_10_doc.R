@@ -13,6 +13,7 @@ mod_10_doc_ui <- function(id) {
     title = icon("info"),
     value = "Doc",
     fluidPage(
+      uiOutput(ns("update_message")),
       h3(
         "If you find iDEP helpful, please ",
         a(
@@ -225,6 +226,52 @@ mod_10_doc_ui <- function(id) {
 mod_10_doc_server <- function(id, pre_process, idep_data, tab) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    version_checked <- reactiveVal(FALSE)
+    update_info <- reactiveVal(NULL)
+
+    observeEvent(tab(), {
+      if (!identical(tab(), "Doc")) {
+        return(NULL)
+      }
+
+      if (!version_checked()) {
+        version_checked(TRUE)
+        check_version_update()
+      }
+
+      if (exists(".idep_update_available", envir = .GlobalEnv)) {
+        info <- get(".idep_update_available", envir = .GlobalEnv)
+        is_newer <- tryCatch({
+          current <- utils::packageVersion("idepGolem")
+          latest <- tryCatch(numeric_version(info$version), error = function(e) NULL)
+          !is.null(latest) && latest > current
+        }, error = function(e) FALSE)
+
+        if (is_newer) {
+          update_info(info)
+        } else {
+          update_info(NULL)
+        }
+      } else {
+        update_info(NULL)
+      }
+    }, ignoreNULL = TRUE)
+
+    output$update_message <- renderUI({
+      info <- update_info()
+      if (is.null(info)) {
+        return(NULL)
+      }
+
+      tags$div(
+        class = "alert alert-warning",
+        role = "alert",
+        sprintf("Please consider update to a new version iDEP %s.", info$version),
+        tags$br(),
+        a("View release notes", href = info$url, target = "_blank")
+      )
+    })
 
     output$session_info <- renderUI({
       i <- c("<br><h4>R session info: </h4>")

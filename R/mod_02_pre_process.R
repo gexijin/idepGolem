@@ -473,6 +473,7 @@ mod_02_pre_process_ui <- function(id) {
                     p("Higher rRNA content may indicuate ineffective rRNA-removal.")
                   )
                 ),
+                uiOutput(ns("gene_type_warning")),
                 br(),
                 hr(),
                 plotOutput(
@@ -483,17 +484,22 @@ mod_02_pre_process_ui <- function(id) {
                 br(),
                 fluidRow(
                   column(
-                    2, 
+                    2,
                     ottoPlots::mod_download_figure_ui(
                       id = ns("dl_chr_counts_gg")
-                    ),
+                    )
                   ),
                   column(
-                    10,
+                    3,
+                    uiOutput(ns("chr_boxplot_checkbox"))
+                  ),
+                  column(
+                    7,
                     align = "right",
-                    p("Higher bar means more reads map to this chromosome in this sample.")
+                    p("% reads mapped to a chromosome.")
                   )
                 ),
+                uiOutput(ns("chr_counts_warning")),
                 br(),
                 hr(),
                 ns = ns
@@ -507,17 +513,22 @@ mod_02_pre_process_ui <- function(id) {
               br(),
               fluidRow(
                 column(
-                  2, 
+                  2,
                   ottoPlots::mod_download_figure_ui(
                     id = ns("dl_chr_normalized_gg")
                   )
                 ),
                 column(
-                  10,
+                  3,
+                  uiOutput(ns("chr_normalized_boxplot_checkbox"))
+                ),
+                column(
+                  7,
                   align = "right",
-                  p("A tall bar means genes on this chromosome are expressed at higher levels in a sample.")
+                  p("75th percentile of normalized expression by chromosomes.")
                 )
               ),
+              uiOutput(ns("chr_normalized_warning")),
             ns = ns
             )
           ),
@@ -614,7 +625,7 @@ mod_02_pre_process_ui <- function(id) {
               ),
               downloadButton(
                 outputId = ns("tukey_download"),
-                label = "TukeyHSD Results"
+                label = "TukeyHSD"
               ),
               uiOutput(ns("signif_text"))
             )
@@ -824,7 +835,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
 
     # gene type barplot ------------
     gene_counts <- reactive({
-      req(!is.null(processed_data()$raw_counts))
+      req(!is.null(load_data$converted_data()))
+      req(!is.null(load_data$all_gene_info()))
       shinybusy::show_modal_spinner(
         spin = "orbit",
         text = "Plotting counts by gene type",
@@ -860,30 +872,49 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     )
 
     # gene type barplot ------------
-    rRNA_counts <- reactive({
+    rRNA_counts_result <- reactive({
       req(!is.null(processed_data()$raw_counts))
       shinybusy::show_modal_spinner(
         spin = "orbit",
         text = "Plotting counts by gene type",
         color = "#000000"
       )
-      p <- rRNA_counts_ggplot(
+      result <- rRNA_counts_ggplot(
         counts_data = load_data$converted_data(),
         sample_info = load_data$sample_info(),
         type = "Raw",
         all_gene_info = load_data$all_gene_info(),
         plots_color_select = load_data$plots_color_select()
       )
+      shinybusy::remove_modal_spinner()
+      return(result)
+    })
+
+    rRNA_counts <- reactive({
+      req(!is.null(rRNA_counts_result()))
+      result <- rRNA_counts_result()
       p <- refine_ggplot2(
-        p = p,
+        p = result$plot,
         gridline = load_data$plot_grid_lines(),
         ggplot2_theme = load_data$ggplot2_theme()
       )
-      shinybusy::remove_modal_spinner()
       return(p)
     })
     output$rRNA_counts_gg <- renderPlot({
       print(rRNA_counts())
+    })
+
+    output$gene_type_warning <- renderUI({
+      req(!is.null(rRNA_counts_result()))
+      result <- rRNA_counts_result()
+
+      if (!is.null(result$warning)) {
+        tags$div(
+          style = "padding: 10px; margin: 10px 0; background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; color: #856404;",
+          tags$strong("\u26A0 Warning: "),
+          result$warning
+        )
+      }
     })
 
     dl_rRNA_counts_gg <- ottoPlots::mod_download_figure_server(
@@ -895,32 +926,77 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       label = ""
     )
 
+    # Dynamic checkbox for chr counts plot ------------
+    output$chr_boxplot_checkbox <- renderUI({
+      req(!is.null(load_data$converted_data()))
+
+      # Determine default value based on number of samples
+      n_samples <- ncol(load_data$converted_data())
+      default_value <- n_samples > 50
+
+      tagList(
+        checkboxInput(
+          inputId = ns("chr_use_boxplot"),
+          label = "Use boxplot",
+          value = default_value
+        ),
+        tippy::tippy_this(
+          ns("chr_use_boxplot"),
+          "Show boxplot grouped by sample groups instead of barplot.",
+          theme = "light"
+        )
+      )
+    })
+
     # chr counts barplot ------------
-    chr_counts <- reactive({
+    chr_counts_result <- reactive({
       req(!is.null(processed_data()$raw_counts))
+      req(!is.null(input$chr_use_boxplot))
       shinybusy::show_modal_spinner(
         spin = "orbit",
         text = "Plotting counts by Chromosome",
         color = "#000000"
       )
-      p <- chr_counts_ggplot(
+      result <- chr_counts_ggplot(
         counts_data = load_data$converted_data(),
         sample_info = load_data$sample_info(),
         type = "Raw",
-        all_gene_info = load_data$all_gene_info()
+        all_gene_info = load_data$all_gene_info(),
+        plots_color_select = load_data$plots_color_select(),
+        use_boxplot = input$chr_use_boxplot
       )
+      shinybusy::remove_modal_spinner()
+      return(result)
+    })
+
+    chr_counts <- reactive({
+      req(!is.null(chr_counts_result()))
+      result <- chr_counts_result()
       p <- refine_ggplot2(
-        p = p,
+        p = result$plot,
         gridline = load_data$plot_grid_lines(),
         ggplot2_theme = load_data$ggplot2_theme()
       )
-      shinybusy::remove_modal_spinner()
       return(p)
     })
     output$chr_counts_gg <- renderPlot({
       print(chr_counts())
     },
     height = 2000)
+
+    # chr counts warning message output
+    output$chr_counts_warning <- renderUI({
+      req(!is.null(chr_counts_result()))
+      result <- chr_counts_result()
+
+      if (!is.null(result$warning)) {
+        tags$div(
+          style = "padding: 10px; margin: 10px 0; background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; color: #856404;",
+          tags$strong("\u26A0 Warning: "),
+          result$warning
+        )
+      }
+    })
 
     dl_chr_counts_gg <- ottoPlots::mod_download_figure_server(
       id = "dl_chr_counts_gg",
@@ -931,33 +1007,76 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       label = ""
     )
 
+    # Dynamic checkbox for chr normalized plot ------------
+    output$chr_normalized_boxplot_checkbox <- renderUI({
+      req(!is.null(processed_data()$data))
+
+      # Determine default value based on number of samples
+      n_samples <- ncol(processed_data()$data)
+      default_value <- n_samples > 50
+
+      tagList(
+        checkboxInput(
+          inputId = ns("chr_normalized_use_boxplot"),
+          label = "Use boxplot",
+          value = default_value
+        ),
+        tippy::tippy_this(
+          ns("chr_normalized_use_boxplot"),
+          "Show boxplot grouped by sample groups instead of barplot.",
+          theme = "light"
+        )
+      )
+    })
 
     # chr normalized barplot ------------
-    chr_normalized <- reactive({
+    chr_normalized_result <- reactive({
       req(!is.null(processed_data()$data))
+      req(!is.null(input$chr_normalized_use_boxplot))
       shinybusy::show_modal_spinner(
         spin = "orbit",
-        text = "Pre-Processing Data",
+        text = "Plotting normalized expression by Chromosome",
         color = "#000000"
       )
-      p <- chr_normalized_ggplot(
+      result <- chr_normalized_ggplot(
         counts_data = processed_data()$data,
         sample_info = load_data$sample_info(),
         type = "Raw",
-        all_gene_info = load_data$all_gene_info()
+        all_gene_info = load_data$all_gene_info(),
+        plots_color_select = load_data$plots_color_select(),
+        use_boxplot = input$chr_normalized_use_boxplot
       )
+      shinybusy::remove_modal_spinner()
+      return(result)
+    })
+
+    chr_normalized <- reactive({
+      req(!is.null(chr_normalized_result()))
+      result <- chr_normalized_result()
       p <- refine_ggplot2(
-        p = p,
+        p = result$plot,
         gridline = load_data$plot_grid_lines(),
         ggplot2_theme = load_data$ggplot2_theme()
       )
-      shinybusy::remove_modal_spinner()
       return(p)
     })
     output$chr_normalized_gg <- renderPlot({
       print(chr_normalized())
     },
     height = 2000)
+
+    output$chr_normalized_warning <- renderUI({
+      req(!is.null(chr_normalized_result()))
+      result <- chr_normalized_result()
+
+      if (!is.null(result$warning)) {
+        tags$div(
+          style = "padding: 10px; margin: 10px 0; background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; color: #856404;",
+          tags$strong("\u26A0 Warning: "),
+          result$warning
+        )
+      }
+    })
 
     dl_chr_counts_gg <- ottoPlots::mod_download_figure_server(
       id = "dl_chr_normalized_gg",

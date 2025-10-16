@@ -10,9 +10,6 @@ app_server <- function(input, output, session) {
   options(warn = -1) # turn off warning
   pdf(file = NULL)
 
-  # Check for major/minor version updates on startup
-  check_version_update()
-
   # define where database is located
   db_ver <<- "data113"
   db_url <<- "http://bioinformatics.sdstate.edu/data/"

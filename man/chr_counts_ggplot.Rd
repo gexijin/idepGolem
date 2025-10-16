@@ -2,9 +2,16 @@
 % Please edit documentation in R/fct_02_pre_process.R
 \name{chr_counts_ggplot}
 \alias{chr_counts_ggplot}
-\title{Creates a barplot of the count data by chr}
+\title{Creates a barplot or boxplot of the count data by chr}
 \usage{
-chr_counts_ggplot(counts_data, sample_info, type = "", all_gene_info)
+chr_counts_ggplot(
+  counts_data,
+  sample_info,
+  type = "",
+  all_gene_info,
+  plots_color_select = "Set1",
+  use_boxplot = FALSE
+)
 }
 \arguments{
 \item{counts_data}{Matrix of raw counts from gene expression data}
@@ -16,15 +23,22 @@ samples}
 Commonly either "Raw" or "Transformed"}
 
 \item{all_gene_info}{Gene info, including chr., gene type etc.}
+
+\item{plots_color_select}{Vector of colors for plots (used for boxplot groups)}
+
+\item{use_boxplot}{Logical indicating whether to use boxplot (TRUE) or
+barplot (FALSE, default)}
 }
 \value{
-A barplot as a \code{ggplot} object
+A list containing 'plot' (a ggplot object) and 'warning' (a
+ character string with ANOVA warning message, or NULL if no significant
+ differences detected)
 }
 \description{
 This function takes in either raw count or processed data and creates a
-formatted barplot as a \code{ggplot} object that shows the number
-of genes mapped to each sample in millions. This function is only used for
-read counts data.
+formatted plot as a \code{ggplot} object that shows the percentage of
+reads mapped to each chromosome. By default shows barplot; can use boxplot
+with jitter when user selects and sample groups are well-defined.
 }
 \seealso{
 Other preprocess functions: 

@@ -13,7 +13,8 @@ gene_counts_ggplot(
 )
 }
 \arguments{
-\item{counts_data}{Matrix of raw counts from gene expression data}
+\item{counts_data}{Matrix of expression values used to align genes with
+metadata (values themselves are ignored)}
 
 \item{sample_info}{Matrix of experiment design information for grouping
 samples}
@@ -29,10 +30,9 @@ Commonly either "Raw" or "Transformed"}
 A barplot as a \code{ggplot} object
 }
 \description{
-This function takes in either raw count or processed data and creates a
-formatted barplot as a \code{ggplot} object that shows the number
-of genes mapped to each sample in millions. This function is only used for
-read counts data.
+This function works with either raw count or normalized expression matrices.
+It links the supplied gene metadata to tally how many genes fall into each
+gene type and returns the counts as a bar chart.
 }
 \seealso{
 Other preprocess functions: 
