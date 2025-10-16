@@ -655,20 +655,47 @@ get_gene_info <- function(converted,
 #' Checks GitHub releases for newer major or minor versions.
 #' Only notifies for changes in first or second version digits (e.g., 2.20 -> 2.21 or 3.0).
 #' Fails silently if GitHub is unreachable or no release info exists.
+#' Stores result in global environment for use by sessions.
 #'
-#' @return NULL (displays notification as side effect if update available)
+#' @return NULL (stores version info in .GlobalEnv as side effect)
 #' @noRd
 check_version_update <- function() {
   tryCatch(
     {
-      # Get current version from package
-      current_ver <- as.character(packageVersion("idepGolem"))
+      # Get current version from package, fall back to DESCRIPTION if needed
+      current_ver <- tryCatch(
+        as.character(utils::packageVersion("idepGolem")),
+        error = function(e) {
+          desc_path <- system.file("DESCRIPTION", package = "idepGolem")
+          if (!nzchar(desc_path) && file.exists("DESCRIPTION")) {
+            desc_path <- "DESCRIPTION"
+          }
+          if (nzchar(desc_path) && file.exists(desc_path)) {
+            desc <- read.dcf(desc_path)
+            if ("Version" %in% colnames(desc)) {
+              return(desc[1, "Version"])
+            }
+          }
+          stop(e)
+        }
+      )
 
       # Fetch latest release from GitHub API using base R
       github_url <- "https://api.github.com/repos/gexijin/idepGolem/releases/latest"
-      con <- url(github_url)
-      response_text <- readLines(con, warn = FALSE)
-      close(con)
+      request_timeout <- getOption("idep.version_check_timeout", 4)
+      response_text <- R.utils::withTimeout(
+        {
+          local({
+            con <- url(github_url, open = "rb")
+            on.exit(close(con), add = TRUE)
+            readLines(con, warn = FALSE)
+          })
+        },
+        timeout = request_timeout,
+        onTimeout = "error"
+      )
+
+      response_text <- paste(response_text, collapse = "\n")
 
       # Parse JSON manually for tag_name and html_url
       tag_match <- regexpr('"tag_name"\\s*:\\s*"([^"]+)"', response_text, perl = TRUE)
@@ -678,15 +705,11 @@ check_version_update <- function() {
         return(invisible(NULL))
       }
 
-      # Extract values using capture groups
-      tag_line <- response_text[which(tag_match != -1)[1]]
-      url_line <- response_text[which(url_match != -1)[1]]
+      latest_tag <- sub('"tag_name"\\s*:\\s*"([^"]+)".*', '\\1', regmatches(response_text, tag_match))
+      release_url <- sub('"html_url"\\s*:\\s*"([^"]+)".*', '\\1', regmatches(response_text, url_match))
 
-      latest_tag <- sub('.*"tag_name"\\s*:\\s*"([^"]+)".*', '\\1', tag_line)
-      release_url <- sub('.*"html_url"\\s*:\\s*"([^"]+)".*', '\\1', url_line)
-
-      # Remove 'v' prefix if present
-      latest_tag <- gsub("^v", "", latest_tag)
+      # Remove 'v' or 'V' prefix if present
+      latest_tag <- gsub("^[vV]", "", latest_tag)
 
       # Parse versions into components
       current_parts <- as.numeric(strsplit(current_ver, "\\.")[[1]])
@@ -702,17 +725,11 @@ check_version_update <- function() {
       minor_update <- latest_parts[1] == current_parts[1] && latest_parts[2] > current_parts[2]
 
       if (major_update || minor_update) {
-        message_html <- sprintf(
-          'New version <strong>%s</strong> is available! <a href="%s" target="_blank">View release</a>',
-          latest_tag,
-          release_url
-        )
-
-        showNotification(
-          ui = HTML(message_html),
-          type = "warning",
-          duration = NULL # Stay until dismissed
-        )
+        # Store version info globally for sessions to display
+        assign(".idep_update_available", list(
+          version = latest_tag,
+          url = release_url
+        ), envir = .GlobalEnv)
       }
     },
     error = function(e) {
@@ -720,4 +737,30 @@ check_version_update <- function() {
       invisible(NULL)
     }
   )
+}
+
+#' Display Version Update Notification
+#'
+#' Shows notification to user if an update is available.
+#' Called once per session.
+#'
+#' @param session Shiny session object
+#' @return NULL (displays notification as side effect if update available)
+#' @noRd
+show_version_notification <- function(session) {
+  if (exists(".idep_update_available", envir = .GlobalEnv)) {
+    update_info <- get(".idep_update_available", envir = .GlobalEnv)
+    message_html <- sprintf(
+      'New version <strong>%s</strong> is available! <a href="%s" target="_blank">View release</a>',
+      update_info$version,
+      update_info$url
+    )
+
+    showNotification(
+      ui = HTML(message_html),
+      type = "warning",
+      duration = NULL, # Stay until dismissed
+      session = session
+    )
+  }
 }
