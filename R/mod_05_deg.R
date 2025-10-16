@@ -265,7 +265,7 @@ mod_05_deg_2_ui <- function(id) {
           condition = "input.step_2 == 'Genes'",
           selectInput(
             inputId = ns("gene_direction_filter"),
-            label = "Show:",
+            label = NULL,
             choices = c("Up-regulated genes", "Down-regulated genes"),
             selected = "Up-regulated genes",
             selectize = FALSE
@@ -275,7 +275,6 @@ mod_05_deg_2_ui <- function(id) {
             "Filter the gene table to view only upregulated or downregulated genes.",
             theme = "light"
           ),
-          p("Click on each gene!"),
           ns = ns
         ),
         conditionalPanel("input.step_2 == 'Heatmap'",
@@ -1601,7 +1600,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
             formatted <- gsub("e([+-])0*(\\d+)", "e\\1\\2", formatted)
             formatted
           },
-          Description = dplyr::coalesce(description_display, "Not available")
+          Description = dplyr::coalesce(description_display, "")
         ) |>
         dplyr::transmute(
           `ID`,
@@ -1636,7 +1635,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         data$display,
         options = list(
           pageLength = 100,
-          lengthMenu = list(c(10, 25, 50, 100, -1), c("10", "25", "50", "100", "All")),
+          lengthChange = FALSE,
+          dom = "frtip",
           scrollX = TRUE,
           order = list(list(2, order_dir))
         ),
@@ -1723,15 +1723,77 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       )
       sample_groups[is.na(sample_groups) | sample_groups == ""] <- sample_names[is.na(sample_groups) | sample_groups == ""]
 
+      raw_data_values <- rep(NA_real_, length(sample_names))
+      raw_data_matrix <- NULL
+      if (!is.null(pre_process$raw_counts())) {
+        raw_data_matrix <- pre_process$raw_counts()
+      } else if (!is.null(load_data$converted_data())) {
+        raw_data_matrix <- load_data$converted_data()
+      }
+      if (!is.null(raw_data_matrix)) {
+        if (inherits(raw_data_matrix, "SummarizedExperiment")) {
+          if (requireNamespace("SummarizedExperiment", quietly = TRUE)) {
+            raw_data_matrix <- SummarizedExperiment::assay(raw_data_matrix)
+          } else {
+            raw_data_matrix <- NULL
+          }
+        }
+      }
+      if (!is.null(raw_data_matrix)) {
+        if (is.data.frame(raw_data_matrix)) {
+          raw_data_matrix <- as.matrix(raw_data_matrix)
+        }
+        if (is.matrix(raw_data_matrix)) {
+          available_samples <- intersect(sample_names, colnames(raw_data_matrix))
+          if (length(available_samples) > 0) {
+            candidate_values <- as.character(c(meta$ensembl_ID, meta$symbol, gene_id))
+            raw_data_candidates <- unique(Filter(
+              function(x) !is.null(x) && !is.na(x) && nzchar(x),
+              candidate_values
+            ))
+            for (candidate in raw_data_candidates) {
+              if (candidate %in% rownames(raw_data_matrix)) {
+                raw_vec <- as.numeric(raw_data_matrix[candidate, available_samples, drop = TRUE])
+                match_idx <- match(available_samples, sample_names)
+                raw_data_values[match_idx] <- raw_vec
+                break
+              }
+            }
+          }
+        }
+      }
+
       data.frame(
         sample = sample_names,
         expression = expr_values,
         group = factor(sample_groups, levels = unique(sample_groups)),
+        raw_data = raw_data_values,
         stringsAsFactors = FALSE
       )
     })
 
     selected_gene_plot_data <- reactiveVal(NULL)
+
+    genes_tab_notice_shown <- reactiveVal(FALSE)
+
+    observeEvent(list(input$step_2, tab()), {
+      req(!is.null(input$step_2))
+      if (!identical(tab(), "DEG")) {
+        return()
+      }
+      if (identical(input$step_2, "Genes") && !genes_tab_notice_shown()) {
+        showNotification(
+          ui = tags$div(
+            tags$strong("Tip:"),
+            " Click on a row for a gene plot."
+          ),
+          type = "message",
+          duration = 8,
+          closeButton = TRUE
+        )
+        genes_tab_notice_shown(TRUE)
+      }
+    }, ignoreNULL = TRUE)
 
     observeEvent(input$deg_gene_table_rows_selected, {
       sel <- input$deg_gene_table_rows_selected
@@ -1752,9 +1814,17 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         return()
       }
 
-      display_name <- meta$symbol
-      if (is.null(display_name) || is.na(display_name) || display_name == "") {
-        display_name <- meta$ensembl_ID
+      symbol_value <- meta$symbol
+      if (is.null(symbol_value) || is.na(symbol_value) || symbol_value == "") {
+        symbol_value <- meta$ensembl_ID
+      }
+      description_value <- meta$description
+      if (is.null(description_value) || is.na(description_value)) {
+        description_value <- ""
+      }
+      display_name <- symbol_value
+      if (nzchar(description_value)) {
+        display_name <- paste0(symbol_value, ": ", description_value)
       }
 
       selected_gene_plot_data(
@@ -1766,38 +1836,234 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
 
       showModal(
         modalDialog(
-          title = paste0(display_name, " Expression"),
-          plotOutput(ns("deg_gene_modal_plot")),
+          tagList(
+            plotOutput(ns("deg_gene_modal_plot")),
+            fluidRow(
+              style = "margin-top: 12px;",
+              column(
+                width = 2,
+                ottoPlots::mod_download_figure_ui(ns("download_gene_plot"))
+              ),
+              column(
+                width = 5,
+                selectInput(
+                  inputId = ns("deg_gene_modal_data_type"),
+                  label = NULL,
+                  choices = c(
+                    "Raw data" = "raw",
+                    "Transformed expression" = "normalized"
+                  ),
+                  selected = "raw",
+                  selectize = FALSE
+                )
+              ),
+              column(
+                width = 5,
+                selectInput(
+                  inputId = ns("deg_gene_modal_plot_type"),
+                  label = NULL,
+                  choices = c(
+                    "Sample bar plot" = "bar",
+                    "Group boxplot" = "box",
+                    "Group violin" = "violin"
+                  ),
+                  selected = "bar",
+                  selectize = FALSE
+                )
+              )
+            )
+          ),
           easyClose = TRUE,
           footer = modalButton("Close"),
           size = "l"
         )
       )
+      updateSelectInput(
+        session = session,
+        inputId = "deg_gene_modal_plot_type",
+        selected = "bar"
+      )
+      updateSelectInput(
+        session = session,
+        inputId = "deg_gene_modal_data_type",
+        selected = "raw"
+      )
     })
 
-    output$deg_gene_modal_plot <- renderPlot({
+    gene_modal_plot <- reactive({
       plot_data <- selected_gene_plot_data()
       req(plot_data)
 
       expr_df <- plot_data$data
       display_name <- plot_data$display_name
 
-      p <- ggplot2::ggplot(
-        expr_df,
-        ggplot2::aes(x = group, y = expression, fill = group)
-      ) +
-        ggplot2::geom_boxplot(alpha = 0.6, outlier.shape = NA) +
-        ggplot2::geom_jitter(width = 0.15, size = 2, alpha = 0.8) +
-        ggplot2::labs(
-          title = paste0(display_name, " normalized expression"),
-          x = NULL,
-          y = "Normalized expression"
-        ) +
-        ggplot2::theme_minimal() +
+      if ("raw_data" %in% colnames(expr_df)) {
+        expr_df <- expr_df[!(
+          is.na(expr_df$expression) &
+            is.na(expr_df$raw_data)
+        ), , drop = FALSE]
+      } else {
+        expr_df <- expr_df[!is.na(expr_df$expression), , drop = FALSE]
+      }
+      req(nrow(expr_df) > 0)
+
+      expr_df$group <- droplevels(expr_df$group)
+      palette_name <- load_data$plots_color_select()
+      if (is.null(palette_name) || length(palette_name) == 0) {
+        palette_name <- "Set1"
+      }
+      group_levels <- levels(expr_df$group)
+      if (is.null(group_levels)) {
+        group_levels <- unique(expr_df$group)
+        expr_df$group <- factor(expr_df$group, levels = group_levels)
+      }
+      color_palette <- generate_colors(
+        n = max(1, length(group_levels)),
+        palette_name = palette_name
+      )
+
+      base_theme <- ggplot2::theme_light() +
         ggplot2::theme(
-          legend.position = "none",
-          plot.title = ggplot2::element_text(face = "bold")
+          plot.title = ggplot2::element_text(size = 16, face = "bold", hjust = 0.5),
+          axis.title.y = ggplot2::element_text(size = 14, color = "black"),
+          axis.title.x = ggplot2::element_blank(),
+          axis.text.x = ggplot2::element_text(size = 12),
+          axis.text.y = ggplot2::element_text(size = 12),
+          legend.text = ggplot2::element_text(size = 12),
+          legend.title = ggplot2::element_blank(),
+          panel.border = ggplot2::element_rect(color = "grey60", fill = NA)
         )
+
+      has_raw_data <- "raw_data" %in% colnames(expr_df) && any(!is.na(expr_df$raw_data))
+      data_type <- input$deg_gene_modal_data_type
+      if (is.null(data_type) || !has_raw_data) {
+        data_type <- "normalized"
+      }
+      use_raw <- identical(data_type, "raw") && has_raw_data
+
+      expr_df$plot_value <- if (use_raw) {
+        as.numeric(expr_df$raw_data)
+      } else {
+        as.numeric(expr_df$expression)
+      }
+      req(any(!is.na(expr_df$plot_value)))
+
+      expression_label <- if (use_raw) {
+        "Raw data"
+      } else {
+        "Normalized Expression"
+      }
+
+      plot_type <- input$deg_gene_modal_plot_type
+      if (is.null(plot_type)) {
+        plot_type <- "bar"
+      }
+
+      use_bar <- identical(plot_type, "bar")
+      use_violin <- identical(plot_type, "violin")
+
+      if (use_bar) {
+        expr_df <- expr_df[order(expr_df$group, expr_df$sample), , drop = FALSE]
+        expr_df$sample <- factor(expr_df$sample, levels = expr_df$sample)
+
+        p <- ggplot2::ggplot(
+          expr_df,
+          ggplot2::aes(x = sample, y = plot_value, fill = group)
+        ) +
+          ggplot2::geom_col(color = "black", width = 0.7, na.rm = TRUE) +
+          ggplot2::labs(
+            title = paste0(display_name),
+            y = expression_label
+          ) +
+          ggplot2::scale_fill_manual(values = color_palette) +
+          base_theme +
+          ggplot2::theme(
+            axis.text.x = ggplot2::element_text(size = 10, angle = 45, hjust = 1),
+            legend.position = "right"
+          )
+
+        sample_count <- length(unique(expr_df$sample))
+        if (sample_count < 50) {
+          is_counts_upload <- !is.null(pre_process$raw_counts())
+          expr_df$plot_label <- if (use_raw) {
+            ifelse(
+              is.na(expr_df$raw_data),
+              NA_character_,
+              if (is_counts_upload) {
+                prettyNum(expr_df$raw_data, big.mark = ",", preserve.width = "none")
+              } else {
+                formatC(expr_df$raw_data, format = "f", digits = 3)
+              }
+            )
+          } else {
+            ifelse(
+              is.na(expr_df$plot_value),
+              NA_character_,
+              formatC(expr_df$plot_value, format = "f", digits = 3)
+            )
+          }
+          label_df <- expr_df[!is.na(expr_df$plot_label), , drop = FALSE]
+          if (nrow(label_df) > 0) {
+            max_y <- max(expr_df$plot_value, na.rm = TRUE)
+            if (is.finite(max_y) && max_y > 0) {
+              p <- p + ggplot2::expand_limits(y = max_y * 1.08)
+            }
+            p <- p +
+              ggplot2::geom_text(
+                data = label_df,
+                mapping = ggplot2::aes(label = plot_label),
+                vjust = -0.25,
+                size = 3.2,
+                color = "black"
+              ) +
+              ggplot2::coord_cartesian(clip = "off")
+          }
+        }
+      } else {
+        jitter_position <- ggplot2::position_jitter(width = 0.15, height = 0)
+
+        p <- ggplot2::ggplot(
+          expr_df,
+          ggplot2::aes(x = group, y = plot_value, fill = group)
+        ) +
+          ggplot2::labs(
+            title = paste0(display_name),
+            y = expression_label
+          ) +
+          ggplot2::scale_fill_manual(values = color_palette) +
+          base_theme +
+          ggplot2::theme(legend.position = "none")
+
+        if (use_violin) {
+          p <- p +
+            ggplot2::geom_violin(
+              alpha = 0.7,
+              color = "black",
+              trim = FALSE,
+              na.rm = TRUE
+            )
+        } else {
+          p <- p +
+            ggplot2::geom_boxplot(
+              width = 0.65,
+              alpha = 0.9,
+              color = "black",
+              outlier.shape = NA,
+              na.rm = TRUE
+            )
+        }
+
+        p <- p +
+          ggplot2::geom_point(
+            ggplot2::aes(color = group),
+            position = jitter_position,
+            size = 2.5,
+            alpha = 0.85,
+            na.rm = TRUE
+          ) +
+          ggplot2::scale_color_manual(values = color_palette) +
+          ggplot2::guides(color = "none")
+      }
 
       refine_ggplot2(
         p = p,
@@ -1805,6 +2071,17 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         ggplot2_theme = pre_process$ggplot2_theme()
       )
     })
+
+    output$deg_gene_modal_plot <- renderPlot({
+      print(gene_modal_plot())
+    })
+
+    ottoPlots::mod_download_figure_server(
+      "download_gene_plot",
+      filename = "gene_expression_plot",
+      figure = gene_modal_plot,
+      label = ""
+    )
 
     gene_labels <- mod_label_server(
       "label_volcano",
