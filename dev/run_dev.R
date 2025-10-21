@@ -31,10 +31,9 @@
 #  styler::style_pkg()
 
   # Run the application
-  Golem::run_app()
+  run_app()
   .reload_time2 <- Sys.time()
   cat(sprintf("[%s] DEV: App reloaded (%.3fs)\n",
               format(.reload_time2, "%H:%M:%OS3"),
               as.numeric(difftime(.reload_time, .reload_time, units = "secs"))))
 }
-

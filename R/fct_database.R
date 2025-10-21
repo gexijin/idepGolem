@@ -130,31 +130,17 @@ get_idep_data <- function(datapath = DATAPATH) {
     conn = conn_db,
     statement = "select * from orgInfo;"
   )
-  annotated_species_count <- sort(table(org_info$group))
-
-  species_choice <- setNames(as.list(org_info$id), org_info$name2)
-  species_choice <- append(
-    setNames("NEW", "**NEW SPECIES**"),
-    species_choice
-  )
 
   # set popular species on the top
   org_info <- org_info[order(org_info$top), ]
-  # GO levels
-  go_levels <- DBI::dbGetQuery(
-    conn = conn_db,
-    statement = "select distinct id, level from GO
-         WHERE GO = 'biological_process'"
-  )
-  go_level_2_terms <- go_levels[which(go_levels$level %in% c(2, 3)), 1]
-
-  quotes <- DBI::dbGetQuery(
-    conn = conn_db,
-    statement = "select quotes from quotes;"
-  )
-  quotes <- quotes[, 1]
 
   DBI::dbDisconnect(conn = conn_db)
+
+  # OPTIMIZATION: Removed unused queries to speed up startup:
+  # - annotated_species_count: never used
+  # - species_choice: only used in one modal, can be built on-demand
+  # - go_levels & go_level_2_terms: never used
+  # - quotes: never used
 
 
   # id_index <- DBI::dbGetQuery(
@@ -164,18 +150,8 @@ get_idep_data <- function(datapath = DATAPATH) {
 
 
   return(list(
-#    kegg_species_id = kegg_species_id,
-#    gmt_files = gmt_files,
-#    gene_info_files = gene_info_files,
     demo_file_info = demo_file_info,
-    quotes = quotes,
-#    string_species_go_data = string_species_go_data,
-    org_info = org_info,
-    annotated_species_count = annotated_species_count,
-    go_levels = go_levels,
-    go_level_2_terms = go_level_2_terms,
-#    id_index = id_index,
-    species_choice = species_choice
+    org_info = org_info
   ))
 }
 

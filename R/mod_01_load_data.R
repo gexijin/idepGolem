@@ -1198,6 +1198,13 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     })
 
     show_gene_ids_modal <- function() {
+      # Build species_choice on-demand (not loaded at startup for performance)
+      species_choice <- setNames(as.list(idep_data$org_info$id), idep_data$org_info$name2)
+      species_choice <- append(
+        setNames("NEW", "**NEW SPECIES**"),
+        species_choice
+      )
+
       shiny::showModal(
         shiny::modalDialog(
           title = "Example Gene IDs",
@@ -1212,7 +1219,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           selectizeInput(
             inputId = ns("gene_id_examples"),
             label = "Select or search for species",
-            choices = c("--Select species--", names(idep_data$species_choice))
+            choices = c("--Select species--", names(species_choice))
           ),
           DT::dataTableOutput(ns("showGeneIDs4Species")),
           size = "l",
