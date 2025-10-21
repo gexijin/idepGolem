@@ -12,14 +12,6 @@ run_app <- function(onStart = NULL,
                     enableBookmarking = NULL,
                     uiPattern = "/",
                     ...) {
-  # === TIMING: App startup ===
-  .app_start_time <- Sys.time()
-  cat(sprintf("\n"))
-  cat(sprintf("========================================\n"))
-  cat(sprintf("iDEP APP STARTUP TIMING\n"))
-  cat(sprintf("========================================\n"))
-  cat(sprintf("[%s] APP: run_app() called\n", format(.app_start_time, "%H:%M:%OS3")))
-
   with_golem_options(
     app = shinyApp(
       ui = app_ui,
