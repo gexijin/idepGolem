@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Bash(chmod:*)",
-      "Bash(Rscript:*)"
+      "Bash(Rscript:*)",
+      "Bash(git log:*)",
+      "WebSearch",
+      "WebFetch(domain:shiny.posit.co)"
     ],
     "deny": [],
     "ask": []
