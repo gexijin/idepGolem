@@ -507,20 +507,21 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       if(!is.null(idep_data$org_info) && nrow(idep_data$org_info) > 0) {
         # Get first species from org_info (ordered by 'top' field)
         first_species_id <- idep_data$org_info$id[1]
+        first_species_name <- idep_data$org_info$name2[1]
 
-        # Create all species choices including NEW for custom species
-        all_choices <- setNames(as.list(idep_data$org_info$id), idep_data$org_info$name2)
-        all_choices <- c(all_choices, setNames("NEW", "**NEW SPECIES**"))
-
+        # Only set the selected value with minimal choices (just the selected one)
+        # The selectInput is hidden and only used to store the selection state
+        # Users select via the modal DataTable, not the dropdown
+        # We provide just the selected choice to ensure Shiny can set the value
         updateSelectInput(
           session = session,
           inputId = "select_org",
-          choices = all_choices,
+          choices = setNames(first_species_id, first_species_name),
           selected = first_species_id
         )
 
         # Set initial selected species name
-        selected_species_name(idep_data$org_info$name2[1])
+        selected_species_name(first_species_name)
       }
     })
 
@@ -620,6 +621,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         updateSelectInput(
           session = session,
           inputId = "select_org",
+          choices = setNames("NEW", "**NEW SPECIES**"),
           selected = "NEW"
         )
         updateCheckboxInput(
@@ -637,6 +639,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         updateSelectInput(
           session = session,
           inputId = "select_org",
+          choices = setNames(first_species_id, first_species_name),
           selected = first_species_id
         )
         updateCheckboxInput(
@@ -692,10 +695,11 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       )
       selected_name <- find_species_by_id_name(selected_id, idep_data$org_info)
 
-      # Update species selection
+      # Update species selection with just the selected choice
       updateSelectInput(
         session = session,
         inputId = "select_org",
+        choices = setNames(selected_id, selected_name),
         selected = selected_id
       )
 

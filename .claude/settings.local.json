@@ -1,17 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(R:*)",
-      "Bash(Rscript:*)",
-      "Bash(for:*)",
-      "Bash(do echo \"Processing: $file\")",
-      "Bash(done)",
-      "mcp__ide__getDiagnostics",
-      "Bash(grep:*)",
-      "Bash(git log:*)",
-      "Bash(sed:*)",
-      "Bash(cat:*)",
-      "Bash(xargs -I {} bash -c 'echo \"\"\"\"=== {} ===\"\"\"\" && grep -A 5 \"\"\"\"^mod_.*_ui\\s*<-\\s*function\"\"\"\" {}')"
+      "Bash(chmod:*)"
     ],
     "deny": [],
     "ask": []

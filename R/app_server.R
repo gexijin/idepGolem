@@ -5,6 +5,10 @@
 #' @import shiny
 #' @noRd
 app_server <- function(input, output, session) {
+  # === TIMING: Server initialization start ===
+  .server_start_time <- Sys.time()
+  cat(sprintf("[%s] SERVER: Initialization started\n", format(.server_start_time, "%H:%M:%OS3")))
+
   # file size is 5MB by default. This changes it to 30MB
   # options(shiny.maxRequestSize = 30*1024^2)
   options(warn = -1) # turn off warning
@@ -28,10 +32,20 @@ app_server <- function(input, output, session) {
     org_info_file <<- paste0(DATAPATH, "demo/orgInfo.db")
   }
 
+  .db_setup_time <- Sys.time()
+  cat(sprintf("[%s] SERVER: Database paths configured (%.3fs)\n",
+              format(.db_setup_time, "%H:%M:%OS3"),
+              as.numeric(difftime(.db_setup_time, .server_start_time, units = "secs"))))
+
   # load static data files such as list of species, gmt files, etc
   # This could be moved to run_app as global variable, as in global.R
   # see https://github.com/ThinkR-open/golem/issues/6
   idep_data <- get_idep_data()
+
+  .data_loaded_time <- Sys.time()
+  cat(sprintf("[%s] SERVER: get_idep_data() completed (%.3fs)\n",
+              format(.data_loaded_time, "%H:%M:%OS3"),
+              as.numeric(difftime(.data_loaded_time, .db_setup_time, units = "secs"))))
 
   # Tab Variable to control reactivity
   tab <- reactive(input$navbar)
@@ -173,4 +187,12 @@ app_server <- function(input, output, session) {
     idep_data = idep_data,
     tab = tab
   )
+
+  .server_end_time <- Sys.time()
+  .total_server_time <- as.numeric(difftime(.server_end_time, .server_start_time, units = "secs"))
+  cat(sprintf("[%s] SERVER: All modules initialized (%.3fs)\n",
+              format(.server_end_time, "%H:%M:%OS3"), .total_server_time))
+  cat(sprintf("========================================\n"))
+  cat(sprintf("TOTAL SERVER INITIALIZATION: %.3f seconds\n", .total_server_time))
+  cat(sprintf("========================================\n"))
 }
