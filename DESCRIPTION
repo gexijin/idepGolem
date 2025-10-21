@@ -89,10 +89,7 @@ Imports:
     ggupset,
     purrr,
     R.utils,
-    readxl,
-    ggraph,
-    tidytext,
-    wordcloud2
+    readxl
 biocViews: 
     Biobase,
     limma,

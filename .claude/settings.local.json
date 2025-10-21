@@ -10,7 +10,8 @@
       "Bash(grep:*)",
       "Bash(git log:*)",
       "Bash(sed:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(xargs -I {} bash -c 'echo \"\"\"\"=== {} ===\"\"\"\" && grep -A 5 \"\"\"\"^mod_.*_ui\\s*<-\\s*function\"\"\"\" {}')"
     ],
     "deny": [],
     "ask": []
