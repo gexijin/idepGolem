@@ -4,7 +4,7 @@
 \alias{get_gene_info}
 \title{Retrieve detailed gene information}
 \usage{
-get_gene_info(converted, select_org, gene_info_files)
+get_gene_info(converted, select_org, idep_data)
 }
 \arguments{
 \item{converted}{List of converted gene information  from
@@ -12,8 +12,8 @@ get_gene_info(converted, select_org, gene_info_files)
 
 \item{select_org}{String designating the organism being analyzed.}
 
-\item{gene_info_files}{List of gene files from the 'gene_info_files' element
-of the result list from \code{\link{get_idep_data}()}.}
+\item{idep_data}{Data object returned by \code{\link{get_idep_data}()}
+containing database configuration.}
 }
 \value{
 A data frame

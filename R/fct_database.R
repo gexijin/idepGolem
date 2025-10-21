@@ -81,20 +81,13 @@ connect_convert_db_org <- function(datapath = DATAPATH, select_org, idep_data) {
 #'
 #' @param datapath Folder path to the iDEP data
 #' @export
-#' @return Large list of the iDEP data.
-#' 1. kegg_species_id:  KEGG species list
-#' 2. gmt_files: list of pathway files
-#' 3. gene_info_files: list of geneInfo files
-#' 4. demo_data_file: demo data file
-#' 5. demo_metadata_file: experimental design file for demo data
-#' 6. quotes:  quotes
-#' 7. string_species_go_data: List of STRING species
-#' 8. org_info: orgInfo for Ensembl species
-#' 9. annotated_species_count: total number of annotated species
-#' 10. go_levels: GO levels
-#' 11. go_level_2_terms: mapping of GO levels to terms
-#' 12. id_index: idtype and index
-#' 13. species_choice: list of species for populating selection.
+#' @return A list containing:
+#' \describe{
+#'   \item{demo_file_info}{Information on bundled demo datasets, including
+#'   paths to expression and design files.}
+#'   \item{org_info}{Species metadata sourced from the Ensembl
+#'   orgInfo table.}
+#' }
 #'
 get_idep_data <- function(datapath = DATAPATH) {
 

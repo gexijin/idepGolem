@@ -529,7 +529,7 @@ kegg_pathway(
 all_gene_info <- get_gene_info(
   converted = converted,
   select_org = "BestMatch",
-  gene_info_files = idep_data$gene_info_files
+  idep_data = idep_data
 )
 
 chromosome_plotly(
