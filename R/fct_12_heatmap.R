@@ -354,8 +354,21 @@ deg_click_info <- function(click,
   sample <- colnames(data)[column_index]
   gene <- rownames(data)[row_index]
 
+  if (is.factor(sub_groups)) {
+    sub_groups <- as.character(sub_groups)
+  }
   group_name <- sub_groups[column_index]
+  if (length(group_name) == 0 || is.null(group_name)) {
+    group_name <- "NA"
+  }
+  if (is.factor(group_name)) {
+    group_name <- as.character(group_name)
+  }
+  group_name <- as.character(group_name)
   group_col <- group_colors[[group_name]]
+  if (is.null(group_col) || is.na(group_col)) {
+    group_col <- "#FFFFFF"
+  }
 
   # HTML for info table
   # Pulled from https://github.com/jokergoo/InteractiveComplexHeatmap/blob/master/R/shiny-server.R
@@ -363,21 +376,29 @@ deg_click_info <- function(click,
   p <- "
 <div>
 <pre>
-@{gene}
-Value: @{round(value, 2)} <span style='background-color:@{col};width=50px;'>    </span>
+Gene ID: @{gene}
+Expression: @{round(value, 2)} <span style='background-color:@{col};width:50px;display:inline-block;'>&nbsp;</span>
 Sample: @{sample}
-Group: @{group_name} <span style='background-color:@{group_col};width=50px;'>    </span>
-"
+Group: @{group_name} <span style='background-color:@{group_col};width:50px;display:inline-block;'>&nbsp;</span>"
 
   if (!is.null(bar)) {
     up_down <- bar[row_index]
-    up_down_col <- group_colors[[up_down]]
-    p <- paste0(
-      p,
-      "Regulation: @{up_down} <span style='background-color:@{up_down_col};width=50px;'>    </span>"
-    )
+    if (length(up_down) == 0 || is.null(up_down)) {
+      up_down <- NA
+    }
+    if (!is.na(up_down)) {
+      up_down <- as.character(up_down)
+      up_down_col <- group_colors[[up_down]]
+      if (is.null(up_down_col) || is.na(up_down_col)) {
+        up_down_col <- "#FFFFFF"
+      }
+      p <- paste0(
+        p,
+        "\nRegulation: @{up_down} <span style='background-color:@{up_down_col};width:50px;display:inline-block;'>&nbsp;</span>"
+      )
+    }
   }
-  p <- paste0(p, "</pre></div>")
+  p <- paste0(p, "\n</pre></div>")
   html <- GetoptLong::qq(p)
 
   return(HTML(html))
