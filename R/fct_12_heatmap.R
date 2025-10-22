@@ -105,7 +105,7 @@ deg_heatmap <- function(df,
         1 - cor(t(x), method = "pearson")
       )
     },
-    cluster_columns = TRUE,
+    cluster_columns = FALSE,
     show_row_dend = FALSE,
     show_column_dend = FALSE,
     left_annotation = row_ann,

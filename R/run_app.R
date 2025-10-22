@@ -42,6 +42,10 @@ run_app <- function(onStart = NULL,
 
     idep_data <<- get_idep_data()
 
+    if (requireNamespace("ComplexHeatmap", quietly = TRUE)) {
+      ComplexHeatmap::ht_opt$message <- FALSE
+    }
+
     # Call user's onStart if provided
     if (!is.null(onStart)) {
       if (is.function(onStart)) {
