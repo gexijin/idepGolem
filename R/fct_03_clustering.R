@@ -650,7 +650,9 @@ cluster_heat_click_info <- function(click,
     return("Select a cell in the heatmap.")
   }
 
-  if (cluster_meth == 1) {
+  using_matrix <- !is.list(click_data)
+
+  if (cluster_meth == 1 || using_matrix) {
     value <- click_data[row_index, column_index]
     col <- ComplexHeatmap::map_to_colors(ht_sub_obj@matrix_color_mapping, value)
     sample <- colnames(click_data)[column_index]
@@ -667,7 +669,17 @@ cluster_heat_click_info <- function(click,
     gene <- rownames(sub_click_data)[row_index]
   }
   group_name <- sub_groups[column_index]
+  if (length(group_name) == 0 || is.null(group_name)) {
+    group_name <- "NA"
+  }
+  if (is.factor(group_name)) {
+    group_name <- as.character(group_name)
+  }
+  group_name <- as.character(group_name)
   group_col <- group_colors[[group_name]]
+  if (is.null(group_col) || is.na(group_col)) {
+    group_col <- "#FFFFFF"
+  }
 
   # HTML for info table
   # Pulled from https://github.com/jokergoo/InteractiveComplexHeatmap/blob/master/R/shiny-server.R
@@ -675,8 +687,10 @@ cluster_heat_click_info <- function(click,
   html <- GetoptLong::qq("
 <div>
 <pre>
-@{gene}  Expression: @{round(value, 2)} <span style='background-color:@{col};width=50px;'>    </span>
-Sample: @{sample},  Group: @{group_name} <span style='background-color:@{group_col};width=50px;'>    </span>
+Gene ID: @{gene}
+Value: @{round(value, 2)} <span style='background-color:@{col};width:50px;display:inline-block;'>&nbsp;</span>
+Sample: @{sample}
+Group: @{group_name} <span style='background-color:@{group_col};width:50px;display:inline-block;'>&nbsp;</span>
 </pre></div>")
   HTML(html)
 }

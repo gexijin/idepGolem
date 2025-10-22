@@ -355,6 +355,7 @@ mod_03_clustering_ui <- function(id) {
                   outputId = ns("heatmap_main"),
                   height = "450px",
                   width = "100%",
+                  click = ns("ht_main_click"),
                   brush = brushOpts(id = ns("ht_brush"),
                                     delayType = "debounce",
                                     clip = TRUE)
@@ -402,8 +403,7 @@ mod_03_clustering_ui <- function(id) {
                 plotOutput(
                   outputId = ns("sub_heatmap"),
                   height = "100%",
-                  width = "100%",
-                  click = ns("ht_click")
+                  width = "100%"
                 )
               )
             )
@@ -682,7 +682,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
             "Select a region on the heatmap to zoom in.",
             "Selection can be adjusted from the sides or dragged around.",
             "Broaden your browser window if there is overlap.",
-            "Click on the zoomed-in heatmap for gene/cluster details."
+            "Click on the main heatmap for gene and sample details."
           ),
           duration = 15,
           closeButton = TRUE,
@@ -716,6 +716,33 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           unique(x)
         )
       })
+    })
+
+    main_heatmap_group_info <- reactive({
+      req(!is.null(heatmap_data()))
+      req(!is.null(input$select_factors_heatmap))
+      req(input$select_factors_heatmap != "")
+      req(!is.null(input$sample_color))
+
+      group_pal_val <- NULL
+      if (input$select_factors_heatmap == "All factors") {
+        req(!is.null(pre_process$sample_info()))
+        req(!is.null(group_pal()))
+        group_pal_val <- group_pal()
+      }
+
+      info <- sub_heat_ann(
+        data = heatmap_data(),
+        sample_info = pre_process$sample_info(),
+        select_factors_heatmap = input$select_factors_heatmap,
+        group_pal = group_pal_val,
+        sample_color = input$sample_color
+      )
+
+      list(
+        groups = info$groups,
+        group_colors = info$group_colors
+      )
     })
     
     # Reactive for heatmap generation with double-render prevention
@@ -897,33 +924,42 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     # Heatmap Click Value ---------
     output$ht_click_content <- renderUI({
       req(!is.null(current_method()))
-      # zoomed in, but not clicked
-      if (is.null(input$ht_click) &&
-        !is.null(shiny_env$ht_sub) &&
-        !is.null(input$ht_brush)
-      ) {
-        p <- '<br><p style="color:red;text-align:left;">Click on the sub-heatmap for more info</p>'
-        html <- GetoptLong::qq(p)
-        return(HTML(html))
-      }
-      # if not zoomed in, show nothing
-      if (is.null(input$ht_click) ||
-        is.null(shiny_env$ht_sub) ||
-        is.null(input$ht_brush)
-      ) {
-        return(NULL)
+
+      main_ready <- !is.null(shiny_env$ht) &&
+        !is.null(shiny_env$ht_pos_main) &&
+        length(shiny_env$ht@ht_list) >= 1
+
+      if (!is.null(input$ht_main_click) && main_ready) {
+        group_info <- tryCatch(main_heatmap_group_info(), error = function(e) NULL)
+        if (!is.null(group_info)) {
+          matrix_obj <- shiny_env$ht@ht_list[[1]]
+          if (!is.null(matrix_obj@matrix)) {
+            click_data_main <- matrix_obj@matrix
+            groups_main <- group_info$groups
+            if (is.factor(groups_main)) {
+              groups_main <- as.character(groups_main)
+            }
+            return(cluster_heat_click_info(
+              click = input$ht_main_click,
+              ht_sub = shiny_env$ht,
+              ht_sub_obj = matrix_obj,
+              ht_pos_sub = shiny_env$ht_pos_main,
+              sub_groups = groups_main,
+              group_colors = group_info$group_colors,
+              cluster_meth = current_method(),
+              click_data = click_data_main
+            ))
+          }
+        }
       }
 
-      cluster_heat_click_info(
-        click = input$ht_click,
-        ht_sub = shiny_env$ht_sub,
-        ht_sub_obj = shiny_env$ht_sub_obj,
-        ht_pos_sub = shiny_env$ht_pos_sub,
-        sub_groups = shiny_env$sub_groups,
-        group_colors = shiny_env$group_colors,
-        cluster_meth = current_method(),
-        click_data = shiny_env$click_data
-      )
+      if (!is.null(input$ht_brush) && is.null(input$ht_main_click)) {
+        note <- '<br><p style="color:red;text-align:left;">Click on the main heatmap for more details</p>'
+        html <- GetoptLong::qq(note)
+        return(HTML(html))
+      }
+
+      return(NULL)
     })
 
     # depending on the number of genes selected
@@ -970,36 +1006,33 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     # Subheatmap creation ---------
     output$sub_heatmap <- renderPlot(
       {
-        if (is.null(input$ht_brush) || is.null(heatmap_sub_object_calc())) {
+        if (is.null(input$ht_brush)) {
           grid::grid.newpage()
-        } else {
-          shinybusy::show_modal_spinner(
-            spin = "orbit",
-            text = "Creating sub-heatmap",
-            color = "#000000"
-          )
-          try(
-            submap_return <- heatmap_sub_object_calc()
-          )
-
-          # Objects used in other components ----------
-          shiny_env$ht_sub_obj <- submap_return$ht_select
-          shiny_env$submap_data <- submap_return$submap_data
-          shiny_env$sub_groups <- submap_return$sub_groups
-          shiny_env$group_colors <- submap_return$group_colors
-          shiny_env$click_data <- submap_return$click_data
-
-          shiny_env$ht_sub <- ComplexHeatmap::draw(
-            shiny_env$ht_sub_obj,
-            annotation_legend_list = submap_return$lgd,
-            annotation_legend_side = "top"
-          )
-
-          shiny_env$ht_pos_sub <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht_sub)
-
-          shinybusy::remove_modal_spinner()
-          return(shiny_env$ht_sub)
+          return(invisible(NULL))
         }
+
+        shinybusy::show_modal_spinner(
+          spin = "orbit",
+          text = "Creating sub-heatmap",
+          color = "#000000"
+        )
+        on.exit(shinybusy::remove_modal_spinner(), add = TRUE)
+
+        submap_return <- heatmap_sub_object_calc()
+        if (is.null(submap_return)) {
+          grid::grid.newpage()
+          return(invisible(NULL))
+        }
+
+        shiny_env$submap_data <- submap_return$submap_data
+
+        ht_static <- ComplexHeatmap::draw(
+          submap_return$ht_select,
+          annotation_legend_list = submap_return$lgd,
+          annotation_legend_side = "top"
+        )
+
+        ht_static
       },
       # adjust height of the zoomed in heatmap dynamically based on selection
       height = reactive(height_sub_heatmap())
@@ -1057,30 +1090,32 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         }
       }
 
+      if (!is.null(submap_return)) {
+        shiny_env$submap_data <- submap_return$submap_data
+      } else {
+        shiny_env$submap_data <- NULL
+      }
+
       return(submap_return)
     })
     # Subheatmap creation ---------
     heatmap_sub_object <- reactive({
-      if (is.null(input$ht_brush) || is.null(heatmap_sub_object_calc())) {
+      if (is.null(input$ht_brush)) {
         grid::grid.newpage()
         grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
       } else {
-        try(
-          submap_return <- heatmap_sub_object_calc()
-        )
-
-        # Objects used in other components ----------
-        shiny_env$ht_sub_obj <- submap_return$ht_select
-        shiny_env$submap_data <- submap_return$submap_data
-        shiny_env$sub_groups <- submap_return$sub_groups
-        shiny_env$group_colors <- submap_return$group_colors
-        shiny_env$click_data <- submap_return$click_data
-
-        return(ComplexHeatmap::draw(
-          shiny_env$ht_sub_obj,
-          annotation_legend_list = submap_return$lgd,
-          annotation_legend_side = "top"
-        ))
+        submap_return <- heatmap_sub_object_calc()
+        if (is.null(submap_return)) {
+          grid::grid.newpage()
+          grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
+        } else {
+          shiny_env$submap_data <- submap_return$submap_data
+          ComplexHeatmap::draw(
+            submap_return$ht_select,
+            annotation_legend_list = submap_return$lgd,
+            annotation_legend_side = "top"
+          )
+        }
       }
     })
 
@@ -1275,13 +1310,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       # when switching between clustering methods
       # NOTE: We do NOT clear shiny_env$ht or shiny_env$ht_pos_main here
       # because the new heatmap will overwrite them when it renders
-      shiny_env$ht_sub <- NULL
-      shiny_env$ht_sub_obj <- NULL
-      shiny_env$ht_pos_sub <- NULL
       shiny_env$submap_data <- NULL
-      shiny_env$sub_groups <- NULL
-      shiny_env$group_colors <- NULL
-      shiny_env$click_data <- NULL
     })
 
     # Auto-uncheck enrichment checkbox when it should be hidden ----------
