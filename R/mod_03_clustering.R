@@ -360,6 +360,11 @@ mod_03_clustering_ui <- function(id) {
                                     delayType = "debounce",
                                     clip = TRUE)
                 ),
+                tippy::tippy_this(
+                  ns("heatmap_main"),
+                  "Tip: Drag over any region of the heatmap to zoom into that selection. Click on the heatmap to view details.",
+                  theme = "light"
+                ),
                 br(),
                 fluidRow(
                   column(

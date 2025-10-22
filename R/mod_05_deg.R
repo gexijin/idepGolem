@@ -261,22 +261,6 @@ mod_05_deg_2_ui <- function(id) {
         h4("Investigate DEGs"),
         br(),
         htmlOutput(outputId = ns("list_comparisons")),
-        conditionalPanel(
-          condition = "input.step_2 == 'Genes'",
-          selectInput(
-            inputId = ns("gene_direction_filter"),
-            label = NULL,
-            choices = c("Up-regulated genes", "Down-regulated genes"),
-            selected = "Up-regulated genes",
-            selectize = FALSE
-          ),
-          tippy::tippy_this(
-            ns("gene_direction_filter"),
-            "Filter the gene table to view only upregulated or downregulated genes.",
-            theme = "light"
-          ),
-          ns = ns
-        ),
         conditionalPanel("input.step_2 == 'Heatmap'",
           selectInput(
             inputId = ns("heatmap_gene_number"),
@@ -353,6 +337,21 @@ mod_05_deg_2_ui <- function(id) {
           id = ns("step_2"),
           tabPanel(
             title = "Genes",
+            tags$div(
+              style = "margin-top: 5px;",
+              selectInput(
+                inputId = ns("gene_direction_filter"),
+                label = NULL,
+                choices = c("Up-regulated genes", "Down-regulated genes"),
+                selected = "Up-regulated genes",
+                selectize = FALSE
+              )
+            ),
+            tippy::tippy_this(
+              ns("gene_direction_filter"),
+              "Filter the gene table to view only upregulated or downregulated genes.",
+              theme = "light"
+            ),
             DT::dataTableOutput(ns("deg_gene_table")),
             tippy::tippy_this(
               ns("deg_gene_table"),
