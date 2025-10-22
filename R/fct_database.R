@@ -23,20 +23,26 @@ NULL
 #' @return Database connection.
 connect_convert_db <- function(datapath = DATAPATH) {
   if (!file.exists(org_info_file)) {
-    # download org_info and demo files to current folder
-    withProgress(message = "Download demo data and species database", {
-      incProgress(0.2)
-      file_name <- paste0(db_ver, ".tar.gz")
-      options(timeout = 3000)
-      download.file(
-        url = paste0(db_url, db_ver, "/", file_name),
-        destfile = file_name,
-        mode = "wb",
-        quiet = FALSE
-      )
-      untar(file_name) # untar and unzip the files
-      file.remove(file_name) # delete the tar file to save storage
-    })
+    shinybusy::show_modal_spinner(
+      spin = "orbit",
+      text = "Downloading demo data and species database",
+      color = "#000000"
+    )
+    on.exit(shinybusy::remove_modal_spinner(), add = TRUE)
+
+    file_name <- paste0(db_ver, ".tar.gz")
+    options(timeout = 3000)
+    download.file(
+      url = paste0(db_url, db_ver, "/", file_name),
+      destfile = file_name,
+      mode = "wb",
+      quiet = FALSE
+    )
+    untar(file_name) # untar and unzip the files
+    file.remove(file_name) # delete the tar file to save storage
+
+    shinybusy::remove_modal_spinner()
+    on.exit(NULL)
   }
 
   return(DBI::dbConnect(

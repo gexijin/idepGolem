@@ -1115,11 +1115,11 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           fluidRow(
             column(
               width = 12,
-              align = "right",
+              align = "center",
               actionButton(
                 inputId = ns("reset_app_new_data"),
-                label = strong("Reset"),
-                align = "right"
+                label = strong(tags$span("Reset", style = "color: red;")),
+                align = "left"
               ),
               tippy::tippy_this(
                 ns("reset_app_new_data"),
@@ -1676,28 +1676,33 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
       dbname <- file.path(DATAPATH, "db", db_file)
       if (!file.exists(dbname)) {
-        withProgress(
-          message = paste(
-            "Download database for",
-            idep_data$org_info[ix, "name2"],
-           "(~5 minutes)"
-           ), {
-          incProgress(0.2)
-          # download org_info and demo files to current folder
-          options(timeout = 3000)
-          download.file(
-            url = paste0(db_url, db_ver, "/db/", db_file, ".gz"),
-            destfile = paste0(dbname, ".gz"),
-            mode = "wb",
-            quiet = FALSE
-          )
-          incProgress(0.7)
-          R.utils::gunzip(
-            paste0(dbname, ".gz"), 
-            remove = TRUE
-          ) # untar and unzip the files
-        })
+        download_message <- paste(
+          "Downloading database for",
+          idep_data$org_info[ix, "name2"],
+          "(~5 minutes)"
+        )
+        shinybusy::show_modal_spinner(
+          spin = "orbit",
+          text = download_message,
+          color = "#000000"
+        )
+        on.exit(shinybusy::remove_modal_spinner(), add = TRUE)
 
+        # download org_info and demo files to current folder
+        options(timeout = 3000)
+        download.file(
+          url = paste0(db_url, db_ver, "/db/", db_file, ".gz"),
+          destfile = paste0(dbname, ".gz"),
+          mode = "wb",
+          quiet = FALSE
+        )
+        R.utils::gunzip(
+          paste0(dbname, ".gz"),
+          remove = TRUE
+        ) # untar and unzip the files
+
+        shinybusy::remove_modal_spinner()
+        on.exit(NULL)
       }
     })
 
