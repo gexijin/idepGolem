@@ -554,15 +554,16 @@ sub_heat_ann <- function(data,
 
   if (select_factors_heatmap == "All factors") {
 
-    group_colors <- group_pal[[1]]
-    
+    # Use all factors instead of just the first one
     heat_sub_ann <- ComplexHeatmap::HeatmapAnnotation(
-      df = sample_info[, 1, drop = FALSE],
-      col = group_pal[1],
+      df = sample_info,
+      col = group_pal,
       show_legend = TRUE
     )
+    # For groups, use the first factor (for backward compatibility with click info)
     groups <- sample_info[, 1]
-    
+    group_colors <- group_pal[[1]]
+
   } else {
     
     if (!is.null(sample_info) && !is.null(select_factors_heatmap)) {
