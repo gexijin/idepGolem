@@ -686,11 +686,11 @@ cluster_heat_click_info <- function(click,
   # Lines 1669:1678
   html <- GetoptLong::qq("
 <div>
-<pre>
+<pre style='background:transparent;border:none;padding:0;margin:0;box-shadow:none;'>
 Gene ID: @{gene}
-Value: @{round(value, 2)} <span style='background-color:@{col};width:50px;display:inline-block;'>&nbsp;</span>
+Value: @{round(value, 2)} <span style='background-color:@{col};width:20px;display:inline-block;'>&nbsp;</span>
 Sample: @{sample}
-Group: @{group_name} <span style='background-color:@{group_col};width:50px;display:inline-block;'>&nbsp;</span>
+Group: @{group_name} <span style='background-color:@{group_col};width:20px;display:inline-block;'>&nbsp;</span>
 </pre></div>")
   HTML(html)
 }

@@ -375,11 +375,11 @@ deg_click_info <- function(click,
   # Lines 1669:1678
   p <- "
 <div>
-<pre>
+<pre style='background:transparent;border:none;padding:0;margin:0;box-shadow:none;'>
 Gene ID: @{gene}
-Expression: @{round(value, 2)} <span style='background-color:@{col};width:50px;display:inline-block;'>&nbsp;</span>
+Expression: @{round(value, 2)} <span style='background-color:@{col};width:20px;display:inline-block;'>&nbsp;</span>
 Sample: @{sample}
-Group: @{group_name} <span style='background-color:@{group_col};width:50px;display:inline-block;'>&nbsp;</span>"
+Group: @{group_name} <span style='background-color:@{group_col};width:20px;display:inline-block;'>&nbsp;</span>"
 
   if (!is.null(bar)) {
     up_down <- bar[row_index]
@@ -394,7 +394,7 @@ Group: @{group_name} <span style='background-color:@{group_col};width:50px;displ
       }
       p <- paste0(
         p,
-        "\nRegulation: @{up_down} <span style='background-color:@{up_down_col};width:50px;display:inline-block;'>&nbsp;</span>"
+        "\nRegulation: @{up_down} <span style='background-color:@{up_down_col};width:20px;display:inline-block;'>&nbsp;</span>"
       )
     }
   }
