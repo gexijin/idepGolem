@@ -1252,7 +1252,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     marker_definitions <- list(
       list(symbol = "GAPDH", description = "Housekeeping gene"),
       list(symbol = "ACTB", description = "Housekeeping gene"),
-      list(symbol = "H2AC6", description = "Histone mRNAs lack poly(A) tails, so they are underrepresented in polyA-selected but abundant in rRNA-depleted protocols."),
+      list(symbol = "H2AC6", description = "Histone mRNAs lack poly(A) tails"),
       list(symbol = "MT-CO1", description = "Mitochondrial mRNA"),
       list(symbol = "MT-RNR2", description = "Mitochondrial rRNA"),
       list(symbol = "UTY", description = "Male-specific"),
