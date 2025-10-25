@@ -876,20 +876,21 @@ mod_11_enrichment_server <- function(id,
       )
     })
 
-    # Update cutoff only when user switches to Network tab or changes cluster
+    # Update cutoff when user switches to Network tab, changes cluster, or changes pathway database
     # This avoids creating reactive dependencies that interfere with other modules
     observeEvent(
-      list(input$subtab, input$select_cluster),
+      list(input$subtab, input$select_cluster, input$select_go),
       {
         # Only run when on Network tab
         if (!is.null(input$subtab) && input$subtab == "Network") {
           # Isolate to prevent reactive chain from affecting other modules
           enrichment_data <- isolate(enrichment_dataframe_for_tree())
+          cluster_selection <- isolate(input$select_cluster)
 
-          if (!is.null(enrichment_data)) {
+          if (!is.null(enrichment_data) && !is.null(cluster_selection)) {
             suggested_cutoff <- isolate(suggest_edge_cutoff(
               go_table = enrichment_data,
-              group = input$select_cluster
+              group = cluster_selection
             ))
 
             if (!is.null(suggested_cutoff) && is.finite(suggested_cutoff)) {

@@ -385,11 +385,13 @@ suggest_edge_cutoff <- function(go_table,
   overlap_values <- sort(overlap_values, decreasing = TRUE)
   max_overlap <- overlap_values[1]
 
-  # If the default cutoff already keeps at least one edge, keep it.
-  if (max_overlap >= fallback) {
+  # If the default cutoff would keep at least one edge, keep it.
+  # Use > not >= because enrich_net uses > for edge creation
+  if (max_overlap > fallback) {
     return(fallback)
   }
 
+  # No edges at default cutoff, so calculate dynamic cutoff for top 10%
   target_index <- max(1, round(length(overlap_values) * target_ratio))
   threshold <- overlap_values[target_index]
   suggested <- max(0, min(1, threshold))
