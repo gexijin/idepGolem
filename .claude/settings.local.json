@@ -5,7 +5,9 @@
       "Bash(Rscript:*)",
       "Bash(git log:*)",
       "WebSearch",
-      "WebFetch(domain:shiny.posit.co)"
+      "WebFetch(domain:shiny.posit.co)",
+      "Bash(git stash push:*)",
+      "Bash(git stash:*)"
     ],
     "deny": [],
     "ask": []

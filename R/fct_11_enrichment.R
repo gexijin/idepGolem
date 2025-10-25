@@ -313,6 +313,94 @@ enrich_barplot <- function(enrichment_dataframe,
   return(p)
 }
 
+#' Suggest an edge cutoff based on observed pathway overlaps
+#'
+#' @param go_table data frame returned by enrichment_dataframe_for_tree()
+#' @param group currently selected cluster/direction
+#' @param target_ratio fraction of edges to retain (default 10%)
+#' @param fallback default cutoff if overlaps cannot be calculated
+#' @param max_terms maximum number of pathways to consider (mirrors network plot)
+#'
+#' @return numeric cutoff between 0 and 1
+#' @export
+suggest_edge_cutoff <- function(go_table,
+                                group = "All Groups",
+                                target_ratio = 0.1,
+                                fallback = 0.3,
+                                max_terms = 200) {
+  if (is.null(go_table) || nrow(go_table) < 2) {
+    return(fallback)
+  }
+
+  if (!is.null(group) && group != "All Groups") {
+    go_table <- go_table[go_table$Direction == group, , drop = FALSE]
+  }
+
+  if (nrow(go_table) < 2) {
+    return(fallback)
+  }
+
+  go_table$adj_p_val <- suppressWarnings(as.numeric(go_table$adj_p_val))
+  go_table <- go_table[order(go_table$adj_p_val), ]
+  go_table <- head(go_table, max_terms)
+
+  if (nrow(go_table) < 2) {
+    return(fallback)
+  }
+
+  gene_lists <- lapply(go_table$Genes, function(x) {
+    genes <- unlist(strsplit(as.character(x), "[, ]+"))
+    genes <- genes[nchar(genes) > 0]
+    unique(genes)
+  })
+
+  gene_lists <- gene_lists[lengths(gene_lists) > 0]
+
+  if (length(gene_lists) < 2) {
+    return(fallback)
+  }
+
+  overlap_values <- utils::combn(
+    seq_along(gene_lists),
+    2,
+    FUN = function(idx) {
+      u <- gene_lists[[idx[1]]]
+      v <- gene_lists[[idx[2]]]
+      denom <- length(unique(c(u, v)))
+      if (denom == 0) {
+        return(0)
+      }
+      length(intersect(u, v)) / denom
+    },
+    simplify = TRUE
+  )
+
+  overlap_values <- overlap_values[is.finite(overlap_values)]
+  overlap_values <- overlap_values[overlap_values > 0]
+
+  if (!length(overlap_values)) {
+    return(fallback)
+  }
+
+  overlap_values <- sort(overlap_values, decreasing = TRUE)
+  max_overlap <- overlap_values[1]
+
+  # If the default cutoff already keeps at least one edge, keep it.
+  if (max_overlap >= fallback) {
+    return(fallback)
+  }
+
+  target_index <- max(1, round(length(overlap_values) * target_ratio))
+  threshold <- overlap_values[target_index]
+  suggested <- max(0, min(1, threshold))
+
+  if (!is.finite(suggested) || suggested <= 0) {
+    return(max(min(max_overlap, fallback), 0.01))
+  }
+
+  suggested
+}
+
 #' VisNetwork data
 #'
 #' Create VisNetwork data that can be inputted in the vis_network_plot
@@ -323,7 +411,7 @@ enrich_barplot <- function(enrichment_dataframe,
 #' @param wrap_text_network_deg Wrap the text from the pathway description
 #' @param layout_vis_deg Button to reset the layout of the network
 #' @param edge_cutoff_deg P-value to cutoff enriched pathways
-#' @param group_color 
+#' @param group_color
 #'
 #' @export
 #' @return Data that can be inputted in the vis_network_plot function

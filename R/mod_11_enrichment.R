@@ -179,7 +179,7 @@ mod_11_enrichment_ui <- function(id) {
             width = 2,
             actionButton(
               inputId = ns("layout_vis_deg"),
-              label = "Change layout"
+              label = "Layout"
             ),
             tippy::tippy_this(
               ns("layout_vis_deg"),
@@ -875,6 +875,37 @@ mod_11_enrichment_server <- function(id,
         group_color = heat_colors()
       )
     })
+
+    # Update cutoff only when user switches to Network tab or changes cluster
+    # This avoids creating reactive dependencies that interfere with other modules
+    observeEvent(
+      list(input$subtab, input$select_cluster),
+      {
+        # Only run when on Network tab
+        if (!is.null(input$subtab) && input$subtab == "Network") {
+          # Isolate to prevent reactive chain from affecting other modules
+          enrichment_data <- isolate(enrichment_dataframe_for_tree())
+
+          if (!is.null(enrichment_data)) {
+            suggested_cutoff <- isolate(suggest_edge_cutoff(
+              go_table = enrichment_data,
+              group = input$select_cluster
+            ))
+
+            if (!is.null(suggested_cutoff) && is.finite(suggested_cutoff)) {
+              isolate({
+                updateNumericInput(
+                  session = session,
+                  inputId = "edge_cutoff_deg",
+                  value = suggested_cutoff
+                )
+              })
+            }
+          }
+        }
+      },
+      ignoreInit = TRUE
+    )
 
     # Interactive vis network plot
     output$vis_network_deg <- visNetwork::renderVisNetwork({
