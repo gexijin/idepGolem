@@ -958,7 +958,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       }
 
       if (!is.null(input$ht_brush) && is.null(input$ht_main_click)) {
-        note <- '<br><p style="color:red;text-align:left;">Click on the main heatmap for more details</p>'
+        note <- '<br><p style="color:red;text-align:left;">Click on the main heatmap for details</p>'
         html <- GetoptLong::qq(note)
         return(HTML(html))
       }
