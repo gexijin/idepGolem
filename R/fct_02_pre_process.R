@@ -787,7 +787,7 @@ chr_counts_ggplot <- function(counts_data,
   )
 
   # remove categories less than 0.5%
-  df <- df[which(apply(df[, -1], 1, max) > 0.1), ]
+  df <- df[which(apply(df[, -1], 1, max) > 0.01), ]
 
   plot_data <- reshape2::melt(df, id.vars = "Chr")
 
