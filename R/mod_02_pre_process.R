@@ -529,6 +529,8 @@ mod_02_pre_process_ui <- function(id) {
                 )
               ),
               uiOutput(ns("chr_normalized_warning")),
+              uiOutput(ns("uty_expression_section")),
+              uiOutput(ns("xist_expression_section")),
             ns = ns
             )
           ),
@@ -1087,6 +1089,192 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       label = ""
     )
 
+    gene_expression_data_by_symbol <- function(target_symbol) {
+      target_symbol_clean <- trimws(target_symbol)
+      target_symbol_upper <- toupper(target_symbol_clean)
+
+      reactive({
+        req(!is.null(processed_data()$data))
+        expr_matrix <- processed_data()$data
+        if (is.null(expr_matrix) || nrow(expr_matrix) == 0 || ncol(expr_matrix) == 0) {
+          return(NULL)
+        }
+
+        sample_names <- colnames(expr_matrix)
+        if (length(sample_names) == 0) {
+          return(NULL)
+        }
+
+        gene_info <- load_data$all_gene_info()
+        symbol_matches <- NULL
+        if (!is.null(gene_info) &&
+          "symbol" %in% colnames(gene_info)) {
+          gene_symbols <- trimws(as.character(gene_info$symbol))
+          symbol_matches <- gene_info[
+            !is.na(gene_symbols) &
+              toupper(gene_symbols) == target_symbol_upper,
+            ,
+            drop = FALSE
+          ]
+        }
+
+        candidate_gene_ids <- character(0)
+        symbol_label <- target_symbol_clean
+        gene_description <- NULL
+
+        if (!is.null(symbol_matches) && nrow(symbol_matches) > 0) {
+          candidate_gene_ids <- unique(na.omit(symbol_matches$ensembl_gene_id))
+          candidate_gene_ids <- candidate_gene_ids[!is.na(candidate_gene_ids) & nzchar(candidate_gene_ids)]
+          first_symbol <- trimws(as.character(symbol_matches$symbol[1]))
+          if (!is.na(first_symbol) && nzchar(first_symbol)) {
+            symbol_label <- first_symbol
+          }
+          if ("description" %in% colnames(symbol_matches)) {
+            gene_description <- symbol_matches$description[1]
+          }
+        }
+
+        rownames_expr <- rownames(expr_matrix)
+        available_rows <- intersect(candidate_gene_ids, rownames_expr)
+        if (length(available_rows) == 0) {
+          cleaned_row_names <- trimws(toupper(rownames_expr))
+          available_rows <- rownames_expr[cleaned_row_names == target_symbol_upper]
+        }
+        if (length(available_rows) == 0) {
+          return(NULL)
+        }
+        gene_row <- available_rows[1]
+
+        display_name <- symbol_label
+        if (!is.null(gene_description) &&
+          !is.na(gene_description) &&
+          nzchar(gene_description)
+        ) {
+          display_name <- paste0(symbol_label, ": ", gene_description)
+        }
+
+        expr_values <- as.numeric(expr_matrix[gene_row, sample_names, drop = TRUE])
+        if (all(is.na(expr_values))) {
+          return(NULL)
+        }
+
+        sample_groups <- detect_groups(sample_names, load_data$sample_info())
+        empty_group <- is.na(sample_groups) | sample_groups == ""
+        sample_groups[empty_group] <- sample_names[empty_group]
+
+        raw_matrix <- processed_data()$raw_counts
+        if (is.null(raw_matrix)) {
+          raw_matrix <- load_data$converted_data()
+        }
+        if (!is.null(raw_matrix) && inherits(raw_matrix, "SummarizedExperiment")) {
+          if (requireNamespace("SummarizedExperiment", quietly = TRUE)) {
+            raw_matrix <- SummarizedExperiment::assay(raw_matrix)
+          } else {
+            raw_matrix <- NULL
+          }
+        }
+        if (!is.null(raw_matrix) && is.data.frame(raw_matrix)) {
+          raw_matrix <- as.matrix(raw_matrix)
+        }
+
+        raw_values <- rep(NA_real_, length(sample_names))
+        if (!is.null(raw_matrix) && is.matrix(raw_matrix)) {
+          available_samples <- intersect(sample_names, colnames(raw_matrix))
+          if (length(available_samples) > 0) {
+            candidate_ids <- unique(c(
+              gene_row,
+              candidate_gene_ids,
+              target_symbol_upper
+            ))
+            candidate_ids <- candidate_ids[
+              !is.na(candidate_ids) &
+                nzchar(candidate_ids)
+            ]
+            for (candidate in candidate_ids) {
+              if (candidate %in% rownames(raw_matrix)) {
+                raw_vec <- as.numeric(raw_matrix[candidate, available_samples, drop = TRUE])
+                idx <- match(available_samples, sample_names)
+                raw_values[idx] <- raw_vec
+                break
+              }
+            }
+          }
+        }
+
+        df <- data.frame(
+          sample = sample_names,
+          expression = expr_values,
+          group = factor(sample_groups, levels = unique(sample_groups)),
+          raw_data = raw_values,
+          stringsAsFactors = FALSE
+        )
+
+        has_values <- any(!is.na(df$expression)) || any(!is.na(df$raw_data))
+        if (!has_values) {
+          return(NULL)
+        }
+
+        list(
+          data = df,
+          display_name = display_name
+        )
+      })
+    }
+
+    uty_expression_data <- gene_expression_data_by_symbol("UTY")
+    xist_expression_data <- gene_expression_data_by_symbol("Xist")
+
+    output$uty_expression_section <- renderUI({
+      req(uty_expression_data())
+      tagList(
+        br(),
+        hr(),
+        h4("UTY expression across samples"),
+        mod_gene_expression_plot_ui(
+          id = ns("uty_expression_plot_module"),
+          plot_height = "400px",
+          show_download = TRUE
+        )
+      )
+    })
+
+    mod_gene_expression_plot_server(
+      id = "uty_expression_plot_module",
+      plot_data = reactive(uty_expression_data()),
+      palette_name = reactive(load_data$plots_color_select()),
+      plot_grid_lines = reactive(load_data$plot_grid_lines()),
+      ggplot2_theme = reactive(load_data$ggplot2_theme()),
+      counts_are_counts = reactive(!is.null(processed_data()$raw_counts)),
+      download_filename = "UTY_expression_barplot",
+      default_plot_type = "bar",
+      default_data_type = "raw"
+    )
+
+    output$xist_expression_section <- renderUI({
+      req(xist_expression_data())
+      tagList(
+        br(),
+        hr(),
+        h4("Xist expression across samples"),
+        mod_gene_expression_plot_ui(
+          id = ns("xist_expression_plot_module"),
+          plot_height = "400px",
+          show_download = TRUE
+        )
+      )
+    })
+
+    mod_gene_expression_plot_server(
+      id = "xist_expression_plot_module",
+      plot_data = reactive(xist_expression_data()),
+      palette_name = reactive(load_data$plots_color_select()),
+      plot_grid_lines = reactive(load_data$plot_grid_lines()),
+      ggplot2_theme = reactive(load_data$ggplot2_theme()),
+      counts_are_counts = reactive(!is.null(processed_data()$raw_counts)),
+      download_filename = "Xist_expression_barplot",
+      default_plot_type = "bar",
+      default_data_type = "raw"
+    )
 
     # Scatter eda plot ----------
     scatter <- reactive({
