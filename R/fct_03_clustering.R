@@ -646,10 +646,6 @@ cluster_heat_click_info <- function(click,
   row_index <- pos[1, "row_index"]
   column_index <- pos[1, "column_index"]
 
-  if (is.null(row_index)) {
-    return("Select a cell in the heatmap.")
-  }
-
   using_matrix <- !is.list(click_data)
 
   if (cluster_meth == 1 || using_matrix) {
