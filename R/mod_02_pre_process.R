@@ -288,7 +288,7 @@ mod_02_pre_process_ui <- function(id) {
 
           # Barplot for read counts data ----------
           tabPanel(
-            title = "Barplot",
+            title = "Counts",
             br(),
             plotOutput(
               outputId = ns("raw_counts_gg"),
@@ -735,11 +735,11 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     # Dynamic Barplot Tab ----------
     observe({
       if (load_data$data_file_format() != 1) {
-        hideTab(inputId = "eda_tabs", target = "Barplot")
+        hideTab(inputId = "eda_tabs", target = "Counts")
         updateTabsetPanel(session, "eda_tabs", selected = "Distribution")
       } else if (load_data$data_file_format() == 1) {
-        showTab(inputId = "eda_tabs", target = "Barplot")
-        updateTabsetPanel(session, "eda_tabs", selected = "Barplot")
+        showTab(inputId = "eda_tabs", target = "Counts")
+        updateTabsetPanel(session, "eda_tabs", selected = "Counts")
       }
     })
 
