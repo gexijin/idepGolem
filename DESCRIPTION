@@ -1,11 +1,11 @@
 Package: idepGolem
 Title: Integrated Differential Expression and Pathway Analysis
-Version: 2.20.4
+Version: 2.21
 Authors@R: 
     person(given = "Xijin",
            family = "Ge",
            role = c("aut", "cre"),
-           email = "gexijin@gmail.com")
+           email = "xijin.ge@sdstate.edu")
 Description: What the package does (one paragraph).
 License: What license is it under?
 Imports: 
@@ -89,10 +89,7 @@ Imports:
     ggupset,
     purrr,
     R.utils,
-    readxl,
-    ggraph,
-    tidytext,
-    wordcloud2
+    readxl
 biocViews: 
     Biobase,
     limma,

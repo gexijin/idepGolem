@@ -507,20 +507,21 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       if(!is.null(idep_data$org_info) && nrow(idep_data$org_info) > 0) {
         # Get first species from org_info (ordered by 'top' field)
         first_species_id <- idep_data$org_info$id[1]
+        first_species_name <- idep_data$org_info$name2[1]
 
-        # Create all species choices including NEW for custom species
-        all_choices <- setNames(as.list(idep_data$org_info$id), idep_data$org_info$name2)
-        all_choices <- c(all_choices, setNames("NEW", "**NEW SPECIES**"))
-
+        # Only set the selected value with minimal choices (just the selected one)
+        # The selectInput is hidden and only used to store the selection state
+        # Users select via the modal DataTable, not the dropdown
+        # We provide just the selected choice to ensure Shiny can set the value
         updateSelectInput(
           session = session,
           inputId = "select_org",
-          choices = all_choices,
+          choices = setNames(first_species_id, first_species_name),
           selected = first_species_id
         )
 
         # Set initial selected species name
-        selected_species_name(idep_data$org_info$name2[1])
+        selected_species_name(first_species_name)
       }
     })
 
@@ -620,6 +621,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         updateSelectInput(
           session = session,
           inputId = "select_org",
+          choices = setNames("NEW", "**NEW SPECIES**"),
           selected = "NEW"
         )
         updateCheckboxInput(
@@ -637,6 +639,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         updateSelectInput(
           session = session,
           inputId = "select_org",
+          choices = setNames(first_species_id, first_species_name),
           selected = first_species_id
         )
         updateCheckboxInput(
@@ -692,10 +695,11 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       )
       selected_name <- find_species_by_id_name(selected_id, idep_data$org_info)
 
-      # Update species selection
+      # Update species selection with just the selected choice
       updateSelectInput(
         session = session,
         inputId = "select_org",
+        choices = setNames(selected_id, selected_name),
         selected = selected_id
       )
 
@@ -1111,11 +1115,11 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           fluidRow(
             column(
               width = 12,
-              align = "right",
+              align = "center",
               actionButton(
                 inputId = ns("reset_app_new_data"),
-                label = strong("Reset"),
-                align = "right"
+                label = strong(tags$span("Reset", style = "color: red;")),
+                align = "left"
               ),
               tippy::tippy_this(
                 ns("reset_app_new_data"),
@@ -1194,6 +1198,13 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     })
 
     show_gene_ids_modal <- function() {
+      # Build species_choice on-demand (not loaded at startup for performance)
+      species_choice <- setNames(as.list(idep_data$org_info$id), idep_data$org_info$name2)
+      species_choice <- append(
+        setNames("NEW", "**NEW SPECIES**"),
+        species_choice
+      )
+
       shiny::showModal(
         shiny::modalDialog(
           title = "Example Gene IDs",
@@ -1208,7 +1219,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           selectizeInput(
             inputId = ns("gene_id_examples"),
             label = "Select or search for species",
-            choices = c("--Select species--", names(idep_data$species_choice))
+            choices = c("--Select species--", names(species_choice))
           ),
           DT::dataTableOutput(ns("showGeneIDs4Species")),
           size = "l",
@@ -1665,28 +1676,33 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
       dbname <- file.path(DATAPATH, "db", db_file)
       if (!file.exists(dbname)) {
-        withProgress(
-          message = paste(
-            "Download database for",
-            idep_data$org_info[ix, "name2"],
-           "(~5 minutes)"
-           ), {
-          incProgress(0.2)
-          # download org_info and demo files to current folder
-          options(timeout = 3000)
-          download.file(
-            url = paste0(db_url, db_ver, "/db/", db_file, ".gz"),
-            destfile = paste0(dbname, ".gz"),
-            mode = "wb",
-            quiet = FALSE
-          )
-          incProgress(0.7)
-          R.utils::gunzip(
-            paste0(dbname, ".gz"), 
-            remove = TRUE
-          ) # untar and unzip the files
-        })
+        download_message <- paste(
+          "Downloading database for",
+          idep_data$org_info[ix, "name2"],
+          "(~5 minutes)"
+        )
+        shinybusy::show_modal_spinner(
+          spin = "orbit",
+          text = download_message,
+          color = "#000000"
+        )
+        on.exit(shinybusy::remove_modal_spinner(), add = TRUE)
 
+        # download org_info and demo files to current folder
+        options(timeout = 3000)
+        download.file(
+          url = paste0(db_url, db_ver, "/db/", db_file, ".gz"),
+          destfile = paste0(dbname, ".gz"),
+          mode = "wb",
+          quiet = FALSE
+        )
+        R.utils::gunzip(
+          paste0(dbname, ".gz"),
+          remove = TRUE
+        ) # untar and unzip the files
+
+        shinybusy::remove_modal_spinner()
+        on.exit(NULL)
       }
     })
 

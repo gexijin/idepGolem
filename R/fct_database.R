@@ -23,20 +23,26 @@ NULL
 #' @return Database connection.
 connect_convert_db <- function(datapath = DATAPATH) {
   if (!file.exists(org_info_file)) {
-    # download org_info and demo files to current folder
-    withProgress(message = "Download demo data and species database", {
-      incProgress(0.2)
-      file_name <- paste0(db_ver, ".tar.gz")
-      options(timeout = 3000)
-      download.file(
-        url = paste0(db_url, db_ver, "/", file_name),
-        destfile = file_name,
-        mode = "wb",
-        quiet = FALSE
-      )
-      untar(file_name) # untar and unzip the files
-      file.remove(file_name) # delete the tar file to save storage
-    })
+    shinybusy::show_modal_spinner(
+      spin = "orbit",
+      text = "Downloading demo data and species database",
+      color = "#000000"
+    )
+    on.exit(shinybusy::remove_modal_spinner(), add = TRUE)
+
+    file_name <- paste0(db_ver, ".tar.gz")
+    options(timeout = 3000)
+    download.file(
+      url = paste0(db_url, db_ver, "/", file_name),
+      destfile = file_name,
+      mode = "wb",
+      quiet = FALSE
+    )
+    untar(file_name) # untar and unzip the files
+    file.remove(file_name) # delete the tar file to save storage
+
+    shinybusy::remove_modal_spinner()
+    on.exit(NULL)
   }
 
   return(DBI::dbConnect(
@@ -81,20 +87,13 @@ connect_convert_db_org <- function(datapath = DATAPATH, select_org, idep_data) {
 #'
 #' @param datapath Folder path to the iDEP data
 #' @export
-#' @return Large list of the iDEP data.
-#' 1. kegg_species_id:  KEGG species list
-#' 2. gmt_files: list of pathway files
-#' 3. gene_info_files: list of geneInfo files
-#' 4. demo_data_file: demo data file
-#' 5. demo_metadata_file: experimental design file for demo data
-#' 6. quotes:  quotes
-#' 7. string_species_go_data: List of STRING species
-#' 8. org_info: orgInfo for Ensembl species
-#' 9. annotated_species_count: total number of annotated species
-#' 10. go_levels: GO levels
-#' 11. go_level_2_terms: mapping of GO levels to terms
-#' 12. id_index: idtype and index
-#' 13. species_choice: list of species for populating selection.
+#' @return A list containing:
+#' \describe{
+#'   \item{demo_file_info}{Information on bundled demo datasets, including
+#'   paths to expression and design files.}
+#'   \item{org_info}{Species metadata sourced from the Ensembl
+#'   orgInfo table.}
+#' }
 #'
 get_idep_data <- function(datapath = DATAPATH) {
 
@@ -130,31 +129,17 @@ get_idep_data <- function(datapath = DATAPATH) {
     conn = conn_db,
     statement = "select * from orgInfo;"
   )
-  annotated_species_count <- sort(table(org_info$group))
-
-  species_choice <- setNames(as.list(org_info$id), org_info$name2)
-  species_choice <- append(
-    setNames("NEW", "**NEW SPECIES**"),
-    species_choice
-  )
 
   # set popular species on the top
   org_info <- org_info[order(org_info$top), ]
-  # GO levels
-  go_levels <- DBI::dbGetQuery(
-    conn = conn_db,
-    statement = "select distinct id, level from GO
-         WHERE GO = 'biological_process'"
-  )
-  go_level_2_terms <- go_levels[which(go_levels$level %in% c(2, 3)), 1]
-
-  quotes <- DBI::dbGetQuery(
-    conn = conn_db,
-    statement = "select quotes from quotes;"
-  )
-  quotes <- quotes[, 1]
 
   DBI::dbDisconnect(conn = conn_db)
+
+  # OPTIMIZATION: Removed unused queries to speed up startup:
+  # - annotated_species_count: never used
+  # - species_choice: only used in one modal, can be built on-demand
+  # - go_levels & go_level_2_terms: never used
+  # - quotes: never used
 
 
   # id_index <- DBI::dbGetQuery(
@@ -164,18 +149,8 @@ get_idep_data <- function(datapath = DATAPATH) {
 
 
   return(list(
-#    kegg_species_id = kegg_species_id,
-#    gmt_files = gmt_files,
-#    gene_info_files = gene_info_files,
     demo_file_info = demo_file_info,
-    quotes = quotes,
-#    string_species_go_data = string_species_go_data,
-    org_info = org_info,
-    annotated_species_count = annotated_species_count,
-    go_levels = go_levels,
-    go_level_2_terms = go_level_2_terms,
-#    id_index = id_index,
-    species_choice = species_choice
+    org_info = org_info
   ))
 }
 

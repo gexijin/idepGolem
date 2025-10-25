@@ -8,9 +8,6 @@
   # Document and reload your package
   golem::document_and_reload()
 
-#  styler::style_pkg()
-
   # Run the application
   run_app()
 }
-

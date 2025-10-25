@@ -457,18 +457,31 @@ find_contrast_samples <- function(select_contrast,
 
     # If read counts data and DESeq2
     if (data_file_format == 1 & counts_deg_method == 3) {
-      # Could be "wt-mu" or "wt-mu_for_conditionB"
-      contrast <- gsub("_for_.*", "", select_contrast)
-      # Selected contrast lookes like: "mutant-control"
+      contrast_raw <- select_contrast
+      contrast <- gsub("_for_.*", "", contrast_raw)
+      # Selected contrast looks like: "mutant-control"
       ik <- match(contrast, comparisons)
+      if (is.na(ik)) {
+        # Allow case-insensitive matching when contrast casing differs
+        ik <- match(tolower(contrast), tolower(comparisons))
+      }
 
-      other_factor_level <- gsub(".*_for_", "", select_contrast)
-      # Find the corresponding factor for the other factor
-      other_factor <- " "
-      if (nchar(other_factor_level) > 0) {
-        for (each_factor in colnames(sample_info)) {
-          if (other_factor_level %in% sample_info[, each_factor]) {
-            other_factor <- each_factor
+      has_for_clause <- grepl("_for_", contrast_raw)
+      other_factor <- NULL
+      other_factor_level <- NULL
+      if (has_for_clause) {
+        other_factor_candidate <- gsub(".*_for_", "", contrast_raw)
+        if (nchar(other_factor_candidate) > 0) {
+          for (each_factor in colnames(sample_info)) {
+            matched_rows <- which(
+              tolower(sample_info[, each_factor]) ==
+                tolower(other_factor_candidate)
+            )
+            if (length(matched_rows) > 0) {
+              other_factor <- each_factor
+              other_factor_level <- sample_info[matched_rows[1], each_factor]
+              break
+            }
           }
         }
       }
@@ -479,26 +492,48 @@ find_contrast_samples <- function(select_contrast,
       } else {
         # Corresponding factors
         selected_factor <- factors_vector[ik]
+        contrast_levels <- tolower(unlist(strsplit(contrast, "-")))
+        sample_factor_values <- sample_info[, selected_factor]
+        sample_factor_lower <- tolower(sample_factor_values)
 
-        iz <- which(sample_info[, selected_factor] %in% unlist(strsplit(contrast, "-")))
+        iz <- which(sample_factor_lower %in% contrast_levels)
 
-        # Filter by other factors: reference level
-        # c("genotype:wt", "treatment:control")
-        if (!is.null(reference_levels)) {
+        if (has_for_clause && !is.null(other_factor) && !is.null(other_factor_level)) {
+          other_idx <- which(
+            tolower(sample_info[, other_factor]) ==
+              tolower(other_factor_level)
+          )
+          iz <- intersect(iz, other_idx)
+        }
+
+        if (has_for_clause && !is.null(reference_levels)) {
           for (refs in reference_levels) {
-            if (!is.null(refs) & gsub(":.*", "", refs) != selected_factor) {
-              current_factor <- gsub(":.*", "", refs)
-              # If not reference level
-              if (nchar(other_factor_level) > 0 & current_factor == other_factor) {
-                iz <- intersect(iz, which(sample_info[, current_factor] == other_factor_level))
-              } else {
-                iz <- intersect(iz, which(sample_info[, current_factor] == gsub(".*:", "", refs)))
-              }
+            if (is.null(refs)) {
+              next
+            }
+            current_factor <- gsub(":.*", "", refs)
+            if (!current_factor %in% colnames(sample_info)) {
+              next
+            }
+            if (current_factor %in% c(selected_factor, other_factor)) {
+              next
+            }
+            target_level <- gsub(".*:", "", refs)
+            match_idx <- which(
+              tolower(sample_info[, current_factor]) ==
+                tolower(target_level)
+            )
+            if (length(match_idx) > 0) {
+              iz <- intersect(iz, match_idx)
             }
           }
         }
-        iz <- iz[which(!is.na(iz))]
+
+        iz <- iz[!is.na(iz)]
         # Switching from limma to DESeq2 causes problem, as reference level is not defined.
+      }
+      if (length(iz) > 1) {
+        iz <- sort(unique(iz))
       }
       # Not DESeq2
     } else {
@@ -602,49 +637,29 @@ read_gmt_robust <- function(in_file) {
 #' @param converted List of converted gene information  from
 #'   \code{\link{convert_id}()}
 #' @param select_org String designating the organism being analyzed.
-#' @param gene_info_files List of gene files from the 'gene_info_files' element
-#'   of the result list from \code{\link{get_idep_data}()}.
+#' @param idep_data Data object returned by \code{\link{get_idep_data}()}
+#'   containing database configuration.
 #'
 #' @return A data frame
 #' @export
 get_gene_info <- function(converted,
                           select_org,
-                          gene_info_files) {
+                          idep_data) {
   if (is.null(converted)) {
     return(as.data.frame("ID not recognized!"))
   }
-  query_set <- converted$ids
-  if (length(query_set) == 0) {
-    return(as.data.frame("ID not recognized!"))
-  }
-  ix <- grep(converted$species[1, 1], gene_info_files)
-  if (length(ix) == 0) {
-    return(as.data.frame("No matching gene info file found"))
-  } else {
-    # If selected species is not the default "bestMatch", use that species directly
-    if (select_org != "BestMatch") {
-      ix <- grep(find_species_by_id(select_org)[1, 1], gene_info_files)
-    }
-    if (length(ix) == 1) {
-      x <- read.csv(as.character(gene_info_files[ix]))
-      x[, 1] <- toupper(x[, 1])
-      # If symbol is missing use Ensembl IDs
-      x$symbol[is.na(x$symbol)] <- x[, 1]
-      # If duplicated symbol, paste Ensembl id to the end
-      n_occur <- data.frame(table(x$symbol))
-      # Rows with duplicated symbols
-      ix_duplicated <- which(n_occur$Freq > 1)
-      x$symbol[ix_duplicated] <- paste(x$symbol[ix_duplicated], x[ix_duplicated, 1])
-    } else {
-      # Read in the chosen file
-      return(as.data.frame("Multiple geneInfo file found!"))
-    }
-    Set <- match(x$ensembl_gene_id, query_set)
-    Set[which(is.na(Set))] <- "Genome"
-    Set[which(Set != "Genome")] <- "List"
 
-    return(cbind(x, Set))
+  result <- gene_info(
+    converted = converted,
+    select_org = select_org,
+    idep_data = idep_data
+  )
+
+  if (is.list(result) && !is.null(result$bool)) {
+    return(result$content)
   }
+
+  return(result)
 }
 
 

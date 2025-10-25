@@ -554,15 +554,16 @@ sub_heat_ann <- function(data,
 
   if (select_factors_heatmap == "All factors") {
 
-    group_colors <- group_pal[[1]]
-    
+    # Use all factors instead of just the first one
     heat_sub_ann <- ComplexHeatmap::HeatmapAnnotation(
-      df = sample_info[, 1, drop = FALSE],
-      col = group_pal[1],
+      df = sample_info,
+      col = group_pal,
       show_legend = TRUE
     )
+    # For groups, use the first factor (for backward compatibility with click info)
     groups <- sample_info[, 1]
-    
+    group_colors <- group_pal[[1]]
+
   } else {
     
     if (!is.null(sample_info) && !is.null(select_factors_heatmap)) {
@@ -645,11 +646,9 @@ cluster_heat_click_info <- function(click,
   row_index <- pos[1, "row_index"]
   column_index <- pos[1, "column_index"]
 
-  if (is.null(row_index)) {
-    return("Select a cell in the heatmap.")
-  }
+  using_matrix <- !is.list(click_data)
 
-  if (cluster_meth == 1) {
+  if (cluster_meth == 1 || using_matrix) {
     value <- click_data[row_index, column_index]
     col <- ComplexHeatmap::map_to_colors(ht_sub_obj@matrix_color_mapping, value)
     sample <- colnames(click_data)[column_index]
@@ -666,16 +665,28 @@ cluster_heat_click_info <- function(click,
     gene <- rownames(sub_click_data)[row_index]
   }
   group_name <- sub_groups[column_index]
+  if (length(group_name) == 0 || is.null(group_name)) {
+    group_name <- "NA"
+  }
+  if (is.factor(group_name)) {
+    group_name <- as.character(group_name)
+  }
+  group_name <- as.character(group_name)
   group_col <- group_colors[[group_name]]
+  if (is.null(group_col) || is.na(group_col)) {
+    group_col <- "#FFFFFF"
+  }
 
   # HTML for info table
   # Pulled from https://github.com/jokergoo/InteractiveComplexHeatmap/blob/master/R/shiny-server.R
   # Lines 1669:1678
   html <- GetoptLong::qq("
 <div>
-<pre>
-@{gene}  Expression: @{round(value, 2)} <span style='background-color:@{col};width=50px;'>    </span>
-Sample: @{sample},  Group: @{group_name} <span style='background-color:@{group_col};width=50px;'>    </span>
+<pre style='background:transparent;border:none;padding:0;margin:0;box-shadow:none;'>
+Gene ID: @{gene}
+Value: @{round(value, 2)} <span style='background-color:@{col};width:20px;display:inline-block;'>&nbsp;</span>
+Sample: @{sample}
+Group: @{group_name} <span style='background-color:@{group_col};width:20px;display:inline-block;'>&nbsp;</span>
 </pre></div>")
   HTML(html)
 }

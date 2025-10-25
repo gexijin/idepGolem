@@ -1,16 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "Bash(R:*)",
+      "Bash(chmod:*)",
       "Bash(Rscript:*)",
-      "Bash(for:*)",
-      "Bash(do echo \"Processing: $file\")",
-      "Bash(done)",
-      "mcp__ide__getDiagnostics",
-      "Bash(grep:*)",
       "Bash(git log:*)",
-      "Bash(sed:*)",
-      "Bash(cat:*)"
+      "WebSearch",
+      "WebFetch(domain:shiny.posit.co)",
+      "Bash(git stash push:*)",
+      "Bash(git stash:*)"
     ],
     "deny": [],
     "ask": []
