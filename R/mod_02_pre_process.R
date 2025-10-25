@@ -304,31 +304,96 @@ mod_02_pre_process_ui <- function(id) {
             )
           ),
 
-          # Boxplot of transformed data ----------
+          # Distribution plots (combined Boxplot, Density, and Dispersion) ----------
           tabPanel(
-            title = "Boxplot",
+            title = "Distribution",
             br(),
-            plotOutput(
-              outputId = ns("eda_boxplot"),
-              width = "100%",
-              height = "500px"
+            fluidRow(
+              column(
+                width = 4,
+                selectInput(
+                  inputId = ns("distribution_plot_type"),
+                  label = "Select Plot Type",
+                  choices = c(
+                    "Boxplot" = "boxplot",
+                    "Density Plot" = "density",
+                    "Dispersion" = "dispersion"
+                  ),
+                  selected = "boxplot",
+                  selectize = FALSE
+                )
+              ),
+              # Dispersion plot controls
+              conditionalPanel(
+                condition = "input.distribution_plot_type == 'dispersion'",
+                column(
+                  width = 4,
+                  selectInput(
+                    inputId = ns("heat_color_select"),
+                    label = "Select Heat Colors",
+                    choices = NULL,
+                    selectize = FALSE
+                  ),
+                  tippy::tippy_this(
+                    ns("heat_color_select"),
+                    "Pick the color palette for the dispersion plot.",
+                    theme = "light"
+                  )
+                ),
+                column(
+                  width = 4,
+                  checkboxInput(
+                    inputId = ns("rank"),
+                    label = "Use rank of mean values"
+                  ),
+                  tippy::tippy_this(
+                    ns("rank"),
+                    "Rank genes by mean expression before plotting dispersion.",
+                    theme = "light"
+                  )
+                ),
+                ns = ns
+              )
             ),
-            ottoPlots::mod_download_figure_ui(
-              id = ns("dl_eda_boxplot")
-            )
-          ),
-
-          # Density plot of transformed data ---------
-          tabPanel(
-            title = "Density Plot",
             br(),
-            plotOutput(
-              outputId = ns("eda_density"),
-              width = "100%",
-              height = "500px"
+            # Boxplot
+            conditionalPanel(
+              condition = "input.distribution_plot_type == 'boxplot'",
+              plotOutput(
+                outputId = ns("eda_boxplot"),
+                width = "100%",
+                height = "500px"
+              ),
+              ottoPlots::mod_download_figure_ui(
+                id = ns("dl_eda_boxplot")
+              ),
+              ns = ns
             ),
-            ottoPlots::mod_download_figure_ui(
-              id = ns("dl_eda_density")
+            # Density Plot
+            conditionalPanel(
+              condition = "input.distribution_plot_type == 'density'",
+              plotOutput(
+                outputId = ns("eda_density"),
+                width = "100%",
+                height = "500px"
+              ),
+              ottoPlots::mod_download_figure_ui(
+                id = ns("dl_eda_density")
+              ),
+              ns = ns
+            ),
+            # Dispersion Plot
+            conditionalPanel(
+              condition = "input.distribution_plot_type == 'dispersion'",
+              plotOutput(
+                outputId = ns("dev_transfrom"),
+                width = "100%",
+                height = "500px"
+              ),
+              ottoPlots::mod_download_figure_ui(
+                id = ns("dl_dev_transform")
+              ),
+              ns = ns
             )
           ),
 
@@ -367,48 +432,6 @@ mod_02_pre_process_ui <- function(id) {
             ),
             ottoPlots::mod_download_figure_ui(
               id = ns("dl_eda_scatter")
-            )
-          ),
-
-          # Density plot of transformed data ---------
-          tabPanel(
-            title = "Dispersion",
-            br(),
-            fluidRow(
-              column(
-                width = 4,
-                selectInput(
-                  inputId = ns("heat_color_select"),
-                  label = "Select Heat Colors",
-                  choices = NULL,
-                  selectize = FALSE
-                ),
-                tippy::tippy_this(
-                  ns("heat_color_select"),
-                  "Pick the color palette for the dispersion plot.",
-                  theme = "light"
-                )
-              ),
-              column(
-                width = 4,
-                checkboxInput(
-                  inputId = ns("rank"),
-                  label = "Use rank of mean values"
-                ),
-                tippy::tippy_this(
-                  ns("rank"),
-                  "Rank genes by mean expression before plotting dispersion.",
-                  theme = "light"
-                )
-              ),
-            ),
-            plotOutput(
-              outputId = ns("dev_transfrom"),
-              width = "100%",
-              height = "500px"
-            ),
-            ottoPlots::mod_download_figure_ui(
-              id = ns("dl_dev_transform")
             )
           ),
 
@@ -713,15 +736,16 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     observe({
       if (load_data$data_file_format() != 1) {
         hideTab(inputId = "eda_tabs", target = "Barplot")
-        updateTabsetPanel(session, "eda_tabs", selected = "Boxplot")
+        updateTabsetPanel(session, "eda_tabs", selected = "Distribution")
       } else if (load_data$data_file_format() == 1) {
         showTab(inputId = "eda_tabs", target = "Barplot")
         updateTabsetPanel(session, "eda_tabs", selected = "Barplot")
       }
     })
 
-    observeEvent(input$eda_tabs, {
-      req(input$eda_tabs == "Density Plot")
+    observeEvent(list(input$eda_tabs, input$distribution_plot_type), {
+      req(input$eda_tabs == "Distribution")
+      req(input$distribution_plot_type == "density")
       if (!density_tip_shown()) {
         showNotification(
           "Figure width can be adjusted by changing the width of browser window.",
