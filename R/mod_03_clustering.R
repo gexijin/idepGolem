@@ -991,13 +991,24 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           verbose = FALSE,
           ht_pos = shiny_env$ht_pos_main
         )
-        row_index <- unlist(pos[1, "row_index"])
+
+        row_index_list <- tryCatch(as.list(pos$row_index),
+          error = function(e) NULL
+        )
+        total_rows <- 0
+        if (!is.null(row_index_list)) {
+          total_rows <- sum(vapply(row_index_list, length, integer(1)))
+        }
+        if (total_rows == 0) {
+          total_rows <- length(unlist(pos[1, "row_index"]))
+        }
+
         # convert to height, pixels
         height1 <- max(
           400, # minimum
           min(
-            1000000, # maximum
-            12 * length(row_index)
+            2000000, # maximum
+            12 * total_rows
           )
         )
         return(height1)

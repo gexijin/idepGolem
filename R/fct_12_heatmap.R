@@ -346,7 +346,7 @@ deg_click_info <- function(click,
   column_index <- pos[1, "column_index"]
 
   if (is.null(row_index)) {
-    return("Select a cell in the heatmap.")
+    return("Click on the heatmap for details.")
   }
 
   value <- data[row_index, column_index]
