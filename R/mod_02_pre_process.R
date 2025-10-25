@@ -529,10 +529,14 @@ mod_02_pre_process_ui <- function(id) {
                 )
               ),
               uiOutput(ns("chr_normalized_warning")),
-              uiOutput(ns("uty_expression_section")),
-              uiOutput(ns("xist_expression_section")),
             ns = ns
             )
+          ),
+          tabPanel(
+            title = "Markers",
+            br(),
+            uiOutput(ns("markers_gene_selectors")),
+            uiOutput(ns("markers_plots"))
           ),
           # Plot panel for individual genes ---------
           tabPanel(
@@ -1221,60 +1225,72 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       })
     }
 
-    uty_expression_data <- gene_expression_data_by_symbol("UTY")
-    xist_expression_data <- gene_expression_data_by_symbol("Xist")
+    marker_definitions <- list(
+      list(symbol = "GAPDH", description = "Housekeeping gene"),
+      list(symbol = "ACTB", description = "Housekeeping gene"),
+      list(symbol = "H2AC6", description = "Histone mRNAs lack poly(A) tails, so they are underrepresented in polyA-selected but abundant in rRNA-depleted protocols."),
+      list(symbol = "MT-CO1", description = "Mitochondrial mRNA"),
+      list(symbol = "MT-RNR2", description = "Mitochondrial rRNA"),
+      list(symbol = "UTY", description = "Male-specific"),
+      list(symbol = "XIST", description = "Female-specific")
+    )
 
-    output$uty_expression_section <- renderUI({
-      req(uty_expression_data())
-      tagList(
-        br(),
-        hr(),
-        h4("UTY expression across samples"),
-        mod_gene_expression_plot_ui(
-          id = ns("uty_expression_plot_module"),
-          plot_height = "400px",
-          show_download = TRUE
-        )
+    marker_data <- lapply(marker_definitions, function(def) {
+      list(
+        symbol = def$symbol,
+        description = def$description,
+        data = gene_expression_data_by_symbol(def$symbol)
       )
     })
 
-    mod_gene_expression_plot_server(
-      id = "uty_expression_plot_module",
-      plot_data = reactive(uty_expression_data()),
-      palette_name = reactive(load_data$plots_color_select()),
-      plot_grid_lines = reactive(load_data$plot_grid_lines()),
-      ggplot2_theme = reactive(load_data$ggplot2_theme()),
-      counts_are_counts = reactive(!is.null(processed_data()$raw_counts)),
-      download_filename = "UTY_expression_barplot",
-      default_plot_type = "bar",
-      default_data_type = "raw"
-    )
-
-    output$xist_expression_section <- renderUI({
-      req(xist_expression_data())
-      tagList(
-        br(),
-        hr(),
-        h4("Xist expression across samples"),
-        mod_gene_expression_plot_ui(
-          id = ns("xist_expression_plot_module"),
-          plot_height = "400px",
-          show_download = TRUE
-        )
-      )
+    output$markers_gene_selectors <- renderUI({
+      req(tab() == "Prep")
+      NULL
     })
 
-    mod_gene_expression_plot_server(
-      id = "xist_expression_plot_module",
-      plot_data = reactive(xist_expression_data()),
-      palette_name = reactive(load_data$plots_color_select()),
-      plot_grid_lines = reactive(load_data$plot_grid_lines()),
-      ggplot2_theme = reactive(load_data$ggplot2_theme()),
-      counts_are_counts = reactive(!is.null(processed_data()$raw_counts)),
-      download_filename = "Xist_expression_barplot",
-      default_plot_type = "bar",
-      default_data_type = "raw"
-    )
+    output$markers_plots <- renderUI({
+      req(marker_data)
+      tagList(
+        lapply(seq_along(marker_data), function(idx) {
+          marker <- marker_data[[idx]]
+          plot_id <- paste0("marker_plot_", idx)
+          section_id <- paste0("marker_section_", idx)
+          local({
+            local_marker <- marker
+            local_plot_id <- plot_id
+            local_section_id <- section_id
+
+            output[[local_section_id]] <- renderUI({
+              req(local_marker$data())
+              tagList(
+                br(),
+                h4(paste0(local_marker$description)),
+                mod_gene_expression_plot_ui(
+                  id = ns(local_plot_id),
+                  plot_height = "400px",
+                  show_download = TRUE
+                ),
+                hr()
+              )
+            })
+
+            mod_gene_expression_plot_server(
+              id = local_plot_id,
+              plot_data = reactive(local_marker$data()),
+              palette_name = reactive(load_data$plots_color_select()),
+              plot_grid_lines = reactive(load_data$plot_grid_lines()),
+              ggplot2_theme = reactive(load_data$ggplot2_theme()),
+              counts_are_counts = reactive(!is.null(processed_data()$raw_counts)),
+              download_filename = paste0(local_marker$symbol, "_expression_barplot"),
+              default_plot_type = "bar",
+              default_data_type = "raw"
+            )
+
+            uiOutput(ns(local_section_id))
+          })
+        })
+      )
+    })
 
     # Scatter eda plot ----------
     scatter <- reactive({
