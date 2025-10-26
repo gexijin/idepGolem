@@ -108,13 +108,43 @@ k_means_elbow(heatmap_data = heatmap_data)
 
 ## Heatmap
 
-```{r fig.height=30, fig.width=8}
+```{r fig.height=6, fig.width=max(4, min(12, ncol(heatmap_data) * 0.2))}
+# Subset sample_info to match heatmap_data columns
+sample_info_subset <- NULL
+if (!is.null(params$sample_info)) {
+  # Match sample_info rows to heatmap_data columns
+  sample_info_subset <- params$sample_info[match(colnames(heatmap_data), rownames(params$sample_info)), , drop = FALSE]
+}
+
+# Prepare group palette for annotation if needed
+group_pal_main <- NULL
+if (!is.null(params$select_factors_heatmap) &&
+    params$select_factors_heatmap == "All factors" &&
+    !is.null(sample_info_subset)) {
+  groups <- as.vector(as.matrix(sample_info_subset))
+  pal <- setNames(
+    colorspace::qualitative_hcl(
+      length(unique(groups)),
+      palette = params$sample_color,
+      c = 70
+    ),
+    unique(groups)
+  )
+  sample_list <- as.list(as.data.frame(sample_info_subset))
+  group_pal_main <- lapply(sample_list, function(x) {
+    setNames(
+      pal[unique(x)],
+      unique(x)
+    )
+  })
+}
+
 ht <- heatmap_main(
   data = heatmap_data,
   cluster_meth = params$cluster_meth,
   heatmap_cutoff = params$heatmap_cutoff,
-  sample_info = params$sample_info,
-  select_factors_heatmap = params$list_factors_heatmap,
+  sample_info = sample_info_subset,
+  select_factors_heatmap = params$select_factors_heatmap,
   dist_funs = dist_functions(),
   dist_function = params$dist_function,
   hclust_function = params$hclust_function,
@@ -123,7 +153,10 @@ ht <- heatmap_main(
   row_dend = params$show_row_dend,
   k_clusters = params$k_clusters,
   re_run = FALSE,
-  selected_genes = params$selected_genes
+  selected_genes = params$selected_genes,
+  group_pal = group_pal_main,
+  sample_color = params$sample_color,
+  show_column_names = TRUE
 )
 ```
 
@@ -131,14 +164,21 @@ ht <- heatmap_main(
 
 `r ifelse(!is.null(params$submap_data), "The following heatmap shows the zoomed-in selection from the main heatmap:", "")`
 
-```{r sub_heatmap, fig.height=if(!is.null(params$submap_data)) max(6, min(300, nrow(params$submap_data) * 0.15)) else 6, fig.width=8}
+```{r sub_heatmap, fig.height=if(!is.null(params$submap_data)) max(6, min(300, nrow(params$submap_data) * 0.15)) else 6, fig.width=if(!is.null(params$submap_data)) max(4, min(12, ncol(params$submap_data) * 0.2)) else 8}
 if (!is.null(params$submap_data)) {
+  # Subset sample_info to match submap_data columns
+  sample_info_sub <- NULL
+  if (!is.null(params$sample_info)) {
+    # Match sample_info rows to submap_data columns
+    sample_info_sub <- params$sample_info[match(colnames(params$submap_data), rownames(params$sample_info)), , drop = FALSE]
+  }
+
   # Prepare group palette for annotation if needed
   group_pal_val <- NULL
   if (!is.null(params$select_factors_heatmap) &&
       params$select_factors_heatmap == "All factors" &&
-      !is.null(params$sample_info)) {
-    groups <- as.vector(as.matrix(params$sample_info))
+      !is.null(sample_info_sub)) {
+    groups <- as.vector(as.matrix(sample_info_sub))
     pal <- setNames(
       colorspace::qualitative_hcl(
         length(unique(groups)),
@@ -147,7 +187,7 @@ if (!is.null(params$submap_data)) {
       ),
       unique(groups)
     )
-    sample_list <- as.list(as.data.frame(params$sample_info))
+    sample_list <- as.list(as.data.frame(sample_info_sub))
     group_pal_val <- lapply(sample_list, function(x) {
       setNames(
         pal[unique(x)],
@@ -159,7 +199,7 @@ if (!is.null(params$submap_data)) {
   # Create annotation for sub heatmap
   sub_heat <- sub_heat_ann(
     data = params$submap_data,
-    sample_info = params$sample_info,
+    sample_info = sample_info_sub,
     select_factors_heatmap = params$select_factors_heatmap,
     group_pal = group_pal_val,
     sample_color = params$sample_color

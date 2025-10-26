@@ -20,7 +20,8 @@ heatmap_main(
   re_run,
   selected_genes,
   group_pal = NULL,
-  sample_color = NULL
+  sample_color = NULL,
+  show_column_names = FALSE
 )
 }
 \arguments{
@@ -56,6 +57,8 @@ hierarchical and 2 for kmeans.}
 \item{group_pal}{Named list of colors and their corresponding categories}
 
 \item{sample_color}{Selected colorspace color palette}
+
+\item{show_column_names}{TRUE/FALSE Show sample names below the heatmap}
 }
 \value{
 Heatmap of the processed data.

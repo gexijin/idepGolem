@@ -222,6 +222,7 @@ process_heatmap_data <- function(data,
 #' @param selected_genes Character list of genes to label on the heatmap
 #' @param group_pal Named list of colors and their corresponding categories
 #' @param sample_color Selected colorspace color palette
+#' @param show_column_names TRUE/FALSE Show sample names below the heatmap
 #'
 #' @export
 #' @return Heatmap of the processed data.
@@ -247,7 +248,8 @@ heatmap_main <- function(data,
                          re_run,
                          selected_genes,
                          group_pal = NULL,
-                         sample_color = NULL) {
+                         sample_color = NULL,
+                         show_column_names = FALSE) {
   # Filter with max z-score
   cutoff <- median(unlist(data)) + heatmap_cutoff * sd(unlist(data))
   data[data > cutoff] <- cutoff
@@ -322,7 +324,7 @@ heatmap_main <- function(data,
       row_dend_width = grid::unit(1, "cm"),
       top_annotation = heat_ann,
       show_row_names = FALSE,
-      show_column_names = FALSE,
+      show_column_names = show_column_names,
       heatmap_legend_param = list(
         direction = "horizontal",
         legend_width = grid::unit(6, "cm"),
@@ -351,7 +353,7 @@ heatmap_main <- function(data,
       row_dend_width = grid::unit(1, "cm"),
       top_annotation = heat_ann,
       show_row_names = FALSE,
-      show_column_names = FALSE,
+      show_column_names = show_column_names,
       heatmap_legend_param = list(
         direction = "horizontal",
         legend_width = grid::unit(6, "cm"),
