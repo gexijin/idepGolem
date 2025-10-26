@@ -1519,6 +1519,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
             pre_processed_data = pre_process$data(),
             sample_info = pre_process$sample_info(),
             descr = pre_process$descr(),
+            mapping_statistics = pre_process$mapping_statistics(),
             all_gene_names = pre_process$all_gene_names(),
             n_genes = input$n_genes,
             k_clusters = input$k_clusters,

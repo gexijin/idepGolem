@@ -6,6 +6,7 @@ output:
 params:
   pre_processed_data:
   pre_processed_descr:
+  mapping_statistics:
   sample_info:
   pc_x:
   pc_y:
@@ -61,7 +62,10 @@ Ge, S.X., Son, E.W. & Yao, R. iDEP: an integrated web application for differenti
 ```{r, include=FALSE}
 for (i in 1:length(params)) {
   # exclude loaded data & sample info
-  if (names(params)[i] != "sample_info" && names(params)[i] != "pre_processed_data" && names(params)[i] != "all_gene_names") {
+  if (names(params)[i] != "sample_info" &&
+      names(params)[i] != "pre_processed_data" &&
+      names(params)[i] != "all_gene_names" &&
+      names(params)[i] != "mapping_statistics") {
     cat(paste0(names(params)[i], ": ", params[[i]], "\n"))
   }
 }
@@ -73,9 +77,11 @@ library(idepGolem)
 
 ## Summary
 
-`r params$pre_processed_descr` 
+`r params$pre_processed_descr`
 
-Principal component analysis was performed using iDEP v`r packageVersion("idepGolem")`. The 2D PCA plot displays PC`r params$pc_x` on the x-axis and PC`r params$pc_y` on the y-axis`r if (!is.null(params$color) && params$color != "Names") paste0(", colored by ", params$color) else ""`
+`r if (!is.null(params$mapping_statistics)) params$mapping_statistics else ""`
+
+The 2D PCA plot displays PC`r params$pc_x` on the x-axis and PC`r params$pc_y` on the y-axis`r if (!is.null(params$color) && params$color != "Names") paste0(", colored by ", params$color) else ""`
 `r if (!is.null(params$shape) && params$shape != "Names") paste0(", with point shapes representing ", params$shape) else ""`. For the biplot analysis, PC`r gsub("PC", "", params$selected_x)` and PC`r gsub("PC", "", params$selected_y)` were selected, `r if (params$encircle) "with group encircling enabled" else "without group encircling"`, `r if (params$showLoadings) "showing gene loadings" else "without gene loadings"`, and `r if (params$pointlabs) "with sample labels displayed" else "without sample labels"`. Additional dimensionality reduction methods including t-SNE and MDS were also applied for comparative visualization.
 
 

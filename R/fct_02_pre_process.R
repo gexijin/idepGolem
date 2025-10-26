@@ -1914,10 +1914,11 @@ generate_descr <- function(missing_value,
       "3" = "Regularized log"
     )
     descr <- paste0(
-      "Read counts data was uploaded to iDEP v1.0 (citation). ",
-      "The data was filtered to include genes with more than ", min_counts,
-      " counts in ", n_min_samples_count, ifelse(n_min_samples_count > 1, " libraries", " library"), ". The data was transformed with ", part_2,
-      ".  Missing values were imputed using ", missing_value, "."
+      "Read Counts data were analyzed using iDEP v", packageVersion("idepGolem"), ". ",
+      "The data was first filtered to remove reads below ", min_counts,
+      " CPM in at least ", n_min_samples_count, " sample", ifelse(n_min_samples_count > 1, "s", ""), ". ",
+      "Then the data was transformed with ", part_2, ". ",
+      "Missing values were imputed using ", missing_value, "."
     )
   }
   # normalized expression values
@@ -1928,10 +1929,11 @@ generate_descr <- function(missing_value,
     )
 
     descr <- paste0(
-      "Normalized expression values were uploaded to iDEP v1.0 (citation). ",
-      "The data was filtered to include genes with above ", low_filter_fpkm,
-      " levels in ", n_min_samples_fpkm, ifelse(n_min_samples_fpkm > 1, " libraries", " library"), ". The data was ", part_2,
-      ".  Missing values were imputed using ", missing_value, "."
+      "Normalized expression values were analyzed using iDEP v", packageVersion("idepGolem"), ". ",
+      "The data was first filtered to remove genes below ", low_filter_fpkm,
+      " in at least ", n_min_samples_fpkm, " sample", ifelse(n_min_samples_fpkm > 1, "s", ""), ". ",
+      "The data was ", part_2, ". ",
+      "Missing values were imputed using ", missing_value, "."
     )
   }
   # LFC and FDR
@@ -1942,7 +1944,7 @@ generate_descr <- function(missing_value,
     )
     descr <- paste0(
       "Log Fold Change ", part_2,
-      "data was uploaded to iDEP v1.0 (citation).",
+      "data were analyzed using iDEP v", packageVersion("idepGolem"), ". ",
       "Missing values were imputed using ", missing_value, "."
     )
   }

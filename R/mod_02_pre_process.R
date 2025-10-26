@@ -1932,6 +1932,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       data_file_format = reactive(load_data$data_file_format()),
       counts_log_start = reactive(input$counts_log_start),
       descr = reactive(processed_data()$descr),
+      mapping_statistics = reactive(converted_message()),
       heatmap_color_select = reactive(load_data$heatmap_color_select()),
       select_gene_id = reactive(load_data$select_gene_id()),
       plot_grid_lines = reactive(load_data$plot_grid_lines()),

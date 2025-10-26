@@ -7,6 +7,7 @@ params:
   pre_processed_data:
   all_gene_names:
   descr:
+  mapping_statistics:
   sample_info:
   n_genes:
   k_clusters:
@@ -66,6 +67,7 @@ for (i in 1:length(params)) {
   if (names(params)[i] != "sample_info" &&
       names(params)[i] != "pre_processed_data" &&
       names(params)[i] != "all_gene_names" &&
+      names(params)[i] != "mapping_statistics" &&
       names(params)[i] != "submap_data") {
     cat(paste0(names(params)[i], ": ", params[[i]], "\n"))
   }
@@ -80,7 +82,11 @@ dist_name <- names(dist_funs)[as.numeric(params$dist_function)]
 
 ## Summary
 
-`r params$descr` Clustering analysis was performed using iDEP v`r packageVersion("idepGolem")`, including the top `r params$n_genes` genes based on `r params$select_gene_id`. `r if(params$cluster_meth == "1") paste0("Hierarchical clustering was applied using ", params$hclust_function, " linkage") else paste0("K-means clustering was performed with ", params$k_clusters, " clusters")` with `r dist_name` distance metric. `r if(params$gene_centering) "Genes were centered" else "Genes were not centered"``r if(params$gene_normalize) " and normalized" else ""`. The heatmap color scheme used was `r paste(params$heatmap_color_select, collapse = ", ")` with a Z-score cutoff of `r params$heatmap_cutoff`. `r if(!params$sample_clustering) "Sample clustering was disabled" else "Samples were clustered"`.
+`r params$descr`
+
+`r if (!is.null(params$mapping_statistics)) params$mapping_statistics else ""`
+
+Clustering analysis included the top `r params$n_genes` genes based on `r params$select_gene_id`. `r if(params$cluster_meth == "1") paste0("Hierarchical clustering was applied using ", params$hclust_function, " linkage") else paste0("K-means clustering was performed with ", params$k_clusters, " clusters")` with `r dist_name` distance metric. `r if(params$gene_centering) "Genes were centered" else "Genes were not centered"``r if(params$gene_normalize) " and normalized" else ""`. The heatmap color scheme used was `r paste(params$heatmap_color_select, collapse = ", ")` with a Z-score cutoff of `r params$heatmap_cutoff`. `r if(!params$sample_clustering) "Sample clustering was disabled" else "Samples were clustered"`.
 
 ```{r process_heatmap_data, include=FALSE}
 heatmap_data <- process_heatmap_data(

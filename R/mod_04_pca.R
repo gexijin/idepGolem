@@ -796,9 +796,11 @@ mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
           params <- list(
             pre_processed_data = pre_process$data(),
             pre_processed_descr = pre_process$descr(),
+            mapping_statistics = pre_process$mapping_statistics(),
             sample_info = pre_process$sample_info(),
             pc_x = input$PCAx,
             pc_y = input$PCAy,
+            pc_z = input$PCAz3d,
             color = input$selectFactors1,
             shape = input$selectFactors2,
             all_gene_names = pre_process$all_gene_names(),
