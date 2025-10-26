@@ -1677,10 +1677,47 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
             }
           }
 
+          individual_data_current <- individual_data()
+          
+          safe_input <- function(value, default) {
+            if (is.null(value) || length(value) == 0) {
+              default
+            } else {
+              value
+            }
+          }
+          
+          selected_gene <- input$selected_gene
+          if (is.null(selected_gene) || length(selected_gene) == 0) {
+            if (!is.null(individual_data_current) && nrow(individual_data_current) > 0) {
+              sorted <- sort(
+                apply(
+                  individual_data_current,
+                  MARGIN = 1,
+                  FUN = function(x) sd(x)
+                ),
+                decreasing = TRUE
+              )
+              if (length(sorted) > 0) {
+                selected_gene <- names(sorted)[seq_len(min(2, length(sorted)))]
+              } else {
+                selected_gene <- character(0)
+              }
+            } else {
+              selected_gene <- character(0)
+            }
+          }
+          
+          gene_plot_box <- safe_input(input$gene_plot_box, 1)
+          use_sd <- safe_input(input$use_sd, FALSE)
+          lab_rotate <- safe_input(input$angle_ind_axis_lab, 45)
+          plot_raw <- safe_input(input$plot_raw, FALSE)
+          plot_tukey <- safe_input(input$plot_tukey, FALSE)
+          
           # Set up parameters to pass to Rmd document
           params <- list(
             loaded_data = load_data$converted_data(),
-            individual_data = individual_data(),
+            individual_data = individual_data_current,
             descr = processed_data()$descr,
             sample_info = load_data$sample_info(),
             all_gene_info = load_data$all_gene_info(),
@@ -1700,12 +1737,12 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
             sd_color = heat_colors[[input$heat_color_select]],
             rank = input$rank,
             no_fdr = load_data$no_fdr(),
-            selected_gene = input$selected_gene,
-            gene_plot_box = input$gene_plot_box,
-            use_sd = input$use_sd,
-            lab_rotate = input$angle_ind_axis_lab,
-            plot_raw = input$plot_raw,
-            plot_tukey = input$plot_tukey,
+            selected_gene = selected_gene,
+            gene_plot_box = gene_plot_box,
+            use_sd = use_sd,
+            lab_rotate = lab_rotate,
+            plot_raw = plot_raw,
+            plot_tukey = plot_tukey,
             plots_color_select = load_data$plots_color_select(),
             plot_grid_lines = load_data$plot_grid_lines(),
             ggplot2_theme = load_data$ggplot2_theme(),
