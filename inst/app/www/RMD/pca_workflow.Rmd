@@ -150,11 +150,29 @@ PCA_biplot(
 PCA_Scree(processed_data = params$pre_processed_data)
 ```
 
-<!--# Eigenvalue Correlation-->
+## Variable Importance for X-axis PC
 ```{r}
-# PCAtools_eigencorplot(
-#   processed_data = params$pre_processed_data,
-#   sample_info =  params$sample_info
-#       )
+var_imp_plots(
+  data = params$pre_processed_data,
+  all_gene_names = params$all_gene_names,
+  PC = params$selected_x
+)
+```
+
+## Variable Importance for Y-axis PC
+```{r}
+var_imp_plots(
+  data = params$pre_processed_data,
+  all_gene_names = params$all_gene_names,
+  PC = params$selected_y
+)
+```
+
+## Eigenvalue Correlation
+```{r}
+PCAtools_eigencorplot(
+  processed_data = params$pre_processed_data,
+  sample_info = params$sample_info
+)
 ```
 
