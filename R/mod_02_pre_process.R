@@ -1771,6 +1771,24 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
           markdown_location <- app_sys("app/www/RMD/pre_process_workflow.Rmd")
           file.copy(from = markdown_location, to = tempReport, overwrite = TRUE)
 
+          # Persist current chromosome plot selections for report rendering
+          chr_use_boxplot <- input$chr_use_boxplot
+          if (is.null(chr_use_boxplot)) {
+            chr_use_boxplot <- if (!is.null(load_data$converted_data())) {
+              ncol(load_data$converted_data()) > 50
+            } else {
+              FALSE
+            }
+          }
+          chr_normalized_use_boxplot <- input$chr_normalized_use_boxplot
+          if (is.null(chr_normalized_use_boxplot)) {
+            chr_normalized_use_boxplot <- if (!is.null(processed_data()$data)) {
+              ncol(processed_data()$data) > 50
+            } else {
+              FALSE
+            }
+          }
+
           # Set up parameters to pass to Rmd document
           params <- list(
             loaded_data = load_data$converted_data(),
@@ -1787,6 +1805,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
             log_transform_fpkm = input$log_transform_fpkm,
             log_start_fpkm = input$log_start_fpkm,
             low_filter_fpkm = input$low_filter_fpkm,
+            n_min_samples_fpkm = input$n_min_samples_fpkm,
             missing_value = input$missing_value,
             scatter_x = input$scatter_x,
             scatter_y = input$scatter_y,
@@ -1797,7 +1816,10 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
             gene_plot_box = input$gene_plot_box,
             use_sd = input$use_sd,
             lab_rotate = input$angle_ind_axis_lab,
-            plots_color_select = load_data$plots_color_select()
+            plots_color_select = load_data$plots_color_select(),
+            chr_use_boxplot = chr_use_boxplot,
+            chr_normalized_use_boxplot = chr_normalized_use_boxplot,
+            mapping_statistics = converted_message()
           )
           req(params)
 

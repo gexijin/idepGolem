@@ -30,6 +30,9 @@ params:
   use_sd:
   lab_rotate:
   plots_color_select:
+  chr_use_boxplot:
+  chr_normalized_use_boxplot:
+  mapping_statistics:
   date:
     label: "Date: "
     value: !r Sys.Date()
@@ -91,6 +94,8 @@ library(idepGolem)
 ## Summary
 `r switch(params$data_file_format, "1" = "Read Counts data", "2" = "Normalized expression values", "3" = "Log Fold Change and corrected P values data")` were analyzed using iDEP v1.0 [[Citation](#citation-1)]. `r switch(params$data_file_format,  "1" = paste0("The data was first filtered to remove reads below ", params$min_counts," CPM in at least ", params$n_min_samples_count, " sample(s). Then the data was transformed with ",  switch(params$counts_transform, "1" = paste0("EdgeR using a pseudocount of ", params$counts_log_start), "2" = "VST: Variance Stabilizing Transformation",  "3" = "Regularized log"), ". Missing values were imputed using ", params$missing_value, "."), "2" = paste0("The data was ",switch(toString(params$log_transform_fpkm), "FALSE" = "not log transformed.", "TRUE" = paste0(" log transformed with a psuedocount of ", params$log_start_fpkm, ".")), " Then it was filtered to only keep genes above level ", params$low_filter_fpkm, " in at least ", params$n_min_samples_fpkm, " sample(s). Missing values were imputed using ", params$missing_value, "."))`
 
+`r if (!is.null(params$mapping_statistics)) params$mapping_statistics else ""`
+
 ## Plots
 
 ```{r Pre-Process Data, include = FALSE }
@@ -117,6 +122,24 @@ if (params$data_file_format == 1) {
     sample_info = params$sample_info,
     type = "RAW",
     plots_color_select = params$plots_color_select
+  )
+}
+```
+
+```{r counts_table, results='asis'}
+if (params$data_file_format == 1 && !is.null(processed_data$raw_counts)) {
+  filtered <- as.data.frame(colSums(processed_data$raw_counts))
+  original <- as.data.frame(colSums(params$loaded_data))
+  df <- merge(x = original, y = filtered, by = "row.names")
+  colnames(df) <- c("Sample", "Total Counts", "Total Counts After Filter")
+  df$`Counts Removed` <- df$`Total Counts` - df$`Total Counts After Filter`
+  numeric_cols <- setdiff(names(df), "Sample")
+  df[numeric_cols] <- lapply(df[numeric_cols], function(col) {
+    format(col, big.mark = ",", scientific = FALSE, trim = TRUE)
+  })
+  knitr::kable(
+    df,
+    caption = "Total reads per sample before and after filtering."
   )
 }
 ```
@@ -161,6 +184,60 @@ idepGolem::gene_counts_ggplot(
   all_gene_info = params$all_gene_info,
   plots_color_select = params$plots_color_select
 )
+```
+
+### QC Plots
+
+```{r qc_gene_type, fig.height=6, fig.width=10}
+if (params$data_file_format == 1 && !is.null(params$all_gene_info)) {
+  rrna <- idepGolem::rRNA_counts_ggplot(
+    counts_data = params$loaded_data,
+    sample_info = params$sample_info,
+    type = "Raw",
+    all_gene_info = params$all_gene_info,
+    plots_color_select = params$plots_color_select
+  )
+  print(rrna$plot)
+  if (!is.null(rrna$warning)) {
+    cat("\n\n**Warning:** ", rrna$warning, "\n")
+  }
+}
+```
+
+```{r qc_chr_counts, fig.height=12, fig.width=10}
+if (params$data_file_format == 1 && !is.null(params$all_gene_info)) {
+  use_boxplot <- isTRUE(params$chr_use_boxplot)
+  chr_counts <- idepGolem::chr_counts_ggplot(
+    counts_data = params$loaded_data,
+    sample_info = params$sample_info,
+    type = "Raw",
+    all_gene_info = params$all_gene_info,
+    plots_color_select = params$plots_color_select,
+    use_boxplot = use_boxplot
+  )
+  print(chr_counts$plot)
+  if (!is.null(chr_counts$warning)) {
+    cat("\n\n**Warning:** ", chr_counts$warning, "\n")
+  }
+}
+```
+
+```{r qc_chr_normalized, fig.height=12, fig.width=10}
+if (!is.null(processed_data$data) && !is.null(params$all_gene_info)) {
+  use_boxplot_norm <- isTRUE(params$chr_normalized_use_boxplot)
+  chr_normalized <- idepGolem::chr_normalized_ggplot(
+    counts_data = processed_data$data,
+    sample_info = params$sample_info,
+    type = "Transformed",
+    all_gene_info = params$all_gene_info,
+    plots_color_select = params$plots_color_select,
+    use_boxplot = use_boxplot_norm
+  )
+  print(chr_normalized$plot)
+  if (!is.null(chr_normalized$warning)) {
+    cat("\n\n**Warning:** ", chr_normalized$warning, "\n")
+  }
+}
 ```
 
 <!--  ```{r} -->
