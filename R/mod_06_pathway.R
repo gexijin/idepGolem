@@ -1335,17 +1335,22 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     })
 
     output$reactome_pa_pathway <- DT::renderDataTable({
-      req(input$pathway_method == 5)
-      req(!is.null(reactome_pa_pathway_data()))
+      input$submit_pathway_button
 
-      DT::datatable(
-        reactome_pa_pathway_data(),
-        options = list(
-          pageLength = 15,
-          scrollX = "500px"
-        ),
-        rownames = FALSE
-      )
+      isolate({
+        req(input$pathway_method == 5)
+        req(input$submit_pathway_button > 0)
+        req(!is.null(reactome_pa_pathway_data()))
+
+        DT::datatable(
+          reactome_pa_pathway_data(),
+          options = list(
+            pageLength = 15,
+            scrollX = "500px"
+          ),
+          rownames = FALSE
+        )
+      })
     })
 
     selected_pathway_data <- reactive({
