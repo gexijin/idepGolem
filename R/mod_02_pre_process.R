@@ -270,7 +270,7 @@ mod_02_pre_process_ui <- function(id) {
         ),
         downloadButton(
           outputId = ns("report"),
-          label = "Report"
+          label = tags$span(style = "color: red;", "Report")
         ),
         tippy::tippy_this(
           ns("report"),
