@@ -227,8 +227,17 @@ mod_05_deg_1_ui <- function(id) {
           tabPanel(
             title = "R Code",
             value = "r_code",
-            verbatimTextOutput(
-              ns("deg_code")
+            shinyAce::aceEditor(
+              outputId = ns("deg_code"),
+              value = "",
+              mode = "r",
+              theme = "textmate",
+              readOnly = TRUE,
+              height = "500px",
+              fontSize = 14,
+              showLineNumbers = TRUE,
+              highlightActiveLine = FALSE,
+              showPrintMargin = FALSE
             ),
             br(),
             downloadButton(
@@ -1007,9 +1016,15 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       )
     })
 
-    output$deg_code <- renderText({
+    # Update the Ace editor with R code when DEG results are available
+    observe({
       req(!is.null(deg$limma))
-      deg$limma$expr
+      req(!is.null(deg$limma$expr))
+      shinyAce::updateAceEditor(
+        session = session,
+        editorId = "deg_code",
+        value = deg$limma$expr
+      )
     })
 
     output$dl_deg_code <- downloadHandler(

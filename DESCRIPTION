@@ -73,6 +73,7 @@ Imports:
     Rtsne,
     runibic,
     shiny (>= 1.6.0),
+    shinyAce,
     shinybusy,
     shinyjs,
     stats,
