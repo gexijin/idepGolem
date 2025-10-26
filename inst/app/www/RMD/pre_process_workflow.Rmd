@@ -30,6 +30,8 @@ params:
   use_sd:
   lab_rotate:
   plots_color_select:
+  plot_grid_lines:
+  ggplot2_theme:
   chr_use_boxplot:
   chr_normalized_use_boxplot:
   mapping_statistics:
@@ -144,6 +146,8 @@ if (params$data_file_format == 1 && !is.null(processed_data$raw_counts)) {
 }
 ```
 
+### Distributions
+
 ```{r fig.height=5.5, fig.width=7.5 }
 idepGolem::eda_scatter(
   processed_data = processed_data$data,
@@ -239,6 +243,44 @@ if (!is.null(processed_data$data) && !is.null(params$all_gene_info)) {
   }
 }
 ```
+
+### Marker Gene Plots
+
+```{r marker_gene_plots, fig.height=5.5, fig.width=7.5, results='asis'}
+marker_payloads <- idepGolem::marker_gene_plot_payloads(
+  expr_matrix = processed_data$data,
+  sample_info = params$sample_info,
+  raw_counts = processed_data$raw_counts,
+  converted_data = params$loaded_data,
+  all_gene_info = params$all_gene_info
+)
+
+if (length(marker_payloads) == 0) {
+  cat("No marker gene plots could be generated for this dataset.\n")
+} else {
+  counts_flag <- !is.null(processed_data$raw_counts)
+  for (payload in marker_payloads) {
+    cat("#### ", payload$description, "\n\n", sep = "")
+    plot_obj <- idepGolem::build_gene_expression_plot(
+      expr_df = payload$data,
+      display_name = payload$display_name,
+      palette_name = params$plots_color_select,
+      plot_type = "bar",
+      data_type = "raw",
+      counts_are_counts = counts_flag
+    )
+    plot_obj <- idepGolem::refine_ggplot2(
+      p = plot_obj,
+      gridline = params$plot_grid_lines,
+      ggplot2_theme = params$ggplot2_theme
+    )
+    print(plot_obj)
+    cat("\n\n")
+  }
+}
+```
+
+Generated using iDEP (https://bioinformatics.sdstate.edu/idep). `r format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z")`. Accuracy not guaranteed.
 
 <!--  ```{r} -->
 <!--   individual_plots( -->

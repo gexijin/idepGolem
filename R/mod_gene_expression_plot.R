@@ -148,17 +148,6 @@ mod_gene_expression_plot_server <- function(id,
       if (is.null(palette_choice) || length(palette_choice) == 0) {
         palette_choice <- "Set1"
       }
-      group_levels <- levels(expr_df$group)
-      if (is.null(group_levels)) {
-        group_levels <- unique(expr_df$group)
-        expr_df$group <- factor(expr_df$group, levels = group_levels)
-      }
-
-      color_palette <- generate_colors(
-        n = max(1, length(group_levels)),
-        palette_name = palette_choice
-      )
-
       has_raw <- "raw_data" %in% colnames(expr_df) &&
         any(!is.na(expr_df$raw_data))
 
@@ -168,145 +157,26 @@ mod_gene_expression_plot_server <- function(id,
       }
       use_raw <- identical(chosen_data, "raw") && has_raw
 
-      expr_df$plot_value <- if (use_raw) {
-        as.numeric(expr_df$raw_data)
-      } else {
-        as.numeric(expr_df$expression)
-      }
-      req(any(!is.na(expr_df$plot_value)))
-
-      expression_label <- if (use_raw) {
-        "Raw data"
-      } else {
-        "Normalized Expression"
-      }
-
       plot_type <- input$plot_type
       if (is.null(plot_type) || !(plot_type %in% c("bar", "box", "violin"))) {
         plot_type <- default_plot_type
       }
-      use_bar <- identical(plot_type, "bar")
-      use_violin <- identical(plot_type, "violin")
-
-      base_theme <- ggplot2::theme_light() +
-        ggplot2::theme(
-          plot.title = ggplot2::element_text(size = 16, face = "bold", hjust = 0.5),
-          axis.title.y = ggplot2::element_text(size = 14, color = "black"),
-          axis.title.x = ggplot2::element_blank(),
-          axis.text.x = ggplot2::element_text(size = 12),
-          axis.text.y = ggplot2::element_text(size = 12),
-          legend.text = ggplot2::element_text(size = 12),
-          legend.title = ggplot2::element_blank(),
-          panel.border = ggplot2::element_rect(color = "grey60", fill = NA)
-        )
 
       display_name <- payload$display_name
       if (is.null(display_name)) {
         display_name <- ""
       }
 
-      if (use_bar) {
-        expr_df <- expr_df[order(expr_df$group, expr_df$sample), , drop = FALSE]
-
-        p <- ggplot2::ggplot(
-          expr_df,
-          ggplot2::aes(x = sample, y = plot_value, fill = group)
-        ) +
-          ggplot2::geom_col(color = "black", width = 0.7, na.rm = TRUE) +
-          ggplot2::labs(
-            title = display_name,
-            y = expression_label
-          ) +
-          ggplot2::scale_fill_manual(values = color_palette) +
-          base_theme +
-          ggplot2::theme(
-            axis.text.x = ggplot2::element_text(size = 10, angle = 45, hjust = 1),
-            legend.position = "right"
-          )
-
-        sample_count <- length(unique(expr_df$sample))
-        if (sample_count < 50) {
-          is_counts_upload <- isTRUE(counts_are_counts())
-          expr_df$plot_label <- if (use_raw) {
-            ifelse(
-              is.na(expr_df$raw_data),
-              NA_character_,
-              if (is_counts_upload) {
-                prettyNum(expr_df$raw_data, big.mark = ",", preserve.width = "none")
-              } else {
-                formatC(expr_df$raw_data, format = "f", digits = 3)
-              }
-            )
-          } else {
-            ifelse(
-              is.na(expr_df$plot_value),
-              NA_character_,
-              formatC(expr_df$plot_value, format = "f", digits = 3)
-            )
-          }
-          label_df <- expr_df[!is.na(expr_df$plot_label), , drop = FALSE]
-          if (nrow(label_df) > 0) {
-            max_y <- max(expr_df$plot_value, na.rm = TRUE)
-            if (is.finite(max_y) && max_y > 0) {
-              p <- p + ggplot2::expand_limits(y = max_y * 1.08)
-            }
-            p <- p +
-              ggplot2::geom_text(
-                data = label_df,
-                mapping = ggplot2::aes(label = plot_label),
-                vjust = -0.25,
-                size = 3.2,
-                color = "black"
-              ) +
-              ggplot2::coord_cartesian(clip = "off")
-          }
-        }
-      } else {
-        jitter_position <- ggplot2::position_jitter(width = 0.15, height = 0)
-
-        p <- ggplot2::ggplot(
-          expr_df,
-          ggplot2::aes(x = group, y = plot_value, fill = group)
-        ) +
-          ggplot2::labs(
-            title = display_name,
-            y = expression_label
-          ) +
-          ggplot2::scale_fill_manual(values = color_palette) +
-          base_theme +
-          ggplot2::theme(legend.position = "none")
-
-        if (use_violin) {
-          p <- p +
-            ggplot2::geom_violin(
-              alpha = 0.7,
-              color = "black",
-              trim = FALSE,
-              na.rm = TRUE
-            )
-        } else {
-          p <- p +
-            ggplot2::geom_boxplot(
-              width = 0.65,
-              alpha = 0.9,
-              color = "black",
-              outlier.shape = NA,
-              na.rm = TRUE
-            )
-        }
-
-        p <- p +
-          ggplot2::geom_point(
-            ggplot2::aes(color = group),
-            position = jitter_position,
-            size = 2.5,
-            alpha = 0.85,
-            na.rm = TRUE
-          ) +
-          ggplot2::scale_color_manual(values = color_palette) +
-          ggplot2::guides(color = "none")
-      }
-
+      counts_flag <- isTRUE(counts_are_counts())
+      data_type_to_use <- if (use_raw) "raw" else "normalized"
+      p <- build_gene_expression_plot(
+        expr_df = expr_df,
+        display_name = display_name,
+        palette_name = palette_choice,
+        plot_type = plot_type,
+        data_type = data_type_to_use,
+        counts_are_counts = counts_flag
+      )
       refine_ggplot2(
         p = p,
         gridline = plot_grid_lines(),
