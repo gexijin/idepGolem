@@ -318,12 +318,12 @@ if (params$pathway_method == 3 && !is.null(params$pathway_list_data) && nrow(par
 
 ## Tree
 Related pathways are clustered to highlight shared gene membership and biological themes.
-```{r echo=FALSE}
+```{r tree-plot, echo=FALSE, fig.width=8}
 if (!is.null(params$pathway_list_data) && nrow(params$pathway_list_data) > 0) {
   idepGolem::enrichment_tree_plot(
     go_table = params$pathway_list_data,
     group = "All Groups",
-    right_margin = 10
+    right_margin = 40
   )
 } else {
   print("No pathway data available for tree plot.")
