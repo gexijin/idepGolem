@@ -462,13 +462,15 @@ mod_02_pre_process_ui <- function(id) {
                 column(
                   10,
                   align = "right",
-                  p(
+                    p(
                     "Genes types are based on ",
                     a(
-                      "ENSEMBL classification.", 
-                      href= "http://useast.ensembl.org/info/genome/genebuild/biotypes.html"),
-                      target = "_blank"
-                  )
+                      "ENSEMBL classification.",
+                      href = "http://useast.ensembl.org/info/genome/genebuild/biotypes.html",
+                      onclick = "window.open(this.href, 'ensembl_info', 'width=900,height=700,resizable=yes,scrollbars=yes'); return false;",
+                      rel = "noopener noreferrer"
+                    )
+                    )
                 )
               ),
               br(),
@@ -485,16 +487,31 @@ mod_02_pre_process_ui <- function(id) {
                 br(),
                 fluidRow(
                   column(
-                    2, 
-                    ottoPlots::mod_download_figure_ui(
-                      id = ns("dl_rRNA_counts_gg")
+                    2,
+                    div(
+                      style = "display: flex; gap: 6px; align-items: center; flex-wrap: wrap;",
+                      ottoPlots::mod_download_figure_ui(
+                        id = ns("dl_rRNA_counts_gg")
+                      )                      
                     )
                   ),
                   column(
-                    10,
+                    3,
+                    downloadButton(
+                      outputId = ns("download_gene_type_data"),
+                      label = "data"
+                    )
+                  ),
+                  column(
+                    7,
                     align = "right",
-                    p("Higher rRNA content may indicuate ineffective rRNA-removal.")
+                    p("Unevenly high rRNA content may introduce bias.")
                   )
+                ),
+                tippy::tippy_this(
+                  ns("download_gene_type_data"),
+                  "Download read counts totals by gene type.",
+                  theme = "light"
                 ),
                 uiOutput(ns("gene_type_warning")),
                 br(),
@@ -956,6 +973,72 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       label = ""
     )
 
+    gene_type_totals <- reactive({
+      req(load_data$data_file_format() == 1)
+      req(!is.null(load_data$converted_data()))
+      req(!is.null(load_data$all_gene_info()))
+
+      counts_data <- load_data$converted_data()
+      gene_info <- load_data$all_gene_info()
+
+      df <- merge(
+        counts_data,
+        gene_info,
+        by.x = "row.names",
+        by.y = "ensembl_gene_id"
+      )
+
+      df$gene_biotype <- gsub(".*pseudogene", "Pseudogene", df$gene_biotype)
+      df$gene_biotype <- gsub("TEC", "Unknown", df$gene_biotype)
+      df$gene_biotype <- gsub("IG_.*", "IG", df$gene_biotype)
+      df$gene_biotype <- gsub("TR_.*", "TR", df$gene_biotype)
+      df$gene_biotype <- gsub("protein_coding", "Coding", df$gene_biotype)
+
+      counts_by_type <- aggregate(
+        df[, colnames(counts_data), drop = FALSE],
+        by = list(df$gene_biotype),
+        FUN = sum
+      )
+      colnames(counts_by_type)[1] <- "Gene_Type"
+
+      sample_counts <- counts_by_type[, -1, drop = FALSE]
+      sample_totals <- colSums(sample_counts, na.rm = TRUE)
+
+      percent_matrix <- sample_counts * 0
+      non_zero_samples <- sample_totals != 0
+
+      if (any(non_zero_samples)) {
+        percent_matrix[, non_zero_samples] <- sweep(
+          sample_counts[, non_zero_samples, drop = FALSE],
+          2,
+          sample_totals[non_zero_samples],
+          "/"
+        ) * 100
+      }
+
+      percent_matrix[, !non_zero_samples] <- 0
+
+      percent_matrix <- round(percent_matrix, 2)
+      row_avg <- rowMeans(percent_matrix, na.rm = TRUE)
+      order_idx <- order(row_avg, decreasing = TRUE)
+
+      data.frame(
+        `Gene Type` = counts_by_type$Gene_Type,
+        percent_matrix,
+        check.names = FALSE
+      )[order_idx, ]
+    })
+
+    output$download_gene_type_data <- downloadHandler(
+      filename = function() {
+        "gene_type_read_totals.csv"
+      },
+      content = function(file) {
+        req(gene_type_totals())
+        utils::write.csv(gene_type_totals(), file, row.names = FALSE)
+      }
+    )
+
     # Dynamic checkbox for chr counts plot ------------
     output$chr_boxplot_checkbox <- renderUI({
       req(!is.null(load_data$converted_data()))
@@ -1254,7 +1337,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       list(symbol = "ACTB", description = "Housekeeping gene"),
       list(symbol = "H2AC6", description = "Histone mRNAs lack poly(A) tails"),
       list(symbol = "MT-CO1", description = "Mitochondrial mRNA"),
-      list(symbol = "MT-RNR2", description = "Mitochondrial rRNA"),
+      list(symbol = "MT-RNR2", description = "16s mitochondrial rRNA"),
       list(symbol = "UTY", description = "Male-specific"),
       list(symbol = "XIST", description = "Female-specific")
     )
