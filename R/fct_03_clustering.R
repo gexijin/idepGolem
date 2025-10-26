@@ -633,29 +633,69 @@ cluster_heat_click_info <- function(click,
                                     group_colors,
                                     cluster_meth,
                                     click_data) {
-  pos1 <- InteractiveComplexHeatmap::getPositionFromClick(click)
-
-  pos <- InteractiveComplexHeatmap::selectPosition(
-    ht_sub,
-    mark = FALSE,
-    pos = pos1,
-    verbose = FALSE,
-    ht_pos = ht_pos_sub
+  click_hint <- HTML(
+    "<div style='color:#666;font-size:0.9em;'>Click inside the heatmap to view details.</div>"
   )
 
-  row_index <- pos[1, "row_index"]
-  column_index <- pos[1, "column_index"]
+  if (is.null(click)) {
+    return(click_hint)
+  }
+
+  pos1 <- InteractiveComplexHeatmap::getPositionFromClick(click)
+  if (is.null(pos1)) {
+    return(click_hint)
+  }
+
+  pos <- tryCatch(
+    InteractiveComplexHeatmap::selectPosition(
+      ht_sub,
+      mark = FALSE,
+      pos = pos1,
+      verbose = FALSE,
+      ht_pos = ht_pos_sub
+    ),
+    error = function(e) NULL
+  )
+
+  if (is.null(pos) || nrow(pos) == 0) {
+    return(click_hint)
+  }
+
+  row_index <- unlist(pos[1, "row_index"])
+  column_index <- unlist(pos[1, "column_index"])
+
+  if (
+    length(row_index) == 0 || length(column_index) == 0 ||
+      any(is.na(c(row_index, column_index))) ||
+      any(c(row_index, column_index) < 1)
+  ) {
+    return(click_hint)
+  }
 
   using_matrix <- !is.list(click_data)
 
   if (cluster_meth == 1 || using_matrix) {
+    if (row_index > nrow(click_data) || column_index > ncol(click_data)) {
+      return(click_hint)
+    }
     value <- click_data[row_index, column_index]
     col <- ComplexHeatmap::map_to_colors(ht_sub_obj@matrix_color_mapping, value)
     sample <- colnames(click_data)[column_index]
     gene <- rownames(click_data)[row_index]
   } else if (cluster_meth == 2) {
     clust <- pos[1, "heatmap"]
+    clust <- if (!is.null(clust)) as.character(clust) else NA_character_
+    if (is.na(clust) || !(clust %in% names(click_data))) {
+      return(click_hint)
+    }
     sub_click_data <- click_data[[clust]]
+    if (
+      is.null(sub_click_data) ||
+        row_index > nrow(sub_click_data) ||
+        column_index > ncol(sub_click_data)
+    ) {
+      return(click_hint)
+    }
     value <- sub_click_data[row_index, column_index]
     col <- ComplexHeatmap::map_to_colors(
       ht_sub_obj@ht_list$heat_1@matrix_color_mapping,
@@ -672,6 +712,9 @@ cluster_heat_click_info <- function(click,
     group_name <- as.character(group_name)
   }
   group_name <- as.character(group_name)
+  if (length(group_name) == 0 || is.na(group_name) || group_name == "") {
+    group_name <- "NA"
+  }
   group_col <- group_colors[[group_name]]
   if (is.null(group_col) || is.na(group_col)) {
     group_col <- "#FFFFFF"
