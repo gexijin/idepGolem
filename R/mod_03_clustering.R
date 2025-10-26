@@ -1533,7 +1533,10 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
             gene_normalize = input$gene_normalize,
             sample_clustering = dendrogram_selection()$sample,
             show_row_dend = dendrogram_selection()$row,
-            selected_genes = input$selected_genes
+            selected_genes = input$selected_genes,
+            submap_data = if(!is.null(shiny_env$submap_data)) shiny_env$submap_data else NULL,
+            select_factors_heatmap = input$select_factors_heatmap,
+            sample_color = input$sample_color
           )
 
           req(params)
