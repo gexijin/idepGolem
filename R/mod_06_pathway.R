@@ -439,6 +439,23 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
 
     # Interactive heatmap environment
     path_env <- new.env()
+    
+    # Inputs that require rerunning the pathway analysis when changed
+    pathway_option_inputs <- c(
+      "select_contrast",
+      "pathway_method",
+      "gage_data",
+      "select_go",
+      "pathway_p_val_cutoff",
+      "min_set_size",
+      "max_set_size",
+      "n_pathway_show",
+      "gene_p_val_cutoff",
+      "absolute_fold",
+      "show_pathway_id",
+      "pgsea_plot_color_select"
+    )
+    pathway_option_notice_initialized <- reactiveVal(FALSE)
 
     # GMT choices for enrichment ----------
     output$select_go_selector <- renderUI({
@@ -518,6 +535,30 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       ))
       removeNotification("click_submit_Stats")
     })
+    
+    observeEvent(
+      {
+        lapply(pathway_option_inputs, function(id) input[[id]])
+      },
+      {
+        if (!pathway_option_notice_initialized()) {
+          pathway_option_notice_initialized(TRUE)
+          return()
+        }
+        
+        if (is.null(tab()) || tab() != "Pathway") {
+          return()
+        }
+        
+        showNotification(
+          ui = "Click Submit to rerun",
+          id = "pathway_submit_reminder",
+          type = "message",
+          duration = 2
+        )
+      },
+      ignoreNULL = FALSE
+    )
 
     output$main_pathway_result <- renderUI({
       req(input$submit_pathway_button)
