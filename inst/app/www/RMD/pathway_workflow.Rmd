@@ -264,7 +264,7 @@ if(!is.null(params$sig_pathways) && !is.null(params$selected_pathway_data)) {
 
 ## KEGG pathway
 
-```{r, message = FALSE}
+```{r, message = FALSE, fig.align='center', out.width='100%'}
 if (!is.null(params$pathway_list_data) &&
     ncol(params$pathway_list_data) >= 5 &&
     !is.null(params$sig_pathways_kegg) &&
@@ -281,10 +281,12 @@ if (!is.null(params$pathway_list_data) &&
     low_color = params$kegg_colors[[params$kegg_color_select]][1],
     high_color = params$kegg_colors[[params$kegg_color_select]][2]
   )
-  cat("\n<!-- The png file is written to a temp folder -->\n")
-  cat("\\centering\n")
   cat(params$sig_pathways_kegg, "\n")
-  cat("![](", out_image$src, "){width=100%}\n", sep = "")
+  if (!is.null(out_image$src) && file.exists(out_image$src)) {
+    knitr::include_graphics(out_image$src)
+  } else {
+    message("KEGG pathway image unavailable; file was not created.")
+  }
 } else {
   print("KEGG pathway visualization not available (requires KEGG database selection).")
 }

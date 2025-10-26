@@ -2326,6 +2326,15 @@ kegg_pathway <- function(go,
     org_info = idep_data$org_info,
     idep_data = idep_data
   )
+  if (is.null(fold)) {
+    warning("No Entrez IDs available for KEGG plotting; returning placeholder image.")
+    return(blank)
+  }
+  fold <- fold[!is.na(fold)]
+  if (!length(fold)) {
+    warning("No fold-change values available for KEGG plotting; returning placeholder image.")
+    return(blank)
+  }
 
 
   kegg_species_id <- idep_data$kegg_species_id

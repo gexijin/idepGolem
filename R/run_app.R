@@ -23,18 +23,35 @@ run_app <- function(onStart = NULL,
     db_url <<- "http://bioinformatics.sdstate.edu/data/"
 
     # if environmental variable is not set, use relative path
-    DATAPATH <<- Sys.getenv("IDEP_DATABASE")[1]
+    data_root <- Sys.getenv("IDEP_DATABASE")[1]
     # if not defined in the environment, use two levels above
-    if (nchar(DATAPATH) == 0) {
-      DATAPATH <<- paste0("../../data/")
+    if (nchar(data_root) == 0) {
+      data_root <- "../../data"
     }
-    # Add version
-    DATAPATH <<- paste0(DATAPATH, "/", db_ver, "/")
-    org_info_file <<- paste0(DATAPATH, "demo/orgInfo.db")
-    if (!file.exists(org_info_file)) {
-      DATAPATH <<- paste0("./", db_ver, "/")
-      org_info_file <<- paste0(DATAPATH, "demo/orgInfo.db")
+
+    add_trailing_slash <- function(path) {
+      if (!grepl("/$", path)) {
+        return(paste0(path, "/"))
+      }
+      path
     }
+
+    # Build absolute path to the requested database
+    candidate_path <- file.path(data_root, db_ver)
+    DATAPATH <<- add_trailing_slash(
+      normalizePath(candidate_path, winslash = "/", mustWork = FALSE)
+    )
+    org_info_candidate <- paste0(DATAPATH, "demo/orgInfo.db")
+
+    if (!file.exists(org_info_candidate)) {
+      # Fall back to local folder (useful for dev environments)
+      fallback_path <- file.path(".", db_ver)
+      DATAPATH <<- add_trailing_slash(
+        normalizePath(fallback_path, winslash = "/", mustWork = FALSE)
+      )
+      org_info_candidate <- paste0(DATAPATH, "demo/orgInfo.db")
+    }
+    org_info_file <<- org_info_candidate
 
     # Load static data files (species list, demo files, etc.) once at startup
     # This is shared across all user sessions for better performance
