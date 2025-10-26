@@ -580,7 +580,7 @@ mod_02_pre_process_ui <- function(id) {
           ),
           # Plot panel for individual genes ---------
           tabPanel(
-            title = "Gene plot",
+            title = "Genes",
             br(),
             fluidRow(
               column(
