@@ -1704,6 +1704,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
             gene_plot_box = input$gene_plot_box,
             use_sd = input$use_sd,
             lab_rotate = input$angle_ind_axis_lab,
+            plot_raw = input$plot_raw,
+            plot_tukey = input$plot_tukey,
             plots_color_select = load_data$plots_color_select(),
             plot_grid_lines = load_data$plot_grid_lines(),
             ggplot2_theme = load_data$ggplot2_theme(),

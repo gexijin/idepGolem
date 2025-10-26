@@ -29,6 +29,8 @@ params:
   gene_plot_box:
   use_sd:
   lab_rotate:
+  plot_raw:
+  plot_tukey:
   plots_color_select:
   plot_grid_lines:
   ggplot2_theme:
@@ -45,7 +47,11 @@ params:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = params$printcode)
+knitr::opts_chunk$set(
+  echo = params$printcode,
+  warning = FALSE,
+  message = FALSE
+)
 ```
 
 <!-- This document cannot be knit directly from R studio -->
@@ -94,7 +100,7 @@ library(idepGolem)
 ```
 
 ## Summary
-`r switch(params$data_file_format, "1" = "Read Counts data", "2" = "Normalized expression values", "3" = "Log Fold Change and corrected P values data")` were analyzed using iDEP v1.0 [[Citation](#citation-1)]. `r switch(params$data_file_format,  "1" = paste0("The data was first filtered to remove reads below ", params$min_counts," CPM in at least ", params$n_min_samples_count, " sample(s). Then the data was transformed with ",  switch(params$counts_transform, "1" = paste0("EdgeR using a pseudocount of ", params$counts_log_start), "2" = "VST: Variance Stabilizing Transformation",  "3" = "Regularized log"), ". Missing values were imputed using ", params$missing_value, "."), "2" = paste0("The data was ",switch(toString(params$log_transform_fpkm), "FALSE" = "not log transformed.", "TRUE" = paste0(" log transformed with a psuedocount of ", params$log_start_fpkm, ".")), " Then it was filtered to only keep genes above level ", params$low_filter_fpkm, " in at least ", params$n_min_samples_fpkm, " sample(s). Missing values were imputed using ", params$missing_value, "."))`
+`r switch(params$data_file_format, "1" = "Read Counts data", "2" = "Normalized expression values", "3" = "Log Fold Change and corrected P values data")` were analyzed using iDEP v2.21 [[Citation](#citation-1)]. `r switch(params$data_file_format,  "1" = paste0("The data was first filtered to remove reads below ", params$min_counts," CPM in at least ", params$n_min_samples_count, " sample(s). Then the data was transformed with ",  switch(params$counts_transform, "1" = paste0("EdgeR using a pseudocount of ", params$counts_log_start), "2" = "VST: Variance Stabilizing Transformation",  "3" = "Regularized log"), ". Missing values were imputed using ", params$missing_value, "."), "2" = paste0("The data was ",switch(toString(params$log_transform_fpkm), "FALSE" = "not log transformed.", "TRUE" = paste0(" log transformed with a psuedocount of ", params$log_start_fpkm, ".")), " Then it was filtered to only keep genes above level ", params$low_filter_fpkm, " in at least ", params$n_min_samples_fpkm, " sample(s). Missing values were imputed using ", params$missing_value, "."))`
 
 `r if (!is.null(params$mapping_statistics)) params$mapping_statistics else ""`
 
@@ -280,15 +286,32 @@ if (length(marker_payloads) == 0) {
 }
 ```
 
-Generated using iDEP (https://bioinformatics.sdstate.edu/idep). `r format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z")`. Accuracy not guaranteed.
+### Gene Plot
 
-<!--  ```{r} -->
-<!--   individual_plots( -->
-<!--           individual_data = params$individual_data, -->
-<!--           sample_info = params$sample_info,             # This is NULL, but think that's ok -->
-<!--           selected_gene = params$selected_gene, -->
-<!--           gene_plot_box = params$gene_plot_box, -->
-<!--           use_sd = params$use_sd, -->
-<!--           lab_rotate = params$angle_ind_axis_lab -->
-<!--         ) -->
-<!-- # ``` -->
+```{r gene_plot, fig.height=5.5, fig.width=7.5}
+if (!is.null(params$selected_gene) && length(params$selected_gene) > 0) {
+  p <- idepGolem::individual_plots(
+    individual_data = params$individual_data,
+    sample_info = params$sample_info,
+    selected_gene = params$selected_gene,
+    gene_plot_box = params$gene_plot_box,
+    use_sd = params$use_sd,
+    lab_rotate = params$lab_rotate,
+    plots_color_select = params$plots_color_select,
+    plot_raw = params$plot_raw,
+    plot_tukey = params$plot_tukey
+  )
+
+  p <- idepGolem::refine_ggplot2(
+    p = p,
+    gridline = params$plot_grid_lines,
+    ggplot2_theme = params$ggplot2_theme
+  )
+
+  print(p)
+} else {
+  cat("No genes selected for gene plot.\n")
+}
+```
+
+Generated using iDEP v2.21 (https://bioinformatics.sdstate.edu/idep). `r format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z")`. Accuracy not guaranteed.
