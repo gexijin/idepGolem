@@ -221,7 +221,7 @@ mod_06_pathway_ui <- function(id) {
           condition = "input.pathway_method == 2 || input.pathway_method == 4",
           selectInput(
             inputId = ns("pgsea_plot_color_select"),
-            label = "Select PGSEA plot colors",
+            label = "PGSEA plot colors",
             choices = "Blue_Red",
             selectize = FALSE
           ),
