@@ -1417,6 +1417,10 @@ reactome_gene_list <- function(sig_pathway,
 #'  \code{\link{get_pgsea_plot_data}()}
 #' @param pgsea_plot_all_samples_data Matrix returned from
 #'  \code{\link{get_pgsea_plot_all_samples_data}()}
+#' @param gsva_plot_data Matrix returned from the \code{\link{gsva_plot_data}()}
+#'  function
+#' @param reactome_pa_pathway_data Data frame returned from
+#'  \code{\link{reactome_data}()}
 #' @param go String designating the section of the database to query for
 #'   pathway analysis. See \code{\link{gmt_category}()} for choices.
 #' @param select_org String designating which organism is being analyzed
@@ -1438,6 +1442,7 @@ get_pathway_list_data <- function(pathway_method,
                                   pgsea_plot_data,
                                   pgsea_plot_all_samples_data,
                                   gsva_plot_data,
+                                  reactome_pa_pathway_data,
                                   go,
                                   select_org,
                                   gene_info,
@@ -1490,6 +1495,16 @@ get_pathway_list_data <- function(pathway_method,
         pathways$Pathways <- substr(rownames(pathways), 10, nchar(rownames(pathways)))
         pathways$adj.Pval <- gsub(" .*", "", rownames(pathways))
         pathways$Direction <- "Diff"
+      }
+    }
+  }
+
+  if (pathway_method == 5) {
+    if (!is.null(reactome_pa_pathway_data)) {
+      if (ncol(reactome_pa_pathway_data) >= 4) {
+        pathways <- as.data.frame(reactome_pa_pathway_data)
+        colnames(pathways)[2] <- "Pathways"
+        colnames(pathways)[4] <- "nGenes"
       }
     }
   }

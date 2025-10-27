@@ -1509,6 +1509,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         pgsea_plot_data = pgsea_plot_data(),
         pgsea_plot_all_samples_data = pgsea_plot_all_samples_data(),
         gsva_plot_data = gsva_plot_data(),
+        reactome_pa_pathway_data = reactome_pa_pathway_data(),
         go = input$select_go,
         select_org = pre_process$select_org(),
         gene_info = pre_process$all_gene_info(),

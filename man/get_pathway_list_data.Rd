@@ -11,6 +11,7 @@ get_pathway_list_data(
   pgsea_plot_data,
   pgsea_plot_all_samples_data,
   gsva_plot_data,
+  reactome_pa_pathway_data,
   go,
   select_org,
   gene_info,
@@ -32,6 +33,12 @@ for "PGSEA w/ all samples", and 5 for "ReactomePA".}
 
 \item{pgsea_plot_all_samples_data}{Matrix returned from
 \code{\link{get_pgsea_plot_all_samples_data}()}}
+
+\item{gsva_plot_data}{Matrix returned from the \code{\link{gsva_plot_data}()}
+function}
+
+\item{reactome_pa_pathway_data}{Data frame returned from
+\code{\link{reactome_data}()}}
 
 \item{go}{String designating the section of the database to query for
 pathway analysis. See \code{\link{gmt_category}()} for choices.}
