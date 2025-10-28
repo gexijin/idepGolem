@@ -311,7 +311,7 @@ mod_03_clustering_ui <- function(id) {
           style = "display: flex; flex: wrap; gap: 5px;",
           downloadButton(
             outputId = ns("report"),
-            label = "Report"
+            label = tags$span(style = "color: red;", "Report")
           ),
           conditionalPanel(
             condition = "input.cluster_panels == 'Heatmap' ",

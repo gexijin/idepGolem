@@ -225,7 +225,7 @@ mod_04_pca_ui <- function(id) {
             # Download report button
             downloadButton(
               outputId = ns("report"),
-              label = "Report"
+              label = tags$span(style = "color: red;", "Report")
             )
           ),
           column(6,

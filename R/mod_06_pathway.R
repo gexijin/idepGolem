@@ -193,7 +193,7 @@ mod_06_pathway_ui <- function(id) {
             # Download report button
             downloadButton(
               outputId = ns("report"),
-              label = "Report"
+              label = tags$span(style = "color: red;", "Report")
             ),
             tippy::tippy_this(
               ns("report"),

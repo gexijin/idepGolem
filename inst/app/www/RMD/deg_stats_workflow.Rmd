@@ -139,7 +139,7 @@ if (!is.null(params$venn_data)) {
 
 ```{r rcode_header, results='asis', eval=!is.null(params$r_code)}
 cat("\n<br>\n\n## R Code\n\n")
-cat("The following R code was used to perform the differential expression analysis:\n\n")
+cat("The following R code can be used to redo the differential expression analysis:\n\n")
 ```
 
 ```{r rcode, eval=!is.null(params$r_code), comment=''}
@@ -152,12 +152,4 @@ if (!is.null(params$r_code)) {
 
 <br>
 
-------------------------------------------------------------------------
-
 Generated using iDEP v`r packageVersion("idepGolem")` (https://bioinformatics.sdstate.edu/idep). `r format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z")`. Accuracy not guaranteed.
-
-## Session Information
-
-```{r}
-sessionInfo()
-```
