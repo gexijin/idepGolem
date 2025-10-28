@@ -309,10 +309,6 @@ mod_03_clustering_ui <- function(id) {
         br(),
         div(
           style = "display: flex; flex: wrap; gap: 5px;",
-          downloadButton(
-            outputId = ns("report"),
-            label = tags$span(style = "color: red;", "Report")
-          ),
           conditionalPanel(
             condition = "input.cluster_panels == 'Heatmap' ",
             downloadButton(
@@ -325,6 +321,10 @@ mod_03_clustering_ui <- function(id) {
               theme = "light"
             ),
             ns = ns
+          ),
+          downloadButton(
+            outputId = ns("report"),
+            label = tags$span(style = "color: red;", "Report")
           )
         ),
         tippy::tippy_this(

@@ -306,4 +306,5 @@ k_means_elbow(heatmap_data = heatmap_data)
 <!-- ) -->
 <!-- ``` -->
 
+<br>
 Generated using iDEP v`r packageVersion("idepGolem")` (https://bioinformatics.sdstate.edu/idep). `r format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z")`. Accuracy not guaranteed.

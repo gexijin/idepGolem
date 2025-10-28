@@ -220,14 +220,6 @@ mod_04_pca_ui <- function(id) {
           ns = ns
         ),
         fluidRow(
-          column(
-            6,
-            # Download report button
-            downloadButton(
-              outputId = ns("report"),
-              label = tags$span(style = "color: red;", "Report")
-            )
-          ),
           column(6,
             offset = 0,
             downloadButton(
@@ -238,6 +230,13 @@ mod_04_pca_ui <- function(id) {
               ns("pca_data"),
               "Download the PCA scores and loadings table.",
               theme = "light"
+            )
+          ),
+          column(
+            6,
+            downloadButton(
+              outputId = ns("report"),
+              label = tags$span(style = "color: red;", "Report")
             )
           ),
           tippy::tippy_this(
