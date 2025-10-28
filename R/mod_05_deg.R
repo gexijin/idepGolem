@@ -152,6 +152,16 @@ mod_05_deg_1_ui <- function(id) {
             uiOutput(ns("sig_genes_download_button")),
             uiOutput(ns("note_sig_genes_download"))
           )
+        ),
+        br(),
+        downloadButton(
+          outputId = ns("report"),
+          label = "Report"
+        ),
+        tippy::tippy_this(
+          ns("report"),
+          "Create an HTML report summarizing the DEG analysis in the Stats tab.",
+          theme = "light"
         )
       ),
 
@@ -2047,6 +2057,99 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       return(deg_lists)
     })
 
+
+    # Report generation for Stats tab ----
+    output$report <- downloadHandler(
+      filename = "deg_stats_report.html",
+      content = function(file) {
+        withProgress(message = "Generating Report", {
+          incProgress(0.2)
+
+          # Copy the report file to a temporary directory
+          tempReport <- file.path(tempdir(), "deg_stats_workflow.Rmd")
+          tempReport <- gsub("\\", "/", tempReport, fixed = TRUE)
+
+          markdown_location <- app_sys("app/www/RMD/deg_stats_workflow.Rmd")
+          file.copy(from = markdown_location, to = tempReport, overwrite = TRUE)
+
+          # Get plot colors
+          plot_colors_list <- list(
+            "Red-Green" = c("#D92120", "#22A12F"),
+            "Blue-Orange" = c("#3D5A98", "#F47F24"),
+            "Purple-Yellow" = c("#9467BD", "#BCBD22")
+          )
+          selected_colors <- plot_colors_list[[input$plot_color_select_1]]
+          if (is.null(selected_colors)) {
+            selected_colors <- plot_colors_list[["Red-Green"]]
+          }
+
+          # Compute the stats table
+          stats_table <- if (!is.null(deg$limma)) {
+            genes_stat_table(limma = deg$limma)
+          } else {
+            NULL
+          }
+
+          # Get R code if available
+          r_code <- if (!is.null(deg$limma) && !is.null(deg$limma$expr)) {
+            deg$limma$expr
+          } else {
+            NULL
+          }
+
+          # Get venn diagram data if available
+          venn_data_param <- NULL
+          venn_comparisons <- NULL
+          if (!is.null(deg$limma) && !is.null(input$select_comparisons_venn)) {
+            tryCatch({
+              venn_data_param <- prep_venn(
+                limma = deg$limma,
+                up_down_regulated = input$up_down_regulated,
+                select_comparisons_venn = input$select_comparisons_venn
+              )
+              venn_comparisons <- input$select_comparisons_venn
+            }, error = function(e) {
+              # Silently fail if venn data not available
+            })
+          }
+
+          # Set up parameters to pass to Rmd document
+          params <- list(
+            pre_processed_descr = pre_process$descr(),
+            mapping_statistics = pre_process$mapping_statistics(),
+            sample_info = pre_process$sample_info(),
+            deg_results = if (!is.null(deg$limma)) deg$limma$results else NULL,
+            stats_table = stats_table,
+            limma_p_val = input$limma_p_val,
+            limma_fc = input$limma_fc,
+            counts_deg_method = input$counts_deg_method,
+            data_file_format = pre_process$data_file_format(),
+            threshold_wald_test = if (!is.null(input$threshold_wald_test)) input$threshold_wald_test else FALSE,
+            independent_filtering = if (!is.null(input$independent_filtering)) input$independent_filtering else TRUE,
+            plot_colors = selected_colors,
+            all_gene_names = pre_process$all_gene_names(),
+            select_gene_id = pre_process$select_gene_id(),
+            plot_grid_lines = pre_process$plot_grid_lines(),
+            ggplot2_theme = pre_process$ggplot2_theme(),
+            plots_color_select = load_data$plots_color_select(),
+            r_code = r_code,
+            venn_data = venn_data_param,
+            venn_comparisons = venn_comparisons,
+            up_down_regulated = input$up_down_regulated
+          )
+
+          req(params)
+
+          # Render the document
+          rmarkdown::render(
+            input = tempReport,
+            output_file = file,
+            params = params,
+            envir = new.env(parent = globalenv())
+          )
+        })
+      }
+    )
 
     enrichment_table_cluster <- mod_11_enrichment_server(
       id = "enrichment_table_cluster",
