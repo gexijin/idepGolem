@@ -670,7 +670,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     )
     
     # Get pathway choices from correct data
-    choices <- reactive({
+    choices <- eventReactive(input$submit_pathway_button, {
       if (input$pathway_method == 1) {
         if (!is.null(gage_pathway_data())) {
           if (dim(gage_pathway_data())[2] > 1) {
@@ -714,11 +714,11 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     })
     
     # Trim pathway choices to no ID
-    path_choices <- reactive({
+    path_choices <- eventReactive(input$submit_pathway_button, {
       req(!is.null(choices()))
 
-      if (input$select_go %in% c("GOBP", "GOCC", "GOMF", "KEGG") && 
-          !input$show_pathway_id && 
+      if (input$select_go %in% c("GOBP", "GOCC", "GOMF", "KEGG") &&
+          !input$show_pathway_id &&
           input$pathway_method != 5){
         setNames(choices(),
                  proper(sub("^[^0-9]*\\d+\\s*", "", choices())))
@@ -937,7 +937,17 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       sanitize.text.function = function(x) x
     )
 
-    contrast_samples <- reactive({
+    # Capture analysis option values when Submit is clicked
+    # These ensure all downstream reactives use consistent parameter values
+    select_contrast_submitted <- eventReactive(input$submit_pathway_button, {
+      input$select_contrast
+    })
+
+    select_go_submitted <- eventReactive(input$submit_pathway_button, {
+      input$select_go
+    })
+
+    contrast_samples <- eventReactive(input$submit_pathway_button, {
       req(!is.null(input$select_contrast))
       req(!is.null(pre_process$data()))
 
@@ -1365,7 +1375,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         select_org = pre_process$select_org(),
         all_gene_names = pre_process$all_gene_names(),
         deg = as.data.frame(deg$limma()$results),
-        select_contrast = input$select_contrast
+        select_contrast = select_contrast_submitted()
       )
       df[,-ncol(df)]
     })
@@ -1461,17 +1471,17 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
 
     kegg_image <- reactive({
       req(!is.null(input$sig_pathways_kegg))
-      
+
       shinybusy::show_modal_spinner(
         spin = "orbit",
         text = "Generating KEGG...",
         color = "#000000"
       )
       tmpfile <- kegg_pathway(
-        go = input$select_go,
+        go = select_go_submitted(),
         gage_pathway_data = pathway_list_data()[, 1:5],
         sig_pathways = input$sig_pathways_kegg,
-        select_contrast = input$select_contrast,
+        select_contrast = select_contrast_submitted(),
         limma = deg$limma(),
         converted = pre_process$converted(),
         idep_data = idep_data,
@@ -1494,7 +1504,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     ) 
 
     # List of pathways with details
-    pathway_list_data <- reactive({
+    pathway_list_data <- eventReactive(input$submit_pathway_button, {
       # only remove pathway ID for Ensembl species
       show_pathway_id <- input$show_pathway_id
       # always show pathway ID for STRING species
