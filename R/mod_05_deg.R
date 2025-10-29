@@ -2069,7 +2069,11 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
 
     # Report generation for Stats tab ----
     output$report <- downloadHandler(
-      filename = "deg_stats_report.html",
+      filename = paste0(
+        "deg_stats_report_",
+        format(Sys.time(), "%Y-%m-%d_%H-%M-%S"),
+        ".html"
+      ),
       content = function(file) {
         withProgress(message = "Generating Report", {
           incProgress(0.2)
@@ -2164,7 +2168,11 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
 
     # Report generation for DEG tab ----
     output$report_deg <- downloadHandler(
-      filename = "deg_report.html",
+      filename = paste0(
+        "deg_report_",
+        format(Sys.time(), "%Y-%m-%d_%H-%M-%S"),
+        ".html"
+      ),
       content = function(file) {
         withProgress(message = "Generating DEG Report", {
           incProgress(0.2)

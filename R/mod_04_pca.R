@@ -772,7 +772,11 @@ mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
     output$report <- downloadHandler(
 
       # For PDF output, change this to "report.pdf"
-      filename = "pca_report.html",
+      filename = paste0(
+        "pca_report_",
+        format(Sys.time(), "%Y-%m-%d_%H-%M-%S"),
+        ".html"
+      ),
       content = function(file) {
         withProgress(message = "Generating Report", {
           incProgress(0.2)

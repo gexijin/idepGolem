@@ -1496,7 +1496,11 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     output$report <- downloadHandler(
 
       # For PDF output, change this to "report.pdf"
-      filename = "clustering_report.html",
+      filename = paste0(
+        "clustering_report_",
+        format(Sys.time(), "%Y-%m-%d_%H-%M-%S"),
+        ".html"
+      ),
       content = function(file) {
         withProgress(message = "Generating report", {
           incProgress(0.2)

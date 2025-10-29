@@ -1641,7 +1641,11 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     # Markdown report
     output$report <- downloadHandler(
       # For PDF output, change this to "report.pdf"
-      filename = "pre_process_report.html",
+      filename = paste0(
+        "pre_process_report_",
+        format(Sys.time(), "%Y-%m-%d_%H-%M-%S"),
+        ".html"
+      ),
       content = function(file) {
         withProgress(message = "Generating Report (5 mins)", {
           incProgress(0.2)

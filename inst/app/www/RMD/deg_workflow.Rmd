@@ -1,5 +1,5 @@
 ---
-title: "iDEP: Differential Expression Analysis - DEG"
+title: "iDEP: Investigating Differentially Expressed Genes"
 output:
   html_document:
     code_folding: hide
