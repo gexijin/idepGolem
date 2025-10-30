@@ -1093,7 +1093,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           tags$ul(
             tags$li(
               "Watch a ",
-              a("video", href = "https://youtu.be/Hs5SamHHG9s", target = "_blank"),
+              a("video", href = "https://youtu.be/ta1orPnjY-0", target = "_blank"),
               " tutorial!"
             ),
             tags$li(
