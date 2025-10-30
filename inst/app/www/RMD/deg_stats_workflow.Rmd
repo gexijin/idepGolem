@@ -1,0 +1,155 @@
+---
+title: "iDEP: Identifying Differentially Expressed Genes"
+output:
+  html_document:
+    code_folding: hide
+params:
+  pre_processed_descr:
+  mapping_statistics:
+  sample_info:
+  deg_results:
+  stats_table:
+  limma_p_val:
+  limma_fc:
+  counts_deg_method:
+  data_file_format:
+  threshold_wald_test:
+  independent_filtering:
+  plot_colors:
+  all_gene_names:
+  select_gene_id:
+  plot_grid_lines:
+  ggplot2_theme:
+  plots_color_select:
+  r_code:
+  venn_data:
+  venn_comparisons:
+  up_down_regulated:
+  printcode:
+    label: "Display Code"
+    value: TRUE
+    input: checkbox
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = params$printcode,
+  warning = FALSE,
+  message = FALSE
+)
+```
+
+<!-- This document cannot be knit directly from R studio -->
+
+<div>
+
+::: {style="color: Blue"}
+## If this site has contributed to your work, please cite our article:
+
+Ge, S.X., Son, E.W. & Yao, R. iDEP: an integrated web application for differential expression and pathway analysis of RNA-Seq data. BMC Bioinformatics 19, 534 (2018). <https://doi.org/10.1186/s12859-018-2486-6>
+:::
+
+##
+
+</div>
+
+------------------------------------------------------------------------
+
+```{r, include=FALSE}
+library(idepGolem)
+```
+
+## Summary
+
+`r params$pre_processed_descr`
+
+`r if (!is.null(params$mapping_statistics)) params$mapping_statistics else ""`
+
+Differential expression analysis was performed using `r if (params$data_file_format == 1) { if (params$counts_deg_method == 3) "DESeq2" else if (params$counts_deg_method == 2) "limma-voom" else "limma-trend" } else "limma"` with an FDR cutoff of `r params$limma_p_val` and a minimum fold-change threshold of `r params$limma_fc``r if (params$data_file_format == 1 && params$counts_deg_method == 3) { paste0(". ", ifelse(params$threshold_wald_test, "Threshold-based Wald test was used", "Standard Wald test was used"), " and independent filtering was ", ifelse(params$independent_filtering, "enabled", "disabled")) } else ""`.
+
+## DEG Analysis Results
+
+```{r fig.height=6, fig.width=8}
+if (!is.null(params$deg_results)) {
+  p <- sig_genes_plot(
+    results = params$deg_results,
+    plot_colors = params$plot_colors
+  )
+  p <- refine_ggplot2(
+    p = p,
+    gridline = params$plot_grid_lines,
+    ggplot2_theme = params$ggplot2_theme
+  )
+  print(p)
+}
+```
+
+<br>
+
+## DEG Summary Table
+
+```{r}
+if (!is.null(params$stats_table)) {
+  knitr::kable(
+    params$stats_table,
+    caption = "Numbers of differentially expressed genes for all comparisons",
+    row.names = FALSE
+  )
+}
+```
+
+```{r venn_header, results='asis', eval=!is.null(params$venn_data)}
+cat("\n<br>\n\n## Venn Diagram\n\n")
+if (!is.null(params$venn_comparisons)) {
+  cat("Comparing", length(params$venn_comparisons), "selected comparison(s)")
+  if (params$up_down_regulated) {
+    cat(", with up- and down-regulated genes separated.\n\n")
+  } else {
+    cat(".\n\n")
+  }
+}
+```
+
+```{r venn_plot, fig.height=5, fig.width=8, eval=!is.null(params$venn_data)}
+if (!is.null(params$venn_data)) {
+  venn_plot <- plot_venn(
+    results = params$venn_data,
+    plots_color_select = params$plots_color_select
+  )
+  # plot_venn uses base graphics, so no need for print()
+}
+```
+
+```{r upset_header, results='asis', eval=!is.null(params$venn_data)}
+cat("\n<br>\n\n### UpSet Plot\n\n")
+cat("The UpSet plot is an alternative to the Venn diagram, showing the intersections of the data in the combination matrix (bottom). The columns show how many genes are in each intersection.\n\n")
+```
+
+```{r upset_plot, fig.height=6, fig.width=8, eval=!is.null(params$venn_data)}
+if (!is.null(params$venn_data)) {
+  p <- plot_upset(results = params$venn_data)
+  p <- refine_ggplot2(
+    p = p,
+    gridline = params$plot_grid_lines,
+    ggplot2_theme = params$ggplot2_theme
+  )
+  print(p)
+}
+```
+
+```{r rcode_header, results='asis', eval=!is.null(params$r_code)}
+cat("\n<br>\n\n## R Code\n\n")
+cat("The following R code can be used to redo the differential expression analysis:\n\n")
+```
+
+```{r rcode, eval=!is.null(params$r_code), comment=''}
+if (!is.null(params$r_code)) {
+  cat("```r\n")
+  cat(params$r_code)
+  cat("\n```\n")
+}
+```
+
+<br>
+
+Generated using iDEP v`r packageVersion("idepGolem")` (https://bioinformatics.sdstate.edu/idep). `r format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z")`. Accuracy not guaranteed.

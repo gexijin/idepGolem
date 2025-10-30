@@ -588,14 +588,25 @@ rRNA_counts_ggplot <- function(counts_data,
   plot_data <- reshape2::melt(df, id.vars = "Gene_Type")
   plot_data$groups <- groups[match(plot_data$variable, colnames(counts_data))]
 
-  color_palette <- generate_colors(n = nlevels(as.factor(plot_data$Gene_Type)), palette_name = plots_color_select)
+  avg_pct <- rowMeans(df[, -1, drop = FALSE], na.rm = TRUE)
+  gene_type_order <- df$Gene_Type[order(avg_pct, decreasing = TRUE)]
+  plot_data$Gene_Type <- factor(plot_data$Gene_Type, levels = gene_type_order)
+
+  color_palette <- generate_colors(n = length(gene_type_order), palette_name = plots_color_select)
   plot <- ggplot2::ggplot(plot_data, ggplot2::aes(x = variable, y = value, fill = Gene_Type)) +
-    ggplot2::geom_bar(stat = "identity") +
+    ggplot2::geom_bar(
+      stat = "identity",
+      position = ggplot2::position_stack(reverse = TRUE)
+    ) +
     ggplot2::labs(x = NULL, y = "% Reads", title = "% Reads by gene type")+
-    ggplot2::scale_fill_manual(values = color_palette)
+    ggplot2::scale_fill_manual(values = color_palette, drop = FALSE) +
+    ggplot2::guides(fill = ggplot2::guide_legend(reverse = TRUE))
 
   plot <- plot +
-    ggplot2::geom_bar(stat = "identity") +
+    ggplot2::geom_bar(
+      stat = "identity",
+      position = ggplot2::position_stack(reverse = TRUE)
+    ) +
     ggplot2::theme_light() +
     ggplot2::theme(
       legend.position = "right",
@@ -1903,10 +1914,11 @@ generate_descr <- function(missing_value,
       "3" = "Regularized log"
     )
     descr <- paste0(
-      "Read counts data was uploaded to iDEP v1.0 (citation). ",
-      "The data was filtered to include genes with more than ", min_counts,
-      " counts in ", n_min_samples_count, ifelse(n_min_samples_count > 1, " libraries", " library"), ". The data was transformed with ", part_2,
-      ".  Missing values were imputed using ", missing_value, "."
+      "Read Counts data were analyzed using iDEP v", packageVersion("idepGolem"), ". ",
+      "The data was first filtered to remove reads below ", min_counts,
+      " CPM in at least ", n_min_samples_count, " sample", ifelse(n_min_samples_count > 1, "s", ""), ". ",
+      "Then the data was transformed with ", part_2, ". ",
+      "Missing values were imputed using ", missing_value, "."
     )
   }
   # normalized expression values
@@ -1917,10 +1929,11 @@ generate_descr <- function(missing_value,
     )
 
     descr <- paste0(
-      "Normalized expression values were uploaded to iDEP v1.0 (citation). ",
-      "The data was filtered to include genes with above ", low_filter_fpkm,
-      " levels in ", n_min_samples_fpkm, ifelse(n_min_samples_fpkm > 1, " libraries", " library"), ". The data was ", part_2,
-      ".  Missing values were imputed using ", missing_value, "."
+      "Normalized expression values were analyzed using iDEP v", packageVersion("idepGolem"), ". ",
+      "The data was first filtered to remove genes below ", low_filter_fpkm,
+      " in at least ", n_min_samples_fpkm, " sample", ifelse(n_min_samples_fpkm > 1, "s", ""), ". ",
+      "The data was ", part_2, ". ",
+      "Missing values were imputed using ", missing_value, "."
     )
   }
   # LFC and FDR
@@ -1931,7 +1944,7 @@ generate_descr <- function(missing_value,
     )
     descr <- paste0(
       "Log Fold Change ", part_2,
-      "data was uploaded to iDEP v1.0 (citation).",
+      "data were analyzed using iDEP v", packageVersion("idepGolem"), ". ",
       "Missing values were imputed using ", missing_value, "."
     )
   }

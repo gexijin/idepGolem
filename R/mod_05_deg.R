@@ -152,6 +152,16 @@ mod_05_deg_1_ui <- function(id) {
             uiOutput(ns("sig_genes_download_button")),
             uiOutput(ns("note_sig_genes_download"))
           )
+        ),
+        br(),
+        downloadButton(
+          outputId = ns("report"),
+          label = tags$span(style = "color: red;", "Report")
+        ),
+        tippy::tippy_this(
+          ns("report"),
+          "Create an HTML report summarizing the DEG analysis in the Stats tab.",
+          theme = "light"
         )
       ),
 
@@ -227,8 +237,17 @@ mod_05_deg_1_ui <- function(id) {
           tabPanel(
             title = "R Code",
             value = "r_code",
-            verbatimTextOutput(
-              ns("deg_code")
+            shinyAce::aceEditor(
+              outputId = ns("deg_code"),
+              value = "",
+              mode = "r",
+              theme = "textmate",
+              readOnly = TRUE,
+              height = "500px",
+              fontSize = 14,
+              showLineNumbers = TRUE,
+              highlightActiveLine = FALSE,
+              showPrintMargin = FALSE
             ),
             br(),
             downloadButton(
@@ -327,8 +346,17 @@ mod_05_deg_2_ui <- function(id) {
           condition = "input.step_2 == 'Scatter Plot' ",
           mod_label_ui(ns("label_scatter")),
           ns = ns
+        ),
+        br(),
+        downloadButton(
+          outputId = ns("report_deg"),
+          label = tags$span(style = "color: red;", "Report")
+        ),
+        tippy::tippy_this(
+          ns("report_deg"),
+          "Create an HTML report summarizing the DEG analysis in the DEG tab.",
+          theme = "light"
         )
-
       ),
 
 
@@ -1007,9 +1035,15 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       )
     })
 
-    output$deg_code <- renderText({
+    # Update the Ace editor with R code when DEG results are available
+    observe({
       req(!is.null(deg$limma))
-      deg$limma$expr
+      req(!is.null(deg$limma$expr))
+      shinyAce::updateAceEditor(
+        session = session,
+        editorId = "deg_code",
+        value = deg$limma$expr
+      )
     })
 
     output$dl_deg_code <- downloadHandler(
@@ -2032,6 +2066,302 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       return(deg_lists)
     })
 
+
+    # Report generation for Stats tab ----
+    output$report <- downloadHandler(
+      filename = paste0(
+        "deg_stats_report_",
+        format(Sys.time(), "%Y-%m-%d_%H-%M-%S"),
+        ".html"
+      ),
+      content = function(file) {
+        withProgress(message = "Generating Report", {
+          incProgress(0.2)
+
+          # Copy the report file to a temporary directory
+          tempReport <- file.path(tempdir(), "deg_stats_workflow.Rmd")
+          tempReport <- gsub("\\", "/", tempReport, fixed = TRUE)
+
+          markdown_location <- app_sys("app/www/RMD/deg_stats_workflow.Rmd")
+          file.copy(from = markdown_location, to = tempReport, overwrite = TRUE)
+
+          # Get plot colors - must match the format in the main app
+          plot_colors_list <- list(
+            "Green-Red" = c("green", "grey45", "red"),
+            "Red-Green" = c("red", "grey45", "green"),
+            "Blue-Red" = c("blue", "grey45", "red"),
+            "Green-Magenta" = c("green", "grey45", "magenta"),
+            "Orange-Blue" = c("orange", "grey45", "blue")
+          )
+          selected_colors <- plot_colors_list[[input$plot_color_select_1]]
+          if (is.null(selected_colors)) {
+            selected_colors <- plot_colors_list[["Red-Green"]]
+          }
+
+          # Compute the stats table
+          stats_table <- if (!is.null(deg$limma)) {
+            genes_stat_table(limma = deg$limma)
+          } else {
+            NULL
+          }
+
+          # Get R code if available
+          r_code <- if (!is.null(deg$limma) && !is.null(deg$limma$expr)) {
+            deg$limma$expr
+          } else {
+            NULL
+          }
+
+          # Get venn diagram data if available
+          venn_data_param <- NULL
+          venn_comparisons <- NULL
+          if (!is.null(deg$limma) && !is.null(input$select_comparisons_venn)) {
+            tryCatch({
+              venn_data_param <- prep_venn(
+                limma = deg$limma,
+                up_down_regulated = input$up_down_regulated,
+                select_comparisons_venn = input$select_comparisons_venn
+              )
+              venn_comparisons <- input$select_comparisons_venn
+            }, error = function(e) {
+              # Silently fail if venn data not available
+            })
+          }
+
+          # Set up parameters to pass to Rmd document
+          params <- list(
+            pre_processed_descr = pre_process$descr(),
+            mapping_statistics = pre_process$mapping_statistics(),
+            sample_info = pre_process$sample_info(),
+            deg_results = if (!is.null(deg$limma)) deg$limma$results else NULL,
+            stats_table = stats_table,
+            limma_p_val = input$limma_p_val,
+            limma_fc = input$limma_fc,
+            counts_deg_method = input$counts_deg_method,
+            data_file_format = pre_process$data_file_format(),
+            threshold_wald_test = if (!is.null(input$threshold_wald_test)) input$threshold_wald_test else FALSE,
+            independent_filtering = if (!is.null(input$independent_filtering)) input$independent_filtering else TRUE,
+            plot_colors = selected_colors,
+            all_gene_names = pre_process$all_gene_names(),
+            select_gene_id = pre_process$select_gene_id(),
+            plot_grid_lines = pre_process$plot_grid_lines(),
+            ggplot2_theme = pre_process$ggplot2_theme(),
+            plots_color_select = load_data$plots_color_select(),
+            r_code = r_code,
+            venn_data = venn_data_param,
+            venn_comparisons = venn_comparisons,
+            up_down_regulated = input$up_down_regulated
+          )
+
+          req(params)
+
+          # Render the document
+          rmarkdown::render(
+            input = tempReport,
+            output_file = file,
+            params = params,
+            envir = new.env(parent = globalenv())
+          )
+        })
+      }
+    )
+
+    # Report generation for DEG tab ----
+    output$report_deg <- downloadHandler(
+      filename = paste0(
+        "deg_report_",
+        format(Sys.time(), "%Y-%m-%d_%H-%M-%S"),
+        ".html"
+      ),
+      content = function(file) {
+        withProgress(message = "Generating DEG Report", {
+          incProgress(0.2)
+
+          # Copy the report file to a temporary directory
+          tempReport <- file.path(tempdir(), "deg_workflow.Rmd")
+          tempReport <- gsub("\\", "/", tempReport, fixed = TRUE)
+
+          markdown_location <- app_sys("app/www/RMD/deg_workflow.Rmd")
+          file.copy(from = markdown_location, to = tempReport, overwrite = TRUE)
+
+          # Get plot colors - must match the format in the main app
+          plot_colors_list <- list(
+            "Green-Red" = c("green", "grey45", "red"),
+            "Red-Green" = c("red", "grey45", "green"),
+            "Blue-Red" = c("blue", "grey45", "red"),
+            "Green-Magenta" = c("green", "grey45", "magenta"),
+            "Orange-Blue" = c("orange", "grey45", "blue")
+          )
+          selected_colors <- plot_colors_list[[input$plot_color_select]]
+          if (is.null(selected_colors)) {
+            selected_colors <- plot_colors_list[["Red-Green"]]
+          }
+
+          # Calculate up and down gene counts
+          up_count <- 0
+          down_count <- 0
+          if (!is.null(heat_data()$bar)) {
+            up_count <- sum(heat_data()$bar == 1, na.rm = TRUE)
+            down_count <- sum(heat_data()$bar == -1, na.rm = TRUE)
+          }
+
+          # Generate gene tables for up and down regulated genes
+          up_genes_table <- NULL
+          down_genes_table <- NULL
+
+          if (!is.null(deg$limma$top_genes) && !is.null(input$select_contrast)) {
+            top_list <- deg$limma$top_genes
+            idx <- match(input$select_contrast, names(top_list))
+            if (!is.na(idx) && !is.null(top_list[[idx]])) {
+              top_df <- as.data.frame(top_list[[idx]])
+              if (ncol(top_df) >= 2) {
+                colnames(top_df)[1:2] <- c("log2FC", "Adjusted_P_value")
+                top_df$ensembl_ID <- rownames(top_df)
+
+                # Filter by significance
+                fc_cutoff <- input$limma_fc
+                if (is.null(fc_cutoff) || !is.finite(fc_cutoff) || fc_cutoff <= 0) {
+                  fc_cutoff <- 1
+                }
+
+                top_df <- top_df |>
+                  dplyr::filter(
+                    is.finite(log2FC),
+                    is.finite(Adjusted_P_value),
+                    Adjusted_P_value <= input$limma_p_val,
+                    abs(log2FC) >= log2(fc_cutoff)
+                  )
+
+                # Add gene names and info
+                gene_names <- pre_process$all_gene_names()
+                if (!is.null(gene_names) && "ensembl_ID" %in% colnames(gene_names)) {
+                  gene_names <- gene_names |>
+                    dplyr::distinct(ensembl_ID, .keep_all = TRUE)
+                  top_df <- top_df |>
+                    dplyr::left_join(
+                      gene_names |> dplyr::select(ensembl_ID, symbol),
+                      by = "ensembl_ID"
+                    )
+                } else {
+                  top_df$symbol <- NA_character_
+                }
+
+                gene_info <- pre_process$all_gene_info()
+                if (!is.null(gene_info) && "ensembl_gene_id" %in% colnames(gene_info)) {
+                  keep_cols <- c("ensembl_gene_id", "entrezgene_id", "description")
+                  keep_cols <- keep_cols[keep_cols %in% colnames(gene_info)]
+                  gene_info <- gene_info |>
+                    dplyr::select(dplyr::all_of(keep_cols)) |>
+                    dplyr::distinct(ensembl_gene_id, .keep_all = TRUE)
+                  top_df <- top_df |>
+                    dplyr::left_join(
+                      gene_info,
+                      by = c("ensembl_ID" = "ensembl_gene_id")
+                    )
+                }
+
+                if (!"entrezgene_id" %in% colnames(top_df)) {
+                  top_df$entrezgene_id <- NA_character_
+                }
+                if (!"description" %in% colnames(top_df)) {
+                  top_df$description <- NA_character_
+                }
+
+                top_df <- top_df |>
+                  dplyr::mutate(
+                    symbol = dplyr::coalesce(symbol, ensembl_ID),
+                    entrezgene_id = as.character(entrezgene_id),
+                    description = as.character(description),
+                    description = gsub(";.*|\\[.*", "", description),
+                    description = dplyr::na_if(trimws(description), "")
+                  )
+
+                # Split into up and down
+                up_df <- top_df |>
+                  dplyr::filter(log2FC > 0) |>
+                  dplyr::arrange(dplyr::desc(log2FC), Adjusted_P_value) |>
+                  dplyr::slice(1:50)
+
+                down_df <- top_df |>
+                  dplyr::filter(log2FC < 0) |>
+                  dplyr::arrange(log2FC, Adjusted_P_value) |>
+                  dplyr::slice(1:50)
+
+                # Create display tables
+                if (nrow(up_df) > 0) {
+                  up_genes_table <- up_df |>
+                    dplyr::transmute(
+                      Symbol = symbol,
+                      `Ensembl ID` = ensembl_ID,
+                      `log2 FC` = sprintf("%.3f", log2FC),
+                      `Adj. P-value` = formatC(Adjusted_P_value, format = "e", digits = 2),
+                      Description = dplyr::coalesce(description, "")
+                    ) |>
+                    as.data.frame(stringsAsFactors = FALSE)
+                }
+
+                if (nrow(down_df) > 0) {
+                  down_genes_table <- down_df |>
+                    dplyr::transmute(
+                      Symbol = symbol,
+                      `Ensembl ID` = ensembl_ID,
+                      `log2 FC` = sprintf("%.3f", log2FC),
+                      `Adj. P-value` = formatC(Adjusted_P_value, format = "e", digits = 2),
+                      Description = dplyr::coalesce(description, "")
+                    ) |>
+                    as.data.frame(stringsAsFactors = FALSE)
+                }
+              }
+            }
+          }
+
+          # Set up parameters to pass to Rmd document
+          params <- list(
+            pre_processed_descr = pre_process$descr(),
+            mapping_statistics = pre_process$mapping_statistics(),
+            sample_info = pre_process$sample_info(),
+            select_contrast = input$select_contrast,
+            limma_p_val = input$limma_p_val,
+            limma_fc = input$limma_fc,
+            counts_deg_method = input$counts_deg_method,
+            data_file_format = pre_process$data_file_format(),
+            threshold_wald_test = if (!is.null(input$threshold_wald_test)) input$threshold_wald_test else FALSE,
+            independent_filtering = if (!is.null(input$independent_filtering)) input$independent_filtering else TRUE,
+            plot_colors = selected_colors,
+            all_gene_names = pre_process$all_gene_names(),
+            select_gene_id = pre_process$select_gene_id(),
+            plot_grid_lines = pre_process$plot_grid_lines(),
+            ggplot2_theme = pre_process$ggplot2_theme(),
+            plots_color_select = load_data$plots_color_select(),
+            heatmap_color_select = pre_process$heatmap_color_select(),
+            vol_data = if (!is.null(vol_data())) vol_data() else NULL,
+            heat_data = if (!is.null(heat_data()$genes)) heat_data()$genes else NULL,
+            heat_bar = if (!is.null(heat_data()$bar)) heat_data()$bar else NULL,
+            up_count = up_count,
+            down_count = down_count,
+            up_genes_table = up_genes_table,
+            down_genes_table = down_genes_table,
+            gene_labels_volcano = if (!is.null(gene_labels())) gene_labels() else NULL,
+            gene_labels_ma = if (!is.null(gene_labels_ma())) gene_labels_ma() else NULL,
+            gene_labels_scatter = if (!is.null(gene_labels_scat())) gene_labels_scat() else NULL,
+            contrast_samples = if (!is.null(contrast_samples())) contrast_samples() else NULL,
+            processed_data = pre_process$data(),
+            top_genes = if (!is.null(deg$limma$top_genes)) deg$limma$top_genes else NULL,
+            comparisons = if (!is.null(deg$limma$comparisons)) deg$limma$comparisons else NULL
+          )
+
+          req(params)
+
+          # Render the document
+          rmarkdown::render(
+            input = tempReport,
+            output_file = file,
+            params = params,
+            envir = new.env(parent = globalenv())
+          )
+        })
+      }
+    )
 
     enrichment_table_cluster <- mod_11_enrichment_server(
       id = "enrichment_table_cluster",

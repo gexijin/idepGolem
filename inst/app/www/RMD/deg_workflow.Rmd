@@ -1,0 +1,203 @@
+---
+title: "iDEP: Investigating Differentially Expressed Genes"
+output:
+  html_document:
+    code_folding: hide
+params:
+  pre_processed_descr:
+  mapping_statistics:
+  sample_info:
+  select_contrast:
+  limma_p_val:
+  limma_fc:
+  counts_deg_method:
+  data_file_format:
+  threshold_wald_test:
+  independent_filtering:
+  plot_colors:
+  all_gene_names:
+  select_gene_id:
+  plot_grid_lines:
+  ggplot2_theme:
+  plots_color_select:
+  heatmap_color_select:
+  vol_data:
+  heat_data:
+  heat_bar:
+  up_count:
+  down_count:
+  gene_labels_volcano:
+  gene_labels_ma:
+  gene_labels_scatter:
+  contrast_samples:
+  processed_data:
+  top_genes:
+  comparisons:
+  up_genes_table:
+  down_genes_table:
+  printcode:
+    label: "Display Code"
+    value: TRUE
+    input: checkbox
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = params$printcode,
+  warning = FALSE,
+  message = FALSE
+)
+```
+
+<!-- This document cannot be knit directly from R studio -->
+
+<div>
+
+::: {style="color: Blue"}
+## If this site has contributed to your work, please cite our article:
+
+Ge, S.X., Son, E.W. & Yao, R. iDEP: an integrated web application for differential expression and pathway analysis of RNA-Seq data. BMC Bioinformatics 19, 534 (2018). <https://doi.org/10.1186/s12859-018-2486-6>
+:::
+
+##
+
+</div>
+
+------------------------------------------------------------------------
+
+```{r, include=FALSE}
+library(idepGolem)
+library(dplyr)
+library(kableExtra)
+```
+
+## Summary
+
+`r params$pre_processed_descr`
+
+`r if (!is.null(params$mapping_statistics)) params$mapping_statistics else ""`
+
+Differential expression analysis was performed using `r if (params$data_file_format == 1) { if (params$counts_deg_method == 3) "DESeq2" else if (params$counts_deg_method == 2) "limma-voom" else "limma-trend" } else "limma"` with an FDR cutoff of `r params$limma_p_val` and a minimum fold-change threshold of `r params$limma_fc``r if (params$data_file_format == 1 && params$counts_deg_method == 3) { paste0(". ", ifelse(params$threshold_wald_test, "Threshold-based Wald test was used", "Standard Wald test was used"), " and independent filtering was ", ifelse(params$independent_filtering, "enabled", "disabled")) } else ""`.
+
+## Selected Comparison: `r params$select_contrast`
+
+Up-regulated genes: `r params$up_count`
+
+Down-regulated genes: `r params$down_count`
+
+<br>
+
+## Top Up-regulated Genes
+
+```{r}
+if (!is.null(params$up_genes_table) && nrow(params$up_genes_table) > 0) {
+  kbl(params$up_genes_table, escape = FALSE) %>%
+    kable_classic(full_width = FALSE, html_font = "Cambria")
+} else {
+  print("No up-regulated genes found for this comparison.")
+}
+```
+
+<br>
+
+## Top Down-regulated Genes
+
+```{r}
+if (!is.null(params$down_genes_table) && nrow(params$down_genes_table) > 0) {
+  kbl(params$down_genes_table, escape = FALSE) %>%
+    kable_classic(full_width = FALSE, html_font = "Cambria")
+} else {
+  print("No down-regulated genes found for this comparison.")
+}
+```
+
+<br>
+
+## DEG Heatmap
+
+```{r fig.height=10, fig.width=5}
+if (!is.null(params$heat_data) && !is.null(params$heat_bar)) {
+  heat_colors <- unlist(strsplit(params$heatmap_color_select, "-"))
+
+  deg_heatmap(
+    df = params$heat_data,
+    bar = params$heat_bar,
+    heatmap_color_select = heat_colors,
+    cluster_rows = FALSE
+  )
+}
+```
+
+<br>
+
+## Volcano Plot
+
+```{r fig.height=6, fig.width=8}
+if (!is.null(params$vol_data) && !is.null(params$vol_data$data)) {
+  p <- plot_volcano(
+    data = params$vol_data$data,
+    plot_colors = params$plot_colors,
+    anotate_genes = params$gene_labels_volcano
+  )
+  p <- refine_ggplot2(
+    p = p,
+    gridline = params$plot_grid_lines,
+    ggplot2_theme = params$ggplot2_theme
+  )
+  print(p)
+}
+```
+
+<br>
+
+## MA Plot
+
+```{r fig.height=6, fig.width=8}
+if (!is.null(params$vol_data) && !is.null(params$vol_data$data)) {
+  p <- plot_ma(
+    data = params$vol_data$data,
+    plot_colors = params$plot_colors,
+    anotate_genes = params$gene_labels_ma
+  )
+  p <- refine_ggplot2(
+    p = p,
+    gridline = params$plot_grid_lines,
+    ggplot2_theme = params$ggplot2_theme
+  )
+  print(p)
+}
+```
+
+<br>
+
+## Scatter Plot
+
+```{r fig.height=6, fig.width=8}
+if (!is.null(params$top_genes) && !is.null(params$comparisons)) {
+  p <- plot_deg_scatter(
+    select_contrast = params$select_contrast,
+    comparisons = params$comparisons,
+    top_genes = params$top_genes,
+    limma_p_val = params$limma_p_val,
+    limma_fc = params$limma_fc,
+    contrast_samples = params$contrast_samples,
+    processed_data = params$processed_data,
+    sample_info = params$sample_info,
+    plot_colors = params$plot_colors,
+    all_gene_names = params$all_gene_names,
+    anotate_genes = params$gene_labels_scatter
+  )
+  p <- refine_ggplot2(
+    p = p,
+    gridline = params$plot_grid_lines,
+    ggplot2_theme = params$ggplot2_theme
+  )
+  print(p)
+}
+```
+
+<br>
+
+------------------------------------------------------------------------
+
+Generated using iDEP v`r packageVersion("idepGolem")` (https://bioinformatics.sdstate.edu/idep). `r format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z")`. Accuracy not guaranteed.

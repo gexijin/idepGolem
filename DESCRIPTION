@@ -1,6 +1,6 @@
 Package: idepGolem
 Title: Integrated Differential Expression and Pathway Analysis
-Version: 2.21
+Version: 2.3.0
 Authors@R: 
     person(given = "Xijin",
            family = "Ge",
@@ -73,6 +73,7 @@ Imports:
     Rtsne,
     runibic,
     shiny (>= 1.6.0),
+    shinyAce,
     shinybusy,
     shinyjs,
     stats,

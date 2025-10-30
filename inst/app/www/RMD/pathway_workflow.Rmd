@@ -1,5 +1,5 @@
 ---
-title: "Pathway analysis using iDEP"
+title: "iDEP: Pathway Analysis"
 output: 
   html_document:
     code_folding: hide
@@ -42,58 +42,159 @@ params:
   printcode:
     label: "Display Code"
     value: TRUE
-    input: checkbox
+input: checkbox
 ---
 
-Automatically generated using  [iDEP](http://bioinformatics.sdstate.edu/) at `r format(Sys.time(), "%H:%M, %Y-%m-%d")`. 
-
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = params$printcode) # , include = FALSE, eval = FALSE)
+knitr::opts_chunk$set(
+  echo = params$printcode,
+  warning = FALSE,
+  message = FALSE
+)
+```
+
+```{r libraries, include=FALSE}
+library(idepGolem)
+library(dplyr)
+library(kableExtra)
 ```
 
 <!-- This document cannot be knit directly from R studio -->
 <div>
 
 ::: {style="color: Blue"}
-If this site has contributed to your work, please cite: Ge, Son & Yao, iDEP: an integrated web application for differential expression and pathway analysis of RNA-Seq data. BMC Bioinformatics 19, 534 (2018). <https://doi.org/10.1186/s12859-018-2486-6>
+## If this site has contributed to your work, please cite our article:
+
+Ge, S.X., Son, E.W. & Yao, R. iDEP: an integrated web application for differential expression and pathway analysis of RNA-Seq data. BMC Bioinformatics 19, 534 (2018). <https://doi.org/10.1186/s12859-018-2486-6>
 :::
 
 </div>
-This document contains what parameters values were selected on the IDEP interface. It also includes the plots generated from those selections. 
+------------------------------------------------------------------------
 
-# Summary
+## Summary
 
 `r params$descr`
 
-The comparison selected was **`r params$select_contrast`** using **`r params$go`** genesets. **`r params$n_pathway_show`** pathways with between **`r params$min_set_size`** and **`r params$max_set_size`** genes were included. Absolute fold values were `r ifelse(params$absolute_fold, 'not', '')`  used. Pathways were found using the **`r switch(as.character(params$pathway_method), "1" = "GAGE", "2" = "PGSEA", "3" = "GSEA (Pre-Ranked)", "4" = "PGSEA with all samples", "5" = "ReactomePA", "6" = "GSVA", "7" = "ssGSEA", "8" = "PLAGE")`** method. Pathway p values cutoff is set to **`r params$pathway_p_val_cutoff`**. Genes with FDR (DEG) greater than **`r params$gene_p_val_cutoff`** were removed.
+The contrast **`r params$select_contrast`** was evaluated against the **`r params$go`** gene-set collection, restricting pathway sizes to `r params$min_set_size`-`r params$max_set_size` genes. Pathways were tested with the **`r switch(as.character(params$pathway_method), "1" = "GAGE", "2" = "PGSEA", "3" = "GSEA (Pre-Ranked)", "4" = "PGSEA with all samples", "5" = "ReactomePA", "6" = "GSVA", "7" = "ssGSEA", "8" = "PLAGE")`** workflow, applying a pathway FDR cutoff of **`r params$pathway_p_val_cutoff`** and filtering genes with DEG FDR greater than **`r params$gene_p_val_cutoff`**. Absolute fold values were `r ifelse(params$absolute_fold, "applied to emphasize magnitude changes.", "not applied, preserving directional fold changes.")`
 
+`r if (!is.null(params$sig_pathways) && length(params$sig_pathways) > 0) paste("Heatmap previews focus on the selected significant pathways:", paste(head(params$sig_pathways, 5), collapse = ", "), if (length(params$sig_pathways) > 5) "..." else "", sep = " ") else "No individual pathways were selected for focused heatmap visualization."`
 
-<!--ALL SELECTED PARAMETERS-->
-# Selections
-```{r echo=FALSE}
+This document contains the generated plots and the full set of user-selected parameters for reproducibility.
 
-# exclude long parameter we won't print
+## Analysis Settings
+
+```{r analysis-settings, echo=FALSE}
+method_label <- switch(
+  as.character(params$pathway_method),
+  "1" = "GAGE",
+  "2" = "PGSEA",
+  "3" = "GSEA (Pre-Ranked)",
+  "4" = "PGSEA (All Samples)",
+  "5" = "ReactomePA",
+  "6" = "GSVA",
+  "7" = "ssGSEA",
+  "8" = "PLAGE",
+  "Not specified"
+)
+
+`%||%` <- function(x, y) {
+  if (is.null(x)) {
+    return(y)
+  }
+  if (length(x) == 0) {
+    return(y)
+  }
+  if (is.character(x) && all(x == "")) {
+    return(y)
+  }
+  x
+}
+
+size_filter <- if (!is.null(params$min_set_size) && !is.null(params$max_set_size)) {
+  paste(params$min_set_size, params$max_set_size, sep = " - ")
+} else {
+  "Not specified"
+}
+
+analysis_settings <- tibble::tibble(
+  Setting = c(
+    "Contrast",
+    "Gene-set collection",
+    "Method",
+    "Pathways displayed",
+    "Pathway size filter",
+    "Pathway FDR cutoff",
+    "Gene-level FDR cutoff",
+    "Absolute fold filter",
+    "Heatmap palette",
+    "KEGG palette"
+  ),
+  Value = c(
+    params$select_contrast %||% "Not specified",
+    params$go %||% "Not specified",
+    method_label,
+    params$n_pathway_show %||% "Default",
+    size_filter,
+    params$pathway_p_val_cutoff %||% "Default",
+    params$gene_p_val_cutoff %||% "Default",
+    ifelse(isTRUE(params$absolute_fold), "Enabled", "Disabled"),
+    params$heatmap_color_select %||% "Default",
+    params$kegg_color_select %||% "Default"
+  )
+) %>%
+  mutate(
+    Value = ifelse(is.na(Value) | Value == "", "Not specified", Value)
+  )
+
+kbl(
+  analysis_settings,
+  col.names = c("Setting", "Value"),
+  align = c("l", "l"),
+  format = "html"
+) %>%
+  kable_classic(full_width = FALSE, html_font = "Cambria")
+```
+
+<details>
+<summary><strong>Show all parameter values</strong></summary>
+
+```{r all-params, echo=FALSE, results='asis'}
 excluded_params <- c(
   "sample_info", "loaded_data", "pre_processed", "deg",
   "idep_data", "converted", "limma", "gene_sets",
   "pathway_list_data", "all_gene_names", "all_gene_info",
-  "selected_pathway_data", 'descr'
+  "selected_pathway_data", "descr", "contrast_samples",
+  "sig_pathways", "sig_pathways_kegg", "up_down_reg_deg",
+  "wrap_text_network_deg", "layout_vis_deg", "edge_cutoff_deg",
+  "group_color"
 )
 
-for (i in 1:length(params)) {
-  if (!(names(params)[i] %in% excluded_params)) {
-    cat(paste0(names(params)[i], ": ", params[[i]], "\n"))
-  }
-}
+param_subset <- setdiff(names(params), excluded_params)
+lines <- vapply(
+  param_subset,
+  function(param_name) {
+    value <- params[[param_name]]
+    if (is.null(value)) {
+      value <- "NULL"
+    } else if (length(value) > 1) {
+      value <- paste(value, collapse = ", ")
+    }
+    paste(param_name, ":", value)
+  },
+  FUN.VALUE = character(1),
+  USE.NAMES = FALSE
+)
+
+knitr::asis_output(paste0("<pre>", paste(lines, collapse = "\n"), "</pre>"))
 ```
 
-```{r, quiet = TRUE, message = FALSE}
-library(kableExtra)
-library(dplyr)
-library(idepGolem)
-```
+</details>
+
+<br>
+
 
 ## Gene Sets
+The statement below confirms whether a curated gene-set collection was available for this run.
 ```{r}
 # Display gene sets information from params
 if (!is.null(params$gene_sets) && length(params$gene_sets) > 0) {
@@ -103,8 +204,11 @@ if (!is.null(params$gene_sets) && length(params$gene_sets) > 0) {
 }
 ```
 
+<br>
+
 
 ## Pathway analysis for contrast: `r params$select_contrast`
+The tables or heatmaps below mirror the visuals from the Pathway tab while preserving the selected enrichment algorithm.
 
 ```{r }
 # Display GAGE results from pre-computed data
@@ -210,20 +314,27 @@ if (params$pathway_method == 3 && !is.null(params$pathway_list_data) && nrow(par
 
 
 
+<br>
+
 ## Tree
-```{r echo=FALSE}
+Related pathways are clustered to highlight shared gene membership and biological themes.
+```{r tree-plot, echo=FALSE, fig.width=10}
 if (!is.null(params$pathway_list_data) && nrow(params$pathway_list_data) > 0) {
   idepGolem::enrichment_tree_plot(
     go_table = params$pathway_list_data,
     group = "All Groups",
-    right_margin = 10
+    right_margin = 30
   )
 } else {
   print("No pathway data available for tree plot.")
 }
 ```
 
+<br>
+
+
 ## Network plot
+The enrichment network reveals how significant pathways overlap; edge width reflects shared genes while node color follows group assignments from the Pathway tab.
 ```{r network}
 if (!is.null(params$pathway_list_data) && nrow(params$pathway_list_data) > 0) {
   network_data <- idepGolem::network_data(
@@ -242,7 +353,11 @@ if (!is.null(params$pathway_list_data) && nrow(params$pathway_list_data) > 0) {
 }
 ```
 
+<br>
+
+
 ## Heatmap
+When a pathway is selected on the Heatmap tab, the corresponding genes are displayed with the chosen palette and clustering settings.
 
 ```{r pathway-name}
 if (!is.null(params$sig_pathways)) {
@@ -262,9 +377,13 @@ if(!is.null(params$sig_pathways) && !is.null(params$selected_pathway_data)) {
 }
 ```
 
-## KEGG pathway
+<br>
 
-```{r, message = FALSE}
+
+## KEGG pathway
+For KEGG-based analyses, highlighted pathways are rendered with the chosen low/high color scale to overlay log2 fold-change statistics.
+
+```{r, message = FALSE, fig.align='center', out.width='100%'}
 if (!is.null(params$pathway_list_data) &&
     ncol(params$pathway_list_data) >= 5 &&
     !is.null(params$sig_pathways_kegg) &&
@@ -281,10 +400,12 @@ if (!is.null(params$pathway_list_data) &&
     low_color = params$kegg_colors[[params$kegg_color_select]][1],
     high_color = params$kegg_colors[[params$kegg_color_select]][2]
   )
-  cat("\n<!-- The png file is written to a temp folder -->\n")
-  cat("\\centering\n")
   cat(params$sig_pathways_kegg, "\n")
-  cat("![](", out_image$src, "){width=100%}\n", sep = "")
+  if (!is.null(out_image$src) && file.exists(out_image$src)) {
+    knitr::include_graphics(out_image$src)
+  } else {
+    message("KEGG pathway image unavailable; file was not created.")
+  }
 } else {
   print("KEGG pathway visualization not available (requires KEGG database selection).")
 }
@@ -343,4 +464,4 @@ if (params$pathway_method == 2) {
 }
 ```
 
-Free for academic use. No warranty of correctness. 
+Generated using iDEP v`r packageVersion("idepGolem")` (https://bioinformatics.sdstate.edu/idep). `r format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z")`. Accuracy not guaranteed.

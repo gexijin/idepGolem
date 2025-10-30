@@ -220,14 +220,6 @@ mod_04_pca_ui <- function(id) {
           ns = ns
         ),
         fluidRow(
-          column(
-            6,
-            # Download report button
-            downloadButton(
-              outputId = ns("report"),
-              label = "Report"
-            )
-          ),
           column(6,
             offset = 0,
             downloadButton(
@@ -238,6 +230,13 @@ mod_04_pca_ui <- function(id) {
               ns("pca_data"),
               "Download the PCA scores and loadings table.",
               theme = "light"
+            )
+          ),
+          column(
+            6,
+            downloadButton(
+              outputId = ns("report"),
+              label = tags$span(style = "color: red;", "Report")
             )
           ),
           tippy::tippy_this(
@@ -773,7 +772,11 @@ mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
     output$report <- downloadHandler(
 
       # For PDF output, change this to "report.pdf"
-      filename = "pca_report.html",
+      filename = paste0(
+        "pca_report_",
+        format(Sys.time(), "%Y-%m-%d_%H-%M-%S"),
+        ".html"
+      ),
       content = function(file) {
         withProgress(message = "Generating Report", {
           incProgress(0.2)
@@ -796,9 +799,11 @@ mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
           params <- list(
             pre_processed_data = pre_process$data(),
             pre_processed_descr = pre_process$descr(),
+            mapping_statistics = pre_process$mapping_statistics(),
             sample_info = pre_process$sample_info(),
             pc_x = input$PCAx,
             pc_y = input$PCAy,
+            pc_z = input$PCAz3d,
             color = input$selectFactors1,
             shape = input$selectFactors2,
             all_gene_names = pre_process$all_gene_names(),

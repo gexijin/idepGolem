@@ -1,5 +1,5 @@
 ---
-title: "Clustering Workflow"
+title: "iDEP: clustering analysis"
 output: 
   html_document:
     code_folding: hide
@@ -7,6 +7,7 @@ params:
   pre_processed_data:
   all_gene_names:
   descr:
+  mapping_statistics:
   sample_info:
   n_genes:
   k_clusters:
@@ -22,6 +23,9 @@ params:
   sample_clustering:
   show_row_dend:
   selected_genes:
+  submap_data:
+  select_factors_heatmap:
+  sample_color:
   printcode:
     label: "Display Code"
     value: TRUE
@@ -29,8 +33,15 @@ params:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = params$printcode)
+knitr::opts_chunk$set(
+  echo = params$printcode,
+  warning = FALSE,
+  message = FALSE
+)
 ```
+
+<!-- This document cannot be knit directly from R studio -->
+
 <div>
 
 ::: {style="color: Blue"}
@@ -39,52 +50,45 @@ knitr::opts_chunk$set(echo = params$printcode)
 Ge, S.X., Son, E.W. & Yao, R. iDEP: an integrated web application for differential expression and pathway analysis of RNA-Seq data. BMC Bioinformatics 19, 534 (2018). <https://doi.org/10.1186/s12859-018-2486-6>
 :::
 
-## 
+##
 
 </div>
 
-<!-- This document cannot be knit directly from R studio -->
+------------------------------------------------------------------------
 
-This html document contains what parameters values were selected on the IDEP interface of the "Cluster" tab. It also includes the plots generated from those selections.
 
-<!-- # ALL SELECTED PARAMETERS -->
+<!-- `r params$descr` -->
 
-```{r echo=FALSE}
+<!--ALL SELECTED PARAMETERS-->
+
+```{r, include=FALSE}
 for (i in 1:length(params)) {
   # exclude loaded data & sample info
-  if (names(params)[i] != "sample_info" && names(params)[i] != "pre_processed_data" && names(params)[i] != "all_gene_names") {
+  if (names(params)[i] != "sample_info" &&
+      names(params)[i] != "pre_processed_data" &&
+      names(params)[i] != "all_gene_names" &&
+      names(params)[i] != "mapping_statistics" &&
+      names(params)[i] != "submap_data") {
     cat(paste0(names(params)[i], ": ", params[[i]], "\n"))
   }
 }
 ```
 
-## Pre-processing Summary
+```{r, include=FALSE}
+# Map distance function number to name
+dist_funs <- dist_functions()
+dist_name <- names(dist_funs)[as.numeric(params$dist_function)]
+```
+
+## Summary
 
 `r params$descr`
 
-## Clustering Summary
+`r if (!is.null(params$mapping_statistics)) params$mapping_statistics else ""`
 
-The following plots were generated using IDEP with the following filters: Include only the top `r params$n_genes` genes using `r params$select_gene_id` to label color scheme: `r params$heatmap_color_select` distance: `r switch(params$dist_function, "1" = "Hierarchical", "2" = "K-Means")`
+Clustering analysis included the top `r params$n_genes` genes based on `r params$select_gene_id`. `r if(params$cluster_meth == "1") paste0("Hierarchical clustering was applied using ", params$hclust_function, " linkage") else paste0("K-means clustering was performed with ", params$k_clusters, " clusters")` with `r dist_name` distance metric. `r if(params$gene_centering) "Genes were centered" else "Genes were not centered"``r if(params$gene_normalize) " and normalized" else ""`. The heatmap color scheme used was `r paste(params$heatmap_color_select, collapse = ", ")` with a Z-score cutoff of `r params$heatmap_cutoff`. `r if(!params$sample_clustering) "Sample clustering was disabled" else "Samples were clustered"`.
 
-Linkage: `r params$hclust_function`
-
-Cut off Z-score: `r params$heatmap_cutoff`
-
-Center Genes: `r params$gene_centering`
-
-Gene normalize: `r params$gene_normalize`
-
-Do not cluster samples: `r params$no_sample_clustering`
-
-Show row Dendogram: `r params$show_row_dend`
-
-### Paragraph
-
-The following plots were generated using IDEP, including only the top `r params$n_genes` genes, using `r params$select_gene_id` to label, `r switch(params$dist_function, "1" = "Hierarchical", "2" = "K-Means")` distance,`r params$hclust_function` linkage, Cut off Z-score: `r params$heatmap_cutoff`, Center Genes: `r params$gene_centering`. genes are `r if(!params$gene_normalize) paste0(" not ")` normalized.
-
-## Elbow Plot
-
-```{r}
+```{r process_heatmap_data, include=FALSE}
 heatmap_data <- process_heatmap_data(
   data = params$pre_processed_data,
   n_genes_max = params$n_genes,
@@ -96,19 +100,48 @@ heatmap_data <- process_heatmap_data(
   all_gene_names = params$all_gene_names,
   select_gene_id = params$select_gene_id
 )
-
-k_means_elbow(heatmap_data = heatmap_data)
 ```
+
 
 ## Heatmap
 
-```{r}
+```{r fig.height=6, fig.width=max(4, min(12, ncol(heatmap_data) * 0.2))}
+# Subset sample_info to match heatmap_data columns
+sample_info_subset <- NULL
+if (!is.null(params$sample_info)) {
+  # Match sample_info rows to heatmap_data columns
+  sample_info_subset <- params$sample_info[match(colnames(heatmap_data), rownames(params$sample_info)), , drop = FALSE]
+}
+
+# Prepare group palette for annotation if needed
+group_pal_main <- NULL
+if (!is.null(params$select_factors_heatmap) &&
+    params$select_factors_heatmap == "All factors" &&
+    !is.null(sample_info_subset)) {
+  groups <- as.vector(as.matrix(sample_info_subset))
+  pal <- setNames(
+    colorspace::qualitative_hcl(
+      length(unique(groups)),
+      palette = params$sample_color,
+      c = 70
+    ),
+    unique(groups)
+  )
+  sample_list <- as.list(as.data.frame(sample_info_subset))
+  group_pal_main <- lapply(sample_list, function(x) {
+    setNames(
+      pal[unique(x)],
+      unique(x)
+    )
+  })
+}
+
 ht <- heatmap_main(
   data = heatmap_data,
   cluster_meth = params$cluster_meth,
   heatmap_cutoff = params$heatmap_cutoff,
-  sample_info = params$sample_info,
-  select_factors_heatmap = params$list_factors_heatmap,
+  sample_info = sample_info_subset,
+  select_factors_heatmap = params$select_factors_heatmap,
   dist_funs = dist_functions(),
   dist_function = params$dist_function,
   hclust_function = params$hclust_function,
@@ -117,9 +150,115 @@ ht <- heatmap_main(
   row_dend = params$show_row_dend,
   k_clusters = params$k_clusters,
   re_run = FALSE,
-  selected_genes = params$selected_genes
+  selected_genes = params$selected_genes,
+  group_pal = group_pal_main,
+  sample_color = params$sample_color,
+  show_column_names = TRUE
 )
 ```
+
+<br>
+
+## Sub Heatmap
+
+`r ifelse(!is.null(params$submap_data), "The following heatmap shows the zoomed-in selection from the main heatmap:", "")`
+
+```{r sub_heatmap, fig.height=if(!is.null(params$submap_data)) max(6, min(300, nrow(params$submap_data) * 0.15)) else 6, fig.width=if(!is.null(params$submap_data)) max(4, min(12, ncol(params$submap_data) * 0.2)) else 8}
+if (!is.null(params$submap_data)) {
+  # Subset sample_info to match submap_data columns
+  sample_info_sub <- NULL
+  if (!is.null(params$sample_info)) {
+    # Match sample_info rows to submap_data columns
+    sample_info_sub <- params$sample_info[match(colnames(params$submap_data), rownames(params$sample_info)), , drop = FALSE]
+  }
+
+  # Prepare group palette for annotation if needed
+  group_pal_val <- NULL
+  if (!is.null(params$select_factors_heatmap) &&
+      params$select_factors_heatmap == "All factors" &&
+      !is.null(sample_info_sub)) {
+    groups <- as.vector(as.matrix(sample_info_sub))
+    pal <- setNames(
+      colorspace::qualitative_hcl(
+        length(unique(groups)),
+        palette = params$sample_color,
+        c = 70
+      ),
+      unique(groups)
+    )
+    sample_list <- as.list(as.data.frame(sample_info_sub))
+    group_pal_val <- lapply(sample_list, function(x) {
+      setNames(
+        pal[unique(x)],
+        unique(x)
+      )
+    })
+  }
+
+  # Create annotation for sub heatmap
+  sub_heat <- sub_heat_ann(
+    data = params$submap_data,
+    sample_info = sample_info_sub,
+    select_factors_heatmap = params$select_factors_heatmap,
+    group_pal = group_pal_val,
+    sample_color = params$sample_color
+  )
+
+  # Color function matching the main heatmap
+  # Apply cutoff filter like in the main heatmap
+  cutoff <- median(unlist(params$submap_data)) +
+    params$heatmap_cutoff * sd(unlist(params$submap_data))
+  sub_data <- params$submap_data
+  sub_data[sub_data > cutoff] <- cutoff
+  cutoff <- median(unlist(params$submap_data)) -
+    params$heatmap_cutoff * sd(unlist(params$submap_data))
+  sub_data[sub_data < cutoff] <- cutoff
+
+  # Create color scale matching main heatmap logic
+  if (min(sub_data) < 0) {
+    col_fun <- circlize::colorRamp2(
+      c(min(sub_data), 0, max(sub_data)),
+      params$heatmap_color_select
+    )
+  } else {
+    col_fun <- circlize::colorRamp2(
+      c(min(sub_data), median(sub_data), max(sub_data)),
+      params$heatmap_color_select
+    )
+  }
+
+  # Determine if row names should be shown
+  show_rows <- nrow(sub_data) <= 2000
+
+  # Create sub heatmap
+  ht_sub <- ComplexHeatmap::Heatmap(
+    sub_data,
+    col = col_fun,
+    show_heatmap_legend = FALSE,
+    cluster_rows = FALSE,
+    cluster_columns = FALSE,
+    show_row_names = show_rows,
+    top_annotation = sub_heat$heat_sub_ann,
+    name = "sub_heat",
+    heatmap_legend_param = list(
+      direction = "horizontal",
+      legend_width = grid::unit(6, "cm"),
+      title = "Color Key",
+      title_position = "topcenter"
+    )
+  )
+
+  # Draw the heatmap
+  ComplexHeatmap::draw(
+    ht_sub,
+    annotation_legend_list = sub_heat$lgd,
+    annotation_legend_side = "top",
+    heatmap_legend_side = "bottom"
+  )
+}
+```
+
+<br>
 
 ## SD Density
 
@@ -130,9 +269,9 @@ sd_density(
 )
 ```
 
+<br>
 
-
-`r ifelse(as.character(params$dist_function) == "1","## Tree (Hierarchical)","")`
+`r ifelse(as.character(params$dist_function) == "1","## Hierarchical clustering tree","")`
 ```{r}
 if (params$dist_function == 1) {
   draw_sample_tree(
@@ -149,6 +288,13 @@ if (params$dist_function == 1) {
 }
 ```
 
+<br>
+
+## Elbow Plot
+
+```{r}
+k_means_elbow(heatmap_data = heatmap_data)
+```
 
 <!-- # Correlation Matrix (Not included in app) -->
 <!-- ```{r} -->
@@ -159,3 +305,6 @@ if (params$dist_function == 1) {
 <!--   text_col = "white" -->
 <!-- ) -->
 <!-- ``` -->
+
+<br>
+Generated using iDEP v`r packageVersion("idepGolem")` (https://bioinformatics.sdstate.edu/idep). `r format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z")`. Accuracy not guaranteed.

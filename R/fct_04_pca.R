@@ -692,8 +692,18 @@ PCA_biplot <- function(data,
                        ui_shape = NULL) {
   # missing design
   if (is.null(sample_info)) {
-    meta_data <- as.data.frame(colnames(data))
-    rownames(meta_data) <- colnames(data)
+    sample_groups <- detect_groups(colnames(data))
+    meta_data <- data.frame(
+      Groups = sample_groups,
+      row.names = colnames(data),
+      stringsAsFactors = FALSE
+    )
+    if (is.null(ui_color) || !(ui_color %in% colnames(meta_data))) {
+      ui_color <- "Groups"
+    }
+    if (is.null(ui_shape) || !(ui_shape %in% colnames(meta_data))) {
+      ui_shape <- "Groups"
+    }
   } else {
     meta_data <- sample_info
   }

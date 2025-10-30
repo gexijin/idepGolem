@@ -270,7 +270,7 @@ mod_02_pre_process_ui <- function(id) {
         ),
         downloadButton(
           outputId = ns("report"),
-          label = "Report"
+          label = tags$span(style = "color: red;", "Report")
         ),
         tippy::tippy_this(
           ns("report"),
@@ -288,7 +288,7 @@ mod_02_pre_process_ui <- function(id) {
 
           # Barplot for read counts data ----------
           tabPanel(
-            title = "Counts",
+            title = "Reads",
             br(),
             plotOutput(
               outputId = ns("raw_counts_gg"),
@@ -462,13 +462,15 @@ mod_02_pre_process_ui <- function(id) {
                 column(
                   10,
                   align = "right",
-                  p(
+                    p(
                     "Genes types are based on ",
                     a(
-                      "ENSEMBL classification.", 
-                      href= "http://useast.ensembl.org/info/genome/genebuild/biotypes.html"),
-                      target = "_blank"
-                  )
+                      "ENSEMBL classification.",
+                      href = "http://useast.ensembl.org/info/genome/genebuild/biotypes.html",
+                      onclick = "window.open(this.href, 'ensembl_info', 'width=900,height=700,resizable=yes,scrollbars=yes'); return false;",
+                      rel = "noopener noreferrer"
+                    )
+                    )
                 )
               ),
               br(),
@@ -485,16 +487,31 @@ mod_02_pre_process_ui <- function(id) {
                 br(),
                 fluidRow(
                   column(
-                    2, 
-                    ottoPlots::mod_download_figure_ui(
-                      id = ns("dl_rRNA_counts_gg")
+                    2,
+                    div(
+                      style = "display: flex; gap: 6px; align-items: center; flex-wrap: wrap;",
+                      ottoPlots::mod_download_figure_ui(
+                        id = ns("dl_rRNA_counts_gg")
+                      )                      
                     )
                   ),
                   column(
-                    10,
+                    3,
+                    downloadButton(
+                      outputId = ns("download_gene_type_data"),
+                      label = "data"
+                    )
+                  ),
+                  column(
+                    7,
                     align = "right",
-                    p("Higher rRNA content may indicuate ineffective rRNA-removal.")
+                    p("Unevenly high rRNA content may introduce bias.")
                   )
+                ),
+                tippy::tippy_this(
+                  ns("download_gene_type_data"),
+                  "Download read counts totals by gene type.",
+                  theme = "light"
                 ),
                 uiOutput(ns("gene_type_warning")),
                 br(),
@@ -563,7 +580,7 @@ mod_02_pre_process_ui <- function(id) {
           ),
           # Plot panel for individual genes ---------
           tabPanel(
-            title = "Gene plot",
+            title = "Genes",
             br(),
             fluidRow(
               column(
@@ -735,11 +752,11 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     # Dynamic Barplot Tab ----------
     observe({
       if (load_data$data_file_format() != 1) {
-        hideTab(inputId = "eda_tabs", target = "Counts")
+        hideTab(inputId = "eda_tabs", target = "Reads")
         updateTabsetPanel(session, "eda_tabs", selected = "Distribution")
       } else if (load_data$data_file_format() == 1) {
-        showTab(inputId = "eda_tabs", target = "Counts")
-        updateTabsetPanel(session, "eda_tabs", selected = "Counts")
+        showTab(inputId = "eda_tabs", target = "Reads")
+        updateTabsetPanel(session, "eda_tabs", selected = "Reads")
       }
     })
 
@@ -956,6 +973,72 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       label = ""
     )
 
+    gene_type_totals <- reactive({
+      req(load_data$data_file_format() == 1)
+      req(!is.null(load_data$converted_data()))
+      req(!is.null(load_data$all_gene_info()))
+
+      counts_data <- load_data$converted_data()
+      gene_info <- load_data$all_gene_info()
+
+      df <- merge(
+        counts_data,
+        gene_info,
+        by.x = "row.names",
+        by.y = "ensembl_gene_id"
+      )
+
+      df$gene_biotype <- gsub(".*pseudogene", "Pseudogene", df$gene_biotype)
+      df$gene_biotype <- gsub("TEC", "Unknown", df$gene_biotype)
+      df$gene_biotype <- gsub("IG_.*", "IG", df$gene_biotype)
+      df$gene_biotype <- gsub("TR_.*", "TR", df$gene_biotype)
+      df$gene_biotype <- gsub("protein_coding", "Coding", df$gene_biotype)
+
+      counts_by_type <- aggregate(
+        df[, colnames(counts_data), drop = FALSE],
+        by = list(df$gene_biotype),
+        FUN = sum
+      )
+      colnames(counts_by_type)[1] <- "Gene_Type"
+
+      sample_counts <- counts_by_type[, -1, drop = FALSE]
+      sample_totals <- colSums(sample_counts, na.rm = TRUE)
+
+      percent_matrix <- sample_counts * 0
+      non_zero_samples <- sample_totals != 0
+
+      if (any(non_zero_samples)) {
+        percent_matrix[, non_zero_samples] <- sweep(
+          sample_counts[, non_zero_samples, drop = FALSE],
+          2,
+          sample_totals[non_zero_samples],
+          "/"
+        ) * 100
+      }
+
+      percent_matrix[, !non_zero_samples] <- 0
+
+      percent_matrix <- round(percent_matrix, 2)
+      row_avg <- rowMeans(percent_matrix, na.rm = TRUE)
+      order_idx <- order(row_avg, decreasing = TRUE)
+
+      data.frame(
+        `Gene Type` = counts_by_type$Gene_Type,
+        percent_matrix,
+        check.names = FALSE
+      )[order_idx, ]
+    })
+
+    output$download_gene_type_data <- downloadHandler(
+      filename = function() {
+        "gene_type_read_totals.csv"
+      },
+      content = function(file) {
+        req(gene_type_totals())
+        utils::write.csv(gene_type_totals(), file, row.names = FALSE)
+      }
+    )
+
     # Dynamic checkbox for chr counts plot ------------
     output$chr_boxplot_checkbox <- renderUI({
       req(!is.null(load_data$converted_data()))
@@ -1117,153 +1200,17 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       label = ""
     )
 
-    gene_expression_data_by_symbol <- function(target_symbol) {
-      target_symbol_clean <- trimws(target_symbol)
-      target_symbol_upper <- toupper(target_symbol_clean)
-
-      reactive({
-        req(!is.null(processed_data()$data))
-        expr_matrix <- processed_data()$data
-        if (is.null(expr_matrix) || nrow(expr_matrix) == 0 || ncol(expr_matrix) == 0) {
-          return(NULL)
-        }
-
-        sample_names <- colnames(expr_matrix)
-        if (length(sample_names) == 0) {
-          return(NULL)
-        }
-
-        gene_info <- load_data$all_gene_info()
-        symbol_matches <- NULL
-        if (!is.null(gene_info) &&
-          "symbol" %in% colnames(gene_info)) {
-          gene_symbols <- trimws(as.character(gene_info$symbol))
-          symbol_matches <- gene_info[
-            !is.na(gene_symbols) &
-              toupper(gene_symbols) == target_symbol_upper,
-            ,
-            drop = FALSE
-          ]
-        }
-
-        candidate_gene_ids <- character(0)
-        symbol_label <- target_symbol_clean
-        gene_description <- NULL
-
-        if (!is.null(symbol_matches) && nrow(symbol_matches) > 0) {
-          candidate_gene_ids <- unique(na.omit(symbol_matches$ensembl_gene_id))
-          candidate_gene_ids <- candidate_gene_ids[!is.na(candidate_gene_ids) & nzchar(candidate_gene_ids)]
-          first_symbol <- trimws(as.character(symbol_matches$symbol[1]))
-          if (!is.na(first_symbol) && nzchar(first_symbol)) {
-            symbol_label <- first_symbol
-          }
-          if ("description" %in% colnames(symbol_matches)) {
-            gene_description <- symbol_matches$description[1]
-          }
-        }
-
-        rownames_expr <- rownames(expr_matrix)
-        available_rows <- intersect(candidate_gene_ids, rownames_expr)
-        if (length(available_rows) == 0) {
-          cleaned_row_names <- trimws(toupper(rownames_expr))
-          available_rows <- rownames_expr[cleaned_row_names == target_symbol_upper]
-        }
-        if (length(available_rows) == 0) {
-          return(NULL)
-        }
-        gene_row <- available_rows[1]
-
-        display_name <- symbol_label
-        if (!is.null(gene_description) &&
-          !is.na(gene_description) &&
-          nzchar(gene_description)
-        ) {
-          display_name <- paste0(symbol_label, ": ", gene_description)
-        }
-
-        expr_values <- as.numeric(expr_matrix[gene_row, sample_names, drop = TRUE])
-        if (all(is.na(expr_values))) {
-          return(NULL)
-        }
-
-        sample_groups <- detect_groups(sample_names, load_data$sample_info())
-        empty_group <- is.na(sample_groups) | sample_groups == ""
-        sample_groups[empty_group] <- sample_names[empty_group]
-
-        raw_matrix <- processed_data()$raw_counts
-        if (is.null(raw_matrix)) {
-          raw_matrix <- load_data$converted_data()
-        }
-        if (!is.null(raw_matrix) && inherits(raw_matrix, "SummarizedExperiment")) {
-          if (requireNamespace("SummarizedExperiment", quietly = TRUE)) {
-            raw_matrix <- SummarizedExperiment::assay(raw_matrix)
-          } else {
-            raw_matrix <- NULL
-          }
-        }
-        if (!is.null(raw_matrix) && is.data.frame(raw_matrix)) {
-          raw_matrix <- as.matrix(raw_matrix)
-        }
-
-        raw_values <- rep(NA_real_, length(sample_names))
-        if (!is.null(raw_matrix) && is.matrix(raw_matrix)) {
-          available_samples <- intersect(sample_names, colnames(raw_matrix))
-          if (length(available_samples) > 0) {
-            candidate_ids <- unique(c(
-              gene_row,
-              candidate_gene_ids,
-              target_symbol_upper
-            ))
-            candidate_ids <- candidate_ids[
-              !is.na(candidate_ids) &
-                nzchar(candidate_ids)
-            ]
-            for (candidate in candidate_ids) {
-              if (candidate %in% rownames(raw_matrix)) {
-                raw_vec <- as.numeric(raw_matrix[candidate, available_samples, drop = TRUE])
-                idx <- match(available_samples, sample_names)
-                raw_values[idx] <- raw_vec
-                break
-              }
-            }
-          }
-        }
-
-        df <- data.frame(
-          sample = sample_names,
-          expression = expr_values,
-          group = factor(sample_groups, levels = unique(sample_groups)),
-          raw_data = raw_values,
-          stringsAsFactors = FALSE
-        )
-
-        has_values <- any(!is.na(df$expression)) || any(!is.na(df$raw_data))
-        if (!has_values) {
-          return(NULL)
-        }
-
-        list(
-          data = df,
-          display_name = display_name
-        )
-      })
-    }
-
-    marker_definitions <- list(
-      list(symbol = "GAPDH", description = "Housekeeping gene"),
-      list(symbol = "ACTB", description = "Housekeeping gene"),
-      list(symbol = "H2AC6", description = "Histone mRNAs lack poly(A) tails"),
-      list(symbol = "MT-CO1", description = "Mitochondrial mRNA"),
-      list(symbol = "MT-RNR2", description = "Mitochondrial rRNA"),
-      list(symbol = "UTY", description = "Male-specific"),
-      list(symbol = "XIST", description = "Female-specific")
-    )
-
-    marker_data <- lapply(marker_definitions, function(def) {
-      list(
-        symbol = def$symbol,
-        description = def$description,
-        data = gene_expression_data_by_symbol(def$symbol)
+    marker_payloads <- reactive({
+      expr_matrix <- processed_data()$data
+      if (is.null(expr_matrix)) {
+        return(list())
+      }
+      marker_gene_plot_payloads(
+        expr_matrix = expr_matrix,
+        sample_info = load_data$sample_info(),
+        raw_counts = processed_data()$raw_counts,
+        converted_data = load_data$converted_data(),
+        all_gene_info = load_data$all_gene_info()
       )
     })
 
@@ -1273,22 +1220,33 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     })
 
     output$markers_plots <- renderUI({
-      req(marker_data)
+      payloads <- marker_payloads()
+      if (length(payloads) == 0) {
+        return(tags$p("Marker gene plots are unavailable for the current dataset."))
+      }
       tagList(
-        lapply(seq_along(marker_data), function(idx) {
-          marker <- marker_data[[idx]]
+        lapply(seq_along(payloads), function(idx) {
+          marker <- payloads[[idx]]
           plot_id <- paste0("marker_plot_", idx)
           section_id <- paste0("marker_section_", idx)
           local({
             local_marker <- marker
             local_plot_id <- plot_id
             local_section_id <- section_id
+            local_idx <- idx
 
             output[[local_section_id]] <- renderUI({
-              req(local_marker$data())
+              payload_list <- marker_payloads()
+              if (length(payload_list) < local_idx) {
+                return(NULL)
+              }
+              marker_payload <- payload_list[[local_idx]]
+              if (is.null(marker_payload$data)) {
+                return(NULL)
+              }
               tagList(
                 br(),
-                h4(paste0(local_marker$description)),
+                h4(paste0(marker_payload$description)),
                 mod_gene_expression_plot_ui(
                   id = ns(local_plot_id),
                   plot_height = "400px",
@@ -1300,7 +1258,20 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
 
             mod_gene_expression_plot_server(
               id = local_plot_id,
-              plot_data = reactive(local_marker$data()),
+              plot_data = reactive({
+                payload_list <- marker_payloads()
+                if (length(payload_list) < local_idx) {
+                  return(NULL)
+                }
+                payload <- payload_list[[local_idx]]
+                if (is.null(payload$data)) {
+                  return(NULL)
+                }
+                list(
+                  data = payload$data,
+                  display_name = payload$display_name
+                )
+              }),
               palette_name = reactive(load_data$plots_color_select()),
               plot_grid_lines = reactive(load_data$plot_grid_lines()),
               ggplot2_theme = reactive(load_data$ggplot2_theme()),
@@ -1670,7 +1641,11 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     # Markdown report
     output$report <- downloadHandler(
       # For PDF output, change this to "report.pdf"
-      filename = "pre_process_report.html",
+      filename = paste0(
+        "pre_process_report_",
+        format(Sys.time(), "%Y-%m-%d_%H-%M-%S"),
+        ".html"
+      ),
       content = function(file) {
         withProgress(message = "Generating Report (5 mins)", {
           incProgress(0.2)
@@ -1688,10 +1663,65 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
           markdown_location <- app_sys("app/www/RMD/pre_process_workflow.Rmd")
           file.copy(from = markdown_location, to = tempReport, overwrite = TRUE)
 
+          # Persist current chromosome plot selections for report rendering
+          chr_use_boxplot <- input$chr_use_boxplot
+          if (is.null(chr_use_boxplot)) {
+            chr_use_boxplot <- if (!is.null(load_data$converted_data())) {
+              ncol(load_data$converted_data()) > 50
+            } else {
+              FALSE
+            }
+          }
+          chr_normalized_use_boxplot <- input$chr_normalized_use_boxplot
+          if (is.null(chr_normalized_use_boxplot)) {
+            chr_normalized_use_boxplot <- if (!is.null(processed_data()$data)) {
+              ncol(processed_data()$data) > 50
+            } else {
+              FALSE
+            }
+          }
+
+          individual_data_current <- individual_data()
+          
+          safe_input <- function(value, default) {
+            if (is.null(value) || length(value) == 0) {
+              default
+            } else {
+              value
+            }
+          }
+          
+          selected_gene <- input$selected_gene
+          if (is.null(selected_gene) || length(selected_gene) == 0) {
+            if (!is.null(individual_data_current) && nrow(individual_data_current) > 0) {
+              sorted <- sort(
+                apply(
+                  individual_data_current,
+                  MARGIN = 1,
+                  FUN = function(x) sd(x)
+                ),
+                decreasing = TRUE
+              )
+              if (length(sorted) > 0) {
+                selected_gene <- names(sorted)[seq_len(min(2, length(sorted)))]
+              } else {
+                selected_gene <- character(0)
+              }
+            } else {
+              selected_gene <- character(0)
+            }
+          }
+          
+          gene_plot_box <- safe_input(input$gene_plot_box, 1)
+          use_sd <- safe_input(input$use_sd, FALSE)
+          lab_rotate <- safe_input(input$angle_ind_axis_lab, 45)
+          plot_raw <- safe_input(input$plot_raw, FALSE)
+          plot_tukey <- safe_input(input$plot_tukey, FALSE)
+          
           # Set up parameters to pass to Rmd document
           params <- list(
             loaded_data = load_data$converted_data(),
-            individual_data = individual_data(),
+            individual_data = individual_data_current,
             descr = processed_data()$descr,
             sample_info = load_data$sample_info(),
             all_gene_info = load_data$all_gene_info(),
@@ -1704,17 +1734,25 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
             log_transform_fpkm = input$log_transform_fpkm,
             log_start_fpkm = input$log_start_fpkm,
             low_filter_fpkm = input$low_filter_fpkm,
+            n_min_samples_fpkm = input$n_min_samples_fpkm,
             missing_value = input$missing_value,
             scatter_x = input$scatter_x,
             scatter_y = input$scatter_y,
             sd_color = heat_colors[[input$heat_color_select]],
             rank = input$rank,
             no_fdr = load_data$no_fdr(),
-            selected_gene = input$selected_gene,
-            gene_plot_box = input$gene_plot_box,
-            use_sd = input$use_sd,
-            lab_rotate = input$angle_ind_axis_lab,
-            plots_color_select = load_data$plots_color_select()
+            selected_gene = selected_gene,
+            gene_plot_box = gene_plot_box,
+            use_sd = use_sd,
+            lab_rotate = lab_rotate,
+            plot_raw = plot_raw,
+            plot_tukey = plot_tukey,
+            plots_color_select = load_data$plots_color_select(),
+            plot_grid_lines = load_data$plot_grid_lines(),
+            ggplot2_theme = load_data$ggplot2_theme(),
+            chr_use_boxplot = chr_use_boxplot,
+            chr_normalized_use_boxplot = chr_normalized_use_boxplot,
+            mapping_statistics = converted_message()
           )
           req(params)
 
@@ -1898,6 +1936,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       data_file_format = reactive(load_data$data_file_format()),
       counts_log_start = reactive(input$counts_log_start),
       descr = reactive(processed_data()$descr),
+      mapping_statistics = reactive(converted_message()),
       heatmap_color_select = reactive(load_data$heatmap_color_select()),
       select_gene_id = reactive(load_data$select_gene_id()),
       plot_grid_lines = reactive(load_data$plot_grid_lines()),

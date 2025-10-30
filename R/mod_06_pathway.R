@@ -193,7 +193,7 @@ mod_06_pathway_ui <- function(id) {
             # Download report button
             downloadButton(
               outputId = ns("report"),
-              label = "Report"
+              label = tags$span(style = "color: red;", "Report")
             ),
             tippy::tippy_this(
               ns("report"),
@@ -221,7 +221,7 @@ mod_06_pathway_ui <- function(id) {
           condition = "input.pathway_method == 2 || input.pathway_method == 4",
           selectInput(
             inputId = ns("pgsea_plot_color_select"),
-            label = "Select PGSEA plot colors",
+            label = "PGSEA plot colors",
             choices = "Blue_Red",
             selectize = FALSE
           ),
@@ -439,6 +439,23 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
 
     # Interactive heatmap environment
     path_env <- new.env()
+    
+    # Inputs that require rerunning the pathway analysis when changed
+    pathway_option_inputs <- c(
+      "select_contrast",
+      "pathway_method",
+      "gage_data",
+      "select_go",
+      "pathway_p_val_cutoff",
+      "min_set_size",
+      "max_set_size",
+      "n_pathway_show",
+      "gene_p_val_cutoff",
+      "absolute_fold",
+      "show_pathway_id",
+      "pgsea_plot_color_select"
+    )
+    pathway_option_notice_initialized <- reactiveVal(FALSE)
 
     # GMT choices for enrichment ----------
     output$select_go_selector <- renderUI({
@@ -518,6 +535,30 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       ))
       removeNotification("click_submit_Stats")
     })
+    
+    observeEvent(
+      {
+        lapply(pathway_option_inputs, function(id) input[[id]])
+      },
+      {
+        if (!pathway_option_notice_initialized()) {
+          pathway_option_notice_initialized(TRUE)
+          return()
+        }
+        
+        if (is.null(tab()) || tab() != "Pathway") {
+          return()
+        }
+        
+        showNotification(
+          ui = "Click Submit to rerun",
+          id = "pathway_submit_reminder",
+          type = "message",
+          duration = 2
+        )
+      },
+      ignoreNULL = FALSE
+    )
 
     output$main_pathway_result <- renderUI({
       req(input$submit_pathway_button)
@@ -629,7 +670,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     )
     
     # Get pathway choices from correct data
-    choices <- reactive({
+    choices <- eventReactive(input$submit_pathway_button, {
       if (input$pathway_method == 1) {
         if (!is.null(gage_pathway_data())) {
           if (dim(gage_pathway_data())[2] > 1) {
@@ -673,11 +714,11 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     })
     
     # Trim pathway choices to no ID
-    path_choices <- reactive({
+    path_choices <- eventReactive(input$submit_pathway_button, {
       req(!is.null(choices()))
 
-      if (input$select_go %in% c("GOBP", "GOCC", "GOMF", "KEGG") && 
-          !input$show_pathway_id && 
+      if (input$select_go %in% c("GOBP", "GOCC", "GOMF", "KEGG") &&
+          !input$show_pathway_id &&
           input$pathway_method != 5){
         setNames(choices(),
                  proper(sub("^[^0-9]*\\d+\\s*", "", choices())))
@@ -896,7 +937,17 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       sanitize.text.function = function(x) x
     )
 
-    contrast_samples <- reactive({
+    # Capture analysis option values when Submit is clicked
+    # These ensure all downstream reactives use consistent parameter values
+    select_contrast_submitted <- eventReactive(input$submit_pathway_button, {
+      input$select_contrast
+    })
+
+    select_go_submitted <- eventReactive(input$submit_pathway_button, {
+      input$select_go
+    })
+
+    contrast_samples <- eventReactive(input$submit_pathway_button, {
       req(!is.null(input$select_contrast))
       req(!is.null(pre_process$data()))
 
@@ -1294,17 +1345,22 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     })
 
     output$reactome_pa_pathway <- DT::renderDataTable({
-      req(input$pathway_method == 5)
-      req(!is.null(reactome_pa_pathway_data()))
+      input$submit_pathway_button
 
-      DT::datatable(
-        reactome_pa_pathway_data(),
-        options = list(
-          pageLength = 15,
-          scrollX = "500px"
-        ),
-        rownames = FALSE
-      )
+      isolate({
+        req(input$pathway_method == 5)
+        req(input$submit_pathway_button > 0)
+        req(!is.null(reactome_pa_pathway_data()))
+
+        DT::datatable(
+          reactome_pa_pathway_data(),
+          options = list(
+            pageLength = 15,
+            scrollX = "500px"
+          ),
+          rownames = FALSE
+        )
+      })
     })
 
     selected_pathway_data <- reactive({
@@ -1319,7 +1375,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         select_org = pre_process$select_org(),
         all_gene_names = pre_process$all_gene_names(),
         deg = as.data.frame(deg$limma()$results),
-        select_contrast = input$select_contrast
+        select_contrast = select_contrast_submitted()
       )
       df[,-ncol(df)]
     })
@@ -1415,17 +1471,17 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
 
     kegg_image <- reactive({
       req(!is.null(input$sig_pathways_kegg))
-      
+
       shinybusy::show_modal_spinner(
         spin = "orbit",
         text = "Generating KEGG...",
         color = "#000000"
       )
       tmpfile <- kegg_pathway(
-        go = input$select_go,
+        go = select_go_submitted(),
         gage_pathway_data = pathway_list_data()[, 1:5],
         sig_pathways = input$sig_pathways_kegg,
-        select_contrast = input$select_contrast,
+        select_contrast = select_contrast_submitted(),
         limma = deg$limma(),
         converted = pre_process$converted(),
         idep_data = idep_data,
@@ -1448,7 +1504,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     ) 
 
     # List of pathways with details
-    pathway_list_data <- reactive({
+    pathway_list_data <- eventReactive(input$submit_pathway_button, {
       # only remove pathway ID for Ensembl species
       show_pathway_id <- input$show_pathway_id
       # always show pathway ID for STRING species
@@ -1463,6 +1519,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         pgsea_plot_data = pgsea_plot_data(),
         pgsea_plot_all_samples_data = pgsea_plot_all_samples_data(),
         gsva_plot_data = gsva_plot_data(),
+        reactome_pa_pathway_data = reactome_pa_pathway_data(),
         go = input$select_go,
         select_org = pre_process$select_org(),
         gene_info = pre_process$all_gene_info(),

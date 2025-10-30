@@ -1,5 +1,5 @@
 ---
-title: "Pre-Processing and Exploratory Data Analysis"
+title: "iDEP: Pre-Processing and Exploratory Data Analysis"
 output: 
   html_document:
     code_folding: hide
@@ -29,7 +29,14 @@ params:
   gene_plot_box:
   use_sd:
   lab_rotate:
+  plot_raw:
+  plot_tukey:
   plots_color_select:
+  plot_grid_lines:
+  ggplot2_theme:
+  chr_use_boxplot:
+  chr_normalized_use_boxplot:
+  mapping_statistics:
   date:
     label: "Date: "
     value: !r Sys.Date()
@@ -40,7 +47,11 @@ params:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = params$printcode)
+knitr::opts_chunk$set(
+  echo = params$printcode,
+  warning = FALSE,
+  message = FALSE
+)
 ```
 
 <!-- This document cannot be knit directly from R studio -->
@@ -59,8 +70,6 @@ Ge, S.X., Son, E.W. & Yao, R. iDEP: an integrated web application for differenti
 
 ------------------------------------------------------------------------
 
-
-This html document contains what parameters values were selected on the IDEP interface. It also includes the plots generated from those selections.
 
 <!-- `r params$descr` -->
 
@@ -89,9 +98,10 @@ library(idepGolem)
 ```
 
 ## Summary
-`r switch(params$data_file_format, "1" = "Read Counts data", "2" = "Normalized expression values", "3" = "Log Fold Change and corrected P values data")` were analyzed using iDEP v1.0 [[Citation](#citation-1)]. `r switch(params$data_file_format,  "1" = paste0("The data was first filtered to remove reads below ", params$min_counts," CPM in at least ", params$n_min_samples_count, " sample(s). Then the data was transformed with ",  switch(params$counts_transform, "1" = paste0("EdgeR using a pseudocount of ", params$counts_log_start), "2" = "VST: Variance Stabilizing Transformation",  "3" = "Regularized log"), ". Missing values were imputed using ", params$missing_value, "."), "2" = paste0("The data was ",switch(toString(params$log_transform_fpkm), "FALSE" = "not log transformed.", "TRUE" = paste0(" log transformed with a psuedocount of ", params$log_start_fpkm, ".")), " Then it was filtered to only keep genes above level ", params$low_filter_fpkm, " in at least ", params$n_min_samples_fpkm, " sample(s). Missing values were imputed using ", params$missing_value, "."))`
 
-## Plots
+`r params$descr`
+
+`r if (!is.null(params$mapping_statistics)) params$mapping_statistics else ""`
 
 ```{r Pre-Process Data, include = FALSE }
 processed_data <- idepGolem::pre_process(
@@ -121,6 +131,30 @@ if (params$data_file_format == 1) {
 }
 ```
 
+<br>
+
+```{r counts_table, results='asis'}
+if (params$data_file_format == 1 && !is.null(processed_data$raw_counts)) {
+  filtered <- as.data.frame(colSums(processed_data$raw_counts))
+  original <- as.data.frame(colSums(params$loaded_data))
+  df <- merge(x = original, y = filtered, by = "row.names")
+  colnames(df) <- c("Sample", "Total Counts", "Total Counts After Filter")
+  df$`Counts Removed` <- df$`Total Counts` - df$`Total Counts After Filter`
+  numeric_cols <- setdiff(names(df), "Sample")
+  df[numeric_cols] <- lapply(df[numeric_cols], function(col) {
+    format(col, big.mark = ",", scientific = FALSE, trim = TRUE)
+  })
+  knitr::kable(
+    df,
+    caption = "Total reads per sample before and after filtering."
+  )
+}
+```
+
+<br>
+
+## Distributions
+
 ```{r fig.height=5.5, fig.width=7.5 }
 idepGolem::eda_scatter(
   processed_data = processed_data$data,
@@ -128,6 +162,8 @@ idepGolem::eda_scatter(
   plot_yaxis = params$scatter_y
 )
 ```
+
+<br>
 
 ```{r fig.height=5.5, fig.width=7.5}
 idepGolem::eda_boxplot(
@@ -137,6 +173,8 @@ idepGolem::eda_boxplot(
 )
 ```
 
+<br>
+
 ```{r }
 idepGolem::eda_density(
   processed_data = processed_data$data,
@@ -145,6 +183,8 @@ idepGolem::eda_density(
 )
 ```
 
+<br>
+
 ```{r}
 idepGolem::mean_sd_plot(
   processed_data = processed_data$data,
@@ -152,6 +192,8 @@ idepGolem::mean_sd_plot(
   rank = params$rank
 )
 ```
+
+<br>
 
 ```{r}
 idepGolem::gene_counts_ggplot(
@@ -163,13 +205,134 @@ idepGolem::gene_counts_ggplot(
 )
 ```
 
-<!--  ```{r} -->
-<!--   individual_plots( -->
-<!--           individual_data = params$individual_data, -->
-<!--           sample_info = params$sample_info,             # This is NULL, but think that's ok -->
-<!--           selected_gene = params$selected_gene, -->
-<!--           gene_plot_box = params$gene_plot_box, -->
-<!--           use_sd = params$use_sd, -->
-<!--           lab_rotate = params$angle_ind_axis_lab -->
-<!--         ) -->
-<!-- # ``` -->
+<br>
+
+## QC Plots
+
+```{r qc_gene_type, fig.height=6, fig.width=10}
+if (params$data_file_format == 1 && !is.null(params$all_gene_info)) {
+  rrna <- idepGolem::rRNA_counts_ggplot(
+    counts_data = params$loaded_data,
+    sample_info = params$sample_info,
+    type = "Raw",
+    all_gene_info = params$all_gene_info,
+    plots_color_select = params$plots_color_select
+  )
+  print(rrna$plot)
+  if (!is.null(rrna$warning)) {
+    cat("\n\n**Warning:** ", rrna$warning, "\n")
+  }
+}
+```
+
+<br>
+
+```{r qc_chr_counts, fig.height=12, fig.width=10}
+if (params$data_file_format == 1 && !is.null(params$all_gene_info)) {
+  use_boxplot <- isTRUE(params$chr_use_boxplot)
+  chr_counts <- idepGolem::chr_counts_ggplot(
+    counts_data = params$loaded_data,
+    sample_info = params$sample_info,
+    type = "Raw",
+    all_gene_info = params$all_gene_info,
+    plots_color_select = params$plots_color_select,
+    use_boxplot = use_boxplot
+  )
+  print(chr_counts$plot)
+  if (!is.null(chr_counts$warning)) {
+    cat("\n\n**Warning:** ", chr_counts$warning, "\n")
+  }
+}
+```
+
+<br>
+
+```{r qc_chr_normalized, fig.height=12, fig.width=10}
+if (!is.null(processed_data$data) && !is.null(params$all_gene_info)) {
+  use_boxplot_norm <- isTRUE(params$chr_normalized_use_boxplot)
+  chr_normalized <- idepGolem::chr_normalized_ggplot(
+    counts_data = processed_data$data,
+    sample_info = params$sample_info,
+    type = "Transformed",
+    all_gene_info = params$all_gene_info,
+    plots_color_select = params$plots_color_select,
+    use_boxplot = use_boxplot_norm
+  )
+  print(chr_normalized$plot)
+  if (!is.null(chr_normalized$warning)) {
+    cat("\n\n**Warning:** ", chr_normalized$warning, "\n")
+  }
+}
+```
+
+<br>
+
+## Marker Gene Plots
+
+```{r marker_gene_plots, fig.height=5.5, fig.width=7.5, results='asis'}
+marker_payloads <- idepGolem::marker_gene_plot_payloads(
+  expr_matrix = processed_data$data,
+  sample_info = params$sample_info,
+  raw_counts = processed_data$raw_counts,
+  converted_data = params$loaded_data,
+  all_gene_info = params$all_gene_info
+)
+
+if (length(marker_payloads) == 0) {
+  cat("No marker gene plots could be generated for this dataset.\n")
+} else {
+  counts_flag <- !is.null(processed_data$raw_counts)
+  for (payload in marker_payloads) {
+    cat("#### ", payload$description, "\n\n", sep = "")
+    plot_obj <- idepGolem::build_gene_expression_plot(
+      expr_df = payload$data,
+      display_name = payload$display_name,
+      palette_name = params$plots_color_select,
+      plot_type = "bar",
+      data_type = "raw",
+      counts_are_counts = counts_flag
+    )
+    plot_obj <- idepGolem::refine_ggplot2(
+      p = plot_obj,
+      gridline = params$plot_grid_lines,
+      ggplot2_theme = params$ggplot2_theme
+    )
+    print(plot_obj)
+    cat("\n\n")
+  }
+}
+```
+
+```{r gene_plot_header, results='asis', eval=!is.null(params$individual_data)}
+cat("\n<br>\n\n## Gene Plot\n\n")
+```
+
+```{r gene_plot, fig.height=5.5, fig.width=7.5, eval=!is.null(params$individual_data)}
+if (is.null(params$selected_gene) || length(params$selected_gene) == 0) {
+  cat("No genes were available for plotting at render time.\n")
+} else {
+  p <- idepGolem::individual_plots(
+    individual_data = params$individual_data,
+    sample_info = params$sample_info,
+    selected_gene = params$selected_gene,
+    gene_plot_box = params$gene_plot_box,
+    use_sd = params$use_sd,
+    lab_rotate = params$lab_rotate,
+    plots_color_select = params$plots_color_select,
+    plot_raw = params$plot_raw,
+    plot_tukey = params$plot_tukey
+  )
+  
+  p <- idepGolem::refine_ggplot2(
+    p = p,
+    gridline = params$plot_grid_lines,
+    ggplot2_theme = params$ggplot2_theme
+  )
+  
+  print(p)
+}
+```
+
+<br>
+
+Generated using iDEP v`r packageVersion("idepGolem")` (https://bioinformatics.sdstate.edu/idep). `r format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z")`. Accuracy not guaranteed.

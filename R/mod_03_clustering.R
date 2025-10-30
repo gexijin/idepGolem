@@ -309,10 +309,6 @@ mod_03_clustering_ui <- function(id) {
         br(),
         div(
           style = "display: flex; flex: wrap; gap: 5px;",
-          downloadButton(
-            outputId = ns("report"),
-            label = "Report"
-          ),
           conditionalPanel(
             condition = "input.cluster_panels == 'Heatmap' ",
             downloadButton(
@@ -325,6 +321,10 @@ mod_03_clustering_ui <- function(id) {
               theme = "light"
             ),
             ns = ns
+          ),
+          downloadButton(
+            outputId = ns("report"),
+            label = tags$span(style = "color: red;", "Report")
           )
         ),
         tippy::tippy_this(
@@ -1496,7 +1496,11 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     output$report <- downloadHandler(
 
       # For PDF output, change this to "report.pdf"
-      filename = "clustering_report.html",
+      filename = paste0(
+        "clustering_report_",
+        format(Sys.time(), "%Y-%m-%d_%H-%M-%S"),
+        ".html"
+      ),
       content = function(file) {
         withProgress(message = "Generating report", {
           incProgress(0.2)
@@ -1519,6 +1523,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
             pre_processed_data = pre_process$data(),
             sample_info = pre_process$sample_info(),
             descr = pre_process$descr(),
+            mapping_statistics = pre_process$mapping_statistics(),
             all_gene_names = pre_process$all_gene_names(),
             n_genes = input$n_genes,
             k_clusters = input$k_clusters,
@@ -1533,7 +1538,10 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
             gene_normalize = input$gene_normalize,
             sample_clustering = dendrogram_selection()$sample,
             show_row_dend = dendrogram_selection()$row,
-            selected_genes = input$selected_genes
+            selected_genes = input$selected_genes,
+            submap_data = if(!is.null(shiny_env$submap_data)) shiny_env$submap_data else NULL,
+            select_factors_heatmap = input$select_factors_heatmap,
+            sample_color = input$sample_color
           )
 
           req(params)
