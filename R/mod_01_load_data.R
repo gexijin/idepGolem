@@ -1092,13 +1092,13 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           tags$span("Quick Start:", style = "font-size: 18px;"),
           tags$ul(
             tags$li(
-              "Watch a ",
+              "Watch a 6-minute ",
               a("video", href = "https://youtu.be/ta1orPnjY-0", target = "_blank"),
               " tutorial!"
             ),
             tags$li(
               "Try it with demo data. After selecting a data type, just click ",
-              tags$span("Load Demo.", id = "load-demo", style = "color: red;")
+              tags$span("Demo Data.", id = "load-demo", style = "color: red;")
             )
           )
         )
