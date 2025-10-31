@@ -572,8 +572,8 @@ deg_deseq2 <- function(raw_counts,
   max_comparisons <- 500
 
   # Define groups------------------------------------------------
-  # if factors are not selected, ignore the design matrix
-  # this solve the error cased when design matrix is available but
+  # If factors are not selected, ignore the design matrix.
+  # This solves the error caused when the design matrix is available but
   # factors are not selected.
   if (is.null(model_factors)) {
     sample_info <- NULL
@@ -598,7 +598,7 @@ deg_deseq2 <- function(raw_counts,
       comparisons = NULL,
       exp_type =
         "Failed to parse sample names to define groups. Cannot perform DEGs
-         and pathway analysis. Please double check column names! Use
+         and pathway analysis. Please double-check column names! Use
          WT_Rep1, WT_Rep2 etc. ",
       top_genes = NULL
     ))
@@ -1344,7 +1344,7 @@ deg_limma <- function(processed_data,
         comparisons = NULL,
         exp_type =
           "Failed to parse sample names to define groups. Cannot perform
-          DEGs and pathway analysis. Please double check column names! Use
+          DEGs and pathway analysis. Please double-check column names! Use
           WT_Rep1, WT_Rep2 etc. ",
         expr = NULL,
         topGenes = NULL

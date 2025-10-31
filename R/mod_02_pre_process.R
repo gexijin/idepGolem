@@ -64,7 +64,7 @@ mod_02_pre_process_ui <- function(id) {
           ),
           tippy::tippy_this(
             ns("counts_transform"),
-            "Transformed data is used for clustering, PCA, network analysis. Differentialy analysis with DESeq2 uses raw counts.",
+            "Transformed data is used for clustering, PCA, and network analysis. Differential analysis with DESeq2 uses raw counts.",
             theme = "light"
           ),
 
@@ -77,7 +77,7 @@ mod_02_pre_process_ui <- function(id) {
               ),              
               column(
                 width = 7,
-                "Pseudo count c:"
+                "Pseudo-count c:"
               ),
               column(
                 width = 3,
@@ -90,7 +90,7 @@ mod_02_pre_process_ui <- function(id) {
                 ),
                 tippy::tippy_this(
                   ns("counts_log_start"),
-                  "Constant c in log2(CPM + c) transformation; higher values reduces noises but loses sensitivity. Normally between 1 and 10.",
+                  "Constant c in the log2(CPM + c) transformation; higher values reduce noise but decrease sensitivity. Typically between 1 and 10.",
                   theme = "light"
                 )
               )
@@ -115,7 +115,7 @@ mod_02_pre_process_ui <- function(id) {
               ),
               tippy::tippy_this(
                 ns("low_filter_fpkm"),
-                "Minimum expression value (FPKM, RPKM, TPM, or similar normalized units). Defaults to -1000 effectively bypass this filter for most datasets.",
+                "Minimum expression value (FPKM, RPKM, TPM, or similar normalized units). Defaults to -1000 to effectively bypass this filter for most datasets.",
                 theme = "light"
               )
             ),
@@ -234,7 +234,7 @@ mod_02_pre_process_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("download_processed_data"),
-              "Download the transformed data. Includes Enembll gene IDs and gene symbols.",
+              "Download the transformed data. Includes Ensembl gene IDs and gene symbols.",
               theme = "light"
             )
           ),
@@ -274,7 +274,7 @@ mod_02_pre_process_ui <- function(id) {
         ),
         tippy::tippy_this(
           ns("report"),
-          "Create an HTML report summarizing the Pre-preprocessing step.",
+          "Create an HTML report summarizing the preprocessing step.",
           theme = "light"
         ),
         uiOutput(ns("mapping_statistics_container")),

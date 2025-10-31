@@ -11,9 +11,9 @@ NULL
 
 #' @title Pre-Process the data
 #'
-#' @description This function takes in user defined values to
+#' @description This function takes in user-defined values to
 #' process the data for the EDA. Processing steps depend on data format, but
-#' generally includes missing value imputation, data filtering, and data
+#' generally include missing value imputation, data filtering, and data
 #' transformations.
 #'
 #' @param data Matrix of data that has already gone through
@@ -38,10 +38,10 @@ NULL
 #' @param counts_transform Integer to indicate which transformation to make if
 #'   \code{data_file_format} is read counts. This should be one of 1 for
 #'   log2(CPM+c) (EdgeR), 2 for variance stabilizing transformation (VST), or 3
-#'   for regulatized log (rlog)
+#'   for regularized log (rlog)
 #' @param counts_log_start Integer added to log if \code{counts_transform} is
 #'   log2(CPM + 2)
-#' @param no_fdr TRUE/FALSE to indicate fold-changes-only data with no p values
+#' @param no_fdr TRUE/FALSE to indicate fold-changes-only data with no p-values
 #'   if \code{data_file_format} is fold changes
 #'
 #' @export
@@ -103,7 +103,7 @@ pre_process <- function(data,
     function(x) sd(x, na.rm = TRUE)
   )), ]
 
-  # Missng values in expression data ----------
+  # Missing values in expression data ----------
   if (sum(is.na(data)) > 0) {
     if (missing_value == "geneMedian") {
       row_medians <- apply(data, 1, function(y) median(y, na.rm = T))
@@ -196,19 +196,19 @@ pre_process <- function(data,
       function(y) sum(y >= min_counts)
     ) >= n_min_samples_count), ]
 
-    #R cannot handle integers larger than 3 billion, which can impact popular 
-    #packages such as DESeq2. R still uses 32-bit integers, and the largest 
-    #allowable integer is 2^32 −1. In an unusual case, a user's RNA-Seq counts 
-    #matrix included a count of 4 billion for a single gene, which was converted 
-    #to NA, leading to an error in DESeq2. This issue also caused the iDEP app to crash. 
+    # R cannot handle integers larger than 3 billion, which can impact popular 
+    # packages such as DESeq2. R still uses 32-bit integers, and the largest 
+    # allowable integer is 2^32 −1. In an unusual case, a user's RNA-Seq counts 
+    # matrix included a count of 4 billion for a single gene, which was converted 
+    # to NA, leading to an error in DESeq2. This issue also caused the iDEP app to crash. 
     if(max(data) > 2e9) {
       scale_factor <- max(data) / (2^32 - 1)
-      #round up scale_factor to the nearest integer
+      # Round up scale_factor to the nearest integer
       scale_factor <- ceiling(scale_factor / 10 + 1) * 10 #  just to be safe.
-      # divide by scale factor and round to the nearest integer, for the entire matrix, data
+      # Divide by the scale factor and round the entire matrix to the nearest integer
       data <- round(data / scale_factor)       
-      # warning message via the showNotification function
-      showNotification(paste("Data includes counts bigger than 2.15 billion (2^32). The data was divided by ", scale_factor,". Double check the data file. Is this really counts data? Proceed with caution."), duration = 60, type = "warning")
+      # Warning message via the showNotification function
+      showNotification(paste("Data includes counts bigger than 2.15 billion (2^32). The data was divided by ", scale_factor,". Double-check the data file. Is this really counts data? Proceed with caution."), duration = 60, type = "warning")
     }
 
     results$raw_counts <- data
@@ -290,7 +290,7 @@ pre_process <- function(data,
             # Add small constant to avoid log(0)
             data[, i] <- log2(results$raw_counts[, fc_cols[i]] + 0.01)
 
-            # Show notification to user
+            # Show notification to the user
             showNotification(
               paste0("Column ", colnames(results$raw_counts)[fc_cols[i]],
                      " detected as ratio data (no negatives, right skew = ",
@@ -308,7 +308,7 @@ pre_process <- function(data,
   validate(
     need(
       nrow(data) > 5 && ncol(data) >= 1,
-      "Data file not recognized. Please double check."
+      "Data file not recognized. Please double-check."
     )
   )
 
@@ -1718,7 +1718,7 @@ conversion_counts_message <- function(data_size,
   } else {
     return(paste(
       "After mapping, there are",
-      data_size[1], "uniqe genes in", data_size[4], "samples. Of the",
+      data_size[1], "unique genes in", data_size[4], "samples. Of the",
       data_size[3], " genes passed filter, ", n_matched,
       " were converted to Ensembl/STRING gene IDs in our database.
       The remaining ", data_size[3] - n_matched, " genes were

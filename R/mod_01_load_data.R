@@ -11,7 +11,7 @@ mod_01_load_data_ui <- function(id) {
   ns <- shiny::NS(id)
   tabPanel(
     title = "Data",
-    # move notifications and progress bar to the center of screen
+    # move notifications and progress bar to the center of the screen
     tags$head(
       tags$style(
         HTML(".shiny-notification {
@@ -148,15 +148,15 @@ mod_01_load_data_ui <- function(id) {
           choices = list(
             "..." = 0,
             "Read counts data" = 1,
-            "Normalized Expression data" = 2,
-            "Fold-changes & adjusted P-vals" = 3
+            "Normalized expression data" = 2,
+            "Fold changes & adjusted p-values" = 3
           ),
           selected = 0,
           selectize = FALSE
         ),
         tippy::tippy_this(
           ns("data_file_format"),
-          "We recommend raw read counts so iDEP can run DESeq2. Choose normalized expression if you have TPM/FPKM, microarray, or proteomics values. Select Fold-change plus P-values when statistical analysis was done elsewhere.",
+          "We recommend raw read counts so iDEP can run DESeq2. Choose normalized expression if you have TPM/FPKM, microarray, or proteomics values. Select fold change plus p-values when statistical analysis was done elsewhere.",
           theme = "light"
         ),
         
