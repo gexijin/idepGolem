@@ -1092,8 +1092,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           tags$span("Quick Start:", style = "font-size: 18px;"),
           tags$ul(
             tags$li(
-              "Watch a 6-minute ",
-              a("video", href = "https://youtu.be/ta1orPnjY-0", target = "_blank"),
+              "Watch a 5-min ",
+              a("video", href = "https://youtu.be/lqDqrJU-e24", target = "_blank"),
               " tutorial!"
             ),
             tags$li(
@@ -1781,7 +1781,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         div(
           style = "position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%;",
           tags$iframe(
-            src = "https://www.youtube.com/embed/ta1orPnjY-0?rel=0",
+            src = "https://www.youtube.com/embed/lqDqrJU-e24?rel=0",
             style = "position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;",
             allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture",
             allowfullscreen = NA
