@@ -117,7 +117,9 @@ deg_heatmap <- function(df,
       legend_width = grid::unit(6, "cm"),
       title = "Color Key",
       title_position = "topcenter"
-    )
+    ),
+    use_raster = TRUE,        # Force rasterization for performance
+    raster_quality = 1       # Good quality/performance balance
   )
   return(
     heatmap = ComplexHeatmap::draw(
@@ -270,7 +272,9 @@ deg_heat_sub <- function(ht_brush,
     show_row_names = show_rows,
     top_annotation = top_ann,
     left_annotation = row_ann,
-    name = "heat_1"
+    name = "heat_1",
+    use_raster = TRUE,        # Force rasterization for performance
+    raster_quality = 1       # Good quality/performance balance
   )
 
   # Show a subset of gene names when more than 50 is selected.

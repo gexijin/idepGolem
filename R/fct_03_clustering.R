@@ -330,7 +330,9 @@ heatmap_main <- function(data,
         legend_width = grid::unit(6, "cm"),
         title = "Color Key",
         title_position = "topcenter"
-      )
+      ),
+      use_raster = TRUE,        # Force rasterization for performance
+      raster_quality = 1       # Good quality/performance balance
     )
   } else if (cluster_meth == 2) {
     set.seed(re_run)
@@ -360,7 +362,9 @@ heatmap_main <- function(data,
         title = "Color Key",
         title_position = "topcenter"
       ),
-      row_title_gp = grid::gpar(fontsize = row_title)
+      row_title_gp = grid::gpar(fontsize = row_title),
+      use_raster = TRUE,        # Force rasterization for performance
+      raster_quality = 1       # Good quality/performance balance
     )
   }
 
