@@ -350,7 +350,7 @@ mod_03_clustering_ui <- function(id) {
             br(),
             fluidRow(
               column(
-                width = 4,
+                width = 5,
                 plotOutput(
                   outputId = ns("heatmap_main"),
                   height = "450px",
@@ -382,7 +382,7 @@ mod_03_clustering_ui <- function(id) {
                 )
               ),
               column(
-                width = 8,
+                width = 7,
                 conditionalPanel(
                   condition = paste0(
                     "input.cluster_meth == 2 || ",
@@ -651,6 +651,56 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       unlist(strsplit(pre_process$heatmap_color_select(), "-"))
     })
 
+    # Cache row/column dendrograms so we only rebuild when inputs that affect
+    # clustering actually change.
+    row_dendrogram <- eventReactive(
+      list(
+        heatmap_data(),
+        input$cluster_meth,
+        input$dist_function,
+        input$hclust_function,
+        dendrogram_selection()$row
+      ),
+      {
+        if (isolate(input$cluster_meth) != 1 ||
+            !isolate(dendrogram_selection()$row)) {
+          return(NULL)
+        }
+        mat <- isolate(heatmap_data())
+        if (is.null(mat) || nrow(mat) < 2) {
+          return(NULL)
+        }
+        dist_fun <- dist_funs[[as.numeric(isolate(input$dist_function))]]
+        h_fun <- hclust_funs[[isolate(input$hclust_function)]]
+        stats::as.dendrogram(h_fun(dist_fun(mat)))
+      },
+      ignoreNULL = FALSE
+    )
+
+    column_dendrogram <- eventReactive(
+      list(
+        heatmap_data(),
+        input$cluster_meth,
+        input$dist_function,
+        input$hclust_function,
+        dendrogram_selection()$sample
+      ),
+      {
+        if (isolate(input$cluster_meth) != 1 ||
+            !isolate(dendrogram_selection()$sample)) {
+          return(NULL)
+        }
+        mat <- isolate(heatmap_data())
+        if (is.null(mat) || ncol(mat) < 2) {
+          return(NULL)
+        }
+        dist_fun <- dist_funs[[as.numeric(isolate(input$dist_function))]]
+        h_fun <- hclust_funs[[isolate(input$hclust_function)]]
+        stats::as.dendrogram(h_fun(dist_fun(t(mat))))
+      },
+      ignoreNULL = FALSE
+    )
+
     # HEATMAP -----------
     # Information on interactivity
     # https://jokergoo.github.io/2020/05/15/interactive-complexheatmap/
@@ -665,13 +715,21 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           color = "#000000"
         )
 
+        # Measure and print how long building the main heatmap object takes
+        start_time <- Sys.time()
         shiny_env$ht <- heatmap_main_object()
+        end_time <- Sys.time()
+        elapsed_secs <- as.numeric(difftime(end_time, start_time, units = "secs"))
+        message(sprintf("Heatmap creation took %.2f seconds", elapsed_secs))
 
         # Ensure heatmap object is valid before getting positions
         if (!is.null(shiny_env$ht)) {
           tryCatch({
-            # Use heatmap position in multiple components
+            start_pos_time <- Sys.time()
             shiny_env$ht_pos_main <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht)
+            end_pos_time <- Sys.time()
+            elapsed_pos <- as.numeric(difftime(end_pos_time, start_pos_time, units = "secs"))
+            message(sprintf("htPositionsOnDevice took %.2f seconds", elapsed_pos))
           }, error = function(e) {
             # If position detection fails, set to NULL and continue
             shiny_env$ht_pos_main <- NULL
@@ -696,7 +754,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
 
         return(shiny_env$ht)
       },
-      width = 240 # , # this avoids the heatmap being redraw
+      width = 400 # , # this avoids the heatmap being redraw
       # height = 600
     )
     
@@ -785,7 +843,17 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           } else {
             NULL
           },
-          sample_color = input$sample_color
+          sample_color = input$sample_color,
+          row_dend_obj = if (input$cluster_meth == 1 && dendrogram_selection()$row) {
+            row_dendrogram()
+          } else {
+            NULL
+          },
+          col_dend_obj = if (input$cluster_meth == 1 && dendrogram_selection()$sample) {
+            column_dendrogram()
+          } else {
+            NULL
+          }
         )
       )
 

@@ -21,7 +21,9 @@ heatmap_main(
   selected_genes,
   group_pal = NULL,
   sample_color = NULL,
-  show_column_names = FALSE
+  show_column_names = FALSE,
+  row_dend_obj = NULL,
+  col_dend_obj = NULL
 )
 }
 \arguments{
@@ -59,6 +61,10 @@ hierarchical and 2 for kmeans.}
 \item{sample_color}{Selected colorspace color palette}
 
 \item{show_column_names}{TRUE/FALSE Show sample names below the heatmap}
+
+\item{row_dend_obj}{Optional precomputed row dendrogram to reuse}
+
+\item{col_dend_obj}{Optional precomputed column dendrogram to reuse}
 }
 \value{
 Heatmap of the processed data.

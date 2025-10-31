@@ -223,6 +223,8 @@ process_heatmap_data <- function(data,
 #' @param group_pal Named list of colors and their corresponding categories
 #' @param sample_color Selected colorspace color palette
 #' @param show_column_names TRUE/FALSE Show sample names below the heatmap
+#' @param row_dend_obj Optional precomputed row dendrogram to reuse
+#' @param col_dend_obj Optional precomputed column dendrogram to reuse
 #'
 #' @export
 #' @return Heatmap of the processed data.
@@ -249,7 +251,9 @@ heatmap_main <- function(data,
                          selected_genes,
                          group_pal = NULL,
                          sample_color = NULL,
-                         show_column_names = FALSE) {
+                         show_column_names = FALSE,
+                         row_dend_obj = NULL,
+                         col_dend_obj = NULL) {
   # Filter with max z-score
   cutoff <- median(unlist(data)) + heatmap_cutoff * sd(unlist(data))
   data[data > cutoff] <- cutoff
@@ -304,21 +308,28 @@ heatmap_main <- function(data,
   
   # Different heatmaps for hierarchical and k-means
   if (cluster_meth == 1) {
-    heat <- ComplexHeatmap::Heatmap(
-      data,
+    use_precomputed_row <- row_dend && !is.null(row_dend_obj)
+    use_precomputed_col <- sample_clustering && !is.null(col_dend_obj)
+
+    cluster_rows_value <- if (row_dend) {
+      if (use_precomputed_row) row_dend_obj else TRUE
+    } else {
+      FALSE
+    }
+
+    cluster_columns_value <- if (sample_clustering) {
+      if (use_precomputed_col) col_dend_obj else TRUE
+    } else {
+      FALSE
+    }
+
+    heat_args <- list(
+      matrix = data,
       name = "Expression",
       col = col_fun,
-      clustering_method_rows = hclust_function,
-      clustering_method_columns = hclust_function,
-      clustering_distance_rows = function(x) {
-        dist_funs[[as.numeric(dist_function)]](x)
-      },
-      clustering_distance_columns = function(x) {
-        dist_funs[[as.numeric(dist_function)]](x)
-      },
-      cluster_rows = TRUE,
-      cluster_columns = sample_clustering,
-      show_column_dend = TRUE,
+      cluster_rows = cluster_rows_value,
+      cluster_columns = cluster_columns_value,
+      show_column_dend = sample_clustering,
       show_row_dend = row_dend,
       row_dend_side = "left",
       row_dend_width = grid::unit(1, "cm"),
@@ -334,6 +345,22 @@ heatmap_main <- function(data,
       use_raster = TRUE,        # Force rasterization for performance
       raster_quality = 1       # Good quality/performance balance
     )
+
+    if (row_dend && !use_precomputed_row) {
+      heat_args$clustering_method_rows <- hclust_function
+      heat_args$clustering_distance_rows <- function(x) {
+        dist_funs[[as.numeric(dist_function)]](x)
+      }
+    }
+
+    if (sample_clustering && !use_precomputed_col) {
+      heat_args$clustering_method_columns <- hclust_function
+      heat_args$clustering_distance_columns <- function(x) {
+        dist_funs[[as.numeric(dist_function)]](x)
+      }
+    }
+
+    heat <- do.call(ComplexHeatmap::Heatmap, heat_args)
   } else if (cluster_meth == 2) {
     set.seed(re_run)
     if (k_clusters > 10) {
