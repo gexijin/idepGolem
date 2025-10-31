@@ -446,6 +446,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     # Interactive heatmap environment
     deg_env <- new.env()
 
+    stats_option_notice_initialized <- reactiveVal(FALSE)
+
     output$submit_ui <- renderUI({
       # req(model_comparisons()) # this is stopping LCF data from getting through Stats
       tagList(
@@ -641,6 +643,50 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
           input$reference_level_factor_6
         )
       )
+    )
+
+    # Watch for changes in Stats tab options and notify user to click Submit
+    observeEvent(
+      list(
+        input$counts_deg_method,
+        input$limma_p_val,
+        input$limma_fc,
+        input$threshold_wald_test,
+        input$independent_filtering,
+        input$select_factors_model,
+        input$select_block_factors_model,
+        input$select_model_comprions,
+        input$select_interactions,
+        input$reference_level_factor_1,
+        input$reference_level_factor_2,
+        input$reference_level_factor_3,
+        input$reference_level_factor_4,
+        input$reference_level_factor_5,
+        input$reference_level_factor_6
+      ),
+      {
+        if (!stats_option_notice_initialized()) {
+          stats_option_notice_initialized(TRUE)
+          return()
+        }
+
+        # Only show notification after Submit has been clicked at least once
+        if (is.null(input$submit_model_button) || input$submit_model_button == 0) {
+          return()
+        }
+
+        if (is.null(tab()) || tab() != "Stats") {
+          return()
+        }
+
+        showNotification(
+          ui = "Click Submit to rerun",
+          id = "stats_submit_reminder",
+          type = "message",
+          duration = 5
+        )
+      },
+      ignoreNULL = FALSE
     )
 
     deg <- reactiveValues(limma = NULL)

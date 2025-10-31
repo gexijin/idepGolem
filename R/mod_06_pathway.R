@@ -240,7 +240,7 @@ mod_06_pathway_ui <- function(id) {
               condition = "input.submit_pathway_button == 0",
               br(),
               br(),
-              h3("Adjust parameters and click the Submit button to perform analysis."),
+              h3("Adjust parameters and click Submit."),
               ns = ns
             ),
             htmlOutput(
@@ -439,22 +439,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
 
     # Interactive heatmap environment
     path_env <- new.env()
-    
-    # Inputs that require rerunning the pathway analysis when changed
-    pathway_option_inputs <- c(
-      "select_contrast",
-      "pathway_method",
-      "gage_data",
-      "select_go",
-      "pathway_p_val_cutoff",
-      "min_set_size",
-      "max_set_size",
-      "n_pathway_show",
-      "gene_p_val_cutoff",
-      "absolute_fold",
-      "show_pathway_id",
-      "pgsea_plot_color_select"
-    )
+
     pathway_option_notice_initialized <- reactiveVal(FALSE)
 
     # GMT choices for enrichment ----------
@@ -537,24 +522,40 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     })
     
     observeEvent(
-      {
-        lapply(pathway_option_inputs, function(id) input[[id]])
-      },
+      list(
+        input$select_contrast,
+        input$pathway_method,
+        input$gage_data,
+        input$select_go,
+        input$pathway_p_val_cutoff,
+        input$min_set_size,
+        input$max_set_size,
+        input$n_pathway_show,
+        input$gene_p_val_cutoff,
+        input$absolute_fold,
+        input$show_pathway_id,
+        input$pgsea_plot_color_select
+      ),
       {
         if (!pathway_option_notice_initialized()) {
           pathway_option_notice_initialized(TRUE)
           return()
         }
-        
+
+        # Only show notification after Submit has been clicked at least once
+        if (is.null(input$submit_pathway_button) || input$submit_pathway_button == 0) {
+          return()
+        }
+
         if (is.null(tab()) || tab() != "Pathway") {
           return()
         }
-        
+
         showNotification(
           ui = "Click Submit to rerun",
           id = "pathway_submit_reminder",
           type = "message",
-          duration = 2
+          duration = 5
         )
       },
       ignoreNULL = FALSE
