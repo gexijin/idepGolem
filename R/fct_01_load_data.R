@@ -713,7 +713,10 @@ showGeneIDs <- function(species, db, nGenes = 10){
   }
   removeNotification("db_notDownloaded")
   showNotification(
-    ui = paste("Querying Data...  May take 5 minutes."),
+    ui = tagList(
+      icon("spinner", class = "fa-spin"),
+      "Querying Database..."
+    ),
     id = "ExampleIDDataQuery",
     duration = NULL,
     type = "message"
