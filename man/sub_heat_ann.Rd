@@ -35,17 +35,17 @@ submap that will also show the legend
 \seealso{
 Other clustering functions: 
 \code{\link{cluster_heat_click_info}()},
+\code{\link{create_marker_legend}()},
 \code{\link{draw_sample_tree}()},
 \code{\link{heat_sub}()},
-\code{\link{heatmap_main}()},
 \code{\link{k_means_elbow}()},
 \code{\link{process_heatmap_data}()},
 \code{\link{sd_density}()}
 
 Other heatmaps: 
 \code{\link{cluster_heat_click_info}()},
+\code{\link{create_marker_legend}()},
 \code{\link{heat_sub}()},
-\code{\link{heatmap_main}()},
 \code{\link{process_heatmap_data}()}
 }
 \concept{clustering functions}

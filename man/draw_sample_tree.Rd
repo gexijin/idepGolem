@@ -62,8 +62,8 @@ Other plots:
 
 Other clustering functions: 
 \code{\link{cluster_heat_click_info}()},
+\code{\link{create_marker_legend}()},
 \code{\link{heat_sub}()},
-\code{\link{heatmap_main}()},
 \code{\link{k_means_elbow}()},
 \code{\link{process_heatmap_data}()},
 \code{\link{sd_density}()},

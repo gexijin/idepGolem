@@ -43,17 +43,17 @@ information for their click.
 }
 \seealso{
 Other clustering functions: 
+\code{\link{create_marker_legend}()},
 \code{\link{draw_sample_tree}()},
 \code{\link{heat_sub}()},
-\code{\link{heatmap_main}()},
 \code{\link{k_means_elbow}()},
 \code{\link{process_heatmap_data}()},
 \code{\link{sd_density}()},
 \code{\link{sub_heat_ann}()}
 
 Other heatmaps: 
+\code{\link{create_marker_legend}()},
 \code{\link{heat_sub}()},
-\code{\link{heatmap_main}()},
 \code{\link{process_heatmap_data}()},
 \code{\link{sub_heat_ann}()}
 }
