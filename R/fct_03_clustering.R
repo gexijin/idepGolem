@@ -430,7 +430,9 @@ heatmap_main <- function(data,
   return(
     ComplexHeatmap::draw(
       heat,
-      heatmap_legend_side = "bottom"
+      heatmap_legend_side = "bottom",
+      annotation_legend_side = "right",
+      align_annotation_legend = "heatmap_top"
     )
   )
 }
