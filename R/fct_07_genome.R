@@ -348,7 +348,7 @@ chromosome_data <- function(limma,
   if (ignore_non_coding) {
     x <- subset(x, gene_biotype == "protein_coding")
   }
-  
+
   # If no chromosomes found. For example if user do not convert gene IDs.
   if (dim(x)[1] > 5) {
     x <- x[order(x$chromosome_name, x$start_position), ]
@@ -405,6 +405,12 @@ chromosome_data <- function(limma,
       # ch. name less than 10 characters
       #    ch <- ch[nchar(ch) <= 12]
     }
+
+    # Check if any chromosomes remain after filtering
+    if (length(ch) == 0) {
+      return(NULL)
+    }
+
     ch <- ch[order(as.numeric(ch))]
     tem <- ch
     # The numbers are continous from 1 to length(ch)
@@ -413,6 +419,12 @@ chromosome_data <- function(limma,
     names(ch) <- tem
     x <- x[which(x$chromosome_name %in% names(ch)), ]
     x <- droplevels(x)
+
+    # Check if any data remains after filtering
+    if (nrow(x) == 0) {
+      return(NULL)
+    }
+
     # Numeric encoding
     x$chNum <- 1
     x$chNum <- ch[x$chromosome_name]
@@ -454,6 +466,12 @@ chromosome_data <- function(limma,
     x <- droplevels(x)
     
     x0 <- x0[x0$chromosome_name %in% unique(x$chromosome_name), ]
+
+    # Check if any data remains after filtering
+    if (nrow(x0) == 0) {
+      return(NULL)
+    }
+
     # Numeric encoding
     x0$chNum <- 1
     x0$chNum <- ch[x0$chromosome_name]

@@ -32,11 +32,12 @@ mod_08_bicluster_ui <- function(id) {
             "BCCC" = "biclust::BCCC()",
             "QUBIC" = "QUBIC::BCQU()",
             "runibic" = "runibic::BCUnibic()",
-            "BCXmotifs" = "biclust::BCXmotifs()",
             "BCPlaid" = "biclust::BCPlaid()",
-            "BCSpectral" = "biclust::BCSpectral()",
-            "BCBimax" = "biclust::BCBimax()",
-            "BCQuest" = "biclust::BCQuest()"
+            #"BCXmotifs" = "biclust::BCXmotifs()",   # error
+            #"BCSpectral" = "biclust::BCSpectral()",
+            #"BCQuest" = "biclust::BCQuest()",
+            "BCBimax" = "biclust::BCBimax()"
+
           ),
           selected = "BCCC()",
           selectize = FALSE
