@@ -847,7 +847,9 @@ heat_sub <- function(ht_brush,
       cluster_columns = FALSE,
       show_row_names = show_rows,
       top_annotation = sub_ann,
-      name = "heat_1"
+      name = "heat_1",
+      use_raster = TRUE,
+      raster_quality = 1
     )
   } else if (cluster_meth == 2) {
     sub_heats <- c()
@@ -878,7 +880,9 @@ heat_sub <- function(ht_brush,
         cluster_rows = FALSE,
         cluster_columns = FALSE,
         show_row_names = show_rows,
-        name = paste0("heat_", i)
+        name = paste0("heat_", i),
+        use_raster = TRUE,
+        raster_quality = 1
       )
       if (i == 1) {
         sub_heats[[i]] <- ComplexHeatmap::add_heatmap(
