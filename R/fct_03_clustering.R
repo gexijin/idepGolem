@@ -222,6 +222,7 @@ build_marker_legend <- function(levels,
     if (is.na(marker_val) || identical(marker_val, "")) {
       marker_val <- "?"
     }
+    marker_val <- toupper(marker_val)
     fill_col <- ordered_colors[i]
     function(x, y, w, h) {
       grid::grid.rect(
@@ -253,6 +254,17 @@ build_marker_legend <- function(levels,
   )
 }
 
+make_letter_markers <- function(levels) {
+  if (length(levels) == 0) {
+    return(setNames(character(0), character(0)))
+  }
+  markers <- trimws(levels)
+  markers[markers == "" | is.na(markers)] <- "?"
+  markers <- toupper(substr(markers, 1, 1))
+  markers[markers == "" | is.na(markers)] <- "?"
+  setNames(markers, levels)
+}
+
 #' Draw a heatmap of processed data
 #'
 #' Uses the package ComplexHeatmaps to draw a heatmap of the
@@ -280,6 +292,7 @@ build_marker_legend <- function(levels,
 #' @param show_column_names TRUE/FALSE Show sample names below the heatmap
 #' @param row_dend_obj Optional precomputed row dendrogram to reuse
 #' @param col_dend_obj Optional precomputed column dendrogram to reuse
+#' @param use_letter_overlay Logical flag to overlay uppercase letters on sample annotations.
 #'
 #' @export
 #' @return Heatmap of the processed data.
@@ -308,7 +321,8 @@ heatmap_main <- function(data,
                          sample_color = NULL,
                          show_column_names = FALSE,
                          row_dend_obj = NULL,
-                         col_dend_obj = NULL) {
+                         col_dend_obj = NULL,
+                         use_letter_overlay = TRUE) {
   # Filter with max z-score
   cutoff <- median(unlist(data)) + heatmap_cutoff * sd(unlist(data))
   data[data > cutoff] <- cutoff
@@ -352,31 +366,42 @@ heatmap_main <- function(data,
         c = 70
       )
       group_colors <- setNames(group_colors, group_levels)
-      group_markers <- trimws(group_levels)
-      group_markers[group_markers == "" | is.na(group_markers)] <- "?"
-      group_markers <- substr(group_markers, 1, 1)
-      group_markers[group_markers == "" | is.na(group_markers)] <- "?"
-      group_markers <- setNames(group_markers, group_levels)
-      heat_ann <- ComplexHeatmap::HeatmapAnnotation(
-        Group = ComplexHeatmap::anno_simple(
+      group_markers <- if (use_letter_overlay) make_letter_markers(group_levels) else NULL
+      group_annotation <- if (use_letter_overlay) {
+        ComplexHeatmap::anno_simple(
           x = groups,
           col = group_colors,
           pch = group_markers[groups],
           pt_gp = grid::gpar(col = "black", fill = NA, fontsize = 8, fontface = "bold")
-        ),
+        )
+      } else {
+        ComplexHeatmap::anno_simple(
+          x = groups,
+          col = group_colors
+        )
+      }
+      heat_ann <- ComplexHeatmap::HeatmapAnnotation(
+        Group = group_annotation,
         show_annotation_name = FALSE,
         show_legend = FALSE
       )
       if (show_legend) {
-        annotation_legends <- c(
-          annotation_legends,
-          list(build_marker_legend(
+        legend_entry <- if (use_letter_overlay) {
+          build_marker_legend(
             levels = group_levels,
             colors = group_colors,
             markers = group_markers,
             title = "Group"
-          ))
-        )
+          )
+        } else {
+          ComplexHeatmap::Legend(
+            title = "Group",
+            at = group_levels,
+            type = "grid",
+            legend_gp = grid::gpar(fill = group_colors, col = NA)
+          )
+        }
+        annotation_legends <- c(annotation_legends, list(legend_entry))
       }
     } else { # more factors------------------------
       if (!is.null(sample_info) && ncol(sample_info) > 0) {
@@ -419,27 +444,41 @@ heatmap_main <- function(data,
             colors_named <- colors_named[levels_used]
           }
 
-          factor_markers <- trimws(levels_used)
-          factor_markers[factor_markers == "" | is.na(factor_markers)] <- "?"
-          factor_markers <- substr(factor_markers, 1, 1)
-          factor_markers[factor_markers == "" | is.na(factor_markers)] <- "?"
-          factor_markers <- setNames(factor_markers, levels_used)
+          factor_markers <- if (use_letter_overlay) make_letter_markers(levels_used) else NULL
 
-          factor_annotations[[i]] <- ComplexHeatmap::anno_simple(
-            factor_groups,
-            col = colors_named,
-            pch = factor_markers[factor_groups],
-            pt_gp = grid::gpar(col = "black", fill = NA, fontsize = 8, fontface = "bold")
-          )
+          factor_annotations[[i]] <- if (use_letter_overlay) {
+            ComplexHeatmap::anno_simple(
+              factor_groups,
+              col = colors_named,
+              pch = factor_markers[factor_groups],
+              pt_gp = grid::gpar(col = "black", fill = NA, fontsize = 8, fontface = "bold")
+            )
+          } else {
+            ComplexHeatmap::anno_simple(
+              factor_groups,
+              col = colors_named
+            )
+          }
 
-          factor_legends <- c(
-            factor_legends,
-            list(build_marker_legend(
+          legend_entry <- if (use_letter_overlay) {
+            build_marker_legend(
               levels = levels_used,
               colors = colors_named,
               markers = factor_markers,
               title = factor_name
-            ))
+            )
+          } else {
+            ComplexHeatmap::Legend(
+              title = factor_name,
+              at = levels_used,
+              type = "grid",
+              legend_gp = grid::gpar(fill = colors_named, col = NA)
+            )
+          }
+
+          factor_legends <- c(
+            factor_legends,
+            list(legend_entry)
           )
         }
 
@@ -734,6 +773,7 @@ k_means_elbow <- function(heatmap_data) {
 #'   "All factors" will use all of the sample information.
 #' @param group_pal Named list of colors and their corresponding categories
 #' @param sample_color Selected colorspace color palette
+#' @param use_letter_overlay Logical flag to overlay uppercase letters on sample annotations.
 #'
 #' @export
 #' @return A list containing a ComplexHeatmap annotation object,
@@ -745,7 +785,8 @@ sub_heat_ann <- function(data,
                          sample_info,
                          select_factors_heatmap,
                          group_pal = NULL,
-                         sample_color = NULL) {
+                         sample_color = NULL,
+                         use_letter_overlay = TRUE) {
   groups <- detect_groups(colnames(data))
   lgd <- NULL
 
@@ -794,27 +835,41 @@ sub_heat_ann <- function(data,
           colors_named <- colors_named[levels_used]
         }
 
-        factor_markers <- trimws(levels_used)
-        factor_markers[factor_markers == "" | is.na(factor_markers)] <- "?"
-        factor_markers <- substr(factor_markers, 1, 1)
-        factor_markers[factor_markers == "" | is.na(factor_markers)] <- "?"
-        factor_markers <- setNames(factor_markers, levels_used)
+        factor_markers <- if (use_letter_overlay) make_letter_markers(levels_used) else NULL
 
-        factor_annotations[[i]] <- ComplexHeatmap::anno_simple(
-          factor_groups,
-          col = colors_named,
-          pch = factor_markers[factor_groups],
-          pt_gp = grid::gpar(col = "black", fill = NA, fontsize = 8, fontface = "bold")
-        )
+        factor_annotations[[i]] <- if (use_letter_overlay) {
+          ComplexHeatmap::anno_simple(
+            factor_groups,
+            col = colors_named,
+            pch = factor_markers[factor_groups],
+            pt_gp = grid::gpar(col = "black", fill = NA, fontsize = 8, fontface = "bold")
+          )
+        } else {
+          ComplexHeatmap::anno_simple(
+            factor_groups,
+            col = colors_named
+          )
+        }
 
-        factor_legends <- c(
-          factor_legends,
-          list(build_marker_legend(
+        legend_entry <- if (use_letter_overlay) {
+          build_marker_legend(
             levels = levels_used,
             colors = colors_named,
             markers = factor_markers,
             title = factor_name
-          ))
+          )
+        } else {
+          ComplexHeatmap::Legend(
+            title = factor_name,
+            at = levels_used,
+            type = "grid",
+            legend_gp = grid::gpar(fill = colors_named, col = NA)
+          )
+        }
+
+        factor_legends <- c(
+          factor_legends,
+          list(legend_entry)
         )
 
         factor_colors_map[[factor_name]] <- colors_named
@@ -872,30 +927,45 @@ sub_heat_ann <- function(data,
       c = 70
     )
     group_colors <- setNames(group_colors, group_levels)
-    group_markers <- trimws(group_levels)
-    group_markers[group_markers == "" | is.na(group_markers)] <- "?"
-    group_markers <- substr(group_markers, 1, 1)
-    group_markers[group_markers == "" | is.na(group_markers)] <- "?"
-    group_markers <- setNames(group_markers, group_levels)
+    group_markers <- if (use_letter_overlay) make_letter_markers(group_levels) else NULL
     
-    heat_sub_ann <- ComplexHeatmap::HeatmapAnnotation(
-      Group = ComplexHeatmap::anno_simple(
+    group_annotation <- if (use_letter_overlay) {
+      ComplexHeatmap::anno_simple(
         groups,
         col = group_colors,
         pch = group_markers[groups],
         pt_gp = grid::gpar(col = "black", fill = NA, fontsize = 8, fontface = "bold")
-      ),
+      )
+    } else {
+      ComplexHeatmap::anno_simple(
+        groups,
+        col = group_colors
+      )
+    }
+
+    heat_sub_ann <- ComplexHeatmap::HeatmapAnnotation(
+      Group = group_annotation,
       show_annotation_name = FALSE,
       show_legend = FALSE
     )
 
     if (length(group_levels) < 10) {
-      lgd <- list(build_marker_legend(
-        levels = group_levels,
-        colors = group_colors,
-        markers = group_markers,
-        title = NULL
-      ))
+      legend_entry <- if (use_letter_overlay) {
+        build_marker_legend(
+          levels = group_levels,
+          colors = group_colors,
+          markers = group_markers,
+          title = NULL
+        )
+      } else {
+        ComplexHeatmap::Legend(
+          title = NULL,
+          at = group_levels,
+          type = "grid",
+          legend_gp = grid::gpar(fill = group_colors, col = NA)
+        )
+      }
+      lgd <- list(legend_entry)
     } else {
       lgd <- NULL
     }
@@ -1060,6 +1130,7 @@ Group: @{group_name} <span style='background-color:@{group_col};width:20px;displ
 #'   hierarchical and 2 for kmeans.
 #' @param group_pal Named list of colors and their corresponding categories
 #' @param sample_color Selected colorspace color palette
+#' @param use_letter_overlay Logical flag to overlay uppercase letters on sample annotations.
 #'
 #' @export
 #' @return A list containing a Heatmap from the brush selection
@@ -1076,7 +1147,8 @@ heat_sub <- function(ht_brush,
                      select_factors_heatmap,
                      cluster_meth,
                      group_pal = NULL,
-                     sample_color = NULL) {
+                     sample_color = NULL,
+                     use_letter_overlay = TRUE) {
   max_gene_ids <- 2000
   lt <- InteractiveComplexHeatmap::getPositionFromBrush(ht_brush)
   pos1 <- lt[[1]]
@@ -1098,7 +1170,8 @@ heat_sub <- function(ht_brush,
     sample_info = sample_info,
     select_factors_heatmap = select_factors_heatmap,
     group_pal = group_pal,
-    sample_color = sample_color
+    sample_color = sample_color,
+    use_letter_overlay = use_letter_overlay
   )
   sub_ann <- sub_heat$heat_sub_ann[column_index]
   sub_groups <- sub_heat$groups[column_index]

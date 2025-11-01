@@ -9,7 +9,8 @@ sub_heat_ann(
   sample_info,
   select_factors_heatmap,
   group_pal = NULL,
-  sample_color = NULL
+  sample_color = NULL,
+  use_letter_overlay = TRUE
 )
 }
 \arguments{
@@ -23,6 +24,8 @@ sub_heat_ann(
 \item{group_pal}{Named list of colors and their corresponding categories}
 
 \item{sample_color}{Selected colorspace color palette}
+
+\item{use_letter_overlay}{Logical flag to overlay uppercase letters on sample annotations.}
 }
 \value{
 A list containing a ComplexHeatmap annotation object,

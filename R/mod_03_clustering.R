@@ -256,6 +256,17 @@ mod_03_clustering_ui <- function(id) {
                 "Substract mean and scale by standard deviation before clustering.",
                 theme = "light"
               ),
+              checkboxInput(
+                inputId = ns("letter_overlay"),
+                label = "Overlay sample initials",
+                value = TRUE
+              ),
+              tippy::tippy_this(
+                ns("letter_overlay"),
+                "Toggle letter overlays on the sample color bar above the heatmap.",
+                theme = "light"
+              ),
+
               fluidRow(
                 column(width = 4, p("Sample Colors")),
                 column(
@@ -293,7 +304,8 @@ mod_03_clustering_ui <- function(id) {
                     theme = "light"
                   )
                 )
-              )
+              ),
+              tags$hr()
             )
           ),
           ns = ns
@@ -489,6 +501,19 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
 
     # Interactive heatmap environment
     shiny_env <- new.env()
+
+    observeEvent(pre_process$data(), {
+      data_mat <- pre_process$data()
+      req(!is.null(data_mat))
+      sample_count <- ncol(data_mat)
+      if (!is.null(sample_count) && sample_count > 30 && isTRUE(input$letter_overlay)) {
+        updateCheckboxInput(
+          session = session,
+          inputId = "letter_overlay",
+          value = FALSE
+        )
+      }
+    }, ignoreNULL = TRUE)
 
     # Reset to Heatmap whenever the Cluster tab becomes active again
     observeEvent(tab(), {
@@ -775,6 +800,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       req(!is.null(heatmap_data()))
       req(!is.null(input$select_factors_heatmap))
       req(input$select_factors_heatmap != "")
+      req(!is.null(input$letter_overlay))
       req(!is.null(input$sample_color))
 
       group_pal_val <- NULL
@@ -789,7 +815,8 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         sample_info = pre_process$sample_info(),
         select_factors_heatmap = input$select_factors_heatmap,
         group_pal = group_pal_val,
-        sample_color = input$sample_color
+        sample_color = input$sample_color,
+        use_letter_overlay = isTRUE(input$letter_overlay)
       )
 
       list(
@@ -803,6 +830,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       req(!is.null(heatmap_data()))
       req(!is.null(input$select_factors_heatmap))
       req(input$select_factors_heatmap != "")
+      req(!is.null(input$letter_overlay))
 
       # Ensure stable state before proceeding
       if (!is.null(pre_process$sample_info())) {
@@ -844,7 +872,8 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
             column_dendrogram()
           } else {
             NULL
-          }
+          },
+          use_letter_overlay = isTRUE(input$letter_overlay)
         )
       )
 
@@ -1142,7 +1171,8 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           select_factors_heatmap = selected_factors_heatmap(),
           cluster_meth = current_method(),
           group_pal = group_pal(),
-          sample_color = submitted_pal()
+          sample_color = submitted_pal(),
+          use_letter_overlay = isTRUE(input$letter_overlay)
         )},
         error = function(e) {e$message}
       )

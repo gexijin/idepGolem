@@ -23,7 +23,8 @@ heatmap_main(
   sample_color = NULL,
   show_column_names = FALSE,
   row_dend_obj = NULL,
-  col_dend_obj = NULL
+  col_dend_obj = NULL,
+  use_letter_overlay = TRUE
 )
 }
 \arguments{
@@ -65,6 +66,8 @@ hierarchical and 2 for kmeans.}
 \item{row_dend_obj}{Optional precomputed row dendrogram to reuse}
 
 \item{col_dend_obj}{Optional precomputed column dendrogram to reuse}
+
+\item{use_letter_overlay}{Logical flag to overlay uppercase letters on sample annotations.}
 }
 \value{
 Heatmap of the processed data.

@@ -13,7 +13,8 @@ heat_sub(
   select_factors_heatmap,
   cluster_meth,
   group_pal = NULL,
-  sample_color = NULL
+  sample_color = NULL,
+  use_letter_overlay = TRUE
 )
 }
 \arguments{
@@ -36,6 +37,8 @@ hierarchical and 2 for kmeans.}
 \item{group_pal}{Named list of colors and their corresponding categories}
 
 \item{sample_color}{Selected colorspace color palette}
+
+\item{use_letter_overlay}{Logical flag to overlay uppercase letters on sample annotations.}
 }
 \value{
 A list containing a Heatmap from the brush selection
