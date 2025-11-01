@@ -382,7 +382,11 @@ mod_03_clustering_ui <- function(id) {
                 )
               ),
               column(
-                width = 7,
+                width = 1,
+                # Spacer
+              ),
+              column(
+                width = 6,
                 conditionalPanel(
                   condition = paste0(
                     "input.cluster_meth == 2 || ",

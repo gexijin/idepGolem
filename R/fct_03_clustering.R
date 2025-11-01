@@ -343,7 +343,8 @@ heatmap_main <- function(data,
         title_position = "topcenter"
       ),
       use_raster = TRUE,        # Force rasterization for performance
-      raster_quality = 1       # Good quality/performance balance
+      raster_quality = 1,       # Good quality/performance balance
+      border = FALSE            # Disable borders for faster rendering
     )
 
     if (row_dend && !use_precomputed_row) {
@@ -391,7 +392,8 @@ heatmap_main <- function(data,
       ),
       row_title_gp = grid::gpar(fontsize = row_title),
       use_raster = TRUE,        # Force rasterization for performance
-      raster_quality = 1       # Good quality/performance balance
+      raster_quality = 1,       # Good quality/performance balance
+      border = FALSE            # Disable borders for faster rendering
     )
   }
 
@@ -849,7 +851,8 @@ heat_sub <- function(ht_brush,
       top_annotation = sub_ann,
       name = "heat_1",
       use_raster = TRUE,
-      raster_quality = 1
+      raster_quality = 1,
+      border = FALSE
     )
   } else if (cluster_meth == 2) {
     sub_heats <- c()
@@ -882,7 +885,8 @@ heat_sub <- function(ht_brush,
         show_row_names = show_rows,
         name = paste0("heat_", i),
         use_raster = TRUE,
-        raster_quality = 1
+        raster_quality = 1,
+        border = FALSE
       )
       if (i == 1) {
         sub_heats[[i]] <- ComplexHeatmap::add_heatmap(
