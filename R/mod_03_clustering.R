@@ -382,11 +382,7 @@ mod_03_clustering_ui <- function(id) {
                 )
               ),
               column(
-                width = 1,
-                # Spacer
-              ),
-              column(
-                width = 6,
+                width = 7,
                 conditionalPanel(
                   condition = paste0(
                     "input.cluster_meth == 2 || ",
@@ -719,21 +715,12 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           color = "#000000"
         )
 
-        # Measure and print how long building the main heatmap object takes
-        start_time <- Sys.time()
         shiny_env$ht <- heatmap_main_object()
-        end_time <- Sys.time()
-        elapsed_secs <- as.numeric(difftime(end_time, start_time, units = "secs"))
-        message(sprintf("Heatmap creation took %.2f seconds", elapsed_secs))
 
         # Ensure heatmap object is valid before getting positions
         if (!is.null(shiny_env$ht)) {
           tryCatch({
-            start_pos_time <- Sys.time()
             shiny_env$ht_pos_main <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht)
-            end_pos_time <- Sys.time()
-            elapsed_pos <- as.numeric(difftime(end_pos_time, start_pos_time, units = "secs"))
-            message(sprintf("htPositionsOnDevice took %.2f seconds", elapsed_pos))
           }, error = function(e) {
             # If position detection fails, set to NULL and continue
             shiny_env$ht_pos_main <- NULL
@@ -758,7 +745,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
 
         return(shiny_env$ht)
       },
-      width = 320 # , # this avoids the heatmap being redraw
+      width = 300 # , # this avoids the heatmap being redraw
       # height = 600
     )
     
