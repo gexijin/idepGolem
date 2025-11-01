@@ -258,7 +258,7 @@ mod_03_clustering_ui <- function(id) {
               ),
               checkboxInput(
                 inputId = ns("letter_overlay"),
-                label = "Overlay sample initials",
+                label = "Letter Overlay",
                 value = TRUE
               ),
               tippy::tippy_this(
