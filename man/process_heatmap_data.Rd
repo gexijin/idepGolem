@@ -46,17 +46,17 @@ to perform, and what gene ID label to use.
 \seealso{
 Other clustering functions: 
 \code{\link{cluster_heat_click_info}()},
-\code{\link{create_marker_legend}()},
 \code{\link{draw_sample_tree}()},
 \code{\link{heat_sub}()},
+\code{\link{heatmap_main}()},
 \code{\link{k_means_elbow}()},
 \code{\link{sd_density}()},
 \code{\link{sub_heat_ann}()}
 
 Other heatmaps: 
 \code{\link{cluster_heat_click_info}()},
-\code{\link{create_marker_legend}()},
 \code{\link{heat_sub}()},
+\code{\link{heatmap_main}()},
 \code{\link{sub_heat_ann}()}
 }
 \concept{clustering functions}
