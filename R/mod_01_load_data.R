@@ -1097,7 +1097,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
               " tutorial!"
             ),
             tags$li(
-              "Try it with demo data. After selecting a data type, just click ",
+              "Select a data type, then click ",
               tags$span("Demo Data.", id = "load-demo", style = "color: red;")
             )
           )
@@ -1778,21 +1778,11 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       req(input$data_format_help == 0 && input$design_format_help == 0)
 
       tagList(
-        div(
-          style = "position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%;",
-          tags$iframe(
-            src = "https://www.youtube.com/embed/lqDqrJU-e24?rel=0",
-            style = "position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;",
-            allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture",
-            allowfullscreen = NA
-          )
-        ),
         fluidRow(
           column(
             width = 9,
             h4(paste("v", as.character(packageVersion("idepGolem")))),
             h4("iDEP: integrated Differential Expression & Pathway analysis"),
-            h5("The power of 100s of R packages and annotation databases, at your fingertips!")
           ),
           column(
             width = 3,
@@ -1807,7 +1797,15 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         # alternative UI output message for once expression data is loaded
         uiOutput(ns("load_data_alt")),
         includeHTML(app_sys("app/www/messages.html")),
-        br(),
+        div(
+          style = "position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%;",
+          tags$iframe(
+            src = "https://www.youtube.com/embed/lqDqrJU-e24?rel=0",
+            style = "position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;",
+            allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture",
+            allowfullscreen = NA
+          )
+        ),
         img(
           src = "www/flowchart.png",
           align = "center",

@@ -212,6 +212,10 @@ mod_10_doc_ui <- function(id) {
       with a certain parameter using a particular method.
       "),
       h3("Change log"),
+      p("10/29/2025: iDEP 2.3.0. Add Marker gene plots. Update reports for each tabs. New video."),
+      p("9/28/2025: iDEP 2.20. UI improvements. Add documentations for each tab."),
+      p("9/25/2025: iDEP 2.11. UI improvements for species selection. Remove submit buttons from Clustering, Bicluster, and Network tabs."),
+      p("9/5/2025: iDEP 2.10. UI improvements. Database update to Ensembl 133."),
       p("4/20/2024: Fix bug in network tab related to module download. Enable download of network as a CSV file."),
       p("4/19/2024: iDEP 2.01. Minor upgrade. Fixed a bug related to insufficiant # of color in palettes. 
       Optimized UI for load data. Reverted to basic Shiny theme due to an issue with new version of Shiny package."),
