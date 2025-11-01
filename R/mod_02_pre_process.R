@@ -774,6 +774,18 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       }
     }, ignoreNULL = TRUE)
 
+    # Dynamic Markers Tab - hide if no markers found ----------
+    observe({
+      req(!is.null(processed_data()$data))
+      payloads <- marker_payloads()
+
+      if (length(payloads) == 0) {
+        hideTab(inputId = "eda_tabs", target = "Markers")
+      } else {
+        showTab(inputId = "eda_tabs", target = "Markers")
+      }
+    })
+
     # Process the data with user defined criteria ----------
     processed_data <- reactive({
       req(!is.null(load_data$converted_data()))
