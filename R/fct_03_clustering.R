@@ -202,23 +202,26 @@ process_heatmap_data <- function(data,
 #'
 #' @param levels Character vector of factor levels.
 #' @param colors Named character vector of colors.
-#' @param shapes Named integer vector of pch values matching the levels.
+#' @param markers Named character vector of single-character markers matching the levels.
 #' @param title Optional legend title.
 #'
 #' @return A ComplexHeatmap legend object.
 build_marker_legend <- function(levels,
                                 colors,
-                                shapes,
+                                markers,
                                 title = NULL) {
   if (length(levels) == 0) {
     return(NULL)
   }
 
   ordered_colors <- colors[levels]
-  ordered_shapes <- shapes[levels]
+  ordered_markers <- markers[levels]
 
   graphics_layers <- lapply(seq_along(levels), function(i) {
-    shape_val <- ordered_shapes[i]
+    marker_val <- ordered_markers[i]
+    if (is.na(marker_val) || identical(marker_val, "")) {
+      marker_val <- "?"
+    }
     fill_col <- ordered_colors[i]
     function(x, y, w, h) {
       grid::grid.rect(
@@ -228,12 +231,11 @@ build_marker_legend <- function(levels,
         height = h,
         gp = grid::gpar(fill = fill_col, col = NA)
       )
-      grid::grid.points(
+      grid::grid.text(
         x = x,
         y = y,
-        pch = shape_val,
-        size = grid::unit(3, "mm"),
-        gp = grid::gpar(fill = NA, col = "black")
+        label = marker_val,
+        gp = grid::gpar(col = "black", fontsize = 8, fontface = "bold")
       )
     }
   })
@@ -342,6 +344,7 @@ heatmap_main <- function(data,
         }
       }
       groups <- as.character(groups)
+      groups[is.na(groups)] <- "NA"
       group_levels <- unique(groups)
       group_colors <- colorspace::qualitative_hcl(
         length(group_levels),
@@ -349,17 +352,17 @@ heatmap_main <- function(data,
         c = 70
       )
       group_colors <- setNames(group_colors, group_levels)
-      shape_pool <- c(21:25, 0:20, 33:126)
-      group_shapes <- setNames(
-        rep(shape_pool, length.out = length(group_levels)),
-        group_levels
-      )
+      group_markers <- trimws(group_levels)
+      group_markers[group_markers == "" | is.na(group_markers)] <- "?"
+      group_markers <- substr(group_markers, 1, 1)
+      group_markers[group_markers == "" | is.na(group_markers)] <- "?"
+      group_markers <- setNames(group_markers, group_levels)
       heat_ann <- ComplexHeatmap::HeatmapAnnotation(
         Group = ComplexHeatmap::anno_simple(
           x = groups,
           col = group_colors,
-          pch = group_shapes[groups],
-          pt_gp = grid::gpar(col = "black", fill = NA)
+          pch = group_markers[groups],
+          pt_gp = grid::gpar(col = "black", fill = NA, fontsize = 8, fontface = "bold")
         ),
         show_annotation_name = FALSE,
         show_legend = FALSE
@@ -370,7 +373,7 @@ heatmap_main <- function(data,
           list(build_marker_legend(
             levels = group_levels,
             colors = group_colors,
-            shapes = group_shapes,
+            markers = group_markers,
             title = "Group"
           ))
         )
@@ -381,8 +384,6 @@ heatmap_main <- function(data,
         factor_annotations <- vector("list", length(factor_names))
         names(factor_annotations) <- factor_names
         factor_legends <- list()
-        shape_pool <- c(21:25, 0:20, 33:126)
-        shape_index <- 1
 
         for (i in seq_along(factor_names)) {
           factor_name <- factor_names[i]
@@ -418,24 +419,17 @@ heatmap_main <- function(data,
             colors_named <- colors_named[levels_used]
           }
 
-          needed_shapes <- length(levels_used)
-          if (shape_index + needed_shapes - 1 > length(shape_pool)) {
-            extra_needed <- shape_index + needed_shapes - 1 - length(shape_pool)
-            max_shape <- if (length(shape_pool) > 0) max(shape_pool) else 0
-            shape_pool <- c(
-              shape_pool,
-              seq.int(from = max_shape + 1, length.out = extra_needed)
-            )
-          }
-          assigned_shapes <- shape_pool[shape_index:(shape_index + needed_shapes - 1)]
-          shape_index <- shape_index + needed_shapes
-          factor_shapes <- setNames(assigned_shapes, levels_used)
+          factor_markers <- trimws(levels_used)
+          factor_markers[factor_markers == "" | is.na(factor_markers)] <- "?"
+          factor_markers <- substr(factor_markers, 1, 1)
+          factor_markers[factor_markers == "" | is.na(factor_markers)] <- "?"
+          factor_markers <- setNames(factor_markers, levels_used)
 
           factor_annotations[[i]] <- ComplexHeatmap::anno_simple(
             factor_groups,
             col = colors_named,
-            pch = factor_shapes[factor_groups],
-            pt_gp = grid::gpar(col = "black", fill = NA)
+            pch = factor_markers[factor_groups],
+            pt_gp = grid::gpar(col = "black", fill = NA, fontsize = 8, fontface = "bold")
           )
 
           factor_legends <- c(
@@ -443,7 +437,7 @@ heatmap_main <- function(data,
             list(build_marker_legend(
               levels = levels_used,
               colors = colors_named,
-              shapes = factor_shapes,
+              markers = factor_markers,
               title = factor_name
             ))
           )
@@ -764,8 +758,7 @@ sub_heat_ann <- function(data,
       factor_names <- colnames(sample_info)
       factor_annotations <- vector("list", length(factor_names))
       names(factor_annotations) <- factor_names
-      shape_pool <- c(21:25, 0:20, 33:126)
-      shape_index <- 1
+      factor_legends <- list()
 
       for (i in seq_along(factor_names)) {
         factor_name <- factor_names[i]
@@ -801,24 +794,17 @@ sub_heat_ann <- function(data,
           colors_named <- colors_named[levels_used]
         }
 
-        needed_shapes <- length(levels_used)
-        if (shape_index + needed_shapes - 1 > length(shape_pool)) {
-          extra_needed <- shape_index + needed_shapes - 1 - length(shape_pool)
-          max_shape <- if (length(shape_pool) > 0) max(shape_pool) else 0
-          shape_pool <- c(
-            shape_pool,
-            seq.int(from = max_shape + 1, length.out = extra_needed)
-          )
-        }
-        assigned_shapes <- shape_pool[shape_index:(shape_index + needed_shapes - 1)]
-        shape_index <- shape_index + needed_shapes
-        factor_shapes <- setNames(assigned_shapes, levels_used)
+        factor_markers <- trimws(levels_used)
+        factor_markers[factor_markers == "" | is.na(factor_markers)] <- "?"
+        factor_markers <- substr(factor_markers, 1, 1)
+        factor_markers[factor_markers == "" | is.na(factor_markers)] <- "?"
+        factor_markers <- setNames(factor_markers, levels_used)
 
         factor_annotations[[i]] <- ComplexHeatmap::anno_simple(
           factor_groups,
           col = colors_named,
-          pch = factor_shapes[factor_groups],
-          pt_gp = grid::gpar(col = "black", fill = NA)
+          pch = factor_markers[factor_groups],
+          pt_gp = grid::gpar(col = "black", fill = NA, fontsize = 8, fontface = "bold")
         )
 
         factor_legends <- c(
@@ -826,7 +812,7 @@ sub_heat_ann <- function(data,
           list(build_marker_legend(
             levels = levels_used,
             colors = colors_named,
-            shapes = factor_shapes,
+            markers = factor_markers,
             title = factor_name
           ))
         )
@@ -878,6 +864,7 @@ sub_heat_ann <- function(data,
       }
     }
     groups <- as.character(groups)
+    groups[is.na(groups)] <- "NA"
     group_levels <- unique(groups)
     group_colors <- colorspace::qualitative_hcl(
       length(group_levels),
@@ -885,18 +872,18 @@ sub_heat_ann <- function(data,
       c = 70
     )
     group_colors <- setNames(group_colors, group_levels)
-    shape_pool <- c(21:25, 0:20, 33:126)
-    group_shapes <- setNames(
-      rep(shape_pool, length.out = length(group_levels)),
-      group_levels
-    )
+    group_markers <- trimws(group_levels)
+    group_markers[group_markers == "" | is.na(group_markers)] <- "?"
+    group_markers <- substr(group_markers, 1, 1)
+    group_markers[group_markers == "" | is.na(group_markers)] <- "?"
+    group_markers <- setNames(group_markers, group_levels)
     
     heat_sub_ann <- ComplexHeatmap::HeatmapAnnotation(
       Group = ComplexHeatmap::anno_simple(
         groups,
         col = group_colors,
-        pch = group_shapes[groups],
-        pt_gp = grid::gpar(col = "black", fill = NA)
+        pch = group_markers[groups],
+        pt_gp = grid::gpar(col = "black", fill = NA, fontsize = 8, fontface = "bold")
       ),
       show_annotation_name = FALSE,
       show_legend = FALSE
@@ -906,7 +893,7 @@ sub_heat_ann <- function(data,
       lgd <- list(build_marker_legend(
         levels = group_levels,
         colors = group_colors,
-        shapes = group_shapes,
+        markers = group_markers,
         title = NULL
       ))
     } else {

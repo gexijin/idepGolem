@@ -4,14 +4,14 @@
 \alias{build_marker_legend}
 \title{Build a legend with overlay markers}
 \usage{
-build_marker_legend(levels, colors, shapes, title = NULL)
+build_marker_legend(levels, colors, markers, title = NULL)
 }
 \arguments{
 \item{levels}{Character vector of factor levels.}
 
 \item{colors}{Named character vector of colors.}
 
-\item{shapes}{Named integer vector of pch values matching the levels.}
+\item{markers}{Named character vector of single-character markers matching the levels.}
 
 \item{title}{Optional legend title.}
 }
