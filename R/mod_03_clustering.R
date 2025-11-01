@@ -67,7 +67,7 @@ mod_03_clustering_ui <- function(id) {
                 label = NULL,
                 min = 10,
                 max = 12000,
-                value = 2000,
+                value = 1500,
                 step = 100
               ),
               tippy::tippy_this(
@@ -758,7 +758,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
 
         return(shiny_env$ht)
       },
-      width = 300 # , # this avoids the heatmap being redraw
+      width = 320 # , # this avoids the heatmap being redraw
       # height = 600
     )
     
