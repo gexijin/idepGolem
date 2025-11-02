@@ -394,9 +394,11 @@ mod_03_clustering_ui <- function(id) {
                   outputId = ns("ht_click_content")
                 )
               ),
-              column(
+                column(
                 width = 7,
-                conditionalPanel(
+                div(
+                  style = "max-height: calc(120vh - 300px); overflow-y: auto; -webkit-overflow-scrolling: touch; padding-right: 10px;",
+                  conditionalPanel(
                   condition = paste0(
                     "input.cluster_meth == 2 || ",
                     "(input.cluster_meth == 1 && input.ht_brush != null)"
@@ -412,18 +414,19 @@ mod_03_clustering_ui <- function(id) {
                     theme = "light"
                   ),
                   ns = ns
-                ),
-                conditionalPanel(
+                  ),
+                  conditionalPanel(
                   condition = "input.cluster_enrichment == 1 ",
                   mod_11_enrichment_ui(ns("enrichment_table_cluster")),
                   ns = ns
-                ),
-                plotOutput(
+                  ),
+                  plotOutput(
                   outputId = ns("sub_heatmap"),
                   height = "100%",
                   width = "100%"
+                  )
                 )
-              )
+                )
             )
           ),
           tabPanel(
