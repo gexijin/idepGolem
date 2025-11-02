@@ -290,6 +290,7 @@ make_letter_markers <- function(levels) {
 #' @param group_pal Named list of colors and their corresponding categories
 #' @param sample_color Selected colorspace color palette
 #' @param show_column_names TRUE/FALSE Show sample names below the heatmap
+#' @param show_heatmap_legend TRUE/FALSE Show the color key legend on the heatmap
 #' @param row_dend_obj Optional precomputed row dendrogram to reuse
 #' @param col_dend_obj Optional precomputed column dendrogram to reuse
 #' @param use_letter_overlay Logical flag to overlay uppercase letters on sample annotations.
@@ -320,6 +321,7 @@ heatmap_main <- function(data,
                          group_pal = NULL,
                          sample_color = NULL,
                          show_column_names = FALSE,
+                         show_heatmap_legend = FALSE,
                          row_dend_obj = NULL,
                          col_dend_obj = NULL,
                          use_letter_overlay = TRUE) {
@@ -533,6 +535,7 @@ heatmap_main <- function(data,
       top_annotation = heat_ann,
       show_row_names = FALSE,
       show_column_names = show_column_names,
+      show_heatmap_legend = show_heatmap_legend,
       heatmap_legend_param = list(
         direction = "horizontal",
         legend_width = grid::unit(6, "cm"),
@@ -581,6 +584,7 @@ heatmap_main <- function(data,
       top_annotation = heat_ann,
       show_row_names = FALSE,
       show_column_names = show_column_names,
+      show_heatmap_legend = show_heatmap_legend,
       heatmap_legend_param = list(
         direction = "horizontal",
         legend_width = grid::unit(6, "cm"),
@@ -627,7 +631,7 @@ heatmap_main <- function(data,
   return(
     ComplexHeatmap::draw(
       heat,
-      heatmap_legend_side = "top",
+      heatmap_legend_side = if (show_heatmap_legend) "top" else NULL,
       annotation_legend_list = annotation_legends,
       #align_annotation_legend = "heatmap_top",
       annotation_legend_side = "top"

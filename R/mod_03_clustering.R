@@ -266,6 +266,16 @@ mod_03_clustering_ui <- function(id) {
                 "Toggle letter overlays on the sample color bar above the heatmap.",
                 theme = "light"
               ),
+              checkboxInput(
+                inputId = ns("show_color_key"),
+                label = "Color Key",
+                value = FALSE
+              ),
+              tippy::tippy_this(
+                ns("show_color_key"),
+                "Show or hide the color key legend on the main heatmap.",
+                theme = "light"
+              ),
 
               fluidRow(
                 column(width = 4, p("Sample Colors")),
@@ -847,6 +857,8 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
             NULL
           },
           sample_color = input$sample_color,
+          show_column_names = TRUE,
+          show_heatmap_legend = isTRUE(input$show_color_key),
           row_dend_obj = if (input$cluster_meth == 1 && dendrogram_selection()$row) {
             row_dendrogram()
           } else {

@@ -22,6 +22,7 @@ heatmap_main(
   group_pal = NULL,
   sample_color = NULL,
   show_column_names = FALSE,
+  show_heatmap_legend = FALSE,
   row_dend_obj = NULL,
   col_dend_obj = NULL,
   use_letter_overlay = TRUE
@@ -62,6 +63,8 @@ hierarchical and 2 for kmeans.}
 \item{sample_color}{Selected colorspace color palette}
 
 \item{show_column_names}{TRUE/FALSE Show sample names below the heatmap}
+
+\item{show_heatmap_legend}{TRUE/FALSE Show the color key legend on the heatmap}
 
 \item{row_dend_obj}{Optional precomputed row dendrogram to reuse}
 
