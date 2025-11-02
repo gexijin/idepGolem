@@ -354,6 +354,7 @@ mod_03_clustering_ui <- function(id) {
       #########################################################################
 
       mainPanel(
+        width = 9,
         tabsetPanel(
           id = ns("cluster_panels"),
           # Heatmap panel ----------

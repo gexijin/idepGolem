@@ -222,7 +222,7 @@ build_marker_legend <- function(levels,
     if (is.na(marker_val) || identical(marker_val, "")) {
       marker_val <- "?"
     }
-    marker_val <- toupper(marker_val)
+    marker_val <- tolower(marker_val)
     fill_col <- ordered_colors[i]
     function(x, y, w, h) {
       grid::grid.rect(
@@ -260,7 +260,7 @@ make_letter_markers <- function(levels) {
   }
   markers <- trimws(levels)
   markers[markers == "" | is.na(markers)] <- "?"
-  markers <- toupper(substr(markers, 1, 1))
+  markers <- tolower(substr(markers, 1, 1))
   markers[markers == "" | is.na(markers)] <- "?"
   setNames(markers, levels)
 }
