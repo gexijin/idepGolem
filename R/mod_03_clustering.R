@@ -1102,6 +1102,19 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       {
         if (is.null(input$ht_brush)) {
           grid::grid.newpage()
+          # Only show message if main heatmap data is available
+          if (!is.null(heatmap_data()) && !is.null(input$select_factors_heatmap)) {
+            grid::grid.text(
+              "Drag over a region on the main heatmap to zoom in and view details.",
+              x = 0.5,
+              y = 0.5,
+              gp = grid::gpar(
+                fontsize = 14,
+                col = "#666666",
+                fontface = "italic"
+              )
+            )
+          }
           return(invisible(NULL))
         }
 
@@ -1110,6 +1123,16 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           submap_return <- heatmap_sub_object_calc()
           if (is.null(submap_return)) {
             grid::grid.newpage()
+            grid::grid.text(
+              "Unable to create sub-heatmap. Please try selecting a different region.",
+              x = 0.5,
+              y = 0.5,
+              gp = grid::gpar(
+                fontsize = 14,
+                col = "#666666",
+                fontface = "italic"
+              )
+            )
             return(invisible(NULL))
           }
 
