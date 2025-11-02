@@ -629,8 +629,8 @@ heatmap_main <- function(data,
       heat,
       heatmap_legend_side = "bottom",
       annotation_legend_list = annotation_legends,
-      annotation_legend_side = "right",
-      align_annotation_legend = "heatmap_top"
+      annotation_legend_side = "top"
+      #align_annotation_legend = "heatmap_top"
     )
   )
 }

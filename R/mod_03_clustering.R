@@ -770,8 +770,8 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         )
 
         return(shiny_env$ht)
-      },
-      width = 300 # , # this avoids the heatmap being redraw
+      }
+      #,width = 300 # , # this avoids the heatmap being redraw
       # height = 600
     )
     
