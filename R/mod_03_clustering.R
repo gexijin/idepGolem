@@ -394,39 +394,39 @@ mod_03_clustering_ui <- function(id) {
                   outputId = ns("ht_click_content")
                 )
               ),
-                column(
+              column(
                 width = 7,
                 div(
                   style = "max-height: calc(120vh - 300px); overflow-y: auto; -webkit-overflow-scrolling: touch; padding-right: 10px;",
                   conditionalPanel(
-                  condition = paste0(
-                    "input.cluster_meth == 2 || ",
-                    "(input.cluster_meth == 1 && input.ht_brush != null)"
-                  ),
-                  checkboxInput(
-                    inputId = ns("cluster_enrichment"),
-                    label = strong("Show enrichment"),
-                    value = FALSE
-                  ),
-                  tippy::tippy_this(
-                    ns("cluster_enrichment"),
-                    "Run GO enrichment for the selected genes (hierarchical clustering). For k-means, all clusters are analyzed.",
-                    theme = "light"
-                  ),
-                  ns = ns
+                    condition = paste0(
+                      "input.cluster_meth == 2 || ",
+                      "(input.cluster_meth == 1 && input.ht_brush != null)"
+                    ),
+                    checkboxInput(
+                      inputId = ns("cluster_enrichment"),
+                      label = strong("Show enrichment"),
+                      value = FALSE
+                    ),
+                    tippy::tippy_this(
+                      ns("cluster_enrichment"),
+                      "Run GO enrichment for the selected genes (hierarchical clustering). For k-means, all clusters are analyzed.",
+                      theme = "light"
+                    ),
+                    ns = ns
                   ),
                   conditionalPanel(
-                  condition = "input.cluster_enrichment == 1 ",
-                  mod_11_enrichment_ui(ns("enrichment_table_cluster")),
-                  ns = ns
+                    condition = "input.cluster_enrichment == 1 ",
+                    mod_11_enrichment_ui(ns("enrichment_table_cluster")),
+                    ns = ns
                   ),
                   plotOutput(
-                  outputId = ns("sub_heatmap"),
-                  height = "100%",
-                  width = "100%"
+                    outputId = ns("sub_heatmap"),
+                    height = "100%",
+                    width = "100%"
                   )
                 )
-                )
+              )
             )
           ),
           tabPanel(

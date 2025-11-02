@@ -627,10 +627,11 @@ heatmap_main <- function(data,
   return(
     ComplexHeatmap::draw(
       heat,
-      heatmap_legend_side = "bottom",
+      heatmap_legend_side = "top",
       annotation_legend_list = annotation_legends,
+      #align_annotation_legend = "heatmap_top",
       annotation_legend_side = "top"
-      #align_annotation_legend = "heatmap_top"
+
     )
   )
 }
