@@ -1105,7 +1105,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           # Only show message if main heatmap data is available
           if (!is.null(heatmap_data()) && !is.null(input$select_factors_heatmap)) {
             grid::grid.text(
-              "Drag over a region on the main heatmap to zoom in and view details.",
+              "Drag over a region on the heatmap to zoom in.",
               x = 0.5,
               y = 0.5,
               gp = grid::gpar(
