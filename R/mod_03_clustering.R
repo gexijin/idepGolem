@@ -319,25 +319,22 @@ mod_03_clustering_ui <- function(id) {
           ns = ns
         ),
         br(),
-        div(
-          style = "display: flex; flex: wrap; gap: 5px;",
-          conditionalPanel(
-            condition = "input.cluster_panels == 'Heatmap' ",
-            downloadButton(
-              outputId = ns("download_heatmap_data"),
-              label = "Data"
-            ),
-            tippy::tippy_this(
-              ns("download_heatmap_data"),
-              "Download the data currently displayed in the heatmap.",
-              theme = "light"
-            ),
-            ns = ns
-          ),
+        conditionalPanel(
+          condition = "input.cluster_panels == 'Heatmap' ",
           downloadButton(
-            outputId = ns("report"),
-            label = tags$span(style = "color: red;", "Report")
-          )
+            outputId = ns("download_heatmap_data"),
+            label = "Data"
+          ),
+          tippy::tippy_this(
+            ns("download_heatmap_data"),
+            "Download the data currently displayed in the heatmap.",
+            theme = "light"
+          ),
+          ns = ns
+        ),
+        downloadButton(
+          outputId = ns("report"),
+          label = tags$span(style = "color: red;", "Report")
         ),
         tippy::tippy_this(
           ns("report"),
