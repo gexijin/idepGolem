@@ -329,30 +329,36 @@ mod_03_clustering_ui <- function(id) {
           ns = ns
         ),
         br(),
-        conditionalPanel(
-          condition = "input.cluster_panels == 'Heatmap' ",
-          downloadButton(
-            outputId = ns("download_heatmap_data"),
-            label = "Data"
+        fluidRow(
+          conditionalPanel(
+            condition = "input.cluster_panels == 'Heatmap' ",
+            column(
+              width = 6,
+              downloadButton(
+                outputId = ns("download_heatmap_data"),
+                label = "Data"
+              ),
+              tippy::tippy_this(
+                ns("download_heatmap_data"),
+                "Download the data currently displayed in the heatmap.",
+                theme = "light"
+              )
+            ),
+            ns = ns
           ),
-          tippy::tippy_this(
-            ns("download_heatmap_data"),
-            "Download the data currently displayed in the heatmap.",
-            theme = "light"
-          ),
-          ns = ns
-        ),
-        downloadButton(
-          outputId = ns("report"),
-          label = tags$span(style = "color: red;", "Report")
-        ),
-        tippy::tippy_this(
-          ns("report"),
-          "Create an HTML report summarizing the Clustering tab.",
-          theme = "light"
-        ),
-        uiOutput(ns("dl_heatmap_main_download_ui")),
-        uiOutput(ns("dl_heatmap_sub_download_ui"))
+          column(
+            width = 6,
+            downloadButton(
+              outputId = ns("report"),
+              label = tags$span(style = "color: red;", "Report")
+            ),
+            tippy::tippy_this(
+              ns("report"),
+              "Create an HTML report summarizing the Clustering tab.",
+              theme = "light"
+            )
+          )
+        )
       ),
 
 
@@ -373,6 +379,7 @@ mod_03_clustering_ui <- function(id) {
             fluidRow(
               column(
                 width = 5,
+                uiOutput(ns("dl_heatmap_main_download_ui")),
                 plotOutput(
                   outputId = ns("heatmap_main"),
                   height = "450px",
@@ -385,17 +392,6 @@ mod_03_clustering_ui <- function(id) {
                   ns("heatmap_main"),
                   "Drag over any region of the heatmap to zoom into that selection.",
                   theme = "light"
-                ),
-                br(),
-                fluidRow(
-                  column(
-                    width = 6,
-
-                  ),
-                  column(
-                    width = 6,
-
-                  )
                 )
               ),
               column(
@@ -424,6 +420,7 @@ mod_03_clustering_ui <- function(id) {
                     mod_11_enrichment_ui(ns("enrichment_table_cluster")),
                     ns = ns
                   ),
+                  uiOutput(ns("dl_heatmap_sub_download_ui")),
                   plotOutput(
                     outputId = ns("sub_heatmap"),
                     height = "100%",
@@ -1312,87 +1309,101 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       filename = "heatmap_zoom",
       default_width = 8,
       default_height = 12,
-      label_tag = tags$span(icon("download"), "\u2192"),
+      label_tag = icon("download"),
       icon_tag = NULL
     )
 
-    # gene lists for enrichment analysis
-    gene_lists <- reactive({
+    # gene lists for enrichment analysis - Hierarchical clustering
+    # This reactive depends on the brush selection for hierarchical clustering
+    hierarchical_gene_lists <- reactive({
       req(!is.null(pre_process$select_gene_id()))
-      req(!is.null(input$ht_brush) || input$cluster_meth == 2)
-      
+      req(!is.null(input$ht_brush))
+      req(input$cluster_meth == 1)
+      req(!is.null(shiny_env$submap_data))
+      req(is.data.frame(shiny_env$submap_data) || is.matrix(shiny_env$submap_data))
+      req(nrow(shiny_env$submap_data) > 0)
+
       gene_lists <- list()
 
-      if (input$cluster_meth == 1) {
+      gene_names <- merge_data(
+        all_gene_names = pre_process$all_gene_names(),
+        data = shiny_env$submap_data,
+        merge_ID = pre_process$select_gene_id()
+      )
+
+      # Only keep the gene names and scrap the data
+      gene_lists[["Selection"]] <- dplyr::select_if(gene_names, is.character)
+
+      return(gene_lists)
+    })
+
+    # gene lists for enrichment analysis - k-means clustering
+    # This reactive does NOT depend on brush selection, only on cluster assignments
+    kmeans_gene_lists <- reactive({
+      req(!is.null(pre_process$select_gene_id()))
+      req(input$cluster_meth == 2)
+      req(heatmap_data())
+      req(input$k_clusters)
+      req(pre_process$select_gene_id())
+      req(shiny_env$ht)
+
+      gene_lists <- list()
+
+      row_ord <- ComplexHeatmap::row_order(shiny_env$ht)
+
+      req(!is.null(names(row_ord)))
+
+      for (i in 1:length(row_ord)) {
+        if (i == 1) {
+          clusts <- data.frame(
+            "cluster" = rep(names(row_ord[i]), length(row_ord[[i]])),
+            "row_order" = row_ord[[i]]
+          )
+        } else {
+          tem <- data.frame(
+            "cluster" = rep(names(row_ord[i]), length(row_ord[[i]])),
+            "row_order" = row_ord[[i]]
+          )
+          clusts <- rbind(clusts, tem)
+        }
+      }
+      clusts$id <- rownames(heatmap_data()[clusts$row_order, ])
+
+      req(length(unique(clusts$cluster)) == input$k_clusters)
+      # disregard user selection use clusters for enrichment
+      for (i in 1:input$k_clusters) {
+        cluster_data <- subset(clusts, cluster == i)
+        row.names(cluster_data) <- cluster_data$id
+
         gene_names <- merge_data(
           all_gene_names = pre_process$all_gene_names(),
-          data = shiny_env$submap_data,
+          data = cluster_data,
           merge_ID = pre_process$select_gene_id()
         )
 
         # Only keep the gene names and scrap the data
-        gene_lists[["Selection"]] <- dplyr::select_if(gene_names, is.character)
-
-        # k-means-----------------------------------------------------
-      } else if (input$cluster_meth == 2) {
-        # Get the cluster number and Gene
-
-        req(heatmap_data())
-        req(input$k_clusters)
-        req(pre_process$select_gene_id())
-        req(shiny_env$ht)
-
-        row_ord <- ComplexHeatmap::row_order(shiny_env$ht)
-
-        req(!is.null(names(row_ord)))
-
-        for (i in 1:length(row_ord)) {
-          if (i == 1) {
-            clusts <- data.frame(
-              "cluster" = rep(names(row_ord[i]), length(row_ord[[i]])),
-              "row_order" = row_ord[[i]]
-            )
-          } else {
-            tem <- data.frame(
-              "cluster" = rep(names(row_ord[i]), length(row_ord[[i]])),
-              "row_order" = row_ord[[i]]
-            )
-            clusts <- rbind(clusts, tem)
-          }
-        }
-        clusts$id <- rownames(heatmap_data()[clusts$row_order, ])
-        
-        req(length(unique(clusts$cluster)) == input$k_clusters)
-        # disregard user selection use clusters for enrichment
-        for (i in 1:input$k_clusters) {
-          cluster_data <- subset(clusts, cluster == i)
-          row.names(cluster_data) <- cluster_data$id
-
-          gene_names <- merge_data(
-            all_gene_names = pre_process$all_gene_names(),
-            data = cluster_data,
-            merge_ID = pre_process$select_gene_id()
-          )
-
-          # Only keep the gene names and scrap the data
-          gene_lists[[paste0("", i)]] <-
-            dplyr::select_if(gene_names, is.character)
-        }
+        gene_lists[[paste0("", i)]] <-
+          dplyr::select_if(gene_names, is.character)
       }
+
       return(gene_lists)
     })
-    
+
     k_means_list <- reactive({
-      req(!is.null(gene_lists()))
-      gene_lists()
+      req(!is.null(kmeans_gene_lists()))
+      kmeans_gene_lists()
     })
-    
+
     gene_list_clust <- reactive({
       req(!is.null(input$cluster_meth))
-      
+
       if (current_method() == 1){
-        gene_lists()
+        # For hierarchical clustering, only return gene lists if we have valid data
+        req(!is.null(input$ht_brush))
+        req(!is.null(shiny_env$submap_data))
+        hierarchical_gene_lists()
       } else {
+        # For k-means clustering, gene lists are based on clusters
         req(!is.null(k_means_list()))
         k_means_list()
       }
