@@ -402,7 +402,7 @@ mod_03_clustering_ui <- function(id) {
               column(
                 width = 7,
                 div(
-                  style = "max-height: calc(130vh - 300px); overflow-y: auto; -webkit-overflow-scrolling: touch; padding-right: 10px;",
+                  style = "max-height: calc(120vh - 300px); overflow-y: auto; -webkit-overflow-scrolling: touch; padding-right: 10px;",
                   conditionalPanel(
                     condition = paste0(
                       "input.cluster_meth == 2 || ",
@@ -425,12 +425,12 @@ mod_03_clustering_ui <- function(id) {
                     mod_11_enrichment_ui(ns("enrichment_table_cluster")),
                     ns = ns
                   ),
-                  uiOutput(ns("dl_heatmap_sub_download_ui")),
                   plotOutput(
                     outputId = ns("sub_heatmap"),
                     height = "100%",
                     width = "100%"
-                  )
+                  ),
+                  uiOutput(ns("dl_heatmap_sub_download_ui"))
                 )
               )
             )
@@ -615,7 +615,16 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           function(factor_name) {
             values <- sample_info[, factor_name] # each column
             values <- values[!is.na(values)]
-            length(unique(values)) < sample_count
+            if(length(unique(values)) >= 20) {
+              showNotification(
+                paste0("Factor '", factor_name, "' has too many unique values and will be ignored."),
+                type = "warning",
+                duration = 5
+              )
+              return(FALSE)
+            }
+            # ignore if every value is unique or too many unique
+            length(unique(values)) < sample_count && length(unique(values)) >= 20
           },
           logical(1)
         )
