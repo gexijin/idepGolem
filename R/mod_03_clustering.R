@@ -67,7 +67,7 @@ mod_03_clustering_ui <- function(id) {
                 label = NULL,
                 min = 10,
                 max = 12000,
-                value = 1500,
+                value = 500,
                 step = 100
               ),
               tippy::tippy_this(
@@ -1651,38 +1651,99 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       req(!is.null(enrichment_table_cluster$pathway_table()))
 
       pathway_table <- enrichment_table_cluster$pathway_table()
+      k <- input$k_clusters
+      max_terms <- 3
+      fdr_threshold <- 0.0001
+      empty_label <- character(0)
+      fontsize <- 10
 
-      # Extract top pathway for each cluster
-      labels <- sapply(1:input$k_clusters, function(i) {
+      formatted_labels <- vector("list", length = k)
+
+      for (i in seq_len(k)) {
         cluster_name <- as.character(i)
-        if (cluster_name %in% names(pathway_table)) {
+        cluster_lines <- character()
+
+        if (!is.null(pathway_table) && cluster_name %in% names(pathway_table)) {
           cluster_data <- pathway_table[[cluster_name]]
-          # Check if data frame has rows, Pathway column, and FDR column
-          if (is.data.frame(cluster_data) && nrow(cluster_data) > 0 &&
-              "Pathway" %in% colnames(cluster_data) && "FDR" %in% colnames(cluster_data)) {
-            # Get the first (most significant) pathway and its FDR
-            top_pathway <- cluster_data$Pathway[1]
-            top_fdr <- as.numeric(cluster_data$FDR[1])
 
-            # Only use pathway name if FDR < 0.0001
-            if (!is.na(top_fdr) && top_fdr < 0.0001) {
-              # Split pathway name into words and join with newlines
-              words <- unlist(strsplit(top_pathway, " "))
-              # Limit to first 5 words to prevent excessively long labels
-              if (length(words) > 5) {
-                words <- c(words[1:5], "...")
-              }
-              multiline_label <- paste(words, collapse = "\n")
+          if (is.data.frame(cluster_data) &&
+              nrow(cluster_data) > 0 &&
+              "Pathway" %in% colnames(cluster_data) &&
+              "FDR" %in% colnames(cluster_data)) {
 
-              return(multiline_label)
+            # Ensure numeric FDR values and order by significance
+            fdr_values <- suppressWarnings(as.numeric(cluster_data$FDR))
+            cluster_data$FDR <- fdr_values
+            cluster_data <- cluster_data[!is.na(cluster_data$FDR), , drop = FALSE]
+            cluster_data <- cluster_data[order(cluster_data$FDR), , drop = FALSE]
+            cluster_data <- cluster_data[cluster_data$FDR <= fdr_threshold, , drop = FALSE]
+
+            if (nrow(cluster_data) > 0) {
+              top_rows <- head(cluster_data, max_terms)
+
+              cluster_lines <- unlist(
+                lapply(seq_len(nrow(top_rows)), function(idx) {
+                  pathway_name <- as.character(top_rows$Pathway[idx])
+                  if (is.na(pathway_name) || !nzchar(pathway_name)) {
+                    return(character())
+                  }
+                  wrapped <- strwrap(pathway_name, width = 32)
+                  if (length(wrapped) == 0) {
+                    return(character())
+                  }
+                  wrapped[1] <- paste0("- ", wrapped[1])
+                  if (length(wrapped) > 1) {
+                    wrapped[-1] <- paste0("  ", wrapped[-1])
+                  }
+                  wrapped
+                })
+              )
             }
           }
         }
-        # Show empty label if no pathway found or FDR >= 0.0001
-        return("")
-      })
 
-      return(labels)
+        if (length(cluster_lines) == 0) {
+          cluster_lines <- empty_label
+        } else {
+          combined <- paste(cluster_lines, collapse = "\n")
+          if (nchar(combined) > 150) {
+            truncated <- substr(combined, 1, 97)
+            truncated <- sub("\n+$", "", truncated)
+            truncated <- paste0(truncated, "...")
+            cluster_lines <- strsplit(truncated, "\n", fixed = TRUE)[[1]]
+            if (length(cluster_lines) == 0) {
+              cluster_lines <- empty_label
+            }
+          }
+        }
+        formatted_labels[[i]] <- cluster_lines
+      }
+
+      all_label_lines <- unique(unlist(formatted_labels, use.names = FALSE))
+      all_label_lines <- all_label_lines[nzchar(all_label_lines)]
+      if (length(all_label_lines) == 0) {
+        all_label_lines <- ""
+      }
+
+      text_width <- ComplexHeatmap::max_text_width(
+        all_label_lines,
+        gp = grid::gpar(fontsize = fontsize)
+      )
+
+      annotation_width <- text_width + grid::unit(6, "mm")
+      cluster_colors <- colorspace::qualitative_hcl(
+        n = max(k, 3),
+        palette = "Dark 3",
+        c = 70
+      )[seq_len(k)]
+
+      list(
+        labels = formatted_labels,
+        colors = cluster_colors,
+        width = annotation_width,
+        empty_label = empty_label,
+        fontsize = fontsize
+      )
     })
     
     # Generate word/frequency data for word cloud

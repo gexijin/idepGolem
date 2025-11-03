@@ -562,11 +562,11 @@ mod_11_enrichment_server <- function(id,
       req(!is.null(gene_lists()))
 
       withProgress(message = "Enrichment Analysis", {
-        incProgress(0.2)
+        incProgress(0.1)
         pathway_info <- list()
         # disregard user selection use clusters for enrichment
         for (i in 1:length(gene_lists())) {
-          incProgress(0.2 + length(gene_lists()) / 20)
+          incProgress( 1 / length(gene_lists()))
           gene_names_query <- gene_lists()[[i]]
           req(!is.null(input$select_go))
           gene_sets <- read_pathway_sets(

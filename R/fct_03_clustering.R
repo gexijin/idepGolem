@@ -576,24 +576,89 @@ heatmap_main <- function(data,
       row_title <- 10
     }
 
-    # Create cluster labels for anno_block if show_cluster_labels is TRUE
+    # Create custom right-side annotation when enrichment labels are available
     cluster_labels_ann <- NULL
     if (show_cluster_labels) {
-      # Use custom labels if provided, otherwise use default "Cluster N" labels
-      if (!is.null(custom_cluster_labels) && length(custom_cluster_labels) == k_clusters) {
-        cluster_labels <- custom_cluster_labels
-      } else {
-        cluster_labels <- paste("Cluster", 1:k_clusters)
-      }
-      cluster_labels_ann <- ComplexHeatmap::rowAnnotation(
-        cluster = ComplexHeatmap::anno_block(
-          gp = grid::gpar(fill = "lightblue", col = "black"),
-          labels = cluster_labels,
-          labels_gp = grid::gpar(col = "black", fontsize = 10, fontface = "bold"),
-          labels_rot = 0,
-          width = grid::unit(3, "cm")
+      if (!is.null(custom_cluster_labels) &&
+          is.list(custom_cluster_labels) &&
+          !is.null(custom_cluster_labels$labels)) {
+        annotation_width <- custom_cluster_labels$width
+        if (is.null(annotation_width)) {
+          annotation_width <- grid::unit(35, "mm")
+        }
+        label_lines_list <- custom_cluster_labels$labels
+        cluster_colors <- custom_cluster_labels$colors
+        if (is.null(cluster_colors) || length(cluster_colors) == 0) {
+          cluster_colors <- rep("#4D4D4D", k_clusters)
+        }
+        cluster_colors <- rep(cluster_colors, length.out = k_clusters)
+        fallback_label <- if (!is.null(custom_cluster_labels$empty_label)) {
+          custom_cluster_labels$empty_label
+        } else {
+          character(0)
+        }
+        fontsize <- if (!is.null(custom_cluster_labels$fontsize)) {
+          custom_cluster_labels$fontsize
+        } else {
+          10
+        }
+
+        cluster_labels_ann <- ComplexHeatmap::rowAnnotation(
+          enrichment = ComplexHeatmap::anno_block(
+            gp = grid::gpar(fill = NA, col = NA),
+            labels = rep("", k_clusters),
+            labels_gp = grid::gpar(fontsize = fontsize),
+            labels_rot = 0,
+            width = annotation_width,
+            panel_fun = function(index, k, ...) {
+              slice_id <- as.integer(k)
+              if (is.na(slice_id) || slice_id < 1) {
+                slice_id <- 1
+              } else if (slice_id > length(label_lines_list)) {
+                slice_id <- length(label_lines_list)
+              }
+              label_lines <- label_lines_list[[slice_id]]
+              if (is.null(label_lines) || length(label_lines) == 0) {
+                label_lines <- fallback_label
+              }
+              bar_color <- cluster_colors[min(slice_id, length(cluster_colors))]
+              grid::grid.rect(
+                x = 0,
+                width = grid::unit(2, "mm"),
+                just = "left",
+                gp = grid::gpar(
+                  fill = bar_color,
+                  col = NA
+                )
+              )
+              if (length(label_lines) > 0) {
+                grid::grid.text(
+                  paste(label_lines, collapse = "\n"),
+                  x = grid::unit(4, "mm"),
+                  just = "left",
+                  gp = grid::gpar(fontsize = fontsize)
+                )
+              }
+            }
+          )
         )
-      )
+      } else {
+        cluster_labels <- if (!is.null(custom_cluster_labels) &&
+                              length(custom_cluster_labels) == k_clusters) {
+          custom_cluster_labels
+        } else {
+          paste("Cluster", seq_len(k_clusters))
+        }
+        cluster_labels_ann <- ComplexHeatmap::rowAnnotation(
+          cluster = ComplexHeatmap::anno_block(
+            gp = grid::gpar(fill = "lightblue", col = "black"),
+            labels = cluster_labels,
+            labels_gp = grid::gpar(col = "black", fontsize = 10, fontface = "bold"),
+            labels_rot = 0,
+            width = grid::unit(3, "cm")
+          )
+        )
+      }
     }
 
     heat <- ComplexHeatmap::Heatmap(
@@ -656,16 +721,15 @@ heatmap_main <- function(data,
     )
   }
 
-  return(
-    ComplexHeatmap::draw(
-      heat,
-      heatmap_legend_side = if (show_heatmap_legend) "bottom" else NULL,
-      annotation_legend_list = annotation_legends,
-      #align_annotation_legend = "heatmap_top",
-      annotation_legend_side = "top"
-
-    )
+  ht <- ComplexHeatmap::draw(
+    heat,
+    heatmap_legend_side = if (show_heatmap_legend) "bottom" else NULL,
+    annotation_legend_list = annotation_legends,
+    #align_annotation_legend = "heatmap_top",
+    annotation_legend_side = "top"
   )
+
+  return(ht)
 }
 
 #' Draw a dendogram of data samples
