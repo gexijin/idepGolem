@@ -42,6 +42,12 @@ knitr::opts_chunk$set(
 )
 ```
 
+```{r libraries, include=FALSE}
+if (requireNamespace("kableExtra", quietly = TRUE)) {
+  suppressPackageStartupMessages(library(kableExtra))
+}
+```
+
 ```{r format_enrichment_helper, include=FALSE}
 format_enrichment_for_report <- function(enrichment_list) {
   if (is.null(enrichment_list) || length(enrichment_list) == 0) {
@@ -149,6 +155,10 @@ format_enrichment_for_report <- function(enrichment_list) {
 
   if ("nGenes" %in% colnames(res)) {
     res$nGenes <- NULL
+  }
+
+  if ("Grp." %in% colnames(res)) {
+    res <- res[, c("Grp.", setdiff(colnames(res), "Grp.")), drop = FALSE]
   }
 
   return(res)
@@ -393,15 +403,31 @@ if (isTRUE(params$cluster_enrichment_enabled) &&
     params$cluster_enrichment_results
   )
 
-  if (!is.null(formatted_table)) {
+  if (!is.null(formatted_table) && nrow(formatted_table) > 0) {
     if (!is.null(heading)) {
       cat(heading, "\n\n")
     }
-    print(knitr::kable(
-      formatted_table,
-      format = "html",
-      escape = FALSE
-    ))
+    if (requireNamespace("kableExtra", quietly = TRUE)) {
+      table_html <- kableExtra::kbl(
+        formatted_table,
+        format = "html",
+        escape = FALSE,
+        align = rep("l", ncol(formatted_table))
+      ) |>
+        kableExtra::kable_classic(
+          full_width = FALSE,
+          html_font = "Arial",
+          lightable_options = c("striped")
+        )
+      table_html
+    } else {
+      print(knitr::kable(
+        formatted_table,
+        format = "html",
+        escape = FALSE,
+        align = rep("l", ncol(formatted_table))
+      ))
+    }
   } else if (!is.null(heading)) {
     cat(heading, "\n\nNo significant enrichment found.\n")
   }
