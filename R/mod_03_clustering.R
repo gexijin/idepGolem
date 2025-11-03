@@ -357,12 +357,6 @@ mod_03_clustering_ui <- function(id) {
               "Create an HTML report summarizing the Clustering tab.",
               theme = "light"
             )
-          ),
-          column(
-            width = 4,
-            style = "margin-top: 8px;",
-            align = "right",
-            uiOutput(ns("dl_heatmap_main_download_ui"))
           )
         )
       ),
@@ -387,7 +381,7 @@ mod_03_clustering_ui <- function(id) {
                 width = 5,
                 plotOutput(
                   outputId = ns("heatmap_main"),
-                  height = "450px",
+                  height = "600px",
                   width = "100%",
                   brush = brushOpts(id = ns("ht_brush"),
                                     delayType = "debounce",
@@ -397,7 +391,8 @@ mod_03_clustering_ui <- function(id) {
                   ns("heatmap_main"),
                   "Drag over any region of the heatmap to zoom in.",
                   theme = "light"
-                )
+                ),
+                uiOutput(ns("dl_heatmap_main_download_ui"))
               ),
               column(
                 width = 7,
@@ -822,7 +817,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         return(shiny_env$ht)
       }
       #,width = 300 # , # this avoids the heatmap being redraw # no longer needed when removed clicking
-      , height = 600
+      #, height = 600
     )
     
     # Color palette for experiment groups on heatmap

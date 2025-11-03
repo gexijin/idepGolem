@@ -18,7 +18,7 @@ mod_01_load_data_ui <- function(id) {
               width: 300px;
               position:fixed;
               top: calc(85%);
-              left: calc(5%);
+              right: calc(5%);
                }
 
              #shiny-notification-load_prompt {
