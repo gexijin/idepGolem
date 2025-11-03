@@ -578,6 +578,9 @@ get_all_gene_names <- function(mapped_ids,
       all.x = T
     )
     all_names <- all_names[!duplicated(all_names$ensembl_ID), ]
+    # Remove leading/trailing whitespace from symbols
+    all_names$symbol <- trimws(all_names$symbol)
+    # Convert empty strings to NA
     all_names$symbol[all_names$symbol == ""] <- NA
     all_names$symbol[is.na(all_names$symbol)] <- {
       all_names$ensembl_ID[is.na(all_names$symbol)]
