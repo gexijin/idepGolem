@@ -403,15 +403,36 @@ mod_03_clustering_ui <- function(id) {
                       "input.cluster_meth == 2 || ",
                       "(input.cluster_meth == 1 && input.ht_brush != null)"
                     ),
-                    checkboxInput(
-                      inputId = ns("cluster_enrichment"),
-                      label = strong("Show enrichment"),
-                      value = FALSE
-                    ),
-                    tippy::tippy_this(
-                      ns("cluster_enrichment"),
-                      "Run GO enrichment for the selected genes (hierarchical clustering). For k-means, all clusters are analyzed.",
-                      theme = "light"
+                    tags$div(
+                      style = "display: flex; flex-wrap: wrap; align-items: center; gap: 12px;",
+                      tags$div(
+                        checkboxInput(
+                          inputId = ns("cluster_enrichment"),
+                          label = strong("Show enrichment"),
+                          value = FALSE
+                        ),
+                        tippy::tippy_this(
+                          ns("cluster_enrichment"),
+                          "Run GO enrichment for the selected genes (hierarchical clustering). For k-means, all clusters are analyzed.",
+                          theme = "light"
+                        )
+                      ),
+                      conditionalPanel(
+                        condition = "input.cluster_enrichment == 1",
+                        ns = ns,
+                        tags$div(
+                          checkboxInput(
+                            inputId = ns("cluster_enrichment_label"),
+                            label = strong("Label enrichment"),
+                            value = FALSE
+                          ),
+                          tippy::tippy_this(
+                            ns("cluster_enrichment_label"),
+                            "Display top enriched pathways as labels on the heatmap for each k-means cluster.",
+                            theme = "light"
+                          )
+                        )
+                      )
                     ),
                     ns = ns
                   ),
@@ -886,8 +907,10 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       req(input$select_factors_heatmap != "")
       req(!is.null(input$letter_overlay))
 
-      # Wait for enrichment results if enrichment is enabled for k-means
-      if (isTRUE(input$cluster_enrichment) && input$cluster_meth == 2) {
+      # Wait for enrichment labels when labeling is enabled for k-means
+      label_clusters <- isTRUE(input$cluster_enrichment_label) && input$cluster_meth == 2
+
+      if (label_clusters) {
         req(!is.null(cluster_pathway_labels()))
       }
 
@@ -935,8 +958,8 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
             NULL
           },
           use_letter_overlay = isTRUE(input$letter_overlay),
-          show_cluster_labels = isTRUE(input$cluster_enrichment) && input$cluster_meth == 2,
-          custom_cluster_labels = if (isTRUE(input$cluster_enrichment) && input$cluster_meth == 2) {
+          show_cluster_labels = label_clusters,
+          custom_cluster_labels = if (label_clusters) {
             tryCatch(cluster_pathway_labels(), error = function(e) NULL)
           } else {
             NULL
@@ -1367,32 +1390,39 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       req(pre_process$select_gene_id())
       req(shiny_env$ht)
 
-      gene_lists <- list()
-
       row_ord <- ComplexHeatmap::row_order(shiny_env$ht)
+      req(!is.null(row_ord))
 
-      req(!is.null(names(row_ord)))
-
-      for (i in 1:length(row_ord)) {
-        if (i == 1) {
-          clusts <- data.frame(
-            "cluster" = rep(names(row_ord[i]), length(row_ord[[i]])),
-            "row_order" = row_ord[[i]]
-          )
-        } else {
-          tem <- data.frame(
-            "cluster" = rep(names(row_ord[i]), length(row_ord[[i]])),
-            "row_order" = row_ord[[i]]
-          )
-          clusts <- rbind(clusts, tem)
+      cluster_ids <- names(row_ord)
+      if (is.null(cluster_ids)) {
+        cluster_ids <- as.character(seq_along(row_ord))
+      } else {
+        cluster_ids <- as.character(cluster_ids)
+        empty_ids <- which(!nzchar(cluster_ids))
+        if (length(empty_ids) > 0) {
+          cluster_ids[empty_ids] <- as.character(empty_ids)
+        }
+        na_ids <- which(is.na(cluster_ids))
+        if (length(na_ids) > 0) {
+          cluster_ids[na_ids] <- as.character(na_ids)
         }
       }
-      clusts$id <- rownames(heatmap_data()[clusts$row_order, ])
 
-      req(length(unique(clusts$cluster)) == input$k_clusters)
-      # disregard user selection use clusters for enrichment
-      for (i in 1:input$k_clusters) {
-        cluster_data <- subset(clusts, cluster == i)
+      cluster_frames <- lapply(seq_along(row_ord), function(idx) {
+        data.frame(
+          cluster = rep(cluster_ids[idx], length(row_ord[[idx]])),
+          row_order = row_ord[[idx]],
+          stringsAsFactors = FALSE
+        )
+      })
+
+      clusts <- do.call(rbind, cluster_frames)
+      req(!is.null(clusts), nrow(clusts) > 0)
+
+      clusts$id <- rownames(heatmap_data())[clusts$row_order]
+
+      gene_lists <- lapply(cluster_ids, function(cluster_id) {
+        cluster_data <- clusts[clusts$cluster == cluster_id, , drop = FALSE]
         row.names(cluster_data) <- cluster_data$id
 
         gene_names <- merge_data(
@@ -1401,9 +1431,17 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           merge_ID = pre_process$select_gene_id()
         )
 
-        # Only keep the gene names and scrap the data
-        gene_lists[[paste0("", i)]] <-
-          dplyr::select_if(gene_names, is.character)
+        dplyr::select_if(gene_names, is.character)
+      })
+
+      names(gene_lists) <- cluster_ids
+
+      suppressWarnings({
+        numeric_ids <- as.numeric(cluster_ids)
+      })
+      if (!all(is.na(numeric_ids))) {
+        ordering <- order(numeric_ids, na.last = TRUE)
+        gene_lists <- gene_lists[ordering]
       }
 
       return(gene_lists)
@@ -1516,6 +1554,11 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         inputId = "cluster_enrichment",
         value = FALSE
       )
+      updateCheckboxInput(
+        session = session,
+        inputId = "cluster_enrichment_label",
+        value = FALSE
+      )
 
       # Clear the brush selection by sending JavaScript to reset it
       session$sendCustomMessage(
@@ -1542,7 +1585,22 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
             inputId = "cluster_enrichment",
             value = FALSE
           )
+          updateCheckboxInput(
+            session = session,
+            inputId = "cluster_enrichment_label",
+            value = FALSE
+          )
         }
+      }
+    })
+
+    observeEvent(input$cluster_enrichment, {
+      if (!isTRUE(input$cluster_enrichment)) {
+        updateCheckboxInput(
+          session = session,
+          inputId = "cluster_enrichment_label",
+          value = FALSE
+        )
       }
     })
 
@@ -1645,8 +1703,9 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
 
     # Extract top pathway names for each cluster for heatmap labels
     cluster_pathway_labels <- reactive({
-      # Only compute labels when enrichment is enabled and using k-means
+      # Only compute labels when enrichment is enabled, labeling requested, and using k-means
       req(input$cluster_enrichment == TRUE)
+      req(isTRUE(input$cluster_enrichment_label))
       req(input$cluster_meth == 2)
       req(!is.null(enrichment_table_cluster$pathway_table()))
 
