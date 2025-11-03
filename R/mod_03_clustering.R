@@ -613,7 +613,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         keep_factor <- vapply(
           factor_names,
           function(factor_name) {
-            values <- sample_info[[factor_name]]
+            values <- sample_info[, factor_name] # each column
             values <- values[!is.na(values)]
             length(unique(values)) < sample_count
           },
