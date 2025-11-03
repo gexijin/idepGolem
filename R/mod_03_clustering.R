@@ -333,7 +333,7 @@ mod_03_clustering_ui <- function(id) {
           conditionalPanel(
             condition = "input.cluster_panels == 'Heatmap' ",
             column(
-              width = 6,
+              width = 4,
               downloadButton(
                 outputId = ns("download_heatmap_data"),
                 label = "Data"
@@ -347,7 +347,7 @@ mod_03_clustering_ui <- function(id) {
             ns = ns
           ),
           column(
-            width = 6,
+            width = 4,
             downloadButton(
               outputId = ns("report"),
               label = tags$span(style = "color: red;", "Report")
@@ -357,6 +357,12 @@ mod_03_clustering_ui <- function(id) {
               "Create an HTML report summarizing the Clustering tab.",
               theme = "light"
             )
+          ),
+          column(
+            width = 4,
+            style = "margin-top: 8px;",
+            align = "right",
+            uiOutput(ns("dl_heatmap_main_download_ui"))
           )
         )
       ),
@@ -379,7 +385,6 @@ mod_03_clustering_ui <- function(id) {
             fluidRow(
               column(
                 width = 5,
-                uiOutput(ns("dl_heatmap_main_download_ui")),
                 plotOutput(
                   outputId = ns("heatmap_main"),
                   height = "450px",
@@ -390,14 +395,14 @@ mod_03_clustering_ui <- function(id) {
                 ),
                 tippy::tippy_this(
                   ns("heatmap_main"),
-                  "Drag over any region of the heatmap to zoom into that selection.",
+                  "Drag over any region of the heatmap to zoom in.",
                   theme = "light"
                 )
               ),
               column(
                 width = 7,
                 div(
-                  style = "max-height: calc(120vh - 300px); overflow-y: auto; -webkit-overflow-scrolling: touch; padding-right: 10px;",
+                  style = "max-height: calc(130vh - 300px); overflow-y: auto; -webkit-overflow-scrolling: touch; padding-right: 10px;",
                   conditionalPanel(
                     condition = paste0(
                       "input.cluster_meth == 2 || ",
@@ -807,8 +812,8 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
 
         return(shiny_env$ht)
       }
-      #,width = 300 # , # this avoids the heatmap being redraw
-       , height = 700
+      #,width = 300 # , # this avoids the heatmap being redraw # no longer needed when removed clicking
+      , height = 600
     )
     
     # Color palette for experiment groups on heatmap
