@@ -909,9 +909,12 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
 
       # Wait for enrichment labels when labeling is enabled for k-means
       label_clusters <- isTRUE(input$cluster_enrichment_label) && input$cluster_meth == 2
-
+      cluster_label_data <- NULL
       if (label_clusters) {
-        req(!is.null(cluster_pathway_labels()))
+        cluster_label_data <- tryCatch(
+          cluster_pathway_labels(),
+          error = function(e) NULL
+        )
       }
 
       # Ensure stable state before proceeding
@@ -958,12 +961,8 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
             NULL
           },
           use_letter_overlay = isTRUE(input$letter_overlay),
-          show_cluster_labels = label_clusters,
-          custom_cluster_labels = if (label_clusters) {
-            tryCatch(cluster_pathway_labels(), error = function(e) NULL)
-          } else {
-            NULL
-          }
+          show_cluster_labels = label_clusters && !is.null(cluster_label_data),
+          custom_cluster_labels = cluster_label_data
         )
       )
 
@@ -1381,71 +1380,74 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     })
 
     # gene lists for enrichment analysis - k-means clustering
-    # This reactive does NOT depend on brush selection, only on cluster assignments
+    # Derived directly from the current heatmap data and k-means settings
     kmeans_gene_lists <- reactive({
-      req(!is.null(pre_process$select_gene_id()))
       req(input$cluster_meth == 2)
-      req(heatmap_data())
-      req(input$k_clusters)
-      req(pre_process$select_gene_id())
-      req(shiny_env$ht)
+      req(!is.null(pre_process$select_gene_id()))
+      req(!is.null(pre_process$all_gene_names()))
+      req(!is.null(heatmap_data()))
 
-      row_ord <- ComplexHeatmap::row_order(shiny_env$ht)
-      req(!is.null(row_ord))
+      heatmap_mat <- as.matrix(heatmap_data())
+      cluster_count <- input$k_clusters
 
-      cluster_ids <- names(row_ord)
-      if (is.null(cluster_ids)) {
-        cluster_ids <- as.character(seq_along(row_ord))
-      } else {
-        cluster_ids <- as.character(cluster_ids)
-        empty_ids <- which(!nzchar(cluster_ids))
-        if (length(empty_ids) > 0) {
-          cluster_ids[empty_ids] <- as.character(empty_ids)
-        }
-        na_ids <- which(is.na(cluster_ids))
-        if (length(na_ids) > 0) {
-          cluster_ids[na_ids] <- as.character(na_ids)
-        }
+      req(!is.null(rownames(heatmap_mat)))
+      req(nrow(heatmap_mat) >= cluster_count)
+
+      if (cluster_count < 2) {
+        return(NULL)
       }
 
-      cluster_frames <- lapply(seq_along(row_ord), function(idx) {
-        data.frame(
-          cluster = rep(cluster_ids[idx], length(row_ord[[idx]])),
-          row_order = row_ord[[idx]],
+      # Recreate the k-means clustering used in the heatmap
+      set.seed(input$k_means_re_run)
+      km_result <- tryCatch(
+        stats::kmeans(heatmap_mat, centers = cluster_count),
+        error = function(e) NULL
+      )
+
+      if (is.null(km_result) || is.null(km_result$cluster)) {
+        return(NULL)
+      }
+
+      assignments <- km_result$cluster
+      if (length(assignments) != nrow(heatmap_mat)) {
+        return(NULL)
+      }
+
+      gene_lists <- lapply(sort(unique(assignments)), function(cluster_id) {
+        member_ix <- assignments == cluster_id
+        if (!any(member_ix)) {
+          return(NULL)
+        }
+
+        member_names <- rownames(heatmap_mat)[member_ix]
+        member_positions <- which(member_ix)
+        cluster_data <- data.frame(
+          row_order = member_positions,
+          cluster = rep(cluster_id, length(member_names)),
+          row.names = member_names,
           stringsAsFactors = FALSE
         )
-      })
 
-      clusts <- do.call(rbind, cluster_frames)
-      req(!is.null(clusts), nrow(clusts) > 0)
+      gene_names <- merge_data(
+        all_gene_names = pre_process$all_gene_names(),
+        data = cluster_data,
+        merge_ID = pre_process$select_gene_id()
+      )
 
-      clusts$id <- rownames(heatmap_data())[clusts$row_order]
-
-      gene_lists <- lapply(cluster_ids, function(cluster_id) {
-        cluster_data <- clusts[clusts$cluster == cluster_id, , drop = FALSE]
-        row.names(cluster_data) <- cluster_data$id
-
-        gene_names <- merge_data(
-          all_gene_names = pre_process$all_gene_names(),
-          data = cluster_data,
-          merge_ID = pre_process$select_gene_id()
-        )
-
-        dplyr::select_if(gene_names, is.character)
-      })
-
-      names(gene_lists) <- cluster_ids
-
-      suppressWarnings({
-        numeric_ids <- as.numeric(cluster_ids)
-      })
-      if (!all(is.na(numeric_ids))) {
-        ordering <- order(numeric_ids, na.last = TRUE)
-        gene_lists <- gene_lists[ordering]
-      }
-
-      return(gene_lists)
+      dplyr::select_if(gene_names, is.character)
     })
+
+    names(gene_lists) <- as.character(sort(unique(assignments)))
+
+    # Drop any empty clusters to avoid passing invalid gene lists downstream
+    gene_lists <- gene_lists[!vapply(gene_lists, is.null, logical(1))]
+
+    if (length(gene_lists) != cluster_count) {
+      return(NULL)
+    }
+
+    gene_lists
+  })
 
     k_means_list <- reactive({
       req(!is.null(kmeans_gene_lists()))
@@ -1704,12 +1706,16 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     # Extract top pathway names for each cluster for heatmap labels
     cluster_pathway_labels <- reactive({
       # Only compute labels when enrichment is enabled, labeling requested, and using k-means
-      req(input$cluster_enrichment == TRUE)
-      req(isTRUE(input$cluster_enrichment_label))
-      req(input$cluster_meth == 2)
-      req(!is.null(enrichment_table_cluster$pathway_table()))
+      if (!isTRUE(input$cluster_enrichment) ||
+          !isTRUE(input$cluster_enrichment_label) ||
+          input$cluster_meth != 2) {
+        return(NULL)
+      }
 
       pathway_table <- enrichment_table_cluster$pathway_table()
+      if (is.null(pathway_table)) {
+        return(NULL)
+      }
       k <- input$k_clusters
       max_terms <- 3
       fdr_threshold <- 0.0001
