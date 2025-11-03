@@ -904,6 +904,18 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       png_id <- paste0(trigger_id, "_png")
       svg_id <- paste0(trigger_id, "_svg")
 
+      draw_download_plot <- function(plot_obj) {
+        if (inherits(plot_obj, "idep_heatmap_bundle")) {
+          ComplexHeatmap::draw(
+            plot_obj$heatmap,
+            annotation_legend_list = plot_obj$legends,
+            annotation_legend_side = "top"
+          )
+        } else {
+          print(plot_obj)
+        }
+      }
+
       output[[ui_id]] <- renderUI({
         req(figure())
         tagList(
@@ -970,7 +982,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           req(plot_obj)
           on.exit(removeModal(), add = TRUE)
           pdf(file, width = width_value(), height = height_value())
-          print(plot_obj)
+          draw_download_plot(plot_obj)
           dev.off()
         }
       )
@@ -988,7 +1000,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
             height = height_value(),
             units = "in"
           )
-          print(plot_obj)
+          draw_download_plot(plot_obj)
           dev.off()
         }
       )
@@ -1000,7 +1012,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           req(plot_obj)
           on.exit(removeModal(), add = TRUE)
           svg(file, width = width_value(), height = height_value())
-          print(plot_obj)
+          draw_download_plot(plot_obj)
           dev.off()
         }
       )
@@ -1229,22 +1241,22 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     # Subheatmap creation ---------
     heatmap_sub_object <- reactive({
       if (is.null(input$ht_brush)) {
-        grid::grid.newpage()
-        grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
-      } else {
-        submap_return <- heatmap_sub_object_calc()
-        if (is.null(submap_return)) {
-          grid::grid.newpage()
-          grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
-        } else {
-          shiny_env$submap_data <- submap_return$submap_data
-          ComplexHeatmap::draw(
-            submap_return$ht_select,
-            annotation_legend_list = submap_return$lgd,
-            annotation_legend_side = "top"
-          )
-        }
+        return(NULL)
       }
+
+      submap_return <- heatmap_sub_object_calc()
+      if (is.null(submap_return)) {
+        return(NULL)
+      }
+
+      shiny_env$submap_data <- submap_return$submap_data
+      structure(
+        list(
+          heatmap = submap_return$ht_select,
+          legends = submap_return$lgd
+        ),
+        class = "idep_heatmap_bundle"
+      )
     })
 
     setup_download_link(
