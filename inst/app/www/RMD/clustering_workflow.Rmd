@@ -27,7 +27,7 @@ params:
   select_factors_heatmap:
   sample_color:
   cluster_enrichment_enabled:
-  selection_enrichment_table:
+  cluster_enrichment_results:
   printcode:
     label: "Display Code"
     value: TRUE
@@ -373,27 +373,37 @@ if (!is.null(params$submap_data)) {
 }
 ```
 
-```{r hierarchical_enrichment_table, echo=FALSE, results='asis'}
-if (params$cluster_meth == 1 &&
-    isTRUE(params$cluster_enrichment_enabled) &&
-    !is.null(params$submap_data)) {
+```{r cluster_enrichment_table, echo=FALSE, results='asis'}
+should_show <- FALSE
+heading <- NULL
 
-  enrichment_table <- params$selection_enrichment_table
+if (params$cluster_meth == 1 && !is.null(params$submap_data)) {
+  should_show <- TRUE
+  heading <- "## Pathway Enrichment for Selected Region"
+} else if (params$cluster_meth == 2) {
+  should_show <- TRUE
+  heading <- "## Pathway Enrichment for k-Means Clusters"
+}
 
-  if (!is.null(enrichment_table)) {
-    formatted_table <- format_enrichment_for_report(enrichment_table)
+if (isTRUE(params$cluster_enrichment_enabled) &&
+    should_show &&
+    !is.null(params$cluster_enrichment_results)) {
 
-    cat("## Pathway Enrichment for Selected Region\n\n")
+  formatted_table <- format_enrichment_for_report(
+    params$cluster_enrichment_results
+  )
 
-    if (!is.null(formatted_table)) {
-      print(knitr::kable(
-        formatted_table,
-        format = "html",
-        escape = FALSE
-      ))
-    } else {
-      cat("No significant enrichment found.\n")
+  if (!is.null(formatted_table)) {
+    if (!is.null(heading)) {
+      cat(heading, "\n\n")
     }
+    print(knitr::kable(
+      formatted_table,
+      format = "html",
+      escape = FALSE
+    ))
+  } else if (!is.null(heading)) {
+    cat(heading, "\n\nNo significant enrichment found.\n")
   }
 }
 ```

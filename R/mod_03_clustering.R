@@ -1889,15 +1889,21 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           markdown_location <- app_sys("app/www/RMD/clustering_workflow.Rmd")
           file.copy(from = markdown_location, to = tempReport, overwrite = TRUE)
 
-          # Prepare enrichment results for hierarchical clustering selections
-          selection_enrichment_export <- NULL
-          if (isTRUE(input$cluster_enrichment) &&
-              input$cluster_meth == 1 &&
-              !is.null(shiny_env$submap_data)) {
-            selection_enrichment_export <- tryCatch(
-              isolate(enrichment_table_cluster$pathway_table()),
-              error = function(e) NULL
-            )
+          # Prepare enrichment results for report export
+          cluster_enrichment_export <- NULL
+          if (isTRUE(input$cluster_enrichment)) {
+            if (input$cluster_meth == 1 &&
+                !is.null(shiny_env$submap_data)) {
+              cluster_enrichment_export <- tryCatch(
+                isolate(enrichment_table_cluster$pathway_table()),
+                error = function(e) NULL
+              )
+            } else if (input$cluster_meth == 2) {
+              cluster_enrichment_export <- tryCatch(
+                isolate(enrichment_table_cluster$pathway_table()),
+                error = function(e) NULL
+              )
+            }
           }
 
           # Set up parameters to pass to Rmd document
@@ -1925,7 +1931,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
             select_factors_heatmap = input$select_factors_heatmap,
             sample_color = input$sample_color,
             cluster_enrichment_enabled = isTRUE(input$cluster_enrichment),
-            selection_enrichment_table = selection_enrichment_export
+            cluster_enrichment_results = cluster_enrichment_export
           )
 
           req(params)
