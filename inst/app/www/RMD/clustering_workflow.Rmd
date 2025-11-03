@@ -26,6 +26,8 @@ params:
   submap_data:
   select_factors_heatmap:
   sample_color:
+  cluster_enrichment_enabled:
+  selection_enrichment_table:
   printcode:
     label: "Display Code"
     value: TRUE
@@ -38,6 +40,119 @@ knitr::opts_chunk$set(
   warning = FALSE,
   message = FALSE
 )
+```
+
+```{r format_enrichment_helper, include=FALSE}
+format_enrichment_for_report <- function(enrichment_list) {
+  if (is.null(enrichment_list) || length(enrichment_list) == 0) {
+    return(NULL)
+  }
+
+  if (is.data.frame(enrichment_list)) {
+    enrichment_list <- list(Selection = enrichment_list)
+  }
+
+  collapse_list_columns <- function(df) {
+    df_copy <- as.data.frame(df, stringsAsFactors = FALSE)
+    for (col in seq_along(df_copy)) {
+      if (is.list(df_copy[[col]])) {
+        df_copy[[col]] <- vapply(
+          df_copy[[col]],
+          function(x) paste0(unlist(x), collapse = ", "),
+          character(1),
+          USE.NAMES = FALSE
+        )
+      }
+    }
+    rownames(df_copy) <- NULL
+    df_copy
+  }
+
+  indices <- seq_along(enrichment_list)
+  rows <- lapply(indices, function(i) {
+    tbl <- enrichment_list[[i]]
+    if (is.null(tbl) || !is.data.frame(tbl)) {
+      return(NULL)
+    }
+    if (ncol(tbl) == 1) {
+      return(NULL)
+    }
+    group_name <- names(enrichment_list)[i]
+    if (is.null(group_name) || is.na(group_name) || group_name == "") {
+      group_name <- paste0("Group ", i)
+    }
+    df1 <- collapse_list_columns(tbl)
+    df1$group <- group_name
+    df1
+  })
+
+  rows <- Filter(Negate(is.null), rows)
+  if (length(rows) == 0) {
+    return(NULL)
+  }
+
+  res <- do.call(rbind, rows)
+  if (is.null(res) || ncol(res) == 0) {
+    return(NULL)
+  }
+
+  res <- as.data.frame(res, stringsAsFactors = FALSE)
+  colnames(res) <- gsub("\\.", " ", colnames(res), perl = TRUE)
+
+  if ("group" %in% colnames(res)) {
+    if (length(unique(res$group)) == 1) {
+      res$group <- NULL
+    } else {
+      res$group[duplicated(res$group)] <- ""
+      colnames(res)[colnames(res) == "group"] <- "Grp."
+    }
+  }
+
+  if ("FDR" %in% colnames(res)) {
+    res$FDR <- gsub("e-0", "e-", res$FDR)
+    res$FDR <- gsub("e", "E", res$FDR)
+  }
+
+  if ("nGenes" %in% colnames(res)) {
+    res$nGenes <- as.character(res$nGenes)
+  }
+
+  if ("Fold enriched" %in% colnames(res)) {
+    fold_vals <- suppressWarnings(as.numeric(res$`Fold enriched`))
+    res$`Fold enriched` <- as.character(round(fold_vals, 1))
+  }
+
+  if ("Pathway size" %in% colnames(res)) {
+    res$`Pathway size` <- as.character(res$`Pathway size`)
+  }
+
+  if (all(c("Pathway", "URL") %in% colnames(res))) {
+    res$Pathway <- hyperText(res$Pathway, res$URL)
+  }
+
+  drop_cols <- colnames(res) %in% c("Genes", "URL")
+  if (any(drop_cols)) {
+    res <- res[, !drop_cols, drop = FALSE]
+  }
+
+  colnames(res) <- gsub("Pathway size", "PathwaySize", colnames(res))
+  colnames(res) <- gsub("Fold enriched", "Fold", colnames(res))
+  colnames(res) <- gsub("FDR", "Adj.Pval", colnames(res))
+
+  if ("PathwaySize" %in% colnames(res)) {
+    res$PathwaySize <- NULL
+  }
+
+  if ("Pathway" %in% colnames(res)) {
+    colnames(res)[colnames(res) == "Pathway"] <- "Pathway (Click for more info)"
+  }
+
+  if ("nGenes" %in% colnames(res)) {
+    res$nGenes <- NULL
+  }
+
+  return(res)
+}
 ```
 
 <!-- This document cannot be knit directly from R studio -->
@@ -255,6 +370,31 @@ if (!is.null(params$submap_data)) {
     annotation_legend_side = "top",
     heatmap_legend_side = "bottom"
   )
+}
+```
+
+```{r hierarchical_enrichment_table, echo=FALSE, results='asis'}
+if (params$cluster_meth == 1 &&
+    isTRUE(params$cluster_enrichment_enabled) &&
+    !is.null(params$submap_data)) {
+
+  enrichment_table <- params$selection_enrichment_table
+
+  if (!is.null(enrichment_table)) {
+    formatted_table <- format_enrichment_for_report(enrichment_table)
+
+    cat("## Pathway Enrichment for Selected Region\n\n")
+
+    if (!is.null(formatted_table)) {
+      print(knitr::kable(
+        formatted_table,
+        format = "html",
+        escape = FALSE
+      ))
+    } else {
+      cat("No significant enrichment found.\n")
+    }
+  }
 }
 ```
 
