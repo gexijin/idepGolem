@@ -577,28 +577,74 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
 
     # Sample color bar selector ----------
     output$list_factors_heatmap <- renderUI({
-      choices <- c("None", "Names")
-      selected <- "Names"
-      if (!is.null(colnames(pre_process$sample_info()))) {
-        factors <- colnames(pre_process$sample_info())
-        choices <- c(
-          choices,
-          factors,
-          "All factors"
+      data_mat <- pre_process$data()
+      sample_info <- pre_process$sample_info()
+      sample_count <- NULL
+
+      if (!is.null(data_mat)) {
+        sample_count <- ncol(data_mat)
+      } else if (!is.null(sample_info)) {
+        sample_count <- nrow(sample_info)
+      }
+
+      choices <- "None"
+
+      include_names <- TRUE
+      if (!is.null(sample_count) && sample_count > 0 && !is.null(data_mat) && !is.null(colnames(data_mat))) {
+        detected_groups <- tryCatch(
+          detect_groups(colnames(data_mat)),
+          error = function(e) NULL
         )
-        # Only set to "All factors" if input doesn't exist yet or is NULL
-        # This prevents unnecessary re-triggering when sample_info changes
-        if (is.null(input$select_factors_heatmap) || is.na(input$select_factors_heatmap)) {
-          selected <- choices[length(choices)]
-        } else {
-          # Keep current selection if it's still valid
-          selected <- if (input$select_factors_heatmap %in% choices) {
-            input$select_factors_heatmap
-          } else {
-            choices[length(choices)]
-          }
+        if (!is.null(detected_groups)) {
+          unique_groups <- unique(detected_groups)
+          include_names <- length(unique_groups) < sample_count
         }
       }
+
+      if (include_names) {
+        choices <- c(choices, "Names")
+      }
+
+      valid_factors <- character()
+      if (!is.null(sample_info) && ncol(sample_info) > 0 && !is.null(sample_count) && sample_count > 0) {
+        factor_names <- colnames(sample_info)
+        keep_factor <- vapply(
+          factor_names,
+          function(factor_name) {
+            values <- sample_info[[factor_name]]
+            values <- values[!is.na(values)]
+            length(unique(values)) < sample_count
+          },
+          logical(1)
+        )
+        valid_factors <- factor_names[keep_factor]
+      }
+
+      if (length(valid_factors) > 0) {
+        choices <- c(choices, valid_factors)
+      }
+
+      if (!is.null(sample_info) && ncol(sample_info) > 0) {
+        choices <- c(choices, "All factors")
+      }
+
+      # Ensure choices are unique while preserving order
+      choices <- unique(choices)
+
+      default_selection <- if ("All factors" %in% choices) {
+        "All factors"
+      } else if ("Names" %in% choices) {
+        "Names"
+      } else {
+        "None"
+      }
+
+      selected <- default_selection
+      existing_selection <- isolate(input$select_factors_heatmap)
+      if (!is.null(existing_selection) && !is.na(existing_selection) && existing_selection %in% choices) {
+        selected <- existing_selection
+      }
+
       tagList(
         selectInput(
           inputId = ns("select_factors_heatmap"),
