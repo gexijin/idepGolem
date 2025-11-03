@@ -1657,19 +1657,29 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         cluster_name <- as.character(i)
         if (cluster_name %in% names(pathway_table)) {
           cluster_data <- pathway_table[[cluster_name]]
-          # Check if data frame has rows and Pathway column
-          if (is.data.frame(cluster_data) && nrow(cluster_data) > 0 && "Pathway" %in% colnames(cluster_data)) {
-            # Get the first (most significant) pathway
+          # Check if data frame has rows, Pathway column, and FDR column
+          if (is.data.frame(cluster_data) && nrow(cluster_data) > 0 &&
+              "Pathway" %in% colnames(cluster_data) && "FDR" %in% colnames(cluster_data)) {
+            # Get the first (most significant) pathway and its FDR
             top_pathway <- cluster_data$Pathway[1]
-            # Truncate long pathway names
-            if (nchar(top_pathway) > 30) {
-              top_pathway <- paste0(substr(top_pathway, 1, 27), "...")
+            top_fdr <- as.numeric(cluster_data$FDR[1])
+
+            # Only use pathway name if FDR < 0.0001
+            if (!is.na(top_fdr) && top_fdr < 0.0001) {
+              # Split pathway name into words and join with newlines
+              words <- unlist(strsplit(top_pathway, " "))
+              # Limit to first 5 words to prevent excessively long labels
+              if (length(words) > 5) {
+                words <- c(words[1:5], "...")
+              }
+              multiline_label <- paste(words, collapse = "\n")
+
+              return(multiline_label)
             }
-            return(top_pathway)
           }
         }
-        # Fallback to default label if no pathway found
-        return(paste("Cluster", i))
+        # Show empty label if no pathway found or FDR >= 0.0001
+        return("")
       })
 
       return(labels)
