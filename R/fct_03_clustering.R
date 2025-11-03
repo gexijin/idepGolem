@@ -294,6 +294,8 @@ make_letter_markers <- function(levels) {
 #' @param row_dend_obj Optional precomputed row dendrogram to reuse
 #' @param col_dend_obj Optional precomputed column dendrogram to reuse
 #' @param use_letter_overlay Logical flag to overlay uppercase letters on sample annotations.
+#' @param show_cluster_labels Logical flag to show cluster labels (e.g., "Cluster 1", "Cluster 2")
+#'   on the right side for k-means clustering using anno_block().
 #'
 #' @export
 #' @return Heatmap of the processed data.
@@ -324,7 +326,8 @@ heatmap_main <- function(data,
                          show_heatmap_legend = FALSE,
                          row_dend_obj = NULL,
                          col_dend_obj = NULL,
-                         use_letter_overlay = TRUE) {
+                         use_letter_overlay = TRUE,
+                         show_cluster_labels = FALSE) {
   # Filter with max z-score
   cutoff <- median(unlist(data)) + heatmap_cutoff * sd(unlist(data))
   data[data > cutoff] <- cutoff
@@ -569,6 +572,22 @@ heatmap_main <- function(data,
     } else {
       row_title <- 10
     }
+
+    # Create cluster labels for anno_block if show_cluster_labels is TRUE
+    cluster_labels_ann <- NULL
+    if (show_cluster_labels) {
+      cluster_labels <- paste("Cluster", 1:k_clusters)
+      cluster_labels_ann <- ComplexHeatmap::rowAnnotation(
+        cluster = ComplexHeatmap::anno_block(
+          gp = grid::gpar(fill = "lightblue", col = "black"),
+          labels = cluster_labels,
+          labels_gp = grid::gpar(col = "black", fontsize = 10, fontface = "bold"),
+          labels_rot = 0,
+          width = grid::unit(3, "cm")
+        )
+      )
+    }
+
     heat <- ComplexHeatmap::Heatmap(
       data,
       name = "Expression",
@@ -582,6 +601,7 @@ heatmap_main <- function(data,
       row_dend_side = "left",
       row_dend_width = grid::unit(1, "cm"),
       top_annotation = heat_ann,
+      right_annotation = cluster_labels_ann,
       show_row_names = FALSE,
       show_column_names = show_column_names,
       show_heatmap_legend = show_heatmap_legend,

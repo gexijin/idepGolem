@@ -929,7 +929,8 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           } else {
             NULL
           },
-          use_letter_overlay = isTRUE(input$letter_overlay)
+          use_letter_overlay = isTRUE(input$letter_overlay),
+          show_cluster_labels = isTRUE(input$cluster_enrichment) && input$cluster_meth == 2
         )
       )
 

@@ -25,7 +25,8 @@ heatmap_main(
   show_heatmap_legend = FALSE,
   row_dend_obj = NULL,
   col_dend_obj = NULL,
-  use_letter_overlay = TRUE
+  use_letter_overlay = TRUE,
+  show_cluster_labels = FALSE
 )
 }
 \arguments{
@@ -71,6 +72,9 @@ hierarchical and 2 for kmeans.}
 \item{col_dend_obj}{Optional precomputed column dendrogram to reuse}
 
 \item{use_letter_overlay}{Logical flag to overlay uppercase letters on sample annotations.}
+
+\item{show_cluster_labels}{Logical flag to show cluster labels (e.g., "Cluster 1", "Cluster 2")
+on the right side for k-means clustering using anno_block().}
 }
 \value{
 Heatmap of the processed data.
