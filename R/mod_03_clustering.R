@@ -577,8 +577,8 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
 
     # Sample color bar selector ----------
     output$list_factors_heatmap <- renderUI({
-      choices <- "Names"
-      selected <- choices
+      choices <- c("None", "Names")
+      selected <- "Names"
       if (!is.null(colnames(pre_process$sample_info()))) {
         factors <- colnames(pre_process$sample_info())
         choices <- c(
@@ -796,6 +796,14 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       req(input$select_factors_heatmap != "")
       req(!is.null(input$letter_overlay))
       req(!is.null(input$sample_color))
+
+      if (identical(input$select_factors_heatmap, "None")) {
+        groups <- rep("None", ncol(heatmap_data()))
+        return(list(
+          groups = groups,
+          group_colors = NULL
+        ))
+      }
 
       group_pal_val <- NULL
       if (input$select_factors_heatmap == "All factors") {
@@ -1188,7 +1196,11 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           sample_info = pre_process$sample_info(),
           select_factors_heatmap = selected_factors_heatmap(),
           cluster_meth = current_method(),
-          group_pal = group_pal(),
+          group_pal = if (selected_factors_heatmap() == "All factors") {
+            group_pal()
+          } else {
+            NULL
+          },
           sample_color = submitted_pal(),
           use_letter_overlay = isTRUE(input$letter_overlay)
         )},

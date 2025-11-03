@@ -346,7 +346,7 @@ heatmap_main <- function(data,
   groups <- detect_groups(colnames(data))
   heat_ann <- NULL
   annotation_legends <- list()
-  if (!is.null(select_factors_heatmap)) {
+  if (!is.null(select_factors_heatmap) && select_factors_heatmap != "None") {
     if (select_factors_heatmap != "All factors") { # one factor-------
       show_legend <- TRUE
       # Annotation for groups
@@ -792,6 +792,18 @@ sub_heat_ann <- function(data,
                          group_pal = NULL,
                          sample_color = NULL,
                          use_letter_overlay = TRUE) {
+  if (is.null(select_factors_heatmap) ||
+      identical(select_factors_heatmap, "None")) {
+    group_count <- if (is.null(data)) 0 else ncol(data)
+    empty_groups <- if (group_count > 0) rep("None", group_count) else character(0)
+    return(list(
+      heat_sub_ann = NULL,
+      lgd = NULL,
+      groups = empty_groups,
+      group_colors = NULL
+    ))
+  }
+
   groups <- detect_groups(colnames(data))
   lgd <- NULL
 
@@ -1089,7 +1101,11 @@ cluster_heat_click_info <- function(click,
     sample <- colnames(sub_click_data)[column_index]
     gene <- rownames(sub_click_data)[row_index]
   }
-  group_name <- sub_groups[column_index]
+  group_name <- if (!is.null(sub_groups) && length(sub_groups) >= column_index) {
+    sub_groups[column_index]
+  } else {
+    NA_character_
+  }
   if (length(group_name) == 0 || is.null(group_name)) {
     group_name <- "NA"
   }
@@ -1100,7 +1116,14 @@ cluster_heat_click_info <- function(click,
   if (length(group_name) == 0 || is.na(group_name) || group_name == "") {
     group_name <- "NA"
   }
-  group_col <- group_colors[[group_name]]
+  group_col <- "#FFFFFF"
+  if (!is.null(group_colors)) {
+    if (!is.null(names(group_colors)) && group_name %in% names(group_colors)) {
+      group_col <- group_colors[[group_name]]
+    } else if (length(group_colors) >= column_index) {
+      group_col <- group_colors[[column_index]]
+    }
+  }
   if (is.null(group_col) || is.na(group_col)) {
     group_col <- "#FFFFFF"
   }
@@ -1178,8 +1201,16 @@ heat_sub <- function(ht_brush,
     sample_color = sample_color,
     use_letter_overlay = use_letter_overlay
   )
-  sub_ann <- sub_heat$heat_sub_ann[column_index]
-  sub_groups <- sub_heat$groups[column_index]
+  sub_ann <- if (!is.null(sub_heat$heat_sub_ann)) {
+    sub_heat$heat_sub_ann[column_index]
+  } else {
+    NULL
+  }
+  sub_groups <- if (!is.null(sub_heat$groups) && length(sub_heat$groups) > 0) {
+    sub_heat$groups[column_index]
+  } else {
+    NULL
+  }
   lgd <- sub_heat$lgd
   group_colors <- sub_heat$group_colors
 
@@ -1194,19 +1225,23 @@ heat_sub <- function(ht_brush,
     submap_data <- m[row_index, column_index, drop = FALSE]
     click_data <- submap_data
 
-    ht_select <- ComplexHeatmap::Heatmap(
-      m[row_index, column_index, drop = FALSE],
+    heat_matrix <- m[row_index, column_index, drop = FALSE]
+    heat_args <- list(
+      matrix = heat_matrix,
       col = ht@ht_list[[1]]@matrix_color_mapping@col_fun,
       show_heatmap_legend = FALSE,
       cluster_rows = FALSE,
       cluster_columns = FALSE,
       show_row_names = show_rows,
-      top_annotation = sub_ann,
       name = "heat_1",
       use_raster = TRUE,
       raster_quality = 1,
       border = FALSE
     )
+    if (!is.null(sub_ann)) {
+      heat_args$top_annotation <- sub_ann
+    }
+    ht_select <- do.call(ComplexHeatmap::Heatmap, heat_args)
   } else if (cluster_meth == 2) {
     sub_heats <- c()
     all_rows <- c()
@@ -1242,11 +1277,13 @@ heat_sub <- function(ht_brush,
         border = FALSE
       )
       if (i == 1) {
-        sub_heats[[i]] <- ComplexHeatmap::add_heatmap(
-          sub_ann,
-          sub_heats[[i]],
-          direction = "vertical"
-        )
+        if (!is.null(sub_ann)) {
+          sub_heats[[i]] <- ComplexHeatmap::add_heatmap(
+            sub_ann,
+            sub_heats[[i]],
+            direction = "vertical"
+          )
+        }
       } else if (i >= 2) {
         sub_heats[[i]] <- ComplexHeatmap::add_heatmap(
           sub_heats[[i - 1]],
