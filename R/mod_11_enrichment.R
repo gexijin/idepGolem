@@ -1100,7 +1100,12 @@ mod_11_enrichment_server <- function(id,
           Then the siginificant pathways are sorted by.", input$sort_by, ".",
           " Only the top ", input$top_pathways, " pathways are shown.")
       )
-    })    
+    })
+
+    # Return pathway_table for use by other modules
+    return(list(
+      pathway_table = pathway_table
+    ))
   })
 
 

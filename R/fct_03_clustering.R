@@ -296,6 +296,8 @@ make_letter_markers <- function(levels) {
 #' @param use_letter_overlay Logical flag to overlay uppercase letters on sample annotations.
 #' @param show_cluster_labels Logical flag to show cluster labels (e.g., "Cluster 1", "Cluster 2")
 #'   on the right side for k-means clustering using anno_block().
+#' @param custom_cluster_labels Optional named vector of custom labels for k-means clusters.
+#'   Names should be cluster numbers ("1", "2", etc.), values are the labels to display.
 #'
 #' @export
 #' @return Heatmap of the processed data.
@@ -327,7 +329,8 @@ heatmap_main <- function(data,
                          row_dend_obj = NULL,
                          col_dend_obj = NULL,
                          use_letter_overlay = TRUE,
-                         show_cluster_labels = FALSE) {
+                         show_cluster_labels = FALSE,
+                         custom_cluster_labels = NULL) {
   # Filter with max z-score
   cutoff <- median(unlist(data)) + heatmap_cutoff * sd(unlist(data))
   data[data > cutoff] <- cutoff
@@ -576,7 +579,12 @@ heatmap_main <- function(data,
     # Create cluster labels for anno_block if show_cluster_labels is TRUE
     cluster_labels_ann <- NULL
     if (show_cluster_labels) {
-      cluster_labels <- paste("Cluster", 1:k_clusters)
+      # Use custom labels if provided, otherwise use default "Cluster N" labels
+      if (!is.null(custom_cluster_labels) && length(custom_cluster_labels) == k_clusters) {
+        cluster_labels <- custom_cluster_labels
+      } else {
+        cluster_labels <- paste("Cluster", 1:k_clusters)
+      }
       cluster_labels_ann <- ComplexHeatmap::rowAnnotation(
         cluster = ComplexHeatmap::anno_block(
           gp = grid::gpar(fill = "lightblue", col = "black"),

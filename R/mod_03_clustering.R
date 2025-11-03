@@ -886,6 +886,11 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       req(input$select_factors_heatmap != "")
       req(!is.null(input$letter_overlay))
 
+      # Wait for enrichment results if enrichment is enabled for k-means
+      if (isTRUE(input$cluster_enrichment) && input$cluster_meth == 2) {
+        req(!is.null(cluster_pathway_labels()))
+      }
+
       # Ensure stable state before proceeding
       if (!is.null(pre_process$sample_info())) {
         # For "All factors", ensure group_pal is ready
@@ -930,7 +935,12 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
             NULL
           },
           use_letter_overlay = isTRUE(input$letter_overlay),
-          show_cluster_labels = isTRUE(input$cluster_enrichment) && input$cluster_meth == 2
+          show_cluster_labels = isTRUE(input$cluster_enrichment) && input$cluster_meth == 2,
+          custom_cluster_labels = if (isTRUE(input$cluster_enrichment) && input$cluster_meth == 2) {
+            tryCatch(cluster_pathway_labels(), error = function(e) NULL)
+          } else {
+            NULL
+          }
         )
       )
 
@@ -1632,6 +1642,38 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         strsplit(load_data$heatmap_color_select(), "-")[[1]][c(1,3)]
       })
     )
+
+    # Extract top pathway names for each cluster for heatmap labels
+    cluster_pathway_labels <- reactive({
+      # Only compute labels when enrichment is enabled and using k-means
+      req(input$cluster_enrichment == TRUE)
+      req(input$cluster_meth == 2)
+      req(!is.null(enrichment_table_cluster$pathway_table()))
+
+      pathway_table <- enrichment_table_cluster$pathway_table()
+
+      # Extract top pathway for each cluster
+      labels <- sapply(1:input$k_clusters, function(i) {
+        cluster_name <- as.character(i)
+        if (cluster_name %in% names(pathway_table)) {
+          cluster_data <- pathway_table[[cluster_name]]
+          # Check if data frame has rows and Pathway column
+          if (is.data.frame(cluster_data) && nrow(cluster_data) > 0 && "Pathway" %in% colnames(cluster_data)) {
+            # Get the first (most significant) pathway
+            top_pathway <- cluster_data$Pathway[1]
+            # Truncate long pathway names
+            if (nchar(top_pathway) > 30) {
+              top_pathway <- paste0(substr(top_pathway, 1, 27), "...")
+            }
+            return(top_pathway)
+          }
+        }
+        # Fallback to default label if no pathway found
+        return(paste("Cluster", i))
+      })
+
+      return(labels)
+    })
     
     # Generate word/frequency data for word cloud
     word_cloud_data <- reactive({

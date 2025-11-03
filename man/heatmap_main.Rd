@@ -26,7 +26,8 @@ heatmap_main(
   row_dend_obj = NULL,
   col_dend_obj = NULL,
   use_letter_overlay = TRUE,
-  show_cluster_labels = FALSE
+  show_cluster_labels = FALSE,
+  custom_cluster_labels = NULL
 )
 }
 \arguments{
@@ -75,6 +76,9 @@ hierarchical and 2 for kmeans.}
 
 \item{show_cluster_labels}{Logical flag to show cluster labels (e.g., "Cluster 1", "Cluster 2")
 on the right side for k-means clustering using anno_block().}
+
+\item{custom_cluster_labels}{Optional named vector of custom labels for k-means clusters.
+Names should be cluster numbers ("1", "2", etc.), values are the labels to display.}
 }
 \value{
 Heatmap of the processed data.
