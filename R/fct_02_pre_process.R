@@ -1251,20 +1251,10 @@ eda_boxplot <- function(processed_data,
   counts <- as.data.frame(processed_data)
   memo <- ""
 
-  if (ncol(counts) > 40) {
-    part <- 1:40
-    counts <- counts[, part]
-    memo <- paste(" (only showing 40 samples)")
-  }
   groups <- as.factor(
     detect_groups(colnames(counts), sample_info)
   )
-
-  if (nlevels(groups) <= 1 | nlevels(groups) > 20) {
-    grouping <- NULL
-  } else {
-    grouping <- groups
-  }
+  grouping <- groups
   if (ncol(counts) < 31) {
     x_axis_labels <- 16
   } else {
@@ -1341,22 +1331,11 @@ eda_density <- function(processed_data,
   counts <- as.data.frame(processed_data)
   memo <- ""
 
-  if (ncol(counts) > 40) {
-    part <- 1:40
-    counts <- counts[, part]
-    memo <- paste(" (only showing 40 samples)")
-  }
   groups <- as.factor(
     detect_groups(colnames(counts), sample_info)
   )
-
-  if (nlevels(groups) <= 1 | nlevels(groups) > 20) {
-    group_fill <- NULL
-    legend <- "none"
-  } else {
-    group_fill <- groups
-    legend <- "right"
-  }
+  group_fill <- groups
+  legend <- if (nlevels(groups) <= 1) "none" else "right"
   if (ncol(counts) < 31) {
     x_axis_labels <- 16
   } else {

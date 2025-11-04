@@ -67,7 +67,7 @@ mod_03_clustering_ui <- function(id) {
                 label = NULL,
                 min = 10,
                 max = 12000,
-                value = 500,
+                value = 1500,
                 step = 100
               ),
               tippy::tippy_this(
