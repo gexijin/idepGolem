@@ -1510,7 +1510,12 @@ individual_plots <- function(individual_data,
 
     return(ind_line)
   } else if (gene_plot_box == 1) {
-    plot_data$groups <- detect_groups(plot_data$sample, sample_info)
+    # Get unique sample names first to avoid duplicates when multiple genes selected
+    unique_samples <- unique(plot_data$sample)
+    sample_groups <- detect_groups(unique_samples, sample_info)
+    # Map groups back to all rows in plot_data
+    sample_to_group <- setNames(sample_groups, unique_samples)
+    plot_data$groups <- sample_to_group[plot_data$sample]
 
     summarized <- plot_data |>
       dplyr::group_by(groups, symbol) |>
