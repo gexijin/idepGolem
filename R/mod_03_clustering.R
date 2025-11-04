@@ -403,9 +403,10 @@ mod_03_clustering_ui <- function(id) {
                       "input.cluster_meth == 2 || ",
                       "(input.cluster_meth == 1 && input.ht_brush != null)"
                     ),
-                    tags$div(
-                      style = "display: flex; flex-wrap: wrap; align-items: center; gap: 12px;",
-                      tags$div(
+                    fluidRow(
+                      column(
+                        width = 6,
+                        align = "left",
                         checkboxInput(
                           inputId = ns("cluster_enrichment"),
                           label = strong("Show enrichment"),
@@ -417,13 +418,15 @@ mod_03_clustering_ui <- function(id) {
                           theme = "light"
                         )
                       ),
-                      conditionalPanel(
-                        condition = "input.cluster_enrichment == 1",
-                        ns = ns,
-                        tags$div(
+                      column(
+                        width = 6,
+                        align = "left",
+                        conditionalPanel(
+                          condition = "input.cluster_enrichment == 1",
+                          ns = ns,
                           checkboxInput(
                             inputId = ns("cluster_enrichment_label"),
-                            label = strong("Label enrichment"),
+                            label = strong("Label"),
                             value = FALSE
                           ),
                           tippy::tippy_this(
@@ -438,6 +441,7 @@ mod_03_clustering_ui <- function(id) {
                   ),
                   conditionalPanel(
                     condition = "input.cluster_enrichment == 1 ",
+                    hr(),
                     mod_11_enrichment_ui(ns("enrichment_table_cluster")),
                     ns = ns
                   ),

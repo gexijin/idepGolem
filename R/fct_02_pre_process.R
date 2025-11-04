@@ -1525,9 +1525,9 @@ individual_plots <- function(individual_data,
       ),
       fill = "black",
       position = ggplot2::position_dodge(),
-      binaxis='y', 
-      stackdir='center', 
-      dotsize=1
+      binaxis='y',
+      stackdir='center',
+      dotsize=0.5
     ) +
     ggplot2::theme_light() +
     ggplot2::theme(
