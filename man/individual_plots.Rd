@@ -13,7 +13,9 @@ individual_plots(
   lab_rotate,
   plots_color_select,
   plot_raw,
-  plot_tukey
+  plot_tukey,
+  max_groups = 12,
+  max_length = 30
 )
 }
 \arguments{

@@ -115,22 +115,30 @@ dynamic_range <- function(num_set) {
 #'
 #' Detects groups from column names in sample info file so that they can be used
 #' for things such as coloring plots or building the model for DEG analysis.
-#' Groups with only one sample (no replicates) are labeled as "Other". If all
-#' samples end up as "Other" (no groups have replicates), they are relabeled as
-#' "Samples" to prevent legend overflow in plots. Group names longer than 30
-#' characters are truncated to improve plot readability.
+#' Groups with only one sample (no replicates) are labeled as "Other". If more
+#' than max_groups exist, only the most frequent groups are kept and the rest
+#' are recoded as "Other". If all samples end up as "Other" (no groups have
+#' replicates), they are relabeled as "Samples" to prevent legend overflow.
+#' Group names longer than max_length characters are truncated.
 #'
 #' @param sample_names Vector of column headings from data file or design file
 #' @param sample_info Matrix of the experiment design information
+#' @param max_groups Maximum number of groups to display (default 12). Groups
+#'  beyond this limit are recoded as "Other", resulting in max_groups + 1 total.
+#' @param max_length Maximum length for group names (default 30). Longer names
+#'  are truncated to improve plot readability.
 #'
 #' @export
 #' @return A character vector with the groups. Non-replicated groups become "Other",
-#'  and if all groups are non-replicated, all return as "Samples". Long group names
-#'  (>30 characters) are truncated.
+#'  groups beyond max_groups become "Other", all non-replicated become "Samples",
+#'  and long names (>max_length) are truncated.
 #' @note This function is mainly called internally in other idepGolem functions.
-#'  A warning is shown if any group names are truncated.
+#'  Warnings are shown if groups are recoded or truncated.
 #'
-detect_groups <- function(sample_names, sample_info = NULL) {
+detect_groups <- function(sample_names,
+                          sample_info = NULL,
+                          max_groups = 12,
+                          max_length = 30) {
   # sample_names are col names parsing samples by either the name
   # or using a data frame of sample infos.
   # Note that each row of the sample_info data frame represents a sample.
@@ -188,9 +196,51 @@ detect_groups <- function(sample_names, sample_info = NULL) {
     sample_group <- rep("Samples", length(sample_group))
   }
 
+  # Limit to at most max_groups (plus "Other" makes max_groups + 1 total)
+  # If more than max_groups, keep the most frequent and recode rest as "Other"
+  unique_groups <- unique(sample_group)
+  n_unique <- length(unique_groups)
+
+  if (n_unique > max_groups) {
+    # Count frequency of each group
+    group_freq <- table(sample_group)
+    # Sort by frequency (descending)
+    group_freq_sorted <- sort(group_freq, decreasing = TRUE)
+    # Keep top 12 groups
+    top_groups <- names(group_freq_sorted)[1:max_groups]
+
+    # Recode less frequent groups as "Other"
+    sample_group <- ifelse(
+      sample_group %in% top_groups,
+      sample_group,
+      "Other"
+    )
+
+    # Show warning message once
+    n_recoded <- n_unique - max_groups
+    if (requireNamespace("shiny", quietly = TRUE) && !is.null(shiny::getDefaultReactiveDomain())) {
+      shiny::showNotification(
+        ui = paste0(
+          "Warning: Too many groups detected (", n_unique, "). ",
+          "Keeping the ", max_groups, " most frequent groups. ",
+          n_recoded, " less frequent group(s) recoded as 'Other'."
+        ),
+        id = "too_many_groups_recoded",
+        duration = 8,
+        type = "warning"
+      )
+    } else {
+      warning(
+        "Too many groups detected (", n_unique, "). ",
+        "Keeping the ", max_groups, " most frequent groups. ",
+        n_recoded, " less frequent group(s) recoded as 'Other'.",
+        call. = FALSE
+      )
+    }
+  }
+
   # Truncate long group names to prevent plot display issues
-  # Group names longer than 30 characters will be truncated
-  max_length <- 30
+  # Group names longer than max_length characters will be truncated
   long_groups <- unique(sample_group[nchar(sample_group) > max_length])
 
   if (length(long_groups) > 0) {

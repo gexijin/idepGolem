@@ -77,7 +77,7 @@ test_that("detect_groups truncates long group names", {
   )
 
   # Suppress warnings for testing
-  groups <- suppressWarnings(detect_groups(sample_names))
+  groups <- suppressWarnings(detect_groups(sample_names, max_length = 30))
 
   # Check that long group name was truncated to 30 chars
   long_group <- groups[1]
@@ -88,4 +88,89 @@ test_that("detect_groups truncates long group names", {
   control_group <- unique(groups[3:4])
   expect_equal(control_group, "Control")
   expect_equal(nchar(control_group), 7)
+})
+
+test_that("detect_groups respects custom max_length parameter", {
+  sample_names <- c(
+    "VeryLongGroupName_1",
+    "VeryLongGroupName_2",
+    "Short_1",
+    "Short_2"
+  )
+
+  # Test with max_length = 10
+  groups <- suppressWarnings(detect_groups(sample_names, max_length = 10))
+
+  long_group <- unique(groups[1:2])
+  expect_equal(nchar(long_group), 10)
+  expect_equal(long_group, "VeryLongGr")
+})
+
+test_that("detect_groups limits to 12 groups plus Other", {
+  # Create 15 groups with varying frequencies
+  sample_names <- c(
+    paste0("GroupA_", 1:10),  # Most frequent
+    paste0("GroupB_", 1:8),
+    paste0("GroupC_", 1:6),
+    paste0("GroupD_", 1:5),
+    paste0("GroupE_", 1:4),
+    paste0("GroupF_", 1:4),
+    paste0("GroupG_", 1:3),
+    paste0("GroupH_", 1:3),
+    paste0("GroupI_", 1:3),
+    paste0("GroupJ_", 1:2),
+    paste0("GroupK_", 1:2),
+    paste0("GroupL_", 1:2),
+    paste0("GroupM_", 1:2),  # 12th most frequent
+    paste0("GroupN_", 1:2),  # Should become Other
+    paste0("GroupO_", 1:1)   # Should become Other
+  )
+
+  groups <- suppressWarnings(detect_groups(sample_names))
+
+  # Should have at most 13 unique groups (12 + Other)
+  expect_lte(length(unique(groups)), 13)
+
+  # Should have "Other" group
+  expect_true("Other" %in% groups)
+
+  # Less frequent groups should be recoded as Other
+  # GroupN and GroupO should not appear as separate groups
+  expect_false("GroupN" %in% unique(groups))
+  expect_false("GroupO" %in% unique(groups))
+})
+
+test_that("detect_groups preserves all groups when 12 or fewer", {
+  # Create exactly 12 groups
+  sample_names <- c(
+    paste0("A_", 1:2), paste0("B_", 1:2), paste0("C_", 1:2),
+    paste0("D_", 1:2), paste0("E_", 1:2), paste0("F_", 1:2),
+    paste0("G_", 1:2), paste0("H_", 1:2), paste0("I_", 1:2),
+    paste0("J_", 1:2), paste0("K_", 1:2), paste0("L_", 1:2)
+  )
+
+  groups <- suppressWarnings(detect_groups(sample_names))
+
+  # Should have exactly 12 groups
+  expect_equal(length(unique(groups)), 12)
+
+  # Should NOT have "Other" group (all groups preserved)
+  expect_false("Other" %in% groups)
+})
+
+test_that("detect_groups respects custom max_groups parameter", {
+  # Create 8 groups, test with max_groups = 5
+  sample_names <- c(
+    paste0("A_", 1:3), paste0("B_", 1:3), paste0("C_", 1:3),
+    paste0("D_", 1:3), paste0("E_", 1:3), paste0("F_", 1:3),
+    paste0("G_", 1:3), paste0("H_", 1:3)
+  )
+
+  groups <- suppressWarnings(detect_groups(sample_names, max_groups = 5))
+
+  # Should have at most 6 unique groups (5 + Other)
+  expect_lte(length(unique(groups)), 6)
+
+  # Should have "Other" group
+  expect_true("Other" %in% groups)
 })

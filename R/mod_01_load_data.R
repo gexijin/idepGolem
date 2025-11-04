@@ -325,6 +325,32 @@ mod_01_load_data_ui <- function(id) {
               "Keep your original gene IDs. By default we convert to Ensembl IDs used by pathway databases.",
               theme = "light"
             ),
+            numericInput(
+              inputId = ns("max_groups"),
+              label = "Max groups in legends:",
+              value = 12,
+              min = 5,
+              max = 30,
+              step = 1
+            ),
+            tippy::tippy_this(
+              ns("max_groups"),
+              "Maximum number of groups to show in plot legends. Groups beyond this limit are recoded as 'Other'.",
+              theme = "light"
+            ),
+            numericInput(
+              inputId = ns("max_group_name_length"),
+              label = "Max group name length:",
+              value = 30,
+              min = 10,
+              max = 50,
+              step = 5
+            ),
+            tippy::tippy_this(
+              ns("max_group_name_length"),
+              "Maximum character length for group names in legends. Longer names are truncated.",
+              theme = "light"
+            ),
           )
         ),
         br(),
@@ -1873,7 +1899,9 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       select_gene_id = reactive(input$select_gene_id),
       multiple_map = reactive(input$multiple_map),
       plot_grid_lines = reactive(input$plot_grid_lines),
-      ggplot2_theme = reactive(input$ggplot2_theme)
+      ggplot2_theme = reactive(input$ggplot2_theme),
+      max_groups = reactive(input$max_groups),
+      max_group_name_length = reactive(input$max_group_name_length)
     )
   })
 }

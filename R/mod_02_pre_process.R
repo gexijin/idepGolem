@@ -1598,7 +1598,9 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
           lab_rotate = input$angle_ind_axis_lab,
           plots_color_select = load_data$plots_color_select(),
           plot_raw = input$plot_raw,
-          plot_tukey = input$plot_tukey
+          plot_tukey = input$plot_tukey,
+          max_groups = load_data$max_groups(),
+          max_length = load_data$max_group_name_length()
         )
         refine_ggplot2(
           p = p,

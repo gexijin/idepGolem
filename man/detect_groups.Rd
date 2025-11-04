@@ -4,27 +4,39 @@
 \alias{detect_groups}
 \title{Detect groups by sample names}
 \usage{
-detect_groups(sample_names, sample_info = NULL)
+detect_groups(
+  sample_names,
+  sample_info = NULL,
+  max_groups = 12,
+  max_length = 30
+)
 }
 \arguments{
 \item{sample_names}{Vector of column headings from data file or design file}
 
 \item{sample_info}{Matrix of the experiment design information}
+
+\item{max_groups}{Maximum number of groups to display (default 12). Groups
+beyond this limit are recoded as "Other", resulting in max_groups + 1 total.}
+
+\item{max_length}{Maximum length for group names (default 30). Longer names
+are truncated to improve plot readability.}
 }
 \value{
 A character vector with the groups. Non-replicated groups become "Other",
- and if all groups are non-replicated, all return as "Samples". Long group names
- (>30 characters) are truncated.
+ groups beyond max_groups become "Other", all non-replicated become "Samples",
+ and long names (>max_length) are truncated.
 }
 \description{
 Detects groups from column names in sample info file so that they can be used
 for things such as coloring plots or building the model for DEG analysis.
-Groups with only one sample (no replicates) are labeled as "Other". If all
-samples end up as "Other" (no groups have replicates), they are relabeled as
-"Samples" to prevent legend overflow in plots. Group names longer than 30
-characters are truncated to improve plot readability.
+Groups with only one sample (no replicates) are labeled as "Other". If more
+than max_groups exist, only the most frequent groups are kept and the rest
+are recoded as "Other". If all samples end up as "Other" (no groups have
+replicates), they are relabeled as "Samples" to prevent legend overflow.
+Group names longer than max_length characters are truncated.
 }
 \note{
 This function is mainly called internally in other idepGolem functions.
- A warning is shown if any group names are truncated.
+ Warnings are shown if groups are recoded or truncated.
 }

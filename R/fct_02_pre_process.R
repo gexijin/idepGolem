@@ -1458,7 +1458,9 @@ individual_plots <- function(individual_data,
                              lab_rotate,
                              plots_color_select,
                              plot_raw,
-                             plot_tukey) {
+                             plot_tukey,
+                             max_groups = 12,
+                             max_length = 30) {
   individual_data <- as.data.frame(individual_data)
   individual_data$symbol <- rownames(individual_data)
   
@@ -1512,7 +1514,7 @@ individual_plots <- function(individual_data,
   } else if (gene_plot_box == 1) {
     # Get unique sample names first to avoid duplicates when multiple genes selected
     unique_samples <- unique(plot_data$sample)
-    sample_groups <- detect_groups(unique_samples, sample_info)
+    sample_groups <- detect_groups(unique_samples, sample_info, max_groups, max_length)
     # Map groups back to all rows in plot_data
     sample_to_group <- setNames(sample_groups, unique_samples)
     plot_data$groups <- sample_to_group[plot_data$sample]
