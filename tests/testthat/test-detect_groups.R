@@ -6,34 +6,34 @@ test_that("detect_groups identifies good grouping patterns", {
   groups <- detect_groups(sample_names)
 
   expect_equal(length(unique(groups)), 2)
-  expect_equal(unique(groups), c("Control", "Treatment"))
+  expect_equal(sort(unique(groups)), c("Control", "Treatment"))
 })
 
-test_that("detect_groups handles no grouping pattern (each sample unique)", {
+test_that("detect_groups handles no grouping pattern (all samples unique)", {
   sample_names <- c("SampleA", "SampleB", "SampleC", "SampleD", "SampleE")
   groups <- detect_groups(sample_names)
 
-  # When 100% of samples are unique (>= 80% threshold), should return "Samples"
+  # When all samples are unique, all become "Other", then all become "Samples"
   expect_equal(length(unique(groups)), 1)
   expect_equal(unique(groups), "Samples")
 })
 
-test_that("detect_groups handles edge case at 80% threshold", {
-  # 4 out of 5 groups are unique (80%)
-  sample_names <- c("A1", "A2", "B", "C", "D")
+test_that("detect_groups labels non-replicated groups as Other", {
+  # Mix of replicated and non-replicated groups
+  sample_names <- c("A1", "A2", "B1", "B2", "C", "D", "E")
   groups <- detect_groups(sample_names)
 
-  # Should trigger threshold and return "Samples"
-  expect_equal(length(unique(groups)), 1)
-  expect_equal(unique(groups), "Samples")
+  # A and B have replicates, C/D/E are unique -> become "Other"
+  expect_equal(length(unique(groups)), 3)
+  expect_true(all(unique(groups) %in% c("A", "B", "Other")))
+  expect_equal(sum(groups == "Other"), 3) # C, D, E
 })
 
-test_that("detect_groups preserves groups below 80% threshold", {
-  # 3 out of 6 groups are unique (50%)
+test_that("detect_groups preserves all groups when all have replicates", {
   sample_names <- c("A1", "A2", "B1", "B2", "C1", "C2")
   groups <- detect_groups(sample_names)
 
-  # Should keep the groups
+  # All groups have replicates, should keep all
   expect_equal(length(unique(groups)), 3)
   expect_true(all(unique(groups) %in% c("A", "B", "C")))
 })
@@ -65,4 +65,27 @@ test_that("detect_groups handles sample_info with unique combinations", {
   # Should trigger threshold and return "Samples"
   expect_equal(length(unique(groups)), 1)
   expect_equal(unique(groups), "Samples")
+})
+
+test_that("detect_groups truncates long group names", {
+  # Create samples with group names longer than 30 characters
+  sample_names <- c(
+    "VeryLongGroupNameThatExceeds30Characters_1",
+    "VeryLongGroupNameThatExceeds30Characters_2",
+    "Control_1",
+    "Control_2"
+  )
+
+  # Suppress warnings for testing
+  groups <- suppressWarnings(detect_groups(sample_names))
+
+  # Check that long group name was truncated to 30 chars
+  long_group <- groups[1]
+  expect_equal(nchar(long_group), 30)
+  expect_equal(long_group, "VeryLongGroupNameThatExceeds30")
+
+  # Check that short group name was not affected
+  control_group <- unique(groups[3:4])
+  expect_equal(control_group, "Control")
+  expect_equal(nchar(control_group), 7)
 })

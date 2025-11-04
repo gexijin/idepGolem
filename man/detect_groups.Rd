@@ -12,16 +12,19 @@ detect_groups(sample_names, sample_info = NULL)
 \item{sample_info}{Matrix of the experiment design information}
 }
 \value{
-A character vector with the groups. Returns "Samples" for all samples
- when no meaningful grouping pattern is detected (50%+ unique groups).
+A character vector with the groups. Non-replicated groups become "Other",
+ and if all groups are non-replicated, all return as "Samples". Long group names
+ (>30 characters) are truncated.
 }
 \description{
 Detects groups from column names in sample info file so that they can be used
 for things such as coloring plots or building the model for DEG analysis.
-If there are too many unique groups (50% or more samples in their own group),
-the function acknowledges there are no meaningful sample groups and returns
-"Samples" for all samples to prevent legend overflow in plots.
+Groups with only one sample (no replicates) are labeled as "Other". If all
+samples end up as "Other" (no groups have replicates), they are relabeled as
+"Samples" to prevent legend overflow in plots. Group names longer than 30
+characters are truncated to improve plot readability.
 }
 \note{
 This function is mainly called internally in other idepGolem functions.
+ A warning is shown if any group names are truncated.
 }

@@ -115,17 +115,20 @@ dynamic_range <- function(num_set) {
 #'
 #' Detects groups from column names in sample info file so that they can be used
 #' for things such as coloring plots or building the model for DEG analysis.
-#' If there are too many unique groups (50% or more samples in their own group),
-#' the function acknowledges there are no meaningful sample groups and returns
-#' "Samples" for all samples to prevent legend overflow in plots.
+#' Groups with only one sample (no replicates) are labeled as "Other". If all
+#' samples end up as "Other" (no groups have replicates), they are relabeled as
+#' "Samples" to prevent legend overflow in plots. Group names longer than 30
+#' characters are truncated to improve plot readability.
 #'
 #' @param sample_names Vector of column headings from data file or design file
 #' @param sample_info Matrix of the experiment design information
 #'
 #' @export
-#' @return A character vector with the groups. Returns "Samples" for all samples
-#'  when no meaningful grouping pattern is detected (50%+ unique groups).
+#' @return A character vector with the groups. Non-replicated groups become "Other",
+#'  and if all groups are non-replicated, all return as "Samples". Long group names
+#'  (>30 characters) are truncated.
 #' @note This function is mainly called internally in other idepGolem functions.
+#'  A warning is shown if any group names are truncated.
 #'
 detect_groups <- function(sample_names, sample_info = NULL) {
   # sample_names are col names parsing samples by either the name
@@ -169,16 +172,55 @@ detect_groups <- function(sample_names, sample_info = NULL) {
     }
   }
 
-  # Check if there are too many unique groups (one per sample or close to it)
-  # This happens when sample names don't follow a consistent pattern
-  # or when factor combinations create unique groups for each sample
-  n_samples <- length(sample_group)
-  n_unique_groups <- length(unique(sample_group))
+  # Improve grouping by handling non-replicated samples
+  # Count occurrences of each group
+  group_counts <- table(sample_group)
 
-  # If 50% or more samples are in their own group, treat as no meaningful groups
-  # This prevents legends from having too many entries and squeezing plots
-  if (n_unique_groups >= (0.5 * n_samples)) {
-    sample_group <- rep("Samples", n_samples)
+  # If a group appears only once (no replicates), label it as 'Other'
+  for (i in seq_along(sample_group)) {
+    if (group_counts[sample_group[i]] == 1) {
+      sample_group[i] <- "Other"
+    }
+  }
+
+  # If all samples became 'Other' (no meaningful groups), change to 'Samples'
+  if (all(sample_group == "Other")) {
+    sample_group <- rep("Samples", length(sample_group))
+  }
+
+  # Truncate long group names to prevent plot display issues
+  # Group names longer than 30 characters will be truncated
+  max_length <- 30
+  long_groups <- unique(sample_group[nchar(sample_group) > max_length])
+
+  if (length(long_groups) > 0) {
+    # Truncate all long group names
+    sample_group <- ifelse(
+      nchar(sample_group) > max_length,
+      substr(sample_group, 1, max_length),
+      sample_group
+    )
+
+    # Show warning message once
+    if (requireNamespace("shiny", quietly = TRUE) && !is.null(shiny::getDefaultReactiveDomain())) {
+      shiny::showNotification(
+        ui = paste0(
+          "Warning: Some group names were longer than ", max_length,
+          " characters and have been truncated to improve plot readability."
+        ),
+        id = "long_group_names_truncated",
+        duration = 8,
+        type = "warning"
+      )
+    } else {
+      warning(
+        "Some group names were longer than ", max_length,
+        " characters and have been truncated: ",
+        paste(long_groups[1:min(3, length(long_groups))], collapse = ", "),
+        if (length(long_groups) > 3) " ..." else "",
+        call. = FALSE
+      )
+    }
   }
 
   return(as.character(sample_group))
