@@ -67,7 +67,7 @@ mod_03_clustering_ui <- function(id) {
                 label = NULL,
                 min = 10,
                 max = 12000,
-                value = 1500,
+                value = 1000,
                 step = 100
               ),
               tippy::tippy_this(
@@ -205,7 +205,7 @@ mod_03_clustering_ui <- function(id) {
         conditionalPanel(
           condition = "input.cluster_panels == 'Heatmap'",
           fluidRow(
-            column(width = 4, p("Samples color")),
+            column(width = 4, p("Sample color")),
             column(
               width = 8,
               htmlOutput(ns("list_factors_heatmap"))
