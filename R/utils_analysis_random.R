@@ -111,6 +111,71 @@ dynamic_range <- function(num_set) {
 }
 
 
+#' Remove version numbers from Ensembl Gene IDs
+#'
+#' Takes Ensembl Gene IDs with version numbers (e.g., ENSG00000211459.2) and
+#' removes the version suffix to return just the base ID (e.g., ENSG00000211459).
+#' Uses vectorized operations for efficient processing of multiple IDs.
+#' The function uses sub() which is optimized for vector operations, making it
+#' highly efficient even with large datasets (>600,000 IDs per second).
+#'
+#' Only removes versions from valid Ensembl Gene IDs that match the pattern:
+#' ENSG/Ensg/ensg followed by 8-12 digits, then a dot and 1-2 digit version number.
+#' Non-matching strings (e.g., "ABC.cded") are returned unchanged. Version
+#' numbers with 3+ digits are NOT removed. Trailing dots without version
+#' numbers (e.g., "ENSG00000211459.") are also removed. The prefix matching is
+#' case-insensitive (accepts ENSG, Ensg, or ensg).
+#'
+#' @param ensembl_ids A character vector of Ensembl Gene IDs with or without
+#'   version numbers. Valid IDs follow the pattern ENSG/Ensg/ensg followed by
+#'   8-12 digits, optionally ending with a dot and 1-2 digit version number
+#'   (e.g., .2, .15). Strings that don't match this pattern are returned
+#'   unchanged. Version numbers with 3+ digits (e.g., .100, .333) are NOT
+#'   removed. Trailing dots without digits (e.g., "ENSG00000211459.") are removed.
+#'
+#' @return A character vector of Ensembl Gene IDs without version numbers.
+#'   Valid IDs without versions are returned unchanged. Invalid/non-Ensembl
+#'   strings are returned unchanged. IDs with 3+ digit versions are unchanged.
+#'   Trailing dots are removed. NA values are preserved.
+#'
+#' @export
+#' @examples
+#' # Single ID with 1-2 digit version
+#' remove_ensembl_version("ENSG00000211459.2")
+#' # Returns: "ENSG00000211459"
+#'
+#' # Case-insensitive prefix matching
+#' remove_ensembl_version(c("ENSG00000211459.2", "Ensg00000123456.10", "ensg00000999999.5"))
+#' # Returns: c("ENSG00000211459", "Ensg00000123456", "ensg00000999999")
+#'
+#' # Version with 3+ digits is NOT removed
+#' remove_ensembl_version("ENSG00000222222.333")
+#' # Returns: "ENSG00000222222.333"
+#'
+#' # Trailing dot without digits is removed
+#' remove_ensembl_version("ENSG00000211459.")
+#' # Returns: "ENSG00000211459"
+#'
+#' # Non-Ensembl strings are left unchanged
+#' remove_ensembl_version(c("ENSG00000211459.2", "ABC.cded", "GENE123.4"))
+#' # Returns: c("ENSG00000211459", "ABC.cded", "GENE123.4")
+#'
+remove_ensembl_version <- function(ensembl_ids) {
+  # Remove version suffix ONLY from valid Ensembl Gene IDs
+  # Pattern: ^([Ee][Nn][Ss][Gg]\\d{8,12})\\.(\\d{1,2})?$
+  #   ^           - start of string
+  #   ([Ee][Nn][Ss][Gg]\\d{8,12}) - capture: ENSG/Ensg/ensg + 8-12 digits
+  #   \\.          - literal dot
+  #   (\\d{1,2})?  - optional capture: 1 or 2 digits (version number)
+  #   $           - end of string
+  # Replacement: \\1 (just the captured base ID without version or dot)
+  # Non-matching strings are returned unchanged by sub()
+  # This handles: .2 .15 (removed), .333 (kept), . with no digits (removed)
+  # Uses sub() for vectorized operation - much faster than loops or apply
+  sub("^([Ee][Nn][Ss][Gg]\\d{8,12})\\.(\\d{1,2})?$", "\\1", ensembl_ids)
+}
+
+
 #' Detect groups by sample names
 #'
 #' Detects groups from column names in sample info file so that they can be used

@@ -263,7 +263,8 @@ input_data <- function(expression_file,
     #iconv converts latin1 to UTF-8; otherwise toupper(ENSG00000267023Ê) causes error
     data[, 1] <- toupper(iconv(data[, 1], "latin1", "UTF-8"))
     data[, 1] <- gsub(" |\"|\'", "", data[, 1])
-
+    # "ENSG00000211459.2 -> "ENSG00000211459"
+    data[, 1] <- remove_ensembl_version(data[, 1])
     # Remove duplicated genes ----------
     data <- data[!duplicated(data[, 1]), ]
 
