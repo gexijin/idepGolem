@@ -12,11 +12,15 @@ detect_groups(sample_names, sample_info = NULL)
 \item{sample_info}{Matrix of the experiment design information}
 }
 \value{
-A character vector with the groups
+A character vector with the groups. Returns "Samples" for all samples
+ when no meaningful grouping pattern is detected.
 }
 \description{
 Detects groups from column names in sample info file so that they can be used
 for things such as coloring plots or building the model for DEG analysis.
+If there are too many unique groups (80% or more samples in their own group),
+the function acknowledges there are no meaningful sample groups and returns
+"Samples" for all samples to prevent legend overflow in plots.
 }
 \note{
 This function is mainly called internally in other idepGolem functions.

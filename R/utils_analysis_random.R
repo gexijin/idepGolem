@@ -115,12 +115,16 @@ dynamic_range <- function(num_set) {
 #'
 #' Detects groups from column names in sample info file so that they can be used
 #' for things such as coloring plots or building the model for DEG analysis.
+#' If there are too many unique groups (80% or more samples in their own group),
+#' the function acknowledges there are no meaningful sample groups and returns
+#' "Samples" for all samples to prevent legend overflow in plots.
 #'
 #' @param sample_names Vector of column headings from data file or design file
 #' @param sample_info Matrix of the experiment design information
 #'
 #' @export
-#' @return A character vector with the groups
+#' @return A character vector with the groups. Returns "Samples" for all samples
+#'  when no meaningful grouping pattern is detected.
 #' @note This function is mainly called internally in other idepGolem functions.
 #'
 detect_groups <- function(sample_names, sample_info = NULL) {
@@ -164,6 +168,19 @@ detect_groups <- function(sample_names, sample_info = NULL) {
       }
     }
   }
+
+  # Check if there are too many unique groups (one per sample or close to it)
+  # This happens when sample names don't follow a consistent pattern
+  # or when factor combinations create unique groups for each sample
+  n_samples <- length(sample_group)
+  n_unique_groups <- length(unique(sample_group))
+
+  # If 80% or more samples are in their own group, treat as no meaningful groups
+  # This prevents legends from having too many entries and squeezing plots
+  if (n_unique_groups >= (0.8 * n_samples)) {
+    sample_group <- rep("Samples", n_samples)
+  }
+
   return(as.character(sample_group))
 }
 
