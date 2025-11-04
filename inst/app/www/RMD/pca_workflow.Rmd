@@ -175,7 +175,8 @@ PCA_biplot(
   pointlabs = params$pointlabs,
   point_size = params$point_size,
   ui_color = params$ui_color,
-  ui_shape = params$ui_shape
+  ui_shape = params$ui_shape,
+  plots_color_select = params$plots_color_select
 )
 ```
 

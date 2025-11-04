@@ -668,6 +668,7 @@ pc_factor_correlation <- function(data,
 #'  Should be one of the design factors from the design file
 #' @param ui_shape String designating factor to shape points by.
 #'  Should be one of the design factors from the design file
+#' @param plots_color_select Vector of colors for plots
 #'
 #' @export
 #' @return A \code{ggplot} object formatted as a PCA plot using PCAtools package
@@ -689,7 +690,8 @@ PCA_biplot <- function(data,
                        pointlabs = TRUE,
                        point_size = 4.0,
                        ui_color = NULL,
-                       ui_shape = NULL) {
+                       ui_shape = NULL,
+                       plots_color_select = "Set1") {
   # missing design
   if (is.null(sample_info)) {
     sample_groups <- detect_groups(colnames(data))
@@ -723,20 +725,38 @@ PCA_biplot <- function(data,
     show_point_labels <- NULL
   }
 
+  # Generate custom color palette for all groups
+  unique_color_groups <- unique(as.character(meta_data[[ui_color]]))
+  n_color_groups <- length(unique_color_groups)
+  color_palette <- generate_colors(n = n_color_groups, palette_name = plots_color_select)
+
+  # Create named vector for colkey
+  names(color_palette) <- unique_color_groups
+
+  # Generate shape key for all groups
+  unique_shape_groups <- unique(as.character(meta_data[[ui_shape]]))
+  n_shape_groups <- length(unique_shape_groups)
+  # Define available shapes (using R's pch values)
+  available_shapes <- c(15, 16, 17, 18, 0, 1, 2, 3, 4, 5, 6, 7, 8)
+  shape_values <- rep(available_shapes, length.out = n_shape_groups)
+  names(shape_values) <- unique_shape_groups
+
   PCAtools::biplot(
     pcaobj = pca_obj,
     x = selected_x,
     y = selected_y,
     colby = ui_color,
+    colkey = color_palette,
     shape = ui_shape,
+    shapekey = shape_values,
     # colLegendTitle = 'Color?',
     encircle = encircle,
     encircleFill = encircleFill,
     showLoadings = showLoadings,
     lab = show_point_labels,
     legendPosition = "right",
-    legendLabSize = 16,
-    legendIconSize = 8.0,
+    legendLabSize = 10,
+    legendIconSize = 4.0,
     pointSize = point_size,
     title = NULL
   )

@@ -17,7 +17,8 @@ PCA_biplot(
   pointlabs = TRUE,
   point_size = 4,
   ui_color = NULL,
-  ui_shape = NULL
+  ui_shape = NULL,
+  plots_color_select = "Set1"
 )
 }
 \arguments{
@@ -52,6 +53,8 @@ Should be one of the design factors from the design file}
 
 \item{ui_shape}{String designating factor to shape points by.
 Should be one of the design factors from the design file}
+
+\item{plots_color_select}{Vector of colors for plots}
 }
 \value{
 A \code{ggplot} object formatted as a PCA plot using PCAtools package
