@@ -494,12 +494,11 @@ mod_03_clustering_ui <- function(id) {
                Data is transformed and clustered as specified in the sidebar."
             ),
             br(),
+            ottoPlots::mod_download_figure_ui(ns("dl_sample_tree")),
             plotOutput(
               outputId = ns("sample_tree"),
-              width = "100%",
-              height = "400px"
-            ),
-            ottoPlots::mod_download_figure_ui(ns("dl_sample_tree"))
+              width = "100%"
+            )
           ),
           tabPanel(
             title = icon("info-circle"),
@@ -1517,9 +1516,25 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       return(p)
     })
 
+    # Calculate dynamic height for sample tree based on number of samples
+    height_sample_tree <- reactive({
+      data_mat <- pre_process$data()
+      if (is.null(data_mat)) {
+        return(400)
+      }
+
+      # Number of samples (columns in the data)
+      n_samples <- ncol(data_mat)
+
+      # Each sample requires 12px to be readable, with minimum of 400px
+      height <- max(400, 14 * n_samples)
+
+      return(height)
+    })
+
     output$sample_tree <- renderPlot({
       print(sample_tree())
-    })
+    }, height = reactive(height_sample_tree()))
 
     dl_sample_tree <- ottoPlots::mod_download_figure_server(
       id = "dl_sample_tree",
