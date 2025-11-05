@@ -891,7 +891,8 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           if (isolate(input$cluster_meth) == 2) {
             current_config <- list(
               k = isolate(input$k_clusters),
-              seed = isolate(input$k_means_re_run)
+              seed = isolate(input$k_means_re_run),
+              n_genes = isolate(input$n_genes)
             )
             # Only increment if configuration actually changed
             if (!identical(current_config, isolate(last_config()))) {
@@ -1476,24 +1477,33 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       }
 
       # Create gene lists based on heatmap slice order
-      # Use the actual slice names from ComplexHeatmap (not sequential numbers)
+      # Number clusters sequentially by visual position (1=top, 2=second, etc.)
+      # This matches user expectations where "Cluster 1" = topmost cluster
       gene_lists <- lapply(seq_along(row_ord), function(i) {
         row_indices <- row_ord[[i]]
 
-        # Get the actual cluster name from ComplexHeatmap slice names
-        cluster_name <- names(row_ord)[i]
-        if (is.null(cluster_name) || cluster_name == "") {
-          cluster_name <- as.character(i)
-        }
+        # Use sequential numbering based on visual position
+        # i=1 is the top cluster, i=2 is second from top, etc.
+        cluster_number <- i
 
-        if (length(row_indices) == 0) {
+        # Filter out invalid indices (can happen when heatmap data changes)
+        # Only keep indices that are within the current heatmap matrix bounds
+        valid_indices <- row_indices[row_indices > 0 & row_indices <= nrow(heatmap_mat)]
+
+        if (length(valid_indices) == 0) {
           return(NULL)
         }
 
-        member_names <- rownames(heatmap_mat)[row_indices]
+        member_names <- rownames(heatmap_mat)[valid_indices]
+
+        # Check for NA row names (shouldn't happen but extra safety)
+        if (any(is.na(member_names))) {
+          return(NULL)
+        }
+
         cluster_data <- data.frame(
-          row_order = row_indices,
-          cluster = rep(cluster_name, length(member_names)),
+          row_order = valid_indices,
+          cluster = rep(cluster_number, length(member_names)),
           row.names = member_names,
           stringsAsFactors = FALSE
         )
@@ -1507,9 +1517,9 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         dplyr::select_if(gene_names, is.character)
       })
 
-      # Use ComplexHeatmap's slice names (not sequential numbers)
-      # This ensures cluster IDs match the heatmap display
-      names(gene_lists) <- names(row_ord)
+      # Name gene lists sequentially (1, 2, 3...) by visual position
+      # This ensures "Cluster 1" in enrichment = top cluster visually
+      names(gene_lists) <- as.character(seq_along(row_ord))
 
       # Drop any empty clusters
       gene_lists <- gene_lists[!vapply(gene_lists, is.null, logical(1))]
