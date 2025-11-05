@@ -1549,6 +1549,16 @@ prep_download <- function(heatmap,
     data <- data |>
       dplyr::select(-c(Row.names))
 
+    # Sort genes by cluster ID (ascending) to make downloads easier to scan
+    if ("cluster" %in% colnames(data)) {
+      cluster_numeric <- suppressWarnings(as.numeric(data$cluster))
+      if (all(!is.na(cluster_numeric))) {
+        data <- data[order(cluster_numeric, rownames(data)), , drop = FALSE]
+      } else {
+        data <- data[order(data$cluster, rownames(data)), , drop = FALSE]
+      }
+    }
+
     return(data)
 
     # hierarchical clustering - NOT CURRENTLY USED
