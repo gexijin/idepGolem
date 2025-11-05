@@ -1870,7 +1870,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
                   if (length(wrapped) == 0) {
                     return(character())
                   }
-                  wrapped[1] <- paste0("- ", wrapped[1])
+                  #wrapped[1] <- paste0("- ", wrapped[1])
                   if (length(wrapped) > 1) {
                     wrapped[-1] <- paste0("  ", wrapped[-1])
                   }
