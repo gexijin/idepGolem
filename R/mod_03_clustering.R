@@ -278,7 +278,7 @@ mod_03_clustering_ui <- function(id) {
               ),
 
               fluidRow(
-                column(width = 4, p("Sample Colors")),
+                column(width = 4, p("Color set")),
                 column(
                   width = 8,
                   selectInput(
@@ -312,6 +312,48 @@ mod_03_clustering_ui <- function(id) {
                     ns("heatmap_cutoff"),
                     "Cap extremely large or small values on the heatmap. This improves color contrast for most values. Normally 2-4. ",
                     theme = "light"
+                  )
+                )
+              ),
+              conditionalPanel(
+                condition = "input.cluster_enrichment_label == 1",
+                ns = ns,
+                fluidRow(
+                  column(width = 4, p("Label FDR cutoff")),
+                  column(
+                    width = 8,
+                    numericInput(
+                      inputId = ns("pathway_label_fdr"),
+                      label = NULL,
+                      value = 0.001,
+                      min = 0,
+                      max = 1,
+                      step = 0.001
+                    ),
+                    tippy::tippy_this(
+                      ns("pathway_label_fdr"),
+                      "FDR threshold for selecting pathways to label on k-means clusters. Only pathways with FDR below this value will be considered for labeling.",
+                      theme = "light"
+                    )
+                  )
+                ),
+                fluidRow(
+                  column(width = 4, p("Max labels")),
+                  column(
+                    width = 8,
+                    numericInput(
+                      inputId = ns("pathway_label_max"),
+                      label = NULL,
+                      value = 1,
+                      min = 1,
+                      max = 4,
+                      step = 1
+                    ),
+                    tippy::tippy_this(
+                      ns("pathway_label_max"),
+                      "Maximum number of pathways to label per k-means cluster. Shows the most significant pathways that pass the FDR threshold.",
+                      theme = "light"
+                    )
                   )
                 )
               ),
@@ -530,6 +572,13 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
 
     # Interactive heatmap environment
     shiny_env <- new.env()
+
+    # Reactive value to track heatmap rendering
+    # Used to signal when gene lists can safely read from shiny_env$ht
+    heatmap_rendered <- reactiveVal(0)
+
+    # Track the last rendered clustering configuration
+    last_config <- reactiveVal(NULL)
 
     observeEvent(pre_process$data(), {
       data_mat <- pre_process$data()
@@ -836,6 +885,20 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           }
 
           incProgress(0.3, detail = "Finalizing")
+
+          # Store current configuration and signal render completion
+          # Use isolate to prevent creating reactive dependency loops
+          if (isolate(input$cluster_meth) == 2) {
+            current_config <- list(
+              k = isolate(input$k_clusters),
+              seed = isolate(input$k_means_re_run)
+            )
+            # Only increment if configuration actually changed
+            if (!identical(current_config, isolate(last_config()))) {
+              isolate(last_config(current_config))
+              isolate(heatmap_rendered(heatmap_rendered() + 1))
+            }
+          }
         })
 
         return(shiny_env$ht)
@@ -1367,6 +1430,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       req(!is.null(shiny_env$submap_data))
       req(is.data.frame(shiny_env$submap_data) || is.matrix(shiny_env$submap_data))
       req(nrow(shiny_env$submap_data) > 0)
+      req(ncol(shiny_env$submap_data) > 0)
 
       gene_lists <- list()
 
@@ -1383,74 +1447,72 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     })
 
     # gene lists for enrichment analysis - k-means clustering
-    # Derived directly from the current heatmap data and k-means settings
+    # Extract cluster assignments from the actual heatmap object to ensure
+    # cluster IDs match what's displayed in the heatmap
     kmeans_gene_lists <- reactive({
       req(input$cluster_meth == 2)
       req(!is.null(pre_process$select_gene_id()))
       req(!is.null(pre_process$all_gene_names()))
       req(!is.null(heatmap_data()))
 
+      # Depend on heatmap_rendered to ensure we only run after heatmap renders
+      # This prevents reading stale cluster assignments
+      req(heatmap_rendered() > 0)
+
+      # Wait for heatmap to be rendered first
+      req(!is.null(shiny_env$ht))
+
       heatmap_mat <- as.matrix(heatmap_data())
-      cluster_count <- input$k_clusters
 
-      req(!is.null(rownames(heatmap_mat)))
-      req(nrow(heatmap_mat) >= cluster_count)
-
-      if (cluster_count < 2) {
-        return(NULL)
-      }
-
-      # Recreate the k-means clustering used in the heatmap
-      set.seed(input$k_means_re_run)
-      km_result <- tryCatch(
-        stats::kmeans(heatmap_mat, centers = cluster_count),
+      # Extract row order from the rendered heatmap
+      # This ensures cluster IDs match the displayed heatmap slices
+      row_ord <- tryCatch(
+        ComplexHeatmap::row_order(shiny_env$ht),
         error = function(e) NULL
       )
 
-      if (is.null(km_result) || is.null(km_result$cluster)) {
+      if (is.null(row_ord) || length(row_ord) == 0) {
         return(NULL)
       }
 
-      assignments <- km_result$cluster
-      if (length(assignments) != nrow(heatmap_mat)) {
-        return(NULL)
-      }
+      # Create gene lists based on heatmap slice order
+      # Slice numbers (1, 2, 3...) correspond to visual display order
+      gene_lists <- lapply(seq_along(row_ord), function(i) {
+        row_indices <- row_ord[[i]]
 
-      gene_lists <- lapply(sort(unique(assignments)), function(cluster_id) {
-        member_ix <- assignments == cluster_id
-        if (!any(member_ix)) {
+        if (length(row_indices) == 0) {
           return(NULL)
         }
 
-        member_names <- rownames(heatmap_mat)[member_ix]
-        member_positions <- which(member_ix)
+        member_names <- rownames(heatmap_mat)[row_indices]
         cluster_data <- data.frame(
-          row_order = member_positions,
-          cluster = rep(cluster_id, length(member_names)),
+          row_order = row_indices,
+          cluster = rep(i, length(member_names)),
           row.names = member_names,
           stringsAsFactors = FALSE
         )
 
-      gene_names <- merge_data(
-        all_gene_names = pre_process$all_gene_names(),
-        data = cluster_data,
-        merge_ID = pre_process$select_gene_id()
-      )
+        gene_names <- merge_data(
+          all_gene_names = pre_process$all_gene_names(),
+          data = cluster_data,
+          merge_ID = pre_process$select_gene_id()
+        )
 
-      dplyr::select_if(gene_names, is.character)
+        dplyr::select_if(gene_names, is.character)
+      })
+
+      # Name gene lists by slice number (matches visual cluster order)
+      names(gene_lists) <- as.character(seq_along(row_ord))
+
+      # Drop any empty clusters
+      gene_lists <- gene_lists[!vapply(gene_lists, is.null, logical(1))]
+
+      if (length(gene_lists) == 0) {
+        return(NULL)
+      }
+
+      gene_lists
     })
-
-    names(gene_lists) <- as.character(sort(unique(assignments)))
-
-    # Drop any empty clusters to avoid passing invalid gene lists downstream
-    gene_lists <- gene_lists[!vapply(gene_lists, is.null, logical(1))]
-
-    if (length(gene_lists) != cluster_count) {
-      return(NULL)
-    }
-
-    gene_lists
-  })
 
     k_means_list <- reactive({
       req(!is.null(kmeans_gene_lists()))
@@ -1736,8 +1798,8 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         return(NULL)
       }
       k <- input$k_clusters
-      max_terms <- 3
-      fdr_threshold <- 0.0001
+      max_terms <- input$pathway_label_max
+      fdr_threshold <- input$pathway_label_fdr
       empty_label <- character(0)
       fontsize <- 10
 
