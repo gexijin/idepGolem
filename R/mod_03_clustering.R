@@ -1476,9 +1476,15 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       }
 
       # Create gene lists based on heatmap slice order
-      # Slice numbers (1, 2, 3...) correspond to visual display order
+      # Use the actual slice names from ComplexHeatmap (not sequential numbers)
       gene_lists <- lapply(seq_along(row_ord), function(i) {
         row_indices <- row_ord[[i]]
+
+        # Get the actual cluster name from ComplexHeatmap slice names
+        cluster_name <- names(row_ord)[i]
+        if (is.null(cluster_name) || cluster_name == "") {
+          cluster_name <- as.character(i)
+        }
 
         if (length(row_indices) == 0) {
           return(NULL)
@@ -1487,7 +1493,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         member_names <- rownames(heatmap_mat)[row_indices]
         cluster_data <- data.frame(
           row_order = row_indices,
-          cluster = rep(i, length(member_names)),
+          cluster = rep(cluster_name, length(member_names)),
           row.names = member_names,
           stringsAsFactors = FALSE
         )
@@ -1501,8 +1507,9 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         dplyr::select_if(gene_names, is.character)
       })
 
-      # Name gene lists by slice number (matches visual cluster order)
-      names(gene_lists) <- as.character(seq_along(row_ord))
+      # Use ComplexHeatmap's slice names (not sequential numbers)
+      # This ensures cluster IDs match the heatmap display
+      names(gene_lists) <- names(row_ord)
 
       # Drop any empty clusters
       gene_lists <- gene_lists[!vapply(gene_lists, is.null, logical(1))]
