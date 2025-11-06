@@ -21,6 +21,8 @@ get_x_axis_label_size <- function(n_samples) {
     return(16)
   } else if (n_samples <= 60) {
     return(12)
+  } else if (n_samples <= 100) {
+        return(10)
   } else {
     return(8)
   }
