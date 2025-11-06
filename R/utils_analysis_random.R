@@ -111,68 +111,119 @@ dynamic_range <- function(num_set) {
 }
 
 
-#' Remove version numbers from Ensembl Gene IDs
+#' Remove version numbers from Ensembl and RefSeq IDs
 #'
-#' Takes Ensembl Gene IDs with version numbers (e.g., ENSG00000211459.2) and
-#' removes the version suffix to return just the base ID (e.g., ENSG00000211459).
-#' Uses vectorized operations for efficient processing of multiple IDs.
-#' The function uses sub() which is optimized for vector operations, making it
-#' highly efficient even with large datasets (>600,000 IDs per second).
+#' Takes gene, transcript, or protein IDs with version numbers and removes the
+#' version suffix to return just the base ID. Supports Ensembl IDs (genes,
+#' transcripts, proteins) and RefSeq IDs (mRNA, protein, ncRNA). Uses vectorized
+#' operations for efficient processing of multiple IDs.
 #'
-#' Only removes versions from valid Ensembl Gene IDs that match the pattern:
-#' ENSG/Ensg/ensg followed by 8-12 digits, then a dot and 1-2 digit version number.
-#' Non-matching strings (e.g., "ABC.cded") are returned unchanged. Version
-#' numbers with 3+ digits are NOT removed. Trailing dots without version
-#' numbers (e.g., "ENSG00000211459.") are also removed. The prefix matching is
-#' case-insensitive (accepts ENSG, Ensg, or ensg).
+#' Supported ID patterns:
+#' - Ensembl: ENS + characters + 11 digits + optional version
+#'   Format: ENS[A-Z]+########### where:
+#'   - ENS = prefix (case-insensitive)
+#'   - [A-Z]+ = 1+ letters: species code (MUS, DAR, etc.) + type (G, T, P, E)
+#'   - ########### = exactly 11 digits
+#'   - .# = optional 1-2 digit version
+#'   Examples: ENSG00000211459.2, ENSMUSG00000025902.5, ENST00000456328.2
+#' - RefSeq: [prefix]_######.# where:
+#'   - [prefix] = NM (mRNA), NP (protein), NR (ncRNA), XM (predicted mRNA),
+#'     XR (predicted ncRNA), XP (predicted protein)
+#'   - ###### = 6-9 digits
+#'   Examples: NM_000546.5, NP_000537.3, XM_011545467.2, XR_007058843.1
 #'
-#' @param ensembl_ids A character vector of Ensembl Gene IDs with or without
-#'   version numbers. Valid IDs follow the pattern ENSG/Ensg/ensg followed by
-#'   8-12 digits, optionally ending with a dot and 1-2 digit version number
-#'   (e.g., .2, .15). Strings that don't match this pattern are returned
-#'   unchanged. Version numbers with 3+ digits (e.g., .100, .333) are NOT
-#'   removed. Trailing dots without digits (e.g., "ENSG00000211459.") are removed.
+#' Version numbers with 3+ digits are NOT removed (likely not versions).
+#' Trailing dots without version numbers are removed.
+#' Prefix matching is case-insensitive.
+#' Non-matching strings are returned unchanged.
 #'
-#' @return A character vector of Ensembl Gene IDs without version numbers.
-#'   Valid IDs without versions are returned unchanged. Invalid/non-Ensembl
-#'   strings are returned unchanged. IDs with 3+ digit versions are unchanged.
-#'   Trailing dots are removed. NA values are preserved.
+#' @param ensembl_ids A character vector of gene/transcript/protein IDs with or
+#'   without version numbers. Supports Ensembl (ENS...) and RefSeq (NM_, NP_,
+#'   NR_, XM_, XP_) formats. Strings that don't match are returned unchanged.
+#'   Version numbers with 3+ digits are NOT removed. NA values are preserved.
+#'
+#' @return A character vector of IDs without version numbers. Valid IDs without
+#'   versions are returned unchanged. Invalid/non-matching strings are returned
+#'   unchanged. IDs with 3+ digit versions are unchanged. Trailing dots are
+#'   removed. NA values are preserved.
 #'
 #' @export
 #' @examples
-#' # Single ID with 1-2 digit version
-#' remove_ensembl_version("ENSG00000211459.2")
+#' # Ensembl gene IDs
+#' remove_gene_version("ENSG00000211459.2")  # Human gene
 #' # Returns: "ENSG00000211459"
 #'
-#' # Case-insensitive prefix matching
-#' remove_ensembl_version(c("ENSG00000211459.2", "Ensg00000123456.10", "ensg00000999999.5"))
-#' # Returns: c("ENSG00000211459", "Ensg00000123456", "ensg00000999999")
+#' remove_gene_version("ENSMUSG00000025902.5")  # Mouse gene
+#' # Returns: "ENSMUSG00000025902"
+#'
+#' # Ensembl transcript and protein IDs
+#' remove_gene_version("ENST00000456328.2")  # Transcript
+#' # Returns: "ENST00000456328"
+#'
+#' remove_gene_version("ENSP00000384458.1")  # Protein
+#' # Returns: "ENSP00000384458"
+#'
+#' # RefSeq IDs
+#' remove_gene_version("NM_000546.5")  # mRNA
+#' # Returns: "NM_000546"
+#'
+#' remove_gene_version("NP_000537.3")  # Protein
+#' # Returns: "NP_000537"
+#'
+#' remove_gene_version("XR_007058843.1")  # Predicted ncRNA
+#' # Returns: "XR_007058843"
 #'
 #' # Version with 3+ digits is NOT removed
-#' remove_ensembl_version("ENSG00000222222.333")
+#' remove_gene_version("ENSG00000222222.333")
 #' # Returns: "ENSG00000222222.333"
 #'
 #' # Trailing dot without digits is removed
-#' remove_ensembl_version("ENSG00000211459.")
-#' # Returns: "ENSG00000211459"
+#' remove_gene_version(c("ENSG00000211459.", "NM_000546."))
+#' # Returns: c("ENSG00000211459", "NM_000546")
 #'
-#' # Non-Ensembl strings are left unchanged
-#' remove_ensembl_version(c("ENSG00000211459.2", "ABC.cded", "GENE123.4"))
-#' # Returns: c("ENSG00000211459", "ABC.cded", "GENE123.4")
-#'
-remove_ensembl_version <- function(ensembl_ids) {
-  # Remove version suffix ONLY from valid Ensembl Gene IDs
-  # Pattern: ^([Ee][Nn][Ss][Gg]\\d{8,12})\\.(\\d{1,2})?$
+remove_gene_version <- function(ensembl_ids) {
+  # Remove version suffix from valid Ensembl or RefSeq IDs
+  # Pattern explanation:
   #   ^           - start of string
-  #   ([Ee][Nn][Ss][Gg]\\d{8,12}) - capture: ENSG/Ensg/ensg + 8-12 digits
+  #   (...)       - capture group 1: entire base ID
+  #     ([Ee][Nn][Ss][A-Za-z]+\\d{11}) - Ensembl IDs:
+  #       [Ee][Nn][Ss] - ENS prefix (case-insensitive)
+  #       [A-Za-z]+ - 1+ letters (species code + type: G/T/P/E/etc)
+  #       \\d{11} - exactly 11 digits
+  #     |         - OR
+  #     ([Nn][Mm]_\\d{6,9}) - RefSeq mRNA: NM_ + 6-9 digits
+  #     |         - OR
+  #     ([Nn][Pp]_\\d{6,9}) - RefSeq protein: NP_ + 6-9 digits
+  #     |         - OR
+  #     ([Nn][Rr]_\\d{6,9}) - RefSeq ncRNA: NR_ + 6-9 digits
+  #     |         - OR
+  #     ([Xx][Mm]_\\d{6,9}) - RefSeq predicted mRNA: XM_ + 6-9 digits
+  #     |         - OR
+  #     ([Xx][Rr]_\\d{6,9}) - RefSeq predicted ncRNA: XR_ + 6-9 digits
+  #     |         - OR
+  #     ([Xx][Pp]_\\d{6,9}) - RefSeq predicted protein: XP_ + 6-9 digits
   #   \\.          - literal dot
-  #   (\\d{1,2})?  - optional capture: 1 or 2 digits (version number)
+  #   (\\d{1,2})?  - optional 1 or 2 digit version (or 0 for trailing dot)
   #   $           - end of string
-  # Replacement: \\1 (just the captured base ID without version or dot)
+  # Replacement: \\1 (captured base ID without version or dot)
   # Non-matching strings are returned unchanged by sub()
-  # This handles: .2 .15 (removed), .333 (kept), . with no digits (removed)
-  # Uses sub() for vectorized operation - much faster than loops or apply
-  sub("^([Ee][Nn][Ss][Gg]\\d{8,12})\\.(\\d{1,2})?$", "\\1", ensembl_ids)
+  # Uses sub() for vectorized operation - much faster than loops
+
+  # Build regex pattern (split for readability)
+  ensembl_pattern <- "([Ee][Nn][Ss][A-Za-z]+\\d{11})"
+  refseq_patterns <- paste0(
+    "([Nn][Mm]_\\d{6,9})|",  # NM_ (mRNA)
+    "([Nn][Pp]_\\d{6,9})|",  # NP_ (protein)
+    "([Nn][Rr]_\\d{6,9})|",  # NR_ (non-coding RNA)
+    "([Xx][Mm]_\\d{6,9})|",  # XM_ (predicted mRNA)
+    "([Xx][Rr]_\\d{6,9})|",  # XR_ (predicted ncRNA)
+    "([Xx][Pp]_\\d{6,9})"    # XP_ (predicted protein)
+  )
+  full_pattern <- paste0(
+    "^((", ensembl_pattern, ")|(", refseq_patterns, "))\\.(\\d{1,2})?$"
+  )
+
+  sub(full_pattern, "\\1", ensembl_ids)
 }
 
 
