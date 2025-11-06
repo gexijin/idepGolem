@@ -558,14 +558,22 @@ get_all_gene_names <- function(mapped_ids,
     return(data.frame(
       "User_ID" = mapped_ids,
       "ensembl_ID" = mapped_ids, # dummy data
-      "symbol" = mapped_ids # dummy data
+      "symbol" = mapped_ids, # dummy data
+      "search_label" = mapped_ids # all same, just use once
     ))
   } else if (!is.null(all_gene_info$bool)) { # ensembl ID only, no symbol
-    return(data.frame(
+    df <- data.frame(
       "User_ID" = mapped_ids[, 1],
       "ensembl_ID" = mapped_ids[, 2],
       "symbol" = mapped_ids[, 1] # dummy data
-    ))
+    )
+    # Add search_label: User_ID and ensembl_ID (symbol is same as User_ID)
+    df$search_label <- ifelse(
+      df$User_ID == df$ensembl_ID,
+      df$User_ID,
+      paste(df$User_ID, df$ensembl_ID, sep = " | ")
+    )
+    return(df)
   } else {
     mapped_ids <- data.frame(
       "User_ID" = mapped_ids[, 1],
@@ -599,6 +607,20 @@ get_all_gene_names <- function(mapped_ids,
       symbol,
       tidyselect::everything()
     )
+
+    # Add search_label column for gene searching
+    # Only include unique IDs (don't repeat if two or more are identical)
+    all_names$search_label <- sapply(seq_len(nrow(all_names)), function(i) {
+      ids <- c(
+        symbol = all_names$symbol[i],
+        ensembl = all_names$ensembl_ID[i],
+        user = all_names$User_ID[i]
+      )
+      # Get unique IDs while preserving order (symbol, ensembl, user)
+      unique_ids <- ids[!duplicated(ids)]
+      # Combine with separator
+      paste(unique_ids, collapse = " | ")
+    })
 
     return(all_names)
   }

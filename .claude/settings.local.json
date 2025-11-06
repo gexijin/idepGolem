@@ -7,7 +7,8 @@
       "WebSearch",
       "WebFetch(domain:shiny.posit.co)",
       "Bash(git stash push:*)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "mcp__ide__getDiagnostics"
     ],
     "deny": [],
     "ask": []

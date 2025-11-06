@@ -595,7 +595,7 @@ mod_02_pre_process_ui <- function(id) {
                 ),
                 tippy::tippy_this(
                   ns("selected_gene"),
-                  "Type to search by gene ID, symbol, or name.",
+                  "Type to search by gene symbol, Ensembl gene ID, or original user gene ID.",
                   theme = "light"
                 )
               ),
@@ -1511,13 +1511,36 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
           ),
           decreasing = TRUE
         )
+
+        # Create searchable gene choices using search_label column
+        all_gene_names <- load_data$all_gene_names()
+        select_gene_id <- load_data$select_gene_id()
+
+        # Determine which column to use for matching
+        lookup_col <- if (select_gene_id == "symbol") {
+          "symbol"
+        } else if (select_gene_id == "ensembl_ID") {
+          "ensembl_ID"
+        } else {
+          "User_ID"
+        }
+
+        # Match rownames to all_gene_names and get search labels
+        matches <- match(names(sorted), all_gene_names[[lookup_col]])
+        search_labels <- all_gene_names$search_label[matches]
+        # Fallback to rowname if no match found
+        search_labels[is.na(search_labels)] <- names(sorted)[is.na(search_labels)]
+
+        # Create named vector: names are search labels, values are rownames
+        gene_choices <- setNames(names(sorted), search_labels)
+
         # top 2 most variable genes are plotted by default
-        selected <- names(sorted)[1:2]
+        selected <- gene_choices[1:2]
 
         updateSelectizeInput(
           session,
           inputId = "selected_gene", # genes are ranked by SD
-          choices = names(sorted),
+          choices = gene_choices,
           selected = selected,
           server = TRUE
         )
