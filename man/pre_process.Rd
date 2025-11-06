@@ -87,6 +87,7 @@ Other preprocess functions:
 \code{\link{eda_density}()},
 \code{\link{eda_scatter}()},
 \code{\link{gene_counts_ggplot}()},
+\code{\link{get_x_axis_label_size}()},
 \code{\link{individual_plots}()},
 \code{\link{mean_sd_plot}()},
 \code{\link{rRNA_counts_ggplot}()},

@@ -9,6 +9,23 @@
 #' @name fct_02_pre_process.R
 NULL
 
+#' Get x-axis label size based on number of samples
+#'
+#' @param n_samples Number of samples in the data
+#'
+#' @return Numeric value for x-axis label size
+#'
+#' @family preprocess functions
+get_x_axis_label_size <- function(n_samples) {
+  if (n_samples < 31) {
+    return(16)
+  } else if (n_samples <= 60) {
+    return(12)
+  } else {
+    return(8)
+  }
+}
+
 #' @title Pre-Process the data
 #'
 #' @description This function takes in user-defined values to
@@ -360,14 +377,10 @@ total_counts_ggplot <- function(counts_data,
     memo <- paste("(only showing 100 samples)")
   }
   groups <- as.factor(
-    detect_groups(colnames(counts_data), sample_info)
+    detect_groups(colnames(counts), sample_info)
   )
 
-  if (ncol(counts) < 31) {
-    x_axis_labels <- 16
-  } else {
-    x_axis_labels <- 12
-  }
+  x_axis_labels <- get_x_axis_label_size(ncol(counts))
 
   if (length(unique(groups)) <= 1 || length(unique(groups)) > 20) {
     plot_data <- data.frame(
@@ -552,14 +565,10 @@ rRNA_counts_ggplot <- function(counts_data,
     memo <- paste("(only showing 100 samples)")
   }
   groups <- as.factor(
-    detect_groups(colnames(counts_data), sample_info)
+    detect_groups(colnames(counts), sample_info)
   )
 
-  if (ncol(counts) < 31) {
-    x_axis_labels <- 16
-  } else {
-    x_axis_labels <- 12
-  }
+  x_axis_labels <- get_x_axis_label_size(ncol(counts))
 
   df <- merge(
     counts_data,
@@ -722,11 +731,7 @@ chr_counts_ggplot <- function(counts_data,
     detect_groups(colnames(counts), sample_info)
   )
 
-  if (ncol(counts) < 31) {
-    x_axis_labels <- 16
-  } else {
-    x_axis_labels <- 12
-  }
+  x_axis_labels <- get_x_axis_label_size(ncol(counts))
 
   df <- merge(
     counts_data,
@@ -967,11 +972,7 @@ chr_normalized_ggplot <- function(counts_data,
     detect_groups(colnames(counts), sample_info)
   )
 
-  if (ncol(counts) < 31) {
-    x_axis_labels <- 16
-  } else {
-    x_axis_labels <- 12
-  }
+  x_axis_labels <- get_x_axis_label_size(ncol(counts))
 
   df <- merge(
     counts_data,
@@ -1255,11 +1256,7 @@ eda_boxplot <- function(processed_data,
     detect_groups(colnames(counts), sample_info)
   )
   grouping <- groups
-  if (ncol(counts) < 31) {
-    x_axis_labels <- 16
-  } else {
-    x_axis_labels <- 12
-  }
+  x_axis_labels <- get_x_axis_label_size(ncol(counts))
 
   longer_data <- tidyr::pivot_longer(
     data = counts,
@@ -1336,11 +1333,7 @@ eda_density <- function(processed_data,
   )
   group_fill <- groups
   legend <- if (nlevels(groups) <= 1) "none" else "right"
-  if (ncol(counts) < 31) {
-    x_axis_labels <- 16
-  } else {
-    x_axis_labels <- 12
-  }
+  x_axis_labels <- get_x_axis_label_size(ncol(counts))
 
   longer_data <- tidyr::pivot_longer(
     data = counts,
