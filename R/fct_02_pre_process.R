@@ -369,13 +369,7 @@ total_counts_ggplot <- function(counts_data,
                                 type = "",
                                 plots_color_select) {
   counts <- counts_data
-  memo <- ""
 
-  if (ncol(counts) > 100) {
-    part <- 1:100
-    counts <- counts[, part]
-    memo <- paste("(only showing 100 samples)")
-  }
   groups <- as.factor(
     detect_groups(colnames(counts), sample_info)
   )
@@ -437,7 +431,7 @@ total_counts_ggplot <- function(counts_data,
       )
     ) +
     ggplot2::labs(
-      title = paste("Total", type, "Read Counts (Millions)", memo),
+      title = paste("Total", type, "Read Counts (Millions)"),
       y = paste(type, "Counts (Millions)")
     )
 
@@ -557,13 +551,7 @@ rRNA_counts_ggplot <- function(counts_data,
                                 all_gene_info,
                                 plots_color_select) {
   counts <- counts_data
-  memo <- ""
 
-  if (ncol(counts) > 100) {
-    part <- 1:100
-    counts <- counts[, part]
-    memo <- paste("(only showing 100 samples)")
-  }
   groups <- as.factor(
     detect_groups(colnames(counts), sample_info)
   )
@@ -720,13 +708,7 @@ chr_counts_ggplot <- function(counts_data,
                                 plots_color_select = "Set1",
                                 use_boxplot = FALSE) {
   counts <- counts_data
-  memo <- ""
 
-  if (ncol(counts) > 100) {
-    part <- 1:100
-    counts <- counts[, part]
-    memo <- paste("(only showing 100 samples)")
-  }
   groups <- as.factor(
     detect_groups(colnames(counts), sample_info)
   )
@@ -961,13 +943,7 @@ chr_normalized_ggplot <- function(counts_data,
                                 plots_color_select = "Set1",
                                 use_boxplot = FALSE) {
   counts <- counts_data
-  memo <- ""
 
-  if (ncol(counts) > 100) {
-    part <- 1:100
-    counts <- counts[, part]
-    memo <- paste("(only showing 100 samples)")
-  }
   groups <- as.factor(
     detect_groups(colnames(counts), sample_info)
   )
@@ -1250,7 +1226,6 @@ eda_boxplot <- function(processed_data,
                         sample_info,
                         plots_color_select) {
   counts <- as.data.frame(processed_data)
-  memo <- ""
 
   groups <- as.factor(
     detect_groups(colnames(counts), sample_info)
@@ -1299,7 +1274,7 @@ eda_boxplot <- function(processed_data,
       )
     ) +
     ggplot2::labs(
-      title = paste("Distribution of Transformed Data", memo),
+      title = "Distribution of Transformed Data",
       y = "Transformed Expression"
     )
 
@@ -1326,7 +1301,6 @@ eda_density <- function(processed_data,
                         sample_info,
                         plots_color_select) {
   counts <- as.data.frame(processed_data)
-  memo <- ""
 
   groups <- as.factor(
     detect_groups(colnames(counts), sample_info)
@@ -1376,7 +1350,7 @@ eda_density <- function(processed_data,
       )
     ) +
     ggplot2::labs(
-      title = paste("Density Plot of Transformed Data", memo),
+      title = "Density Plot of Transformed Data",
       x = "Transformed Expression",
       y = "Density",
       color = "Sample"

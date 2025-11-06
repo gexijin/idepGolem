@@ -43,11 +43,6 @@ get_pc <- function(data,
 #' @export
 #' @return importance of each pc
 get_pc_variance <- function(data) {
-  # subset data if more than 100 columns
-  if (ncol(data) > 100) {
-    part <- 1:100
-    data <- data[, part]
-  }
   # pca
   pca.object <- prcomp(t(data))
 
