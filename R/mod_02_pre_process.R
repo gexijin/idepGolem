@@ -751,10 +751,13 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
 
     # Dynamic Barplot Tab ----------
     observe({
-      if (load_data$data_file_format() != 1) {
+      data_format <- load_data$data_file_format()
+      req(!is.null(data_format))
+
+      if (data_format != 1) {
         hideTab(inputId = "eda_tabs", target = "Reads")
         updateTabsetPanel(session, "eda_tabs", selected = "Distribution")
-      } else if (load_data$data_file_format() == 1) {
+      } else if (data_format == 1) {
         showTab(inputId = "eda_tabs", target = "Reads")
         updateTabsetPanel(session, "eda_tabs", selected = "Reads")
       }
@@ -1857,7 +1860,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
           )
           save(params_r, file = file)
         }
-        if (load_data$data_file_format() == 3) {
+        if (load_data$data_file_format() %in% c(3, 4)) {
           params_r <- list(
             loaded_data = load_data$converted_data(),
             sample_info = load_data$sample_info(),

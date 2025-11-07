@@ -149,32 +149,21 @@ mod_01_load_data_ui <- function(id) {
             "..." = 0,
             "Read counts data" = 1,
             "Normalized expression data" = 2,
-            "Fold changes & adjusted p-values" = 3
+            "Fold changes & adjusted p-values" = 3,
+            "Fold changes only" = 4
           ),
           selected = 0,
           selectize = FALSE
         ),
         tippy::tippy_this(
           ns("data_file_format"),
-          "We recommend raw read counts so iDEP can run DESeq2. Choose normalized expression if you have TPM/FPKM, microarray, or proteomics values. Select fold change plus p-values when statistical analysis was done elsewhere.",
+          paste(
+            "Raw read counts enable DESeq2.",
+            "Choose normalized expression for TPM/FPKM, microarray, or proteomics.",
+            "Select fold change + adjusted p-values when both statistics are available,",
+            "or choose Fold changes only if you just have log-fold changes."
+          ),
           theme = "light"
-        ),
-        
-        
-        # Conditional panel for fold changes data file ----------
-        conditionalPanel(
-          condition = "input.data_file_format == 3",
-          checkboxInput(
-            inputId = ns("no_fdr"),
-            label = "Fold-changes only",
-            value = FALSE
-          ),
-          tippy::tippy_this(
-            ns("no_fdr"),
-            "Your data contains fold changes but not adjusted p-values.",
-            theme = "light"
-          ),
-          ns = ns
         ),
         # Load expression data options ----------
         # Includes load demo action button, demo data dropdown, and expression
@@ -481,6 +470,13 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         treatB_LFC = c(-1.81, 0.10, 1.98, -0.02, 0.13),
         treatB_Pval = c(0.001, 0.25, 0.0001, 0.02, 0.001),
         stringsAsFactors = FALSE
+      ),
+      `4` = data.frame(
+        genes = c("Gnai3", "Cdc45", "Scml2", "Narf", "Cav2"),
+        WTvsMu_LFC = c(-0.098, 0.510, 0.545, -0.230, -0.592),
+        IRvsMock_LFC = c(0.760, 1.638, 0.929, -0.973, -0.176),
+        Interaction_LFC = c(-0.659, -1.499, 1.149, 0.162, 0.970),
+        stringsAsFactors = FALSE
       )
     )
 
@@ -513,8 +509,19 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             p("Upload summary statistics for one or more contrasts."),
             tags$ul(
               tags$li("First column: gene IDs (Ensembl, symbols, ...)"),
-              tags$li("Log2 fold-change and its matching adjusted P-value/FDR"),
-              tags$li("Pair each contrast with an adjusted P-value/FDR column.")
+              tags$li("Log2 fold-change columns paired with adjusted P-value/FDR columns."),
+              tags$li("Order columns as LFC, FDR, LFC, FDR for each contrast.")
+            )
+          )
+        ),
+        `4` = list(
+          title = "Fold Changes Only",
+          body = tagList(
+            p("Upload log2 fold-changes when p-values or FDRs are unavailable."),
+            tags$ul(
+              tags$li("First column: gene IDs (Ensembl, symbols, ...)"),
+              tags$li("One column per contrast containing log2 fold-change values."),
+              tags$li("No accompanying p-value columns are required.")
             )
           )
         ),
@@ -822,9 +829,13 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       updateSelectInput(
         session = session,
         inputId = "data_file_format",
-        choices = list("Read counts data" = 1,
-                       "Normalized Expression data" = 2,
-                       "Fold-change & adjusted P-val" = 3),
+        choices = list(
+          "..." = 0,
+          "Read counts data" = 1,
+          "Normalized expression data" = 2,
+          "Fold changes & adjusted p-values" = 3,
+          "Fold changes only" = 4
+        ),
         selected = input$data_file_format
       )
 
@@ -1552,15 +1563,16 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       }
 
       # Check for ratio data in fold-change uploads
-      if (input$data_file_format == 3) {
+      if (input$data_file_format %in% c(3, 4)) {
         data <- loaded_data()$data
 
         # Determine which columns are fold-changes
         n2 <- ncol(data) %/% 2
-        fc_cols <- if (!input$no_fdr) {
+        has_p_vals <- input$data_file_format == 3
+        fc_cols <- if (has_p_vals) {
           2 * (1:n2) - 1  # Fold-change columns (odd columns)
         } else {
-          1:ncol(data)    # All columns are fold-changes
+          seq_len(ncol(data))    # All columns are fold-changes
         }
 
         # Check each fold-change column for ratio characteristics
@@ -1883,7 +1895,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
     list(
       data_file_format = reactive(input$data_file_format),
-      no_fdr = reactive(input$no_fdr),
+      no_fdr = reactive(input$data_file_format == 4),
       select_org = reactive(input$select_org),
       gmt_file = reactive(input$gmt_file),
       sample_info = reactive(loaded_data()$sample_info),

@@ -467,6 +467,13 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
 
     # Interactive heatmap environment
     deg_env <- new.env()
+    summary_only_formats <- c(3, 4)
+    is_summary_format <- function(value) {
+      if (is.null(value) || length(value) == 0) {
+        return(FALSE)
+      }
+      suppressWarnings(as.numeric(value)) %in% summary_only_formats
+    }
 
     stats_option_notice_initialized <- reactiveVal(FALSE)
 
@@ -509,7 +516,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       pre_process$data_file_format(),
       {
         dfmt <- pre_process$data_file_format()
-        hide_r_code <- isTRUE(suppressWarnings(as.numeric(dfmt)) == 3)
+        hide_r_code <- is_summary_format(dfmt)
 
         session$sendCustomMessage(
           ns("toggle_stats_r_code"),
@@ -566,7 +573,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     })
 
     model_comparisons <- reactive({
-      req(pre_process$data() & pre_process$data_file_format() != 3)
+      req(pre_process$data() & !is_summary_format(pre_process$data_file_format()))
 
       list_model_comparisons_ui(
         sample_info = pre_process$sample_info(),
@@ -874,7 +881,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
           }
           
           if (is.null(input$select_model_comprions) && 
-              pre_process$data_file_format() != "3") {
+              !is_summary_format(pre_process$data_file_format())) {
             warning_type("NoComparison")
             deg$limma <- NULL
           } else {

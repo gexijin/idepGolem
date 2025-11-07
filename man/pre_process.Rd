@@ -7,7 +7,7 @@
 pre_process(
   data,
   missing_value = c("geneMedian", "treatAsZero", "geneMedianInGroup"),
-  data_file_format = c(1, 2, 3),
+  data_file_format = c(1, 2, 3, 4),
   low_filter_fpkm,
   n_min_samples_fpkm,
   log_transform_fpkm,
@@ -27,8 +27,8 @@ pre_process(
 should be one of "geneMedian", "treatAsZero", or "geneMedianInGroup"}
 
 \item{data_file_format}{Integer indicating the data format. This should be
-one of 1 for read counts data, 2 for normalized expression, or 3 for
-fold changes and adjusted P-values}
+one of 1 for read counts data, 2 for normalized expression, 3 for fold
+changes with adjusted P-values, or 4 for fold changes without P-values}
 
 \item{low_filter_fpkm}{Integer for low count filter if
 \code{data_file_format} is normalized expression, \code{NULL} otherwise}

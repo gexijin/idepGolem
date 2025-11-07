@@ -40,8 +40,8 @@ get_x_axis_label_size <- function(n_samples) {
 #' @param missing_value String indicating method to deal with missing data. This
 #'   should be one of "geneMedian", "treatAsZero", or "geneMedianInGroup"
 #' @param data_file_format Integer indicating the data format. This should be
-#'   one of 1 for read counts data, 2 for normalized expression, or 3 for
-#'   fold changes and adjusted P-values
+#'   one of 1 for read counts data, 2 for normalized expression, 3 for fold
+#'   changes with adjusted P-values, or 4 for fold changes without P-values
 #' @param low_filter_fpkm Integer for low count filter if
 #'   \code{data_file_format} is normalized expression, \code{NULL} otherwise
 #' @param n_min_samples_fpkm Integer for minimum samples if
@@ -80,7 +80,7 @@ get_x_axis_label_size <- function(n_samples) {
 #'
 pre_process <- function(data,
                         missing_value = c("geneMedian", "treatAsZero", "geneMedianInGroup"),
-                        data_file_format = c(1, 2, 3),
+                        data_file_format = c(1, 2, 3, 4),
                         low_filter_fpkm,
                         n_min_samples_fpkm,
                         log_transform_fpkm,
@@ -258,7 +258,7 @@ pre_process <- function(data,
         normalized = TRUE
       ) + counts_log_start)
     }
-  } else if (data_file_format == 3) { # LFC and P-values
+  } else if (data_file_format %in% c(3, 4)) { # LFC summary statistics
     n2 <- (ncol(data) %/% 2)
     results$raw_counts <- data
     if (!no_fdr) {
@@ -1911,13 +1911,16 @@ generate_descr <- function(missing_value,
   }
   # LFC and FDR
   if (data_file_format == 3) {
-    part_2 <- switch(toString(no_fdr),
-      "TRUE" = "",
-      "FALSE" = " and corrected p-value "
-    )
     descr <- paste0(
-      "Log Fold Change ", part_2,
-      "data were analyzed using iDEP v", packageVersion("idepGolem"), ". ",
+      "Log Fold Change and corrected p-value data were analyzed using iDEP v",
+      packageVersion("idepGolem"), ". ",
+      "Missing values were imputed using ", missing_value, "."
+    )
+  }
+  if (data_file_format == 4) {
+    descr <- paste0(
+      "Log Fold Change (no p-value) data were analyzed using iDEP v",
+      packageVersion("idepGolem"), ". ",
       "Missing values were imputed using ", missing_value, "."
     )
   }
