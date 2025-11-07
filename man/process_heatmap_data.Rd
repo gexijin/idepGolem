@@ -50,14 +50,14 @@ Other clustering functions:
 \code{\link{heat_sub}()},
 \code{\link{heatmap_main}()},
 \code{\link{k_means_elbow}()},
-\code{\link{sd_density}()},
-\code{\link{sub_heat_ann}()}
+\code{\link{limit_annotation_factors}()},
+\code{\link{sd_density}()}
 
 Other heatmaps: 
 \code{\link{cluster_heat_click_info}()},
 \code{\link{heat_sub}()},
 \code{\link{heatmap_main}()},
-\code{\link{sub_heat_ann}()}
+\code{\link{limit_annotation_factors}()}
 }
 \concept{clustering functions}
 \concept{heatmaps}

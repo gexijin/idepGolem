@@ -41,9 +41,9 @@ Other clustering functions:
 \code{\link{draw_sample_tree}()},
 \code{\link{heat_sub}()},
 \code{\link{heatmap_main}()},
+\code{\link{limit_annotation_factors}()},
 \code{\link{process_heatmap_data}()},
-\code{\link{sd_density}()},
-\code{\link{sub_heat_ann}()}
+\code{\link{sd_density}()}
 }
 \concept{clustering functions}
 \concept{plots}

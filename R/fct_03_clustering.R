@@ -412,15 +412,16 @@ heatmap_main <- function(data,
         annotation_legends <- c(annotation_legends, list(legend_entry))
       }
     } else { # more factors------------------------
-      if (!is.null(sample_info) && ncol(sample_info) > 0) {
-        factor_names <- colnames(sample_info)
+      limited_sample_info <- limit_annotation_factors(sample_info)
+      if (!is.null(limited_sample_info) && ncol(limited_sample_info) > 0) {
+        factor_names <- colnames(limited_sample_info)
         factor_annotations <- vector("list", length(factor_names))
         names(factor_annotations) <- factor_names
         factor_legends <- list()
 
         for (i in seq_along(factor_names)) {
           factor_name <- factor_names[i]
-          factor_groups <- as.character(sample_info[, i])
+          factor_groups <- as.character(limited_sample_info[, i])
           factor_groups[is.na(factor_groups)] <- "NA"
           levels_used <- unique(factor_groups)
 
@@ -867,7 +868,7 @@ k_means_elbow <- function(heatmap_data) {
 #' @param data Matrix of heatmap data
 #' @param sample_info Matrix of experiment design information from load data
 #' @param select_factors_heatmap Factor to group by in the samples.
-#'   "All factors" will use all of the sample information.
+#'   "All factors" will use up to the first three columns of the sample information.
 #' @param group_pal Named list of colors and their corresponding categories
 #' @param sample_color Selected colorspace color palette
 #' @param use_letter_overlay Logical flag to overlay uppercase letters on sample annotations.
@@ -878,6 +879,19 @@ k_means_elbow <- function(heatmap_data) {
 #'
 #' @family clustering functions
 #' @family heatmaps
+limit_annotation_factors <- function(sample_info, max_factors = 3) {
+  if (is.null(sample_info)) {
+    return(sample_info)
+  }
+  if (!is.matrix(sample_info) && !is.data.frame(sample_info)) {
+    return(sample_info)
+  }
+  if (ncol(sample_info) <= max_factors) {
+    return(sample_info)
+  }
+  sample_info[, seq_len(max_factors), drop = FALSE]
+}
+
 sub_heat_ann <- function(data,
                          sample_info,
                          select_factors_heatmap,
@@ -904,15 +918,17 @@ sub_heat_ann <- function(data,
     factor_colors_map <- list()
     factor_values_map <- list()
 
-    if (!is.null(sample_info) && ncol(sample_info) > 0) {
-      factor_names <- colnames(sample_info)
+    limited_sample_info <- limit_annotation_factors(sample_info)
+
+    if (!is.null(limited_sample_info) && ncol(limited_sample_info) > 0) {
+      factor_names <- colnames(limited_sample_info)
       factor_annotations <- vector("list", length(factor_names))
       names(factor_annotations) <- factor_names
       factor_legends <- list()
 
       for (i in seq_along(factor_names)) {
         factor_name <- factor_names[i]
-        factor_groups <- as.character(sample_info[, i])
+        factor_groups <- as.character(limited_sample_info[, i])
         factor_groups[is.na(factor_groups)] <- "NA"
         levels_used <- unique(factor_groups)
 
