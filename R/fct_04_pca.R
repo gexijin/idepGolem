@@ -712,6 +712,28 @@ PCA_biplot <- function(data,
     }
   } else {
     meta_data <- sample_info
+    if (!is.data.frame(meta_data)) {
+      meta_data <- as.data.frame(meta_data, stringsAsFactors = FALSE)
+    }
+    # Fallback to first available column if the selected aesthetics
+    # are missing or not yet initialized (can happen right after
+    # uploading a design file before the UI updates)
+    available_cols <- colnames(meta_data)
+    if (length(available_cols) == 0) {
+      sample_groups <- detect_groups(colnames(data))
+      meta_data <- data.frame(
+        Groups = sample_groups,
+        row.names = colnames(data),
+        stringsAsFactors = FALSE
+      )
+      available_cols <- "Groups"
+    }
+    if (is.null(ui_color) || !(ui_color %in% available_cols)) {
+      ui_color <- available_cols[1]
+    }
+    if (is.null(ui_shape) || !(ui_shape %in% available_cols)) {
+      ui_shape <- available_cols[1]
+    }
   }
 
   # Swap rownames
