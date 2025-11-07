@@ -264,6 +264,28 @@ mod_05_deg_1_ui <- function(id) {
             title = icon("info-circle"),
             includeHTML(app_sys("app/www/help_deg1.html"))
           )
+        ),
+        tags$script(
+          HTML(
+            sprintf(
+"
+Shiny.addCustomMessageHandler('%s', function(message) {
+  var tabset = $('#%s');
+  if (!tabset.length) { return; }
+  var tabLink = tabset.find('a[data-value=\"r_code\"]');
+  if (!tabLink.length) { return; }
+  var tabItem = tabLink.closest('li');
+  if (message.hide) {
+    tabItem.hide();
+  } else {
+    tabItem.show();
+  }
+});
+",
+              ns("toggle_stats_r_code"),
+              ns("step_1")
+            )
+          )
         )
       )
     )
@@ -481,6 +503,28 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       x = output,
       name = "data_file_format",
       suspendWhenHidden = FALSE
+    )
+
+    observeEvent(
+      pre_process$data_file_format(),
+      {
+        dfmt <- pre_process$data_file_format()
+        hide_r_code <- isTRUE(suppressWarnings(as.numeric(dfmt)) == 3)
+
+        session$sendCustomMessage(
+          ns("toggle_stats_r_code"),
+          list(hide = hide_r_code)
+        )
+
+        if (isTRUE(hide_r_code) && identical(input$step_1, "r_code")) {
+          updateTabsetPanel(
+            session = session,
+            inputId = "step_1",
+            selected = "results"
+          )
+        }
+      },
+      ignoreNULL = FALSE
     )
 
     # Experiment Design UI Elements ------------
