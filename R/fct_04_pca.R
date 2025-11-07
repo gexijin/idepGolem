@@ -277,6 +277,7 @@ PCA_plot_3d <- function(data,
 
   # plot color scheme
   color_palette <- generate_colors(n = levels, palette_name = plots_color_select)
+  legend_title <- if (identical(selected_color, "Names")) "" else selected_color
   
   # selected principal components
   PCAxyz <- c(as.integer(PCAx), as.integer(PCAy), as.integer(PCAz))
@@ -303,7 +304,7 @@ PCA_plot_3d <- function(data,
     )
   plot_PCA <- plotly::layout(
     p = plot_PCA,
-    legend = list(title = list(text = "Names")),
+    legend = list(title = list(text = legend_title)),
     plot_bgcolor = "#e5ecf6",
     scene = list(
       xaxis = list(
@@ -398,6 +399,8 @@ t_SNE_plot <- function(data,
 
   # plot color scheme
   color_palette <- generate_colors(n = nlevels(as.factor(pcaData$Names)), palette_name = plots_color_select)
+  legend_color_title <- if (identical(selected_color, "Names")) NULL else selected_color
+  legend_shape_title <- if (identical(selected_shape, "Names")) NULL else selected_shape
 
   # Generate plot
   plot_t_SNE <- ggplot2::ggplot(
@@ -441,7 +444,9 @@ t_SNE_plot <- function(data,
     ggplot2::labs(
       title = memo,
       y = "Dimension 2",
-      x = "Dimension 1"
+      x = "Dimension 1",
+      color = legend_color_title,
+      shape = legend_shape_title
     ) +
     ggplot2::scale_color_manual(values = color_palette)
 
@@ -528,6 +533,8 @@ MDS_plot <- function(data,
 
   # plot color scheme
   color_palette <- generate_colors(n = nlevels(as.factor(pcaData$Names)), palette_name = plots_color_select)
+  legend_color_title <- if (identical(selected_color, "Names")) NULL else selected_color
+  legend_shape_title <- if (identical(selected_shape, "Names")) NULL else selected_shape
 
   p <- ggplot2::ggplot(
     data = pcaData,
@@ -570,7 +577,9 @@ MDS_plot <- function(data,
     ggplot2::labs(
       title = memo,
       y = "Dimension 2",
-      x = "Dimension 1"
+      x = "Dimension 1",
+      color = legend_color_title,
+      shape = legend_shape_title
     ) +
     ggplot2::scale_color_manual(values = color_palette)
 

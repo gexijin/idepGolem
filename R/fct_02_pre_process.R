@@ -434,7 +434,8 @@ total_counts_ggplot <- function(counts_data,
     ) +
     ggplot2::labs(
       title = paste("Total", type, "Read Counts (Millions)"),
-      y = paste(type, "Counts (Millions)")
+      y = paste(type, "Counts (Millions)"),
+      fill = NULL
     )
 
   return(plot)
@@ -597,7 +598,12 @@ rRNA_counts_ggplot <- function(counts_data,
       stat = "identity",
       position = ggplot2::position_stack(reverse = TRUE)
     ) +
-    ggplot2::labs(x = NULL, y = "% Reads", title = "% Reads by gene type")+
+    ggplot2::labs(
+      x = NULL,
+      y = "% Reads",
+      title = "% Reads by gene type",
+      fill = NULL
+    ) +
     ggplot2::scale_fill_manual(values = color_palette, drop = FALSE) +
     ggplot2::guides(fill = ggplot2::guide_legend(reverse = TRUE))
 
@@ -808,7 +814,12 @@ chr_counts_ggplot <- function(counts_data,
     plot <- ggplot2::ggplot(plot_data, ggplot2::aes(x = groups, y = value, fill = groups)) +
       ggplot2::geom_boxplot(outlier.shape = NA) +
       ggplot2::geom_jitter(width = 0.2, height = 0, alpha = 0.6, size = 2) +
-      ggplot2::labs(x = NULL, y = "% Reads", title = "% Reads by Chromosomes") +
+      ggplot2::labs(
+        x = NULL,
+        y = "% Reads",
+        title = "% Reads by Chromosomes",
+        fill = NULL
+      ) +
       ggplot2::scale_fill_manual(values = color_palette)
   } else {
     # Use original barplot
@@ -1045,7 +1056,12 @@ chr_normalized_ggplot <- function(counts_data,
     plot <- ggplot2::ggplot(plot_data, ggplot2::aes(x = groups, y = value, fill = groups)) +
       ggplot2::geom_boxplot(outlier.shape = NA) +
       ggplot2::geom_jitter(width = 0.2, height = 0, alpha = 0.6, size = 2) +
-      ggplot2::labs(x = NULL, y = "Normalized Expression", title = "75th percentile of normalized expression by chromosomes") +
+      ggplot2::labs(
+        x = NULL,
+        y = "Normalized Expression",
+        title = "75th percentile of normalized expression by chromosomes",
+        fill = NULL
+      ) +
       ggplot2::scale_fill_manual(values = color_palette)
   } else {
     # Use original barplot
@@ -1277,7 +1293,8 @@ eda_boxplot <- function(processed_data,
     ) +
     ggplot2::labs(
       title = "Distribution of Transformed Data",
-      y = "Transformed Expression"
+      y = "Transformed Expression",
+      fill = NULL
     )
 
   return(plot)
@@ -1484,7 +1501,8 @@ individual_plots <- function(individual_data,
       position = ggplot2::position_dodge()
       ) +
     ggplot2::labs(
-      y = ifelse(plot_raw, "Raw counts", "Normalized Expression")
+      y = ifelse(plot_raw, "Raw counts", "Normalized Expression"),
+      fill = NULL
     ) +
     ggplot2::geom_dotplot(
       data = plot_data,
