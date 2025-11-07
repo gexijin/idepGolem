@@ -359,7 +359,6 @@ heatmap_main <- function(data,
       if (!is.null(sample_info) && !is.null(select_factors_heatmap)) {
         if (select_factors_heatmap == "Names") {
           groups <- detect_groups(colnames(data))
-          show_legend <- FALSE
         } else {
           ix <- match(select_factors_heatmap, colnames(sample_info))
           groups <- sample_info[, ix]
