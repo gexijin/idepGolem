@@ -5,21 +5,6 @@
 
 [iDEP](http://bioinformatics.sdstate.edu/idep/)  is a bioinformatics platform for analyzing gene expression data graphically, interactively, and reproducibly. The input file is a gene-level expression matrix derived from RNA-Seq, microarray, proteomics, or other methods. Hosted at [South Dakota State Univerisity](http://bioinformatics.sdstate.edu/idep/), iDEP is developed as an R package based on the [Golem framework](https://thinkr-open.github.io/golem/), by a small team led by Dr. [Steven Ge](https://twitter.com/StevenXGe). See [documentation](https://idepsite.wordpress.com/) and [paper](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-018-2486-6). 
 
-### Re-running Prep reports from `.RData`
-Report downloads from the Prep tab now bundle the complete parameter list used to render the HTML report. To regenerate the same report locally:
-1. Download the `.RData` file from the Prep tab and move it to your analysis directory.
-2. In RStudio (or R), load the workspace and render the Markdown document:
-```r
-load("idep_session_YYYY_MM_DD.Rdata")
-library(idepGolem)
-rmarkdown::render(
-  system.file("app/www/RMD", "pre_process_workflow.Rmd", package = "idepGolem"),
-  params = report_params,
-  envir = new.env(parent = globalenv())
-)
-```
-`report_params` is included in every `.RData` download and mirrors the `params` object the Shiny app sends to the report renderer, so the resulting HTML will match what you obtained in the Prep tab.
-
 
 ## License
 (CC BY-NC 3.0) Non-commercial use. For local installation at private institutions, please [contact us](https://www.sdstate.edu/directory/xijin-ge).
@@ -136,3 +121,18 @@ sudo docker rm idep
 ```
 After stopping it, you can restart it by repeating Step 2, which also pulls the latest iDEP image from DockerHub. We update it frequently, make sure you upgrade your image at least on a monthly basis.
 
+
+### Re-running Prep reports from `.RData`
+Report downloads from the Prep tab now bundle the complete parameter list used to render the HTML report. To regenerate the same report locally:
+1. Download the `.RData` file from the Prep tab and move it to your analysis directory.
+2. In RStudio (or R), load the workspace and render the Markdown document:
+```r
+load("idep_session_YYYY_MM_DD.Rdata")
+library(idepGolem)
+rmarkdown::render(
+  system.file("app/www/RMD", "pre_process_workflow.Rmd", package = "idepGolem"),
+  params = report_params,
+  envir = new.env(parent = globalenv())
+)
+```
+`report_params` is included in every `.RData` download and mirrors the `params` object the Shiny app sends to the report renderer, so the resulting HTML will match what you obtained in the Prep tab.
