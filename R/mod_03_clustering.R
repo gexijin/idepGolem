@@ -464,7 +464,7 @@ mod_03_clustering_ui <- function(id) {
                         width = 6,
                         align = "left",
                         conditionalPanel(
-                          condition = "input.cluster_enrichment == 1",
+                          condition = "input.cluster_enrichment == 1 && input.cluster_meth == 2",
                           ns = ns,
                           checkboxInput(
                             inputId = ns("cluster_enrichment_label"),
