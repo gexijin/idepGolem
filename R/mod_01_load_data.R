@@ -480,6 +480,36 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       )
     )
 
+    build_preview_table <- function(df) {
+      df[] <- lapply(df, as.character)
+
+      tags$table(
+        style = "width: 100%; border-collapse: collapse; margin-top: 10px;",
+        tags$thead(
+          tags$tr(
+            lapply(names(df), function(col) {
+              tags$th(
+                style = "border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2;",
+                col
+              )
+            })
+          )
+        ),
+        tags$tbody(
+          lapply(seq_len(nrow(df)), function(i) {
+            tags$tr(
+              lapply(df[i, ], function(val) {
+                tags$td(
+                  style = "border: 1px solid #ddd; padding: 8px; text-align: center;",
+                  val
+                )
+              })
+            )
+          })
+        )
+      )
+    }
+
     get_data_type_details <- function(type) {
       switch(
         as.character(type),
@@ -488,8 +518,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           body = tagList(
             p("Raw gene-by-sample count matrix. Values indicate the number of sequencing reads assigned to each gene. Counts are typically integers, but estimated counts (e.g., from kallisto or Salmon) may be non-integer and should still be treated as count data."),
             tags$ul(
-              tags$li("First column: gene IDs, such as Ensembl, Entrez, symbols, etc."),
-              tags$li("Column headers: sample names; avoid spaces and '-' characters.")
+              tags$li("First column contains gene IDs such as Ensembl (recommended), Entrez, symbols, ..."),
+              tags$li("Column headers: sample names; append '_1', '_2', etc, for replicates; avoid spaces and '-' characters. ")
             )
           )
         ),
@@ -498,8 +528,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           body = tagList(
             p("Provide a gene-by-sample matrix with normalized values such as TPM/FPKM, microarray intensities, proteomics, etc."),
             tags$ul(
-              tags$li("First column: gene IDs such as Ensembl, Entrez, symbols, etc."),
-              tags$li("Column headers: sample names; avoid spaces and '-' characters.")
+              tags$li("First column contains gene IDs such as Ensembl (recommended), Entrez, symbols, ..."),
+              tags$li("Column headers: sample names; append '_1', '_2', etc, for replicates; avoid spaces and '-' characters.")
             )
           )
         ),
@@ -508,7 +538,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           body = tagList(
             p("Upload summary statistics for one or more contrasts."),
             tags$ul(
-              tags$li("First column: gene IDs (Ensembl, symbols, ...)"),
+              tags$li("First column contains gene IDs such as Ensembl (recommended), Entrez, symbols, ..."),
               tags$li("Log2 fold-change columns paired with adjusted P-value/FDR columns."),
               tags$li("Order columns as LFC, FDR, LFC, FDR for each contrast.")
             )
@@ -519,9 +549,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           body = tagList(
             p("Upload log2 fold-changes when p-values or FDRs are unavailable."),
             tags$ul(
-              tags$li("First column: gene IDs (Ensembl, symbols, ...)"),
-              tags$li("One column per contrast containing log2 fold-change values."),
-              tags$li("No accompanying p-value columns are required.")
+              tags$li("First column contains gene IDs such as Ensembl (recommended), Entrez, symbols, ..."),
+              tags$li("One column per contrast containing log2 fold-change values.")
             )
           )
         ),
@@ -849,37 +878,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
       # Build notification UI with details and preview
       notification_ui <- if (!is.null(preview)) {
-        # Convert preview to character to preserve exact display
-        df <- preview
-        df[] <- lapply(df, as.character)
-
-        # Create HTML table manually
-        table_html <- tags$table(
-          style = "width: 100%; border-collapse: collapse; margin-top: 10px;",
-          tags$thead(
-            tags$tr(
-              lapply(names(df), function(col) {
-                tags$th(
-                  style = "border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2;",
-                  col
-                )
-              })
-            )
-          ),
-          tags$tbody(
-            lapply(seq_len(nrow(df)), function(i) {
-              tags$tr(
-                lapply(df[i, ], function(val) {
-                  tags$td(
-                    style = "border: 1px solid #ddd; padding: 8px; text-align: center;",
-                    val
-                  )
-                })
-              )
-            })
-          )
-        )
-
+        table_html <- build_preview_table(preview)
         tagList(
           tags$strong(details$title),
           tags$br(),
@@ -903,6 +902,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         type = "message",
         id = "load_prompt"
       )
+
     }, ignoreNULL = TRUE)
 
     # Dismiss notification when user interacts with file input or demo button
