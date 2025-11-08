@@ -212,6 +212,7 @@ mod_10_doc_ui <- function(id) {
       with a certain parameter using a particular method.
       "),
       h3("Change log"),
+      p("11/6/2025: iDEP 2.3.5. Fix bugs. Improve plots for big datasets. Make Prep report reproducible. "),
       p("11/5/2025: iDEP 2.3.4. Fix bugs on labeling k-Means clusters. "),
       p("10/29/2025: iDEP 2.3.0. Add Marker gene plots. Update reports for each tabs. New video."),      
       p("11/4/2025: iDEP 2.3.2. Improve plots for large sample sets. Cap # of sample groups. Label pathway on k-Means heatmap. "),
