@@ -1071,15 +1071,11 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     output$chr_boxplot_checkbox <- renderUI({
       req(!is.null(load_data$converted_data()))
 
-      # Determine default value based on number of samples
-      n_samples <- ncol(load_data$converted_data())
-      default_value <- n_samples > 50
-
       tagList(
         checkboxInput(
           inputId = ns("chr_use_boxplot"),
           label = "Use boxplot",
-          value = default_value
+          value = FALSE
         ),
         tippy::tippy_this(
           ns("chr_use_boxplot"),
@@ -1159,15 +1155,11 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     output$chr_normalized_boxplot_checkbox <- renderUI({
       req(!is.null(processed_data()$data))
 
-      # Determine default value based on number of samples
-      n_samples <- ncol(processed_data()$data)
-      default_value <- n_samples > 50
-
       tagList(
         checkboxInput(
           inputId = ns("chr_normalized_use_boxplot"),
           label = "Use boxplot",
-          value = default_value
+          value = FALSE
         ),
         tippy::tippy_this(
           ns("chr_normalized_use_boxplot"),

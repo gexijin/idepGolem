@@ -75,15 +75,6 @@ Ge, S.X., Son, E.W. & Yao, R. iDEP: an integrated web application for differenti
 
 <!--ALL SELECTED PARAMETERS-->
 
-```{r, include=FALSE}
-for (i in 1:length(params)) {
-  # exclude loaded data & sample info
-  if (names(params)[i] != "sample_info" && names(params)[i] != "loaded_data") {
-    cat(paste0(names(params)[i], ": ", params[[i]], "\n"))
-  }
-}
-```
-
 <!-- counts_transform guide: -->
 
 <!-- "VST: variance stabilizing transform" = 2 -->
