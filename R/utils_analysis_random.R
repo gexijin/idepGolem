@@ -243,6 +243,10 @@ remove_gene_version <- function(ensembl_ids) {
 #'  beyond this limit are recoded as "Other", resulting in max_groups + 1 total.
 #' @param max_length Maximum length for group names (default 30). Longer names
 #'  are truncated to improve plot readability.
+#' @param preserve_original When TRUE, skips all downstream recoding, capping,
+#'  and truncation logic so the raw parsed group labels are returned unchanged.
+#'  Useful for statistical modeling steps that must operate on the original
+#'  experimental design.
 #'
 #' @export
 #' @return A character vector with the groups. Non-replicated groups become "Other",
@@ -254,7 +258,8 @@ remove_gene_version <- function(ensembl_ids) {
 detect_groups <- function(sample_names,
                           sample_info = NULL,
                           max_groups = 12,
-                          max_length = 30) {
+                          max_length = 30,
+                          preserve_original = FALSE) {
   # sample_names are col names parsing samples by either the name
   # or using a data frame of sample infos.
   # Note that each row of the sample_info data frame represents a sample.
@@ -294,6 +299,11 @@ detect_groups <- function(sample_names,
         sample_group <- sample_info2[, 1]
       }
     }
+  }
+
+  # preserve original group labels if requested (e.g. for statistical modeling)
+  if (isTRUE(preserve_original)) {
+    return(sample_group)
   }
 
   # Improve grouping by handling non-replicated samples

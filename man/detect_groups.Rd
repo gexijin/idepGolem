@@ -8,7 +8,8 @@ detect_groups(
   sample_names,
   sample_info = NULL,
   max_groups = 12,
-  max_length = 30
+  max_length = 30,
+  preserve_original = FALSE
 )
 }
 \arguments{
@@ -21,6 +22,11 @@ beyond this limit are recoded as "Other", resulting in max_groups + 1 total.}
 
 \item{max_length}{Maximum length for group names (default 30). Longer names
 are truncated to improve plot readability.}
+
+\item{preserve_original}{When TRUE, skips all downstream recoding, capping,
+and truncation logic so the raw parsed group labels are returned unchanged.
+Useful for statistical modeling steps that must operate on the original
+experimental design.}
 }
 \value{
 A character vector with the groups. Non-replicated groups become "Other",

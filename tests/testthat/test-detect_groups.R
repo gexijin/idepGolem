@@ -174,3 +174,33 @@ test_that("detect_groups respects custom max_groups parameter", {
   # Should have "Other" group
   expect_true("Other" %in% groups)
 })
+
+test_that("detect_groups preserve_original bypasses recoding and truncation", {
+  uniq_samples <- c("Alpha1", "Beta1", "Gamma1")
+  groups_preserve <- detect_groups(uniq_samples, preserve_original = TRUE)
+  expect_equal(groups_preserve, c("Alpha", "Beta", "Gamma"))
+
+  many_groups <- as.vector(t(outer(
+    paste0("Group", sprintf("%02d", 1:20)),
+    c("_1", "_2"),
+    paste0
+  )))
+  limited <- suppressWarnings(detect_groups(many_groups))
+  expect_true("Other" %in% limited)
+
+  preserved <- detect_groups(many_groups, preserve_original = TRUE)
+  expect_false("Other" %in% preserved)
+  expect_equal(length(unique(preserved)), length(unique(sub("_.*", "", many_groups))))
+
+  long_names <- c(
+    "SuperLongGroupNameExceedingThirtyCharacters_1",
+    "SuperLongGroupNameExceedingThirtyCharacters_2",
+    "ShortGroup_1",
+    "ShortGroup_2"
+  )
+  default_long <- suppressWarnings(detect_groups(long_names))
+  expect_equal(nchar(default_long[1]), 30)
+
+  preserved_long <- detect_groups(long_names, preserve_original = TRUE)
+  expect_true(nchar(preserved_long[1]) > 30)
+})

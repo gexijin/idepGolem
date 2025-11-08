@@ -132,7 +132,8 @@ list_model_comparisons_ui <- function(sample_info,
   if (is.null(sample_info) | is.null(select_factors_model)) {
     factors <- as.character(
       detect_groups(
-        colnames(processed_data)
+        colnames(processed_data),
+        preserve_original = TRUE
       )
     )
 
@@ -581,7 +582,8 @@ deg_deseq2 <- function(raw_counts,
   groups <- as.character(
     detect_groups(
       colnames(raw_counts),
-      sample_info
+      sample_info,
+      preserve_original = TRUE
     )
   )
   unique_groups <- unique(groups)
@@ -1329,7 +1331,8 @@ deg_limma <- function(processed_data,
   }
   groups <- detect_groups(
     colnames(processed_data),
-    sample_info_effective
+    sample_info_effective,
+    preserve_original = TRUE
   )
   unique_groups <- unique(groups)
 
@@ -1601,7 +1604,11 @@ deg_limma <- function(processed_data,
       # Remove factors not used.
       sample_info_filter <- sample_info[, key_model_factors, drop = F]
       # groups <- apply(sample_info_filter, 1, function(x) paste(x, collapse = "_"))
-      groups <- detect_groups(colnames(processed_data), sample_info_filter)
+      groups <- detect_groups(
+        colnames(processed_data),
+        sample_info_filter,
+        preserve_original = TRUE
+      )
       unique_groups <- unique(groups)
 
       groups <- factor(groups, levels = unique_groups)
@@ -2906,7 +2913,11 @@ plot_deg_scatter <- function(select_contrast,
 
   genes <- processed_data[, iz]
 
-  g <- detect_groups(colnames(genes), sample_info)
+  g <- detect_groups(
+    colnames(genes),
+    sample_info,
+    preserve_original = TRUE
+  )
 
   if (length(unique(g)) > 2) {
     plot.new()
