@@ -297,6 +297,9 @@ detect_groups <- function(sample_names,
       names(sample_group) <- row.names(sample_info2)
       if (min(table(sample_group)) == 1) { # no replicates?
         sample_group <- sample_info2[, 1]
+      } else if (length(unique(sample_group)) > max_groups) {
+        # too many group combinations; default to first design column
+        sample_group <- sample_info2[, 1]
       }
     }
   }
