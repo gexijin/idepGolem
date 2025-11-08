@@ -325,15 +325,17 @@ if (is.null(params$selected_gene) || length(params$selected_gene) == 0) {
 }
 ```
 
-## Reproduce This Report Locally
+<br>
 
-1. Install the latest `idepGolem` package (once per machine):
+## To Reproduce This Report Locally
+
+1. Install the latest `idepGolem` package (once per machine). All the functions and the Rmarkdown code are downloaded with the package. 
 
 ```r
 install.packages("devtools")
 devtools::install_github("gexijin/idepGolem", upgrade = "never")
 ```
-All the functions and the Rmarkdown code are downloaded with the package. 
+
 
 2. Download the RData file from the Prep tab. 
 
