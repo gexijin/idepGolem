@@ -24,7 +24,7 @@ get_x_axis_label_size <- function(n_samples) {
   } else if (n_samples <= 100) {
         return(10)
   } else {
-    return(8)
+    return(10)
   }
 }
 
@@ -1433,10 +1433,12 @@ individual_plots <- function(individual_data,
     dplyr::filter(symbol %in% selected_gene) |>
     tidyr::pivot_longer(!symbol, names_to = "sample", values_to = "value")
   
-  if (ncol(plot_data) < 31) {
-    x_axis_labels <- 14
+  sample_count <- length(unique(plot_data$sample))
+  gene_count <- length(unique(plot_data$symbol))
+  x_axis_labels <- if (gene_plot_box == 2) {
+    get_x_axis_label_size(sample_count)
   } else {
-    x_axis_labels <- 10
+    get_x_axis_label_size(gene_count)
   }
 
   if (gene_plot_box == 2) {

@@ -52,7 +52,42 @@ golem_add_external_resources <- function() {
     bundle_resources(
       path = app_sys("app/www"),
       app_title = "iDEP"
-    )
+    ),
+    tags$style(HTML(
+      "
+.idep-scrollable-plot {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.idep-scrollable-plot .shiny-plot-output {
+  max-width: none;
+}
+
+.idep-scrollable-plot .shiny-plot-output img {
+  display: block;
+  max-width: none;
+}
+"
+    )),
+    tags$script(HTML(
+      "
+Shiny.addCustomMessageHandler('idep-set-plot-width', function(message) {
+  if (!message || !message.id) { return; }
+  var el = document.getElementById(message.id);
+  if (!el) { return; }
+  if (message.width === null || typeof message.width === 'undefined') {
+    el.style.width = '';
+    el.style.minWidth = '';
+    return;
+  }
+  var width = parseInt(message.width, 10);
+  if (!isFinite(width) || width <= 0) { return; }
+  el.style.width = width + 'px';
+  el.style.minWidth = width + 'px';
+});
+"
+    ))
     # Add here other external resources
     # for example, you can add shinyalert::useShinyalert()
   )

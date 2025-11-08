@@ -290,7 +290,7 @@ mod_02_pre_process_ui <- function(id) {
           tabPanel(
             title = "Reads",
             br(),
-            plotOutput(
+            scrollable_plot_output(
               outputId = ns("raw_counts_gg"),
               width = "100%",
               height = "500px"
@@ -359,7 +359,7 @@ mod_02_pre_process_ui <- function(id) {
             # Boxplot
             conditionalPanel(
               condition = "input.distribution_plot_type == 'boxplot'",
-              plotOutput(
+              scrollable_plot_output(
                 outputId = ns("eda_boxplot"),
                 width = "100%",
                 height = "500px"
@@ -479,7 +479,7 @@ mod_02_pre_process_ui <- function(id) {
               conditionalPanel(
                 condition = "output.data_file_format == 1",
                 br(),
-                plotOutput(
+                scrollable_plot_output(
                   outputId = ns("rRNA_counts_gg"),
                   width = "100%",
                   height = "500px"
@@ -516,7 +516,7 @@ mod_02_pre_process_ui <- function(id) {
                 uiOutput(ns("gene_type_warning")),
                 br(),
                 hr(),
-                plotOutput(
+                scrollable_plot_output(
                   outputId = ns("chr_counts_gg"),
                   width = "100%",
                   height = "2000px"
@@ -545,7 +545,7 @@ mod_02_pre_process_ui <- function(id) {
                 ns = ns
               ),
             
-              plotOutput(
+              scrollable_plot_output(
                 outputId = ns("chr_normalized_gg"),
                 width = "100%",
                 height = "2000px"
@@ -649,7 +649,7 @@ mod_02_pre_process_ui <- function(id) {
                   inputId = ns("angle_ind_axis_lab"),
                   label = "Rotate Labels",
                   choices = c(0, 45, 90),
-                  selected = 45
+                  selected = 90
                 ),
                 tippy::tippy_this(
                   ns("angle_ind_axis_lab"),
@@ -659,7 +659,7 @@ mod_02_pre_process_ui <- function(id) {
               )
             ),
 
-            plotOutput(
+            scrollable_plot_output(
               outputId = ns("gene_plot"),
               width = "100%",
               height = "500px"
@@ -823,7 +823,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
 
       return(processed_data)
     })
-    
+
     observe({
       req(processed_data()$data_size[3] < 1000)
       showNotification(
@@ -856,11 +856,17 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
           type = "Raw",
           plots_color_select = load_data$plots_color_select()
         )
-        refine_ggplot2(
+        plot <- refine_ggplot2(
           p = p,
           gridline = load_data$plot_grid_lines(),
           ggplot2_theme = load_data$ggplot2_theme()
         )
+        update_scrollable_plot_width(
+          session = session,
+          output_id = "raw_counts_gg",
+          n_samples = ncol(processed_data()$raw_counts)
+        )
+        plot
       })
     })
     
@@ -955,12 +961,19 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     rRNA_counts <- reactive({
       req(!is.null(rRNA_counts_result()))
       result <- rRNA_counts_result()
-      p <- refine_ggplot2(
+      plot <- refine_ggplot2(
         p = result$plot,
         gridline = load_data$plot_grid_lines(),
         ggplot2_theme = load_data$ggplot2_theme()
       )
-      return(p)
+      converted <- load_data$converted_data()
+      req(!is.null(converted))
+      update_scrollable_plot_width(
+        session = session,
+        output_id = "rRNA_counts_gg",
+        n_samples = ncol(converted)
+      )
+      plot
     })
     output$rRNA_counts_gg <- renderPlot({
       print(rRNA_counts())
@@ -1100,12 +1113,19 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     chr_counts <- reactive({
       req(!is.null(chr_counts_result()))
       result <- chr_counts_result()
-      p <- refine_ggplot2(
+      plot <- refine_ggplot2(
         p = result$plot,
         gridline = load_data$plot_grid_lines(),
         ggplot2_theme = load_data$ggplot2_theme()
       )
-      return(p)
+      converted <- load_data$converted_data()
+      req(!is.null(converted))
+      update_scrollable_plot_width(
+        session = session,
+        output_id = "chr_counts_gg",
+        n_samples = ncol(converted)
+      )
+      plot
     })
     output$chr_counts_gg <- renderPlot({
       print(chr_counts())
@@ -1181,12 +1201,19 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     chr_normalized <- reactive({
       req(!is.null(chr_normalized_result()))
       result <- chr_normalized_result()
-      p <- refine_ggplot2(
+      plot <- refine_ggplot2(
         p = result$plot,
         gridline = load_data$plot_grid_lines(),
         ggplot2_theme = load_data$ggplot2_theme()
       )
-      return(p)
+      processed <- processed_data()$data
+      req(!is.null(processed))
+      update_scrollable_plot_width(
+        session = session,
+        output_id = "chr_normalized_gg",
+        n_samples = ncol(processed)
+      )
+      plot
     })
     output$chr_normalized_gg <- renderPlot({
       print(chr_normalized())
@@ -1341,11 +1368,17 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
           sample_info = load_data$sample_info(),
           plots_color_select = load_data$plots_color_select()
         )
-        refine_ggplot2(
+        plot <- refine_ggplot2(
           p = p,
           gridline = load_data$plot_grid_lines(),
           ggplot2_theme = load_data$ggplot2_theme()
         )
+        update_scrollable_plot_width(
+          session = session,
+          output_id = "eda_boxplot",
+          n_samples = ncol(processed_data()$data)
+        )
+        plot
       })
     })
     output$eda_boxplot <- renderPlot({
@@ -1628,11 +1661,23 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
           max_groups = load_data$max_groups(),
           max_length = load_data$max_group_name_length()
         )
-        refine_ggplot2(
+        plot <- refine_ggplot2(
           p = p,
           gridline = load_data$plot_grid_lines(),
           ggplot2_theme = load_data$ggplot2_theme()
         )
+        use_individual_samples <- isTRUE(as.numeric(input$gene_plot_box) == 2)
+        samples_for_width <- if (use_individual_samples) {
+          ncol(individual_data())
+        } else {
+          NULL
+        }
+        update_scrollable_plot_width(
+          session = session,
+          output_id = "gene_plot",
+          n_samples = samples_for_width
+        )
+        plot
       })
     })
   
