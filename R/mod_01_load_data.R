@@ -935,13 +935,42 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     demo_choices <- reactive({
       req(input$data_file_format)
 
-      if (input$data_file_format > 0) {
-        files <- idep_data$demo_file_info
-        files <- files[files$type == input$data_file_format, ]
-        setNames(as.list(files$ID), files$name)
-      } else {
-        NULL
+      if (input$data_file_format <= 0) {
+        return(NULL)
       }
+
+      files <- idep_data$demo_file_info
+      files <- files[files$type == input$data_file_format, , drop = FALSE]
+
+      selected_species <- selected_species_name()
+      if (is.null(selected_species) || !nzchar(selected_species)) {
+        return(NULL)
+      }
+      if (identical(selected_species, "NEW")) {
+        return(NULL)
+      }
+      has_species_column <- "species" %in% names(files)
+
+      if (
+        has_species_column &&
+        !is.null(selected_species) &&
+        nzchar(selected_species)
+      ) {
+        normalize_species <- function(x) {
+          tolower(trimws(as.character(x)))
+        }
+
+        species_match <- normalize_species(files$species) ==
+          normalize_species(selected_species)
+
+        files <- files[species_match, , drop = FALSE]
+      }
+
+      if (!nrow(files)) {
+        return(NULL)
+      }
+
+      setNames(as.list(files$ID), files$name)
     })
 
     observeEvent(demo_choices(), {
@@ -970,6 +999,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       req(input$data_file_format)
 
       choices <- demo_choices()
+      has_demo_datasets <- !is.null(choices) && length(choices) > 0
+
       tagList(
         strong("3. Expression matrix (CSV or text)"),
         fluidRow(
@@ -1003,19 +1034,21 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             )
           ),
 
-          column(
-            width = 4,
-            actionButton(
-              inputId = ns("demo_modal_button"),
-              label = tags$span("Demo Data", style = "color: red;"),
-              class = "btn-default"
-            ),
-            tippy::tippy_this(
-              ns("demo_modal_button"),
-              "Load demo datasets.",
-              theme = "light"
+          if (has_demo_datasets) {
+            column(
+              width = 4,
+              actionButton(
+                inputId = ns("demo_modal_button"),
+                label = tags$span("Demo Data", style = "color: red;"),
+                class = "btn-default"
+              ),
+              tippy::tippy_this(
+                ns("demo_modal_button"),
+                "Load demo datasets.",
+                theme = "light"
+              )
             )
-          ),
+          },
           column(
             width = 2,
             align = "center",
