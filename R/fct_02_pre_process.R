@@ -133,7 +133,7 @@ pre_process <- function(data,
     } else if (missing_value == "treatAsZero") {
       data[is.na(data)] <- 0
     } else if (missing_value == "geneMedianInGroup") {
-      sample_groups <- detect_groups(colnames(data))
+      sample_groups <- detect_groups(colnames(data), preserve_original = TRUE)
       for (group in unique(sample_groups)) {
         samples <- which(sample_groups == group)
         row_medians <- apply(
@@ -1718,7 +1718,8 @@ counts_bias_message <- function(raw_counts,
   groups <- as.factor(
     detect_groups(
       colnames(raw_counts),
-      sample_info
+      sample_info,
+      preserve_original = TRUE
     )
   )
   message <- NULL

@@ -1854,7 +1854,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
 
       sample_groups <- detect_groups(
         sample_names,
-        pre_process$sample_info()
+        pre_process$sample_info(),
+        preserve_original = TRUE
       )
       sample_groups[is.na(sample_groups) | sample_groups == ""] <- sample_names[is.na(sample_groups) | sample_groups == ""]
 

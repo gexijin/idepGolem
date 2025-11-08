@@ -416,7 +416,10 @@ find_contrast_samples <- function(select_contrast,
                                   reference_levels = NULL,
                                   counts_deg_method = NULL,
                                   data_file_format = NULL) {
-  iz <- match(detect_groups(all_sample_names), unlist(strsplit(select_contrast, "-")))
+  iz <- match(
+    detect_groups(all_sample_names, preserve_original = TRUE),
+    unlist(strsplit(select_contrast, "-"))
+  )
   iz <- which(!is.na(iz))
 
   # Has design file, but didn't select factors
