@@ -131,6 +131,7 @@ load("idep_session_YYYY_MM_DD.Rdata")
 library(idepGolem)
 rmarkdown::render(
   system.file("app/www/RMD", "pre_process_workflow.Rmd", package = "idepGolem"),
+  output_dir = getwd(),
   params = report_params,
   envir = new.env(parent = globalenv())
 )

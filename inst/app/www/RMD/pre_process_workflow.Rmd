@@ -71,6 +71,7 @@ Ge, S.X., Son, E.W. & Yao, R. iDEP: an integrated web application for differenti
 ------------------------------------------------------------------------
 
 
+
 <!-- `r params$descr` -->
 
 <!--ALL SELECTED PARAMETERS-->
@@ -323,6 +324,31 @@ if (is.null(params$selected_gene) || length(params$selected_gene) == 0) {
   print(p)
 }
 ```
+
+## Re-running This Report Locally
+
+1. Install the latest `idepGolem` package (once per machine):
+
+```r
+install.packages("devtools")
+devtools::install_github("gexijin/idepGolem", upgrade = "never")
+```
+
+2. Load the downloaded `.RData` workspace and render this report directly in R or RStudio:
+
+```r
+load("idep_session_YYYY_MM_DD.Rdata")
+library(idepGolem)
+rmarkdown::render(
+  system.file("app/www/RMD", "pre_process_workflow.Rmd", package = "idepGolem"),
+  output_dir = getwd(),
+  params = report_params,
+  envir = new.env(parent = globalenv())
+)
+```
+
+The resulting HTML will reproduce what you see in the Prep tab, using the saved `report_params` list bundled inside every `.RData` download.
+
 
 <br>
 
