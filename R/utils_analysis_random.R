@@ -368,37 +368,29 @@ detect_groups <- function(sample_names,
     }
   }
 
-  # Truncate long group names to prevent plot display issues
-  # Group names longer than max_length characters will be truncated
+  # Truncate long group names only if doing so keeps groups distinct
   long_groups <- unique(sample_group[nchar(sample_group) > max_length])
 
   if (length(long_groups) > 0) {
-    # Truncate all long group names
-    sample_group <- ifelse(
-      nchar(sample_group) > max_length,
-      substr(sample_group, 1, max_length),
-      sample_group
-    )
+    truncated_group <- sample_group
+    needs_trunc <- nchar(sample_group) > max_length
+    truncated_group[needs_trunc] <- substr(sample_group[needs_trunc], 1, max_length)
 
-    # Show warning message once
-    if (requireNamespace("shiny", quietly = TRUE) && !is.null(shiny::getDefaultReactiveDomain())) {
-      shiny::showNotification(
-        ui = paste0(
-          "Warning: Some group names were longer than ", max_length,
-          " characters and have been truncated to improve plot readability."
-        ),
-        id = "long_group_names_truncated",
-        duration = 8,
-        type = "warning"
-      )
-    } else {
-      warning(
-        "Some group names were longer than ", max_length,
-        " characters and have been truncated: ",
-        paste(long_groups[1:min(3, length(long_groups))], collapse = ", "),
-        if (length(long_groups) > 3) " ..." else "",
-        call. = FALSE
-      )
+    if (length(unique(truncated_group)) == length(unique(sample_group))) {
+      sample_group <- truncated_group
+
+      # Show warning message once
+      if (requireNamespace("shiny", quietly = TRUE) && !is.null(shiny::getDefaultReactiveDomain())) {
+        shiny::showNotification(
+          ui = paste0(
+            "Warning: Some group names were longer than ", max_length,
+            " characters and have been truncated to improve plot readability."
+          ),
+          id = "long_group_names_truncated",
+          duration = 8,
+          type = "warning"
+        )
+      }
     }
   }
 
