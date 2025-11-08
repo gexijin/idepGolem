@@ -1715,6 +1715,109 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       }
     )
 
+    build_report_params <- function() {
+      processed <- processed_data()
+      converted <- load_data$converted_data()
+
+      if (is.null(processed) || is.null(converted)) {
+        return(NULL)
+      }
+
+      individual_data_current <- individual_data()
+      safe_input <- function(value, default) {
+        if (is.null(value) || length(value) == 0) {
+          default
+        } else {
+          value
+        }
+      }
+
+      selected_gene <- input$selected_gene
+      if (is.null(selected_gene) || length(selected_gene) == 0) {
+        if (!is.null(individual_data_current) && nrow(individual_data_current) > 0) {
+          sorted <- sort(
+            apply(
+              individual_data_current,
+              MARGIN = 1,
+              FUN = function(x) sd(x)
+            ),
+            decreasing = TRUE
+          )
+          if (length(sorted) > 0) {
+            selected_gene <- names(sorted)[seq_len(min(2, length(sorted)))]
+          } else {
+            selected_gene <- character(0)
+          }
+        } else {
+          selected_gene <- character(0)
+        }
+      }
+
+      chr_use_boxplot <- input$chr_use_boxplot
+      if (is.null(chr_use_boxplot)) {
+        chr_use_boxplot <- ncol(converted) > 50
+      }
+
+      chr_normalized_use_boxplot <- input$chr_normalized_use_boxplot
+      if (is.null(chr_normalized_use_boxplot)) {
+        chr_normalized_use_boxplot <- if (!is.null(processed$data)) {
+          ncol(processed$data) > 50
+        } else {
+          FALSE
+        }
+      }
+
+      heat_choice <- input$heat_color_select
+      if (is.null(heat_choice) || !heat_choice %in% names(heat_colors)) {
+        heat_choice <- names(heat_colors)[1]
+      }
+      sd_color <- heat_colors[[heat_choice]]
+
+      gene_plot_box <- safe_input(input$gene_plot_box, 1)
+      use_sd <- safe_input(input$use_sd, FALSE)
+      lab_rotate <- safe_input(input$angle_ind_axis_lab, 45)
+      plot_raw <- safe_input(input$plot_raw, FALSE)
+      plot_tukey <- safe_input(input$plot_tukey, FALSE)
+
+      params <- list(
+        loaded_data = converted,
+        individual_data = individual_data_current,
+        descr = processed$descr,
+        sample_info = load_data$sample_info(),
+        all_gene_info = load_data$all_gene_info(),
+        data_file_format = load_data$data_file_format(),
+        no_id_conversion = input$no_id_conversion,
+        min_counts = input$min_counts,
+        n_min_samples_count = input$n_min_samples_count,
+        counts_transform = input$counts_transform,
+        counts_log_start = input$counts_log_start,
+        log_transform_fpkm = input$log_transform_fpkm,
+        log_start_fpkm = input$log_start_fpkm,
+        low_filter_fpkm = input$low_filter_fpkm,
+        n_min_samples_fpkm = input$n_min_samples_fpkm,
+        missing_value = input$missing_value,
+        scatter_x = input$scatter_x,
+        scatter_y = input$scatter_y,
+        sd_color = sd_color,
+        rank = input$rank,
+        no_fdr = load_data$no_fdr(),
+        selected_gene = selected_gene,
+        gene_plot_box = gene_plot_box,
+        use_sd = use_sd,
+        lab_rotate = lab_rotate,
+        plot_raw = plot_raw,
+        plot_tukey = plot_tukey,
+        plots_color_select = load_data$plots_color_select(),
+        plot_grid_lines = load_data$plot_grid_lines(),
+        ggplot2_theme = load_data$ggplot2_theme(),
+        chr_use_boxplot = chr_use_boxplot,
+        chr_normalized_use_boxplot = chr_normalized_use_boxplot,
+        mapping_statistics = converted_message()
+      )
+
+      params
+    }
+
     # Markdown report
     output$report <- downloadHandler(
       # For PDF output, change this to "report.pdf"
@@ -1740,97 +1843,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
           markdown_location <- app_sys("app/www/RMD/pre_process_workflow.Rmd")
           file.copy(from = markdown_location, to = tempReport, overwrite = TRUE)
 
-          # Persist current chromosome plot selections for report rendering
-          chr_use_boxplot <- input$chr_use_boxplot
-          if (is.null(chr_use_boxplot)) {
-            chr_use_boxplot <- if (!is.null(load_data$converted_data())) {
-              ncol(load_data$converted_data()) > 50
-            } else {
-              FALSE
-            }
-          }
-          chr_normalized_use_boxplot <- input$chr_normalized_use_boxplot
-          if (is.null(chr_normalized_use_boxplot)) {
-            chr_normalized_use_boxplot <- if (!is.null(processed_data()$data)) {
-              ncol(processed_data()$data) > 50
-            } else {
-              FALSE
-            }
-          }
-
-          individual_data_current <- individual_data()
-          
-          safe_input <- function(value, default) {
-            if (is.null(value) || length(value) == 0) {
-              default
-            } else {
-              value
-            }
-          }
-          
-          selected_gene <- input$selected_gene
-          if (is.null(selected_gene) || length(selected_gene) == 0) {
-            if (!is.null(individual_data_current) && nrow(individual_data_current) > 0) {
-              sorted <- sort(
-                apply(
-                  individual_data_current,
-                  MARGIN = 1,
-                  FUN = function(x) sd(x)
-                ),
-                decreasing = TRUE
-              )
-              if (length(sorted) > 0) {
-                selected_gene <- names(sorted)[seq_len(min(2, length(sorted)))]
-              } else {
-                selected_gene <- character(0)
-              }
-            } else {
-              selected_gene <- character(0)
-            }
-          }
-          
-          gene_plot_box <- safe_input(input$gene_plot_box, 1)
-          use_sd <- safe_input(input$use_sd, FALSE)
-          lab_rotate <- safe_input(input$angle_ind_axis_lab, 45)
-          plot_raw <- safe_input(input$plot_raw, FALSE)
-          plot_tukey <- safe_input(input$plot_tukey, FALSE)
-          
-          # Set up parameters to pass to Rmd document
-          params <- list(
-            loaded_data = load_data$converted_data(),
-            individual_data = individual_data_current,
-            descr = processed_data()$descr,
-            sample_info = load_data$sample_info(),
-            all_gene_info = load_data$all_gene_info(),
-            data_file_format = load_data$data_file_format(),
-            no_id_conversion = input$no_id_conversion,
-            min_counts = input$min_counts,
-            n_min_samples_count = input$n_min_samples_count,
-            counts_transform = input$counts_transform,
-            counts_log_start = input$counts_log_start,
-            log_transform_fpkm = input$log_transform_fpkm,
-            log_start_fpkm = input$log_start_fpkm,
-            low_filter_fpkm = input$low_filter_fpkm,
-            n_min_samples_fpkm = input$n_min_samples_fpkm,
-            missing_value = input$missing_value,
-            scatter_x = input$scatter_x,
-            scatter_y = input$scatter_y,
-            sd_color = heat_colors[[input$heat_color_select]],
-            rank = input$rank,
-            no_fdr = load_data$no_fdr(),
-            selected_gene = selected_gene,
-            gene_plot_box = gene_plot_box,
-            use_sd = use_sd,
-            lab_rotate = lab_rotate,
-            plot_raw = plot_raw,
-            plot_tukey = plot_tukey,
-            plots_color_select = load_data$plots_color_select(),
-            plot_grid_lines = load_data$plot_grid_lines(),
-            ggplot2_theme = load_data$ggplot2_theme(),
-            chr_use_boxplot = chr_use_boxplot,
-            chr_normalized_use_boxplot = chr_normalized_use_boxplot,
-            mapping_statistics = converted_message()
-          )
+          params <- build_report_params()
           req(params)
 
           # Knit the document, passing in the `params` list, and eval it in a
@@ -1849,6 +1862,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     output$rds <- downloadHandler(
       filename = paste0("idep_session_", format(Sys.time(), "%Y_%m_%d"), ".Rdata"),
       content = function(file) {
+        report_params <- build_report_params()
         if (load_data$data_file_format() == 1) {
           loaded_data <- load_data$converted_data()
           sample_info <- load_data$sample_info()
@@ -1877,6 +1891,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
             scatter_y,
             sd_color,
             rank,
+            report_params,
             file = file
           )
         }
@@ -1893,7 +1908,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
             scatter_x = input$scatter_x,
             scatter_y = input$scatter_y,
             sd_color = heat_colors[[input$heat_color_select]],
-            rank = input$rank
+            rank = input$rank,
+            report_params = report_params
           )
           save(params_r, file = file)
         }
@@ -1908,7 +1924,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
             scatter_y = input$scatter_y,
             sd_color = heat_colors[[input$heat_color_select]],
             rank = input$rank,
-            no_fdr = load_data$no_fdr()
+            no_fdr = load_data$no_fdr(),
+            report_params = report_params
           )
           save(params_r, file = file)
         }
