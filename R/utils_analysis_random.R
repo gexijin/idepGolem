@@ -227,6 +227,48 @@ remove_gene_version <- function(ensembl_ids) {
 }
 
 
+#' Truncate labels without creating duplicates
+#'
+#' Safely truncates a character vector to the specified maximum length while
+#' ensuring that no new duplicate values are introduced. If potential
+#' duplication is detected, the original labels are returned unchanged.
+#'
+#' @param labels Character vector of labels to truncate.
+#' @param max_length Maximum number of characters to keep.
+#'
+#' @return Character vector with labels truncated when safe.
+#' @keywords internal
+truncate_labels_safely <- function(labels, max_length) {
+  if (is.null(labels) || length(labels) == 0) {
+    return(labels)
+  }
+
+  max_length <- suppressWarnings(as.numeric(max_length))[1]
+
+  if (is.null(max_length) || is.na(max_length) || !is.finite(max_length) || max_length <= 0) {
+    return(labels)
+  }
+
+  max_length <- floor(max_length)
+
+  labels_chr <- as.character(labels)
+  char_lens <- nchar(labels_chr, keepNA = TRUE)
+  needs_trunc <- !is.na(char_lens) & char_lens > max_length
+
+  if (!any(needs_trunc)) {
+    return(labels_chr)
+  }
+
+  truncated <- labels_chr
+  truncated[needs_trunc] <- substr(truncated[needs_trunc], 1, max_length)
+
+  if (length(unique(truncated)) == length(unique(labels_chr))) {
+    return(truncated)
+  }
+
+  labels_chr
+}
+
 #' Detect groups by sample names
 #'
 #' Detects groups from column names in sample info file so that they can be used
@@ -368,29 +410,22 @@ detect_groups <- function(sample_names,
     }
   }
 
-  # Truncate long group names only if doing so keeps groups distinct
-  long_groups <- unique(sample_group[nchar(sample_group) > max_length])
+  truncated_group <- truncate_labels_safely(sample_group, max_length)
 
-  if (length(long_groups) > 0) {
-    truncated_group <- sample_group
-    needs_trunc <- nchar(sample_group) > max_length
-    truncated_group[needs_trunc] <- substr(sample_group[needs_trunc], 1, max_length)
+  if (!identical(truncated_group, sample_group)) {
+    sample_group <- truncated_group
 
-    if (length(unique(truncated_group)) == length(unique(sample_group))) {
-      sample_group <- truncated_group
-
-      # Show warning message once
-      if (requireNamespace("shiny", quietly = TRUE) && !is.null(shiny::getDefaultReactiveDomain())) {
-        shiny::showNotification(
-          ui = paste0(
-            "Warning: Some group names were longer than ", max_length,
-            " characters and have been truncated to improve plot readability."
-          ),
-          id = "long_group_names_truncated",
-          duration = 8,
-          type = "warning"
-        )
-      }
+    # Show warning message once
+    if (requireNamespace("shiny", quietly = TRUE) && !is.null(shiny::getDefaultReactiveDomain())) {
+      shiny::showNotification(
+        ui = paste0(
+          "Warning: Some group names were longer than ", max_length,
+          " characters and have been truncated to improve plot readability."
+        ),
+        id = "long_group_names_truncated",
+        duration = 8,
+        type = "warning"
+      )
     }
   }
 

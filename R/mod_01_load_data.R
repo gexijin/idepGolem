@@ -1535,7 +1535,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         experiment_file = input$experiment_file,
         go_button = go_button_count(),
         demo_data_file = demo_data_file()[1],
-        demo_metadata_file = demo_data_file()[2]
+        demo_metadata_file = demo_data_file()[2],
+        max_group_name_length = input$max_group_name_length
       )
     })
 

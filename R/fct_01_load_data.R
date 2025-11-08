@@ -123,6 +123,9 @@ safe_numeric_conversion <- function(x) {
 #' @param demo_data_file Expression demo data path \code{idep_data$demo_data_file}
 #' @param demo_metadata_file Experiment demo data path
 #'  \code{idep_data$demo_metadata_file}
+#' @param max_group_name_length Maximum allowed character length for factor
+#'  names detected from the design file. Longer names are truncated when doing
+#'  so will not create duplicate labels. Default is 30.
 #'
 #' @export
 #' @return This returns a list that contains the expression data
@@ -134,7 +137,8 @@ input_data <- function(expression_file,
                        experiment_file,
                        go_button,
                        demo_data_file,
-                       demo_metadata_file) {
+                       demo_metadata_file,
+                       max_group_name_length = 30) {
   in_file_data <- expression_file
   in_file_data <- in_file_data$datapath
 
@@ -302,6 +306,46 @@ input_data <- function(expression_file,
           header = TRUE,
           colClasses = "character"
         ))
+
+        truncated_cols <- truncate_labels_safely(colnames(sample_info_demo), max_group_name_length)
+        if (!identical(truncated_cols, colnames(sample_info_demo))) {
+          colnames(sample_info_demo) <- truncated_cols
+
+          if (requireNamespace("shiny", quietly = TRUE) && !is.null(shiny::getDefaultReactiveDomain())) {
+            shiny::showNotification(
+              ui = paste0(
+                "Warning: Some factor names were longer than ", max_group_name_length,
+                " characters and have been truncated to improve readability."
+              ),
+              id = "design_factor_names_truncated",
+              duration = 8,
+              type = "warning"
+            )
+          }
+        }
+
+        levels_truncated_demo <- FALSE
+        if (!is.null(dim(sample_info_demo)) && ncol(sample_info_demo) > 0) {
+          for (j in seq_len(ncol(sample_info_demo))) {
+            truncated_levels <- truncate_labels_safely(sample_info_demo[, j], max_group_name_length)
+            if (!identical(truncated_levels, sample_info_demo[, j])) {
+              sample_info_demo[, j] <- truncated_levels
+              levels_truncated_demo <- TRUE
+            }
+          }
+        }
+
+        if (isTRUE(levels_truncated_demo) && requireNamespace("shiny", quietly = TRUE) && !is.null(shiny::getDefaultReactiveDomain())) {
+          shiny::showNotification(
+            ui = paste0(
+              "Warning: Some factor levels were longer than ", max_group_name_length,
+              " characters and have been truncated to improve readability."
+            ),
+            id = "design_factor_levels_truncated",
+            duration = 8,
+            type = "warning"
+          )
+        }
       }
     }
     return(list(
@@ -356,6 +400,24 @@ input_data <- function(expression_file,
     rownames(expr) <- gsub("\\.", "", rownames(expr))
     rownames(expr) <- gsub(" ", "", rownames(expr))
 
+    truncated_factor_names <- truncate_labels_safely(rownames(expr), max_group_name_length)
+
+    if (!identical(truncated_factor_names, rownames(expr))) {
+      rownames(expr) <- truncated_factor_names
+
+      if (requireNamespace("shiny", quietly = TRUE) && !is.null(shiny::getDefaultReactiveDomain())) {
+        shiny::showNotification(
+          ui = paste0(
+            "Warning: Some factor names were longer than ", max_group_name_length,
+            " characters and have been truncated to improve readability."
+          ),
+          id = "design_factor_names_truncated",
+          duration = 8,
+          type = "warning"
+        )
+      }
+    }
+
     # Matching with column names of expression file ----------
     matches <- match(
       toupper(colnames(data)), toupper(colnames(expr))
@@ -373,6 +435,7 @@ input_data <- function(expression_file,
 
     # Check factor levels, change if needed ----------
     ignored_factors <- c()
+    levels_truncated <- FALSE
     for (i in 1:nrow(expr)) {
       expr[i, ] <- gsub("-", "", expr[i, ])
       expr[i, ] <- gsub("\\.", "", expr[i, ])
@@ -383,6 +446,24 @@ input_data <- function(expression_file,
       if(length(unique(t(expr[i, ]))) == 1) {
         ignored_factors <- c(ignored_factors, i)
       }
+
+      truncated_levels <- truncate_labels_safely(expr[i, ], max_group_name_length)
+      if (!identical(truncated_levels, expr[i, ])) {
+        expr[i, ] <- truncated_levels
+        levels_truncated <- TRUE
+      }
+    }
+
+    if (isTRUE(levels_truncated) && requireNamespace("shiny", quietly = TRUE) && !is.null(shiny::getDefaultReactiveDomain())) {
+      shiny::showNotification(
+        ui = paste0(
+          "Warning: Some factor levels were longer than ", max_group_name_length,
+          " characters and have been truncated to improve readability."
+        ),
+        id = "design_factor_levels_truncated",
+        duration = 8,
+        type = "warning"
+      )
     }
 
     if(length(ignored_factors) == nrow(expr)) {
