@@ -181,6 +181,7 @@ Ge, S.X., Son, E.W. & Yao, R. iDEP: an integrated web application for differenti
 
 ------------------------------------------------------------------------
 
+
 <!-- `r params$descr` -->
 
 <!--ALL SELECTED PARAMETERS-->
@@ -480,35 +481,6 @@ k_means_elbow(heatmap_data = heatmap_data)
 <!--   text_col = "white" -->
 <!-- ) -->
 <!-- ``` -->
-
-<br>
-
-## Re-running This Report Locally
-
-1. Install the latest `idepGolem` package (once per machine):
-
-```r
-install.packages("devtools")
-devtools::install_github("gexijin/idepGolem", upgrade = "never")
-```
-
-2. Download the `.RData` file from the Cluster tab, load it, and render this report from your working directory:
-
-```r
-load("idep_cluster_YYYY_MM_DD.Rdata")
-library(idepGolem)
-rmarkdown::render(
-  system.file("app/www/RMD", "clustering_workflow.Rmd", package = "idepGolem"),
-  output_dir = getwd(),
-  params = cluster_report_params,
-  envir = new.env(parent = globalenv())
-)
-```
-
-The resulting HTML will match the clustering report generated inside iDEP because it reuses the saved `cluster_report_params` list bundled with every Cluster `.RData` download.
-
-
-
 
 <br>
 Generated using iDEP v`r packageVersion("idepGolem")` (https://bioinformatics.sdstate.edu/idep). `r format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z")`. Accuracy not guaranteed.

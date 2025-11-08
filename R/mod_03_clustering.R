@@ -399,18 +399,6 @@ mod_03_clustering_ui <- function(id) {
               "Create an HTML report summarizing the Clustering tab.",
               theme = "light"
             )
-          ),
-          column(
-            width = 4,
-            downloadButton(
-              outputId = ns("cluster_rds"),
-              label = ".RData"
-            ),
-            tippy::tippy_this(
-              ns("cluster_rds"),
-              "Download everything needed to re-run the clustering report in RStudio.",
-              theme = "light"
-            )
           )
         )
       ),
@@ -1984,66 +1972,11 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       filename = "word_cloud_data.csv",
       content = function(file) {
         req(!is.null(word_cloud_data()))
-
+        
         write.csv(word_cloud_data(), file)
       }
     )
-
-    build_clustering_report_params <- function() {
-      processed <- pre_process$data()
-      sample_info <- pre_process$sample_info()
-      req(!is.null(processed))
-      req(!is.null(sample_info))
-
-      safe_input <- function(value, default = NULL) {
-        if (is.null(value) || length(value) == 0) {
-          default
-        } else {
-          value
-        }
-      }
-
-      cluster_enrichment_export <- NULL
-      if (isTRUE(input$cluster_enrichment)) {
-        cluster_enrichment_export <- tryCatch(
-          isolate(enrichment_table_cluster$pathway_table()),
-          error = function(e) NULL
-        )
-      }
-
-      dend_sel <- dendrogram_selection()
-      sample_clustering <- if (!is.null(dend_sel)) dend_sel$sample else NULL
-      show_row_dend <- if (!is.null(dend_sel)) dend_sel$row else NULL
-
-      params <- list(
-        pre_processed_data = processed,
-        sample_info = sample_info,
-        descr = pre_process$descr(),
-        mapping_statistics = pre_process$mapping_statistics(),
-        all_gene_names = pre_process$all_gene_names(),
-        n_genes = safe_input(input$n_genes),
-        k_clusters = safe_input(input$k_clusters),
-        cluster_meth = safe_input(input$cluster_meth, 1),
-        select_gene_id = pre_process$select_gene_id(),
-        list_factors_heatmap = safe_input(input$list_factors_heatmap),
-        heatmap_color_select = safe_input(heatmap_color_select()),
-        dist_function = safe_input(input$dist_function),
-        hclust_function = safe_input(input$hclust_function),
-        heatmap_cutoff = safe_input(input$heatmap_cutoff),
-        gene_centering = safe_input(input$gene_centering),
-        gene_normalize = safe_input(input$gene_normalize),
-        sample_clustering = sample_clustering,
-        show_row_dend = show_row_dend,
-        selected_genes = safe_input(input$selected_genes),
-        submap_data = if (!is.null(shiny_env$submap_data)) shiny_env$submap_data else NULL,
-        select_factors_heatmap = safe_input(input$select_factors_heatmap),
-        sample_color = safe_input(input$sample_color),
-        cluster_enrichment_enabled = isTRUE(input$cluster_enrichment),
-        cluster_enrichment_results = cluster_enrichment_export
-      )
-      params
-    }
-
+    
     # Markdown report------------
     output$report <- downloadHandler(
 
@@ -2070,7 +2003,50 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           markdown_location <- app_sys("app/www/RMD/clustering_workflow.Rmd")
           file.copy(from = markdown_location, to = tempReport, overwrite = TRUE)
 
-          params <- build_clustering_report_params()
+          # Prepare enrichment results for report export
+          cluster_enrichment_export <- NULL
+          if (isTRUE(input$cluster_enrichment)) {
+            if (input$cluster_meth == 1 &&
+                !is.null(shiny_env$submap_data)) {
+              cluster_enrichment_export <- tryCatch(
+                isolate(enrichment_table_cluster$pathway_table()),
+                error = function(e) NULL
+              )
+            } else if (input$cluster_meth == 2) {
+              cluster_enrichment_export <- tryCatch(
+                isolate(enrichment_table_cluster$pathway_table()),
+                error = function(e) NULL
+              )
+            }
+          }
+
+          # Set up parameters to pass to Rmd document
+          params <- list(
+            pre_processed_data = pre_process$data(),
+            sample_info = pre_process$sample_info(),
+            descr = pre_process$descr(),
+            mapping_statistics = pre_process$mapping_statistics(),
+            all_gene_names = pre_process$all_gene_names(),
+            n_genes = input$n_genes,
+            k_clusters = input$k_clusters,
+            cluster_meth = input$cluster_meth,
+            select_gene_id = pre_process$select_gene_id(),
+            list_factors_heatmap = input$list_factors_heatmap,
+            heatmap_color_select = heatmap_color_select(),
+            dist_function = input$dist_function,
+            hclust_function = input$hclust_function,
+            heatmap_cutoff = input$heatmap_cutoff,
+            gene_centering = input$gene_centering,
+            gene_normalize = input$gene_normalize,
+            sample_clustering = dendrogram_selection()$sample,
+            show_row_dend = dendrogram_selection()$row,
+            selected_genes = input$selected_genes,
+            submap_data = if(!is.null(shiny_env$submap_data)) shiny_env$submap_data else NULL,
+            select_factors_heatmap = input$select_factors_heatmap,
+            sample_color = input$sample_color,
+            cluster_enrichment_enabled = isTRUE(input$cluster_enrichment),
+            cluster_enrichment_results = cluster_enrichment_export
+          )
 
           req(params)
 
@@ -2084,16 +2060,6 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
             envir = new.env(parent = globalenv())
           )
         })
-      }
-    )
-    output$cluster_rds <- downloadHandler(
-      filename = paste0("idep_cluster_", format(Sys.time(), "%Y_%m_%d"), ".Rdata"),
-      content = function(file) {
-        cluster_report_params <- build_clustering_report_params()
-        req(cluster_report_params)
-        save(cluster_report_params,
-          file = file
-        )
       }
     )
   })

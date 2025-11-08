@@ -137,19 +137,3 @@ rmarkdown::render(
 )
 ```
 `report_params` is included in every `.RData` download and mirrors the `params` object the Shiny app sends to the report renderer, so the resulting HTML will match what you obtained in the Prep tab.
-
-### Re-running Cluster reports from `.RData`
-Cluster tab downloads behave the same way:
-1. Use the Cluster tab’s `.RData` button to download the current session data.
-2. From your working directory, load the file and render the clustering report:
-```r
-load("idep_cluster_YYYY_MM_DD.Rdata")
-library(idepGolem)
-rmarkdown::render(
-  system.file("app/www/RMD", "clustering_workflow.Rmd", package = "idepGolem"),
-  output_dir = getwd(),
-  params = cluster_report_params,
-  envir = new.env(parent = globalenv())
-)
-```
-`cluster_report_params` contains everything required to recreate the HTML produced in the Cluster tab.
