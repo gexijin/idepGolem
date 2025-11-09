@@ -256,7 +256,7 @@ truncate_labels_safely <- function(labels, max_length) {
   needs_trunc <- !is.na(char_lens) & char_lens > max_length
 
   if (!any(needs_trunc)) {
-    return(labels_chr)
+    return(labels)
   }
 
   truncated <- labels_chr
@@ -412,7 +412,7 @@ detect_groups <- function(sample_names,
 
   truncated_group <- truncate_labels_safely(sample_group, max_length)
 
-  if (!identical(truncated_group, sample_group)) {
+  if (!identical(as.character(truncated_group), as.character(sample_group))) {
     sample_group <- truncated_group
 
     # Show warning message once

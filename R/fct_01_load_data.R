@@ -308,7 +308,7 @@ input_data <- function(expression_file,
         ))
 
         truncated_cols <- truncate_labels_safely(colnames(sample_info_demo), max_group_name_length)
-        if (!identical(truncated_cols, colnames(sample_info_demo))) {
+        if (!identical(as.character(truncated_cols), as.character(colnames(sample_info_demo)))) {
           colnames(sample_info_demo) <- truncated_cols
 
           if (requireNamespace("shiny", quietly = TRUE) && !is.null(shiny::getDefaultReactiveDomain())) {
@@ -328,7 +328,7 @@ input_data <- function(expression_file,
         if (!is.null(dim(sample_info_demo)) && ncol(sample_info_demo) > 0) {
           for (j in seq_len(ncol(sample_info_demo))) {
             truncated_levels <- truncate_labels_safely(sample_info_demo[, j], max_group_name_length)
-            if (!identical(truncated_levels, sample_info_demo[, j])) {
+            if (!identical(as.character(truncated_levels), as.character(sample_info_demo[, j]))) {
               sample_info_demo[, j] <- truncated_levels
               levels_truncated_demo <- TRUE
             }
@@ -402,7 +402,7 @@ input_data <- function(expression_file,
 
     truncated_factor_names <- truncate_labels_safely(rownames(expr), max_group_name_length)
 
-    if (!identical(truncated_factor_names, rownames(expr))) {
+    if (!identical(as.character(truncated_factor_names), as.character(rownames(expr)))) {
       rownames(expr) <- truncated_factor_names
 
       if (requireNamespace("shiny", quietly = TRUE) && !is.null(shiny::getDefaultReactiveDomain())) {
@@ -448,7 +448,7 @@ input_data <- function(expression_file,
       }
 
       truncated_levels <- truncate_labels_safely(expr[i, ], max_group_name_length)
-      if (!identical(truncated_levels, expr[i, ])) {
+      if (!identical(as.character(truncated_levels), as.character(expr[i, ]))) {
         expr[i, ] <- truncated_levels
         levels_truncated <- TRUE
       }
