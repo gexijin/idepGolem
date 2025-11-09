@@ -284,15 +284,18 @@ mod_03_clustering_ui <- function(id) {
                   selectInput(
                     inputId = ns("sample_color"),
                     label = NULL,
-                    choices = c("Pastel 1", "Dark 2", "Dark 3", 
-                                "Set 2", "Set 3", "Warm",
-                                "Cold", "Harmonic", "Dynamic"),
-                    selected = "Dynamic",
+                    choices = c(
+                      "Okabe Ito",
+                      "Pastel 1", "Dark 2", "Dark 3",
+                      "Set 2", "Set 3", "Warm",
+                      "Cold", "Harmonic", "Dynamic"
+                    ),
+                    selected = "Okabe Ito",
                     selectize = FALSE
                   ),
                   tippy::tippy_this(
                     ns("sample_color"),
-                    "Color palette for sample annotations.",
+                    "Color palette for sample annotations (\"Okabe Ito\" gives a high-contrast, colorblind-friendly set).",
                     theme = "light"
                   )
                 )
@@ -662,7 +665,11 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       include_names <- TRUE
       if (!is.null(sample_count) && sample_count > 0 && !is.null(data_mat) && !is.null(colnames(data_mat))) {
         detected_groups <- tryCatch(
-          detect_groups(colnames(data_mat)),
+          detect_groups(
+            colnames(data_mat),
+            sample_info = sample_info,
+            preserve_original = TRUE
+          ),
           error = function(e) NULL
         )
         if (!is.null(detected_groups)) {
@@ -914,12 +921,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       req(!is.na(input$sample_color))
 
       groups <- as.vector(as.matrix(pre_process$sample_info()))
-      pal <- setNames(
-        colorspace::qualitative_hcl(length(unique(groups)),
-                                    palette = input$sample_color,
-                                    c = 70),
-        unique(groups)
-      )
+      pal <- build_annotation_colors(unique(groups), input$sample_color)
       sample_list <- as.list(as.data.frame(pre_process$sample_info()))
 
       lapply(sample_list, function(x){
@@ -1910,11 +1912,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       )
 
       annotation_width <- text_width + grid::unit(6, "mm")
-      cluster_colors <- colorspace::qualitative_hcl(
-        n = max(k, 3),
-        palette = "Dark 3",
-        c = 70
-      )[seq_len(k)]
+      cluster_colors <- annotation_palette_values(max(k, 3), "Dark 3")[seq_len(k)]
 
       list(
         labels = unname(formatted_labels),

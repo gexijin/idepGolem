@@ -400,13 +400,6 @@ detect_groups <- function(sample_names,
         duration = 8,
         type = "warning"
       )
-    } else {
-      warning(
-        "Too many groups detected (", n_unique, "). ",
-        "Keeping the ", max_groups, " most frequent groups. ",
-        n_recoded, " less frequent group(s) recoded as 'Other'.",
-        call. = FALSE
-      )
     }
   }
 

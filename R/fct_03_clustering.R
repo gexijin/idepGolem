@@ -288,7 +288,7 @@ make_letter_markers <- function(levels) {
 #' @param re_run Integer for a seed to Re-run k-means with
 #' @param selected_genes Character list of genes to label on the heatmap
 #' @param group_pal Named list of colors and their corresponding categories
-#' @param sample_color Selected colorspace color palette
+#' @param sample_color Selected annotation palette (colorspace palette name or custom options such as "Okabe Ito")
 #' @param show_column_names TRUE/FALSE Show sample names below the heatmap
 #' @param show_heatmap_legend TRUE/FALSE Show the color key legend on the heatmap
 #' @param row_dend_obj Optional precomputed row dendrogram to reuse
@@ -349,7 +349,11 @@ heatmap_main <- function(data,
       heatmap_color_select
     )
   }
-  groups <- detect_groups(colnames(data))
+  groups <- detect_groups(
+    sample_names = colnames(data),
+    sample_info = sample_info,
+    preserve_original = !is.null(sample_info)
+  )
   heat_ann <- NULL
   annotation_legends <- list()
   if (!is.null(select_factors_heatmap) && select_factors_heatmap != "None") {
@@ -358,7 +362,10 @@ heatmap_main <- function(data,
       # Annotation for groups
       if (!is.null(sample_info) && !is.null(select_factors_heatmap)) {
         if (select_factors_heatmap == "Names") {
-          groups <- detect_groups(colnames(data))
+          groups <- detect_groups(
+            sample_names = colnames(data),
+            preserve_original = TRUE
+          )
         } else {
           ix <- match(select_factors_heatmap, colnames(sample_info))
           groups <- sample_info[, ix]
@@ -367,12 +374,7 @@ heatmap_main <- function(data,
       groups <- as.character(groups)
       groups[is.na(groups)] <- "NA"
       group_levels <- unique(groups)
-      group_colors <- colorspace::qualitative_hcl(
-        length(group_levels),
-        palette = sample_color,
-        c = 70
-      )
-      group_colors <- setNames(group_colors, group_levels)
+      group_colors <- build_annotation_colors(group_levels, sample_color)
       group_markers <- if (use_letter_overlay) make_letter_markers(group_levels) else NULL
       group_annotation <- if (use_letter_overlay) {
         ComplexHeatmap::anno_simple(
@@ -433,21 +435,12 @@ heatmap_main <- function(data,
             colors_named <- group_pal[[factor_name]]
           }
           if (is.null(colors_named)) {
-            colors_named <- colorspace::qualitative_hcl(
-              length(levels_used),
-              palette = sample_color,
-              c = 70
-            )
-            colors_named <- setNames(colors_named, levels_used)
+            colors_named <- build_annotation_colors(levels_used, sample_color)
           } else {
             missing_levels <- setdiff(levels_used, names(colors_named))
             if (length(missing_levels) > 0) {
-              extra_cols <- colorspace::qualitative_hcl(
-                length(missing_levels),
-                palette = sample_color,
-                c = 70
-              )
-              colors_named <- c(colors_named, setNames(extra_cols, missing_levels))
+              extra_cols <- build_annotation_colors(missing_levels, sample_color)
+              colors_named <- c(colors_named, extra_cols)
             }
             colors_named <- colors_named[levels_used]
           }
@@ -869,7 +862,7 @@ k_means_elbow <- function(heatmap_data) {
 #' @param select_factors_heatmap Factor to group by in the samples.
 #'   "All factors" will use up to the first three columns of the sample information.
 #' @param group_pal Named list of colors and their corresponding categories
-#' @param sample_color Selected colorspace color palette
+#' @param sample_color Selected annotation palette (colorspace palette name or custom options such as "Okabe Ito")
 #' @param use_letter_overlay Logical flag to overlay uppercase letters on sample annotations.
 #'
 #' @export
@@ -909,7 +902,11 @@ sub_heat_ann <- function(data,
     ))
   }
 
-  groups <- detect_groups(colnames(data))
+  groups <- detect_groups(
+    sample_names = colnames(data),
+    sample_info = sample_info,
+    preserve_original = !is.null(sample_info)
+  )
   lgd <- NULL
 
   if (select_factors_heatmap == "All factors") {
@@ -940,21 +937,12 @@ sub_heat_ann <- function(data,
           colors_named <- group_pal[[factor_name]]
         }
         if (is.null(colors_named)) {
-          colors_named <- colorspace::qualitative_hcl(
-            length(levels_used),
-            palette = sample_color,
-            c = 70
-          )
-          colors_named <- setNames(colors_named, levels_used)
+          colors_named <- build_annotation_colors(levels_used, sample_color)
         } else {
           missing_levels <- setdiff(levels_used, names(colors_named))
           if (length(missing_levels) > 0) {
-            extra_cols <- colorspace::qualitative_hcl(
-              length(missing_levels),
-              palette = sample_color,
-              c = 70
-            )
-            colors_named <- c(colors_named, setNames(extra_cols, missing_levels))
+            extra_cols <- build_annotation_colors(missing_levels, sample_color)
+            colors_named <- c(colors_named, extra_cols)
           }
           colors_named <- colors_named[levels_used]
         }
@@ -1036,7 +1024,10 @@ sub_heat_ann <- function(data,
     
     if (!is.null(sample_info) && !is.null(select_factors_heatmap)) {
       if (select_factors_heatmap == "Names") {
-        groups <- detect_groups(colnames(data))
+        groups <- detect_groups(
+          sample_names = colnames(data),
+          preserve_original = TRUE
+        )
       } else {
         ix <- match(select_factors_heatmap, colnames(sample_info))
         groups <- sample_info[, ix]
@@ -1045,12 +1036,7 @@ sub_heat_ann <- function(data,
     groups <- as.character(groups)
     groups[is.na(groups)] <- "NA"
     group_levels <- unique(groups)
-    group_colors <- colorspace::qualitative_hcl(
-      length(group_levels),
-      palette = sample_color,
-      c = 70
-    )
-    group_colors <- setNames(group_colors, group_levels)
+    group_colors <- build_annotation_colors(group_levels, sample_color)
     group_markers <- if (use_letter_overlay) make_letter_markers(group_levels) else NULL
     
     group_annotation <- if (use_letter_overlay) {
@@ -1264,7 +1250,7 @@ Group: @{group_name} <span style='background-color:@{group_col};width:20px;displ
 #' @param cluster_meth Integer indicating which clustering method to use 1 for
 #'   hierarchical and 2 for kmeans.
 #' @param group_pal Named list of colors and their corresponding categories
-#' @param sample_color Selected colorspace color palette
+#' @param sample_color Selected annotation palette (colorspace palette name or custom options such as "Okabe Ito")
 #' @param use_letter_overlay Logical flag to overlay uppercase letters on sample annotations.
 #'
 #' @export

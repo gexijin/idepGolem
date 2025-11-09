@@ -244,14 +244,7 @@ if (!is.null(params$select_factors_heatmap) &&
     params$select_factors_heatmap == "All factors" &&
     !is.null(sample_info_subset)) {
   groups <- as.vector(as.matrix(sample_info_subset))
-  pal <- setNames(
-    colorspace::qualitative_hcl(
-      length(unique(groups)),
-      palette = params$sample_color,
-      c = 70
-    ),
-    unique(groups)
-  )
+  pal <- idepGolem:::build_annotation_colors(unique(groups), params$sample_color)
   sample_list <- as.list(as.data.frame(sample_info_subset))
   group_pal_main <- lapply(sample_list, function(x) {
     setNames(
@@ -303,14 +296,7 @@ if (!is.null(params$submap_data)) {
       params$select_factors_heatmap == "All factors" &&
       !is.null(sample_info_sub)) {
     groups <- as.vector(as.matrix(sample_info_sub))
-    pal <- setNames(
-      colorspace::qualitative_hcl(
-        length(unique(groups)),
-        palette = params$sample_color,
-        c = 70
-      ),
-      unique(groups)
-    )
+    pal <- idepGolem:::build_annotation_colors(unique(groups), params$sample_color)
     sample_list <- as.list(as.data.frame(sample_info_sub))
     group_pal_val <- lapply(sample_list, function(x) {
       setNames(

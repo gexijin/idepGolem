@@ -36,7 +36,7 @@ hierarchical and 2 for kmeans.}
 
 \item{group_pal}{Named list of colors and their corresponding categories}
 
-\item{sample_color}{Selected colorspace color palette}
+\item{sample_color}{Selected annotation palette (colorspace palette name or custom options such as "Okabe Ito")}
 
 \item{use_letter_overlay}{Logical flag to overlay uppercase letters on sample annotations.}
 }
