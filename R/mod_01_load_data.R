@@ -390,10 +390,16 @@ mod_01_load_data_ui <- function(id) {
         # Gene ID conversion statistics ----------
         uiOutput(ns("conversion_stats_message")),
 
-        DT::dataTableOutput(ns("sample_info_table")),
+        div(
+          style = "overflow-x: auto;",
+          tableOutput(ns("sample_info_table"))
+        ),
 
         # Display first 20 rows of the data ----------
-        DT::dataTableOutput(ns("sample_20")),
+        div(
+          style = "overflow-x: auto;",
+          tableOutput(ns("sample_20"))
+        ),
         div(
           id = ns("load_message"),
           h3("From data to discoveries", style = "color: #d9534f; font-weight: 700;"),
@@ -1541,43 +1547,39 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     })
 
     # Sample information table -----------
-    output$sample_info_table <- DT::renderDataTable({
+    output$sample_info_table <- renderTable({
       req(!is.null(loaded_data()$sample_info))
 
-      DT::datatable(
-        isolate({
-          tem <- t(loaded_data()$sample_info)
-          tem <- cbind(rownames(tem), tem)
-          colnames(tem)[1] <- "Study_design"
-          tem
-        }),
-        options = list(
-          pageLength = 10,
-          scrollX = "400px",
-          dom = "t",
-          ordering = F
-        ),
-        rownames = FALSE
-      )
-    })
+      isolate({
+        tem <- t(loaded_data()$sample_info)
+        tem <- cbind(rownames(tem), tem)
+        colnames(tem)[1] <- "Study_design"
+        as.data.frame(tem, stringsAsFactors = FALSE)
+      })
+    },
+    striped = TRUE,
+    bordered = TRUE,
+    spacing = "s",
+    align = "l",
+    rownames = FALSE)
 
     # First 20 rows of dataset table -----------
-    output$sample_20 <- DT::renderDataTable({
+    output$sample_20 <- renderTable({
       req(!is.null(conversion_info()$converted_data))
 
-      DT::datatable(
-        #conversion_info()$converted_data[1:20, ],
-        if(nrow(loaded_data()$data) > 20){
-          loaded_data()$data[1:20, ]
-        } else (loaded_data()$data),
-        options = list(
-          pageLength = 10,
-          scrollX = "400px",
-          dom = "t"
-        ),
-        rownames = TRUE
-      )
-    })
+      data_preview <- if (nrow(loaded_data()$data) > 20) {
+        loaded_data()$data[1:20, , drop = FALSE]
+      } else {
+        loaded_data()$data
+      }
+
+      as.data.frame(data_preview, stringsAsFactors = FALSE)
+    },
+    striped = TRUE,
+    bordered = TRUE,
+    spacing = "s",
+    align = "l",
+    rownames = TRUE)
 
     observeEvent(input$expression_file, {
       # test data for correct format
