@@ -662,7 +662,11 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       include_names <- TRUE
       if (!is.null(sample_count) && sample_count > 0 && !is.null(data_mat) && !is.null(colnames(data_mat))) {
         detected_groups <- tryCatch(
-          detect_groups(colnames(data_mat)),
+          detect_groups(
+            colnames(data_mat),
+            sample_info = sample_info,
+            preserve_original = TRUE
+          ),
           error = function(e) NULL
         )
         if (!is.null(detected_groups)) {

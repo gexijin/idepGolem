@@ -349,7 +349,11 @@ heatmap_main <- function(data,
       heatmap_color_select
     )
   }
-  groups <- detect_groups(colnames(data))
+  groups <- detect_groups(
+    sample_names = colnames(data),
+    sample_info = sample_info,
+    preserve_original = !is.null(sample_info)
+  )
   heat_ann <- NULL
   annotation_legends <- list()
   if (!is.null(select_factors_heatmap) && select_factors_heatmap != "None") {
@@ -358,7 +362,10 @@ heatmap_main <- function(data,
       # Annotation for groups
       if (!is.null(sample_info) && !is.null(select_factors_heatmap)) {
         if (select_factors_heatmap == "Names") {
-          groups <- detect_groups(colnames(data))
+          groups <- detect_groups(
+            sample_names = colnames(data),
+            preserve_original = TRUE
+          )
         } else {
           ix <- match(select_factors_heatmap, colnames(sample_info))
           groups <- sample_info[, ix]
@@ -909,7 +916,11 @@ sub_heat_ann <- function(data,
     ))
   }
 
-  groups <- detect_groups(colnames(data))
+  groups <- detect_groups(
+    sample_names = colnames(data),
+    sample_info = sample_info,
+    preserve_original = !is.null(sample_info)
+  )
   lgd <- NULL
 
   if (select_factors_heatmap == "All factors") {
@@ -1036,7 +1047,10 @@ sub_heat_ann <- function(data,
     
     if (!is.null(sample_info) && !is.null(select_factors_heatmap)) {
       if (select_factors_heatmap == "Names") {
-        groups <- detect_groups(colnames(data))
+        groups <- detect_groups(
+          sample_names = colnames(data),
+          preserve_original = TRUE
+        )
       } else {
         ix <- match(select_factors_heatmap, colnames(sample_info))
         groups <- sample_info[, ix]
