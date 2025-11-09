@@ -264,6 +264,28 @@ mod_05_deg_1_ui <- function(id) {
             title = icon("info-circle"),
             includeHTML(app_sys("app/www/help_deg1.html"))
           )
+        ),
+        tags$script(
+          HTML(
+            sprintf(
+"
+Shiny.addCustomMessageHandler('%s', function(message) {
+  var tabset = $('#%s');
+  if (!tabset.length) { return; }
+  var tabLink = tabset.find('a[data-value=\"r_code\"]');
+  if (!tabLink.length) { return; }
+  var tabItem = tabLink.closest('li');
+  if (message.hide) {
+    tabItem.hide();
+  } else {
+    tabItem.show();
+  }
+});
+",
+              ns("toggle_stats_r_code"),
+              ns("step_1")
+            )
+          )
         )
       )
     )
@@ -445,6 +467,15 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
 
     # Interactive heatmap environment
     deg_env <- new.env()
+    summary_only_formats <- c(3, 4)
+    is_summary_format <- function(value) {
+      if (is.null(value) || length(value) == 0) {
+        return(FALSE)
+      }
+      suppressWarnings(as.numeric(value)) %in% summary_only_formats
+    }
+
+    stats_option_notice_initialized <- reactiveVal(FALSE)
 
     output$submit_ui <- renderUI({
       # req(model_comparisons()) # this is stopping LCF data from getting through Stats
@@ -479,6 +510,28 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       x = output,
       name = "data_file_format",
       suspendWhenHidden = FALSE
+    )
+
+    observeEvent(
+      pre_process$data_file_format(),
+      {
+        dfmt <- pre_process$data_file_format()
+        hide_r_code <- is_summary_format(dfmt)
+
+        session$sendCustomMessage(
+          ns("toggle_stats_r_code"),
+          list(hide = hide_r_code)
+        )
+
+        if (isTRUE(hide_r_code) && identical(input$step_1, "r_code")) {
+          updateTabsetPanel(
+            session = session,
+            inputId = "step_1",
+            selected = "results"
+          )
+        }
+      },
+      ignoreNULL = FALSE
     )
 
     # Experiment Design UI Elements ------------
@@ -520,7 +573,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     })
 
     model_comparisons <- reactive({
-      req(pre_process$data() & pre_process$data_file_format() != 3)
+      req(pre_process$data() & !is_summary_format(pre_process$data_file_format()))
 
       list_model_comparisons_ui(
         sample_info = pre_process$sample_info(),
@@ -641,6 +694,50 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
           input$reference_level_factor_6
         )
       )
+    )
+
+    # Watch for changes in Stats tab options and notify user to click Submit
+    observeEvent(
+      list(
+        input$counts_deg_method,
+        input$limma_p_val,
+        input$limma_fc,
+        input$threshold_wald_test,
+        input$independent_filtering,
+        input$select_factors_model,
+        input$select_block_factors_model,
+        input$select_model_comprions,
+        input$select_interactions,
+        input$reference_level_factor_1,
+        input$reference_level_factor_2,
+        input$reference_level_factor_3,
+        input$reference_level_factor_4,
+        input$reference_level_factor_5,
+        input$reference_level_factor_6
+      ),
+      {
+        if (!stats_option_notice_initialized()) {
+          stats_option_notice_initialized(TRUE)
+          return()
+        }
+
+        # Only show notification after Submit has been clicked at least once
+        if (is.null(input$submit_model_button) || input$submit_model_button == 0) {
+          return()
+        }
+
+        if (is.null(tab()) || tab() != "Stats") {
+          return()
+        }
+
+        showNotification(
+          ui = "Click Submit to rerun",
+          id = "stats_submit_reminder",
+          type = "message",
+          duration = 5
+        )
+      },
+      ignoreNULL = FALSE
     )
 
     deg <- reactiveValues(limma = NULL)
@@ -784,7 +881,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
           }
           
           if (is.null(input$select_model_comprions) && 
-              pre_process$data_file_format() != "3") {
+              !is_summary_format(pre_process$data_file_format())) {
             warning_type("NoComparison")
             deg$limma <- NULL
           } else {
@@ -1757,7 +1854,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
 
       sample_groups <- detect_groups(
         sample_names,
-        pre_process$sample_info()
+        pre_process$sample_info(),
+        preserve_original = TRUE
       )
       sample_groups[is.na(sample_groups) | sample_groups == ""] <- sample_names[is.na(sample_groups) | sample_groups == ""]
 

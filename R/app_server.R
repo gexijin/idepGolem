@@ -31,14 +31,18 @@ app_server <- function(input, output, session) {
   single_column_notice_id <- "single_column_notice"
   observe({
     data_format <- load_data$data_file_format()
+    data_format_numeric <- suppressWarnings(as.numeric(data_format))
+    has_data_format <- length(data_format_numeric) > 0 && !is.na(data_format_numeric)
+    summary_formats <- c(3, 4)
+    is_summary_format <- has_data_format && data_format_numeric %in% summary_formats
     prep_data <- pre_process$data()
     placeholder_present <- !is.null(prep_data) && "Ctrl" %in% colnames(prep_data) && ncol(prep_data) == 2
     placeholder_is_zero <- placeholder_present && all(prep_data[, "Ctrl"] == 0)
 
     # Hide tabs for type 3 data (fold-change & P-values) regardless of number of comparisons
     # This includes both single comparison (with dummy Ctrl) and multiple comparisons
-    hide_prep <- isTRUE(data_format == 3) && placeholder_is_zero
-    hide_analysis_tabs <- isTRUE(data_format == 3)  # Hide PCA, Bicluster, Network for all type 3 data
+    hide_prep <- has_data_format && data_format_numeric == 3 && placeholder_is_zero
+    hide_analysis_tabs <- isTRUE(is_summary_format)  # Hide PCA, Bicluster, Network for summary-level data
 
     top_targets <- c("Prep", "Cluster", "PCA", "Bicluster", "Network")
     analysis_only_targets <- c("PCA", "Bicluster", "Network")  # Tabs to hide for type 3 with multiple comparisons

@@ -67,7 +67,7 @@ mod_03_clustering_ui <- function(id) {
                 label = NULL,
                 min = 10,
                 max = 12000,
-                value = 2000,
+                value = 1000,
                 step = 100
               ),
               tippy::tippy_this(
@@ -205,7 +205,7 @@ mod_03_clustering_ui <- function(id) {
         conditionalPanel(
           condition = "input.cluster_panels == 'Heatmap'",
           fluidRow(
-            column(width = 4, p("Samples color")),
+            column(width = 4, p("Sample color")),
             column(
               width = 8,
               htmlOutput(ns("list_factors_heatmap"))
@@ -256,8 +256,29 @@ mod_03_clustering_ui <- function(id) {
                 "Substract mean and scale by standard deviation before clustering.",
                 theme = "light"
               ),
+              checkboxInput(
+                inputId = ns("letter_overlay"),
+                label = "Letter Overlay",
+                value = TRUE
+              ),
+              tippy::tippy_this(
+                ns("letter_overlay"),
+                "Toggle letter overlays on the sample color bar above the heatmap.",
+                theme = "light"
+              ),
+              checkboxInput(
+                inputId = ns("show_color_key"),
+                label = "Color Key",
+                value = FALSE
+              ),
+              tippy::tippy_this(
+                ns("show_color_key"),
+                "Show or hide the color key legend on the main heatmap.",
+                theme = "light"
+              ),
+
               fluidRow(
-                column(width = 4, p("Sample Colors")),
+                column(width = 4, p("Color set")),
                 column(
                   width = 8,
                   selectInput(
@@ -293,7 +314,50 @@ mod_03_clustering_ui <- function(id) {
                     theme = "light"
                   )
                 )
-              )
+              ),
+              conditionalPanel(
+                condition = "input.cluster_enrichment_label == 1",
+                ns = ns,
+                fluidRow(
+                  column(width = 4, p("Label FDR cutoff")),
+                  column(
+                    width = 8,
+                    numericInput(
+                      inputId = ns("pathway_label_fdr"),
+                      label = NULL,
+                      value = 0.001,
+                      min = 0,
+                      max = 1,
+                      step = 0.001
+                    ),
+                    tippy::tippy_this(
+                      ns("pathway_label_fdr"),
+                      "FDR threshold for selecting pathways to label on k-means clusters. Only pathways with FDR below this value will be considered for labeling.",
+                      theme = "light"
+                    )
+                  )
+                ),
+                fluidRow(
+                  column(width = 4, p("Max labels")),
+                  column(
+                    width = 8,
+                    numericInput(
+                      inputId = ns("pathway_label_max"),
+                      label = NULL,
+                      value = 1,
+                      min = 1,
+                      max = 4,
+                      step = 1
+                    ),
+                    tippy::tippy_this(
+                      ns("pathway_label_max"),
+                      "Maximum number of pathways to label per k-means cluster. Shows the most significant pathways that pass the FDR threshold.",
+                      theme = "light"
+                    )
+                  )
+                )
+              ),
+              tags$hr()
             )
           ),
           ns = ns
@@ -307,30 +371,35 @@ mod_03_clustering_ui <- function(id) {
           ns = ns
         ),
         br(),
-        div(
-          style = "display: flex; flex: wrap; gap: 5px;",
+        fluidRow(
           conditionalPanel(
             condition = "input.cluster_panels == 'Heatmap' ",
-            downloadButton(
-              outputId = ns("download_heatmap_data"),
-              label = "Heatmap data"
-            ),
-            tippy::tippy_this(
-              ns("download_heatmap_data"),
-              "Download the data currently displayed in the heatmap.",
-              theme = "light"
+            column(
+              width = 4,
+              downloadButton(
+                outputId = ns("download_heatmap_data"),
+                label = "Data"
+              ),
+              tippy::tippy_this(
+                ns("download_heatmap_data"),
+                "Download the data currently displayed in the heatmap.",
+                theme = "light"
+              )
             ),
             ns = ns
           ),
-          downloadButton(
-            outputId = ns("report"),
-            label = tags$span(style = "color: red;", "Report")
+          column(
+            width = 4,
+            downloadButton(
+              outputId = ns("report"),
+              label = tags$span(style = "color: red;", "Report")
+            ),
+            tippy::tippy_this(
+              ns("report"),
+              "Create an HTML report summarizing the Clustering tab.",
+              theme = "light"
+            )
           )
-        ),
-        tippy::tippy_this(
-          ns("report"),
-          "Create an HTML report summarizing the Clustering tab.",
-          theme = "light"
         )
       ),
 
@@ -342,6 +411,7 @@ mod_03_clustering_ui <- function(id) {
       #########################################################################
 
       mainPanel(
+        width = 9,
         tabsetPanel(
           id = ns("cluster_panels"),
           # Heatmap panel ----------
@@ -350,65 +420,79 @@ mod_03_clustering_ui <- function(id) {
             br(),
             fluidRow(
               column(
-                width = 4,
+                width = 5,
                 plotOutput(
                   outputId = ns("heatmap_main"),
-                  height = "450px",
+                  height = "600px",
                   width = "100%",
-                  click = ns("ht_main_click"),
                   brush = brushOpts(id = ns("ht_brush"),
                                     delayType = "debounce",
                                     clip = TRUE)
                 ),
                 tippy::tippy_this(
                   ns("heatmap_main"),
-                  "Tip: Drag over any region of the heatmap to zoom into that selection. Click on the heatmap to view details.",
+                  "Drag over any region of the heatmap to zoom in.",
                   theme = "light"
                 ),
-                br(),
-                fluidRow(
-                  column(
-                    width = 6,
-                    uiOutput(ns("dl_heatmap_main_download_ui"))
-                  ),
-                  column(
-                    width = 6,
-                    uiOutput(ns("dl_heatmap_sub_download_ui"))
-                  )
-                ),
-                br(),
-                uiOutput(
-                  outputId = ns("ht_click_content")
-                )
+                uiOutput(ns("dl_heatmap_main_download_ui"))
               ),
               column(
-                width = 8,
-                conditionalPanel(
-                  condition = paste0(
-                    "input.cluster_meth == 2 || ",
-                    "(input.cluster_meth == 1 && input.ht_brush != null)"
+                width = 7,
+                div(
+                  style = "max-height: calc(120vh - 300px); overflow-y: auto; -webkit-overflow-scrolling: touch; padding-right: 10px;",
+                  conditionalPanel(
+                    condition = paste0(
+                      "input.cluster_meth == 2 || ",
+                      "(input.cluster_meth == 1 && input.ht_brush != null)"
+                    ),
+                    fluidRow(
+                      column(
+                        width = 6,
+                        align = "left",
+                        checkboxInput(
+                          inputId = ns("cluster_enrichment"),
+                          label = strong("Show enrichment"),
+                          value = FALSE
+                        ),
+                        tippy::tippy_this(
+                          ns("cluster_enrichment"),
+                          "Run GO enrichment for the selected genes (hierarchical clustering). For k-means, all clusters are analyzed.",
+                          theme = "light"
+                        )
+                      ),
+                      column(
+                        width = 6,
+                        align = "left",
+                        conditionalPanel(
+                          condition = "input.cluster_enrichment == 1 && input.cluster_meth == 2",
+                          ns = ns,
+                          checkboxInput(
+                            inputId = ns("cluster_enrichment_label"),
+                            label = strong("Label"),
+                            value = FALSE
+                          ),
+                          tippy::tippy_this(
+                            ns("cluster_enrichment_label"),
+                            "Display top enriched pathways as labels on the heatmap for each k-means cluster.",
+                            theme = "light"
+                          )
+                        )
+                      )
+                    ),
+                    ns = ns
                   ),
-                  checkboxInput(
-                    inputId = ns("cluster_enrichment"),
-                    label = strong("Show enrichment"),
-                    value = FALSE
+                  conditionalPanel(
+                    condition = "input.cluster_enrichment == 1 ",
+                    hr(),
+                    mod_11_enrichment_ui(ns("enrichment_table_cluster")),
+                    ns = ns
                   ),
-                  tippy::tippy_this(
-                    ns("cluster_enrichment"),
-                    "Run GO enrichment for the selected genes (hierarchical clustering). For k-means, all clusters are analyzed.",
-                    theme = "light"
+                  plotOutput(
+                    outputId = ns("sub_heatmap"),
+                    height = "100%",
+                    width = "100%"
                   ),
-                  ns = ns
-                ),
-                conditionalPanel(
-                  condition = "input.cluster_enrichment == 1 ",
-                  mod_11_enrichment_ui(ns("enrichment_table_cluster")),
-                  ns = ns
-                ),
-                plotOutput(
-                  outputId = ns("sub_heatmap"),
-                  height = "100%",
-                  width = "100%"
+                  uiOutput(ns("dl_heatmap_sub_download_ui"))
                 )
               )
             )
@@ -452,12 +536,11 @@ mod_03_clustering_ui <- function(id) {
                Data is transformed and clustered as specified in the sidebar."
             ),
             br(),
+            ottoPlots::mod_download_figure_ui(ns("dl_sample_tree")),
             plotOutput(
               outputId = ns("sample_tree"),
-              width = "100%",
-              height = "400px"
-            ),
-            ottoPlots::mod_download_figure_ui(ns("dl_sample_tree"))
+              width = "100%"
+            )
           ),
           tabPanel(
             title = icon("info-circle"),
@@ -489,6 +572,26 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
 
     # Interactive heatmap environment
     shiny_env <- new.env()
+
+    # Reactive value to track heatmap rendering
+    # Used to signal when gene lists can safely read from shiny_env$ht
+    heatmap_rendered <- reactiveVal(0)
+
+    # Track the last rendered clustering configuration
+    last_config <- reactiveVal(NULL)
+
+    observeEvent(pre_process$data(), {
+      data_mat <- pre_process$data()
+      req(!is.null(data_mat))
+      sample_count <- ncol(data_mat)
+      if (!is.null(sample_count) && sample_count > 30 && isTRUE(input$letter_overlay)) {
+        updateCheckboxInput(
+          session = session,
+          inputId = "letter_overlay",
+          value = FALSE
+        )
+      }
+    }, ignoreNULL = TRUE)
 
     # Reset to Heatmap whenever the Cluster tab becomes active again
     observeEvent(tab(), {
@@ -544,28 +647,83 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
 
     # Sample color bar selector ----------
     output$list_factors_heatmap <- renderUI({
-      choices <- "Names"
-      selected <- choices
-      if (!is.null(colnames(pre_process$sample_info()))) {
-        factors <- colnames(pre_process$sample_info())
-        choices <- c(
-          choices,
-          factors,
-          "All factors"
+      data_mat <- pre_process$data()
+      sample_info <- pre_process$sample_info()
+      sample_count <- NULL
+
+      if (!is.null(data_mat)) {
+        sample_count <- ncol(data_mat)
+      } else if (!is.null(sample_info)) {
+        sample_count <- nrow(sample_info)
+      }
+
+      choices <- "None"
+
+      include_names <- TRUE
+      if (!is.null(sample_count) && sample_count > 0 && !is.null(data_mat) && !is.null(colnames(data_mat))) {
+        detected_groups <- tryCatch(
+          detect_groups(colnames(data_mat)),
+          error = function(e) NULL
         )
-        # Only set to "All factors" if input doesn't exist yet or is NULL
-        # This prevents unnecessary re-triggering when sample_info changes
-        if (is.null(input$select_factors_heatmap) || is.na(input$select_factors_heatmap)) {
-          selected <- choices[length(choices)]
-        } else {
-          # Keep current selection if it's still valid
-          selected <- if (input$select_factors_heatmap %in% choices) {
-            input$select_factors_heatmap
-          } else {
-            choices[length(choices)]
-          }
+        if (!is.null(detected_groups)) {
+          unique_groups <- unique(detected_groups)
+          include_names <- length(unique_groups) < sample_count
         }
       }
+
+      if (include_names) {
+        choices <- c(choices, "Names")
+      }
+
+      valid_factors <- character()
+      if (!is.null(sample_info) && ncol(sample_info) > 0 && !is.null(sample_count) && sample_count > 0) {
+        factor_names <- colnames(sample_info)
+        keep_factor <- vapply(
+          factor_names,
+          function(factor_name) {
+            values <- sample_info[, factor_name] # each column
+            values <- values[!is.na(values)]
+            if(length(unique(values)) >= 20) {
+              showNotification(
+                paste0("Factor '", factor_name, "' has too many unique values and will be ignored."),
+                type = "warning",
+                duration = 5
+              )
+              return(FALSE)
+            }
+            # ignore if every value is unique or too many unique
+            length(unique(values)) < sample_count && length(unique(values)) >= 20
+          },
+          logical(1)
+        )
+        valid_factors <- factor_names[keep_factor]
+      }
+
+      if (length(valid_factors) > 0) {
+        choices <- c(choices, valid_factors)
+      }
+
+      if (!is.null(sample_info) && ncol(sample_info) > 0) {
+        choices <- c(choices, "All factors")
+      }
+
+      # Ensure choices are unique while preserving order
+      choices <- unique(choices)
+
+      default_selection <- if ("All factors" %in% choices) {
+        "All factors"
+      } else if ("Names" %in% choices) {
+        "Names"
+      } else {
+        "None"
+      }
+
+      selected <- default_selection
+      existing_selection <- isolate(input$select_factors_heatmap)
+      if (!is.null(existing_selection) && !is.na(existing_selection) && existing_selection %in% choices) {
+        selected <- existing_selection
+      }
+
       tagList(
         selectInput(
           inputId = ns("select_factors_heatmap"),
@@ -651,6 +809,56 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       unlist(strsplit(pre_process$heatmap_color_select(), "-"))
     })
 
+    # Cache row/column dendrograms so we only rebuild when inputs that affect
+    # clustering actually change.
+    row_dendrogram <- eventReactive(
+      list(
+        heatmap_data(),
+        input$cluster_meth,
+        input$dist_function,
+        input$hclust_function,
+        dendrogram_selection()$row
+      ),
+      {
+        if (isolate(input$cluster_meth) != 1 ||
+            !isolate(dendrogram_selection()$row)) {
+          return(NULL)
+        }
+        mat <- isolate(heatmap_data())
+        if (is.null(mat) || nrow(mat) < 2) {
+          return(NULL)
+        }
+        dist_fun <- dist_funs[[as.numeric(isolate(input$dist_function))]]
+        h_fun <- hclust_funs[[isolate(input$hclust_function)]]
+        stats::as.dendrogram(h_fun(dist_fun(mat)))
+      },
+      ignoreNULL = FALSE
+    )
+
+    column_dendrogram <- eventReactive(
+      list(
+        heatmap_data(),
+        input$cluster_meth,
+        input$dist_function,
+        input$hclust_function,
+        dendrogram_selection()$sample
+      ),
+      {
+        if (isolate(input$cluster_meth) != 1 ||
+            !isolate(dendrogram_selection()$sample)) {
+          return(NULL)
+        }
+        mat <- isolate(heatmap_data())
+        if (is.null(mat) || ncol(mat) < 2) {
+          return(NULL)
+        }
+        dist_fun <- dist_funs[[as.numeric(isolate(input$dist_function))]]
+        h_fun <- hclust_funs[[isolate(input$hclust_function)]]
+        stats::as.dendrogram(h_fun(dist_fun(t(mat))))
+      },
+      ignoreNULL = FALSE
+    )
+
     # HEATMAP -----------
     # Information on interactivity
     # https://jokergoo.github.io/2020/05/15/interactive-complexheatmap/
@@ -659,45 +867,45 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         req(!is.null(heatmap_data()))
         req(!is.null(input$select_factors_heatmap))
 
-        shinybusy::show_modal_spinner(
-          spin = "orbit",
-          text = "Creating Heatmap",
-          color = "#000000"
-        )
+        withProgress(message = "Creating Heatmap", value = 0, {
+          incProgress(0.3, detail = "Processing data")
 
-        shiny_env$ht <- heatmap_main_object()
+          shiny_env$ht <- heatmap_main_object()
 
-        # Ensure heatmap object is valid before getting positions
-        if (!is.null(shiny_env$ht)) {
-          tryCatch({
-            # Use heatmap position in multiple components
-            shiny_env$ht_pos_main <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht)
-          }, error = function(e) {
-            # If position detection fails, set to NULL and continue
-            shiny_env$ht_pos_main <- NULL
-          })
-        }
+          incProgress(0.4, detail = "Calculating positions")
 
-        shinybusy::remove_modal_spinner()
+          # Ensure heatmap object is valid before getting positions
+          if (!is.null(shiny_env$ht)) {
+            tryCatch({
+              shiny_env$ht_pos_main <- InteractiveComplexHeatmap::htPositionsOnDevice(shiny_env$ht)
+            }, error = function(e) {
+              # If position detection fails, set to NULL and continue
+              shiny_env$ht_pos_main <- NULL
+            })
+          }
 
-        # Show guidance notification for 5 seconds
-        showNotification(
-          ui = div(
-            style = "text-align: center; font-size: 14px;",
-            "Select a region on the heatmap to zoom in.",
-            "Broaden your browser window if there is overlap.",
-            "Click on the main heatmap for gene and sample details."
-          ),
-          duration = 15,
-          closeButton = TRUE,
-          type = "message",
-          id = "heatmap_guidance"
-        )
+          incProgress(0.3, detail = "Finalizing")
+
+          # Store current configuration and signal render completion
+          # Use isolate to prevent creating reactive dependency loops
+          if (isolate(input$cluster_meth) == 2) {
+            current_config <- list(
+              k = isolate(input$k_clusters),
+              seed = isolate(input$k_means_re_run),
+              n_genes = isolate(input$n_genes)
+            )
+            # Only increment if configuration actually changed
+            if (!identical(current_config, isolate(last_config()))) {
+              isolate(last_config(current_config))
+              isolate(heatmap_rendered(heatmap_rendered() + 1))
+            }
+          }
+        })
 
         return(shiny_env$ht)
-      },
-      width = 240 # , # this avoids the heatmap being redraw
-      # height = 600
+      }
+      #,width = 300 # , # this avoids the heatmap being redraw # no longer needed when removed clicking
+      #, height = 600
     )
     
     # Color palette for experiment groups on heatmap
@@ -726,7 +934,16 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       req(!is.null(heatmap_data()))
       req(!is.null(input$select_factors_heatmap))
       req(input$select_factors_heatmap != "")
+      req(!is.null(input$letter_overlay))
       req(!is.null(input$sample_color))
+
+      if (identical(input$select_factors_heatmap, "None")) {
+        groups <- rep("None", ncol(heatmap_data()))
+        return(list(
+          groups = groups,
+          group_colors = NULL
+        ))
+      }
 
       group_pal_val <- NULL
       if (input$select_factors_heatmap == "All factors") {
@@ -740,7 +957,8 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         sample_info = pre_process$sample_info(),
         select_factors_heatmap = input$select_factors_heatmap,
         group_pal = group_pal_val,
-        sample_color = input$sample_color
+        sample_color = input$sample_color,
+        use_letter_overlay = isTRUE(input$letter_overlay)
       )
 
       list(
@@ -754,6 +972,17 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       req(!is.null(heatmap_data()))
       req(!is.null(input$select_factors_heatmap))
       req(input$select_factors_heatmap != "")
+      req(!is.null(input$letter_overlay))
+
+      # Wait for enrichment labels when labeling is enabled for k-means
+      label_clusters <- isTRUE(input$cluster_enrichment_label) && input$cluster_meth == 2
+      cluster_label_data <- NULL
+      if (label_clusters) {
+        cluster_label_data <- tryCatch(
+          cluster_pathway_labels(),
+          error = function(e) NULL
+        )
+      }
 
       # Ensure stable state before proceeding
       if (!is.null(pre_process$sample_info())) {
@@ -785,7 +1014,22 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           } else {
             NULL
           },
-          sample_color = input$sample_color
+          sample_color = input$sample_color,
+          show_column_names = TRUE,
+          show_heatmap_legend = isTRUE(input$show_color_key),
+          row_dend_obj = if (input$cluster_meth == 1 && dendrogram_selection()$row) {
+            row_dendrogram()
+          } else {
+            NULL
+          },
+          col_dend_obj = if (input$cluster_meth == 1 && dendrogram_selection()$sample) {
+            column_dendrogram()
+          } else {
+            NULL
+          },
+          use_letter_overlay = isTRUE(input$letter_overlay),
+          show_cluster_labels = label_clusters && !is.null(cluster_label_data),
+          custom_cluster_labels = cluster_label_data
         )
       )
 
@@ -811,6 +1055,18 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       pdf_id <- paste0(trigger_id, "_pdf")
       png_id <- paste0(trigger_id, "_png")
       svg_id <- paste0(trigger_id, "_svg")
+
+      draw_download_plot <- function(plot_obj) {
+        if (inherits(plot_obj, "idep_heatmap_bundle")) {
+          ComplexHeatmap::draw(
+            plot_obj$heatmap,
+            annotation_legend_list = plot_obj$legends,
+            annotation_legend_side = "top"
+          )
+        } else {
+          print(plot_obj)
+        }
+      }
 
       output[[ui_id]] <- renderUI({
         req(figure())
@@ -878,7 +1134,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           req(plot_obj)
           on.exit(removeModal(), add = TRUE)
           pdf(file, width = width_value(), height = height_value())
-          print(plot_obj)
+          draw_download_plot(plot_obj)
           dev.off()
         }
       )
@@ -896,7 +1152,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
             height = height_value(),
             units = "in"
           )
-          print(plot_obj)
+          draw_download_plot(plot_obj)
           dev.off()
         }
       )
@@ -908,7 +1164,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           req(plot_obj)
           on.exit(removeModal(), add = TRUE)
           svg(file, width = width_value(), height = height_value())
-          print(plot_obj)
+          draw_download_plot(plot_obj)
           dev.off()
         }
       )
@@ -925,40 +1181,41 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       icon_tag = icon("download")
     )
 
-    # Heatmap Click Value ---------
-    output$ht_click_content <- renderUI({
-      req(!is.null(current_method()))
-
-      main_ready <- !is.null(shiny_env$ht) &&
-        !is.null(shiny_env$ht_pos_main) &&
-        length(shiny_env$ht@ht_list) >= 1
-
-      if (!is.null(input$ht_main_click) && main_ready) {
-        group_info <- tryCatch(main_heatmap_group_info(), error = function(e) NULL)
-        if (!is.null(group_info)) {
-          matrix_obj <- shiny_env$ht@ht_list[[1]]
-          if (!is.null(matrix_obj@matrix)) {
-            click_data_main <- matrix_obj@matrix
-            groups_main <- group_info$groups
-            if (is.factor(groups_main)) {
-              groups_main <- as.character(groups_main)
-            }
-            return(cluster_heat_click_info(
-              click = input$ht_main_click,
-              ht_sub = shiny_env$ht,
-              ht_sub_obj = matrix_obj,
-              ht_pos_sub = shiny_env$ht_pos_main,
-              sub_groups = groups_main,
-              group_colors = group_info$group_colors,
-              cluster_meth = current_method(),
-              click_data = click_data_main
-            ))
-          }
-        }
-      }
-
-      return(NULL)
-    })
+    # Heatmap Click Value - DISABLED
+    # Click functionality has been disabled to only show sub heatmap on brush
+    # output$ht_click_content <- renderUI({
+    #   req(!is.null(current_method()))
+    #
+    #   main_ready <- !is.null(shiny_env$ht) &&
+    #     !is.null(shiny_env$ht_pos_main) &&
+    #     length(shiny_env$ht@ht_list) >= 1
+    #
+    #   if (!is.null(input$ht_main_click) && main_ready) {
+    #     group_info <- tryCatch(main_heatmap_group_info(), error = function(e) NULL)
+    #     if (!is.null(group_info)) {
+    #       matrix_obj <- shiny_env$ht@ht_list[[1]]
+    #       if (!is.null(matrix_obj@matrix)) {
+    #         click_data_main <- matrix_obj@matrix
+    #         groups_main <- group_info$groups
+    #         if (is.factor(groups_main)) {
+    #           groups_main <- as.character(groups_main)
+    #         }
+    #         return(cluster_heat_click_info(
+    #           click = input$ht_main_click,
+    #           ht_sub = shiny_env$ht,
+    #           ht_sub_obj = matrix_obj,
+    #           ht_pos_sub = shiny_env$ht_pos_main,
+    #           sub_groups = groups_main,
+    #           group_colors = group_info$group_colors,
+    #           cluster_meth = current_method(),
+    #           click_data = click_data_main
+    #         ))
+    #       }
+    #     }
+    #   }
+    #
+    #   return(NULL)
+    # })
 
     # depending on the number of genes selected
     # change the height of the sub heatmap
@@ -1017,35 +1274,56 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       {
         if (is.null(input$ht_brush)) {
           grid::grid.newpage()
+          # Only show message if main heatmap data is available
+          if (!is.null(heatmap_data()) && !is.null(input$select_factors_heatmap)) {
+            grid::grid.text(
+              "Drag over a region on the heatmap to zoom in.",
+              x = 0.5,
+              y = 0.5,
+              gp = grid::gpar(
+                fontsize = 14,
+                col = "#666666",
+                fontface = "italic"
+              )
+            )
+          }
           return(invisible(NULL))
         }
 
-        shinybusy::show_modal_spinner(
-          spin = "orbit",
-          text = "Creating sub-heatmap",
-          color = "#000000"
-        )
-        on.exit(shinybusy::remove_modal_spinner(), add = TRUE)
+        withProgress(message = "Creating sub-heatmap", value = 0, {
 
-        submap_return <- heatmap_sub_object_calc()
-        if (is.null(submap_return)) {
-          grid::grid.newpage()
-          return(invisible(NULL))
-        }
+          submap_return <- heatmap_sub_object_calc()
+          if (is.null(submap_return)) {
+            grid::grid.newpage()
+            grid::grid.text(
+              "Unable to create sub-heatmap. Please try selecting a different region.",
+              x = 0.5,
+              y = 0.5,
+              gp = grid::gpar(
+                fontsize = 14,
+                col = "#666666",
+                fontface = "italic"
+              )
+            )
+            return(invisible(NULL))
+          }
 
-        shiny_env$submap_data <- submap_return$submap_data
 
-        ht_static <- ComplexHeatmap::draw(
-          submap_return$ht_select,
-          annotation_legend_list = submap_return$lgd,
-          annotation_legend_side = "top"
-        )
+          shiny_env$submap_data <- submap_return$submap_data
 
-        ht_static
+          ht_static <- ComplexHeatmap::draw(
+            submap_return$ht_select,
+            annotation_legend_list = submap_return$lgd,
+            annotation_legend_side = "top"
+          )
+
+
+          ht_static
+        })
       },
       # adjust height of the zoomed in heatmap dynamically based on selection
       height = reactive(height_sub_heatmap())
-      # width = 500 # this avoids the heatmap being redraw
+#      ,width = 500 # this avoids the heatmap being redraw
     )
 
     # Reactive input versions to store values every submit press
@@ -1082,8 +1360,13 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           sample_info = pre_process$sample_info(),
           select_factors_heatmap = selected_factors_heatmap(),
           cluster_meth = current_method(),
-          group_pal = group_pal(),
-          sample_color = submitted_pal()
+          group_pal = if (selected_factors_heatmap() == "All factors") {
+            group_pal()
+          } else {
+            NULL
+          },
+          sample_color = submitted_pal(),
+          use_letter_overlay = isTRUE(input$letter_overlay)
         )},
         error = function(e) {e$message}
       )
@@ -1110,22 +1393,22 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     # Subheatmap creation ---------
     heatmap_sub_object <- reactive({
       if (is.null(input$ht_brush)) {
-        grid::grid.newpage()
-        grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
-      } else {
-        submap_return <- heatmap_sub_object_calc()
-        if (is.null(submap_return)) {
-          grid::grid.newpage()
-          grid::grid.text("Select a region on the heatmap to zoom in.", 0.5, 0.5)
-        } else {
-          shiny_env$submap_data <- submap_return$submap_data
-          ComplexHeatmap::draw(
-            submap_return$ht_select,
-            annotation_legend_list = submap_return$lgd,
-            annotation_legend_side = "top"
-          )
-        }
+        return(NULL)
       }
+
+      submap_return <- heatmap_sub_object_calc()
+      if (is.null(submap_return)) {
+        return(NULL)
+      }
+
+      shiny_env$submap_data <- submap_return$submap_data
+      structure(
+        list(
+          heatmap = submap_return$ht_select,
+          legends = submap_return$lgd
+        ),
+        class = "idep_heatmap_bundle"
+      )
     })
 
     setup_download_link(
@@ -1135,87 +1418,144 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       filename = "heatmap_zoom",
       default_width = 8,
       default_height = 12,
-      label_tag = tags$span(icon("download"), "\u2192"),
+      label_tag = icon("download"),
       icon_tag = NULL
     )
 
-    # gene lists for enrichment analysis
-    gene_lists <- reactive({
+    # gene lists for enrichment analysis - Hierarchical clustering
+    # This reactive depends on the brush selection for hierarchical clustering
+    hierarchical_gene_lists <- reactive({
       req(!is.null(pre_process$select_gene_id()))
-      req(!is.null(input$ht_brush) || input$cluster_meth == 2)
-      
+      req(!is.null(input$ht_brush))
+      req(input$cluster_meth == 1)
+      req(!is.null(shiny_env$submap_data))
+      req(is.data.frame(shiny_env$submap_data) || is.matrix(shiny_env$submap_data))
+      req(nrow(shiny_env$submap_data) > 0)
+      req(ncol(shiny_env$submap_data) > 0)
+
       gene_lists <- list()
 
-      if (input$cluster_meth == 1) {
+      gene_names <- merge_data(
+        all_gene_names = pre_process$all_gene_names(),
+        data = shiny_env$submap_data,
+        merge_ID = pre_process$select_gene_id()
+      )
+
+      # Only keep the gene names and scrap the data
+      gene_lists[["Selection"]] <- dplyr::select_if(gene_names, is.character)
+
+      return(gene_lists)
+    })
+
+    # gene lists for enrichment analysis - k-means clustering
+    # Extract cluster assignments from the actual heatmap object to ensure
+    # cluster IDs match what's displayed in the heatmap
+    kmeans_gene_lists <- reactive({
+      req(input$cluster_meth == 2)
+      req(!is.null(pre_process$select_gene_id()))
+      req(!is.null(pre_process$all_gene_names()))
+      req(!is.null(heatmap_data()))
+
+      # Depend on heatmap_rendered to ensure we only run after heatmap renders
+      # This prevents reading stale cluster assignments
+      req(heatmap_rendered() > 0)
+
+      # Wait for heatmap to be rendered first
+      req(!is.null(shiny_env$ht))
+
+      heatmap_mat <- as.matrix(heatmap_data())
+
+      # Extract row order from the rendered heatmap
+      # This ensures cluster IDs match the displayed heatmap slices
+      row_ord <- tryCatch(
+        ComplexHeatmap::row_order(shiny_env$ht),
+        error = function(e) NULL
+      )
+
+      if (is.null(row_ord) || length(row_ord) == 0) {
+        return(NULL)
+      }
+
+      cluster_ids <- names(row_ord)
+      if (is.null(cluster_ids)) {
+        cluster_ids <- as.character(seq_along(row_ord))
+      } else {
+        cluster_ids[cluster_ids == ""] <- NA_character_
+        missing_ids <- is.na(cluster_ids)
+        if (any(missing_ids)) {
+          cluster_ids[missing_ids] <- as.character(which(missing_ids))
+        }
+      }
+
+      # Create gene lists based on heatmap slice order.
+      # Preserve the cluster IDs generated by ComplexHeatmap so downstream
+      # components (enrichment, downloads, etc.) stay consistent.
+      gene_lists <- lapply(seq_along(row_ord), function(i) {
+        row_indices <- row_ord[[i]]
+
+        # Use sequential numbering based on visual position
+        # i=1 is the top cluster, i=2 is second from top, etc.
+        cluster_number <- cluster_ids[[i]]
+
+        # Filter out invalid indices (can happen when heatmap data changes)
+        # Only keep indices that are within the current heatmap matrix bounds
+        valid_indices <- row_indices[row_indices > 0 & row_indices <= nrow(heatmap_mat)]
+
+        if (length(valid_indices) == 0) {
+          return(NULL)
+        }
+
+        member_names <- rownames(heatmap_mat)[valid_indices]
+
+        # Check for NA row names (shouldn't happen but extra safety)
+        if (any(is.na(member_names))) {
+          return(NULL)
+        }
+
+        cluster_data <- data.frame(
+          row_order = valid_indices,
+          cluster = rep(cluster_number, length(member_names)),
+          row.names = member_names,
+          stringsAsFactors = FALSE
+        )
+
         gene_names <- merge_data(
           all_gene_names = pre_process$all_gene_names(),
-          data = shiny_env$submap_data,
+          data = cluster_data,
           merge_ID = pre_process$select_gene_id()
         )
 
-        # Only keep the gene names and scrap the data
-        gene_lists[["Selection"]] <- dplyr::select_if(gene_names, is.character)
+        dplyr::select_if(gene_names, is.character)
+      })
 
-        # k-means-----------------------------------------------------
-      } else if (input$cluster_meth == 2) {
-        # Get the cluster number and Gene
+      # Keep names aligned with the heatmap cluster IDs
+      names(gene_lists) <- cluster_ids
 
-        req(heatmap_data())
-        req(input$k_clusters)
-        req(pre_process$select_gene_id())
-        req(shiny_env$ht)
+      # Drop any empty clusters
+      gene_lists <- gene_lists[!vapply(gene_lists, is.null, logical(1))]
 
-        row_ord <- ComplexHeatmap::row_order(shiny_env$ht)
-
-        req(!is.null(names(row_ord)))
-
-        for (i in 1:length(row_ord)) {
-          if (i == 1) {
-            clusts <- data.frame(
-              "cluster" = rep(names(row_ord[i]), length(row_ord[[i]])),
-              "row_order" = row_ord[[i]]
-            )
-          } else {
-            tem <- data.frame(
-              "cluster" = rep(names(row_ord[i]), length(row_ord[[i]])),
-              "row_order" = row_ord[[i]]
-            )
-            clusts <- rbind(clusts, tem)
-          }
-        }
-        clusts$id <- rownames(heatmap_data()[clusts$row_order, ])
-        
-        req(length(unique(clusts$cluster)) == input$k_clusters)
-        # disregard user selection use clusters for enrichment
-        for (i in 1:input$k_clusters) {
-          cluster_data <- subset(clusts, cluster == i)
-          row.names(cluster_data) <- cluster_data$id
-
-          gene_names <- merge_data(
-            all_gene_names = pre_process$all_gene_names(),
-            data = cluster_data,
-            merge_ID = pre_process$select_gene_id()
-          )
-
-          # Only keep the gene names and scrap the data
-          gene_lists[[paste0("", i)]] <-
-            dplyr::select_if(gene_names, is.character)
-        }
+      if (length(gene_lists) == 0) {
+        return(NULL)
       }
-      return(gene_lists)
+
+      gene_lists
     })
-    
+
     k_means_list <- reactive({
-      req(!is.null(gene_lists()))
-      gene_lists()
+      req(!is.null(kmeans_gene_lists()))
+      kmeans_gene_lists()
     })
-    
+
     gene_list_clust <- reactive({
       req(!is.null(input$cluster_meth))
-      
+
       if (current_method() == 1){
-        gene_lists()
+        # For hierarchical clustering, only return gene lists if we have valid data
+        req(!is.null(input$ht_brush))
+        req(!is.null(shiny_env$submap_data))
+        hierarchical_gene_lists()
       } else {
+        # For k-means clustering, gene lists are based on clusters
         req(!is.null(k_means_list()))
         k_means_list()
       }
@@ -1265,9 +1605,25 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       return(p)
     })
 
+    # Calculate dynamic height for sample tree based on number of samples
+    height_sample_tree <- reactive({
+      data_mat <- pre_process$data()
+      if (is.null(data_mat)) {
+        return(400)
+      }
+
+      # Number of samples (columns in the data)
+      n_samples <- ncol(data_mat)
+
+      # Each sample requires 12px to be readable, with minimum of 400px
+      height <- max(400, 14 * n_samples)
+
+      return(height)
+    })
+
     output$sample_tree <- renderPlot({
       print(sample_tree())
-    })
+    }, height = reactive(height_sample_tree()))
 
     dl_sample_tree <- ottoPlots::mod_download_figure_server(
       id = "dl_sample_tree",
@@ -1308,6 +1664,11 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         inputId = "cluster_enrichment",
         value = FALSE
       )
+      updateCheckboxInput(
+        session = session,
+        inputId = "cluster_enrichment_label",
+        value = FALSE
+      )
 
       # Clear the brush selection by sending JavaScript to reset it
       session$sendCustomMessage(
@@ -1334,7 +1695,22 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
             inputId = "cluster_enrichment",
             value = FALSE
           )
+          updateCheckboxInput(
+            session = session,
+            inputId = "cluster_enrichment_label",
+            value = FALSE
+          )
         }
+      }
+    })
+
+    observeEvent(input$cluster_enrichment, {
+      if (!isTRUE(input$cluster_enrichment)) {
+        updateCheckboxInput(
+          session = session,
+          inputId = "cluster_enrichment_label",
+          value = FALSE
+        )
       }
     })
 
@@ -1434,32 +1810,141 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         strsplit(load_data$heatmap_color_select(), "-")[[1]][c(1,3)]
       })
     )
+
+    # Extract top pathway names for each cluster for heatmap labels
+    cluster_pathway_labels <- reactive({
+      # Only compute labels when enrichment is enabled, labeling requested, and using k-means
+      if (!isTRUE(input$cluster_enrichment) ||
+          !isTRUE(input$cluster_enrichment_label) ||
+          input$cluster_meth != 2) {
+        return(NULL)
+      }
+
+      pathway_table <- enrichment_table_cluster$pathway_table()
+      if (is.null(pathway_table)) {
+        return(NULL)
+      }
+
+      req(!is.null(k_means_list()))
+      cluster_ids <- names(k_means_list())
+      if (is.null(cluster_ids) || length(cluster_ids) == 0) {
+        cluster_ids <- as.character(seq_along(k_means_list()))
+      }
+
+      k <- length(cluster_ids)
+      max_terms <- input$pathway_label_max
+      fdr_threshold <- input$pathway_label_fdr
+      empty_label <- character(0)
+      fontsize <- 10
+
+      formatted_labels <- setNames(vector("list", length = k), cluster_ids)
+
+      for (cluster_name in cluster_ids) {
+        cluster_lines <- character()
+
+        if (!is.null(pathway_table) && cluster_name %in% names(pathway_table)) {
+          cluster_data <- pathway_table[[cluster_name]]
+
+          if (is.data.frame(cluster_data) &&
+              nrow(cluster_data) > 0 &&
+              "Pathway" %in% colnames(cluster_data) &&
+              "FDR" %in% colnames(cluster_data)) {
+
+            # Ensure numeric FDR values and order by significance
+            fdr_values <- suppressWarnings(as.numeric(cluster_data$FDR))
+            cluster_data$FDR <- fdr_values
+            cluster_data <- cluster_data[!is.na(cluster_data$FDR), , drop = FALSE]
+            cluster_data <- cluster_data[order(cluster_data$FDR), , drop = FALSE]
+            cluster_data <- cluster_data[cluster_data$FDR <= fdr_threshold, , drop = FALSE]
+
+            if (nrow(cluster_data) > 0) {
+              top_rows <- head(cluster_data, max_terms)
+
+              cluster_lines <- unlist(
+                lapply(seq_len(nrow(top_rows)), function(idx) {
+                  pathway_name <- as.character(top_rows$Pathway[idx])
+                  if (is.na(pathway_name) || !nzchar(pathway_name)) {
+                    return(character())
+                  }
+                  wrapped <- strwrap(pathway_name, width = 32)
+                  if (length(wrapped) == 0) {
+                    return(character())
+                  }
+                  #wrapped[1] <- paste0("- ", wrapped[1])
+                  if (length(wrapped) > 1) {
+                    wrapped[-1] <- paste0("  ", wrapped[-1])
+                  }
+                  wrapped
+                })
+              )
+            }
+          }
+        }
+
+        if (length(cluster_lines) == 0) {
+          cluster_lines <- empty_label
+        } else {
+          combined <- paste(cluster_lines, collapse = "\n")
+          if (nchar(combined) > 150) {
+            truncated <- substr(combined, 1, 97)
+            truncated <- sub("\n+$", "", truncated)
+            truncated <- paste0(truncated, "...")
+            cluster_lines <- strsplit(truncated, "\n", fixed = TRUE)[[1]]
+            if (length(cluster_lines) == 0) {
+              cluster_lines <- empty_label
+            }
+          }
+        }
+        formatted_labels[[cluster_name]] <- cluster_lines
+      }
+
+      all_label_lines <- unique(unlist(formatted_labels, use.names = FALSE))
+      all_label_lines <- all_label_lines[nzchar(all_label_lines)]
+      if (length(all_label_lines) == 0) {
+        all_label_lines <- ""
+      }
+
+      text_width <- ComplexHeatmap::max_text_width(
+        all_label_lines,
+        gp = grid::gpar(fontsize = fontsize)
+      )
+
+      annotation_width <- text_width + grid::unit(6, "mm")
+      cluster_colors <- colorspace::qualitative_hcl(
+        n = max(k, 3),
+        palette = "Dark 3",
+        c = 70
+      )[seq_len(k)]
+
+      list(
+        labels = unname(formatted_labels),
+        colors = cluster_colors,
+        width = annotation_width,
+        empty_label = empty_label,
+        fontsize = fontsize
+      )
+    })
     
     # Generate word/frequency data for word cloud
     word_cloud_data <- reactive({
       req(!is.na(input$select_cluster))
       req(!is.null(input$cloud_go))
       req(!is.null(k_means_list()))
-      
-      shinybusy::show_modal_spinner(
-        spin = "orbit",
-        text = "Creating Word Cloud",
-        color = "#000000"
-      )
-      prep_cloud_data(gene_lists = k_means_list(), 
-                      cluster = input$select_cluster,
-                      cloud_go = input$cloud_go,
-                      select_org = pre_process$select_org(),
-                      converted = pre_process$converted(),
-                      gmt_file = pre_process$gmt_file(),
-                      idep_data = idep_data,
-                      gene_info = pre_process$all_gene_info())
+
+      withProgress(message = "Creating Word Cloud", value = 0.5, {
+        prep_cloud_data(gene_lists = k_means_list(),
+                        cluster = input$select_cluster,
+                        cloud_go = input$cloud_go,
+                        select_org = pre_process$select_org(),
+                        converted = pre_process$converted(),
+                        gmt_file = pre_process$gmt_file(),
+                        idep_data = idep_data,
+                        gene_info = pre_process$all_gene_info())
+      })
     })
-    
+
     output$word_cloud <- wordcloud2::renderWordcloud2({
       req(!is.null(word_cloud_data()))
-      
-      shinybusy::remove_modal_spinner()
       
       if ("character" %in% class(word_cloud_data())){
         NULL
@@ -1518,6 +2003,23 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           markdown_location <- app_sys("app/www/RMD/clustering_workflow.Rmd")
           file.copy(from = markdown_location, to = tempReport, overwrite = TRUE)
 
+          # Prepare enrichment results for report export
+          cluster_enrichment_export <- NULL
+          if (isTRUE(input$cluster_enrichment)) {
+            if (input$cluster_meth == 1 &&
+                !is.null(shiny_env$submap_data)) {
+              cluster_enrichment_export <- tryCatch(
+                isolate(enrichment_table_cluster$pathway_table()),
+                error = function(e) NULL
+              )
+            } else if (input$cluster_meth == 2) {
+              cluster_enrichment_export <- tryCatch(
+                isolate(enrichment_table_cluster$pathway_table()),
+                error = function(e) NULL
+              )
+            }
+          }
+
           # Set up parameters to pass to Rmd document
           params <- list(
             pre_processed_data = pre_process$data(),
@@ -1541,7 +2043,9 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
             selected_genes = input$selected_genes,
             submap_data = if(!is.null(shiny_env$submap_data)) shiny_env$submap_data else NULL,
             select_factors_heatmap = input$select_factors_heatmap,
-            sample_color = input$sample_color
+            sample_color = input$sample_color,
+            cluster_enrichment_enabled = isTRUE(input$cluster_enrichment),
+            cluster_enrichment_results = cluster_enrichment_export
           )
 
           req(params)

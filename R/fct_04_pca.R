@@ -43,11 +43,6 @@ get_pc <- function(data,
 #' @export
 #' @return importance of each pc
 get_pc_variance <- function(data) {
-  # subset data if more than 100 columns
-  if (ncol(data) > 100) {
-    part <- 1:100
-    data <- data[, part]
-  }
   # pca
   pca.object <- prcomp(t(data))
 
@@ -282,6 +277,7 @@ PCA_plot_3d <- function(data,
 
   # plot color scheme
   color_palette <- generate_colors(n = levels, palette_name = plots_color_select)
+  legend_title <- if (identical(selected_color, "Names")) "" else selected_color
   
   # selected principal components
   PCAxyz <- c(as.integer(PCAx), as.integer(PCAy), as.integer(PCAz))
@@ -308,7 +304,7 @@ PCA_plot_3d <- function(data,
     )
   plot_PCA <- plotly::layout(
     p = plot_PCA,
-    legend = list(title = list(text = "Names")),
+    legend = list(title = list(text = legend_title)),
     plot_bgcolor = "#e5ecf6",
     scene = list(
       xaxis = list(
@@ -403,6 +399,8 @@ t_SNE_plot <- function(data,
 
   # plot color scheme
   color_palette <- generate_colors(n = nlevels(as.factor(pcaData$Names)), palette_name = plots_color_select)
+  legend_color_title <- if (identical(selected_color, "Names")) NULL else selected_color
+  legend_shape_title <- if (identical(selected_shape, "Names")) NULL else selected_shape
 
   # Generate plot
   plot_t_SNE <- ggplot2::ggplot(
@@ -446,7 +444,9 @@ t_SNE_plot <- function(data,
     ggplot2::labs(
       title = memo,
       y = "Dimension 2",
-      x = "Dimension 1"
+      x = "Dimension 1",
+      color = legend_color_title,
+      shape = legend_shape_title
     ) +
     ggplot2::scale_color_manual(values = color_palette)
 
@@ -533,6 +533,8 @@ MDS_plot <- function(data,
 
   # plot color scheme
   color_palette <- generate_colors(n = nlevels(as.factor(pcaData$Names)), palette_name = plots_color_select)
+  legend_color_title <- if (identical(selected_color, "Names")) NULL else selected_color
+  legend_shape_title <- if (identical(selected_shape, "Names")) NULL else selected_shape
 
   p <- ggplot2::ggplot(
     data = pcaData,
@@ -575,7 +577,9 @@ MDS_plot <- function(data,
     ggplot2::labs(
       title = memo,
       y = "Dimension 2",
-      x = "Dimension 1"
+      x = "Dimension 1",
+      color = legend_color_title,
+      shape = legend_shape_title
     ) +
     ggplot2::scale_color_manual(values = color_palette)
 
@@ -668,6 +672,7 @@ pc_factor_correlation <- function(data,
 #'  Should be one of the design factors from the design file
 #' @param ui_shape String designating factor to shape points by.
 #'  Should be one of the design factors from the design file
+#' @param plots_color_select Vector of colors for plots
 #'
 #' @export
 #' @return A \code{ggplot} object formatted as a PCA plot using PCAtools package
@@ -689,7 +694,8 @@ PCA_biplot <- function(data,
                        pointlabs = TRUE,
                        point_size = 4.0,
                        ui_color = NULL,
-                       ui_shape = NULL) {
+                       ui_shape = NULL,
+                       plots_color_select = "Set1") {
   # missing design
   if (is.null(sample_info)) {
     sample_groups <- detect_groups(colnames(data))
@@ -706,6 +712,28 @@ PCA_biplot <- function(data,
     }
   } else {
     meta_data <- sample_info
+    if (!is.data.frame(meta_data)) {
+      meta_data <- as.data.frame(meta_data, stringsAsFactors = FALSE)
+    }
+    # Fallback to first available column if the selected aesthetics
+    # are missing or not yet initialized (can happen right after
+    # uploading a design file before the UI updates)
+    available_cols <- colnames(meta_data)
+    if (length(available_cols) == 0) {
+      sample_groups <- detect_groups(colnames(data))
+      meta_data <- data.frame(
+        Groups = sample_groups,
+        row.names = colnames(data),
+        stringsAsFactors = FALSE
+      )
+      available_cols <- "Groups"
+    }
+    if (is.null(ui_color) || !(ui_color %in% available_cols)) {
+      ui_color <- available_cols[1]
+    }
+    if (is.null(ui_shape) || !(ui_shape %in% available_cols)) {
+      ui_shape <- available_cols[1]
+    }
   }
 
   # Swap rownames
@@ -723,20 +751,38 @@ PCA_biplot <- function(data,
     show_point_labels <- NULL
   }
 
+  # Generate custom color palette for all groups
+  unique_color_groups <- unique(as.character(meta_data[[ui_color]]))
+  n_color_groups <- length(unique_color_groups)
+  color_palette <- generate_colors(n = n_color_groups, palette_name = plots_color_select)
+
+  # Create named vector for colkey
+  names(color_palette) <- unique_color_groups
+
+  # Generate shape key for all groups
+  unique_shape_groups <- unique(as.character(meta_data[[ui_shape]]))
+  n_shape_groups <- length(unique_shape_groups)
+  # Define available shapes (using R's pch values)
+  available_shapes <- c(15, 16, 17, 18, 0, 1, 2, 3, 4, 5, 6, 7, 8)
+  shape_values <- rep(available_shapes, length.out = n_shape_groups)
+  names(shape_values) <- unique_shape_groups
+
   PCAtools::biplot(
     pcaobj = pca_obj,
     x = selected_x,
     y = selected_y,
     colby = ui_color,
+    colkey = color_palette,
     shape = ui_shape,
+    shapekey = shape_values,
     # colLegendTitle = 'Color?',
     encircle = encircle,
     encircleFill = encircleFill,
     showLoadings = showLoadings,
     lab = show_point_labels,
     legendPosition = "right",
-    legendLabSize = 16,
-    legendIconSize = 8.0,
+    legendLabSize = 10,
+    legendIconSize = 4.0,
     pointSize = point_size,
     title = NULL
   )

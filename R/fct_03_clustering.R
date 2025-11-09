@@ -198,6 +198,73 @@ process_heatmap_data <- function(data,
   return(data)
 }
 
+#' Build a legend with overlay markers
+#'
+#' @param levels Character vector of factor levels.
+#' @param colors Named character vector of colors.
+#' @param markers Named character vector of single-character markers matching the levels.
+#' @param title Optional legend title.
+#'
+#' @return A ComplexHeatmap legend object.
+build_marker_legend <- function(levels,
+                                colors,
+                                markers,
+                                title = NULL) {
+  if (length(levels) == 0) {
+    return(NULL)
+  }
+
+  ordered_colors <- colors[levels]
+  ordered_markers <- markers[levels]
+
+  graphics_layers <- lapply(seq_along(levels), function(i) {
+    marker_val <- ordered_markers[i]
+    if (is.na(marker_val) || identical(marker_val, "")) {
+      marker_val <- "?"
+    }
+    marker_val <- tolower(marker_val)
+    fill_col <- ordered_colors[i]
+    function(x, y, w, h) {
+      grid::grid.rect(
+        x = x,
+        y = y,
+        width = w,
+        height = h,
+        gp = grid::gpar(fill = fill_col, col = NA)
+      )
+      grid::grid.text(
+        x = x,
+        y = y,
+        label = marker_val,
+        gp = grid::gpar(col = "black", fontsize = 8, fontface = "bold")
+      )
+    }
+  })
+
+  ComplexHeatmap::Legend(
+    title = if (is.null(title)) "" else title,
+    at = levels,
+    type = "grid",
+    legend_gp = grid::gpar(
+      fill = ordered_colors,
+      col = NA
+    ),
+    graphics = graphics_layers,
+    nrow = length(levels)
+  )
+}
+
+make_letter_markers <- function(levels) {
+  if (length(levels) == 0) {
+    return(setNames(character(0), character(0)))
+  }
+  markers <- trimws(levels)
+  markers[markers == "" | is.na(markers)] <- "?"
+  markers <- tolower(substr(markers, 1, 1))
+  markers[markers == "" | is.na(markers)] <- "?"
+  setNames(markers, levels)
+}
+
 #' Draw a heatmap of processed data
 #'
 #' Uses the package ComplexHeatmaps to draw a heatmap of the
@@ -223,6 +290,14 @@ process_heatmap_data <- function(data,
 #' @param group_pal Named list of colors and their corresponding categories
 #' @param sample_color Selected colorspace color palette
 #' @param show_column_names TRUE/FALSE Show sample names below the heatmap
+#' @param show_heatmap_legend TRUE/FALSE Show the color key legend on the heatmap
+#' @param row_dend_obj Optional precomputed row dendrogram to reuse
+#' @param col_dend_obj Optional precomputed column dendrogram to reuse
+#' @param use_letter_overlay Logical flag to overlay uppercase letters on sample annotations.
+#' @param show_cluster_labels Logical flag to show cluster labels (e.g., "Cluster 1", "Cluster 2")
+#'   on the right side for k-means clustering using anno_block().
+#' @param custom_cluster_labels Optional named vector of custom labels for k-means clusters.
+#'   Names should be cluster numbers ("1", "2", etc.), values are the labels to display.
 #'
 #' @export
 #' @return Heatmap of the processed data.
@@ -249,7 +324,13 @@ heatmap_main <- function(data,
                          selected_genes,
                          group_pal = NULL,
                          sample_color = NULL,
-                         show_column_names = FALSE) {
+                         show_column_names = FALSE,
+                         show_heatmap_legend = FALSE,
+                         row_dend_obj = NULL,
+                         col_dend_obj = NULL,
+                         use_letter_overlay = TRUE,
+                         show_cluster_labels = FALSE,
+                         custom_cluster_labels = NULL) {
   # Filter with max z-score
   cutoff <- median(unlist(data)) + heatmap_cutoff * sd(unlist(data))
   data[data > cutoff] <- cutoff
@@ -270,68 +351,223 @@ heatmap_main <- function(data,
   }
   groups <- detect_groups(colnames(data))
   heat_ann <- NULL
-  if (!is.null(select_factors_heatmap)) {
+  annotation_legends <- list()
+  if (!is.null(select_factors_heatmap) && select_factors_heatmap != "None") {
     if (select_factors_heatmap != "All factors") { # one factor-------
       show_legend <- TRUE
       # Annotation for groups
       if (!is.null(sample_info) && !is.null(select_factors_heatmap)) {
         if (select_factors_heatmap == "Names") {
           groups <- detect_groups(colnames(data))
-          show_legend <- FALSE
         } else {
           ix <- match(select_factors_heatmap, colnames(sample_info))
           groups <- sample_info[, ix]
         }
       }
-      groups_colors <- colorspace::qualitative_hcl(length(unique(groups)), 
-                                                   palette = sample_color,
-                                                   c = 70)
-      heat_ann <- ComplexHeatmap::HeatmapAnnotation(
-        Group = groups,
-        col = list(Group = setNames(groups_colors, unique(groups))),
-        show_annotation_name = list(Group = FALSE),
-        show_legend = show_legend
+      groups <- as.character(groups)
+      groups[is.na(groups)] <- "NA"
+      group_levels <- unique(groups)
+      group_colors <- colorspace::qualitative_hcl(
+        length(group_levels),
+        palette = sample_color,
+        c = 70
       )
+      group_colors <- setNames(group_colors, group_levels)
+      group_markers <- if (use_letter_overlay) make_letter_markers(group_levels) else NULL
+      group_annotation <- if (use_letter_overlay) {
+        ComplexHeatmap::anno_simple(
+          x = groups,
+          col = group_colors,
+          pch = group_markers[groups],
+          pt_gp = grid::gpar(col = "black", fill = NA, fontsize = 8, fontface = "bold")
+        )
+      } else {
+        ComplexHeatmap::anno_simple(
+          x = groups,
+          col = group_colors
+        )
+      }
+      heat_ann <- ComplexHeatmap::HeatmapAnnotation(
+        Group = group_annotation,
+        show_annotation_name = FALSE,
+        show_legend = FALSE
+      )
+      if (show_legend) {
+        legend_entry <- if (use_letter_overlay) {
+          build_marker_legend(
+            levels = group_levels,
+            colors = group_colors,
+            markers = group_markers,
+            title = "Group"
+          )
+        } else {
+          ComplexHeatmap::Legend(
+            title = "Group",
+            at = group_levels,
+            type = "grid",
+            legend_gp = grid::gpar(fill = group_colors, col = NA)
+          )
+        }
+        annotation_legends <- c(annotation_legends, list(legend_entry))
+      }
     } else { # more factors------------------------
-      
-      heat_ann <- ComplexHeatmap::HeatmapAnnotation(
-        df = sample_info,
-        col = group_pal,
-        show_legend = TRUE
-      )
+      limited_sample_info <- limit_annotation_factors(sample_info)
+      if (!is.null(limited_sample_info) && ncol(limited_sample_info) > 0) {
+        factor_names <- colnames(limited_sample_info)
+        factor_annotations <- vector("list", length(factor_names))
+        names(factor_annotations) <- factor_names
+        factor_legends <- list()
+
+        for (i in seq_along(factor_names)) {
+          factor_name <- factor_names[i]
+          factor_groups <- as.character(limited_sample_info[, i])
+          factor_groups[is.na(factor_groups)] <- "NA"
+          levels_used <- unique(factor_groups)
+
+          if (length(levels_used) == 0) {
+            next
+          }
+
+          colors_named <- NULL
+          if (!is.null(group_pal) && !is.null(group_pal[[factor_name]])) {
+            colors_named <- group_pal[[factor_name]]
+          }
+          if (is.null(colors_named)) {
+            colors_named <- colorspace::qualitative_hcl(
+              length(levels_used),
+              palette = sample_color,
+              c = 70
+            )
+            colors_named <- setNames(colors_named, levels_used)
+          } else {
+            missing_levels <- setdiff(levels_used, names(colors_named))
+            if (length(missing_levels) > 0) {
+              extra_cols <- colorspace::qualitative_hcl(
+                length(missing_levels),
+                palette = sample_color,
+                c = 70
+              )
+              colors_named <- c(colors_named, setNames(extra_cols, missing_levels))
+            }
+            colors_named <- colors_named[levels_used]
+          }
+
+          factor_markers <- if (use_letter_overlay) make_letter_markers(levels_used) else NULL
+
+          factor_annotations[[i]] <- if (use_letter_overlay) {
+            ComplexHeatmap::anno_simple(
+              factor_groups,
+              col = colors_named,
+              pch = factor_markers[factor_groups],
+              pt_gp = grid::gpar(col = "black", fill = NA, fontsize = 8, fontface = "bold")
+            )
+          } else {
+            ComplexHeatmap::anno_simple(
+              factor_groups,
+              col = colors_named
+            )
+          }
+
+          legend_entry <- if (use_letter_overlay) {
+            build_marker_legend(
+              levels = levels_used,
+              colors = colors_named,
+              markers = factor_markers,
+              title = factor_name
+            )
+          } else {
+            ComplexHeatmap::Legend(
+              title = factor_name,
+              at = levels_used,
+              type = "grid",
+              legend_gp = grid::gpar(fill = colors_named, col = NA)
+            )
+          }
+
+          factor_legends <- c(
+            factor_legends,
+            list(legend_entry)
+          )
+        }
+
+        factor_legends <- Filter(Negate(is.null), factor_legends)
+
+        heat_ann <- do.call(
+          ComplexHeatmap::HeatmapAnnotation,
+          c(
+            factor_annotations,
+            list(
+              show_annotation_name = FALSE,
+              show_legend = FALSE
+            )
+          )
+        )
+        annotation_legends <- c(annotation_legends, factor_legends)
+      }
     }
   }
-  
+  annotation_legends <- Filter(Negate(is.null), annotation_legends)
+  if (length(annotation_legends) == 0) {
+    annotation_legends <- NULL
+  }
+
   # Different heatmaps for hierarchical and k-means
   if (cluster_meth == 1) {
-    heat <- ComplexHeatmap::Heatmap(
-      data,
+    use_precomputed_row <- row_dend && !is.null(row_dend_obj)
+    use_precomputed_col <- sample_clustering && !is.null(col_dend_obj)
+
+    cluster_rows_value <- if (row_dend) {
+      if (use_precomputed_row) row_dend_obj else TRUE
+    } else {
+      FALSE
+    }
+
+    cluster_columns_value <- if (sample_clustering) {
+      if (use_precomputed_col) col_dend_obj else TRUE
+    } else {
+      FALSE
+    }
+
+    heat_args <- list(
+      matrix = data,
       name = "Expression",
       col = col_fun,
-      clustering_method_rows = hclust_function,
-      clustering_method_columns = hclust_function,
-      clustering_distance_rows = function(x) {
-        dist_funs[[as.numeric(dist_function)]](x)
-      },
-      clustering_distance_columns = function(x) {
-        dist_funs[[as.numeric(dist_function)]](x)
-      },
-      cluster_rows = TRUE,
-      cluster_columns = sample_clustering,
-      show_column_dend = TRUE,
+      cluster_rows = cluster_rows_value,
+      cluster_columns = cluster_columns_value,
+      show_column_dend = sample_clustering,
       show_row_dend = row_dend,
       row_dend_side = "left",
       row_dend_width = grid::unit(1, "cm"),
       top_annotation = heat_ann,
       show_row_names = FALSE,
       show_column_names = show_column_names,
+      show_heatmap_legend = show_heatmap_legend,
       heatmap_legend_param = list(
         direction = "horizontal",
         legend_width = grid::unit(6, "cm"),
         title = "Color Key",
         title_position = "topcenter"
-      )
+      ),
+      use_raster = TRUE,        # Force rasterization for performance
+      raster_quality = 1,       # Good quality/performance balance
+      border = FALSE            # Disable borders for faster rendering
     )
+
+    if (row_dend && !use_precomputed_row) {
+      heat_args$clustering_method_rows <- hclust_function
+      heat_args$clustering_distance_rows <- function(x) {
+        dist_funs[[as.numeric(dist_function)]](x)
+      }
+    }
+
+    if (sample_clustering && !use_precomputed_col) {
+      heat_args$clustering_method_columns <- hclust_function
+      heat_args$clustering_distance_columns <- function(x) {
+        dist_funs[[as.numeric(dist_function)]](x)
+      }
+    }
+
+    heat <- do.call(ComplexHeatmap::Heatmap, heat_args)
   } else if (cluster_meth == 2) {
     set.seed(re_run)
     if (k_clusters > 10) {
@@ -339,6 +575,92 @@ heatmap_main <- function(data,
     } else {
       row_title <- 10
     }
+
+    # Create custom right-side annotation when enrichment labels are available
+    cluster_labels_ann <- NULL
+    if (show_cluster_labels) {
+      if (!is.null(custom_cluster_labels) &&
+          is.list(custom_cluster_labels) &&
+          !is.null(custom_cluster_labels$labels)) {
+        annotation_width <- custom_cluster_labels$width
+        if (is.null(annotation_width)) {
+          annotation_width <- grid::unit(35, "mm")
+        }
+        label_lines_list <- custom_cluster_labels$labels
+        cluster_colors <- custom_cluster_labels$colors
+        if (is.null(cluster_colors) || length(cluster_colors) == 0) {
+          cluster_colors <- rep("#4D4D4D", k_clusters)
+        }
+        cluster_colors <- rep(cluster_colors, length.out = k_clusters)
+        fallback_label <- if (!is.null(custom_cluster_labels$empty_label)) {
+          custom_cluster_labels$empty_label
+        } else {
+          character(0)
+        }
+        fontsize <- if (!is.null(custom_cluster_labels$fontsize)) {
+          custom_cluster_labels$fontsize
+        } else {
+          10
+        }
+
+        cluster_labels_ann <- ComplexHeatmap::rowAnnotation(
+          enrichment = ComplexHeatmap::anno_block(
+            gp = grid::gpar(fill = NA, col = NA),
+            labels = rep("", k_clusters),
+            labels_gp = grid::gpar(fontsize = fontsize),
+            labels_rot = 0,
+            width = annotation_width,
+            panel_fun = function(index, k, ...) {
+              slice_id <- as.integer(k)
+              if (is.na(slice_id) || slice_id < 1) {
+                slice_id <- 1
+              } else if (slice_id > length(label_lines_list)) {
+                slice_id <- length(label_lines_list)
+              }
+              label_lines <- label_lines_list[[slice_id]]
+              if (is.null(label_lines) || length(label_lines) == 0) {
+                label_lines <- fallback_label
+              }
+              bar_color <- cluster_colors[min(slice_id, length(cluster_colors))]
+              grid::grid.rect(
+                x = 0,
+                width = grid::unit(2, "mm"),
+                just = "left",
+                gp = grid::gpar(
+                  fill = bar_color,
+                  col = NA
+                )
+              )
+              if (length(label_lines) > 0) {
+                grid::grid.text(
+                  paste(label_lines, collapse = "\n"),
+                  x = grid::unit(4, "mm"),
+                  just = "left",
+                  gp = grid::gpar(fontsize = fontsize)
+                )
+              }
+            }
+          )
+        )
+      } else {
+        cluster_labels <- if (!is.null(custom_cluster_labels) &&
+                              length(custom_cluster_labels) == k_clusters) {
+          custom_cluster_labels
+        } else {
+          paste("Cluster", seq_len(k_clusters))
+        }
+        cluster_labels_ann <- ComplexHeatmap::rowAnnotation(
+          cluster = ComplexHeatmap::anno_block(
+            gp = grid::gpar(fill = "lightblue", col = "black"),
+            labels = cluster_labels,
+            labels_gp = grid::gpar(col = "black", fontsize = 10, fontface = "bold"),
+            labels_rot = 0,
+            width = grid::unit(3, "cm")
+          )
+        )
+      }
+    }
+
     heat <- ComplexHeatmap::Heatmap(
       data,
       name = "Expression",
@@ -352,15 +674,20 @@ heatmap_main <- function(data,
       row_dend_side = "left",
       row_dend_width = grid::unit(1, "cm"),
       top_annotation = heat_ann,
+      right_annotation = cluster_labels_ann,
       show_row_names = FALSE,
       show_column_names = show_column_names,
+      show_heatmap_legend = show_heatmap_legend,
       heatmap_legend_param = list(
         direction = "horizontal",
         legend_width = grid::unit(6, "cm"),
         title = "Color Key",
         title_position = "topcenter"
       ),
-      row_title_gp = grid::gpar(fontsize = row_title)
+      row_title_gp = grid::gpar(fontsize = row_title),
+      use_raster = TRUE,        # Force rasterization for performance
+      raster_quality = 1,       # Good quality/performance balance
+      border = FALSE            # Disable borders for faster rendering
     )
   }
 
@@ -394,12 +721,15 @@ heatmap_main <- function(data,
     )
   }
 
-  return(
-    ComplexHeatmap::draw(
-      heat,
-      heatmap_legend_side = "bottom"
-    )
+  ht <- ComplexHeatmap::draw(
+    heat,
+    heatmap_legend_side = if (show_heatmap_legend) "bottom" else NULL,
+    annotation_legend_list = annotation_legends,
+    #align_annotation_legend = "heatmap_top",
+    annotation_legend_side = "top"
   )
+
+  return(ht)
 }
 
 #' Draw a dendogram of data samples
@@ -537,9 +867,10 @@ k_means_elbow <- function(heatmap_data) {
 #' @param data Matrix of heatmap data
 #' @param sample_info Matrix of experiment design information from load data
 #' @param select_factors_heatmap Factor to group by in the samples.
-#'   "All factors" will use all of the sample information.
+#'   "All factors" will use up to the first three columns of the sample information.
 #' @param group_pal Named list of colors and their corresponding categories
 #' @param sample_color Selected colorspace color palette
+#' @param use_letter_overlay Logical flag to overlay uppercase letters on sample annotations.
 #'
 #' @export
 #' @return A list containing a ComplexHeatmap annotation object,
@@ -547,24 +878,159 @@ k_means_elbow <- function(heatmap_data) {
 #'
 #' @family clustering functions
 #' @family heatmaps
+limit_annotation_factors <- function(sample_info, max_factors = 3) {
+  if (is.null(sample_info)) {
+    return(sample_info)
+  }
+  if (!is.matrix(sample_info) && !is.data.frame(sample_info)) {
+    return(sample_info)
+  }
+  if (ncol(sample_info) <= max_factors) {
+    return(sample_info)
+  }
+  sample_info[, seq_len(max_factors), drop = FALSE]
+}
+
 sub_heat_ann <- function(data,
                          sample_info,
                          select_factors_heatmap,
                          group_pal = NULL,
-                         sample_color = NULL) {
+                         sample_color = NULL,
+                         use_letter_overlay = TRUE) {
+  if (is.null(select_factors_heatmap) ||
+      identical(select_factors_heatmap, "None")) {
+    group_count <- if (is.null(data)) 0 else ncol(data)
+    empty_groups <- if (group_count > 0) rep("None", group_count) else character(0)
+    return(list(
+      heat_sub_ann = NULL,
+      lgd = NULL,
+      groups = empty_groups,
+      group_colors = NULL
+    ))
+  }
+
   groups <- detect_groups(colnames(data))
+  lgd <- NULL
 
   if (select_factors_heatmap == "All factors") {
+    factor_legends <- list()
+    factor_colors_map <- list()
+    factor_values_map <- list()
 
-    # Use all factors instead of just the first one
-    heat_sub_ann <- ComplexHeatmap::HeatmapAnnotation(
-      df = sample_info,
-      col = group_pal,
-      show_legend = TRUE
-    )
-    # For groups, use the first factor (for backward compatibility with click info)
-    groups <- sample_info[, 1]
-    group_colors <- group_pal[[1]]
+    limited_sample_info <- limit_annotation_factors(sample_info)
+
+    if (!is.null(limited_sample_info) && ncol(limited_sample_info) > 0) {
+      factor_names <- colnames(limited_sample_info)
+      factor_annotations <- vector("list", length(factor_names))
+      names(factor_annotations) <- factor_names
+      factor_legends <- list()
+
+      for (i in seq_along(factor_names)) {
+        factor_name <- factor_names[i]
+        factor_groups <- as.character(limited_sample_info[, i])
+        factor_groups[is.na(factor_groups)] <- "NA"
+        levels_used <- unique(factor_groups)
+
+        if (length(levels_used) == 0) {
+          next
+        }
+
+        colors_named <- NULL
+        if (!is.null(group_pal) && !is.null(group_pal[[factor_name]])) {
+          colors_named <- group_pal[[factor_name]]
+        }
+        if (is.null(colors_named)) {
+          colors_named <- colorspace::qualitative_hcl(
+            length(levels_used),
+            palette = sample_color,
+            c = 70
+          )
+          colors_named <- setNames(colors_named, levels_used)
+        } else {
+          missing_levels <- setdiff(levels_used, names(colors_named))
+          if (length(missing_levels) > 0) {
+            extra_cols <- colorspace::qualitative_hcl(
+              length(missing_levels),
+              palette = sample_color,
+              c = 70
+            )
+            colors_named <- c(colors_named, setNames(extra_cols, missing_levels))
+          }
+          colors_named <- colors_named[levels_used]
+        }
+
+        factor_markers <- if (use_letter_overlay) make_letter_markers(levels_used) else NULL
+
+        factor_annotations[[i]] <- if (use_letter_overlay) {
+          ComplexHeatmap::anno_simple(
+            factor_groups,
+            col = colors_named,
+            pch = factor_markers[factor_groups],
+            pt_gp = grid::gpar(col = "black", fill = NA, fontsize = 8, fontface = "bold")
+          )
+        } else {
+          ComplexHeatmap::anno_simple(
+            factor_groups,
+            col = colors_named
+          )
+        }
+
+        legend_entry <- if (use_letter_overlay) {
+          build_marker_legend(
+            levels = levels_used,
+            colors = colors_named,
+            markers = factor_markers,
+            title = factor_name
+          )
+        } else {
+          ComplexHeatmap::Legend(
+            title = factor_name,
+            at = levels_used,
+            type = "grid",
+            legend_gp = grid::gpar(fill = colors_named, col = NA)
+          )
+        }
+
+        factor_legends <- c(
+          factor_legends,
+          list(legend_entry)
+        )
+
+        factor_colors_map[[factor_name]] <- colors_named
+        factor_values_map[[factor_name]] <- factor_groups
+      }
+
+      factor_legends <- Filter(Negate(is.null), factor_legends)
+
+      heat_sub_ann <- do.call(
+        ComplexHeatmap::HeatmapAnnotation,
+        c(
+          factor_annotations,
+          list(
+            show_annotation_name = FALSE,
+            show_legend = FALSE
+          )
+        )
+      )
+
+      if (length(factor_names) > 0) {
+        primary_factor <- factor_names[1]
+        groups <- factor_values_map[[primary_factor]]
+        group_colors <- factor_colors_map[[primary_factor]]
+      } else {
+        groups <- rep("NA", ncol(data))
+        group_colors <- NULL
+      }
+      lgd <- factor_legends
+    } else {
+      heat_sub_ann <- ComplexHeatmap::HeatmapAnnotation(
+        df = sample_info,
+        col = group_pal,
+        show_legend = TRUE
+      )
+      groups <- sample_info[, 1]
+      group_colors <- if (!is.null(group_pal) && length(group_pal) > 0) group_pal[[1]] else NULL
+    }
 
   } else {
     
@@ -576,27 +1042,63 @@ sub_heat_ann <- function(data,
         groups <- sample_info[, ix]
       }
     }
-    group_colors <- colorspace::qualitative_hcl(length(unique(groups)), 
-                                                 palette = sample_color,
-                                                 c = 70)
-    group_colors <- setNames(group_colors, unique(groups))
+    groups <- as.character(groups)
+    groups[is.na(groups)] <- "NA"
+    group_levels <- unique(groups)
+    group_colors <- colorspace::qualitative_hcl(
+      length(group_levels),
+      palette = sample_color,
+      c = 70
+    )
+    group_colors <- setNames(group_colors, group_levels)
+    group_markers <- if (use_letter_overlay) make_letter_markers(group_levels) else NULL
     
+    group_annotation <- if (use_letter_overlay) {
+      ComplexHeatmap::anno_simple(
+        groups,
+        col = group_colors,
+        pch = group_markers[groups],
+        pt_gp = grid::gpar(col = "black", fill = NA, fontsize = 8, fontface = "bold")
+      )
+    } else {
+      ComplexHeatmap::anno_simple(
+        groups,
+        col = group_colors
+      )
+    }
+
     heat_sub_ann <- ComplexHeatmap::HeatmapAnnotation(
-      Group = groups,
-      col = list(Group = setNames(group_colors, unique(groups))),
-      show_annotation_name = list(Group = FALSE),
+      Group = group_annotation,
+      show_annotation_name = FALSE,
       show_legend = FALSE
     )
+
+    if (length(group_levels) < 10) {
+      legend_entry <- if (use_letter_overlay) {
+        build_marker_legend(
+          levels = group_levels,
+          colors = group_colors,
+          markers = group_markers,
+          title = NULL
+        )
+      } else {
+        ComplexHeatmap::Legend(
+          title = NULL,
+          at = group_levels,
+          type = "grid",
+          legend_gp = grid::gpar(fill = group_colors, col = NA)
+        )
+      }
+      lgd <- list(legend_entry)
+    } else {
+      lgd <- NULL
+    }
   }
-  if (select_factors_heatmap != "All factors" && length(unique(groups)) < 10) {
-    lgd <- ComplexHeatmap::Legend(
-      at = unique(groups),
-      legend_gp = grid::gpar(fill = group_colors),
-      nrow = 1
-    )
-    
-  } else {
-    lgd <- NULL
+  if (!is.null(lgd)) {
+    lgd <- Filter(Negate(is.null), lgd)
+    if (length(lgd) == 0) {
+      lgd <- NULL
+    }
   }
   return(list(
     heat_sub_ann = heat_sub_ann,
@@ -706,7 +1208,11 @@ cluster_heat_click_info <- function(click,
     sample <- colnames(sub_click_data)[column_index]
     gene <- rownames(sub_click_data)[row_index]
   }
-  group_name <- sub_groups[column_index]
+  group_name <- if (!is.null(sub_groups) && length(sub_groups) >= column_index) {
+    sub_groups[column_index]
+  } else {
+    NA_character_
+  }
   if (length(group_name) == 0 || is.null(group_name)) {
     group_name <- "NA"
   }
@@ -717,7 +1223,14 @@ cluster_heat_click_info <- function(click,
   if (length(group_name) == 0 || is.na(group_name) || group_name == "") {
     group_name <- "NA"
   }
-  group_col <- group_colors[[group_name]]
+  group_col <- "#FFFFFF"
+  if (!is.null(group_colors)) {
+    if (!is.null(names(group_colors)) && group_name %in% names(group_colors)) {
+      group_col <- group_colors[[group_name]]
+    } else if (length(group_colors) >= column_index) {
+      group_col <- group_colors[[column_index]]
+    }
+  }
   if (is.null(group_col) || is.na(group_col)) {
     group_col <- "#FFFFFF"
   }
@@ -752,6 +1265,7 @@ Group: @{group_name} <span style='background-color:@{group_col};width:20px;displ
 #'   hierarchical and 2 for kmeans.
 #' @param group_pal Named list of colors and their corresponding categories
 #' @param sample_color Selected colorspace color palette
+#' @param use_letter_overlay Logical flag to overlay uppercase letters on sample annotations.
 #'
 #' @export
 #' @return A list containing a Heatmap from the brush selection
@@ -768,7 +1282,8 @@ heat_sub <- function(ht_brush,
                      select_factors_heatmap,
                      cluster_meth,
                      group_pal = NULL,
-                     sample_color = NULL) {
+                     sample_color = NULL,
+                     use_letter_overlay = TRUE) {
   max_gene_ids <- 2000
   lt <- InteractiveComplexHeatmap::getPositionFromBrush(ht_brush)
   pos1 <- lt[[1]]
@@ -790,10 +1305,19 @@ heat_sub <- function(ht_brush,
     sample_info = sample_info,
     select_factors_heatmap = select_factors_heatmap,
     group_pal = group_pal,
-    sample_color = sample_color
+    sample_color = sample_color,
+    use_letter_overlay = use_letter_overlay
   )
-  sub_ann <- sub_heat$heat_sub_ann[column_index]
-  sub_groups <- sub_heat$groups[column_index]
+  sub_ann <- if (!is.null(sub_heat$heat_sub_ann)) {
+    sub_heat$heat_sub_ann[column_index]
+  } else {
+    NULL
+  }
+  sub_groups <- if (!is.null(sub_heat$groups) && length(sub_heat$groups) > 0) {
+    sub_heat$groups[column_index]
+  } else {
+    NULL
+  }
   lgd <- sub_heat$lgd
   group_colors <- sub_heat$group_colors
 
@@ -808,16 +1332,23 @@ heat_sub <- function(ht_brush,
     submap_data <- m[row_index, column_index, drop = FALSE]
     click_data <- submap_data
 
-    ht_select <- ComplexHeatmap::Heatmap(
-      m[row_index, column_index, drop = FALSE],
+    heat_matrix <- m[row_index, column_index, drop = FALSE]
+    heat_args <- list(
+      matrix = heat_matrix,
       col = ht@ht_list[[1]]@matrix_color_mapping@col_fun,
       show_heatmap_legend = FALSE,
       cluster_rows = FALSE,
       cluster_columns = FALSE,
       show_row_names = show_rows,
-      top_annotation = sub_ann,
-      name = "heat_1"
+      name = "heat_1",
+      use_raster = TRUE,
+      raster_quality = 1,
+      border = FALSE
     )
+    if (!is.null(sub_ann)) {
+      heat_args$top_annotation <- sub_ann
+    }
+    ht_select <- do.call(ComplexHeatmap::Heatmap, heat_args)
   } else if (cluster_meth == 2) {
     sub_heats <- c()
     all_rows <- c()
@@ -847,14 +1378,19 @@ heat_sub <- function(ht_brush,
         cluster_rows = FALSE,
         cluster_columns = FALSE,
         show_row_names = show_rows,
-        name = paste0("heat_", i)
+        name = paste0("heat_", i),
+        use_raster = TRUE,
+        raster_quality = 1,
+        border = FALSE
       )
       if (i == 1) {
-        sub_heats[[i]] <- ComplexHeatmap::add_heatmap(
-          sub_ann,
-          sub_heats[[i]],
-          direction = "vertical"
-        )
+        if (!is.null(sub_ann)) {
+          sub_heats[[i]] <- ComplexHeatmap::add_heatmap(
+            sub_ann,
+            sub_heats[[i]],
+            direction = "vertical"
+          )
+        }
       } else if (i >= 2) {
         sub_heats[[i]] <- ComplexHeatmap::add_heatmap(
           sub_heats[[i - 1]],
@@ -1027,6 +1563,16 @@ prep_download <- function(heatmap,
     rownames(data) <- data$Row.names
     data <- data |>
       dplyr::select(-c(Row.names))
+
+    # Sort genes by cluster ID (ascending) to make downloads easier to scan
+    if ("cluster" %in% colnames(data)) {
+      cluster_numeric <- suppressWarnings(as.numeric(data$cluster))
+      if (all(!is.na(cluster_numeric))) {
+        data <- data[order(cluster_numeric, rownames(data)), , drop = FALSE]
+      } else {
+        data <- data[order(data$cluster, rownames(data)), , drop = FALSE]
+      }
+    }
 
     return(data)
 

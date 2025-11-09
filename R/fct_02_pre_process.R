@@ -9,11 +9,30 @@
 #' @name fct_02_pre_process.R
 NULL
 
+#' Get x-axis label size based on number of samples
+#'
+#' @param n_samples Number of samples in the data
+#'
+#' @return Numeric value for x-axis label size
+#'
+#' @family preprocess functions
+get_x_axis_label_size <- function(n_samples) {
+  if (n_samples < 31) {
+    return(16)
+  } else if (n_samples <= 60) {
+    return(12)
+  } else if (n_samples <= 100) {
+        return(10)
+  } else {
+    return(10)
+  }
+}
+
 #' @title Pre-Process the data
 #'
-#' @description This function takes in user defined values to
+#' @description This function takes in user-defined values to
 #' process the data for the EDA. Processing steps depend on data format, but
-#' generally includes missing value imputation, data filtering, and data
+#' generally include missing value imputation, data filtering, and data
 #' transformations.
 #'
 #' @param data Matrix of data that has already gone through
@@ -21,8 +40,8 @@ NULL
 #' @param missing_value String indicating method to deal with missing data. This
 #'   should be one of "geneMedian", "treatAsZero", or "geneMedianInGroup"
 #' @param data_file_format Integer indicating the data format. This should be
-#'   one of 1 for read counts data, 2 for normalized expression, or 3 for
-#'   fold changes and adjusted P-values
+#'   one of 1 for read counts data, 2 for normalized expression, 3 for fold
+#'   changes with adjusted P-values, or 4 for fold changes without P-values
 #' @param low_filter_fpkm Integer for low count filter if
 #'   \code{data_file_format} is normalized expression, \code{NULL} otherwise
 #' @param n_min_samples_fpkm Integer for minimum samples if
@@ -38,10 +57,10 @@ NULL
 #' @param counts_transform Integer to indicate which transformation to make if
 #'   \code{data_file_format} is read counts. This should be one of 1 for
 #'   log2(CPM+c) (EdgeR), 2 for variance stabilizing transformation (VST), or 3
-#'   for regulatized log (rlog)
+#'   for regularized log (rlog)
 #' @param counts_log_start Integer added to log if \code{counts_transform} is
 #'   log2(CPM + 2)
-#' @param no_fdr TRUE/FALSE to indicate fold-changes-only data with no p values
+#' @param no_fdr TRUE/FALSE to indicate fold-changes-only data with no p-values
 #'   if \code{data_file_format} is fold changes
 #'
 #' @export
@@ -61,7 +80,7 @@ NULL
 #'
 pre_process <- function(data,
                         missing_value = c("geneMedian", "treatAsZero", "geneMedianInGroup"),
-                        data_file_format = c(1, 2, 3),
+                        data_file_format = c(1, 2, 3, 4),
                         low_filter_fpkm,
                         n_min_samples_fpkm,
                         log_transform_fpkm,
@@ -103,7 +122,7 @@ pre_process <- function(data,
     function(x) sd(x, na.rm = TRUE)
   )), ]
 
-  # Missng values in expression data ----------
+  # Missing values in expression data ----------
   if (sum(is.na(data)) > 0) {
     if (missing_value == "geneMedian") {
       row_medians <- apply(data, 1, function(y) median(y, na.rm = T))
@@ -114,7 +133,7 @@ pre_process <- function(data,
     } else if (missing_value == "treatAsZero") {
       data[is.na(data)] <- 0
     } else if (missing_value == "geneMedianInGroup") {
-      sample_groups <- detect_groups(colnames(data))
+      sample_groups <- detect_groups(colnames(data), preserve_original = TRUE)
       for (group in unique(sample_groups)) {
         samples <- which(sample_groups == group)
         row_medians <- apply(
@@ -196,19 +215,19 @@ pre_process <- function(data,
       function(y) sum(y >= min_counts)
     ) >= n_min_samples_count), ]
 
-    #R cannot handle integers larger than 3 billion, which can impact popular 
-    #packages such as DESeq2. R still uses 32-bit integers, and the largest 
-    #allowable integer is 2^32 −1. In an unusual case, a user's RNA-Seq counts 
-    #matrix included a count of 4 billion for a single gene, which was converted 
-    #to NA, leading to an error in DESeq2. This issue also caused the iDEP app to crash. 
+    # R cannot handle integers larger than 3 billion, which can impact popular 
+    # packages such as DESeq2. R still uses 32-bit integers, and the largest 
+    # allowable integer is 2^32 −1. In an unusual case, a user's RNA-Seq counts 
+    # matrix included a count of 4 billion for a single gene, which was converted 
+    # to NA, leading to an error in DESeq2. This issue also caused the iDEP app to crash. 
     if(max(data) > 2e9) {
       scale_factor <- max(data) / (2^32 - 1)
-      #round up scale_factor to the nearest integer
+      # Round up scale_factor to the nearest integer
       scale_factor <- ceiling(scale_factor / 10 + 1) * 10 #  just to be safe.
-      # divide by scale factor and round to the nearest integer, for the entire matrix, data
+      # Divide by the scale factor and round the entire matrix to the nearest integer
       data <- round(data / scale_factor)       
-      # warning message via the showNotification function
-      showNotification(paste("Data includes counts bigger than 2.15 billion (2^32). The data was divided by ", scale_factor,". Double check the data file. Is this really counts data? Proceed with caution."), duration = 60, type = "warning")
+      # Warning message via the showNotification function
+      showNotification(paste("Data includes counts bigger than 2.15 billion (2^32). The data was divided by ", scale_factor,". Double-check the data file. Is this really counts data? Proceed with caution."), duration = 60, type = "warning")
     }
 
     results$raw_counts <- data
@@ -239,7 +258,7 @@ pre_process <- function(data,
         normalized = TRUE
       ) + counts_log_start)
     }
-  } else if (data_file_format == 3) { # LFC and P-values
+  } else if (data_file_format %in% c(3, 4)) { # LFC summary statistics
     n2 <- (ncol(data) %/% 2)
     results$raw_counts <- data
     if (!no_fdr) {
@@ -290,7 +309,7 @@ pre_process <- function(data,
             # Add small constant to avoid log(0)
             data[, i] <- log2(results$raw_counts[, fc_cols[i]] + 0.01)
 
-            # Show notification to user
+            # Show notification to the user
             showNotification(
               paste0("Column ", colnames(results$raw_counts)[fc_cols[i]],
                      " detected as ratio data (no negatives, right skew = ",
@@ -308,7 +327,7 @@ pre_process <- function(data,
   validate(
     need(
       nrow(data) > 5 && ncol(data) >= 1,
-      "Data file not recognized. Please double check."
+      "Data file not recognized. Please double-check."
     )
   )
 
@@ -352,22 +371,12 @@ total_counts_ggplot <- function(counts_data,
                                 type = "",
                                 plots_color_select) {
   counts <- counts_data
-  memo <- ""
 
-  if (ncol(counts) > 100) {
-    part <- 1:100
-    counts <- counts[, part]
-    memo <- paste("(only showing 100 samples)")
-  }
   groups <- as.factor(
-    detect_groups(colnames(counts_data), sample_info)
+    detect_groups(colnames(counts), sample_info)
   )
 
-  if (ncol(counts) < 31) {
-    x_axis_labels <- 16
-  } else {
-    x_axis_labels <- 12
-  }
+  x_axis_labels <- get_x_axis_label_size(ncol(counts))
 
   if (length(unique(groups)) <= 1 || length(unique(groups)) > 20) {
     plot_data <- data.frame(
@@ -424,8 +433,9 @@ total_counts_ggplot <- function(counts_data,
       )
     ) +
     ggplot2::labs(
-      title = paste("Total", type, "Read Counts (Millions)", memo),
-      y = paste(type, "Counts (Millions)")
+      title = paste("Total", type, "Read Counts (Millions)"),
+      y = paste(type, "Counts (Millions)"),
+      fill = NULL
     )
 
   return(plot)
@@ -544,22 +554,12 @@ rRNA_counts_ggplot <- function(counts_data,
                                 all_gene_info,
                                 plots_color_select) {
   counts <- counts_data
-  memo <- ""
 
-  if (ncol(counts) > 100) {
-    part <- 1:100
-    counts <- counts[, part]
-    memo <- paste("(only showing 100 samples)")
-  }
   groups <- as.factor(
-    detect_groups(colnames(counts_data), sample_info)
+    detect_groups(colnames(counts), sample_info)
   )
 
-  if (ncol(counts) < 31) {
-    x_axis_labels <- 16
-  } else {
-    x_axis_labels <- 12
-  }
+  x_axis_labels <- get_x_axis_label_size(ncol(counts))
 
   df <- merge(
     counts_data,
@@ -598,7 +598,12 @@ rRNA_counts_ggplot <- function(counts_data,
       stat = "identity",
       position = ggplot2::position_stack(reverse = TRUE)
     ) +
-    ggplot2::labs(x = NULL, y = "% Reads", title = "% Reads by gene type")+
+    ggplot2::labs(
+      x = NULL,
+      y = "% Reads",
+      title = "% Reads by gene type",
+      fill = NULL
+    ) +
     ggplot2::scale_fill_manual(values = color_palette, drop = FALSE) +
     ggplot2::guides(fill = ggplot2::guide_legend(reverse = TRUE))
 
@@ -711,22 +716,12 @@ chr_counts_ggplot <- function(counts_data,
                                 plots_color_select = "Set1",
                                 use_boxplot = FALSE) {
   counts <- counts_data
-  memo <- ""
 
-  if (ncol(counts) > 100) {
-    part <- 1:100
-    counts <- counts[, part]
-    memo <- paste("(only showing 100 samples)")
-  }
   groups <- as.factor(
     detect_groups(colnames(counts), sample_info)
   )
 
-  if (ncol(counts) < 31) {
-    x_axis_labels <- 16
-  } else {
-    x_axis_labels <- 12
-  }
+  x_axis_labels <- get_x_axis_label_size(ncol(counts))
 
   df <- merge(
     counts_data,
@@ -819,7 +814,12 @@ chr_counts_ggplot <- function(counts_data,
     plot <- ggplot2::ggplot(plot_data, ggplot2::aes(x = groups, y = value, fill = groups)) +
       ggplot2::geom_boxplot(outlier.shape = NA) +
       ggplot2::geom_jitter(width = 0.2, height = 0, alpha = 0.6, size = 2) +
-      ggplot2::labs(x = NULL, y = "% Reads", title = "% Reads by Chromosomes") +
+      ggplot2::labs(
+        x = NULL,
+        y = "% Reads",
+        title = "% Reads by Chromosomes",
+        fill = NULL
+      ) +
       ggplot2::scale_fill_manual(values = color_palette)
   } else {
     # Use original barplot
@@ -956,22 +956,12 @@ chr_normalized_ggplot <- function(counts_data,
                                 plots_color_select = "Set1",
                                 use_boxplot = FALSE) {
   counts <- counts_data
-  memo <- ""
 
-  if (ncol(counts) > 100) {
-    part <- 1:100
-    counts <- counts[, part]
-    memo <- paste("(only showing 100 samples)")
-  }
   groups <- as.factor(
     detect_groups(colnames(counts), sample_info)
   )
 
-  if (ncol(counts) < 31) {
-    x_axis_labels <- 16
-  } else {
-    x_axis_labels <- 12
-  }
+  x_axis_labels <- get_x_axis_label_size(ncol(counts))
 
   df <- merge(
     counts_data,
@@ -1066,7 +1056,12 @@ chr_normalized_ggplot <- function(counts_data,
     plot <- ggplot2::ggplot(plot_data, ggplot2::aes(x = groups, y = value, fill = groups)) +
       ggplot2::geom_boxplot(outlier.shape = NA) +
       ggplot2::geom_jitter(width = 0.2, height = 0, alpha = 0.6, size = 2) +
-      ggplot2::labs(x = NULL, y = "Normalized Expression", title = "75th percentile of normalized expression by chromosomes") +
+      ggplot2::labs(
+        x = NULL,
+        y = "Normalized Expression",
+        title = "75th percentile of normalized expression by chromosomes",
+        fill = NULL
+      ) +
       ggplot2::scale_fill_manual(values = color_palette)
   } else {
     # Use original barplot
@@ -1249,27 +1244,12 @@ eda_boxplot <- function(processed_data,
                         sample_info,
                         plots_color_select) {
   counts <- as.data.frame(processed_data)
-  memo <- ""
 
-  if (ncol(counts) > 40) {
-    part <- 1:40
-    counts <- counts[, part]
-    memo <- paste(" (only showing 40 samples)")
-  }
   groups <- as.factor(
     detect_groups(colnames(counts), sample_info)
   )
-
-  if (nlevels(groups) <= 1 | nlevels(groups) > 20) {
-    grouping <- NULL
-  } else {
-    grouping <- groups
-  }
-  if (ncol(counts) < 31) {
-    x_axis_labels <- 16
-  } else {
-    x_axis_labels <- 12
-  }
+  grouping <- groups
+  x_axis_labels <- get_x_axis_label_size(ncol(counts))
 
   longer_data <- tidyr::pivot_longer(
     data = counts,
@@ -1312,8 +1292,9 @@ eda_boxplot <- function(processed_data,
       )
     ) +
     ggplot2::labs(
-      title = paste("Distribution of Transformed Data", memo),
-      y = "Transformed Expression"
+      title = "Distribution of Transformed Data",
+      y = "Transformed Expression",
+      fill = NULL
     )
 
   return(plot)
@@ -1339,29 +1320,13 @@ eda_density <- function(processed_data,
                         sample_info,
                         plots_color_select) {
   counts <- as.data.frame(processed_data)
-  memo <- ""
 
-  if (ncol(counts) > 40) {
-    part <- 1:40
-    counts <- counts[, part]
-    memo <- paste(" (only showing 40 samples)")
-  }
   groups <- as.factor(
     detect_groups(colnames(counts), sample_info)
   )
-
-  if (nlevels(groups) <= 1 | nlevels(groups) > 20) {
-    group_fill <- NULL
-    legend <- "none"
-  } else {
-    group_fill <- groups
-    legend <- "right"
-  }
-  if (ncol(counts) < 31) {
-    x_axis_labels <- 16
-  } else {
-    x_axis_labels <- 12
-  }
+  group_fill <- groups
+  legend <- if (nlevels(groups) <= 1) "none" else "right"
+  x_axis_labels <- get_x_axis_label_size(ncol(counts))
 
   longer_data <- tidyr::pivot_longer(
     data = counts,
@@ -1404,7 +1369,7 @@ eda_density <- function(processed_data,
       )
     ) +
     ggplot2::labs(
-      title = paste("Density Plot of Transformed Data", memo),
+      title = "Density Plot of Transformed Data",
       x = "Transformed Expression",
       y = "Density",
       color = "Sample"
@@ -1458,7 +1423,9 @@ individual_plots <- function(individual_data,
                              lab_rotate,
                              plots_color_select,
                              plot_raw,
-                             plot_tukey) {
+                             plot_tukey,
+                             max_groups = 12,
+                             max_length = 30) {
   individual_data <- as.data.frame(individual_data)
   individual_data$symbol <- rownames(individual_data)
   
@@ -1466,10 +1433,12 @@ individual_plots <- function(individual_data,
     dplyr::filter(symbol %in% selected_gene) |>
     tidyr::pivot_longer(!symbol, names_to = "sample", values_to = "value")
   
-  if (ncol(plot_data) < 31) {
-    x_axis_labels <- 14
+  sample_count <- length(unique(plot_data$sample))
+  gene_count <- length(unique(plot_data$symbol))
+  x_axis_labels <- if (gene_plot_box == 2) {
+    get_x_axis_label_size(sample_count)
   } else {
-    x_axis_labels <- 10
+    get_x_axis_label_size(gene_count)
   }
 
   if (gene_plot_box == 2) {
@@ -1510,7 +1479,12 @@ individual_plots <- function(individual_data,
 
     return(ind_line)
   } else if (gene_plot_box == 1) {
-    plot_data$groups <- detect_groups(plot_data$sample, sample_info)
+    # Get unique sample names first to avoid duplicates when multiple genes selected
+    unique_samples <- unique(plot_data$sample)
+    sample_groups <- detect_groups(unique_samples, sample_info, max_groups, max_length)
+    # Map groups back to all rows in plot_data
+    sample_to_group <- setNames(sample_groups, unique_samples)
+    plot_data$groups <- sample_to_group[plot_data$sample]
 
     summarized <- plot_data |>
       dplyr::group_by(groups, symbol) |>
@@ -1529,7 +1503,8 @@ individual_plots <- function(individual_data,
       position = ggplot2::position_dodge()
       ) +
     ggplot2::labs(
-      y = ifelse(plot_raw, "Raw counts", "Normalized Expression")
+      y = ifelse(plot_raw, "Raw counts", "Normalized Expression"),
+      fill = NULL
     ) +
     ggplot2::geom_dotplot(
       data = plot_data,
@@ -1539,9 +1514,9 @@ individual_plots <- function(individual_data,
       ),
       fill = "black",
       position = ggplot2::position_dodge(),
-      binaxis='y', 
-      stackdir='center', 
-      dotsize=1
+      binaxis='y',
+      stackdir='center',
+      dotsize=0.5
     ) +
     ggplot2::theme_light() +
     ggplot2::theme(
@@ -1718,7 +1693,7 @@ conversion_counts_message <- function(data_size,
   } else {
     return(paste(
       "After mapping, there are",
-      data_size[1], "uniqe genes in", data_size[4], "samples. Of the",
+      data_size[1], "unique genes in", data_size[4], "samples. Of the",
       data_size[3], " genes passed filter, ", n_matched,
       " were converted to Ensembl/STRING gene IDs in our database.
       The remaining ", data_size[3] - n_matched, " genes were
@@ -1745,7 +1720,8 @@ counts_bias_message <- function(raw_counts,
   groups <- as.factor(
     detect_groups(
       colnames(raw_counts),
-      sample_info
+      sample_info,
+      preserve_original = TRUE
     )
   )
   message <- NULL
@@ -1938,13 +1914,16 @@ generate_descr <- function(missing_value,
   }
   # LFC and FDR
   if (data_file_format == 3) {
-    part_2 <- switch(toString(no_fdr),
-      "TRUE" = "",
-      "FALSE" = " and corrected p-value "
-    )
     descr <- paste0(
-      "Log Fold Change ", part_2,
-      "data were analyzed using iDEP v", packageVersion("idepGolem"), ". ",
+      "Log Fold Change and corrected p-value data were analyzed using iDEP v",
+      packageVersion("idepGolem"), ". ",
+      "Missing values were imputed using ", missing_value, "."
+    )
+  }
+  if (data_file_format == 4) {
+    descr <- paste0(
+      "Log Fold Change (no p-value) data were analyzed using iDEP v",
+      packageVersion("idepGolem"), ". ",
       "Missing values were imputed using ", missing_value, "."
     )
   }

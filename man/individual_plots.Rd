@@ -13,7 +13,9 @@ individual_plots(
   lab_rotate,
   plots_color_select,
   plot_raw,
-  plot_tukey
+  plot_tukey,
+  max_groups = 12,
+  max_length = 30
 )
 }
 \arguments{
@@ -80,6 +82,7 @@ Other preprocess functions:
 \code{\link{eda_density}()},
 \code{\link{eda_scatter}()},
 \code{\link{gene_counts_ggplot}()},
+\code{\link{get_x_axis_label_size}()},
 \code{\link{mean_sd_plot}()},
 \code{\link{pre_process}()},
 \code{\link{rRNA_counts_ggplot}()},

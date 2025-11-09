@@ -23,12 +23,17 @@ NULL
 #' @return Database connection.
 connect_convert_db <- function(datapath = DATAPATH) {
   if (!file.exists(org_info_file)) {
-    shinybusy::show_modal_spinner(
-      spin = "orbit",
-      text = "Downloading demo data and species database",
-      color = "#000000"
-    )
-    on.exit(shinybusy::remove_modal_spinner(), add = TRUE)
+    has_session <- !is.null(shiny::getDefaultReactiveDomain())
+    if (has_session) {
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Downloading demo data and species database",
+        color = "#000000"
+      )
+      on.exit(shinybusy::remove_modal_spinner(), add = TRUE)
+    } else {
+      message("Downloading demo data and species database ...")
+    }
 
     file_name <- paste0(db_ver, ".tar.gz")
     options(timeout = 3000)
@@ -41,8 +46,10 @@ connect_convert_db <- function(datapath = DATAPATH) {
     untar(file_name) # untar and unzip the files
     file.remove(file_name) # delete the tar file to save storage
 
-    shinybusy::remove_modal_spinner()
-    on.exit(NULL)
+    if (has_session) {
+      shinybusy::remove_modal_spinner()
+      on.exit(NULL)
+    }
   }
 
   return(DBI::dbConnect(
@@ -102,7 +109,9 @@ get_idep_data <- function(datapath = DATAPATH) {
   # demo_data_info.csv file
   # columns: ID, expression, design, type, name
   # ID column must be unique
-  # The type column 1- read counts, 2- normalized , 3 LFC&Pval
+  # The type column:
+  # 1 = read counts, 2 = normalized expression, 3 = LFC + adjusted p-values,
+  # 4 = LFC only (no p-values)
   # The files must be available in the demo folder of the database.
   # Leave blank if design file is missing
   # Default file have smallest ID, within the same type.

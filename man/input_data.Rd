@@ -9,7 +9,8 @@ input_data(
   experiment_file,
   go_button,
   demo_data_file,
-  demo_metadata_file
+  demo_metadata_file,
+  max_group_name_length = 30
 )
 }
 \arguments{
@@ -25,6 +26,10 @@ accessed with \code{experiment_file$datapath}}
 
 \item{demo_metadata_file}{Experiment demo data path
 \code{idep_data$demo_metadata_file}}
+
+\item{max_group_name_length}{Maximum allowed character length for factor
+names detected from the design file. Longer names are truncated when doing
+so will not create duplicate labels. Default is 30.}
 }
 \value{
 This returns a list that contains the expression data

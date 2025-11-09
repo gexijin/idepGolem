@@ -28,7 +28,7 @@ mod_gene_expression_plot_ui <- function(id,
   }
 
   tagList(
-    plotOutput(
+    scrollable_plot_output(
       outputId = ns("gene_expression_plot"),
       width = "100%",
       height = plot_height
@@ -144,6 +144,12 @@ mod_gene_expression_plot_server <- function(id,
       req(nrow(expr_df) > 0)
 
       expr_df$group <- droplevels(expr_df$group)
+      sample_count <- length(unique(expr_df$sample))
+      update_scrollable_plot_width(
+        session = session,
+        output_id = "gene_expression_plot",
+        n_samples = sample_count
+      )
       palette_choice <- palette_name()
       if (is.null(palette_choice) || length(palette_choice) == 0) {
         palette_choice <- "Set1"

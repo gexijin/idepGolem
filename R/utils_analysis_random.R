@@ -111,19 +111,197 @@ dynamic_range <- function(num_set) {
 }
 
 
+#' Remove version numbers from Ensembl and RefSeq IDs
+#'
+#' Takes gene, transcript, or protein IDs with version numbers and removes the
+#' version suffix to return just the base ID. Supports Ensembl IDs (genes,
+#' transcripts, proteins) and RefSeq IDs (mRNA, protein, ncRNA). Uses vectorized
+#' operations for efficient processing of multiple IDs.
+#'
+#' Supported ID patterns:
+#' - Ensembl: ENS + characters + 11 digits + optional version
+#'   Format: ENS[A-Z]+########### where:
+#'   - ENS = prefix (case-insensitive)
+#'   - [A-Z]+ = 1+ letters: species code (MUS, DAR, etc.) + type (G, T, P, E)
+#'   - ########### = exactly 11 digits
+#'   - .# = optional 1-2 digit version
+#'   Examples: ENSG00000211459.2, ENSMUSG00000025902.5, ENST00000456328.2
+#' - RefSeq: [prefix]_######.# where:
+#'   - [prefix] = NM (mRNA), NP (protein), NR (ncRNA), XM (predicted mRNA),
+#'     XR (predicted ncRNA), XP (predicted protein)
+#'   - ###### = 6-9 digits
+#'   Examples: NM_000546.5, NP_000537.3, XM_011545467.2, XR_007058843.1
+#'
+#' Version numbers with 3+ digits are NOT removed (likely not versions).
+#' Trailing dots without version numbers are removed.
+#' Prefix matching is case-insensitive.
+#' Non-matching strings are returned unchanged.
+#'
+#' @param ensembl_ids A character vector of gene/transcript/protein IDs with or
+#'   without version numbers. Supports Ensembl (ENS...) and RefSeq (NM_, NP_,
+#'   NR_, XM_, XP_) formats. Strings that don't match are returned unchanged.
+#'   Version numbers with 3+ digits are NOT removed. NA values are preserved.
+#'
+#' @return A character vector of IDs without version numbers. Valid IDs without
+#'   versions are returned unchanged. Invalid/non-matching strings are returned
+#'   unchanged. IDs with 3+ digit versions are unchanged. Trailing dots are
+#'   removed. NA values are preserved.
+#'
+#' @export
+#' @examples
+#' # Ensembl gene IDs
+#' remove_gene_version("ENSG00000211459.2")  # Human gene
+#' # Returns: "ENSG00000211459"
+#'
+#' remove_gene_version("ENSMUSG00000025902.5")  # Mouse gene
+#' # Returns: "ENSMUSG00000025902"
+#'
+#' # Ensembl transcript and protein IDs
+#' remove_gene_version("ENST00000456328.2")  # Transcript
+#' # Returns: "ENST00000456328"
+#'
+#' remove_gene_version("ENSP00000384458.1")  # Protein
+#' # Returns: "ENSP00000384458"
+#'
+#' # RefSeq IDs
+#' remove_gene_version("NM_000546.5")  # mRNA
+#' # Returns: "NM_000546"
+#'
+#' remove_gene_version("NP_000537.3")  # Protein
+#' # Returns: "NP_000537"
+#'
+#' remove_gene_version("XR_007058843.1")  # Predicted ncRNA
+#' # Returns: "XR_007058843"
+#'
+#' # Version with 3+ digits is NOT removed
+#' remove_gene_version("ENSG00000222222.333")
+#' # Returns: "ENSG00000222222.333"
+#'
+#' # Trailing dot without digits is removed
+#' remove_gene_version(c("ENSG00000211459.", "NM_000546."))
+#' # Returns: c("ENSG00000211459", "NM_000546")
+#'
+remove_gene_version <- function(ensembl_ids) {
+  # Remove version suffix from valid Ensembl or RefSeq IDs
+  # Pattern explanation:
+  #   ^           - start of string
+  #   (...)       - capture group 1: entire base ID
+  #     ([Ee][Nn][Ss][A-Za-z]+\\d{11}) - Ensembl IDs:
+  #       [Ee][Nn][Ss] - ENS prefix (case-insensitive)
+  #       [A-Za-z]+ - 1+ letters (species code + type: G/T/P/E/etc)
+  #       \\d{11} - exactly 11 digits
+  #     |         - OR
+  #     ([Nn][Mm]_\\d{6,9}) - RefSeq mRNA: NM_ + 6-9 digits
+  #     |         - OR
+  #     ([Nn][Pp]_\\d{6,9}) - RefSeq protein: NP_ + 6-9 digits
+  #     |         - OR
+  #     ([Nn][Rr]_\\d{6,9}) - RefSeq ncRNA: NR_ + 6-9 digits
+  #     |         - OR
+  #     ([Xx][Mm]_\\d{6,9}) - RefSeq predicted mRNA: XM_ + 6-9 digits
+  #     |         - OR
+  #     ([Xx][Rr]_\\d{6,9}) - RefSeq predicted ncRNA: XR_ + 6-9 digits
+  #     |         - OR
+  #     ([Xx][Pp]_\\d{6,9}) - RefSeq predicted protein: XP_ + 6-9 digits
+  #   \\.          - literal dot
+  #   (\\d{1,2})?  - optional 1 or 2 digit version (or 0 for trailing dot)
+  #   $           - end of string
+  # Replacement: \\1 (captured base ID without version or dot)
+  # Non-matching strings are returned unchanged by sub()
+  # Uses sub() for vectorized operation - much faster than loops
+
+  # Build regex pattern (split for readability)
+  ensembl_pattern <- "([Ee][Nn][Ss][A-Za-z]+\\d{11})"
+  refseq_patterns <- paste0(
+    "([Nn][Mm]_\\d{6,9})|",  # NM_ (mRNA)
+    "([Nn][Pp]_\\d{6,9})|",  # NP_ (protein)
+    "([Nn][Rr]_\\d{6,9})|",  # NR_ (non-coding RNA)
+    "([Xx][Mm]_\\d{6,9})|",  # XM_ (predicted mRNA)
+    "([Xx][Rr]_\\d{6,9})|",  # XR_ (predicted ncRNA)
+    "([Xx][Pp]_\\d{6,9})"    # XP_ (predicted protein)
+  )
+  full_pattern <- paste0(
+    "^((", ensembl_pattern, ")|(", refseq_patterns, "))\\.(\\d{1,2})?$"
+  )
+
+  sub(full_pattern, "\\1", ensembl_ids)
+}
+
+
+#' Truncate labels without creating duplicates
+#'
+#' Safely truncates a character vector to the specified maximum length while
+#' ensuring that no new duplicate values are introduced. If potential
+#' duplication is detected, the original labels are returned unchanged.
+#'
+#' @param labels Character vector of labels to truncate.
+#' @param max_length Maximum number of characters to keep.
+#'
+#' @return Character vector with labels truncated when safe.
+#' @keywords internal
+truncate_labels_safely <- function(labels, max_length) {
+  if (is.null(labels) || length(labels) == 0) {
+    return(labels)
+  }
+
+  max_length <- suppressWarnings(as.numeric(max_length))[1]
+
+  if (is.null(max_length) || is.na(max_length) || !is.finite(max_length) || max_length <= 0) {
+    return(labels)
+  }
+
+  max_length <- floor(max_length)
+
+  labels_chr <- as.character(labels)
+  char_lens <- nchar(labels_chr, keepNA = TRUE)
+  needs_trunc <- !is.na(char_lens) & char_lens > max_length
+
+  if (!any(needs_trunc)) {
+    return(labels)
+  }
+
+  truncated <- labels_chr
+  truncated[needs_trunc] <- substr(truncated[needs_trunc], 1, max_length)
+
+  if (length(unique(truncated)) == length(unique(labels_chr))) {
+    return(truncated)
+  }
+
+  labels_chr
+}
+
 #' Detect groups by sample names
 #'
 #' Detects groups from column names in sample info file so that they can be used
 #' for things such as coloring plots or building the model for DEG analysis.
+#' Groups with only one sample (no replicates) are labeled as "Other". If more
+#' than max_groups exist, only the most frequent groups are kept and the rest
+#' are recoded as "Other". If all samples end up as "Other" (no groups have
+#' replicates), they are relabeled as "Samples" to prevent legend overflow.
+#' Group names longer than max_length characters are truncated.
 #'
 #' @param sample_names Vector of column headings from data file or design file
 #' @param sample_info Matrix of the experiment design information
+#' @param max_groups Maximum number of groups to display (default 12). Groups
+#'  beyond this limit are recoded as "Other", resulting in max_groups + 1 total.
+#' @param max_length Maximum length for group names (default 30). Longer names
+#'  are truncated to improve plot readability.
+#' @param preserve_original When TRUE, skips all downstream recoding, capping,
+#'  and truncation logic so the raw parsed group labels are returned unchanged.
+#'  Useful for statistical modeling steps that must operate on the original
+#'  experimental design.
 #'
 #' @export
-#' @return A character vector with the groups
+#' @return A character vector with the groups. Non-replicated groups become "Other",
+#'  groups beyond max_groups become "Other", all non-replicated become "Samples",
+#'  and long names (>max_length) are truncated.
 #' @note This function is mainly called internally in other idepGolem functions.
+#'  Warnings are shown if groups are recoded or truncated.
 #'
-detect_groups <- function(sample_names, sample_info = NULL) {
+detect_groups <- function(sample_names,
+                          sample_info = NULL,
+                          max_groups = 12,
+                          max_length = 30,
+                          preserve_original = FALSE) {
   # sample_names are col names parsing samples by either the name
   # or using a data frame of sample infos.
   # Note that each row of the sample_info data frame represents a sample.
@@ -161,9 +339,96 @@ detect_groups <- function(sample_names, sample_info = NULL) {
       names(sample_group) <- row.names(sample_info2)
       if (min(table(sample_group)) == 1) { # no replicates?
         sample_group <- sample_info2[, 1]
+      } else if (length(unique(sample_group)) > max_groups) {
+        # too many group combinations; default to first design column
+        sample_group <- sample_info2[, 1]
       }
     }
   }
+
+  # preserve original group labels if requested (e.g. for statistical modeling)
+  if (isTRUE(preserve_original)) {
+    return(sample_group)
+  }
+
+  # Improve grouping by handling non-replicated samples
+  # Count occurrences of each group
+  group_counts <- table(sample_group)
+
+  # If a group appears only once (no replicates), label it as 'Other'
+  for (i in seq_along(sample_group)) {
+    if (group_counts[sample_group[i]] == 1) {
+      sample_group[i] <- "Other"
+    }
+  }
+
+  # If all samples became 'Other' (no meaningful groups), change to 'Samples'
+  if (all(sample_group == "Other")) {
+    sample_group <- rep("Samples", length(sample_group))
+  }
+
+  # Limit to at most max_groups (plus "Other" makes max_groups + 1 total)
+  # If more than max_groups, keep the most frequent and recode rest as "Other"
+  unique_groups <- unique(sample_group)
+  n_unique <- length(unique_groups)
+
+  if (n_unique > max_groups) {
+    # Count frequency of each group
+    group_freq <- table(sample_group)
+    # Sort by frequency (descending)
+    group_freq_sorted <- sort(group_freq, decreasing = TRUE)
+    # Keep top 12 groups
+    top_groups <- names(group_freq_sorted)[1:max_groups]
+
+    # Recode less frequent groups as "Other"
+    sample_group <- ifelse(
+      sample_group %in% top_groups,
+      sample_group,
+      "Other"
+    )
+
+    # Show warning message once
+    n_recoded <- n_unique - max_groups
+    if (requireNamespace("shiny", quietly = TRUE) && !is.null(shiny::getDefaultReactiveDomain())) {
+      shiny::showNotification(
+        ui = paste0(
+          "Warning: Too many groups detected (", n_unique, "). ",
+          "Keeping the ", max_groups, " most frequent groups. ",
+          n_recoded, " less frequent group(s) recoded as 'Other'."
+        ),
+        id = "too_many_groups_recoded",
+        duration = 8,
+        type = "warning"
+      )
+    } else {
+      warning(
+        "Too many groups detected (", n_unique, "). ",
+        "Keeping the ", max_groups, " most frequent groups. ",
+        n_recoded, " less frequent group(s) recoded as 'Other'.",
+        call. = FALSE
+      )
+    }
+  }
+
+  truncated_group <- truncate_labels_safely(sample_group, max_length)
+
+  if (!identical(as.character(truncated_group), as.character(sample_group))) {
+    sample_group <- truncated_group
+
+    # Show warning message once
+    if (requireNamespace("shiny", quietly = TRUE) && !is.null(shiny::getDefaultReactiveDomain())) {
+      shiny::showNotification(
+        ui = paste0(
+          "Warning: Some group names were longer than ", max_length,
+          " characters and have been truncated to improve plot readability."
+        ),
+        id = "long_group_names_truncated",
+        duration = 8,
+        type = "warning"
+      )
+    }
+  }
+
   return(as.character(sample_group))
 }
 

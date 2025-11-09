@@ -11,7 +11,7 @@ mod_01_load_data_ui <- function(id) {
   ns <- shiny::NS(id)
   tabPanel(
     title = "Data",
-    # move notifications and progress bar to the center of screen
+    # move notifications and progress bar to the center of the screen
     tags$head(
       tags$style(
         HTML(".shiny-notification {
@@ -148,33 +148,22 @@ mod_01_load_data_ui <- function(id) {
           choices = list(
             "..." = 0,
             "Read counts data" = 1,
-            "Normalized Expression data" = 2,
-            "Fold-changes & adjusted P-vals" = 3
+            "Normalized expression data" = 2,
+            "Fold changes & adjusted p-values" = 3,
+            "Fold changes only" = 4
           ),
           selected = 0,
           selectize = FALSE
         ),
         tippy::tippy_this(
           ns("data_file_format"),
-          "We recommend raw read counts so iDEP can run DESeq2. Choose normalized expression if you have TPM/FPKM, microarray, or proteomics values. Select Fold-change plus P-values when statistical analysis was done elsewhere.",
+          paste(
+            "Raw read counts enable DESeq2.",
+            "Choose normalized expression for TPM/FPKM, microarray, or proteomics.",
+            "Select fold change + adjusted p-values when both statistics are available,",
+            "or choose Fold changes only if you just have log-fold changes."
+          ),
           theme = "light"
-        ),
-        
-        
-        # Conditional panel for fold changes data file ----------
-        conditionalPanel(
-          condition = "input.data_file_format == 3",
-          checkboxInput(
-            inputId = ns("no_fdr"),
-            label = "Fold-changes only",
-            value = FALSE
-          ),
-          tippy::tippy_this(
-            ns("no_fdr"),
-            "Your data contains fold changes but not adjusted p-values.",
-            theme = "light"
-          ),
-          ns = ns
         ),
         # Load expression data options ----------
         # Includes load demo action button, demo data dropdown, and expression
@@ -325,6 +314,32 @@ mod_01_load_data_ui <- function(id) {
               "Keep your original gene IDs. By default we convert to Ensembl IDs used by pathway databases.",
               theme = "light"
             ),
+            numericInput(
+              inputId = ns("max_groups"),
+              label = "Max groups in legends:",
+              value = 12,
+              min = 5,
+              max = 30,
+              step = 1
+            ),
+            tippy::tippy_this(
+              ns("max_groups"),
+              "Maximum number of groups to show in plot legends. Groups beyond this limit are recoded as 'Other'.",
+              theme = "light"
+            ),
+            numericInput(
+              inputId = ns("max_group_name_length"),
+              label = "Max group name length:",
+              value = 30,
+              min = 10,
+              max = 50,
+              step = 5
+            ),
+            tippy::tippy_this(
+              ns("max_group_name_length"),
+              "Maximum character length for group names in legends. Longer names are truncated.",
+              theme = "light"
+            ),
           )
         ),
         br(),
@@ -375,10 +390,16 @@ mod_01_load_data_ui <- function(id) {
         # Gene ID conversion statistics ----------
         uiOutput(ns("conversion_stats_message")),
 
-        DT::dataTableOutput(ns("sample_info_table")),
+        div(
+          style = "overflow-x: auto;",
+          tableOutput(ns("sample_info_table"))
+        ),
 
         # Display first 20 rows of the data ----------
-        DT::dataTableOutput(ns("sample_20")),
+        div(
+          style = "overflow-x: auto;",
+          tableOutput(ns("sample_20"))
+        ),
         div(
           id = ns("load_message"),
           h3("From data to discoveries", style = "color: #d9534f; font-weight: 700;"),
@@ -455,8 +476,45 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         treatB_LFC = c(-1.81, 0.10, 1.98, -0.02, 0.13),
         treatB_Pval = c(0.001, 0.25, 0.0001, 0.02, 0.001),
         stringsAsFactors = FALSE
+      ),
+      `4` = data.frame(
+        genes = c("Gnai3", "Cdc45", "Scml2", "Narf", "Cav2"),
+        WTvsMu_LFC = c(-0.098, 0.510, 0.545, -0.230, -0.592),
+        IRvsMock_LFC = c(0.760, 1.638, 0.929, -0.973, -0.176),
+        Interaction_LFC = c(-0.659, -1.499, 1.149, 0.162, 0.970),
+        stringsAsFactors = FALSE
       )
     )
+
+    build_preview_table <- function(df) {
+      df[] <- lapply(df, as.character)
+
+      tags$table(
+        style = "width: 100%; border-collapse: collapse; margin-top: 10px;",
+        tags$thead(
+          tags$tr(
+            lapply(names(df), function(col) {
+              tags$th(
+                style = "border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2;",
+                col
+              )
+            })
+          )
+        ),
+        tags$tbody(
+          lapply(seq_len(nrow(df)), function(i) {
+            tags$tr(
+              lapply(df[i, ], function(val) {
+                tags$td(
+                  style = "border: 1px solid #ddd; padding: 8px; text-align: center;",
+                  val
+                )
+              })
+            )
+          })
+        )
+      )
+    }
 
     get_data_type_details <- function(type) {
       switch(
@@ -466,8 +524,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           body = tagList(
             p("Raw gene-by-sample count matrix. Values indicate the number of sequencing reads assigned to each gene. Counts are typically integers, but estimated counts (e.g., from kallisto or Salmon) may be non-integer and should still be treated as count data."),
             tags$ul(
-              tags$li("First column: gene IDs, such as Ensembl, Entrez, symbols, etc."),
-              tags$li("Column headers: sample names; avoid spaces and '-' characters.")
+              tags$li("First column contains gene IDs such as Ensembl (recommended), Entrez, symbols, ..."),
+              tags$li("Column headers: sample names; append '_1', '_2', etc, for replicates; avoid spaces and '-' characters. ")
             )
           )
         ),
@@ -476,8 +534,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           body = tagList(
             p("Provide a gene-by-sample matrix with normalized values such as TPM/FPKM, microarray intensities, proteomics, etc."),
             tags$ul(
-              tags$li("First column: gene IDs such as Ensembl, Entrez, symbols, etc."),
-              tags$li("Column headers: sample names; avoid spaces and '-' characters.")
+              tags$li("First column contains gene IDs such as Ensembl (recommended), Entrez, symbols, ..."),
+              tags$li("Column headers: sample names; append '_1', '_2', etc, for replicates; avoid spaces and '-' characters.")
             )
           )
         ),
@@ -486,9 +544,19 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           body = tagList(
             p("Upload summary statistics for one or more contrasts."),
             tags$ul(
-              tags$li("First column: gene IDs (Ensembl, symbols, ...)"),
-              tags$li("Log2 fold-change and its matching adjusted P-value/FDR"),
-              tags$li("Pair each contrast with an adjusted P-value/FDR column.")
+              tags$li("First column contains gene IDs such as Ensembl (recommended), Entrez, symbols, ..."),
+              tags$li("Log2 fold-change columns paired with adjusted P-value/FDR columns."),
+              tags$li("Order columns as LFC, FDR, LFC, FDR for each contrast.")
+            )
+          )
+        ),
+        `4` = list(
+          title = "Fold Changes Only",
+          body = tagList(
+            p("Upload log2 fold-changes when p-values or FDRs are unavailable."),
+            tags$ul(
+              tags$li("First column contains gene IDs such as Ensembl (recommended), Entrez, symbols, ..."),
+              tags$li("One column per contrast containing log2 fold-change values.")
             )
           )
         ),
@@ -796,9 +864,13 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       updateSelectInput(
         session = session,
         inputId = "data_file_format",
-        choices = list("Read counts data" = 1,
-                       "Normalized Expression data" = 2,
-                       "Fold-change & adjusted P-val" = 3),
+        choices = list(
+          "..." = 0,
+          "Read counts data" = 1,
+          "Normalized expression data" = 2,
+          "Fold changes & adjusted p-values" = 3,
+          "Fold changes only" = 4
+        ),
         selected = input$data_file_format
       )
 
@@ -812,37 +884,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
       # Build notification UI with details and preview
       notification_ui <- if (!is.null(preview)) {
-        # Convert preview to character to preserve exact display
-        df <- preview
-        df[] <- lapply(df, as.character)
-
-        # Create HTML table manually
-        table_html <- tags$table(
-          style = "width: 100%; border-collapse: collapse; margin-top: 10px;",
-          tags$thead(
-            tags$tr(
-              lapply(names(df), function(col) {
-                tags$th(
-                  style = "border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2;",
-                  col
-                )
-              })
-            )
-          ),
-          tags$tbody(
-            lapply(seq_len(nrow(df)), function(i) {
-              tags$tr(
-                lapply(df[i, ], function(val) {
-                  tags$td(
-                    style = "border: 1px solid #ddd; padding: 8px; text-align: center;",
-                    val
-                  )
-                })
-              )
-            })
-          )
-        )
-
+        table_html <- build_preview_table(preview)
         tagList(
           tags$strong(details$title),
           tags$br(),
@@ -866,6 +908,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         type = "message",
         id = "load_prompt"
       )
+
     }, ignoreNULL = TRUE)
 
     # Dismiss notification when user interacts with file input or demo button
@@ -898,13 +941,42 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     demo_choices <- reactive({
       req(input$data_file_format)
 
-      if (input$data_file_format > 0) {
-        files <- idep_data$demo_file_info
-        files <- files[files$type == input$data_file_format, ]
-        setNames(as.list(files$ID), files$name)
-      } else {
-        NULL
+      if (input$data_file_format <= 0) {
+        return(NULL)
       }
+
+      files <- idep_data$demo_file_info
+      files <- files[files$type == input$data_file_format, , drop = FALSE]
+
+      selected_species <- selected_species_name()
+      if (is.null(selected_species) || !nzchar(selected_species)) {
+        return(NULL)
+      }
+      if (identical(selected_species, "NEW")) {
+        return(NULL)
+      }
+      has_species_column <- "species" %in% names(files)
+
+      if (
+        has_species_column &&
+        !is.null(selected_species) &&
+        nzchar(selected_species)
+      ) {
+        normalize_species <- function(x) {
+          tolower(trimws(as.character(x)))
+        }
+
+        species_match <- normalize_species(files$species) ==
+          normalize_species(selected_species)
+
+        files <- files[species_match, , drop = FALSE]
+      }
+
+      if (!nrow(files)) {
+        return(NULL)
+      }
+
+      setNames(as.list(files$ID), files$name)
     })
 
     observeEvent(demo_choices(), {
@@ -933,6 +1005,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       req(input$data_file_format)
 
       choices <- demo_choices()
+      has_demo_datasets <- !is.null(choices) && length(choices) > 0
+
       tagList(
         strong("3. Expression matrix (CSV or text)"),
         fluidRow(
@@ -966,19 +1040,21 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             )
           ),
 
-          column(
-            width = 4,
-            actionButton(
-              inputId = ns("demo_modal_button"),
-              label = tags$span("Demo Data", style = "color: red;"),
-              class = "btn-default"
-            ),
-            tippy::tippy_this(
-              ns("demo_modal_button"),
-              "Load demo datasets.",
-              theme = "light"
+          if (has_demo_datasets) {
+            column(
+              width = 4,
+              actionButton(
+                inputId = ns("demo_modal_button"),
+                label = tags$span("Demo Data", style = "color: red;"),
+                class = "btn-default"
+              ),
+              tippy::tippy_this(
+                ns("demo_modal_button"),
+                "Load demo datasets.",
+                theme = "light"
+              )
             )
-          ),
+          },
           column(
             width = 2,
             align = "center",
@@ -1092,12 +1168,12 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           tags$span("Quick Start:", style = "font-size: 18px;"),
           tags$ul(
             tags$li(
-              "Watch a 6-minute ",
-              a("video", href = "https://youtu.be/ta1orPnjY-0", target = "_blank"),
+              "Watch a 5-min ",
+              a("video", href = "https://youtu.be/lqDqrJU-e24", target = "_blank"),
               " tutorial!"
             ),
             tags$li(
-              "Try it with demo data. After selecting a data type, just click ",
+              "Select a data type, then click ",
               tags$span("Demo Data.", id = "load-demo", style = "color: red;")
             )
           )
@@ -1465,48 +1541,45 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         experiment_file = input$experiment_file,
         go_button = go_button_count(),
         demo_data_file = demo_data_file()[1],
-        demo_metadata_file = demo_data_file()[2]
+        demo_metadata_file = demo_data_file()[2],
+        max_group_name_length = input$max_group_name_length
       )
     })
 
     # Sample information table -----------
-    output$sample_info_table <- DT::renderDataTable({
+    output$sample_info_table <- renderTable({
       req(!is.null(loaded_data()$sample_info))
 
-      DT::datatable(
-        isolate({
-          tem <- t(loaded_data()$sample_info)
-          tem <- cbind(rownames(tem), tem)
-          colnames(tem)[1] <- "Study_design"
-          tem
-        }),
-        options = list(
-          pageLength = 10,
-          scrollX = "400px",
-          dom = "t",
-          ordering = F
-        ),
-        rownames = FALSE
-      )
-    })
+      isolate({
+        tem <- t(loaded_data()$sample_info)
+        tem <- cbind(rownames(tem), tem)
+        colnames(tem)[1] <- "Study_design"
+        as.data.frame(tem, stringsAsFactors = FALSE)
+      })
+    },
+    striped = TRUE,
+    bordered = TRUE,
+    spacing = "s",
+    align = "l",
+    rownames = FALSE)
 
     # First 20 rows of dataset table -----------
-    output$sample_20 <- DT::renderDataTable({
+    output$sample_20 <- renderTable({
       req(!is.null(conversion_info()$converted_data))
 
-      DT::datatable(
-        #conversion_info()$converted_data[1:20, ],
-        if(nrow(loaded_data()$data) > 20){
-          loaded_data()$data[1:20, ]
-        } else (loaded_data()$data),
-        options = list(
-          pageLength = 10,
-          scrollX = "400px",
-          dom = "t"
-        ),
-        rownames = TRUE
-      )
-    })
+      data_preview <- if (nrow(loaded_data()$data) > 20) {
+        loaded_data()$data[1:20, , drop = FALSE]
+      } else {
+        loaded_data()$data
+      }
+
+      as.data.frame(data_preview, stringsAsFactors = FALSE)
+    },
+    striped = TRUE,
+    bordered = TRUE,
+    spacing = "s",
+    align = "l",
+    rownames = TRUE)
 
     observeEvent(input$expression_file, {
       # test data for correct format
@@ -1526,15 +1599,16 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       }
 
       # Check for ratio data in fold-change uploads
-      if (input$data_file_format == 3) {
+      if (input$data_file_format %in% c(3, 4)) {
         data <- loaded_data()$data
 
         # Determine which columns are fold-changes
         n2 <- ncol(data) %/% 2
-        fc_cols <- if (!input$no_fdr) {
+        has_p_vals <- input$data_file_format == 3
+        fc_cols <- if (has_p_vals) {
           2 * (1:n2) - 1  # Fold-change columns (odd columns)
         } else {
-          1:ncol(data)    # All columns are fold-changes
+          seq_len(ncol(data))    # All columns are fold-changes
         }
 
         # Check each fold-change column for ratio characteristics
@@ -1778,21 +1852,11 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       req(input$data_format_help == 0 && input$design_format_help == 0)
 
       tagList(
-        div(
-          style = "position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%;",
-          tags$iframe(
-            src = "https://www.youtube.com/embed/ta1orPnjY-0?rel=0",
-            style = "position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;",
-            allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture",
-            allowfullscreen = NA
-          )
-        ),
         fluidRow(
           column(
             width = 9,
-            h4(paste("v", as.character(packageVersion("idepGolem")))),
-            h4("iDEP: integrated Differential Expression & Pathway analysis"),
-            h5("The power of 100s of R packages and annotation databases, at your fingertips!")
+            h4(paste0("iDEP   v", as.character(packageVersion("idepGolem")))),
+            h4("Integrated Differential Expression & Pathway analysis"),
           ),
           column(
             width = 3,
@@ -1807,7 +1871,15 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         # alternative UI output message for once expression data is loaded
         uiOutput(ns("load_data_alt")),
         includeHTML(app_sys("app/www/messages.html")),
-        br(),
+        div(
+          style = "position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%;",
+          tags$iframe(
+            src = "https://www.youtube.com/embed/lqDqrJU-e24?rel=0",
+            style = "position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;",
+            allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture",
+            allowfullscreen = NA
+          )
+        ),
         img(
           src = "www/flowchart.png",
           align = "center",
@@ -1859,7 +1931,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
     list(
       data_file_format = reactive(input$data_file_format),
-      no_fdr = reactive(input$no_fdr),
+      no_fdr = reactive(input$data_file_format == 4),
       select_org = reactive(input$select_org),
       gmt_file = reactive(input$gmt_file),
       sample_info = reactive(loaded_data()$sample_info),
@@ -1875,7 +1947,9 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       select_gene_id = reactive(input$select_gene_id),
       multiple_map = reactive(input$multiple_map),
       plot_grid_lines = reactive(input$plot_grid_lines),
-      ggplot2_theme = reactive(input$ggplot2_theme)
+      ggplot2_theme = reactive(input$ggplot2_theme),
+      max_groups = reactive(input$max_groups),
+      max_group_name_length = reactive(input$max_group_name_length)
     )
   })
 }

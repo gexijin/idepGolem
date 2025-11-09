@@ -119,7 +119,7 @@ gage_data <- function(expr_data,
     data <- fold
     # Expression data selected without experiment design
   } else {
-    col_groups <- detect_groups(colnames(expr_data))
+    col_groups <- detect_groups(colnames(expr_data), preserve_original = TRUE)
     
     cols <- sapply(groups, function(x){
       which(col_groups == x)
@@ -188,7 +188,7 @@ pgsea_data <- function(processed_data,
                        my_range,
                        pathway_p_val_cutoff,
                        n_pathway_show) {
-  subtype <- detect_groups(colnames(processed_data))
+  subtype <- detect_groups(colnames(processed_data), preserve_original = TRUE)
 
   # Cut off to report in PGSEA. Otherwise NA
   p_value <- 0.01
@@ -313,7 +313,7 @@ plot_pgsea <- function(my_range,
       NULL
     )
   } else {
-    subtype <- detect_groups(colnames(genes))
+    subtype <- detect_groups(colnames(genes), preserve_original = TRUE)
     result <- pgsea_data(
       processed_data = genes,
       gene_sets = gene_sets,
@@ -396,7 +396,7 @@ plot_gsva <- function(my_range,
     plot.new()
     text(0.5, 1, "No significant pathway found!")
   } else {
-    subtype <- detect_groups(colnames(genes))
+    subtype <- detect_groups(colnames(genes), preserve_original = TRUE)
     result <- gsva_data(
       processed_data = genes,
       gene_sets = gene_sets,
@@ -476,7 +476,7 @@ gsva_data <- function(processed_data,
                        pathway_p_val_cutoff,
                        n_pathway_show,
                        algorithm = "gsva") {
-  subtype <- detect_groups(colnames(processed_data))
+  subtype <- detect_groups(colnames(processed_data), preserve_original = TRUE)
 
   # Cut off to report in PGSEA. Otherwise NA
   p_value <- 0.01
@@ -611,7 +611,10 @@ get_gsva_plot_data <- function(my_range,
                                 n_pathway_show,
                                 algorithm = "gsva") {
   # Find sample related to the comparison
-  iz <- match(detect_groups(colnames(data)), unlist(strsplit(select_contrast, "-")))
+  iz <- match(
+    detect_groups(colnames(data), preserve_original = TRUE),
+    unlist(strsplit(select_contrast, "-"))
+  )
   iz <- which(!is.na(iz))
 
   if (!is.null(sample_info) & !is.null(select_factors_model) & length(select_model_comprions) > 0) {
@@ -644,7 +647,7 @@ get_gsva_plot_data <- function(my_range,
   genes <- data
   genes <- genes[, iz]
 
-  subtype <- detect_groups(colnames(genes))
+  subtype <- detect_groups(colnames(genes), preserve_original = TRUE)
 
   if (length(gene_sets) == 0) {
     return(as.data.frame("No significant pathway!"))
@@ -982,7 +985,7 @@ pgsea_plot_all <- function(go,
     plot.new()
     text(0, 1, "No gene sets!")
   } else {
-    subtype <- detect_groups(colnames(data))
+    subtype <- detect_groups(colnames(data), preserve_original = TRUE)
     result <- pgsea_data(
       processed_data = data,
       gene_sets = gene_sets,
@@ -1067,7 +1070,7 @@ get_pgsea_plot_data <- function(my_range,
                                 n_pathway_show) {
   genes <- data[, contrast_samples]
 
-  subtype <- detect_groups(colnames(genes))
+  subtype <- detect_groups(colnames(genes), preserve_original = TRUE)
 
   if (length(gene_sets) == 0) {
     return(as.data.frame("No significant pathway!"))
@@ -1120,7 +1123,7 @@ get_pgsea_plot_all_samples_data <- function(data,
                                             pathway_p_val_cutoff,
                                             n_pathway_show) {
   genes <- data
-  subtype <- detect_groups(colnames(genes))
+  subtype <- detect_groups(colnames(genes), preserve_original = TRUE)
 
   if (length(gene_sets) == 0) {
     plot.new()

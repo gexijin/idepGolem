@@ -13,7 +13,8 @@ heat_sub(
   select_factors_heatmap,
   cluster_meth,
   group_pal = NULL,
-  sample_color = NULL
+  sample_color = NULL,
+  use_letter_overlay = TRUE
 )
 }
 \arguments{
@@ -36,6 +37,8 @@ hierarchical and 2 for kmeans.}
 \item{group_pal}{Named list of colors and their corresponding categories}
 
 \item{sample_color}{Selected colorspace color palette}
+
+\item{use_letter_overlay}{Logical flag to overlay uppercase letters on sample annotations.}
 }
 \value{
 A list containing a Heatmap from the brush selection
@@ -50,17 +53,17 @@ create a larger subheatmap.
 Other heatmaps: 
 \code{\link{cluster_heat_click_info}()},
 \code{\link{heatmap_main}()},
-\code{\link{process_heatmap_data}()},
-\code{\link{sub_heat_ann}()}
+\code{\link{limit_annotation_factors}()},
+\code{\link{process_heatmap_data}()}
 
 Other clustering functions: 
 \code{\link{cluster_heat_click_info}()},
 \code{\link{draw_sample_tree}()},
 \code{\link{heatmap_main}()},
 \code{\link{k_means_elbow}()},
+\code{\link{limit_annotation_factors}()},
 \code{\link{process_heatmap_data}()},
-\code{\link{sd_density}()},
-\code{\link{sub_heat_ann}()}
+\code{\link{sd_density}()}
 }
 \concept{clustering functions}
 \concept{heatmaps}

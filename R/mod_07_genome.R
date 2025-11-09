@@ -234,7 +234,6 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data) {
     genome_plot <- reactive({
       req(!is.null(deg$limma()))
       req(!is.null(pre_process$all_gene_info()))
-      req(!is.null(chr_data()))
       req(
         input$select_contrast,
         input$limma_p_val_viz,
@@ -243,6 +242,22 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data) {
         input$ma_window_steps,
         input$ch_region_p_val
       )
+
+      # Check if chr_data is NULL (all data filtered out)
+      if (is.null(chr_data())) {
+        fake <- data.frame(a = 1:3, b = 1:3)
+        p <- ggplot2::ggplot(fake, ggplot2::aes(x = a, y = b)) +
+          ggplot2::geom_blank() +
+          ggplot2::ggtitle("No chromosomes or genes to display.") +
+          ggplot2::labs(subtitle = "Try adjusting filter settings (FDR, fold change, or uncheck 'Hide Sparse Chrs.')") +
+          ggplot2::theme(
+            axis.title.x = ggplot2::element_blank(),
+            axis.title.y = ggplot2::element_blank(),
+            plot.subtitle = ggplot2::element_text(size = 10)
+          )
+        return(plotly::ggplotly(p))
+      }
+
       withProgress(message = "Generating plot", {
         incProgress(0.2)
         chromosome_plotly(
@@ -360,12 +375,14 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data) {
     
     observeEvent(input$chr_data_popup, {
       # Update chromosome selection dynamically
-      updateSelectizeInput(
-        inputId = "chr_select",
-        session = session,
-        choices = c(unique(chr_data()$chr_data$chromosome_name), "All"),
-        selected = "All"
-      )
+      if (!is.null(chr_data())) {
+        updateSelectizeInput(
+          inputId = "chr_select",
+          session = session,
+          choices = c(unique(chr_data()$chr_data$chromosome_name), "All"),
+          selected = "All"
+        )
+      }
     })
   })
 }

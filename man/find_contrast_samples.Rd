@@ -41,8 +41,8 @@ performed. This should be one of 1 for limma-trend, 2 for limma-voom, and
 3 for DESeq2.}
 
 \item{data_file_format}{Integer indicating the data format. This should be
-one of 1 for read counts data, 2 for normalized expression, or 3 for
-fold changes and adjusted P-values}
+one of 1 for read counts data, 2 for normalized expression, 3 for
+fold changes with adjusted P-values, or 4 for fold changes only}
 }
 \value{
 A numeric vector that can be used to index the processed

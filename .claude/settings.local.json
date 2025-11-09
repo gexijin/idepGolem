@@ -7,7 +7,14 @@
       "WebSearch",
       "WebFetch(domain:shiny.posit.co)",
       "Bash(git stash push:*)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(if [ -f /workspaces/idepGolem/data/demo/demo_data_info.csv ])",
+      "Bash(then cat /workspaces/idepGolem/data/demo/demo_data_info.csv)",
+      "Bash(elif find /workspaces/idepGolem -name demo_data_info.csv)",
+      "Bash(xargs cat:*)",
+      "Bash(fi)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

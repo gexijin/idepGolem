@@ -96,7 +96,8 @@ Input (`data_file_format`)   Description
 ---------------------------  -----------------------------------------------------------------------
 `1`                          Read counts data (recommended)
 `2`                          Normalized expression values (RNA-seq FPKM, micro-array, etc.)
-`3`                          Fold-changes and corrected P values from CuffDiff or any other program
+`3`                          Fold-changes with corrected p-values from CuffDiff or any other program
+`4`                          Fold-changes only (no p-values or FDR columns available)
 
 <br>
 
@@ -138,12 +139,14 @@ ensure there are no `log(0)` errors. All other values can be set to `NULL`.
 
 <br>
 
-##### **Fold-changes and corrected P values**
+##### **Fold-change summary inputs**
 
-For fold-changes and corrected p-values, there is only one additional parameter
+For fold-change summary statistics, there is only one additional parameter
 to provide an input for, `no_fdr`. This is a logical `TRUE/FALSE` to specify
-whether the data contains corrected p-values or not. `TRUE` denotes fold-change
-only data. All other parameters can be set to `NULL`.
+whether the data contains corrected p-values or not. Set `data_file_format = 3`
+with `no_fdr = FALSE` when both log2 fold-changes and adjusted p-values are
+provided, or `data_file_format = 4` with `no_fdr = TRUE` when only fold-changes
+are available. All other parameters can be set to `NULL`.
 
 <br>
 <br>

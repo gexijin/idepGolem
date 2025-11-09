@@ -123,6 +123,9 @@ safe_numeric_conversion <- function(x) {
 #' @param demo_data_file Expression demo data path \code{idep_data$demo_data_file}
 #' @param demo_metadata_file Experiment demo data path
 #'  \code{idep_data$demo_metadata_file}
+#' @param max_group_name_length Maximum allowed character length for factor
+#'  names detected from the design file. Longer names are truncated when doing
+#'  so will not create duplicate labels. Default is 30.
 #'
 #' @export
 #' @return This returns a list that contains the expression data
@@ -134,7 +137,8 @@ input_data <- function(expression_file,
                        experiment_file,
                        go_button,
                        demo_data_file,
-                       demo_metadata_file) {
+                       demo_metadata_file,
+                       max_group_name_length = 30) {
   in_file_data <- expression_file
   in_file_data <- in_file_data$datapath
 
@@ -142,22 +146,66 @@ input_data <- function(expression_file,
     return(NULL)
   } else if (go_button > 0) { # use demo data
     in_file_data <- demo_data_file
+
+    # Validate demo file exists
+    if (!file.exists(in_file_data)) {
+      if (requireNamespace("shiny", quietly = TRUE) && !is.null(shiny::getDefaultReactiveDomain())) {
+        shiny::showNotification(
+          ui = paste(
+            "Error: Demo expression file not found:",
+            basename(in_file_data),
+            "Please contact the administrator or try a different demo dataset."
+          ),
+          id = "demo_file_not_found",
+          duration = NULL,
+          type = "error"
+        )
+      } else {
+        warning("Demo expression file not found: ", in_file_data)
+      }
+      return(NULL)
+    }
   }
   isolate({
     # Read expression file -----------
 
-    file_extension <- tolower(tools::file_ext(in_file_data))
-    if ( file_extension == "xlsx" || 
-         file_extension == "xls"
-      )  {
-      data <- readxl::read_excel(in_file_data)
-      data <- data.frame(data)
-    } else {
-       data <- read.csv(in_file_data,
-         header = TRUE, stringsAsFactors = FALSE,
-         quote = "\"", comment.char = "",
-         blank.lines.skip = TRUE
-       )
+    # Wrap file reading in tryCatch for better error handling
+    data <- tryCatch(
+      {
+        file_extension <- tolower(tools::file_ext(in_file_data))
+        if (file_extension == "xlsx" || file_extension == "xls") {
+          data_temp <- readxl::read_excel(in_file_data)
+          data.frame(data_temp)
+        } else {
+          read.csv(in_file_data,
+            header = TRUE, stringsAsFactors = FALSE,
+            quote = "\"", comment.char = "",
+            blank.lines.skip = TRUE
+          )
+        }
+      },
+      error = function(e) {
+        if (requireNamespace("shiny", quietly = TRUE) && !is.null(shiny::getDefaultReactiveDomain())) {
+          shiny::showNotification(
+            ui = paste(
+              "Error reading expression file:",
+              conditionMessage(e),
+              "Please check the file format and try again."
+            ),
+            id = "expression_file_read_error",
+            duration = NULL,
+            type = "error"
+          )
+        } else {
+          warning("Error reading expression file: ", conditionMessage(e))
+        }
+        return(NULL)
+      }
+    )
+
+    # Return early if file read failed
+    if (is.null(data)) {
+      return(NULL)
     }
 
     # Try tab-delimented if not CSV
@@ -263,7 +311,8 @@ input_data <- function(expression_file,
     #iconv converts latin1 to UTF-8; otherwise toupper(ENSG00000267023Ê) causes error
     data[, 1] <- toupper(iconv(data[, 1], "latin1", "UTF-8"))
     data[, 1] <- gsub(" |\"|\'", "", data[, 1])
-
+    # "ENSG00000211459.2 -> "ENSG00000211459"
+    data[, 1] <- remove_gene_version(data[, 1])
     # Remove duplicated genes ----------
     data <- data[!duplicated(data[, 1]), ]
 
@@ -295,12 +344,76 @@ input_data <- function(expression_file,
     # if design file is not ""
     if (!is.null(demo_data_file)) {
       if (nchar(demo_metadata_file) > 2) {
-        sample_info_demo <- t(read.csv(
-          demo_metadata_file,
-          row.names = 1,
-          header = TRUE,
-          colClasses = "character"
-        ))
+        # Validate demo design file exists
+        if (!file.exists(demo_metadata_file)) {
+          if (requireNamespace("shiny", quietly = TRUE) && !is.null(shiny::getDefaultReactiveDomain())) {
+            shiny::showNotification(
+              ui = paste(
+                "Warning: Demo design file not found:",
+                basename(demo_metadata_file),
+                "Proceeding without experimental design information."
+              ),
+              id = "demo_design_file_not_found",
+              duration = 10,
+              type = "warning"
+            )
+          } else {
+            warning("Demo design file not found: ", demo_metadata_file)
+          }
+          # Continue without design file rather than failing completely
+          sample_info_demo <- NULL
+        } else {
+          sample_info_demo <- t(read.csv(
+            demo_metadata_file,
+            row.names = 1,
+            header = TRUE,
+            colClasses = "character"
+          ))
+        }
+
+        # Only process truncation if we successfully loaded the design file
+        if (!is.null(sample_info_demo)) {
+
+        truncated_cols <- truncate_labels_safely(colnames(sample_info_demo), max_group_name_length)
+        if (!identical(as.character(truncated_cols), as.character(colnames(sample_info_demo)))) {
+          colnames(sample_info_demo) <- truncated_cols
+
+          if (requireNamespace("shiny", quietly = TRUE) && !is.null(shiny::getDefaultReactiveDomain())) {
+            shiny::showNotification(
+              ui = paste0(
+                "Warning: Some factor names were longer than ", max_group_name_length,
+                " characters and have been truncated to improve readability."
+              ),
+              id = "design_factor_names_truncated",
+              duration = 8,
+              type = "warning"
+            )
+          }
+        }
+
+        levels_truncated_demo <- FALSE
+        if (!is.null(dim(sample_info_demo)) && ncol(sample_info_demo) > 0) {
+          for (j in seq_len(ncol(sample_info_demo))) {
+            truncated_levels <- truncate_labels_safely(sample_info_demo[, j], max_group_name_length)
+            if (!identical(as.character(truncated_levels), as.character(sample_info_demo[, j]))) {
+              sample_info_demo[, j] <- truncated_levels
+              levels_truncated_demo <- TRUE
+            }
+          }
+        }
+
+        if (isTRUE(levels_truncated_demo) && requireNamespace("shiny", quietly = TRUE) && !is.null(shiny::getDefaultReactiveDomain())) {
+          shiny::showNotification(
+            ui = paste0(
+              "Warning: Some factor levels were longer than ", max_group_name_length,
+              " characters and have been truncated to improve readability."
+            ),
+            id = "design_factor_levels_truncated",
+            duration = 8,
+            type = "warning"
+          )
+        }
+        } # end if (!is.null(sample_info_demo))
       }
     }
     return(list(
@@ -355,6 +468,24 @@ input_data <- function(expression_file,
     rownames(expr) <- gsub("\\.", "", rownames(expr))
     rownames(expr) <- gsub(" ", "", rownames(expr))
 
+    truncated_factor_names <- truncate_labels_safely(rownames(expr), max_group_name_length)
+
+    if (!identical(as.character(truncated_factor_names), as.character(rownames(expr)))) {
+      rownames(expr) <- truncated_factor_names
+
+      if (requireNamespace("shiny", quietly = TRUE) && !is.null(shiny::getDefaultReactiveDomain())) {
+        shiny::showNotification(
+          ui = paste0(
+            "Warning: Some factor names were longer than ", max_group_name_length,
+            " characters and have been truncated to improve readability."
+          ),
+          id = "design_factor_names_truncated",
+          duration = 8,
+          type = "warning"
+        )
+      }
+    }
+
     # Matching with column names of expression file ----------
     matches <- match(
       toupper(colnames(data)), toupper(colnames(expr))
@@ -372,6 +503,7 @@ input_data <- function(expression_file,
 
     # Check factor levels, change if needed ----------
     ignored_factors <- c()
+    levels_truncated <- FALSE
     for (i in 1:nrow(expr)) {
       expr[i, ] <- gsub("-", "", expr[i, ])
       expr[i, ] <- gsub("\\.", "", expr[i, ])
@@ -382,6 +514,24 @@ input_data <- function(expression_file,
       if(length(unique(t(expr[i, ]))) == 1) {
         ignored_factors <- c(ignored_factors, i)
       }
+
+      truncated_levels <- truncate_labels_safely(expr[i, ], max_group_name_length)
+      if (!identical(as.character(truncated_levels), as.character(expr[i, ]))) {
+        expr[i, ] <- truncated_levels
+        levels_truncated <- TRUE
+      }
+    }
+
+    if (isTRUE(levels_truncated) && requireNamespace("shiny", quietly = TRUE) && !is.null(shiny::getDefaultReactiveDomain())) {
+      shiny::showNotification(
+        ui = paste0(
+          "Warning: Some factor levels were longer than ", max_group_name_length,
+          " characters and have been truncated to improve readability."
+        ),
+        id = "design_factor_levels_truncated",
+        duration = 8,
+        type = "warning"
+      )
     }
 
     if(length(ignored_factors) == nrow(expr)) {
@@ -557,14 +707,22 @@ get_all_gene_names <- function(mapped_ids,
     return(data.frame(
       "User_ID" = mapped_ids,
       "ensembl_ID" = mapped_ids, # dummy data
-      "symbol" = mapped_ids # dummy data
+      "symbol" = mapped_ids, # dummy data
+      "search_label" = mapped_ids # all same, just use once
     ))
   } else if (!is.null(all_gene_info$bool)) { # ensembl ID only, no symbol
-    return(data.frame(
+    df <- data.frame(
       "User_ID" = mapped_ids[, 1],
       "ensembl_ID" = mapped_ids[, 2],
       "symbol" = mapped_ids[, 1] # dummy data
-    ))
+    )
+    # Add search_label: User_ID and ensembl_ID (symbol is same as User_ID)
+    df$search_label <- ifelse(
+      df$User_ID == df$ensembl_ID,
+      df$User_ID,
+      paste(df$User_ID, df$ensembl_ID, sep = " | ")
+    )
+    return(df)
   } else {
     mapped_ids <- data.frame(
       "User_ID" = mapped_ids[, 1],
@@ -578,6 +736,9 @@ get_all_gene_names <- function(mapped_ids,
       all.x = T
     )
     all_names <- all_names[!duplicated(all_names$ensembl_ID), ]
+    # Remove leading/trailing whitespace from symbols
+    all_names$symbol <- trimws(all_names$symbol)
+    # Convert empty strings to NA
     all_names$symbol[all_names$symbol == ""] <- NA
     all_names$symbol[is.na(all_names$symbol)] <- {
       all_names$ensembl_ID[is.na(all_names$symbol)]
@@ -595,6 +756,20 @@ get_all_gene_names <- function(mapped_ids,
       symbol,
       tidyselect::everything()
     )
+
+    # Add search_label column for gene searching
+    # Only include unique IDs (don't repeat if two or more are identical)
+    all_names$search_label <- sapply(seq_len(nrow(all_names)), function(i) {
+      ids <- c(
+        symbol = all_names$symbol[i],
+        ensembl = all_names$ensembl_ID[i],
+        user = all_names$User_ID[i]
+      )
+      # Get unique IDs while preserving order (symbol, ensembl, user)
+      unique_ids <- ids[!duplicated(ids)]
+      # Combine with separator
+      paste(unique_ids, collapse = " | ")
+    })
 
     return(all_names)
   }
@@ -713,7 +888,10 @@ showGeneIDs <- function(species, db, nGenes = 10){
   }
   removeNotification("db_notDownloaded")
   showNotification(
-    ui = paste("Querying Data...  May take 5 minutes."),
+    ui = tagList(
+      icon("spinner", class = "fa-spin"),
+      "Querying Database..."
+    ),
     id = "ExampleIDDataQuery",
     duration = NULL,
     type = "message"

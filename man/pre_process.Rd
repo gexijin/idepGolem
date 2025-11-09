@@ -7,7 +7,7 @@
 pre_process(
   data,
   missing_value = c("geneMedian", "treatAsZero", "geneMedianInGroup"),
-  data_file_format = c(1, 2, 3),
+  data_file_format = c(1, 2, 3, 4),
   low_filter_fpkm,
   n_min_samples_fpkm,
   log_transform_fpkm,
@@ -27,8 +27,8 @@ pre_process(
 should be one of "geneMedian", "treatAsZero", or "geneMedianInGroup"}
 
 \item{data_file_format}{Integer indicating the data format. This should be
-one of 1 for read counts data, 2 for normalized expression, or 3 for
-fold changes and adjusted P-values}
+one of 1 for read counts data, 2 for normalized expression, 3 for fold
+changes with adjusted P-values, or 4 for fold changes without P-values}
 
 \item{low_filter_fpkm}{Integer for low count filter if
 \code{data_file_format} is normalized expression, \code{NULL} otherwise}
@@ -51,12 +51,12 @@ applied to normalized expression data}
 \item{counts_transform}{Integer to indicate which transformation to make if
 \code{data_file_format} is read counts. This should be one of 1 for
 log2(CPM+c) (EdgeR), 2 for variance stabilizing transformation (VST), or 3
-for regulatized log (rlog)}
+for regularized log (rlog)}
 
 \item{counts_log_start}{Integer added to log if \code{counts_transform} is
 log2(CPM + 2)}
 
-\item{no_fdr}{TRUE/FALSE to indicate fold-changes-only data with no p values
+\item{no_fdr}{TRUE/FALSE to indicate fold-changes-only data with no p-values
 if \code{data_file_format} is fold changes}
 }
 \value{
@@ -65,9 +65,9 @@ the raw counts, a data type warning, the size of the original data,
 and p-values.
 }
 \description{
-This function takes in user defined values to
+This function takes in user-defined values to
 process the data for the EDA. Processing steps depend on data format, but
-generally includes missing value imputation, data filtering, and data
+generally include missing value imputation, data filtering, and data
 transformations.
 }
 \seealso{
@@ -87,6 +87,7 @@ Other preprocess functions:
 \code{\link{eda_density}()},
 \code{\link{eda_scatter}()},
 \code{\link{gene_counts_ggplot}()},
+\code{\link{get_x_axis_label_size}()},
 \code{\link{individual_plots}()},
 \code{\link{mean_sd_plot}()},
 \code{\link{rRNA_counts_ggplot}()},

@@ -21,7 +21,13 @@ heatmap_main(
   selected_genes,
   group_pal = NULL,
   sample_color = NULL,
-  show_column_names = FALSE
+  show_column_names = FALSE,
+  show_heatmap_legend = FALSE,
+  row_dend_obj = NULL,
+  col_dend_obj = NULL,
+  use_letter_overlay = TRUE,
+  show_cluster_labels = FALSE,
+  custom_cluster_labels = NULL
 )
 }
 \arguments{
@@ -59,6 +65,20 @@ hierarchical and 2 for kmeans.}
 \item{sample_color}{Selected colorspace color palette}
 
 \item{show_column_names}{TRUE/FALSE Show sample names below the heatmap}
+
+\item{show_heatmap_legend}{TRUE/FALSE Show the color key legend on the heatmap}
+
+\item{row_dend_obj}{Optional precomputed row dendrogram to reuse}
+
+\item{col_dend_obj}{Optional precomputed column dendrogram to reuse}
+
+\item{use_letter_overlay}{Logical flag to overlay uppercase letters on sample annotations.}
+
+\item{show_cluster_labels}{Logical flag to show cluster labels (e.g., "Cluster 1", "Cluster 2")
+on the right side for k-means clustering using anno_block().}
+
+\item{custom_cluster_labels}{Optional named vector of custom labels for k-means clusters.
+Names should be cluster numbers ("1", "2", etc.), values are the labels to display.}
 }
 \value{
 Heatmap of the processed data.
@@ -80,15 +100,15 @@ Other clustering functions:
 \code{\link{draw_sample_tree}()},
 \code{\link{heat_sub}()},
 \code{\link{k_means_elbow}()},
+\code{\link{limit_annotation_factors}()},
 \code{\link{process_heatmap_data}()},
-\code{\link{sd_density}()},
-\code{\link{sub_heat_ann}()}
+\code{\link{sd_density}()}
 
 Other heatmaps: 
 \code{\link{cluster_heat_click_info}()},
 \code{\link{heat_sub}()},
-\code{\link{process_heatmap_data}()},
-\code{\link{sub_heat_ann}()}
+\code{\link{limit_annotation_factors}()},
+\code{\link{process_heatmap_data}()}
 }
 \concept{clustering functions}
 \concept{heatmaps}

@@ -64,7 +64,7 @@ mod_02_pre_process_ui <- function(id) {
           ),
           tippy::tippy_this(
             ns("counts_transform"),
-            "Transformed data is used for clustering, PCA, network analysis. Differentialy analysis with DESeq2 uses raw counts.",
+            "Transformed data is used for clustering, PCA, and network analysis. Differential analysis with DESeq2 uses raw counts.",
             theme = "light"
           ),
 
@@ -77,7 +77,7 @@ mod_02_pre_process_ui <- function(id) {
               ),              
               column(
                 width = 7,
-                "Pseudo count c:"
+                "Pseudo-count c:"
               ),
               column(
                 width = 3,
@@ -90,7 +90,7 @@ mod_02_pre_process_ui <- function(id) {
                 ),
                 tippy::tippy_this(
                   ns("counts_log_start"),
-                  "Constant c in log2(CPM + c) transformation; higher values reduces noises but loses sensitivity. Normally between 1 and 10.",
+                  "Constant c in the log2(CPM + c) transformation; higher values reduce noise but decrease sensitivity. Typically between 1 and 10.",
                   theme = "light"
                 )
               )
@@ -115,7 +115,7 @@ mod_02_pre_process_ui <- function(id) {
               ),
               tippy::tippy_this(
                 ns("low_filter_fpkm"),
-                "Minimum expression value (FPKM, RPKM, TPM, or similar normalized units). Defaults to -1000 effectively bypass this filter for most datasets.",
+                "Minimum expression value (FPKM, RPKM, TPM, or similar normalized units). Defaults to -1000 to effectively bypass this filter for most datasets.",
                 theme = "light"
               )
             ),
@@ -234,7 +234,7 @@ mod_02_pre_process_ui <- function(id) {
             ),
             tippy::tippy_this(
               ns("download_processed_data"),
-              "Download the transformed data. Includes Enembll gene IDs and gene symbols.",
+              "Download the transformed data. Includes Ensembl gene IDs and gene symbols.",
               theme = "light"
             )
           ),
@@ -274,7 +274,7 @@ mod_02_pre_process_ui <- function(id) {
         ),
         tippy::tippy_this(
           ns("report"),
-          "Create an HTML report summarizing the Pre-preprocessing step.",
+          "Create an HTML report summarizing the preprocessing step.",
           theme = "light"
         ),
         uiOutput(ns("mapping_statistics_container")),
@@ -290,7 +290,7 @@ mod_02_pre_process_ui <- function(id) {
           tabPanel(
             title = "Reads",
             br(),
-            plotOutput(
+            scrollable_plot_output(
               outputId = ns("raw_counts_gg"),
               width = "100%",
               height = "500px"
@@ -359,7 +359,7 @@ mod_02_pre_process_ui <- function(id) {
             # Boxplot
             conditionalPanel(
               condition = "input.distribution_plot_type == 'boxplot'",
-              plotOutput(
+              scrollable_plot_output(
                 outputId = ns("eda_boxplot"),
                 width = "100%",
                 height = "500px"
@@ -479,7 +479,7 @@ mod_02_pre_process_ui <- function(id) {
               conditionalPanel(
                 condition = "output.data_file_format == 1",
                 br(),
-                plotOutput(
+                scrollable_plot_output(
                   outputId = ns("rRNA_counts_gg"),
                   width = "100%",
                   height = "500px"
@@ -516,7 +516,7 @@ mod_02_pre_process_ui <- function(id) {
                 uiOutput(ns("gene_type_warning")),
                 br(),
                 hr(),
-                plotOutput(
+                scrollable_plot_output(
                   outputId = ns("chr_counts_gg"),
                   width = "100%",
                   height = "2000px"
@@ -545,7 +545,7 @@ mod_02_pre_process_ui <- function(id) {
                 ns = ns
               ),
             
-              plotOutput(
+              scrollable_plot_output(
                 outputId = ns("chr_normalized_gg"),
                 width = "100%",
                 height = "2000px"
@@ -595,7 +595,7 @@ mod_02_pre_process_ui <- function(id) {
                 ),
                 tippy::tippy_this(
                   ns("selected_gene"),
-                  "Type to search by gene ID, symbol, or name.",
+                  "Type to search by gene symbol, Ensembl gene ID, or original user gene ID.",
                   theme = "light"
                 )
               ),
@@ -649,7 +649,7 @@ mod_02_pre_process_ui <- function(id) {
                   inputId = ns("angle_ind_axis_lab"),
                   label = "Rotate Labels",
                   choices = c(0, 45, 90),
-                  selected = 45
+                  selected = 90
                 ),
                 tippy::tippy_this(
                   ns("angle_ind_axis_lab"),
@@ -659,7 +659,7 @@ mod_02_pre_process_ui <- function(id) {
               )
             ),
 
-            plotOutput(
+            scrollable_plot_output(
               outputId = ns("gene_plot"),
               width = "100%",
               height = "500px"
@@ -751,10 +751,13 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
 
     # Dynamic Barplot Tab ----------
     observe({
-      if (load_data$data_file_format() != 1) {
+      data_format <- load_data$data_file_format()
+      req(!is.null(data_format))
+
+      if (data_format != 1) {
         hideTab(inputId = "eda_tabs", target = "Reads")
         updateTabsetPanel(session, "eda_tabs", selected = "Distribution")
-      } else if (load_data$data_file_format() == 1) {
+      } else if (data_format == 1) {
         showTab(inputId = "eda_tabs", target = "Reads")
         updateTabsetPanel(session, "eda_tabs", selected = "Reads")
       }
@@ -773,6 +776,18 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
         density_tip_shown(TRUE)
       }
     }, ignoreNULL = TRUE)
+
+    # Dynamic Markers Tab - hide if no markers found ----------
+    observe({
+      req(!is.null(processed_data()$data))
+      payloads <- marker_payloads()
+
+      if (length(payloads) == 0) {
+        hideTab(inputId = "eda_tabs", target = "Markers")
+      } else {
+        showTab(inputId = "eda_tabs", target = "Markers")
+      }
+    })
 
     # Process the data with user defined criteria ----------
     processed_data <- reactive({
@@ -808,7 +823,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
 
       return(processed_data)
     })
-    
+
     observe({
       req(processed_data()$data_size[3] < 1000)
       showNotification(
@@ -841,11 +856,17 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
           type = "Raw",
           plots_color_select = load_data$plots_color_select()
         )
-        refine_ggplot2(
+        plot <- refine_ggplot2(
           p = p,
           gridline = load_data$plot_grid_lines(),
           ggplot2_theme = load_data$ggplot2_theme()
         )
+        update_scrollable_plot_width(
+          session = session,
+          output_id = "raw_counts_gg",
+          n_samples = ncol(processed_data()$raw_counts)
+        )
+        plot
       })
     })
     
@@ -940,12 +961,19 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     rRNA_counts <- reactive({
       req(!is.null(rRNA_counts_result()))
       result <- rRNA_counts_result()
-      p <- refine_ggplot2(
+      plot <- refine_ggplot2(
         p = result$plot,
         gridline = load_data$plot_grid_lines(),
         ggplot2_theme = load_data$ggplot2_theme()
       )
-      return(p)
+      converted <- load_data$converted_data()
+      req(!is.null(converted))
+      update_scrollable_plot_width(
+        session = session,
+        output_id = "rRNA_counts_gg",
+        n_samples = ncol(converted)
+      )
+      plot
     })
     output$rRNA_counts_gg <- renderPlot({
       print(rRNA_counts())
@@ -1043,15 +1071,11 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     output$chr_boxplot_checkbox <- renderUI({
       req(!is.null(load_data$converted_data()))
 
-      # Determine default value based on number of samples
-      n_samples <- ncol(load_data$converted_data())
-      default_value <- n_samples > 50
-
       tagList(
         checkboxInput(
           inputId = ns("chr_use_boxplot"),
           label = "Use boxplot",
-          value = default_value
+          value = FALSE
         ),
         tippy::tippy_this(
           ns("chr_use_boxplot"),
@@ -1085,12 +1109,19 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     chr_counts <- reactive({
       req(!is.null(chr_counts_result()))
       result <- chr_counts_result()
-      p <- refine_ggplot2(
+      plot <- refine_ggplot2(
         p = result$plot,
         gridline = load_data$plot_grid_lines(),
         ggplot2_theme = load_data$ggplot2_theme()
       )
-      return(p)
+      converted <- load_data$converted_data()
+      req(!is.null(converted))
+      update_scrollable_plot_width(
+        session = session,
+        output_id = "chr_counts_gg",
+        n_samples = ncol(converted)
+      )
+      plot
     })
     output$chr_counts_gg <- renderPlot({
       print(chr_counts())
@@ -1124,15 +1155,11 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     output$chr_normalized_boxplot_checkbox <- renderUI({
       req(!is.null(processed_data()$data))
 
-      # Determine default value based on number of samples
-      n_samples <- ncol(processed_data()$data)
-      default_value <- n_samples > 50
-
       tagList(
         checkboxInput(
           inputId = ns("chr_normalized_use_boxplot"),
           label = "Use boxplot",
-          value = default_value
+          value = FALSE
         ),
         tippy::tippy_this(
           ns("chr_normalized_use_boxplot"),
@@ -1166,12 +1193,19 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     chr_normalized <- reactive({
       req(!is.null(chr_normalized_result()))
       result <- chr_normalized_result()
-      p <- refine_ggplot2(
+      plot <- refine_ggplot2(
         p = result$plot,
         gridline = load_data$plot_grid_lines(),
         ggplot2_theme = load_data$ggplot2_theme()
       )
-      return(p)
+      processed <- processed_data()$data
+      req(!is.null(processed))
+      update_scrollable_plot_width(
+        session = session,
+        output_id = "chr_normalized_gg",
+        n_samples = ncol(processed)
+      )
+      plot
     })
     output$chr_normalized_gg <- renderPlot({
       print(chr_normalized())
@@ -1326,11 +1360,17 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
           sample_info = load_data$sample_info(),
           plots_color_select = load_data$plots_color_select()
         )
-        refine_ggplot2(
+        plot <- refine_ggplot2(
           p = p,
           gridline = load_data$plot_grid_lines(),
           ggplot2_theme = load_data$ggplot2_theme()
         )
+        update_scrollable_plot_width(
+          session = session,
+          output_id = "eda_boxplot",
+          n_samples = ncol(processed_data()$data)
+        )
+        plot
       })
     })
     output$eda_boxplot <- renderPlot({
@@ -1499,13 +1539,36 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
           ),
           decreasing = TRUE
         )
+
+        # Create searchable gene choices using search_label column
+        all_gene_names <- load_data$all_gene_names()
+        select_gene_id <- load_data$select_gene_id()
+
+        # Determine which column to use for matching
+        lookup_col <- if (select_gene_id == "symbol") {
+          "symbol"
+        } else if (select_gene_id == "ensembl_ID") {
+          "ensembl_ID"
+        } else {
+          "User_ID"
+        }
+
+        # Match rownames to all_gene_names and get search labels
+        matches <- match(names(sorted), all_gene_names[[lookup_col]])
+        search_labels <- all_gene_names$search_label[matches]
+        # Fallback to rowname if no match found
+        search_labels[is.na(search_labels)] <- names(sorted)[is.na(search_labels)]
+
+        # Create named vector: names are search labels, values are rownames
+        gene_choices <- setNames(names(sorted), search_labels)
+
         # top 2 most variable genes are plotted by default
-        selected <- names(sorted)[1:2]
+        selected <- gene_choices[1:2]
 
         updateSelectizeInput(
           session,
           inputId = "selected_gene", # genes are ranked by SD
-          choices = names(sorted),
+          choices = gene_choices,
           selected = selected,
           server = TRUE
         )
@@ -1586,13 +1649,27 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
           lab_rotate = input$angle_ind_axis_lab,
           plots_color_select = load_data$plots_color_select(),
           plot_raw = input$plot_raw,
-          plot_tukey = input$plot_tukey
+          plot_tukey = input$plot_tukey,
+          max_groups = load_data$max_groups(),
+          max_length = load_data$max_group_name_length()
         )
-        refine_ggplot2(
+        plot <- refine_ggplot2(
           p = p,
           gridline = load_data$plot_grid_lines(),
           ggplot2_theme = load_data$ggplot2_theme()
         )
+        use_individual_samples <- isTRUE(as.numeric(input$gene_plot_box) == 2)
+        samples_for_width <- if (use_individual_samples) {
+          ncol(individual_data())
+        } else {
+          NULL
+        }
+        update_scrollable_plot_width(
+          session = session,
+          output_id = "gene_plot",
+          n_samples = samples_for_width
+        )
+        plot
       })
     })
   
@@ -1638,6 +1715,109 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       }
     )
 
+    build_report_params <- function() {
+      processed <- processed_data()
+      converted <- load_data$converted_data()
+
+      if (is.null(processed) || is.null(converted)) {
+        return(NULL)
+      }
+
+      individual_data_current <- individual_data()
+      safe_input <- function(value, default) {
+        if (is.null(value) || length(value) == 0) {
+          default
+        } else {
+          value
+        }
+      }
+
+      selected_gene <- input$selected_gene
+      if (is.null(selected_gene) || length(selected_gene) == 0) {
+        if (!is.null(individual_data_current) && nrow(individual_data_current) > 0) {
+          sorted <- sort(
+            apply(
+              individual_data_current,
+              MARGIN = 1,
+              FUN = function(x) sd(x)
+            ),
+            decreasing = TRUE
+          )
+          if (length(sorted) > 0) {
+            selected_gene <- names(sorted)[seq_len(min(2, length(sorted)))]
+          } else {
+            selected_gene <- character(0)
+          }
+        } else {
+          selected_gene <- character(0)
+        }
+      }
+
+      chr_use_boxplot <- input$chr_use_boxplot
+      if (is.null(chr_use_boxplot)) {
+        chr_use_boxplot <- ncol(converted) > 50
+      }
+
+      chr_normalized_use_boxplot <- input$chr_normalized_use_boxplot
+      if (is.null(chr_normalized_use_boxplot)) {
+        chr_normalized_use_boxplot <- if (!is.null(processed$data)) {
+          ncol(processed$data) > 50
+        } else {
+          FALSE
+        }
+      }
+
+      heat_choice <- input$heat_color_select
+      if (is.null(heat_choice) || !heat_choice %in% names(heat_colors)) {
+        heat_choice <- names(heat_colors)[1]
+      }
+      sd_color <- heat_colors[[heat_choice]]
+
+      gene_plot_box <- safe_input(input$gene_plot_box, 1)
+      use_sd <- safe_input(input$use_sd, FALSE)
+      lab_rotate <- safe_input(input$angle_ind_axis_lab, 45)
+      plot_raw <- safe_input(input$plot_raw, FALSE)
+      plot_tukey <- safe_input(input$plot_tukey, FALSE)
+
+      params <- list(
+        loaded_data = converted,
+        individual_data = individual_data_current,
+        descr = processed$descr,
+        sample_info = load_data$sample_info(),
+        all_gene_info = load_data$all_gene_info(),
+        data_file_format = load_data$data_file_format(),
+        no_id_conversion = input$no_id_conversion,
+        min_counts = input$min_counts,
+        n_min_samples_count = input$n_min_samples_count,
+        counts_transform = input$counts_transform,
+        counts_log_start = input$counts_log_start,
+        log_transform_fpkm = input$log_transform_fpkm,
+        log_start_fpkm = input$log_start_fpkm,
+        low_filter_fpkm = input$low_filter_fpkm,
+        n_min_samples_fpkm = input$n_min_samples_fpkm,
+        missing_value = input$missing_value,
+        scatter_x = input$scatter_x,
+        scatter_y = input$scatter_y,
+        sd_color = sd_color,
+        rank = input$rank,
+        no_fdr = load_data$no_fdr(),
+        selected_gene = selected_gene,
+        gene_plot_box = gene_plot_box,
+        use_sd = use_sd,
+        lab_rotate = lab_rotate,
+        plot_raw = plot_raw,
+        plot_tukey = plot_tukey,
+        plots_color_select = load_data$plots_color_select(),
+        plot_grid_lines = load_data$plot_grid_lines(),
+        ggplot2_theme = load_data$ggplot2_theme(),
+        chr_use_boxplot = chr_use_boxplot,
+        chr_normalized_use_boxplot = chr_normalized_use_boxplot,
+        mapping_statistics = converted_message()
+      )
+
+      params
+    }
+
     # Markdown report
     output$report <- downloadHandler(
       # For PDF output, change this to "report.pdf"
@@ -1663,97 +1843,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
           markdown_location <- app_sys("app/www/RMD/pre_process_workflow.Rmd")
           file.copy(from = markdown_location, to = tempReport, overwrite = TRUE)
 
-          # Persist current chromosome plot selections for report rendering
-          chr_use_boxplot <- input$chr_use_boxplot
-          if (is.null(chr_use_boxplot)) {
-            chr_use_boxplot <- if (!is.null(load_data$converted_data())) {
-              ncol(load_data$converted_data()) > 50
-            } else {
-              FALSE
-            }
-          }
-          chr_normalized_use_boxplot <- input$chr_normalized_use_boxplot
-          if (is.null(chr_normalized_use_boxplot)) {
-            chr_normalized_use_boxplot <- if (!is.null(processed_data()$data)) {
-              ncol(processed_data()$data) > 50
-            } else {
-              FALSE
-            }
-          }
-
-          individual_data_current <- individual_data()
-          
-          safe_input <- function(value, default) {
-            if (is.null(value) || length(value) == 0) {
-              default
-            } else {
-              value
-            }
-          }
-          
-          selected_gene <- input$selected_gene
-          if (is.null(selected_gene) || length(selected_gene) == 0) {
-            if (!is.null(individual_data_current) && nrow(individual_data_current) > 0) {
-              sorted <- sort(
-                apply(
-                  individual_data_current,
-                  MARGIN = 1,
-                  FUN = function(x) sd(x)
-                ),
-                decreasing = TRUE
-              )
-              if (length(sorted) > 0) {
-                selected_gene <- names(sorted)[seq_len(min(2, length(sorted)))]
-              } else {
-                selected_gene <- character(0)
-              }
-            } else {
-              selected_gene <- character(0)
-            }
-          }
-          
-          gene_plot_box <- safe_input(input$gene_plot_box, 1)
-          use_sd <- safe_input(input$use_sd, FALSE)
-          lab_rotate <- safe_input(input$angle_ind_axis_lab, 45)
-          plot_raw <- safe_input(input$plot_raw, FALSE)
-          plot_tukey <- safe_input(input$plot_tukey, FALSE)
-          
-          # Set up parameters to pass to Rmd document
-          params <- list(
-            loaded_data = load_data$converted_data(),
-            individual_data = individual_data_current,
-            descr = processed_data()$descr,
-            sample_info = load_data$sample_info(),
-            all_gene_info = load_data$all_gene_info(),
-            data_file_format = load_data$data_file_format(),
-            no_id_conversion = input$no_id_conversion,
-            min_counts = input$min_counts,
-            n_min_samples_count = input$n_min_samples_count,
-            counts_transform = input$counts_transform,
-            counts_log_start = input$counts_log_start,
-            log_transform_fpkm = input$log_transform_fpkm,
-            log_start_fpkm = input$log_start_fpkm,
-            low_filter_fpkm = input$low_filter_fpkm,
-            n_min_samples_fpkm = input$n_min_samples_fpkm,
-            missing_value = input$missing_value,
-            scatter_x = input$scatter_x,
-            scatter_y = input$scatter_y,
-            sd_color = heat_colors[[input$heat_color_select]],
-            rank = input$rank,
-            no_fdr = load_data$no_fdr(),
-            selected_gene = selected_gene,
-            gene_plot_box = gene_plot_box,
-            use_sd = use_sd,
-            lab_rotate = lab_rotate,
-            plot_raw = plot_raw,
-            plot_tukey = plot_tukey,
-            plots_color_select = load_data$plots_color_select(),
-            plot_grid_lines = load_data$plot_grid_lines(),
-            ggplot2_theme = load_data$ggplot2_theme(),
-            chr_use_boxplot = chr_use_boxplot,
-            chr_normalized_use_boxplot = chr_normalized_use_boxplot,
-            mapping_statistics = converted_message()
-          )
+          params <- build_report_params()
           req(params)
 
           # Knit the document, passing in the `params` list, and eval it in a
@@ -1772,6 +1862,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     output$rds <- downloadHandler(
       filename = paste0("idep_session_", format(Sys.time(), "%Y_%m_%d"), ".Rdata"),
       content = function(file) {
+        report_params <- build_report_params()
         if (load_data$data_file_format() == 1) {
           loaded_data <- load_data$converted_data()
           sample_info <- load_data$sample_info()
@@ -1800,6 +1891,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
             scatter_y,
             sd_color,
             rank,
+            report_params,
             file = file
           )
         }
@@ -1816,11 +1908,12 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
             scatter_x = input$scatter_x,
             scatter_y = input$scatter_y,
             sd_color = heat_colors[[input$heat_color_select]],
-            rank = input$rank
+            rank = input$rank,
+            report_params = report_params
           )
           save(params_r, file = file)
         }
-        if (load_data$data_file_format() == 3) {
+        if (load_data$data_file_format() %in% c(3, 4)) {
           params_r <- list(
             loaded_data = load_data$converted_data(),
             sample_info = load_data$sample_info(),
@@ -1831,7 +1924,8 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
             scatter_y = input$scatter_y,
             sd_color = heat_colors[[input$heat_color_select]],
             rank = input$rank,
-            no_fdr = load_data$no_fdr()
+            no_fdr = load_data$no_fdr(),
+            report_params = report_params
           )
           save(params_r, file = file)
         }
