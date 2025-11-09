@@ -146,22 +146,66 @@ input_data <- function(expression_file,
     return(NULL)
   } else if (go_button > 0) { # use demo data
     in_file_data <- demo_data_file
+
+    # Validate demo file exists
+    if (!file.exists(in_file_data)) {
+      if (requireNamespace("shiny", quietly = TRUE) && !is.null(shiny::getDefaultReactiveDomain())) {
+        shiny::showNotification(
+          ui = paste(
+            "Error: Demo expression file not found:",
+            basename(in_file_data),
+            "Please contact the administrator or try a different demo dataset."
+          ),
+          id = "demo_file_not_found",
+          duration = NULL,
+          type = "error"
+        )
+      } else {
+        warning("Demo expression file not found: ", in_file_data)
+      }
+      return(NULL)
+    }
   }
   isolate({
     # Read expression file -----------
 
-    file_extension <- tolower(tools::file_ext(in_file_data))
-    if ( file_extension == "xlsx" || 
-         file_extension == "xls"
-      )  {
-      data <- readxl::read_excel(in_file_data)
-      data <- data.frame(data)
-    } else {
-       data <- read.csv(in_file_data,
-         header = TRUE, stringsAsFactors = FALSE,
-         quote = "\"", comment.char = "",
-         blank.lines.skip = TRUE
-       )
+    # Wrap file reading in tryCatch for better error handling
+    data <- tryCatch(
+      {
+        file_extension <- tolower(tools::file_ext(in_file_data))
+        if (file_extension == "xlsx" || file_extension == "xls") {
+          data_temp <- readxl::read_excel(in_file_data)
+          data.frame(data_temp)
+        } else {
+          read.csv(in_file_data,
+            header = TRUE, stringsAsFactors = FALSE,
+            quote = "\"", comment.char = "",
+            blank.lines.skip = TRUE
+          )
+        }
+      },
+      error = function(e) {
+        if (requireNamespace("shiny", quietly = TRUE) && !is.null(shiny::getDefaultReactiveDomain())) {
+          shiny::showNotification(
+            ui = paste(
+              "Error reading expression file:",
+              conditionMessage(e),
+              "Please check the file format and try again."
+            ),
+            id = "expression_file_read_error",
+            duration = NULL,
+            type = "error"
+          )
+        } else {
+          warning("Error reading expression file: ", conditionMessage(e))
+        }
+        return(NULL)
+      }
+    )
+
+    # Return early if file read failed
+    if (is.null(data)) {
+      return(NULL)
     }
 
     # Try tab-delimented if not CSV
@@ -300,12 +344,35 @@ input_data <- function(expression_file,
     # if design file is not ""
     if (!is.null(demo_data_file)) {
       if (nchar(demo_metadata_file) > 2) {
-        sample_info_demo <- t(read.csv(
-          demo_metadata_file,
-          row.names = 1,
-          header = TRUE,
-          colClasses = "character"
-        ))
+        # Validate demo design file exists
+        if (!file.exists(demo_metadata_file)) {
+          if (requireNamespace("shiny", quietly = TRUE) && !is.null(shiny::getDefaultReactiveDomain())) {
+            shiny::showNotification(
+              ui = paste(
+                "Warning: Demo design file not found:",
+                basename(demo_metadata_file),
+                "Proceeding without experimental design information."
+              ),
+              id = "demo_design_file_not_found",
+              duration = 10,
+              type = "warning"
+            )
+          } else {
+            warning("Demo design file not found: ", demo_metadata_file)
+          }
+          # Continue without design file rather than failing completely
+          sample_info_demo <- NULL
+        } else {
+          sample_info_demo <- t(read.csv(
+            demo_metadata_file,
+            row.names = 1,
+            header = TRUE,
+            colClasses = "character"
+          ))
+        }
+
+        # Only process truncation if we successfully loaded the design file
+        if (!is.null(sample_info_demo)) {
 
         truncated_cols <- truncate_labels_safely(colnames(sample_info_demo), max_group_name_length)
         if (!identical(as.character(truncated_cols), as.character(colnames(sample_info_demo)))) {
@@ -346,6 +413,7 @@ input_data <- function(expression_file,
             type = "warning"
           )
         }
+        } # end if (!is.null(sample_info_demo))
       }
     }
     return(list(
