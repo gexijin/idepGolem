@@ -1432,7 +1432,13 @@ individual_plots <- function(individual_data,
   plot_data <- individual_data |>
     dplyr::filter(symbol %in% selected_gene) |>
     tidyr::pivot_longer(!symbol, names_to = "sample", values_to = "value")
-  
+
+  # Clean gene names: split by space and use only the first non-empty element
+  plot_data$symbol <- sapply(strsplit(as.character(plot_data$symbol), " "), function(x) {
+    non_empty <- x[x != ""]
+    if (length(non_empty) > 0) non_empty[1] else ""
+  })
+
   sample_count <- length(unique(plot_data$sample))
   gene_count <- length(unique(plot_data$symbol))
   x_axis_labels <- if (gene_plot_box == 2) {
