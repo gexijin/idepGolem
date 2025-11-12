@@ -29,7 +29,10 @@ app_server <- function(input, output, session) {
   )
 
   gene_ids_unrecognized <- reactive({
-    choices <- load_data$gmt_choices()
+    choices <- tryCatch(
+      load_data$gmt_choices(),
+      error = function(e) NULL
+    )
     selected_org <- load_data$select_org()
 
     if (is.null(choices) || is.null(selected_org) || identical(selected_org, "NEW")) {
@@ -165,12 +168,10 @@ app_server <- function(input, output, session) {
     hide_pathway <- isTRUE(gene_ids_unrecognized()) ||
       (isTRUE(is_custom_species()) && !isTRUE(custom_gmt_uploaded()))
 
-    data_format_value <- suppressWarnings(as.numeric(load_data$data_file_format()))
-    prep_fallback <- if (!is.na(data_format_value) && data_format_value == 1) {
-      "Reads"
-    } else {
-      "Distribution"
-    }
+    data_format_raw <- load_data$data_file_format()
+    data_format_value <- suppressWarnings(as.numeric(data_format_raw))
+    has_data_format <- length(data_format_value) > 0 && !is.na(data_format_value)
+    prep_fallback <- if (has_data_format && data_format_value == 1) "Reads" else "Distribution"
     prep_tabset_id <- "pre_process-eda_tabs"
     qc_tab_label <- "QC"
     markers_tab_label <- "Markers"
