@@ -43,6 +43,7 @@ app_server <- function(input, output, session) {
     # This includes both single comparison (with dummy Ctrl) and multiple comparisons
     hide_prep <- has_data_format && data_format_numeric == 3 && placeholder_is_zero
     hide_analysis_tabs <- isTRUE(is_summary_format)  # Hide PCA, Bicluster, Network for summary-level data
+    is_type_3 <- has_data_format && data_format_numeric == 3  # Fold-change + FDR
     is_type_4 <- has_data_format && data_format_numeric == 4  # Fold-change only (no FDR)
 
     top_targets <- c("Prep", "Cluster", "PCA", "Bicluster", "Network")
@@ -50,14 +51,17 @@ app_server <- function(input, output, session) {
     venn_input_id <- "deg-step_1"
     venn_target <- "venn_diagram"
     deg_plots_input_id <- "deg-step_2"
-    deg_plots_targets <- c("Volcano Plot", "MA Plot", "Scatter Plot", "R Code")
+    # Type 3: hide MA Plot and Scatter Plot
+    deg_plots_type3_targets <- c("MA Plot", "Scatter Plot")
+    # Type 4: hide all plot tabs that require expression data or FDR
+    deg_plots_type4_targets <- c("Volcano Plot", "MA Plot", "Scatter Plot", "R Code")
     deg_plots_fallback <- "Genes"
 
     if (hide_prep) {
       # Single comparison: hide all tabs (original behavior)
       lapply(top_targets, function(tab_name) hideTab(inputId = "navbar", target = tab_name))
       hideTab(inputId = venn_input_id, target = venn_target)
-      lapply(deg_plots_targets, function(tab_name) hideTab(inputId = deg_plots_input_id, target = tab_name))
+      lapply(deg_plots_type3_targets, function(tab_name) hideTab(inputId = deg_plots_input_id, target = tab_name))
 
       if (isolate(input$navbar) %in% top_targets) {
         updateNavbarPage(session, inputId = "navbar", selected = "Data")
@@ -65,7 +69,7 @@ app_server <- function(input, output, session) {
       if (identical(isolate(input[[venn_input_id]]), venn_target)) {
         updateTabsetPanel(session, inputId = venn_input_id, selected = "results")
       }
-      if (isolate(input[[deg_plots_input_id]]) %in% deg_plots_targets) {
+      if (isolate(input[[deg_plots_input_id]]) %in% deg_plots_type3_targets) {
         updateTabsetPanel(session, inputId = deg_plots_input_id, selected = deg_plots_fallback)
       }
       if (!single_column_notice_shown()) {
@@ -92,25 +96,37 @@ app_server <- function(input, output, session) {
       # Show venn diagram
       showTab(inputId = venn_input_id, target = venn_target)
 
-      # For type 4 (fold-change only), hide deg plot tabs that require FDR
-      # For type 3 (fold-change + FDR), show them
+      # Handle DEG plot tabs based on data type
       if (is_type_4) {
-        lapply(deg_plots_targets, function(tab_name) hideTab(inputId = deg_plots_input_id, target = tab_name))
-        if (isolate(input[[deg_plots_input_id]]) %in% deg_plots_targets) {
+        # Type 4 (fold-change only): hide all plot tabs
+        lapply(deg_plots_type4_targets, function(tab_name) hideTab(inputId = deg_plots_input_id, target = tab_name))
+        # Show Heatmap (not in hide list)
+        showTab(inputId = deg_plots_input_id, target = "Heatmap")
+        if (isolate(input[[deg_plots_input_id]]) %in% deg_plots_type4_targets) {
           updateTabsetPanel(session, inputId = deg_plots_input_id, selected = deg_plots_fallback)
         }
-      } else {
-        lapply(deg_plots_targets, function(tab_name) showTab(inputId = deg_plots_input_id, target = tab_name))
+      } else if (is_type_3) {
+        # Type 3 (fold-change + FDR): hide MA Plot and Scatter Plot only
+        lapply(deg_plots_type3_targets, function(tab_name) hideTab(inputId = deg_plots_input_id, target = tab_name))
+        # Show Volcano Plot, Heatmap, and R Code
+        showTab(inputId = deg_plots_input_id, target = "Volcano Plot")
+        showTab(inputId = deg_plots_input_id, target = "Heatmap")
+        showTab(inputId = deg_plots_input_id, target = "R Code")
+        if (isolate(input[[deg_plots_input_id]]) %in% deg_plots_type3_targets) {
+          updateTabsetPanel(session, inputId = deg_plots_input_id, selected = "Volcano Plot")
+        }
       }
 
       if (isolate(input$navbar) %in% analysis_only_targets) {
         updateNavbarPage(session, inputId = "navbar", selected = "Data")
       }
     } else {
-      # Not type 3 data: show all tabs
+      # Not summary data (types 1 and 2): show all tabs
       lapply(top_targets, function(tab_name) showTab(inputId = "navbar", target = tab_name))
       showTab(inputId = venn_input_id, target = venn_target)
-      lapply(deg_plots_targets, function(tab_name) showTab(inputId = deg_plots_input_id, target = tab_name))
+      # Show all DEG plot tabs for regular data types
+      all_deg_tabs <- c("Heatmap", "Volcano Plot", "MA Plot", "Scatter Plot", "R Code")
+      lapply(all_deg_tabs, function(tab_name) showTab(inputId = deg_plots_input_id, target = tab_name))
       if (single_column_notice_shown()) {
         removeNotification(id = single_column_notice_id)
         single_column_notice_shown(FALSE)

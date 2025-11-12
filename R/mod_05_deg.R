@@ -169,6 +169,7 @@ mod_05_deg_1_ui <- function(id) {
           theme = "light"
         ),
         br(),
+        br(),
         # Tip about uploading design file (only shown when no design file)
         uiOutput(ns("design_file_tip"))
       ),
