@@ -185,6 +185,7 @@ if (!is.null(params$top_genes) && !is.null(params$comparisons)) {
     sample_info = params$sample_info,
     plot_colors = params$plot_colors,
     all_gene_names = params$all_gene_names,
+    select_gene_id = params$select_gene_id,
     anotate_genes = params$gene_labels_scatter
   )
   p <- refine_ggplot2(
