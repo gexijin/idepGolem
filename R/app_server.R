@@ -27,6 +27,30 @@ app_server <- function(input, output, session) {
     load_data = load_data,
     tab = tab
   )
+
+  gene_ids_unrecognized <- reactive({
+    choices <- load_data$gmt_choices()
+    selected_org <- load_data$select_org()
+
+    if (is.null(choices) || is.null(selected_org) || identical(selected_org, "NEW")) {
+      return(FALSE)
+    }
+
+    choices_vec <- unlist(choices, use.names = FALSE)
+    if (length(choices_vec) == 0) {
+      return(FALSE)
+    }
+
+    any(grepl("ID not recognized", choices_vec, fixed = TRUE))
+  })
+  is_custom_species <- reactive({
+    identical(load_data$select_org(), "NEW")
+  })
+
+  custom_gmt_uploaded <- reactive({
+    gmt_file <- load_data$gmt_file()
+    !is.null(gmt_file) && nrow(gmt_file) > 0
+  })
   single_column_notice_shown <- reactiveVal(FALSE)
   single_column_notice_id <- "single_column_notice"
   observe({
@@ -131,6 +155,62 @@ app_server <- function(input, output, session) {
         removeNotification(id = single_column_notice_id)
         single_column_notice_shown(FALSE)
       }
+    }
+  })
+
+  observe({
+    hide_qc <- isTRUE(gene_ids_unrecognized()) || isTRUE(is_custom_species())
+    hide_markers <- isTRUE(is_custom_species())
+    hide_genome <- isTRUE(gene_ids_unrecognized()) || isTRUE(is_custom_species())
+    hide_pathway <- isTRUE(gene_ids_unrecognized()) ||
+      (isTRUE(is_custom_species()) && !isTRUE(custom_gmt_uploaded()))
+
+    data_format_value <- suppressWarnings(as.numeric(load_data$data_file_format()))
+    prep_fallback <- if (!is.na(data_format_value) && data_format_value == 1) {
+      "Reads"
+    } else {
+      "Distribution"
+    }
+    prep_tabset_id <- "pre_process-eda_tabs"
+    qc_tab_label <- "QC"
+    markers_tab_label <- "Markers"
+    navbar_pathway <- "Pathway"
+    navbar_genome <- "Genome"
+
+    if (hide_qc) {
+      hideTab(inputId = prep_tabset_id, target = qc_tab_label)
+      if (identical(isolate(input[[prep_tabset_id]]), qc_tab_label)) {
+        updateTabsetPanel(session, inputId = prep_tabset_id, selected = prep_fallback)
+      }
+    } else {
+      showTab(inputId = prep_tabset_id, target = qc_tab_label)
+    }
+
+    if (hide_markers) {
+      hideTab(inputId = prep_tabset_id, target = markers_tab_label)
+      if (identical(isolate(input[[prep_tabset_id]]), markers_tab_label)) {
+        updateTabsetPanel(session, inputId = prep_tabset_id, selected = prep_fallback)
+      }
+    } else {
+      showTab(inputId = prep_tabset_id, target = markers_tab_label)
+    }
+
+    if (hide_genome) {
+      hideTab(inputId = "navbar", target = navbar_genome)
+      if (identical(isolate(input$navbar), navbar_genome)) {
+        updateNavbarPage(session, inputId = "navbar", selected = "Data")
+      }
+    } else {
+      showTab(inputId = "navbar", target = navbar_genome)
+    }
+
+    if (hide_pathway) {
+      hideTab(inputId = "navbar", target = navbar_pathway)
+      if (identical(isolate(input$navbar), navbar_pathway)) {
+        updateNavbarPage(session, inputId = "navbar", selected = "Data")
+      }
+    } else {
+      showTab(inputId = "navbar", target = navbar_pathway)
     }
   })
 

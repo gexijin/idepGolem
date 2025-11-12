@@ -781,8 +781,9 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     observe({
       req(!is.null(processed_data()$data))
       payloads <- marker_payloads()
+      custom_species <- identical(load_data$select_org(), "NEW")
 
-      if (length(payloads) == 0) {
+      if (custom_species || length(payloads) == 0) {
         hideTab(inputId = "eda_tabs", target = "Markers")
       } else {
         showTab(inputId = "eda_tabs", target = "Markers")
