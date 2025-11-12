@@ -251,9 +251,11 @@ deg_heat_sub <- function(ht_brush,
   } else {
     show_rows <- TRUE
   }
+  needed_cols <- c("User_ID", "ensembl_ID", "symbol")
+  has_full_gene_info <- !is.null(all_gene_names) &&
+    all(needed_cols %in% colnames(all_gene_names))
 
-
-  if (ncol(all_gene_names) == 3) {
+  if (has_full_gene_info) {
     genes <- rowname_id_swap(
       data_matrix = m[row_index, column_index, drop = FALSE],
       all_gene_names = all_gene_names,

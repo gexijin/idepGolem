@@ -2665,8 +2665,11 @@ volcano_data <- function(select_contrast,
 
   genes <- merge(average_data, top_1, by = "row.names")
 
-  # swap gene symbols
-  if (ncol(all_gene_names) == 3) {
+  # swap gene symbols when full gene info available
+  needed_cols <- c("User_ID", "ensembl_ID", "symbol")
+  has_full_gene_info <- !is.null(all_gene_names) &&
+    all(needed_cols %in% colnames(all_gene_names))
+  if (has_full_gene_info) {
     genes2 <- genes # a temp data. 
     row.names(genes2) <- genes2$Row.names
     genes2 <- rowname_id_swap(
