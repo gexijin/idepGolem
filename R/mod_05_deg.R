@@ -167,7 +167,10 @@ mod_05_deg_1_ui <- function(id) {
           ns("report"),
           "Create an HTML report summarizing the DEG analysis in the Stats tab.",
           theme = "light"
-        )
+        ),
+        br(),
+        # Tip about uploading design file (only shown when no design file)
+        uiOutput(ns("design_file_tip"))
       ),
 
 
@@ -746,44 +749,29 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     )
 
     deg <- reactiveValues(limma = NULL)
-    deg_help_notification_active <- reactiveVal(FALSE)
 
-    observe({
-      current_tab <- tab()
+    # Show design file tip in sidebar when no design file uploaded
+    output$design_file_tip <- renderUI({
       sample_info <- pre_process$sample_info()
-      message_needed <- identical(current_tab, "Stats") && is.null(sample_info)
 
-      if (isTRUE(message_needed) && !deg_help_notification_active()) {
-        message_ui <- shiny::tags$div(
-          shiny::tags$strong("Tip:"),
+      if (is.null(sample_info)) {
+        div(
+          style = "background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 10px; margin-bottom: 10px;",
+          tags$strong("Tip:"),
           " An ",
-          shiny::tags$a(
+          tags$a(
             href = "https://idepsite.wordpress.com/data-format/",
             target = "_blank",
-            class = "alert-link",
             "experimental design file"
           ),
           " can be uploaded to build a linear model according to experiment design.",
-          shiny::tags$br(),
-          shiny::tags$a(
+          tags$br(),
+          tags$a(
             href = "http://rpubs.com/ge600/deseq2",
             target = "_blank",
-            class = "alert-link",
             "More info on DESeq2 experiment design"
           )
         )
-
-        shiny::showNotification(
-          ui = message_ui,
-          type = "warning",
-          duration = 10,
-          closeButton = TRUE,
-          id = "deg1-design-notification"
-        )
-        deg_help_notification_active(TRUE)
-      } else if (!isTRUE(message_needed) && deg_help_notification_active()) {
-        shiny::removeNotification("deg1-design-notification")
-        deg_help_notification_active(FALSE)
       }
     })
 

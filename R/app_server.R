@@ -50,7 +50,7 @@ app_server <- function(input, output, session) {
     venn_input_id <- "deg-step_1"
     venn_target <- "venn_diagram"
     deg_plots_input_id <- "deg-step_2"
-    deg_plots_targets <- c("Heatmap", "Volcano Plot", "MA Plot", "Scatter Plot", "R Code")
+    deg_plots_targets <- c("Volcano Plot", "MA Plot", "Scatter Plot", "R Code")
     deg_plots_fallback <- "Genes"
 
     if (hide_prep) {
