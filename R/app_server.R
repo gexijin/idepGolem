@@ -43,14 +43,15 @@ app_server <- function(input, output, session) {
     # This includes both single comparison (with dummy Ctrl) and multiple comparisons
     hide_prep <- has_data_format && data_format_numeric == 3 && placeholder_is_zero
     hide_analysis_tabs <- isTRUE(is_summary_format)  # Hide PCA, Bicluster, Network for summary-level data
+    is_type_4 <- has_data_format && data_format_numeric == 4  # Fold-change only (no FDR)
 
     top_targets <- c("Prep", "Cluster", "PCA", "Bicluster", "Network")
     analysis_only_targets <- c("PCA", "Bicluster", "Network")  # Tabs to hide for type 3 with multiple comparisons
     venn_input_id <- "deg-step_1"
     venn_target <- "venn_diagram"
     deg_plots_input_id <- "deg-step_2"
-    deg_plots_targets <- c("Heatmap", "MA Plot", "Scatter Plot", "R Code")
-    deg_plots_fallback <- "Volcano Plot"
+    deg_plots_targets <- c("Heatmap", "Volcano Plot", "MA Plot", "Scatter Plot", "R Code")
+    deg_plots_fallback <- "Genes"
 
     if (hide_prep) {
       # Single comparison: hide all tabs (original behavior)
@@ -88,9 +89,19 @@ app_server <- function(input, output, session) {
       showTab(inputId = "navbar", target = "Prep")
       showTab(inputId = "navbar", target = "Cluster")
 
-      # Show venn diagram and deg plot tabs
+      # Show venn diagram
       showTab(inputId = venn_input_id, target = venn_target)
-      lapply(deg_plots_targets, function(tab_name) showTab(inputId = deg_plots_input_id, target = tab_name))
+
+      # For type 4 (fold-change only), hide deg plot tabs that require FDR
+      # For type 3 (fold-change + FDR), show them
+      if (is_type_4) {
+        lapply(deg_plots_targets, function(tab_name) hideTab(inputId = deg_plots_input_id, target = tab_name))
+        if (isolate(input[[deg_plots_input_id]]) %in% deg_plots_targets) {
+          updateTabsetPanel(session, inputId = deg_plots_input_id, selected = deg_plots_fallback)
+        }
+      } else {
+        lapply(deg_plots_targets, function(tab_name) showTab(inputId = deg_plots_input_id, target = tab_name))
+      }
 
       if (isolate(input$navbar) %in% analysis_only_targets) {
         updateNavbarPage(session, inputId = "navbar", selected = "Data")

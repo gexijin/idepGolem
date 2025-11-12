@@ -48,22 +48,27 @@ mod_05_deg_1_ui <- function(id) {
           ns = ns
         ),
         fluidRow(
-          column(
-            width = 5,
-            # Adjusted significant p-value to use
-            numericInput(
-              inputId = ns("limma_p_val"),
-              label = "FDR cutoff:",
-              value = 0.1,
-              min = 1e-5,
-              max = 1,
-              step = .05
+          # Hide FDR cutoff for fold-change only data (type 4)
+          conditionalPanel(
+            condition = "output.data_file_format != 4",
+            column(
+              width = 5,
+              # Adjusted significant p-value to use
+              numericInput(
+                inputId = ns("limma_p_val"),
+                label = "FDR cutoff:",
+                value = 0.1,
+                min = 1e-5,
+                max = 1,
+                step = .05
+              ),
+              tippy::tippy_this(
+                ns("limma_p_val"),
+                "Adjusted p-value (FDR) threshold for differentially expressed genes.",
+                theme = "light"
+              )
             ),
-            tippy::tippy_this(
-              ns("limma_p_val"),
-              "Adjusted p-value (FDR) threshold for differentially expressed genes.",
-              theme = "light"
-            )
+            ns = ns
           ),
           column(
             width = 7,
