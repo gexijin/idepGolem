@@ -107,6 +107,66 @@ safe_numeric_conversion <- function(x) {
   ifelse(is.na(converted), NA, converted)
 }
 
+#' Sanitize labels for consistent downstream usage
+#'
+#' This helper trims whitespace, removes control characters, and strips
+#' punctuation (hyphen, dot) and spaces so that design labels and column names
+#' remain consistent and safe for downstream modeling.
+#'
+#' @param values Character vector to clean.
+#' @return Cleaned character vector with unsafe characters removed.
+sanitize_names <- function(values) {
+  if (is.null(values)) {
+    return(values)
+  }
+
+  na_mask <- is.na(values)
+  if (!is.character(values)) {
+    values <- as.character(values)
+  }
+
+  values[na_mask] <- NA_character_
+  # Remove control characters (includes tabs, new lines, etc.)
+  values <- gsub("[[:cntrl:]]", "", values, perl = TRUE)
+  # Remove zero-width and byte-order-mark characters
+  zero_width_chars <- "\u200B\u200C\u200D\u2060\uFEFF"
+  values <- gsub(paste0("[", zero_width_chars, "]"), "", values, perl = TRUE)
+  # Replace non-breaking spaces and similar with regular spaces so trimws can drop them
+  nbsp_chars <- "\u00A0\u2007\u202F"
+  values <- gsub(paste0("[", nbsp_chars, "]"), " ", values, perl = TRUE)
+  values <- trimws(values)
+  # Remove hyphen characters to keep column names consistent
+  values <- gsub("-", "", values, fixed = TRUE)
+  # Remove any dots, collapsing double dots as well
+  values <- gsub("\\.+", "", values)
+  # Remove whitespace entirely
+  values <- gsub(" ", "", values, fixed = TRUE)
+  values[na_mask] <- NA_character_
+  values
+}
+
+clean_design_table <- function(tbl) {
+  if (is.null(tbl)) {
+    return(tbl)
+  }
+
+  if (is.matrix(tbl)) {
+    tbl[] <- sanitize_names(tbl[])
+  } else if (is.data.frame(tbl)) {
+    tbl[] <- lapply(tbl, sanitize_names)
+  } else {
+    return(sanitize_names(tbl))
+  }
+
+  if (!is.null(rownames(tbl))) {
+    rownames(tbl) <- sanitize_names(rownames(tbl))
+  }
+  if (!is.null(colnames(tbl))) {
+    colnames(tbl) <- sanitize_names(colnames(tbl))
+  }
+  tbl
+}
+
 
 #' Load basic data information
 #'
@@ -326,9 +386,8 @@ input_data <- function(expression_file,
     # use janitor to clean up column names;  too slow!!!
     #data <- janitor::clean_names(data)
 
-    # Remove "-" or "." from sample names ----------
-    colnames(data) <- gsub("-", "", colnames(data))
-    colnames(data) <- gsub("\\.", "", colnames(data))
+    # Remove disallowed characters from sample names ----------
+    colnames(data) <- sanitize_names(colnames(data))
   })
 
   # Read experiment file ----------
@@ -369,6 +428,8 @@ input_data <- function(expression_file,
             header = TRUE,
             colClasses = "character"
           ))
+          sample_info_demo <- clean_design_table(sample_info_demo)
+          sample_info_demo[] <- sanitize_names(sample_info_demo[])
         }
 
         # Only process truncation if we successfully loaded the design file
@@ -460,13 +521,10 @@ input_data <- function(expression_file,
     }
 
 
-    # remove "-" or "." from sample names ----------
-    colnames(expr) <- gsub("-", "", colnames(expr))
-    colnames(expr) <- gsub("\\.", "", colnames(expr))
-
-    rownames(expr) <- gsub("-", "", rownames(expr))
-    rownames(expr) <- gsub("\\.", "", rownames(expr))
-    rownames(expr) <- gsub(" ", "", rownames(expr))
+    # Normalize sample and factor names ----------
+    expr <- clean_design_table(expr)
+    colnames(expr) <- sanitize_names(colnames(expr))
+    rownames(expr) <- sanitize_names(rownames(expr))
 
     truncated_factor_names <- truncate_labels_safely(rownames(expr), max_group_name_length)
 
@@ -505,10 +563,7 @@ input_data <- function(expression_file,
     ignored_factors <- c()
     levels_truncated <- FALSE
     for (i in 1:nrow(expr)) {
-      expr[i, ] <- gsub("-", "", expr[i, ])
-      expr[i, ] <- gsub("\\.", "", expr[i, ])
-      # Remove whitespace
-      expr[i, ] <- gsub(" ", "", expr[i, ])
+      expr[i, ] <- sanitize_names(expr[i, ])
       # Convert to upper case to avoid mixing
       expr[i, ] <- toupper(expr[i, ])
       if(length(unique(t(expr[i, ]))) == 1) {
