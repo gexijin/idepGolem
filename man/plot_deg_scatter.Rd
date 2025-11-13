@@ -15,6 +15,7 @@ plot_deg_scatter(
   sample_info,
   plot_colors,
   all_gene_names,
+  select_gene_id = "symbol",
   anotate_genes = NULL
 )
 }
@@ -45,9 +46,12 @@ pre-processing}
 \item{plot_colors}{List containing three colors to differentiate between
 the up-regulated, down-regulated, and other genes}
 
-\item{anotate_genes}{Genes to be anotated, coming from \code{mod_label_server()}}
+\item{all_gene_names}{Gene name mappings containing at least User_ID,
+ensembl_ID, and symbol columns}
 
-\item{vol_data}{Volcano data used in gene annotation}
+\item{select_gene_id}{Selected gene ID type used for plot labeling}
+
+\item{anotate_genes}{Genes to be anotated, coming from \code{mod_label_server()}}
 }
 \value{
 A formatted ggplot with the X-axis as the mean expression

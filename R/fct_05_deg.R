@@ -2665,8 +2665,11 @@ volcano_data <- function(select_contrast,
 
   genes <- merge(average_data, top_1, by = "row.names")
 
-  # swap gene symbols
-  if (ncol(all_gene_names) == 3) {
+  # swap gene symbols when full gene info available
+  needed_cols <- c("User_ID", "ensembl_ID", "symbol")
+  has_full_gene_info <- !is.null(all_gene_names) &&
+    all(needed_cols %in% colnames(all_gene_names))
+  if (has_full_gene_info) {
     genes2 <- genes # a temp data. 
     row.names(genes2) <- genes2$Row.names
     genes2 <- rowname_id_swap(
@@ -2855,7 +2858,9 @@ plot_ma <- function(data,
 #' @param sample_info Experiment file information for grouping
 #' @param plot_colors List containing three colors to differentiate between
 #'   the up-regulated, down-regulated, and other genes
-#' @param vol_data Volcano data used in gene annotation
+#' @param all_gene_names Gene name mappings containing at least User_ID,
+#'   ensembl_ID, and symbol columns
+#' @param select_gene_id Selected gene ID type used for plot labeling
 #' @param anotate_genes Genes to be anotated, coming from \code{mod_label_server()}
 #'
 #' @export
@@ -2872,6 +2877,7 @@ plot_deg_scatter <- function(select_contrast,
                              sample_info,
                              plot_colors,
                              all_gene_names,
+                             select_gene_id = "symbol",
                              anotate_genes = NULL) { 
   if (grepl("I:", select_contrast)) {
     grid::grid.newpage()
@@ -2930,52 +2936,90 @@ plot_deg_scatter <- function(select_contrast,
     genes_1 <- cbind(average_1, average_2)
     rownames(genes_1) <- rownames(genes)
     genes_1 <- merge(genes_1, top_1, by = "row.names")
-    
-    # Finds ensembl and symbols for anotated_genes
-    pre_anotate_data <- all_gene_names |>
-      dplyr::filter(all_gene_names$symbol %in% anotate_genes)
-    
-    anotate_data <- genes_1 |>
-      dplyr::filter(Row.names %in% pre_anotate_data$ensembl_ID) |>
-      merge(pre_anotate_data, by.x = 'Row.names', by.y = 'ensembl_ID')
 
+    annotate_data <- NULL
+    if (!is.null(anotate_genes) &&
+      length(anotate_genes) > 0 &&
+      !is.null(all_gene_names)) {
+      id_column <- dplyr::case_when(
+        select_gene_id == "User_ID" ~ "User_ID",
+        select_gene_id == "ensembl_ID" ~ "ensembl_ID",
+        TRUE ~ "symbol"
+      )
 
-      p <- ggplot2::ggplot(genes_1, ggplot2::aes(x = average_1, y = average_2)) +
-        ggplot2::geom_point(ggplot2::aes(color = upOrDown)) +
-        ggplot2::scale_color_manual(values = plot_colors) +
-        ggplot2::theme_light() +
-        ggplot2::theme(
-          legend.position = "right",
-          axis.title.x = ggplot2::element_text(
-            color = "black",
-            size = 14
-          ),
-          axis.title.y = ggplot2::element_text(
-            color = "black",
-            size = 14
-          ),
-          axis.text.x = ggplot2::element_text(
-            size = 16
-          ),
-          axis.text.y = ggplot2::element_text(
-            size = 16
-          ),
-          plot.title = ggplot2::element_text(
-            color = "black",
-            size = 16,
-            face = "bold",
-            hjust = .5
+      if (id_column %in% colnames(all_gene_names) &&
+        "ensembl_ID" %in% colnames(all_gene_names)) {
+        lookup <- all_gene_names[
+          all_gene_names[[id_column]] %in% anotate_genes,
+          ,
+          drop = FALSE
+        ]
+        if (nrow(lookup) > 0 && "ensembl_ID" %in% colnames(lookup)) {
+          lookup <- dplyr::distinct(lookup, ensembl_ID, .keep_all = TRUE)
+          annotate_data <- genes_1 |>
+            dplyr::filter(Row.names %in% lookup$ensembl_ID) |>
+            dplyr::left_join(lookup, by = c("Row.names" = "ensembl_ID"))
+
+          annotate_data$label_value <- dplyr::case_when(
+            select_gene_id == "User_ID" ~ annotate_data$User_ID,
+            select_gene_id == "ensembl_ID" ~ annotate_data$Row.names,
+            TRUE ~ annotate_data$symbol
           )
-        ) +
-        ggplot2::labs(
-          title = "Average Expression in Group",
-          y = paste0("Average Expression: ", unique(g)[2]),
-          x = paste0("Average Expression: ", unique(g)[1]),
-          color = "Regulated"
-        )+
+          annotate_data$label_value <- dplyr::coalesce(
+            annotate_data$label_value,
+            annotate_data$symbol,
+            annotate_data$Row.names
+          )
+        }
+      } else {
+        fallback_data <- genes_1 |>
+          dplyr::filter(Row.names %in% anotate_genes)
+        if (nrow(fallback_data) > 0) {
+          fallback_data$label_value <- fallback_data$Row.names
+          annotate_data <- fallback_data
+        }
+      }
+    }
+
+    p <- ggplot2::ggplot(genes_1, ggplot2::aes(x = average_1, y = average_2)) +
+      ggplot2::geom_point(ggplot2::aes(color = upOrDown)) +
+      ggplot2::scale_color_manual(values = plot_colors) +
+      ggplot2::theme_light() +
+      ggplot2::theme(
+        legend.position = "right",
+        axis.title.x = ggplot2::element_text(
+          color = "black",
+          size = 14
+        ),
+        axis.title.y = ggplot2::element_text(
+          color = "black",
+          size = 14
+        ),
+        axis.text.x = ggplot2::element_text(
+          size = 16
+        ),
+        axis.text.y = ggplot2::element_text(
+          size = 16
+        ),
+        plot.title = ggplot2::element_text(
+          color = "black",
+          size = 16,
+          face = "bold",
+          hjust = .5
+        )
+      ) +
+      ggplot2::labs(
+        title = "Average Expression in Group",
+        y = paste0("Average Expression: ", unique(g)[2]),
+        x = paste0("Average Expression: ", unique(g)[1]),
+        color = "Regulated"
+      )
+
+    if (!is.null(annotate_data) && nrow(annotate_data) > 0) {
+      p <- p +
         ggrepel::geom_text_repel(
-          data = anotate_data,
-          ggplot2::aes(label = anotate_data$symbol),
+          data = annotate_data,
+          ggplot2::aes(label = label_value),
           size = 3,
           min.segment.length = 0,
           max.time = 2,
@@ -2984,7 +3028,8 @@ plot_deg_scatter <- function(select_contrast,
           nudge_x = 0.5,
           nudge_y = 2
         )
-      
+    }
+
     return(p)
   }
 }
