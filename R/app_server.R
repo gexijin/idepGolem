@@ -266,4 +266,7 @@ app_server <- function(input, output, session) {
     idep_data = idep_data,
     tab = tab
   )
+  mod_14_survey_server(
+    id = "survey"
+  )
 }
