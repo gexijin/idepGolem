@@ -2713,12 +2713,24 @@ volcano_data <- function(select_contrast,
 plot_volcano <- function(data,
                          anotate_genes = NULL,
                          plot_colors) {
+  # Set minimum FDR threshold to avoid Inf values from -log10(0)
+  # Replace FDR values of 0 or below 1e-300 with 1e-300
+  data$FDR <- pmax(data$FDR, 1e-300)
+
+  # Calculate -log10(FDR) for y-axis
+  data$neg_log10_FDR <- -log10(data$FDR)
+
+  # Calculate y-axis limit: 5% larger than max value
+  max_y <- max(data$neg_log10_FDR, na.rm = TRUE)
+  y_limit <- max_y * 1.05
+
   anotate_data <- data |>
     dplyr::filter(Row.names %in% anotate_genes)
 
-  plot <- ggplot2::ggplot(data, ggplot2::aes(x = Fold, y = -log10(FDR))) +
+  plot <- ggplot2::ggplot(data, ggplot2::aes(x = Fold, y = neg_log10_FDR)) +
     ggplot2::geom_point(ggplot2::aes(color = upOrDown)) +
     ggplot2::scale_color_manual(values = plot_colors) +
+    ggplot2::coord_cartesian(ylim = c(0, y_limit)) +
     ggplot2::theme_light() +
     ggplot2::theme(
       legend.position = "right",
