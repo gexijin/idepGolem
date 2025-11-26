@@ -89,21 +89,23 @@ mod_14_survey_server <- function(id) {
           notice <- tags$div(
             style = "background:#f8f9fa;border:1px solid #e3e6ea;border-radius:6px;
                     padding:12px;padding-bottom:7px;margin-bottom:12px;font-size:1.00em;",
-            tags$p("Thank you for using iDEP! Please complete a quick 6 question survey (~30 seconds)."),
-            tags$p(
-              tags$b("Note: "), "To opt-out of the survey, select ",
-              tags$span("'I do not want to participate'", style="color:#FF0000;font-weight:bold;"),
-              " at the bottom."
-            )
+            tags$p("Thank you for using iDEP! Please complete a quick 6 question survey (~30 seconds).")
           )
 
+          skip_button <- actionButton(ns("decline_survey"), "Skip for now", class = "btn-secondary")
+
           showModal(modalDialog(
-            title = "We'd love your feedback!",
+            title = tagList(
+              div(
+                style = "display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;",
+                tags$span("We'd love your feedback!"),
+                skip_button
+              )
+            ),
             size = "m",
             easyClose = FALSE,
             footer = tagList(
-              actionButton(ns("submit_survey"), "Submit", class = "btn-primary"),
-              actionButton(ns("decline_survey"), "I do not want to participate", class = "btn-secondary")
+              actionButton(ns("submit_survey"), "Submit", class = "btn-primary")
             ),
 
             # Privacy notice (top)
@@ -111,12 +113,13 @@ mod_14_survey_server <- function(id) {
 
             # Q1: Organization (single)
             div(style = "width:100%;", # ensure q&a displays full width of modal
-              radioButtons(
-                ns("q1_org"),
+              selectInput(
+                inputId = ns("q1_org"),
                 label = tagList(
-                  "Q1. What best describes your organization? (Select one.)"
+                  "Q1. What best describes your organization? (.)"
                 ),
                 choices = c(
+                  "..." = "",
                   "University or academic research institute",
                   "Hospital or medical center",
                   "Pharma or biotech company",
@@ -125,7 +128,8 @@ mod_14_survey_server <- function(id) {
                   "Core facility / service lab",
                   "Other (please specify)"
                 ),
-                selected = character(0)
+                selected = "",
+                selectize = FALSE
               ),
               conditionalPanel(
                 sprintf("input['%s'] == 'Other (please specify)'", ns("q1_org")),
@@ -133,30 +137,34 @@ mod_14_survey_server <- function(id) {
               ),
 
               # Q2: Role (multi-select)
-              checkboxGroupInput(
-                ns("q2_role"),
-                label = tagList(
-                  "Q2. What best describes your role and involvement with data analysis/tools? (Select all that apply.)"
+                selectizeInput(
+                  inputId = ns("q2_role"),
+                  label = tagList(
+                    "Q2. What best describes your role and involvement with data analysis/tools? (Select all that apply.)"
+                  ),
+                  choices = c(
+                    "Principal investigator",
+                    "Bioinformatician",
+                    "Bench / experimental scientist",
+                    "Core facility / service lab staff",
+                    "Student / trainee",
+                    "Instructor / teacher",
+                    "Other (please specify)"
+                  ),
+                  selected = character(0),
+                  multiple = TRUE,
+                  options = list(placeholder = "Select all that apply")
                 ),
-                choices = c(
-                  "Principal investigator",
-                  "Bioinformatician",
-                  "Bench / experimental scientist",
-                  "Core facility / service lab staff",
-                  "Student / trainee",
-                  "Instructor / teacher",
-                  "Other (please specify)"
-                )
-              ),
               uiOutput(ns("q2_other_ui")),
 
               # Q3: How you use iDEP (single)
-              radioButtons(
-                ns("q3_use"),
+              selectInput(
+                inputId = ns("q3_use"),
                 label = tagList(
-                  "Q3. How do you primarily use iDEP in your work? (Select one.)"
+                  "Q3. How do you primarily use iDEP in your work? (.)"
                 ),
                 choices = c(
+                  "..." = "",
                   "Exploring new datasets and generating hypotheses",
                   "Routine analysis as part of a standard workflow",
                   "Quick QC or sanity checks on results",
@@ -164,7 +172,8 @@ mod_14_survey_server <- function(id) {
                   "Method development or benchmarking",
                   "Other (please specify)"
                 ),
-                selected = character(0)
+                selected = "",
+                selectize = FALSE
               ),
               conditionalPanel(
                 sprintf("input['%s'] == 'Other (please specify)'", ns("q3_use")),
@@ -172,39 +181,44 @@ mod_14_survey_server <- function(id) {
               ),
 
               # Q4: Frequency (single)
-              radioButtons(
-                ns("q4_freq"),
+              selectInput(
+                inputId = ns("q4_freq"),
                 label = tagList(
-                  "Q4. How often do you use iDEP? (Select one.)"
+                  "Q4. How often do you use iDEP? (.)"
                 ),
                 choices = c(
+                  "..." = "",
                   "This is my first time!",
                   "Occasionally (About 1–5 times per year)",
                   "Monthly (About 1–5 times per month)",
                   "Weekly (About 1–5 times per week)",
                   "Daily"
                 ),
-                selected = character(0)
+                selected = "",
+                selectize = FALSE
               ),
 
               # Q5: Improvements (multi-select)
-              checkboxGroupInput(
-                ns("q5_improve"),
-                label = tagList(
-                  "Q5. If we could improve iDEP for you, what would be most valuable? (Select as many as you want)"
+                selectizeInput(
+                  inputId = ns("q5_improve"),
+                  label = tagList(
+                    "Q5. If we could improve iDEP for you, what would be most valuable? (Select as many as you want)"
+                  ),
+                  choices = c(
+                    "Support for more public datasets",
+                    "User community (webinars, community forums, etc.)",
+                    "Features that make it easier to cite, document, or reproduce analyses",
+                    "Local deployment options",
+                    "Consultation or custom analysis help",
+                    "New analysis modules (e.g., single-cell, multi-omics, time series)",
+                    "More polished reports and export formats",
+                    "Nothing (good as is)",
+                    "Other (please specify)"
+                  ),
+                  selected = character(0),
+                  multiple = TRUE,
+                  options = list(placeholder = "Select as many as apply")
                 ),
-                choices = c(
-                  "Support for more public datasets",
-                  "User community (webinars, community forums, etc.)",
-                  "Features that make it easier to cite, document, or reproduce analyses",
-                  "Local deployment options",
-                  "Consultation or custom analysis help",
-                  "New analysis modules (e.g., single-cell, multi-omics, time series)",
-                  "More polished reports and export formats",
-                  "Nothing (good as is)",
-                  "Other (please specify)"
-                )
-              ),
               uiOutput(ns("q5_other_ui")),
 
               # Q6: Optional notes
