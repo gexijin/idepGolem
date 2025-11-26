@@ -116,16 +116,16 @@ mod_14_survey_server <- function(id) {
               selectInput(
                 inputId = ns("q1_org"),
                 label = tagList(
-                  "Q1. What best describes your organization? (.)"
+                  "1. What best describes your organization?"
                 ),
                 choices = c(
                   "..." = "",
                   "University / academic institute",
-                  "Hospital / clinical center",
+                  "Hospital or affiliated research center",
                   "Pharma / biotech company",
-                  "Government / public agency",
-                  "Nonprofit / foundation",
-                  "Core facility / service lab",
+                  "Government agency",
+                  "Nonprofit",
+                  "Core facility / service provider",
                   "Other (please specify)"
                 ),
                 selected = "",
@@ -140,14 +140,14 @@ mod_14_survey_server <- function(id) {
                 selectizeInput(
                   inputId = ns("q2_role"),
                   label = tagList(
-                    "Q2. What best describes your role and involvement with data analysis/tools? (Select all that apply.)"
+                    "2. What best describes your roles? (Select all that apply.)"
                   ),
                   choices = c(
                     "PI / group leader",
                     "Bioinformatician / data scientist",
-                    "Bench scientist / wet-lab researcher",
+                    "Bench scientist",
                     "Core facility / service staff",
-                    "Educator / trainer",
+                    "Educator",
                     "Student / trainee",
                     "Other (please specify)"
                   ),
@@ -161,7 +161,7 @@ mod_14_survey_server <- function(id) {
               selectInput(
                 inputId = ns("q3_use"),
                 label = tagList(
-                  "Q3. How do you primarily use iDEP in your work? (.)"
+                  "3. How do you primarily use iDEP in your work?"
                 ),
                 choices = c(
                   "..." = "",
@@ -169,7 +169,6 @@ mod_14_survey_server <- function(id) {
                   "Routine workflow analysis",
                   "QC or sanity checks",
                   "Teaching or training",
-                  "Method development / benchmarking",
                   "Other (please specify)"
                 ),
                 selected = "",
@@ -184,7 +183,7 @@ mod_14_survey_server <- function(id) {
               selectInput(
                 inputId = ns("q4_freq"),
                 label = tagList(
-                  "Q4. How often do you use iDEP? (.)"
+                  "4. How often do you use iDEP?"
                 ),
                 choices = c(
                   "..." = "",
@@ -192,7 +191,7 @@ mod_14_survey_server <- function(id) {
                   "Occasional (1–5× per year)",
                   "Monthly (1–5× per month)",
                   "Weekly (1–5× per week)",
-                  "Daily"
+                  "Daily (5+ times per week)"
                 ),
                 selected = "",
                 selectize = FALSE
@@ -202,16 +201,14 @@ mod_14_survey_server <- function(id) {
                 selectizeInput(
                   inputId = ns("q5_improve"),
                   label = tagList(
-                    "Q5. If we could improve iDEP for you, what would be most valuable? (Select as many as you want)"
+                    "5. To improve iDEP, what would be most valuable? (Select as many as you want)"
                   ),
                   choices = c(
                     "More public datasets",
                     "Community events / webinars",
-                    "Better citation & reproducibility features",
-                    "Local deployment or offline option",
-                    "Consultation or custom analysis help",
+                    "Reproducibility features",
                     "New analysis modules (e.g., single-cell, multi-omics, time series)",
-                    "Polished reports and export formats",
+                    "Add AI assistant features to guide me through analysis",
                     "Nothing (good as is)",
                     "Other (please specify)"
                   ),
@@ -224,7 +221,7 @@ mod_14_survey_server <- function(id) {
               # Q6: Optional notes
               textAreaInput(
                 ns("q6_notes"),
-                "Q6. Anything you want us to know? (Optional)",
+                "6. Any other suggestions or feedback (Optional)",
                 "",
                 rows = 3
               )
