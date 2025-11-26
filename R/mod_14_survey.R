@@ -85,12 +85,8 @@ mod_14_survey_server <- function(id) {
         # Show modal only if survey is NOT done (FALSE)
         if (!isTRUE(input$survey_done_storage)) {
 
-          # Notice text
-          notice <- tags$div(
-            style = "background:#f8f9fa;border:1px solid #e3e6ea;border-radius:6px;
-                    padding:12px;padding-bottom:7px;margin-bottom:12px;font-size:1.00em;",
-            tags$p("Thank you for using iDEP! Please complete a quick 6 question survey (~30 seconds).")
-          )
+          # Notice text as plain text
+          notice <- "Please complete a brief survey to help us prioritize features and improvements."
 
           skip_button <- actionButton(ns("decline_survey"), "Skip for now", class = "btn-secondary")
 
@@ -110,7 +106,7 @@ mod_14_survey_server <- function(id) {
 
             # Privacy notice (top)
             notice,
-
+            br(),br(),
             # Q1: Organization (single)
             div(style = "width:100%;", # ensure q&a displays full width of modal
               selectInput(
@@ -140,7 +136,7 @@ mod_14_survey_server <- function(id) {
                 selectizeInput(
                   inputId = ns("q2_role"),
                   label = tagList(
-                    "2. What best describes your roles? (Select all that apply.)"
+                    "2. What best describes your roles?"
                   ),
                   choices = c(
                     "PI / group leader",
@@ -161,7 +157,7 @@ mod_14_survey_server <- function(id) {
               selectInput(
                 inputId = ns("q3_use"),
                 label = tagList(
-                  "3. How do you primarily use iDEP in your work?"
+                  "3. How do you primarily use iDEP?"
                 ),
                 choices = c(
                   "..." = "",
@@ -201,27 +197,26 @@ mod_14_survey_server <- function(id) {
                 selectizeInput(
                   inputId = ns("q5_improve"),
                   label = tagList(
-                    "5. To improve iDEP, what would be most valuable? (Select as many as you want)"
+                    "5. To improve iDEP, what would be most valuable?"
                   ),
                   choices = c(
-                    "More public datasets",
-                    "Community events / webinars",
+                    "Easy load and reanalysis of public datasets",
                     "Reproducibility features",
-                    "New analysis modules (e.g., single-cell, multi-omics, time series)",
+                    "Support single-cell, multi-omics, time series data",
                     "Add AI assistant features to guide me through analysis",
-                    "Nothing (good as is)",
+                    "More tutorials, training materials, or webinars",
                     "Other (please specify)"
                   ),
                   selected = character(0),
                   multiple = TRUE,
-                  options = list(placeholder = "Select as many as apply")
+                  options = list(placeholder = "Select up to 3.")
                 ),
               uiOutput(ns("q5_other_ui")),
 
               # Q6: Optional notes
               textAreaInput(
                 ns("q6_notes"),
-                "6. Any other suggestions or feedback (Optional)",
+                "6. Any other suggestions or feedback (Optional).",
                 "",
                 rows = 3
               )
