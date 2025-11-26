@@ -318,7 +318,6 @@ mod_14_survey_server <- function(id) {
     # Opt-out
     observeEvent(input$decline_survey, {
       removeModal()
-      session$sendCustomMessage("markSurveyComplete", list())
     })
   })
 }
