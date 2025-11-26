@@ -247,6 +247,20 @@ mod_14_survey_server <- function(id) {
 
     # Submission
     observeEvent(input$submit_survey, {
+      # Ensure all required questions (Q1–Q5) are answered before submission
+      missing_q <- character(0)
+      if (is.null(input$q1_org) || identical(input$q1_org, "")) missing_q <- c(missing_q, "Q1")
+      if (is.null(input$q2_role) || length(input$q2_role) == 0) missing_q <- c(missing_q, "Q2")
+      if (is.null(input$q3_use) || identical(input$q3_use, "")) missing_q <- c(missing_q, "Q3")
+      if (is.null(input$q4_freq) || identical(input$q4_freq, "")) missing_q <- c(missing_q, "Q4")
+      if (is.null(input$q5_improve) || length(input$q5_improve) == 0) missing_q <- c(missing_q, "Q5")
+      if (length(missing_q) > 0) {
+        showNotification(
+          sprintf("Please answer %s before submitting.", paste(missing_q, collapse = ", ")),
+          type = "error"
+        )
+        return()
+      }
 
       # Ensure if 'other' is selected, the short response is answered
       if (identical(input$q1_org, "Other (please specify)") &&
