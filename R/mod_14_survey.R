@@ -120,11 +120,11 @@ mod_14_survey_server <- function(id) {
                 ),
                 choices = c(
                   "..." = "",
-                  "University or academic research institute",
-                  "Hospital or medical center",
-                  "Pharma or biotech company",
-                  "Government agency",
-                  "Nonprofit or foundation",
+                  "University / academic institute",
+                  "Hospital / clinical center",
+                  "Pharma / biotech company",
+                  "Government / public agency",
+                  "Nonprofit / foundation",
                   "Core facility / service lab",
                   "Other (please specify)"
                 ),
@@ -143,12 +143,12 @@ mod_14_survey_server <- function(id) {
                     "Q2. What best describes your role and involvement with data analysis/tools? (Select all that apply.)"
                   ),
                   choices = c(
-                    "Principal investigator",
-                    "Bioinformatician",
-                    "Bench / experimental scientist",
-                    "Core facility / service lab staff",
+                    "PI / group leader",
+                    "Bioinformatician / data scientist",
+                    "Bench scientist / wet-lab researcher",
+                    "Core facility / service staff",
+                    "Educator / trainer",
                     "Student / trainee",
-                    "Instructor / teacher",
                     "Other (please specify)"
                   ),
                   selected = character(0),
@@ -165,11 +165,11 @@ mod_14_survey_server <- function(id) {
                 ),
                 choices = c(
                   "..." = "",
-                  "Exploring new datasets and generating hypotheses",
-                  "Routine analysis as part of a standard workflow",
-                  "Quick QC or sanity checks on results",
-                  "Teaching or training (e.g., courses, workshops)",
-                  "Method development or benchmarking",
+                  "Explore datasets / generate hypotheses",
+                  "Routine workflow analysis",
+                  "QC or sanity checks",
+                  "Teaching or training",
+                  "Method development / benchmarking",
                   "Other (please specify)"
                 ),
                 selected = "",
@@ -188,10 +188,10 @@ mod_14_survey_server <- function(id) {
                 ),
                 choices = c(
                   "..." = "",
-                  "This is my first time!",
-                  "Occasionally (About 1–5 times per year)",
-                  "Monthly (About 1–5 times per month)",
-                  "Weekly (About 1–5 times per week)",
+                  "First time user",
+                  "Occasional (1–5× per year)",
+                  "Monthly (1–5× per month)",
+                  "Weekly (1–5× per week)",
                   "Daily"
                 ),
                 selected = "",
@@ -205,13 +205,13 @@ mod_14_survey_server <- function(id) {
                     "Q5. If we could improve iDEP for you, what would be most valuable? (Select as many as you want)"
                   ),
                   choices = c(
-                    "Support for more public datasets",
-                    "User community (webinars, community forums, etc.)",
-                    "Features that make it easier to cite, document, or reproduce analyses",
-                    "Local deployment options",
+                    "More public datasets",
+                    "Community events / webinars",
+                    "Better citation & reproducibility features",
+                    "Local deployment or offline option",
                     "Consultation or custom analysis help",
                     "New analysis modules (e.g., single-cell, multi-omics, time series)",
-                    "More polished reports and export formats",
+                    "Polished reports and export formats",
                     "Nothing (good as is)",
                     "Other (please specify)"
                   ),
