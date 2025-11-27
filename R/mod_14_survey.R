@@ -64,21 +64,6 @@ mod_14_survey_server <- function(id) {
       )
     }
 
-    # Helper: retention purge
-    purge_old_entries <- function() {
-      # Purge survey responses older than retention_months
-      resp <- tryCatch(read.csv(survey_file, stringsAsFactors = FALSE), error = function(e) NULL)
-      if (!is.null(resp) && nrow(resp) > 0) {
-        # robust timestamp parse
-        ts_parsed <- suppressWarnings(as.POSIXct(resp$timestamp, tz = "UTC"))
-        cutoff <- Sys.time() - (retention_months * 30.4375 * 24 * 3600) # average month length
-        keep_idx <- !is.na(ts_parsed) & ts_parsed >= cutoff
-        resp <- resp[keep_idx, , drop = FALSE]
-        write.csv(resp, survey_file, row.names = FALSE)
-      }
-    }
-    purge_old_entries()
-
     # Show modal once
     observe({
       if (!is.null(input$survey_done_storage)) {
@@ -314,8 +299,6 @@ mod_14_survey_server <- function(id) {
 
       # Save responses with na parameter to ensure consistent NA writing
       data.table::fwrite(new_entry, survey_file, sep = ",", append = TRUE, col.names = FALSE, row.names = FALSE, na = "NA")
-
-      purge_old_entries()
 
       removeModal()
       showNotification("Thank you for your feedback!", type = "message")
