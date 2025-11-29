@@ -1,0 +1,84 @@
+{
+  "name": "idepGolem",
+  "version": "1.0.0",
+  "description": "MyGolemElectronApp with vendored R",
+  "private": true,
+  "main": "main.js",
+  "author": {
+    "name": "Xijin Ge",
+    "email": "gexijin@gmail.com"
+  },  
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/raghaviCJanaswamy/idepGolem.git"
+  },  
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "dependencies": {
+    "fs-extra": "^11.2.0",
+    "tar": "^6.2.1",
+    "undici": "^6.19.8"
+  },
+  "devDependencies": {
+    "electron": "31.7.7",
+    "electron-builder": "24.13.3",
+    "@electron/notarize": "^2.5.0"
+  },
+  "build": {
+    "appId": "com.idepgolem.app",           
+    "productName": "idepGolem",            
+    "asar": false,                         
+    "files": [
+      "main.js",
+      "renderer/**",
+      "preload/**",
+      "package.json",
+      "node_modules/**",
+      "data/**",
+      "runtime/**",
+      "app/**" 
+    ],
+    "extraResources": [
+      { "from": "resources", "to": "." },
+      { "from": "runtime", "to": "runtime" },
+      { "from": "app", "to": "app" }
+    ],
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "artifactName": "${productName}-${version}-win-${arch}.${ext}"
+    },
+    "mac": {
+      "category": "public.app-category.education", 
+      "target": [ "dmg" ],
+      "artifactName": "${productName}-${version}-mac-${arch}.${ext}",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "entitlements.mac.plist",   
+      "notarize": false,
+      "signIgnore": [
+        ".*R\\.framework/Resources/library/.*/help(/.*)?",
+        ".*R\\.framework/Resources/library/.*/doc(/.*)?",
+        ".*R\\.framework/Resources/library/.*/html(/.*)?",
+        ".*R\\.framework/Resources/library/.*/examples(/.*)?",
+        ".*R\\.framework/Resources/library/.*/R(/.*)?",
+        ".*R\\.framework/Resources/library/.*/data(/.*)?"
+      ]      
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Science",
+      "artifactName": "idep-${version}-linux-${arch}.${ext}",
+      "maintainer": "Xijin Ge <gexijin@gmail.com>"
+    },
+    
+    "nsis": {
+      "oneClick": true
+    }
+  }
+}
