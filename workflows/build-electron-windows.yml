@@ -1,0 +1,255 @@
+name: Build Windows (Electron + R.win)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - packaging1
+      - 'rel*'
+    tags:
+      - 'rel*'
+    paths:
+      - "electron/**"
+      - "R/**"
+      - "app.R"
+      - "DESCRIPTION"
+      - "package.json"
+      - ".github/workflows/build-electron-windows.yml"
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Figure out where package.json is (electron/ or repo root)
+      - name: Detect package directory
+        id: detect-pkgdir
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          if (Test-Path "electron/package.json") {
+            "PACKAGE_DIR=electron" | Out-File -FilePath $env:GITHUB_ENV -Append
+          } elseif (Test-Path "package.json") {
+            "PACKAGE_DIR=." | Out-File -FilePath $env:GITHUB_ENV -Append
+          } else {
+            throw "package.json not found at repo root or electron/"
+          }
+          Write-Host "PACKAGE_DIR = $env:PACKAGE_DIR"
+
+      # Find the idepGolem R package source by DESCRIPTION
+      - name: Detect R package source (idepGolem)
+        shell: pwsh
+        working-directory: ${{ github.workspace }}
+        run: |
+          $ErrorActionPreference='Stop'
+          $desc = Get-ChildItem -Path . -Recurse -File -Filter DESCRIPTION -ErrorAction SilentlyContinue |
+            Where-Object { Select-String -Path $_.FullName -Pattern '^Package:\s*idepGolem\b' -Quiet } |
+            Select-Object -First 1
+          if (-not $desc) { throw "idepGolem package source not found (no DESCRIPTION with Package: idepGolem)" }
+          "PKG_SRC=$($desc.Directory.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append
+          Write-Host "PKG_SRC = $env:PKG_SRC"
+
+      - name: Detect package name from DESCRIPTION
+        shell: pwsh
+        working-directory: ${{ github.workspace }}
+        run: |
+          $ErrorActionPreference='Stop'
+          $desc = Join-Path $env:PKG_SRC "DESCRIPTION"
+          if (-not (Test-Path $desc)) { throw "DESCRIPTION not found at: $desc" }
+          $m = Select-String -Path $desc -Pattern '^Package:\s*(\S+)' -List
+          if (-not $m) { throw "Could not parse Package field in: $desc" }
+          "PKG_NAME=$($m.Matches.Groups[1].Value)" | Out-File -FilePath $env:GITHUB_ENV -Append
+          Write-Host "PKG_NAME = $env:PKG_NAME"
+
+      # Optional: fix invalid filename if present
+      - name: Fix invalid filename in R/ (leading underscore)
+        shell: pwsh
+        run: |
+          $bad = Join-Path $env:PKG_SRC 'R\_disable_autoload.R'
+          if (Test-Path $bad) {
+            $good = Join-Path $env:PKG_SRC 'R\z_disable_autoload.R'
+            Move-Item -Force $bad $good
+          }
+
+      - name: Setup Node
+        uses: actions/setup-node@v4    
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: ${{ env.PACKAGE_DIR }}/package-lock.json
+
+      # Install npm deps where package.json actually is
+      - name: Install npm deps
+        shell: bash
+        working-directory: ${{ env.PACKAGE_DIR }}
+        run: |
+          set -euxo pipefail
+          if [ -f package-lock.json ]; then
+            npm ci || (rm -rf node_modules && npm install --no-fund --no-audit)
+          else
+            npm install --no-fund --no-audit
+          fi
+
+      # Ensure electron-builder is available locally in that same folder
+      - name: Ensure electron-builder present
+        shell: bash
+        working-directory: ${{ env.PACKAGE_DIR }}
+        run: |
+          set -euxo pipefail
+          if ! npx --yes --package=electron-builder@26.0.12 --call "echo ok" >/dev/null 2>&1; then
+            npm install -D electron-builder@26.0.12
+          fi
+
+      # R + Rtools (kept as in your config)
+      - name: Setup R (with Rtools)
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.4.1'
+          rtools-version: '44'
+
+      # Stage a full R runtime into the app folder
+      - name: Stage R.win (mirror R.home into runtime/R.win)
+        shell: pwsh
+        run: |
+          $RHOME = & Rscript -e "cat(R.home())"
+          if (-not $RHOME) { throw "Could not get R.home()" }
+          $dst = Join-Path ${{ env.PACKAGE_DIR }} "runtime\R.win"
+          New-Item -ItemType Directory -Force -Path $dst | Out-Null
+          robocopy "$RHOME" "$dst" /MIR /NFL /NDL /NJH /NJS /NP /R:2 /W:2
+          if ($LASTEXITCODE -ge 8) { throw "robocopy failed with code $LASTEXITCODE" }
+          $global:LASTEXITCODE = 0
+
+      - name: Resolve bundled paths (debug)
+        shell: pwsh
+        run: |
+          $app     = "${{ env.PACKAGE_DIR }}"
+          $lib     = Join-Path $app "runtime\R.win\library"
+          $rscript = Join-Path $app "runtime\R.win\bin\Rscript.exe"
+          Write-Host "APP:      $app"
+          Write-Host "Rscript:  $rscript"
+          Write-Host "LIB PATH: $lib"
+          if (!(Test-Path $rscript)) { throw "Bundled Rscript.exe not found at $rscript" }
+          if (!(Test-Path $lib))     { New-Item -ItemType Directory -Force -Path $lib | Out-Null }
+
+      - name: Install ottoPlots into bundled lib
+        shell: pwsh
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}   # or your PAT if needed
+        run: |
+          $app  = Join-Path $pwd "${{ env.PACKAGE_DIR }}"
+          $lib  = (Join-Path $app "runtime\R.win\library") -replace '\\','/'
+          $R    = Join-Path $app "runtime\R.win\bin\Rscript.exe"
+
+          & $R -e "if(!requireNamespace('remotes', quietly=TRUE)) install.packages('remotes', lib='$lib', repos='https://cran.r-project.org')"
+          & $R -e "remotes::install_github('espors/ottoPlots', lib='$lib', dependencies=TRUE, upgrade='never')"
+                      
+      # Install DESCRIPTION deps into bundled lib (CRAN + BioC, special-case ggalt)
+      - name: Install DESCRIPTION deps into bundled library
+        shell: pwsh
+        run: |
+          $app     = "${{ env.PACKAGE_DIR }}"
+          $lib     = Join-Path $app "runtime\R.win\library"
+          $rscript = Join-Path $app "runtime\R.win\bin\Rscript.exe"
+          $desc    = Join-Path $env:PKG_SRC "DESCRIPTION"
+          $libR  = $lib  -replace '\\','/'
+          $descR = $desc -replace '\\','/'
+          $r = @"
+            args <- commandArgs(trailingOnly=TRUE)
+            desc <- args[1]; lib <- args[2]
+            if (!dir.exists(lib)) dir.create(lib, recursive = TRUE, showWarnings = FALSE)
+            .libPaths(c(lib, .libPaths()))
+            opt_repos <- c(CRAN='https://cran.r-project.org')
+            options(repos = opt_repos, Ncpus = max(1L, parallel::detectCores()-1L))
+            if (!requireNamespace('BiocManager', quietly=TRUE))
+              install.packages('BiocManager', repos=opt_repos['CRAN'], lib=lib)
+            if (!requireNamespace('remotes', quietly=TRUE))
+              install.packages('remotes',     repos=opt_repos['CRAN'], lib=lib)
+            d <- read.dcf(desc)
+            parse <- function(field) {
+              if (!field %in% colnames(d)) return(character())
+              x <- gsub('\\n', ' ', d[1, field])
+              x <- unlist(strsplit(x, ','))
+              x <- gsub('\\s*\\(.*?\\)\\s*', '', x)
+              trimws(x)
+            }
+            pkgs <- unique(c(parse('Depends'), parse('Imports')))
+            pkgs <- setdiff(pkgs, c('R','base'))
+            want_ggalt <- 'ggalt' %in% pkgs
+            pkgs <- setdiff(pkgs, 'ggalt')
+            bioc <- intersect(pkgs, c('DESeq2','edgeR','ComplexHeatmap','GSVA','gage',
+                                      'hgu133plus2.db','InteractiveComplexHeatmap',
+                                      'PCAtools','pathview','QUBIC','fgsea'))
+            cran <- setdiff(pkgs, bioc)
+            if (length(cran)) install.packages(cran, lib=lib, dependencies=TRUE)
+            if (length(bioc)) BiocManager::install(bioc, lib=lib, ask=FALSE, update=FALSE)            
+            if (want_ggalt && !('ggalt' %in% rownames(installed.packages(lib.loc=lib)))) {
+              remotes::install_version('ggalt', version='0.4.0',
+                                      lib=lib, upgrade='never', dependencies=TRUE)
+            }
+            ip <- installed.packages(lib.loc = lib)
+            cat('Installed packages in bundled lib:', nrow(ip), '\n')
+            cat('ggalt present:', 'ggalt' %in% rownames(ip), '\n')
+          "@
+          Set-Content -Path install_desc.R -Value $r -Encoding UTF8
+          & $rscript install_desc.R $descR $libR
+
+      - name: Build and install idepGolem into R.win/library
+        shell: pwsh
+        env:
+          _R_CHECK_FORCE_SUGGESTS_: "false"
+          R_BUILD_DONTFAIL_ON_WARNING_: "true"
+          R_BUILD_TAR: tar
+          TAR: tar
+        run: |
+          $app    = "${{ env.PACKAGE_DIR }}"
+          $lib    = Join-Path $app "runtime\R.win\library"
+          $Rexe   = Join-Path $app "runtime\R.win\bin\R.exe"
+          $libR   = $lib -replace '\\','/'
+          Push-Location $env:PKG_SRC
+          & $Rexe CMD build . --no-build-vignettes --no-manual
+          $tar = (Get-ChildItem -Filter '*.tar.gz' | Sort-Object LastWriteTime -Descending | Select-Object -First 1).FullName
+          Pop-Location
+          if (-not $tar) { throw "Package tarball not found after build" }
+          $env:R_LIBS = $libR
+          $env:R_LIBS_USER = $libR
+          & $Rexe CMD INSTALL --library="$lib" $tar
+
+      # Stage golem app sources (as expected by your main.js)
+      - name: Stage app sources into electron/app
+        shell: pwsh
+        run: |
+          $app = "${{ env.PACKAGE_DIR }}"
+          Push-Location $app
+          if (Test-Path app) { Remove-Item -Recurse -Force app }
+          New-Item -ItemType Directory -Force -Path app | Out-Null
+          Pop-Location
+          Copy-Item -Recurse -Force "$env:PKG_SRC\R"        "$app\app\R"
+          Copy-Item -Force          "$env:PKG_SRC\app.R"    "$app\app\app.R"
+          Copy-Item -Force          "$env:PKG_SRC\DESCRIPTION" "$app\app\DESCRIPTION"
+
+      - name: Verify required pkgs in bundled lib
+        shell: pwsh
+        run: |
+          $r = Join-Path "${{ env.PACKAGE_DIR }}" "runtime\R.win\bin\Rscript.exe"
+          $libR = (Join-Path "${{ env.PACKAGE_DIR }}" "runtime\R.win\library") -replace '\\','/'
+          & $r -e "lp <- '$libR'; cat('hgu133plus2.db:', 'hgu133plus2.db' %in% rownames(installed.packages(lib.loc=lp)), '\n')"
+
+      - name: Build Windows installer
+        env:
+          CI: "true"
+        working-directory: ${{ env.PACKAGE_DIR }}
+        run: npx electron-builder --win --x64 --publish=never
+
+      - name: Upload dist artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: win-dist
+          path: ${{ env.PACKAGE_DIR }}/dist/**
+          if-no-files-found: error
+          retention-days: 14
+          
