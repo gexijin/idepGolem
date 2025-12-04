@@ -757,7 +757,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
 
       if (is.null(sample_info)) {
         div(
-          style = "background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 10px; margin-bottom: 10px;",
+          style = "background-color: #e8f4f8; border: 1px solid #b8d4e0; border-radius: 4px; padding: 10px; margin-bottom: 10px;",
           tags$strong("Tip:"),
           " An ",
           tags$a(
