@@ -3,19 +3,19 @@ name: Build Linux (Electron + R.linux)
 on:
   workflow_dispatch:
 
-  push:
-    branches:
-      - packaging1
-      - 'rel*'
-    tags:
-      - 'v*'
-    paths:
-      - "electron/**"
-      - "R/**"
-      - "app.R"
-      - "DESCRIPTION"
-      - "package.json"
-      - ".github/workflows/*.yml"
+  # push:
+  #   branches:
+  #     - packaging1
+  #     - 'rel*'
+  #   tags:
+  #     - 'v*'
+  #   paths:
+  #     - "electron/**"
+  #     - "R/**"
+  #     - "app.R"
+  #     - "DESCRIPTION"
+  #     - "package.json"
+  #     - ".github/workflows/*.yml"
 
 jobs:
   build:

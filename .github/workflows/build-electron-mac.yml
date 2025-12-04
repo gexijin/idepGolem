@@ -3,19 +3,19 @@ name: Build macOS (Electron + R.framework)
 on:
   workflow_dispatch:
 
-  push:
-    branches:
-      - electron-packaging
-      - 'rel*'
-    tags:
-      - 'v*'
-    paths:
-      - "electron/**"
-      - "R/**"
-      - "app.R"
-      - "DESCRIPTION"
-      - "package.json"
-      - ".github/workflows/build-electron-mac.yml"      
+  # push:
+  #   branches:
+  #     - electron-packaging
+  #     - 'rel*'
+  #   tags:
+  #     - 'v*'
+  #   paths:
+  #     - "electron/**"
+  #     - "R/**"
+  #     - "app.R"
+  #     - "DESCRIPTION"
+  #     - "package.json"
+  #     - ".github/workflows/build-electron-mac.yml"      
 
 jobs:
   build:

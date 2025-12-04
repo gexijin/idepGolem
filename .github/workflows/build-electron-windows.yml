@@ -2,19 +2,19 @@ name: Build Windows (Electron + R.win)
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - electron-packaging
-      - 'rel*'
-    tags:
-      - 'rel*'
-    paths:
-      - "electron/**"
-      - "R/**"
-      - "app.R"
-      - "DESCRIPTION"
-      - "package.json"
-      - ".github/workflows/build-electron-windows.yml"
+  # push:
+  #   branches:
+  #     - electron-packaging
+  #     - 'rel*'
+  #   tags:
+  #     - 'rel*'
+  #   paths:
+  #     - "electron/**"
+  #     - "R/**"
+  #     - "app.R"
+  #     - "DESCRIPTION"
+  #     - "package.json"
+  #     - ".github/workflows/build-electron-windows.yml"
 jobs:
   build:
     runs-on: windows-latest
