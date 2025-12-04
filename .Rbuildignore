@@ -6,3 +6,6 @@ dev_history.R
 $run_dev.*
 ^app\.R$
 ^rsconnect$
+^.*\.Rproj$
+^electron/node_modules$
+^electron$
