@@ -178,7 +178,7 @@ mod_07_genome_ui <- function(id) {
             ),
             p("Select a region to zoom in. Mouse over the points to
             see more information on the gene. Enriched regions are
-            highlighted by blue or red line segments paralell to the chromosomes."),
+            highlighted by blue or red line segments parallel to the chromosomes."),
             p("Mouse over the figure to see more options on the top right, including download.")
           ),
           tabPanel(
@@ -230,7 +230,7 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data) {
         )
       }
     })
-    
+
     genome_plot <- reactive({
       req(!is.null(deg$limma()))
       req(!is.null(pre_process$all_gene_info()))
@@ -282,7 +282,7 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data) {
     output$genome_plotly <- plotly::renderPlotly({
       genome_plot()
     })
-    
+
     # Popup for chromosome data download options
     observeEvent(input$chr_data_popup, {
       req(!is.null(chr_data()))
@@ -293,10 +293,12 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data) {
           selectInput(
             inputId = ns("data_type"),
             label = "Select Dataset",
-            choices = c("Enriched Genes" = "enriched_genes",
-                        "Chromosome Data" = "chr_data",
-                        "Enriched Region Boundaries" = "enriched_regions"),
-                        selectize = FALSE
+            choices = c(
+              "Enriched Genes" = "enriched_genes",
+              "Chromosome Data" = "chr_data",
+              "Enriched Region Boundaries" = "enriched_regions"
+            ),
+            selectize = FALSE
           ),
           # Chromosome data filtering options
           conditionalPanel(
@@ -320,16 +322,16 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data) {
             ns = ns
           ),
           downloadButton(
-            ns("download_chr_data"), 
+            ns("download_chr_data"),
             "Download Data"
-            ),
+          ),
           easyClose = TRUE,
           size = "s",
           footer = modalButton("Close")
         )
       )
     })
-    
+
     # Get chromosome data using user-entered parameters
     chr_data <- reactive({
       req(!is.null(deg$limma()))
@@ -350,29 +352,31 @@ mod_07_genome_server <- function(id, pre_process, deg, idep_data) {
         hide_chr = input$hide_chr
       )
     })
-    
+
     # Download config for data file download
     output$download_chr_data <- downloadHandler(
-      filename = function(){
+      filename = function() {
         req(!is.null(input$data_type))
-        paste0(input$data_type, ".csv") #dynamic file name
+        paste0(input$data_type, ".csv") # dynamic file name
       },
-      content = function(file){
+      content = function(file) {
         req(!is.null(chr_data()))
         req(!is.null(input$gene_regulation))
         req(!is.null(input$chr_select))
-        
+
         df <- chr_data()
         # Filter chromosome data
-        if (input$data_type == "chr_data"){
-          df$chr_data <- chr_filter(chr_data = df$chr_data,
-                                    regulation = input$gene_regulation,
-                                    chr_select = input$chr_select)
+        if (input$data_type == "chr_data") {
+          df$chr_data <- chr_filter(
+            chr_data = df$chr_data,
+            regulation = input$gene_regulation,
+            chr_select = input$chr_select
+          )
         }
         write.csv(df[[input$data_type]], file)
       }
     )
-    
+
     observeEvent(input$chr_data_popup, {
       # Update chromosome selection dynamically
       if (!is.null(chr_data())) {

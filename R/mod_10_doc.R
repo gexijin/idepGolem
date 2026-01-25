@@ -45,7 +45,7 @@ mod_10_doc_ui <- function(id) {
       especially those who do not have access to bioinformaticians."
       ),
       p("Graduate students contributed to this project include Eun Wo Son, Runan Yao,
-      Roberto Villegas-Diaz, Eric Tulowetzke, Emma Spors,  
+      Roberto Villegas-Diaz, Eric Tulowetzke, Emma Spors,
       Chris Trettel, and Ben Derenge. Undergraduate students include Jenna Thorstenson and
       Jakob Fossen. Research staff include Jianli Qi and Gavin Doering.
       Much of the new version of iDEP is rewritten by Gavin Doering.
@@ -56,7 +56,7 @@ mod_10_doc_ui <- function(id) {
       "),
       h3("Cite the iDEP paper, otherwise, this service might vanish!"),
       p(
-        "If you use iDEP, even just for prelimiary analysis,
+        "If you use iDEP, even just for preliminary analysis,
         please cite: Ge, Son & Yao, iDEP:
         an integrated web application for differential
         expression and pathway analysis of RNA-Seq data, ",
@@ -124,7 +124,7 @@ mod_10_doc_ui <- function(id) {
        tabs, which has the parameters and results. Also download and try
        the the R code on the Stats tab."),
       h4("Previous versions of iDEP are still useable:"),
-       a("iDEP 2.01 with Ensembl Release 107, archived Sept 5, 2025 ",
+      a("iDEP 2.01 with Ensembl Release 107, archived Sept 5, 2025 ",
         href = "http://bioinformatics.sdstate.edu/idep20"
       ),
       br(),
@@ -168,10 +168,10 @@ mod_10_doc_ui <- function(id) {
         href = "http://bioinformatics.sdstate.edu/idep73/"
       ),
       h3("Privacy policy"),
-      p("User uploaded data files are saved in a temporary folder during your session and automatically deleted. 
+      p("User uploaded data files are saved in a temporary folder during your session and automatically deleted.
       Our group does not keep a copy of the uploaded data.
-      We monitor web traffic using Google Analytics, which tells us your IP address (approximate location down to the city level),  
-      and how long you are on this site. Error messages are recorded by Shiny server.  
+      We monitor web traffic using Google Analytics, which tells us your IP address (approximate location down to the city level),
+      and how long you are on this site. Error messages are recorded by Shiny server.
       By visiting this site, you agree to provide web activity data.
       "),
       h3("Contact us"),
@@ -214,14 +214,14 @@ mod_10_doc_ui <- function(id) {
       h3("Change log"),
       p("11/6/2025: iDEP 2.3.5. Fix bugs. Improve plots for big datasets. Make Prep report reproducible. "),
       p("11/5/2025: iDEP 2.3.4. Fix bugs on labeling k-Means clusters. "),
-      p("10/29/2025: iDEP 2.3.0. Add Marker gene plots. Update reports for each tabs. New video."),      
+      p("10/29/2025: iDEP 2.3.0. Add Marker gene plots. Update reports for each tabs. New video."),
       p("11/4/2025: iDEP 2.3.2. Improve plots for large sample sets. Cap # of sample groups. Label pathway on k-Means heatmap. "),
       p("10/29/2025: iDEP 2.3.0. Add Marker gene plots. Update reports for each tabs. New video."),
       p("9/28/2025: iDEP 2.20. UI improvements. Add documentations for each tab."),
       p("9/25/2025: iDEP 2.11. UI improvements for species selection. Remove submit buttons from Clustering, Bicluster, and Network tabs."),
       p("9/5/2025: iDEP 2.10. UI improvements. Database update to Ensembl 133."),
       p("4/20/2024: Fix bug in network tab related to module download. Enable download of network as a CSV file."),
-      p("4/19/2024: iDEP 2.01. Minor upgrade. Fixed a bug related to insufficiant # of color in palettes. 
+      p("4/19/2024: iDEP 2.01. Minor upgrade. Fixed a bug related to insufficient # of color in palettes.
       Optimized UI for load data. Reverted to basic Shiny theme due to an issue with new version of Shiny package."),
       htmlOutput(ns("session_info"))
     )
@@ -238,33 +238,39 @@ mod_10_doc_server <- function(id, pre_process, idep_data, tab) {
     version_checked <- reactiveVal(FALSE)
     update_info <- reactiveVal(NULL)
 
-    observeEvent(tab(), {
-      if (!identical(tab(), "Doc")) {
-        return(NULL)
-      }
+    observeEvent(tab(),
+      {
+        if (!identical(tab(), "Doc")) {
+          return(NULL)
+        }
 
-      if (!version_checked()) {
-        version_checked(TRUE)
-        check_version_update()
-      }
+        if (!version_checked()) {
+          version_checked(TRUE)
+          check_version_update()
+        }
 
-      if (exists(".idep_update_available", envir = .GlobalEnv)) {
-        info <- get(".idep_update_available", envir = .GlobalEnv)
-        is_newer <- tryCatch({
-          current <- utils::packageVersion("idepGolem")
-          latest <- tryCatch(numeric_version(info$version), error = function(e) NULL)
-          !is.null(latest) && latest > current
-        }, error = function(e) FALSE)
+        if (exists(".idep_update_available", envir = .GlobalEnv)) {
+          info <- get(".idep_update_available", envir = .GlobalEnv)
+          is_newer <- tryCatch(
+            {
+              current <- utils::packageVersion("idepGolem")
+              latest <- tryCatch(numeric_version(info$version), error = function(e) NULL)
+              !is.null(latest) && latest > current
+            },
+            error = function(e) FALSE
+          )
 
-        if (is_newer) {
-          update_info(info)
+          if (is_newer) {
+            update_info(info)
+          } else {
+            update_info(NULL)
+          }
         } else {
           update_info(NULL)
         }
-      } else {
-        update_info(NULL)
-      }
-    }, ignoreNULL = TRUE)
+      },
+      ignoreNULL = TRUE
+    )
 
     output$update_message <- renderUI({
       info <- update_info()

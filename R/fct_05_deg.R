@@ -857,12 +857,13 @@ deg_deseq2 <- function(raw_counts,
       eval(parse(text = deseq2_object)),
       error = function(e) {
         paste("Error in DESeq2 analysis:", e$message)
-      })
+      }
+    )
     # Return if dds contains an error message
-    if(class(dds) == "character"){
+    if (class(dds) == "character") {
       return(dds)
     }
-    
+
     dds <- DESeq2::DESeq(dds) # main function
 
     expr <- paste0(
@@ -1148,7 +1149,6 @@ deg_deseq2 <- function(raw_counts,
     )
   )
 }
-
 
 
 #' Differential expression using limma package
@@ -1473,14 +1473,14 @@ deg_limma <- function(processed_data,
 
     # only keep FC and FDR columns
     if (dim(top_genes_table)[1] != 0) { # have rows
-      # Colnames: "logFC"     "AveExpr"   "t"         "P.Value"   "adj.P.Val" "B" 
+      # Colnames: "logFC"     "AveExpr"   "t"         "P.Value"   "adj.P.Val" "B"
       top_genes_table <- top_genes_table[, c("logFC", "adj.P.Val")]
       ix <- which(colnames(top_genes_table) == "logFC")
       colnames(top_genes_table)[ix] <- "log2FC"
       top_genes[[1]] <- top_genes_table
     }
 
-    # Log fold change is actually substract of means. So if the data is natral log
+    # Log fold change is actually subtract of means. So if the data is natral log
     # transformed, it should be natral log.
     exp_type <- "2 sample groups."
   } else {
@@ -2247,7 +2247,7 @@ print_vector <- function(x, # comparison
 #' @param results Results matrix from the limma_value function
 #'  returned list
 #' @param plot_colors Vector of colors for up and down regulation
-#'  
+#'
 #'
 #' @export
 #' @return Formatted gg barplot of the significantly expressed
@@ -2258,7 +2258,7 @@ sig_genes_plot <- function(results, plot_colors) {
   stats <- rbind(Up, Down)
   gg <- reshape2::melt(stats)
   colnames(gg) <- c("Regulation", "Comparisons", "Genes")
-  
+
   plot_bar <- ggplot2::ggplot(
     gg,
     ggplot2::aes(x = Comparisons, y = Genes, fill = Regulation)
@@ -2266,7 +2266,7 @@ sig_genes_plot <- function(results, plot_colors) {
     ggplot2::geom_bar(position = "dodge", stat = "identity") +
     ggplot2::coord_flip() +
     ggplot2::theme_light() +
-    ggplot2::scale_fill_manual(values = plot_colors[c(3,1)]) +
+    ggplot2::scale_fill_manual(values = plot_colors[c(3, 1)]) +
     ggplot2::theme(
       legend.position = "top",
       axis.title.y = ggplot2::element_blank(),
@@ -2670,7 +2670,7 @@ volcano_data <- function(select_contrast,
   has_full_gene_info <- !is.null(all_gene_names) &&
     all(needed_cols %in% colnames(all_gene_names))
   if (has_full_gene_info) {
-    genes2 <- genes # a temp data. 
+    genes2 <- genes # a temp data.
     row.names(genes2) <- genes2$Row.names
     genes2 <- rowname_id_swap(
       data_matrix = genes2,
@@ -2679,10 +2679,9 @@ volcano_data <- function(select_contrast,
     )
 
     # just make sure gene orders are not switched
-    if(abs(cor(genes2[, 1], genes[, 2]) - 1) < 1e-10) {
+    if (abs(cor(genes2[, 1], genes[, 2]) - 1) < 1e-10) {
       genes$Row.names <- row.names(genes2)
     }
-    
   }
 
 
@@ -2890,7 +2889,7 @@ plot_deg_scatter <- function(select_contrast,
                              plot_colors,
                              all_gene_names,
                              select_gene_id = "symbol",
-                             anotate_genes = NULL) { 
+                             anotate_genes = NULL) {
   if (grepl("I:", select_contrast)) {
     grid::grid.newpage()
     return(
@@ -2962,8 +2961,7 @@ plot_deg_scatter <- function(select_contrast,
       if (id_column %in% colnames(all_gene_names) &&
         "ensembl_ID" %in% colnames(all_gene_names)) {
         lookup <- all_gene_names[
-          all_gene_names[[id_column]] %in% anotate_genes,
-          ,
+          all_gene_names[[id_column]] %in% anotate_genes, ,
           drop = FALSE
         ]
         if (nrow(lookup) > 0 && "ensembl_ID" %in% colnames(lookup)) {
@@ -3062,22 +3060,24 @@ deg_information <- function(limma_value,
                             processed_data,
                             no_id_conversion = FALSE) {
   # get the first comparison level
-  if(is.null(limma_value$baseMean)){
+  if (is.null(limma_value$baseMean)) {
     degs_data <- limma_value$top_genes[[1]]
     colnames(degs_data) <- c(
       (paste(limma_value$comparisons[[1]], "log2FC", sep = "_")),
       (paste(limma_value$comparisons[[1]], "adjPval", sep = "_"))
     )
   } else {
-    degs_data <- data.frame(limma_value$baseMean,
-                            limma_value$top_genes[[1]])
+    degs_data <- data.frame(
+      limma_value$baseMean,
+      limma_value$top_genes[[1]]
+    )
     colnames(degs_data) <- c(
       paste("baseMean"),
       (paste(limma_value$comparisons[[1]], "log2FC", sep = "_")),
       (paste(limma_value$comparisons[[1]], "adjPval", sep = "_"))
     )
   }
-  
+
   if (no_id_conversion) {
     degs_data$User_ID <- rownames(degs_data)
 
@@ -3099,7 +3099,6 @@ deg_information <- function(limma_value,
     processed_data$User_ID <- rownames(processed_data)
     degs_data <- dplyr::full_join(degs_data, gene_names, by = "User_ID")
     degs_data <- dplyr::full_join(degs_data, processed_data, by = "User_ID")
-
   } else {
     degs_data$ensembl_ID <- rownames(degs_data)
 
@@ -3122,12 +3121,12 @@ deg_information <- function(limma_value,
     degs_data <- dplyr::full_join(degs_data, gene_names, by = "ensembl_ID")
     degs_data <- dplyr::full_join(degs_data, processed_data, by = "ensembl_ID")
   }
-  
+
   degs_data <- degs_data |>
     dplyr::relocate(User_ID) |>
     dplyr::relocate(ensembl_ID) |>
     dplyr::relocate(symbol)
-  
+
   return(list(degs_data, limma_value$Results))
 }
 
@@ -3167,13 +3166,13 @@ mod_label_ui <- function(id) {
 mod_label_server <- function(id, data_list, method = c("volcano", "ma", "scatter")) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
+
     if (method != "volcano" & method != "ma" & method != "scatter") {
       stop(
         "The method parameter is misspecified. It must either be 'volcano' or 'ma'."
       )
     }
-    
+
     if (method == "volcano") {
       choice_list <- list(
         "Absolute LFC" = 1,
@@ -3282,7 +3281,7 @@ mod_label_server <- function(id, data_list, method = c("volcano", "ma", "scatter
       req(data_list())
       data <- data_list()$data |>
         dplyr::filter(upOrDown != "None")
-      
+
       if (method == "volcano") {
         data <- data |>
           dplyr::mutate(

@@ -73,16 +73,17 @@ connect_convert_db <- function(datapath = DATAPATH) {
 #' @return Database connection.
 connect_convert_db_org <- function(datapath = DATAPATH, select_org, idep_data) {
   ix <- which(idep_data$org_info$id == select_org)
-  if(select_org == "NEW" || length(ix) == 0) {
+  if (select_org == "NEW" || length(ix) == 0) {
     return(NULL)
-  } 
+  }
   db_file <- idep_data$org_info[ix, "file"]
   return(try(
     DBI::dbConnect(
-    drv = RSQLite::dbDriver("SQLite"),
-    dbname = paste0(datapath, "db/", db_file),
-    flags = RSQLite::SQLITE_RO
-  )))
+      drv = RSQLite::dbDriver("SQLite"),
+      dbname = paste0(datapath, "db/", db_file),
+      flags = RSQLite::SQLITE_RO
+    )
+  ))
 }
 
 
@@ -103,7 +104,6 @@ connect_convert_db_org <- function(datapath = DATAPATH, select_org, idep_data) {
 #' }
 #'
 get_idep_data <- function(datapath = DATAPATH) {
-
   conn_db <- connect_convert_db()
 
   # demo_data_info.csv file
@@ -242,7 +242,7 @@ convert_id <- function(query,
   # is deleted after genes are uploaded.
   if (is.null(select_org)) {
     return(NULL)
-  } else if(select_org == "NEW") {
+  } else if (select_org == "NEW") {
     return(NULL)
   }
 
@@ -278,7 +278,7 @@ convert_id <- function(query,
 
   # if database connection error
   # see ? try
-  if(inherits(conn_db, "try-error")) {
+  if (inherits(conn_db, "try-error")) {
     return(NULL)
   }
 
@@ -366,7 +366,7 @@ convert_id <- function(query,
 #' @param idep_data Data built in to idep
 #' @param gene_info The gene info from the converted IDs and
 #'   the function gene_info()
-#' 
+#'
 #' @export
 #' @return This function returns a list with values that are
 #'   used in the find_overlap function. The list contains
@@ -423,7 +423,7 @@ read_pathway_sets <- function(all_gene_names_query,
   )
 
   # if database connection error
-  if(inherits(pathway, "try-error")) {
+  if (inherits(pathway, "try-error")) {
     return(id_not_recognized)
   }
 
@@ -449,7 +449,7 @@ read_pathway_sets <- function(all_gene_names_query,
     return(pathway_table <- NULL)
   }
 
-  if (go != "All"){
+  if (go != "All") {
     # List pathways and frequency of genes
     pathway_ids <- stats::aggregate(
       result$pathwayID,
@@ -465,11 +465,10 @@ read_pathway_sets <- function(all_gene_names_query,
     )
     colnames(pathway_ids) <- c("pathway_id", "Database", "overlap")
   }
-  
+
   if (dim(pathway_ids)[1] == 0) {
     return(pathway_table <- NULL)
   } else {
-
     pathway_info <- DBI::dbGetQuery(
       pathway,
       paste(
@@ -505,7 +504,7 @@ read_pathway_sets <- function(all_gene_names_query,
     )
     names(gene_sets) <- pathway_merge$description
     # note this might cause errors if length differs.
-    # which could happen if 
+    # which could happen if
     pathway_merge$gene_sets <- gene_sets
   }
 
@@ -538,7 +537,7 @@ read_pathway_sets <- function(all_gene_names_query,
     pathway_table = pathway_merge,
     query_set = query_set,
     total_genes = total_genes
-#    pathway_files = pathway_files
+    #    pathway_files = pathway_files
   ))
 }
 
@@ -592,7 +591,7 @@ background_pathway_sets <- function(processed_data,
     idep_data = idep_data
   )
   # if database connection error
-  if(inherits(pathway, "try-error")) {
+  if (inherits(pathway, "try-error")) {
     return(NULL)
   }
 
@@ -613,8 +612,8 @@ background_pathway_sets <- function(processed_data,
   }
 
   # this is slow when gene lists are big
-  #sql_query <- build_pathway_query(go, query_set)
-  #results <- DBI::dbGetQuery(pathway, sql_query)
+  # sql_query <- build_pathway_query(go, query_set)
+  # results <- DBI::dbGetQuery(pathway, sql_query)
 
   # retrieve all pathways for the category
   sql_query <- "SELECT gene, pathwayID FROM pathway "
@@ -624,7 +623,7 @@ background_pathway_sets <- function(processed_data,
 
   # since there are so many genes, this takes a long time
   # we are not using the genes, just query all the pathways for the category
-  #sql_query <- build_pathway_query(go, query_set)
+  # sql_query <- build_pathway_query(go, query_set)
 
   results <- DBI::dbGetQuery(pathway, sql_query)
 
@@ -700,7 +699,7 @@ gmt_category <- function(converted,
   )
 
   # if database connection error
-  if(inherits(conn_db, "try-error")) {
+  if (inherits(conn_db, "try-error")) {
     return(id_not_recognized)
   }
 
@@ -715,7 +714,7 @@ gmt_category <- function(converted,
   }
 
 
-  # Generate a list of geneset categories such as "GOBP", "KEGG" from file
+  # Generate a list of gene set categories such as "GOBP", "KEGG" from file
   gene_set_category <- DBI::dbGetQuery(conn_db, "select distinct * from categories")
   DBI::dbDisconnect(conn_db)
 
@@ -758,7 +757,7 @@ gmt_category <- function(converted,
 #' @param select_org String designating with organism is being analyzed
 #' @param idep_data List of data returned from \code{\link{get_idep_data}()}
 #' @param my_range Vector of the (min_set_size, max_set_size)
-#' 
+#'
 #' @export
 #' @return A list with each entry a list of gene IDs that correspond to
 #'  a pathway.
@@ -784,15 +783,15 @@ read_gene_sets <- function(converted,
     idep_data = idep_data
   )
 
-# for testing
-#pathway <- DBI::dbConnect(
-#    drv = RSQLite::dbDriver("SQLite"),
-#    dbname = "C:/work/iDEP_data/data104b/pathwayDB/Human__hsapiens_gene_ensembl.db",
-#    flags = RSQLite::SQLITE_RO
-#  )
+  # for testing
+  # pathway <- DBI::dbConnect(
+  #    drv = RSQLite::dbDriver("SQLite"),
+  #    dbname = "C:/work/iDEP_data/data104b/pathwayDB/Human__hsapiens_gene_ensembl.db",
+  #    flags = RSQLite::SQLITE_RO
+  #  )
 
   # if database connection error
-  if(inherits(pathway, "try-error")) {
+  if (inherits(pathway, "try-error")) {
     return(id_not_recognized)
   }
 
@@ -817,7 +816,7 @@ read_gene_sets <- function(converted,
 
   # since there are so many genes, this takes a long time
   # we are not using the genes, just query all the pathways for the category
-  #sql_query <- build_pathway_query(go, query_set)
+  # sql_query <- build_pathway_query(go, query_set)
 
   result <- DBI::dbGetQuery(pathway, sql_query)
 
@@ -895,7 +894,7 @@ convert_ensembl_to_entrez <- function(query,
     idep_data = idep_data
   )
   # if database connection error
-  if(inherits(convert, "try-error")) {
+  if (inherits(convert, "try-error")) {
     return(NULL)
   }
   id_type_entrez <- DBI::dbGetQuery(
@@ -940,7 +939,6 @@ convert_ensembl_to_entrez <- function(query,
 #' @export
 #' @return The SQL SELECT statement
 build_pathway_query <- function(go, query_set) {
-
   sql_query <- "SELECT gene, pathwayID FROM pathway WHERE "
 
   # faster if category is first
@@ -949,7 +947,7 @@ build_pathway_query <- function(go, query_set) {
   } else {
     sql_query <- paste0(
       substr(sql_query, 0, 22),
-      ", category", 
+      ", category",
       substr(sql_query, 23, nchar(sql_query))
     )
   }
@@ -976,14 +974,13 @@ build_pathway_query <- function(go, query_set) {
 #' @export
 #' @return A vector with the source information
 pathway_source_info <- function(pathway_file, go, select_org, idep_data) {
-
   conn_db <- connect_convert_db_org(
     select_org = select_org,
     idep_data = idep_data
   )
 
   # if database connection error
-  if(inherits(conn_db, "try-error")) {
+  if (inherits(conn_db, "try-error")) {
     return(NULL)
   }
 
@@ -1007,7 +1004,7 @@ pathway_source_info <- function(pathway_file, go, select_org, idep_data) {
     )
   )
   DBI::dbDisconnect(conn_db)
-  if(nrow(pathway_info) == 0) { # no record found.
+  if (nrow(pathway_info) == 0) { # no record found.
     return(NULL)
   } else {
     return(pathway_info)
