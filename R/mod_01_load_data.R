@@ -42,12 +42,10 @@ mod_01_load_data_ui <- function(id) {
              .load-data-info-icon { padding: 0; border: none; background: transparent; color: #6c757d; font-size: 18px; line-height: 1; }
              .load-data-info-icon:hover { color: #343a40; text-decoration: none; }
              .load-data-info-icon:focus { outline: none; box-shadow: none; }
-              "
-        )
+              ")
       )
     ),
     sidebarLayout(
-
       ##################################################################
       #       Load Data sidebar panel ----
       ##################################################################
@@ -62,7 +60,6 @@ mod_01_load_data_ui <- function(id) {
           selectize = TRUE,
           selected = NULL
         ),
-
         fluidRow(
           column(
             width = 5,
@@ -76,9 +73,7 @@ mod_01_load_data_ui <- function(id) {
         tags$head(tags$style("#load_data-selected_species{color: blue;
                                  font-size: 12px;
                                  font-style: italic;
-                                 }"
-        )
-        ),
+                                 }")),
 
         # .GMT file input bar ----------
         fluidRow(
@@ -141,7 +136,6 @@ mod_01_load_data_ui <- function(id) {
 
         # Dropdown for data file format ----------
         strong("2. Data type"),
-        
         selectInput(
           inputId = ns("data_file_format"),
           label = NULL,
@@ -350,7 +344,8 @@ mod_01_load_data_ui <- function(id) {
             # Link to public RNA-seq datasets ----------
             a(
               "Public Data",
-              href = "http://bioinformatics.sdstate.edu/reads/"
+              href = "http://bioinformatics.sdstate.edu/reads/",
+              style = "color: #1357A6;"
             ),
           ),
           column(
@@ -359,7 +354,8 @@ mod_01_load_data_ui <- function(id) {
             a(
               "Cite iDEP",
               href = "https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-018-2486-6#citeas",
-              target = "_blank"
+              target = "_blank",
+              style = "color: #1357A6;"
             ),
           ),
           column(
@@ -368,7 +364,8 @@ mod_01_load_data_ui <- function(id) {
             # Action link to reveal Gene ID examples -----------
             actionLink(
               inputId = ns("gene_ids_link"),
-              label = "Gene IDs"
+              label = "Gene IDs",
+              style = "color: #1357A6;"
             ),
             tippy::tippy_this(
               ns("gene_ids_link"),
@@ -389,7 +386,6 @@ mod_01_load_data_ui <- function(id) {
 
         # Gene ID conversion statistics ----------
         uiOutput(ns("conversion_stats_message")),
-
         div(
           style = "overflow-x: auto;",
           tableOutput(ns("sample_info_table"))
@@ -419,12 +415,6 @@ mod_01_load_data_ui <- function(id) {
     )
   )
 }
-
-
-
-
-
-
 
 
 #' 01_load_data Server Functions
@@ -517,8 +507,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     }
 
     get_data_type_details <- function(type) {
-      switch(
-        as.character(type),
+      switch(as.character(type),
         `1` = list(
           title = "Read Counts",
           body = tagList(
@@ -572,7 +561,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
     # Initialize species selection with first species as default
     observe({
-      if(!is.null(idep_data$org_info) && nrow(idep_data$org_info) > 0) {
+      if (!is.null(idep_data$org_info) && nrow(idep_data$org_info) > 0) {
         # Get first species from org_info (ordered by 'top' field)
         first_species_id <- idep_data$org_info$id[1]
         first_species_name <- idep_data$org_info$name2[1]
@@ -609,21 +598,21 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
       # Create Ensembl breakdown
       ensembl_sources <- ensembl_sources[ensembl_sources > 1] # remove singletons 'Bacteria'
-      ix <- which(names(ensembl_sources) == 'ENSEMBL')
-      names(ensembl_sources)[ix] <- 'main'
+      ix <- which(names(ensembl_sources) == "ENSEMBL")
+      names(ensembl_sources)[ix] <- "main"
 
-      names(ensembl_sources) <- gsub("Ensembl", "", names(ensembl_sources)) 
+      names(ensembl_sources) <- gsub("Ensembl", "", names(ensembl_sources))
       ensembl_parts <- paste0(names(ensembl_sources), "(", ensembl_sources, ")", collapse = ", ")
 
       # Create count summary text
       all_parts <- character(0)
-      if(length(ensembl_parts) > 0) {
+      if (length(ensembl_parts) > 0) {
         all_parts <- c(all_parts, paste("Ensembl:", paste(ensembl_parts, collapse = ", ")))
       }
-      if(string_count > 0) {
+      if (string_count > 0) {
         all_parts <- c(all_parts, paste0("STRING-db (", string_count, ")"))
       }
-      if(custom_count > 0) {
+      if (custom_count > 0) {
         all_parts <- c(all_parts, paste0("Custom (", custom_count, ")."))
       }
 
@@ -636,7 +625,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           p(count_text, style = "font-style: italic; color: #666;"),
           easyClose = TRUE,
           DT::renderDataTable({
-            df <- idep_data$org_info[,
+            df <- idep_data$org_info[
+              ,
               c("ensembl_dataset", "name", "academicName", "taxon_id", "group")
             ]
             colnames(df) <- c(
@@ -666,7 +656,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
               ),
               callback = DT::JS(
                 paste0(
-                 "table.on('click', 'tr', function() {
+                  "table.on('click', 'tr', function() {
                     var data = table.row(this).data();
                     if (data) {
                       Shiny.setInputValue('", id, "-clicked_row', data[0]);
@@ -680,7 +670,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         )
       )
     })
-    
+
     selected_species_name <- reactiveVal()
 
     # Handle new species checkbox ----
@@ -738,7 +728,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       in_file <- in_file$datapath
       lines <- scan(in_file, what = "", sep = "\n")
       total <- length(lines)
-      if(length(lines) > 3){
+      if (length(lines) > 3) {
         lines <- lines[1:3]
       }
       tagList(
@@ -755,7 +745,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       )
     })
     observeEvent(input$clicked_row, {
-
       # find species ID from ensembl_dataset
       selected_id <- find_species_id_by_ensembl(
         input$clicked_row,
@@ -806,7 +795,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       first_species_name <- idep_data$org_info$name2[1]
 
       # Only show message if using default species and not in NEW mode
-      if(input$select_org == first_species_id && input$select_org != "NEW") {
+      if (input$select_org == first_species_id && input$select_org != "NEW") {
         div(
           style = "background-color: #d1ecf1; border: 1px solid #bee5eb;
                    border-radius: 4px; padding: 10px; margin: 10px 0;
@@ -845,71 +834,77 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       }
 
       div(
-        style = paste0("background-color: ", bg_color, "; border: 1px solid ",
-                       border_color, "; border-radius: 4px; padding: 10px; margin: 10px 0;
-                       color: ", text_color, ";"),
+        style = paste0(
+          "background-color: ", bg_color, "; border: 1px solid ",
+          border_color, "; border-radius: 4px; padding: 10px; margin: 10px 0;
+                       color: ", text_color, ";"
+        ),
         h5(
           icon(icon_name),
-          paste0(" ", message_type, " ", converted_count, " out of ",
-                 original_count, " genes (", conversion_rate,
-                 "%) converted to Ensembl/STRING IDs.")
+          paste0(
+            " ", message_type, " ", converted_count, " out of ",
+            original_count, " genes (", conversion_rate,
+            "%) converted to Ensembl/STRING IDs."
+          )
         )
       )
     })
 
-    observeEvent(input$data_file_format, {
-      req(input$data_file_format != 0)
+    observeEvent(input$data_file_format,
+      {
+        req(input$data_file_format != 0)
 
-      # Update dropdown text
-      updateSelectInput(
-        session = session,
-        inputId = "data_file_format",
-        choices = list(
-          "..." = 0,
-          "Read counts data" = 1,
-          "Normalized expression data" = 2,
-          "Fold changes & adjusted p-values" = 3,
-          "Fold changes only" = 4
-        ),
-        selected = input$data_file_format
-      )
+        # Update dropdown text
+        updateSelectInput(
+          session = session,
+          inputId = "data_file_format",
+          choices = list(
+            "..." = 0,
+            "Read counts data" = 1,
+            "Normalized expression data" = 2,
+            "Fold changes & adjusted p-values" = 3,
+            "Fold changes only" = 4
+          ),
+          selected = input$data_file_format
+        )
 
-      # Show notification only when on Data tab
-      req(tab() == "Data")
+        # Show notification only when on Data tab
+        req(tab() == "Data")
 
-      details <- get_data_type_details(input$data_file_format)
-      preview <- demo_preview_tables[[as.character(input$data_file_format)]]
+        details <- get_data_type_details(input$data_file_format)
+        preview <- demo_preview_tables[[as.character(input$data_file_format)]]
 
-      demo_preview_content(preview)
+        demo_preview_content(preview)
 
-      # Build notification UI with details and preview
-      notification_ui <- if (!is.null(preview)) {
-        table_html <- build_preview_table(preview)
-        tagList(
-          tags$strong(details$title),
-          tags$br(),
-          details$body,
-          div(
-            style = "max-height: 300px; overflow-y: auto; margin-top: 10px;",
-            table_html
+        # Build notification UI with details and preview
+        notification_ui <- if (!is.null(preview)) {
+          table_html <- build_preview_table(preview)
+          tagList(
+            tags$strong(details$title),
+            tags$br(),
+            details$body,
+            div(
+              style = "max-height: 300px; overflow-y: auto; margin-top: 10px;",
+              table_html
+            )
           )
-        )
-      } else {
-        tagList(
-          tags$strong(details$title),
-          tags$br(),
-          details$body
-        )
-      }
+        } else {
+          tagList(
+            tags$strong(details$title),
+            tags$br(),
+            details$body
+          )
+        }
 
-      showNotification(
-        ui = notification_ui,
-        duration = 20,
-        type = "message",
-        id = "load_prompt"
-      )
-
-    }, ignoreNULL = TRUE)
+        showNotification(
+          ui = notification_ui,
+          duration = 20,
+          type = "message",
+          id = "load_prompt"
+        )
+      },
+      ignoreNULL = TRUE
+    )
 
     # Dismiss notification when user interacts with file input or demo button
     observeEvent(input$expression_file, {
@@ -959,8 +954,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
       if (
         has_species_column &&
-        !is.null(selected_species) &&
-        nzchar(selected_species)
+          !is.null(selected_species) &&
+          nzchar(selected_species)
       ) {
         normalize_species <- function(x) {
           tolower(trimws(as.character(x)))
@@ -979,24 +974,30 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       setNames(as.list(files$ID), files$name)
     })
 
-    observeEvent(demo_choices(), {
-      choices <- demo_choices()
-      values <- unlist(choices, use.names = FALSE)
+    observeEvent(demo_choices(),
+      {
+        choices <- demo_choices()
+        values <- unlist(choices, use.names = FALSE)
 
-      if (length(values) == 0) {
-        selected_demo(NULL)
-      } else {
-        current <- selected_demo()
-        if (is.null(current) || !(current %in% values)) {
-          selected_demo(values[[1]])
+        if (length(values) == 0) {
+          selected_demo(NULL)
+        } else {
+          current <- selected_demo()
+          if (is.null(current) || !(current %in% values)) {
+            selected_demo(values[[1]])
+          }
         }
-      }
-    }, ignoreNULL = FALSE)
+      },
+      ignoreNULL = FALSE
+    )
 
-    observeEvent(input$select_demo, {
-      req(!is.null(input$select_demo))
-      selected_demo(input$select_demo)
-    }, ignoreNULL = TRUE)
+    observeEvent(input$select_demo,
+      {
+        req(!is.null(input$select_demo))
+        selected_demo(input$select_demo)
+      },
+      ignoreNULL = TRUE
+    )
 
     # UI elements for load demo action button, demo data drop down, and -----
     # expression file upload
@@ -1039,7 +1040,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
               theme = "light"
             )
           ),
-
           if (has_demo_datasets) {
             column(
               width = 4,
@@ -1114,7 +1114,6 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
               uiOutput(ns("demo_memo"))
             ),
             br(),
-
             fluidRow(
               column(
                 width = 4,
@@ -1180,7 +1179,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         )
       }
     })
-    
+
 
     output$reset_button <- renderUI({
       if (go_button_count() == 0 && is.null(input$expression_file)) {
@@ -1209,7 +1208,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         )
       }
     })
-    
+
     observeEvent(input$reset_app_new_data, {
       session$reload()
     })
@@ -1217,9 +1216,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # UI element for design file upload ----
     output$design_file_ui <- renderUI({
       req(go_button_count() == 0)
-      
-      tagList(
 
+      tagList(
         strong("4. Optional: Experiment Design (CSV or text)"),
         fluidRow(
           column(
@@ -1547,39 +1545,43 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     })
 
     # Sample information table -----------
-    output$sample_info_table <- renderTable({
-      req(!is.null(loaded_data()$sample_info))
+    output$sample_info_table <- renderTable(
+      {
+        req(!is.null(loaded_data()$sample_info))
 
-      isolate({
-        tem <- t(loaded_data()$sample_info)
-        tem <- cbind(rownames(tem), tem)
-        colnames(tem)[1] <- "Study_design"
-        as.data.frame(tem, stringsAsFactors = FALSE)
-      })
-    },
-    striped = TRUE,
-    bordered = TRUE,
-    spacing = "s",
-    align = "l",
-    rownames = FALSE)
+        isolate({
+          tem <- t(loaded_data()$sample_info)
+          tem <- cbind(rownames(tem), tem)
+          colnames(tem)[1] <- "Study_design"
+          as.data.frame(tem, stringsAsFactors = FALSE)
+        })
+      },
+      striped = TRUE,
+      bordered = TRUE,
+      spacing = "s",
+      align = "l",
+      rownames = FALSE
+    )
 
     # First 20 rows of dataset table -----------
-    output$sample_20 <- renderTable({
-      req(!is.null(conversion_info()$converted_data))
+    output$sample_20 <- renderTable(
+      {
+        req(!is.null(conversion_info()$converted_data))
 
-      data_preview <- if (nrow(loaded_data()$data) > 20) {
-        loaded_data()$data[1:20, , drop = FALSE]
-      } else {
-        loaded_data()$data
-      }
+        data_preview <- if (nrow(loaded_data()$data) > 20) {
+          loaded_data()$data[1:20, , drop = FALSE]
+        } else {
+          loaded_data()$data
+        }
 
-      as.data.frame(data_preview, stringsAsFactors = FALSE)
-    },
-    striped = TRUE,
-    bordered = TRUE,
-    spacing = "s",
-    align = "l",
-    rownames = TRUE)
+        as.data.frame(data_preview, stringsAsFactors = FALSE)
+      },
+      striped = TRUE,
+      bordered = TRUE,
+      spacing = "s",
+      align = "l",
+      rownames = TRUE
+    )
 
     observeEvent(input$expression_file, {
       # test data for correct format
@@ -1594,7 +1596,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           tags$br(),
           size = "m",
           easyClose = TRUE
-          #footer = actionButton(ns("reset_app"), "Start over")
+          # footer = actionButton(ns("reset_app"), "Start over")
         ))
       }
 
@@ -1606,9 +1608,9 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         n2 <- ncol(data) %/% 2
         has_p_vals <- input$data_file_format == 3
         fc_cols <- if (has_p_vals) {
-          2 * (1:n2) - 1  # Fold-change columns (odd columns)
+          2 * (1:n2) - 1 # Fold-change columns (odd columns)
         } else {
-          seq_len(ncol(data))    # All columns are fold-changes
+          seq_len(ncol(data)) # All columns are fold-changes
         }
 
         # Check each fold-change column for ratio characteristics
@@ -1810,15 +1812,18 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     modal_shown <- reactiveVal(FALSE)
 
     # Reset modal flag when new data is loaded
-    observeEvent(list(input$expression_file, input$go_button), {
-      modal_shown(FALSE)
-    }, ignoreInit = TRUE)
+    observeEvent(list(input$expression_file, input$go_button),
+      {
+        modal_shown(FALSE)
+      },
+      ignoreInit = TRUE
+    )
 
     # Show gene ID error modal when IDs are not recognized
     observe({
       req(tab() == "Data")
       req(input$select_org != "NEW")
-      req(!modal_shown())  # Only show once per data load
+      req(!modal_shown()) # Only show once per data load
 
       # Check if we have species match data indicating ID not recognized
       match_data <- species_match_data()
@@ -1834,12 +1839,16 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         tags$p("Possible causes:"),
         tags$ul(
           tags$li("Wrong species is selected."),
-          tags$li("Correct species is selected but we cannot map your ",
-                  "gene IDs to Ensembl gene IDs or STRING protein IDs."),
+          tags$li(
+            "Correct species is selected but we cannot map your ",
+            "gene IDs to Ensembl gene IDs or STRING protein IDs."
+          ),
           tags$li("Your species is not included in our database.")
         ),
-        tags$p("You can still run many analyses except pathway and ",
-               "enrichment."),
+        tags$p(
+          "You can still run many analyses except pathway and ",
+          "enrichment."
+        ),
         size = "m",
         easyClose = FALSE,
         footer = modalButton("OK")

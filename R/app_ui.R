@@ -11,7 +11,7 @@ app_ui <- function(request) {
     # Your application UI logic
 
     navbarPage(
-      "iDEP",
+      span("iDEP", style = "color: #55565B;"),
       id = "navbar",
       mod_01_load_data_ui(id = "load_data"),
       mod_02_pre_process_ui(id = "pre_process"),
@@ -23,10 +23,10 @@ app_ui <- function(request) {
       mod_07_genome_ui(id = "genome"),
       mod_08_bicluster_ui(id = "bicluster"),
       mod_09_network_ui(id = "network"),
-      mod_10_doc_ui(id = "doc")
+      mod_10_doc_ui(id = "doc"),
+      lang = "en"
     ),
     mod_14_survey_ui(id = "survey"),
-
     tags$head(includeHTML(app_sys("app/www/google_analytics_GA4.html")))
   )
 }
@@ -69,6 +69,11 @@ golem_add_external_resources <- function() {
 .idep-scrollable-plot .shiny-plot-output img {
   display: block;
   max-width: none;
+}
+
+.navbar-default .navbar-nav > li > a {
+    color: #55565B !important;
+    font-weight: bold;
 }
 "
     )),
