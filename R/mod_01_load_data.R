@@ -52,14 +52,7 @@ mod_01_load_data_ui <- function(id) {
       sidebarPanel(
         uiOutput(ns("reset_button")),
         # Species Match Drop Down ------------
-        selectInput(
-          inputId = ns("select_org"),
-          label = NULL,
-          choices = list(),
-          multiple = FALSE,
-          selectize = TRUE,
-          selected = NULL
-        ),
+        # Species Match Drop Down ------------
         fluidRow(
           column(
             width = 5,
@@ -135,12 +128,11 @@ mod_01_load_data_ui <- function(id) {
         ),
 
         # Dropdown for data file format ----------
-        strong("2. Data type"),
         selectInput(
           inputId = ns("data_file_format"),
-          label = NULL,
+          label = "2. Data type",
           choices = list(
-            "..." = 0,
+            "(No Type Selected)" = 0,
             "Read counts data" = 1,
             "Normalized expression data" = 2,
             "Fold changes & adjusted p-values" = 3,
@@ -398,9 +390,9 @@ mod_01_load_data_ui <- function(id) {
         ),
         div(
           id = ns("load_message"),
-          h3("From data to discoveries", style = "color: #d9534f; font-weight: 700;"),
+          h1("From data to discoveries", style = "color: #B30000; font-weight: 700;"),
           br(),
-          h4("Visualize, analyze, & unveil pathways — in minutes!", style = "color: green;"),
+          h3("Visualize, analyze, & unveil pathways — in minutes!", style = "color: #10652E;"),
           br(),
           br(),
           br(),
@@ -432,6 +424,9 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         input$go_button
       }
     })
+
+    # Reactive value to store selected species
+    select_org <- reactiveVal(NULL)
 
     selected_demo <- reactiveVal(NULL)
     demo_preview_content <- reactiveVal(NULL)
@@ -570,20 +565,12 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         # The selectInput is hidden and only used to store the selection state
         # Users select via the modal DataTable, not the dropdown
         # We provide just the selected choice to ensure Shiny can set the value
-        updateSelectInput(
-          session = session,
-          inputId = "select_org",
-          choices = setNames(first_species_id, first_species_name),
-          selected = first_species_id
-        )
+        select_org(first_species_id)
 
         # Set initial selected species name
         selected_species_name(first_species_name)
       }
     })
-
-    # Hide the species dropdown
-    shinyjs::hideElement(id = "select_org")
 
     # Pop-up modal for gene assembl information ----
     observeEvent(input$genome_assembl_button, {
@@ -676,12 +663,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # Handle new species checkbox ----
     observeEvent(input$new_species, {
       if (input$new_species) {
-        updateSelectInput(
-          session = session,
-          inputId = "select_org",
-          choices = setNames("NEW", "**NEW SPECIES**"),
-          selected = "NEW"
-        )
+        select_org("NEW")
         updateCheckboxInput(
           session = session,
           inputId = "no_id_conversion",
@@ -694,12 +676,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         first_species_id <- idep_data$org_info$id[1]
         first_species_name <- idep_data$org_info$name2[1]
 
-        updateSelectInput(
-          session = session,
-          inputId = "select_org",
-          choices = setNames(first_species_id, first_species_name),
-          selected = first_species_id
-        )
+        select_org(first_species_id)
         updateCheckboxInput(
           session = session,
           inputId = "no_id_conversion",
@@ -753,12 +730,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       selected_name <- find_species_by_id_name(selected_id, idep_data$org_info)
 
       # Update species selection with just the selected choice
-      updateSelectInput(
-        session = session,
-        inputId = "select_org",
-        choices = setNames(selected_id, selected_name),
-        selected = selected_id
-      )
+      select_org(selected_id)
 
       # Uncheck new species when selecting from database
       updateCheckboxInput(
@@ -795,7 +767,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       first_species_name <- idep_data$org_info$name2[1]
 
       # Only show message if using default species and not in NEW mode
-      if (input$select_org == first_species_id && input$select_org != "NEW") {
+      if (select_org() == first_species_id && select_org() != "NEW") {
         div(
           style = "background-color: #d1ecf1; border: 1px solid #bee5eb;
                    border-radius: 4px; padding: 10px; margin: 10px 0;
@@ -811,7 +783,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # Gene ID conversion statistics message ----------
     output$conversion_stats_message <- renderUI({
       req(!is.null(conversion_info()$converted))
-      req(input$select_org != "NEW")
+      req(select_org() != "NEW")
       req(!is.null(loaded_data()$data))
 
       original_count <- length(conversion_info()$converted$origninal_ids)
@@ -1173,7 +1145,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             ),
             tags$li(
               "Select a data type, then click ",
-              tags$span("Demo Data.", id = "load-demo", style = "color: red;")
+              tags$span("Demo Data.", id = "load-demo", style = "color: #B30000;")
             )
           )
         )
@@ -1687,13 +1659,13 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       converted <- convert_id(
         rownames(loaded_data()$data),
         idep_data = idep_data,
-        select_org = input$select_org,
+        select_org = select_org(),
         max_sample_ids = 200
       )
 
       all_gene_info <- gene_info(
         converted = converted,
-        select_org = input$select_org,
+        select_org = select_org(),
         idep_data = idep_data
       )
 
@@ -1712,7 +1684,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       gmt_choices <- gmt_category(
         converted = converted,
         converted_data = converted_data$data,
-        select_org = input$select_org,
+        select_org = select_org(),
         gmt_file = input$gmt_file,
         idep_data = idep_data
       )
@@ -1729,13 +1701,13 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     })
 
     # download database for selected species
-    observeEvent(input$select_org, {
-      req(!is.null(input$select_org))
-      if (identical(input$select_org, "NEW")) {
+    observeEvent(select_org(), {
+      req(!is.null(select_org()))
+      if (identical(select_org(), "NEW")) {
         return()
       }
 
-      ix <- which(idep_data$org_info$id == input$select_org)
+      ix <- which(idep_data$org_info$id == select_org())
       if (length(ix) == 0) {
         return()
       }
@@ -1784,7 +1756,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
 
     species_match_data <- reactive({
-      req(input$select_org)
+      req(select_org())
       if (is.null(input$expression_file) && go_button_count() == 0) {
         return(NULL)
       }
@@ -1822,7 +1794,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     # Show gene ID error modal when IDs are not recognized
     observe({
       req(tab() == "Data")
-      req(input$select_org != "NEW")
+      req(select_org() != "NEW")
       req(!modal_shown()) # Only show once per data load
 
       # Check if we have species match data indicating ID not recognized
@@ -1941,7 +1913,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
     list(
       data_file_format = reactive(input$data_file_format),
       no_fdr = reactive(input$data_file_format == 4),
-      select_org = reactive(input$select_org),
+      select_org = select_org,
       gmt_file = reactive(input$gmt_file),
       sample_info = reactive(loaded_data()$sample_info),
       all_gene_info = reactive(conversion_info()$all_gene_info),
