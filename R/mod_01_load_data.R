@@ -132,7 +132,7 @@ mod_01_load_data_ui <- function(id) {
           inputId = ns("data_file_format"),
           label = "2. Data type",
           choices = list(
-            "(No Type Selected)" = 0,
+            "..." = 0,
             "Read counts data" = 1,
             "Normalized expression data" = 2,
             "Fold changes & adjusted p-values" = 3,
