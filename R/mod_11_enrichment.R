@@ -78,12 +78,12 @@ mod_11_enrichment_ui <- function(id) {
       column(
         width = 4,
         checkboxInput(
-          inputId = ns("remove_redudant"),
-          label = "Remove Redudant Gene Sets",
+          inputId = ns("remove_redundant"),
+          label = "Remove Redundant Gene Sets",
           value = FALSE
         ),
         tippy::tippy_this(
-          ns("remove_redudant"),
+          ns("remove_redundant"),
           "Collapse overlapping pathways to reduce redundancy.",
           theme = "light"
         )
@@ -121,8 +121,6 @@ mod_11_enrichment_ui <- function(id) {
           theme = "light"
         )
       )
-
-
     ),
     tabsetPanel(
       id = ns("subtab"),
@@ -426,7 +424,7 @@ mod_11_enrichment_ui <- function(id) {
         ),
         tableOutput(ns("gene_info_table")),
         p("Note: In the gene type column, \"C\" indicates
-        protein-coding genes, and \"P\" means pseduogenes.")
+        protein-coding genes, and \"P\" means pseudogenes.")
       ),
       tabPanel(
         title = "Details",
@@ -463,7 +461,7 @@ mod_11_enrichment_server <- function(id,
     observe({
       shinyjs::toggle(id = "sort_by", condition = input$customize_button)
       shinyjs::toggle(id = "filtered_background", condition = input$customize_button)
-      shinyjs::toggle(id = "remove_redudant", condition = input$customize_button)
+      shinyjs::toggle(id = "remove_redundant", condition = input$customize_button)
       shinyjs::toggle(id = "top_pathways", condition = input$customize_button)
       shinyjs::toggle(id = "show_pathway_id", condition = input$customize_button)
     })
@@ -497,12 +495,11 @@ mod_11_enrichment_server <- function(id,
         selected = selected
       )
     })
-    
+
     observe({
       req(!is.null(filter_size()))
-      
-      if(filter_size() < 1000) {
-        
+
+      if (filter_size() < 1000) {
         updateCheckboxInput(
           session = session,
           inputId = "filtered_background",
@@ -515,7 +512,6 @@ mod_11_enrichment_server <- function(id,
           value = TRUE
         )
       }
-      
     })
 
     output$select_cluster <- renderUI({
@@ -566,7 +562,7 @@ mod_11_enrichment_server <- function(id,
         pathway_info <- list()
         # disregard user selection use clusters for enrichment
         for (i in 1:length(gene_lists())) {
-          incProgress( 1 / length(gene_lists()))
+          incProgress(1 / length(gene_lists()))
           gene_names_query <- gene_lists()[[i]]
           req(!is.null(input$select_go))
           gene_sets <- read_pathway_sets(
@@ -590,16 +586,16 @@ mod_11_enrichment_server <- function(id,
             # when GMT file is uploaded, pretend to be a new species
             select_org = ifelse(is.null(gmt_file()), select_org(), "NEW"),
             use_filtered_background = input$filtered_background,
-            reduced = input$remove_redudant,
+            reduced = input$remove_redundant,
             max_terms = input$top_pathways,
             sort_by_fold = (input$sort_by == "Fold")
           )
         }
       })
       # remove pathway ID for GO and KEGG
-      # Path:hsa00270 Cysteine and methionine metabolism 
+      # Path:hsa00270 Cysteine and methionine metabolism
       #           --> Cysteine and methionine metabolism
-                                    # result is not NULL
+      # result is not NULL
       # pathway_info is a list of data frames: Selection, Upregulated, Downregulated, etc
       if (!input$show_pathway_id && select_org() > 0) {
         for (i in 1:length(pathway_info)) {
@@ -759,7 +755,7 @@ mod_11_enrichment_server <- function(id,
     # returns a data frame
     enrichment_dataframe <- reactive({
       req(!is.null(pathway_table()))
-      
+
       results_all <- do.call(
         rbind,
         # combine multiple data frames that are elements of a list
@@ -778,7 +774,8 @@ mod_11_enrichment_server <- function(id,
 
       if (!is.null(results_all)) {
         if (ncol(results_all) > 1) {
-          results_all <- results_all[,
+          results_all <- results_all[
+            ,
             c(
               "group",
               colnames(results_all)[1:(ncol(results_all) - 1)]
@@ -812,7 +809,8 @@ mod_11_enrichment_server <- function(id,
 
       if (!is.null(results_all)) {
         if (ncol(results_all) > 1) {
-          results_all <- results_all[,
+          results_all <- results_all[
+            ,
             c(
               "group",
               colnames(results_all)[1:(ncol(results_all) - 1)]
@@ -959,7 +957,7 @@ mod_11_enrichment_server <- function(id,
         colnames(res) <- gsub("group", "Grp.", colnames(res))
         res <- subset(res, select = -PathwaySize)
 
-        if (input$select_go != "All"){
+        if (input$select_go != "All") {
           colnames(res)[ncol(res)] <- "Pathway (Click for more info)"
         } else {
           colnames(res)[ncol(res) - 1]
@@ -1042,8 +1040,7 @@ mod_11_enrichment_server <- function(id,
       label = "Download"
     )
 
-    output$enrichment_details <- renderUI ({
-
+    output$enrichment_details <- renderUI({
       info <- pathway_source_info(
         pathway_file = gmt_file(),
         go = input$select_go,
@@ -1052,30 +1049,28 @@ mod_11_enrichment_server <- function(id,
       )
 
       tagList(
-        p("Enrichment P-value are calculated based on one-sided the hypergeometric test, which is then 
-                adjusted for multiple testing using the Benjamini-Hochberg procedure and converted to 
+        p("Enrichment P-value are calculated based on one-sided the hypergeometric test, which is then
+                adjusted for multiple testing using the Benjamini-Hochberg procedure and converted to
                 FDR(false discovery rate). FDR tells us how likely to observe the enrichment by chance. Due to increased statistical power,
                 large pathways tend to have smaller FDRs.
                 Fold Enrichment is defined as the percentage
                 of genes in the list belonging to a pathway, divided by the corresponding percentage in the
-                background. As a measure of effect size, Fold Enrichment indicates 
+                background. As a measure of effect size, Fold Enrichment indicates
                 how drastically genes of a certain pathway is overrepresented.
                 "),
-        if(input$filtered_background) {
-          p("The background genes are filtered genes from the original gene list. 
+        if (input$filtered_background) {
+          p("The background genes are filtered genes from the original gene list.
           The filtered genes are those that are passed a low filter in RNA-seq.")
         } else {
           p("The background genes are all protein-coding genes.")
         },
-
-        if(input$remove_redudant) {
+        if (input$remove_redundant) {
           p("Similar pathways sharing 90% of genes are represented by the most significant pathway if
                 they also share 50% of the words in their names.")
         },
-
-
-        if(!is.null(info)) {
-          p("A total of ", info$GeneSets, " gene sets are obtained from ", 
+        if (!is.null(info)) {
+          p(
+            "A total of ", info$GeneSets, " gene sets are obtained from ",
             a(
               info$Subtype.Database.name,
               href = info$Link
@@ -1083,22 +1078,24 @@ mod_11_enrichment_server <- function(id,
             "(", info$Database.Description, ").",
             "Dabase version/date is ", info$Version, ".",
             "For details on  this ", info$Type, "type of database, please refer to: ",
-            info$Author, ", ", 
+            info$Author, ", ",
             info$PaperTitle, ", ",
-            info$Citation.Reference, 
+            info$Citation.Reference,
             "(",
             a(
               paste("PubMed ID: ", info$PMID),
               href = paste0("https://www.ncbi.nlm.nih.gov/pubmed/", info$PMID)
             ),
             ")."
-          )#p
+          ) # p
         } else {
           p("Gene sets are derived from ", paste0(input$select_go, "."))
         },
-        p("After the analysis is done, pathways are first filtered based on a FDR cutoff (0.05).
+        p(
+          "After the analysis is done, pathways are first filtered based on a FDR cutoff (0.05).
           Then the siginificant pathways are sorted by.", input$sort_by, ".",
-          " Only the top ", input$top_pathways, " pathways are shown.")
+          " Only the top ", input$top_pathways, " pathways are shown."
+        )
       )
     })
 
@@ -1107,8 +1104,6 @@ mod_11_enrichment_server <- function(id,
       pathway_table = pathway_table
     ))
   })
-
-
 }
 
 ## To be copied in the UI

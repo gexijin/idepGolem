@@ -165,15 +165,15 @@ get_module_plot <- function(wgcna) {
 #' @export
 #' @return An adjacency matrix of the top genes in the selected module
 get_network <- function(select_wgcna_module,
-            wgcna,
-            top_genes_network,
-            select_org,
-            all_gene_info,
-            edge_threshold) {
+                        wgcna,
+                        top_genes_network,
+                        select_org,
+                        all_gene_info,
+                        edge_threshold) {
   module <- unlist(strsplit(select_wgcna_module, " "))[2]
   module_colors <- wgcna$dynamic_colors
   in_module <- (module_colors == module)
-  
+
   if (select_wgcna_module == "Entire network") {
     in_module <- rep(TRUE, length(in_module))
   }
@@ -194,20 +194,20 @@ get_network <- function(select_wgcna_module,
   if (select_org != "NEW" &&
     !is.null(dim_all_gene_info) &&
     dim_all_gene_info[1] > 1) {
-  # If more than 50% genes have symbol
-  if (sum(is.na(all_gene_info$symbol)) / dim_all_gene_info[1] < .5) {
-    probe_to_gene <- all_gene_info[, c("ensembl_gene_id", "symbol")]
-    probe_to_gene$symbol <- gsub(" ", "", probe_to_gene$symbol)
+    # If more than 50% genes have symbol
+    if (sum(is.na(all_gene_info$symbol)) / dim_all_gene_info[1] < .5) {
+      probe_to_gene <- all_gene_info[, c("ensembl_gene_id", "symbol")]
+      probe_to_gene$symbol <- gsub(" ", "", probe_to_gene$symbol)
 
-    ix <- which(
-    is.na(probe_to_gene$symbol) |
-      nchar(probe_to_gene$symbol) < 2 |
-      toupper(probe_to_gene$symbol) == "NA" |
-      toupper(probe_to_gene$symbol) == "0"
-    )
-    # Use gene ID
-    probe_to_gene[ix, 2] <- probe_to_gene[ix, 1]
-  }
+      ix <- which(
+        is.na(probe_to_gene$symbol) |
+          nchar(probe_to_gene$symbol) < 2 |
+          toupper(probe_to_gene$symbol) == "NA" |
+          toupper(probe_to_gene$symbol) == "0"
+      )
+      # Use gene ID
+      probe_to_gene[ix, 2] <- probe_to_gene[ix, 1]
+    }
   }
 
   net <- mod_tom[top, top, drop = FALSE]
@@ -249,19 +249,20 @@ get_network_plot <- function(adjacency_matrix, edge_threshold) {
   # http://www.kateto.net/wp-content/uploads/2016/01/NetSciX_2016_Workshop.pdf
   ggraph_obj <- ggraph::ggraph(graph, layout = "fr") +
     ggraph::geom_edge_link(edge_colour = "darkgrey") +
-    ggraph::geom_node_point(shape = 21, 
-                            size = 3.5, 
-                            fill = "gold", 
-                            color = "black",
-                            stroke = 0.5) +
-    ggraph::geom_node_text(ggplot2::aes(label = name), 
-                           repel = TRUE, 
-                           size = 4.5)+
+    ggraph::geom_node_point(
+      shape = 21,
+      size = 3.5,
+      fill = "gold",
+      color = "black",
+      stroke = 0.5
+    ) +
+    ggraph::geom_node_text(ggplot2::aes(label = name),
+      repel = TRUE,
+      size = 4.5
+    ) +
     ggplot2::theme_void()
   return(ggraph_obj)
 }
-
-
 
 
 #' List WGCNA modules
@@ -424,23 +425,25 @@ plot_mean_connectivity <- function(wgcna) {
 #' @param wgcna List returned from the \code{get_wgcna}
 #' @param select_org Organism the expression data is for
 #' @param all_gene_info Gene info that was found from querying the database
-#' 
+#'
 #' @export
 #' @return A dataframe containing for csv file
-prepare_module_csv <- function(wgcna,
-select_org,
-all_gene_info) {
+prepare_module_csv <- function(
+  wgcna,
+  select_org,
+  all_gene_info
+) {
   df <- merge(wgcna$module_info, wgcna$data, by.y = "row.names", by.x = "sub_gene_names", all.x = TRUE)
   dim_all_gene_info <- dim(all_gene_info)
   if (select_org != "NEW" &&
     !is.null(dim_all_gene_info) &&
     dim_all_gene_info[1] > 1) {
-      df <- merge(df, all_gene_info, by.x = "sub_gene_names", by.y = "ensembl_gene_id", all.x = T)
-      rownames(df) <- paste0(df$symbol, "__", df$sub_gene_names)
-      # Convert row names to a column and name it
-      df$symbol__gene_id <- rownames(df)
-      # Reorder the columns to have "symbol__gene_id" as the first column
-      df <- df[, c(ncol(df), 1:(ncol(df) - 1))]
+    df <- merge(df, all_gene_info, by.x = "sub_gene_names", by.y = "ensembl_gene_id", all.x = T)
+    rownames(df) <- paste0(df$symbol, "__", df$sub_gene_names)
+    # Convert row names to a column and name it
+    df$symbol__gene_id <- rownames(df)
+    # Reorder the columns to have "symbol__gene_id" as the first column
+    df <- df[, c(ncol(df), 1:(ncol(df) - 1))]
   }
   df <- df[order(df$dynamic_mods), ]
   colnames(df)[2:4] <- c("gene_id", "module_color", "module")
@@ -457,8 +460,9 @@ all_gene_info) {
 #' @export
 #' @return A dataframe containing for csv file
 prepare_module_csv_filter <- function(
-    module_data,
-    module_select) {
+  module_data,
+  module_select
+) {
   if (module_select == "Entire network") {
     return(module_data)
   }

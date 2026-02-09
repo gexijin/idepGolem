@@ -186,7 +186,7 @@ the background when calculating overlap. For TRUE, the background gene set will
 be the genes in the processed data matrix that passed the filtering. If the
 value is set to FALSE, the background will be all the gene IDs that were found
 in the iDEP database for the matched species. It is recommended to use the value TRUE, as this will give the most accurate p-value for which pathways are enriched. The video in the  introduction gives details about the meaning of enriched. `select_org` is the input that specifies the species that the
-expression data is for. Finally, the last input parameter is `reduced` and can be set to FALSE, or a decimal value. If a decimal value is inputted, this will filter out all the pathways that have a greater proportion of genes in common with another pathway than the inputted decimal. If FALSE is inputted, no pathways will be removed with redudant gene sets. This results of this function be examined in the next section.
+expression data is for. Finally, the last input parameter is `reduced` and can be set to FALSE, or a decimal value. If a decimal value is inputted, this will filter out all the pathways that have a greater proportion of genes in common with another pathway than the inputted decimal. If FALSE is inputted, no pathways will be removed with redundant gene sets. This results of this function be examined in the next section.
 
 ```{r}
 pathway_info <- find_overlap(

@@ -34,7 +34,7 @@ find_overlap_gmt <- function(query,
                              min_fdr = .2,
                              min_size = 2,
                              max_size = 10000,
-                             use_filtered_background ,
+                             use_filtered_background,
                              min_genes_background,
                              max_genes_background,
                              idep_data,
@@ -54,10 +54,10 @@ find_overlap_gmt <- function(query,
   gene_set <- gene_set[which(sapply(X = gene_set, FUN = length) > min_size)]
   # gene sets that are too big are ignored
   gene_set <- gene_set[which(sapply(X = gene_set, FUN = length) < max_size)]
-  
+
   # calculate total number of unique genes in the union of all gene_sets
   total_unique_genes <- length(unique(unlist(gene_set)))
-  if(total_unique_genes > 5000) {
+  if (total_unique_genes > 5000) {
     total_elements <- total_unique_genes
   }
 
@@ -76,9 +76,8 @@ find_overlap_gmt <- function(query,
         length(row.names(processed_data)) > min_genes_background &&
         length(row.names(processed_data)) < max_genes_background + 1
     ) {
-
       query_bg <- row.names(processed_data)
-      #total genes
+      # total genes
       total_elements <- length(query_bg)
       # num. of genes in background in each of the gene sets
       result[, 1] <- unlist(lapply(X = gene_set, FUN = length_fun, query = query_bg))
@@ -112,7 +111,8 @@ find_overlap_gmt <- function(query,
   colnames(result) <- c(
     "fdr", "n", "overlap", "gene_sets", "fold", "description", "memo"
   )
-  result <- result[, 
+  result <- result[
+    ,
     c("fdr", "overlap", "n", "fold", "description", "memo", "gene_sets")
   ]
 
@@ -197,7 +197,6 @@ find_overlap <- function(pathway_table,
   if (select_org == "NEW" && is.null(pathway_table)) {
     return(data.frame("Enrichment" = "No GMT file provided!"))
   } else if (select_org == "NEW") {
-    
     pathway_table <- find_overlap_gmt(
       query = query_set,
       gene_set = pathway_table,
@@ -211,7 +210,6 @@ find_overlap <- function(pathway_table,
       processed_data = processed_data
     )
   } else {
-
     # pathway_table <- pathway_table[pathway_table$overlap > 1, ]
 
     if (dim(pathway_table)[1] == 0 || is.null(pathway_table)) {
@@ -272,7 +270,6 @@ find_overlap <- function(pathway_table,
     }
 
     pathway_table$fdr <- stats::p.adjust(pathway_table$pval, method = "fdr")
-
   }
 
   if (min(pathway_table$fdr) > min_fdr) {
@@ -289,7 +286,7 @@ find_overlap <- function(pathway_table,
       "memo",
       "gene_sets"
     )
-    
+
     if (go == "All") {
       cols <- c(cols, "Database")
     } else {
@@ -326,7 +323,7 @@ find_overlap <- function(pathway_table,
 
     pathway_table$n <- as.numeric(pathway_table$n)
     pathway_table$fdr <- formatC(pathway_table$fdr, format = "e", digits = 2)
-    
+
     cols <- c(
       "FDR", "nGenes", "Pathway size", "Fold enriched",
       "Pathway", "URL", "Genes"
@@ -336,8 +333,8 @@ find_overlap <- function(pathway_table,
     } else {
       colnames(pathway_table) <- cols
     }
-    
-    # Remove redudant gene sets; only do it when there are more than 5.
+
+    # Remove redundant gene sets; only do it when there are more than 5.
     # Error when there is only 1 or 2.
     if (reduced != FALSE && dim(pathway_table)[1] > 5) {
       n <- nrow(pathway_table)
@@ -723,8 +720,8 @@ check_version_update <- function() {
         return(invisible(NULL))
       }
 
-      latest_tag <- sub('"tag_name"\\s*:\\s*"([^"]+)".*', '\\1', regmatches(response_text, tag_match))
-      release_url <- sub('"html_url"\\s*:\\s*"([^"]+)".*', '\\1', regmatches(response_text, url_match))
+      latest_tag <- sub('"tag_name"\\s*:\\s*"([^"]+)".*', "\\1", regmatches(response_text, tag_match))
+      release_url <- sub('"html_url"\\s*:\\s*"([^"]+)".*', "\\1", regmatches(response_text, url_match))
 
       # Remove 'v' or 'V' prefix if present
       latest_tag <- gsub("^[vV]", "", latest_tag)
