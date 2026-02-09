@@ -25,7 +25,7 @@ app_ui <- function(request) {
       mod_09_network_ui(id = "network"),
       mod_10_doc_ui(id = "doc")
     ),
-    mod_14_survey_ui(id = "survey"),
+    #mod_14_survey_ui(id = "survey"),
     tags$head(includeHTML(app_sys("app/www/google_analytics_GA4.html")))
   )
 }
