@@ -10,7 +10,7 @@
 mod_10_doc_ui <- function(id) {
   ns <- NS(id)
   tabPanel(
-    title = icon("info"),
+    title = tags$i(class = "fa fa-info", role = "img", "aria-label" = "Documentation"),
     value = "Doc",
     fluidPage(
       uiOutput(ns("update_message")),
@@ -46,8 +46,10 @@ mod_10_doc_ui <- function(id) {
       ),
       p("Graduate students contributed to this project include Eun Wo Son, Runan Yao,
       Roberto Villegas-Diaz, Eric Tulowetzke, Emma Spors,
-      Chris Trettel, and Ben Derenge. Undergraduate students include Jenna Thorstenson and
-      Jakob Fossen. Research staff include Jianli Qi and Gavin Doering.
+
+      Chris Trettel, and Ben Derenge. Undergraduate students include Jenna Thorstenson,
+      Jakob Fossen, and Aidan Frederick. Research staff include Jianli Qi and Gavin Doering.
+
       Much of the new version of iDEP is rewritten by Gavin Doering.
       The iDEP logo was designed by Emma Spors.
       Technical support is kindly provided by the Office of Information
@@ -221,7 +223,8 @@ mod_10_doc_ui <- function(id) {
       p("9/25/2025: iDEP 2.11. UI improvements for species selection. Remove submit buttons from Clustering, Bicluster, and Network tabs."),
       p("9/5/2025: iDEP 2.10. UI improvements. Database update to Ensembl 133."),
       p("4/20/2024: Fix bug in network tab related to module download. Enable download of network as a CSV file."),
-      p("4/19/2024: iDEP 2.01. Minor upgrade. Fixed a bug related to insufficient # of color in palettes.
+      p("4/19/2024: iDEP 2.01. Minor upgrade. Fixed a bug related to insufficiant # of colors in palettes.
+
       Optimized UI for load data. Reverted to basic Shiny theme due to an issue with new version of Shiny package."),
       htmlOutput(ns("session_info"))
     )
