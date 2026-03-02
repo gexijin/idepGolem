@@ -147,10 +147,6 @@ jobs:
 
           & $R -e "if(!requireNamespace('remotes', quietly=TRUE)) install.packages('remotes', lib='$lib', repos='https://cran.r-project.org')"
           & $R -e "remotes::install_github('espors/ottoPlots', lib='$lib', dependencies=TRUE, upgrade='never')"
-
-      - name: Install archived dependency biclust (CRAN Archive)
-        run: |
-          Rscript -e "install.packages('remotes'); remotes::install_url('https://cran.r-project.org/src/contrib/Archive/biclust/biclust_2.0.3.tar.gz', dependencies=FALSE, upgrade='never')"
                       
       # Install DESCRIPTION deps into bundled lib (CRAN + BioC, special-case ggalt)
       - name: Install DESCRIPTION deps into bundled library
@@ -222,6 +218,10 @@ jobs:
           $env:R_LIBS = $libR
           $env:R_LIBS_USER = $libR
           & $Rexe CMD INSTALL --library="$lib" $tar
+      
+      - name: Install archived dependency biclust (CRAN Archive)
+        run: |
+          Rscript -e "install.packages('remotes'); remotes::install_url('https://cran.r-project.org/src/contrib/Archive/biclust/biclust_2.0.3.tar.gz', dependencies=FALSE, upgrade='never')"
 
       # Stage golem app sources (as expected by your main.js)
       - name: Stage app sources into electron/app
