@@ -147,7 +147,19 @@ jobs:
 
           & $R -e "if(!requireNamespace('remotes', quietly=TRUE)) install.packages('remotes', lib='$lib', repos='https://cran.r-project.org')"
           & $R -e "remotes::install_github('espors/ottoPlots', lib='$lib', dependencies=TRUE, upgrade='never')"
-                      
+                 
+      - name: Install archived dependency biclust into bundled lib
+        shell: pwsh
+        run: |
+          $app     = Join-Path $pwd "${{ env.PACKAGE_DIR }}"
+          $lib     = Join-Path $app "runtime\R.win\library"
+          $rscript = Join-Path $app "runtime\R.win\bin\Rscript.exe"
+          $libR    = $lib -replace '\\','/'
+
+          & $rscript -e "if(!requireNamespace('remotes', quietly=TRUE)) install.packages('remotes', lib='$libR', repos='https://cran.r-project.org')"
+          & $rscript -e ".libPaths(c('$libR', .libPaths())); remotes::install_url('https://cran.r-project.org/src/contrib/Archive/biclust/biclust_2.0.3.tar.gz', lib='$libR', dependencies=FALSE, upgrade='never')"
+          & $rscript -e ".libPaths(c('$libR', .libPaths())); stopifnot(requireNamespace('biclust', quietly=TRUE)); cat('biclust OK\n')"
+
       # Install DESCRIPTION deps into bundled lib (CRAN + BioC, special-case ggalt)
       - name: Install DESCRIPTION deps into bundled library
         shell: pwsh
@@ -181,6 +193,8 @@ jobs:
             pkgs <- setdiff(pkgs, c('R','base'))
             want_ggalt <- 'ggalt' %in% pkgs
             pkgs <- setdiff(pkgs, 'ggalt')
+            want_biclust <- 'biclust' %in% pkgs
+            pkgs <- setdiff(pkgs, 'biclust')
             bioc <- intersect(pkgs, c('DESeq2','edgeR','ComplexHeatmap','GSVA','gage',
                                       'hgu133plus2.db','InteractiveComplexHeatmap',
                                       'PCAtools','pathview','QUBIC','fgsea'))
@@ -191,9 +205,14 @@ jobs:
               remotes::install_version('ggalt', version='0.4.0',
                                       lib=lib, upgrade='never', dependencies=TRUE)
             }
+           if (want_biclust && !('biclust' %in% rownames(installed.packages(lib.loc=lib)))) {
+              remotes::install_url('https://cran.r-project.org/src/contrib/Archive/biclust/biclust_2.0.3.tar.gz',
+                                  lib=lib, dependencies=FALSE, upgrade='never')
+            }
             ip <- installed.packages(lib.loc = lib)
             cat('Installed packages in bundled lib:', nrow(ip), '\n')
             cat('ggalt present:', 'ggalt' %in% rownames(ip), '\n')
+            cat('biclust present:', 'biclust' %in% rownames(ip), '\n')
           "@
           Set-Content -Path install_desc.R -Value $r -Encoding UTF8
           & $rscript install_desc.R $descR $libR
@@ -219,10 +238,6 @@ jobs:
           $env:R_LIBS_USER = $libR
           & $Rexe CMD INSTALL --library="$lib" $tar
       
-      - name: Install archived dependency biclust (CRAN Archive)
-        run: |
-          Rscript -e "install.packages('remotes'); remotes::install_url('https://cran.r-project.org/src/contrib/Archive/biclust/biclust_2.0.3.tar.gz', dependencies=FALSE, upgrade='never')"
-
       # Stage golem app sources (as expected by your main.js)
       - name: Stage app sources into electron/app
         shell: pwsh
