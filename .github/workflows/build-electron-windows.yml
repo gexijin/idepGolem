@@ -187,6 +187,7 @@ jobs:
                                       'hgu133plus2.db','InteractiveComplexHeatmap',
                                       'PCAtools','pathview','QUBIC','fgsea'))
             cran <- setdiff(pkgs, bioc)
+            cran <- unique(c(cran, 'factoextra'))
             if (length(cran)) install.packages(cran, lib=lib, dependencies=TRUE)
             if (length(bioc)) BiocManager::install(bioc, lib=lib, ask=FALSE, update=FALSE)            
             if (want_ggalt && !('ggalt' %in% rownames(installed.packages(lib.loc=lib)))) {
