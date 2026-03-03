@@ -136,16 +136,40 @@ function safeKill(proc) {
   } catch {}
 }
 
+// original waitForHttp
+// async function waitForHttp(url, { timeoutMs = 120000, intervalMs = 500 } = {}) {
+//   const start = Date.now();
+//   while (Date.now() - start < timeoutMs) {
+//     try {
+//       const ctrl = new AbortController();
+//       const to = setTimeout(() => ctrl.abort(), Math.min(5000, intervalMs * 4));
+//       const res = await fetch(url, { method: 'GET', signal: ctrl.signal });
+//       clearTimeout(to);
+//       if (res.ok || res.status === 404 || res.status === 403) return true;
+//     } catch {}
+//     await new Promise(r => setTimeout(r, intervalMs));
+//   }
+//   throw new Error(`Timeout waiting for ${url}`);
+// }
+
+const http = require('http');
+
+function httpProbe(hostname, port) {
+  return new Promise((resolve) => {
+    const req = http.get({ hostname, port: Number(port), path: '/', timeout: 5000 }, (res) => {
+      res.resume();
+      resolve(res.statusCode < 500);
+    });
+    req.on('error', () => resolve(false));
+    req.on('timeout', () => { req.destroy(); resolve(false); });
+  });
+}
+
 async function waitForHttp(url, { timeoutMs = 120000, intervalMs = 500 } = {}) {
-  const start = Date.now();
-  while (Date.now() - start < timeoutMs) {
-    try {
-      const ctrl = new AbortController();
-      const to = setTimeout(() => ctrl.abort(), Math.min(5000, intervalMs * 4));
-      const res = await fetch(url, { method: 'GET', signal: ctrl.signal });
-      clearTimeout(to);
-      if (res.ok || res.status === 404 || res.status === 403) return true;
-    } catch {}
+  const { hostname, port } = new URL(url);
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (await httpProbe(hostname, port)) return true;
     await new Promise(r => setTimeout(r, intervalMs));
   }
   throw new Error(`Timeout waiting for ${url}`);
