@@ -187,8 +187,9 @@ jobs:
                                       'hgu133plus2.db','InteractiveComplexHeatmap',
                                       'PCAtools','pathview','QUBIC','fgsea'))
             cran <- setdiff(pkgs, bioc)
-            cran <- unique(c(cran, 'factoextra'))
+            cran <- unique(c(cran, 'flexclust', 'additivityTests', 'colorspace'))
             if (length(cran)) install.packages(cran, lib=lib, dependencies=TRUE)
+            install.packages('factoextra', lib=lib, type='binary', repos='https://cran.r-project.org')
             if (length(bioc)) BiocManager::install(bioc, lib=lib, ask=FALSE, update=FALSE)            
             if (want_ggalt && !('ggalt' %in% rownames(installed.packages(lib.loc=lib)))) {
               remotes::install_version('ggalt', version='0.4.0',
@@ -205,29 +206,6 @@ jobs:
           "@
           Set-Content -Path install_desc.R -Value $r -Encoding UTF8
           & $rscript install_desc.R $descR $libR
-
-      - name: Install biclust
-        shell: pwsh
-        run: |
-          $app     = Join-Path $pwd "${{ env.PACKAGE_DIR }}"
-          $lib     = Join-Path $app "runtime\R.win\library"
-          $rscript = Join-Path $app "runtime\R.win\bin\Rscript.exe"
-          $libR    = $lib -replace '\\','/'
-
-          function Run-R($cmd) {
-            & $rscript -e ".libPaths(c('$libR', .libPaths())); $cmd"
-            if ($LASTEXITCODE -ne 0) { throw "R command failed: $cmd" }
-          }
-
-          if ((& $rscript -e ".libPaths(c('$libR', .libPaths())); cat(requireNamespace('biclust', quietly=TRUE))") -eq "TRUE") {
-            Write-Host "biclust already present, skipping"
-            exit 0
-          }
-
-          Run-R "if(!requireNamespace('remotes', quietly=TRUE)) install.packages('remotes', lib='$libR', repos='https://cran.r-project.org')"
-          Run-R "install.packages(c('colorspace','flexclust','additivityTests','tidyr'), lib='$libR', repos='https://cran.r-project.org', dependencies=TRUE)"
-          Run-R "remotes::install_url('https://cran.r-project.org/src/contrib/Archive/biclust/biclust_2.0.3.tar.gz', lib='$libR', dependencies=FALSE, upgrade='never')"
-          Run-R "stopifnot(requireNamespace('biclust', quietly=TRUE)); cat('biclust OK\n')"
 
       - name: Build and install idepGolem into R.win/library
         shell: pwsh
