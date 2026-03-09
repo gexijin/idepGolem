@@ -1,0 +1,52 @@
+{
+  "name": "R in Docker (AMD64)",
+  "dockerComposeFile": "./docker-compose.yml",
+  "service": "devcontainer",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+
+  
+  "mounts": [
+    "source=${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolderBasename},type=bind,consistency=cached"
+  ],
+
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+
+  // === Claude Code Authentication ===
+  // Cross-platform init script (works on Linux and Windows with bash)
+  "initializeCommand": "bash .devcontainer/amd64/init.sh",
+
+  // Option 2: .env file - Uncomment runArgs below, copy example_api.env to api.env
+  // "runArgs": ["--env-file", ".devcontainer/api.env"],
+  //
+  // Option 3: Environment variable from host (THE HACK - KNOWN TO WORK)
+  // Set CLAUDE_CODE_OAUTH_TOKEN on your host machine via: claude setup-token
+  // "remoteEnv": {
+  //   "CLAUDE_CODE_OAUTH_TOKEN": "${localEnv:CLAUDE_CODE_OAUTH_TOKEN}"
+  // },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "REditorSupport.r",
+        "RDebugger.r-debugger",
+        "posit.shiny",
+        "ms-azuretools.vscode-docker"
+      ],
+      "settings": {
+        "r.rterm.linux": "/usr/bin/R",
+        "r.alwaysUseActiveTerminal": true
+      }
+    }
+  },
+  
+  "remoteUser": "shiny",
+  "forwardPorts": [3838],
+  "portsAttributes": {
+    "3838": { "label": "Shiny app", "onAutoForward": "openBrowser" }
+  },
+  // Creates minimal config to skip onboarding wizard
+  // Optional: Use setup-claude-config.js to pull additional fields from host's ~/.claude.json
+  "postCreateCommand": "echo '{\"hasCompletedOnboarding\": true}' > ~/.claude.json"
+}

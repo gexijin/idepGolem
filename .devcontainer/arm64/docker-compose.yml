@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  # Dev container (R + Claude Code) - ARM64 version
+  devcontainer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      # Claude auth - cross-platform: uses HOME (Linux) or USERPROFILE (Windows)
+      - ${HOME:-${USERPROFILE}}/.claude:/mnt/claude-host:ro
+      # Docker socket - allows spawning sibling containers for MCP servers
+      - /var/run/docker.sock:/var/run/docker.sock
+      # MCP configuration from host (read-only)
+      - ${HOME:-${USERPROFILE}}/.docker/mcp:/mcp:ro
+    environment:
+      - DISPLAY=${DISPLAY:-:0}
+    user: shiny
+    command: >
+      sh -c "cp -r /mnt/claude-host/. /home/shiny/.claude/ 2>/dev/null || true &&
+             chown -R shiny:shiny /home/shiny/.claude &&
+             sleep infinity"
