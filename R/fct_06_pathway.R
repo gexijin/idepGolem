@@ -1193,7 +1193,9 @@ pathway_data_transform <- function(data,
   
   # Name for hypertext column
   hypertext_name <- paste0(method," Analysis: ", contrast)
-  # Rename 2nd column
+  # Rename 2nd column — guard against 1-column "no pathway" data frames
+  # (the no-result check above only matches one specific string, so be safe here)
+  if (ncol(data) < 2) return(data)
   colnames(data)[2] <- paste(hypertext_name, "Pathways")
   
   if (ncol(data) > 1) {

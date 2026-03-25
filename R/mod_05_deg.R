@@ -311,6 +311,18 @@ mod_05_deg_2_ui <- function(id) {
         h4("Investigate DEGs"),
         br(),
         htmlOutput(outputId = ns("list_comparisons")),
+        conditionalPanel("input.step_2 == 'Genes'",
+          downloadButton(
+            outputId = ns("download_deg_gene_list"),
+            label = "Gene List"
+          ),
+          tippy::tippy_this(
+            ns("download_deg_gene_list"),
+            "Download the filtered gene list (symbol, Ensembl ID, log2 FC, adjusted p-value, description) as a CSV.",
+            theme = "light"
+          ),
+          ns = ns
+        ),
         conditionalPanel("input.step_2 == 'Heatmap'",
           selectInput(
             inputId = ns("heatmap_gene_number"),
@@ -754,6 +766,33 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     )
 
     deg <- reactiveValues(limma = NULL)
+
+    # Reset DEG results whenever the data format changes so stale results
+    # from a previous data type cannot be viewed or downloaded.
+    observeEvent(
+      pre_process$data_file_format(),
+      {
+        deg$limma <- NULL
+      },
+      ignoreNULL = TRUE,
+      ignoreInit = TRUE
+    )
+
+    # Notify user when DEG results cannot support Venn/Upset diagram —
+    # specifically when limma$results is NULL or has no dimensions,
+    # which happens with too few samples (e.g. 2 total, no replicates).
+    observeEvent(deg$limma, {
+      if (
+        !is.null(deg$limma) &&
+        (is.null(deg$limma$results) || is.null(dim(deg$limma$results)))
+      ) {
+        showNotification(
+          "Venn/Upset diagram requires at least 2 replicates per group. Not enough samples in the current comparison.",
+          type = "warning",
+          duration = 8
+        )
+      }
+    }, ignoreNULL = TRUE)
 
     # Show design file tip in sidebar when no design file uploaded
     output$design_file_tip <- renderUI({
@@ -1269,6 +1308,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     venn <- reactive({
       req(!is.null(deg$limma))
       req(!is.null(input$select_comparisons_venn))
+      req(!is.null(venn_data()))
 
       venn <- plot_venn(
         results = venn_data(),
@@ -1293,6 +1333,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       p <- plot_upset(
         results = venn_data()
       )
+      req(!is.null(p))
       refine_ggplot2(
         p = p,
         gridline = pre_process$plot_grid_lines(),
@@ -1595,216 +1636,14 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       req(!is.null(deg$limma$top_genes))
       req(input$select_contrast, input$limma_p_val, input$limma_fc)
 
-      empty_tbl <- list(
-        display = data.frame(
-          `ID` = character(0),
-          `Ensembl ID` = character(0),
-          `log2 FC` = character(0),
-          `Adj. Pval` = character(0),
-          Description = character(0),
-          stringsAsFactors = FALSE
-        ),
-        meta = data.frame(
-          ensembl_ID = character(0),
-          symbol = character(0),
-          entrezgene_id = character(0),
-          log2FC = numeric(0),
-          Adjusted_P_value = numeric(0),
-          description = character(0),
-          stringsAsFactors = FALSE
-        ),
-        order_dir = "desc"
-      )
-
-      top_list <- deg$limma$top_genes
-      if (length(top_list) == 0) {
-        return(empty_tbl)
-      }
-
-      idx <- match(input$select_contrast, names(top_list))
-      if (is.na(idx)) {
-        idx <- 1
-      }
-
-      top_df <- top_list[[idx]]
-
-      if (is.null(top_df) || nrow(top_df) == 0) {
-        return(empty_tbl)
-      }
-
-      top_df <- as.data.frame(top_df)
-
-      if (ncol(top_df) < 2) {
-        return(empty_tbl)
-      }
-
-      top_df <- top_df[, 1:2, drop = FALSE]
-      colnames(top_df) <- c("log2FC", "Adjusted_P_value")
-      top_df$ensembl_ID <- rownames(top_df)
-
-      top_df <- top_df |>
-        dplyr::filter(
-          is.finite(log2FC),
-          is.finite(Adjusted_P_value)
-        )
-
-      fc_cutoff <- input$limma_fc
-      if (is.null(fc_cutoff) || !is.finite(fc_cutoff) || fc_cutoff <= 0) {
-        fc_cutoff <- 1
-      }
-
-      top_df <- top_df |>
-        dplyr::filter(
-          Adjusted_P_value <= input$limma_p_val,
-          abs(log2FC) >= log2(fc_cutoff)
-        )
-
-      direction <- input$gene_direction_filter
-      if (is.null(direction)) {
-        direction <- "Up-regulated genes"
-      }
-
-      if (identical(direction, "Up-regulated genes")) {
-        top_df <- top_df |>
-          dplyr::filter(log2FC > 0)
-      } else if (identical(direction, "Down-regulated genes")) {
-        top_df <- top_df |>
-          dplyr::filter(log2FC < 0)
-      }
-
-      order_dir <- if (identical(direction, "Down-regulated genes")) "asc" else "desc"
-
-      if (nrow(top_df) == 0) {
-        empty_tbl$order_dir <- order_dir
-        return(empty_tbl)
-      }
-
-      gene_names <- pre_process$all_gene_names()
-
-      if (!is.null(gene_names) && "ensembl_ID" %in% colnames(gene_names)) {
-        gene_names <- gene_names |>
-          dplyr::distinct(ensembl_ID, .keep_all = TRUE)
-        top_df <- top_df |>
-          dplyr::left_join(
-            gene_names |>
-              dplyr::select(ensembl_ID, symbol),
-            by = "ensembl_ID"
-          )
-      } else {
-        top_df$symbol <- NA_character_
-      }
-
-      gene_info <- pre_process$all_gene_info()
-      if (!is.null(gene_info) &&
-        "ensembl_gene_id" %in% colnames(gene_info)) {
-        keep_cols <- c("ensembl_gene_id", "entrezgene_id", "description")
-        keep_cols <- keep_cols[keep_cols %in% colnames(gene_info)]
-        gene_info <- gene_info |>
-          dplyr::select(dplyr::all_of(keep_cols)) |>
-          dplyr::distinct(ensembl_gene_id, .keep_all = TRUE)
-        top_df <- top_df |>
-          dplyr::left_join(
-            gene_info,
-            by = c("ensembl_ID" = "ensembl_gene_id")
-          )
-      }
-
-      if (!"entrezgene_id" %in% colnames(top_df)) {
-        top_df$entrezgene_id <- NA_character_
-      }
-      if (!"description" %in% colnames(top_df)) {
-        top_df$description <- NA_character_
-      }
-
-      top_df <- top_df |>
-        dplyr::mutate(
-          symbol = dplyr::coalesce(symbol, ensembl_ID),
-          entrezgene_id = as.character(entrezgene_id),
-          description = as.character(description),
-          description = gsub(";.*|\\[.*", "", description),
-          description = dplyr::na_if(trimws(description), "")
-        )
-
-      if (identical(order_dir, "asc")) {
-        top_df <- top_df |>
-          dplyr::arrange(
-            log2FC,
-            Adjusted_P_value
-          )
-      } else {
-        top_df <- top_df |>
-          dplyr::arrange(
-            dplyr::desc(log2FC),
-            Adjusted_P_value
-          )
-      }
-
-      meta_df <- top_df |>
-        dplyr::transmute(
-          ensembl_ID,
-          symbol,
-          entrezgene_id,
-          log2FC,
-          Adjusted_P_value,
-          description
-        )
-
-      display_df <- top_df |>
-        dplyr::mutate(
-          symbol_display = ifelse(
-            is.na(symbol),
-            "",
-            htmltools::htmlEscape(symbol)
-          ),
-          ensembl_display = ifelse(
-            is.na(ensembl_ID),
-            "",
-            htmltools::htmlEscape(ensembl_ID)
-          ),
-          description_display = ifelse(
-            is.na(description),
-            NA_character_,
-            htmltools::htmlEscape(description)
-          ),
-          `ID` = dplyr::if_else(
-            !is.na(entrezgene_id) & entrezgene_id != "",
-            sprintf(
-              "<a href='https://www.ncbi.nlm.nih.gov/gene/%s' target='_blank'>%s</a>",
-              entrezgene_id,
-              symbol_display
-            ),
-            symbol_display
-          ),
-          `Ensembl ID` = dplyr::if_else(
-            !is.na(ensembl_ID) & grepl("^ENS", ensembl_ID),
-            sprintf(
-              "<a href='https://www.ensembl.org/id/%s' target='_blank'>%s</a>",
-              ensembl_ID,
-              ensembl_display
-            ),
-            ensembl_display
-          ),
-          `log2 FC` = sprintf("%.3f", log2FC),
-          `Adj. Pval` = {
-            formatted <- formatC(Adjusted_P_value, format = "e", digits = 2)
-            formatted <- gsub("e([+-])0*(\\d+)", "e\\1\\2", formatted)
-            formatted
-          },
-          Description = dplyr::coalesce(description_display, "")
-        ) |>
-        dplyr::transmute(
-          `ID`,
-          `Ensembl ID`,
-          `log2 FC`,
-          `Adj. Pval`,
-          Description
-        ) |>
-        as.data.frame(stringsAsFactors = FALSE)
-
-      list(
-        display = display_df,
-        meta = meta_df,
-        order_dir = order_dir
+      build_deg_gene_table(
+        top_list              = deg$limma$top_genes,
+        select_contrast       = input$select_contrast,
+        limma_p_val           = input$limma_p_val,
+        limma_fc              = input$limma_fc,
+        gene_direction_filter = input$gene_direction_filter,
+        gene_names            = pre_process$all_gene_names(),
+        gene_info             = pre_process$all_gene_info()
       )
     })
 
@@ -1836,6 +1675,18 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         rownames = FALSE
       )
     })
+
+    output$download_deg_gene_list <- downloadHandler(
+      filename = function() {
+        contrast <- input$select_contrast
+        if (is.null(contrast) || contrast == "") contrast <- "genes"
+        paste0("DEG_gene_list_", gsub("[^A-Za-z0-9_.-]", "_", contrast), ".csv")
+      },
+      content = function(file) {
+        req(deg_gene_table_data())
+        write.csv(deg_gene_table_data()$meta, file, row.names = FALSE)
+      }
+    )
 
     observeEvent(deg_gene_table_data(), {
       table_data <- deg_gene_table_data()
@@ -1918,7 +1769,10 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       raw_data_matrix <- NULL
       if (!is.null(pre_process$raw_counts())) {
         raw_data_matrix <- pre_process$raw_counts()
-      } else if (!is.null(load_data$converted_data())) {
+      } else if (
+        isTRUE(pre_process$data_file_format() == 1) &&
+        !is.null(load_data$converted_data())
+      ) {
         raw_data_matrix <- load_data$converted_data()
       }
       if (!is.null(raw_data_matrix)) {

@@ -487,7 +487,7 @@ find_contrast_samples <- function(select_contrast,
       }
 
       if (is.na(ik)) {
-        iz <- 1:(length(all_sample_names))
+        iz <- seq_along(all_sample_names)
         # Interaction term, use all samples
       } else {
         # Corresponding factors
@@ -535,47 +535,28 @@ find_contrast_samples <- function(select_contrast,
       if (length(iz) > 1) {
         iz <- sort(unique(iz))
       }
-      # Not DESeq2
+      # Not DESeq2 (limma-trend or limma-voom): match the contrast string against
+      # select_model_comprions to find the relevant factor and sample indices.
     } else {
-      # Given level find corresponding sample ids
-      find_ids_from_level <- function(a_level,
-                                      sample_info) {
-        # Find factor
-        current_factor <- ""
-        for (each_factor in colnames(sample_info)) {
-          if (a_level %in% sample_info[, each_factor]) {
-            current_factor <- each_factor
-          }
-        }
+      # comparisons and factors_vector already parsed at the top of this block.
+      # Strip any "_for_<level>" suffix that limma adds for interaction contrasts
+      contrast_clean <- gsub("_for_.*", "", select_contrast)
 
-        if (nchar(current_factor) > 0) {
-          return(which(sample_info[, current_factor] %in% a_level))
-        } else {
-          return(NULL)
-        }
+      ik <- match(contrast_clean, comparisons)
+      if (is.na(ik)) {
+        # Try case-insensitive match (contrast casing may differ)
+        ik <- match(tolower(contrast_clean), tolower(comparisons))
       }
 
-      if (!grepl(".*_.*-.*_.*", select_contrast)) {
-        iz <- c()
-      }
-      # Double split!
-      levels_4 <- unlist(strsplit(unlist(strsplit(select_contrast, "-")), "_"))
-      if (length(levels_4) != 4) {
-        iz <- c()
+      if (is.na(ik)) {
+        # Contrast not found in comparisons list; fall back to all samples
+        iz <- 1:length(all_sample_names)
       } else {
-        # First sample
-        iz <- intersect(
-          find_ids_from_level(levels_4[1], sample_info),
-          find_ids_from_level(levels_4[2], sample_info)
-        )
-        # 2nd sample
-        iz <- c(
-          iz,
-          intersect(
-            find_ids_from_level(levels_4[3], sample_info),
-            find_ids_from_level(levels_4[4], sample_info)
-          )
-        )
+        selected_factor <- factors_vector[ik]
+        contrast_levels <- tolower(unlist(strsplit(contrast_clean, "-")))
+        sample_factor_lower <- tolower(sample_info[, selected_factor])
+        iz <- which(sample_factor_lower %in% contrast_levels)
+        iz <- sort(unique(iz[!is.na(iz)]))
       }
     }
   }
