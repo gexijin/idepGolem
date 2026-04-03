@@ -525,7 +525,7 @@ mod_03_clustering_ui <- function(id) {
               width = "100%",
               height = "500px"
             ),
-            ottoPlots::mod_download_figure_ui(ns("dl_gene_dist"))
+            mod_download_figure_ui(ns("dl_gene_dist"))
           ),
           # Sample Tree -----------------
           tabPanel(
@@ -536,7 +536,7 @@ mod_03_clustering_ui <- function(id) {
                Data is transformed and clustered as specified in the sidebar."
             ),
             br(),
-            ottoPlots::mod_download_figure_ui(ns("dl_sample_tree")),
+            mod_download_figure_ui(ns("dl_sample_tree")),
             plotOutput(
               outputId = ns("sample_tree"),
               width = "100%"
@@ -761,7 +761,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       print(sd_density_plot())
     })
 
-    dl_gene_dist <- ottoPlots::mod_download_figure_server(
+    dl_gene_dist <- mod_download_figure_server(
       id = "dl_gene_dist",
       filename = "sd_density_plot",
       figure = reactive({
@@ -1633,7 +1633,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       height = reactive(height_sample_tree())
     )
 
-    dl_sample_tree <- ottoPlots::mod_download_figure_server(
+    dl_sample_tree <- mod_download_figure_server(
       id = "dl_sample_tree",
       filename = "sample_tree",
       figure = reactive({
