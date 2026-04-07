@@ -100,7 +100,6 @@ biocViews:
     preprocessCore,
     SummarizedExperiment
 Remotes:
-    github::espors/ottoPlots,
     url::https://bioconductor.org/packages/3.10/bioc/src/contrib/PGSEA_1.60.0.tar.gz,
     url::http://www.bioconductor.org/packages//2.11/data/annotation/src/contrib/KEGG.db_2.8.0.tar.gz
 Encoding: UTF-8

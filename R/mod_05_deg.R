@@ -203,7 +203,7 @@ mod_05_deg_1_ui <- function(id) {
               outputId = ns("sig_gene_stats")
             ),
             br(),
-            ottoPlots::mod_download_figure_ui(ns("download_sig_gene_stats")),
+            mod_download_figure_ui(ns("download_sig_gene_stats")),
             br(),
             h5(
               "Numbers of differentially expressed genes for all comparisons.
@@ -228,11 +228,11 @@ mod_05_deg_1_ui <- function(id) {
           ),
             htmlOutput(outputId = ns("list_comparisons_venn")),
             plotOutput(outputId = ns("venn_plot")),
-            ottoPlots::mod_download_figure_ui(
+            mod_download_figure_ui(
               id = ns("dl_venn")
             ),
             plotOutput(outputId = ns("upset_plot")),
-            ottoPlots::mod_download_figure_ui(id = ns("dl_upset")),
+            mod_download_figure_ui(id = ns("dl_upset")),
             tags$p("The above graph is an UpSet plot that is an alternative to a
             venn diagram. The plot shows the intersections of the data in the
             combination matrix (bottom) and the columns show how many genes are
@@ -430,7 +430,7 @@ mod_05_deg_2_ui <- function(id) {
               height = "500px",
               width = "100%"
             ),
-            ottoPlots::mod_download_figure_ui(ns("download_volcano"))
+            mod_download_figure_ui(ns("download_volcano"))
           ),
           tabPanel(
             title = "MA Plot",
@@ -440,7 +440,7 @@ mod_05_deg_2_ui <- function(id) {
               height = "500px",
               width = "100%"
             ),
-            ottoPlots::mod_download_figure_ui(ns("download_ma"))
+            mod_download_figure_ui(ns("download_ma"))
           ),
           tabPanel(
             title = "Scatter Plot",
@@ -450,7 +450,7 @@ mod_05_deg_2_ui <- function(id) {
               height = "500px",
               width = "100%"
             ),
-            ottoPlots::mod_download_figure_ui(ns("download_scatter"))
+            mod_download_figure_ui(ns("download_scatter"))
           ),
           tabPanel(
             title = "Enrichment",
@@ -1113,7 +1113,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       )
     })
 
-    download_sig_gene_stats <- ottoPlots::mod_download_figure_server(
+    download_sig_gene_stats <- mod_download_figure_server(
       id = "download_sig_gene_stats",
       filename = "sig_gene_stats",
       figure = reactive({
@@ -1280,7 +1280,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     output$venn_plot <- renderPlot({
       print(venn())
     })
-    dl_venn <- ottoPlots::mod_download_figure_server(
+    dl_venn <- mod_download_figure_server(
       id = "dl_venn",
       filename = "venn_diagram",
       figure = reactive({
@@ -1304,7 +1304,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       print(upset())
     })
 
-    dl_upset <- ottoPlots::mod_download_figure_server(
+    dl_upset <- mod_download_figure_server(
       id = "dl_upset",
       filename = "upset_plot",
       figure = reactive({
@@ -2094,7 +2094,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       print(vol_plot())
     })
 
-    download_volcano <- ottoPlots::mod_download_figure_server(
+    download_volcano <- mod_download_figure_server(
       "download_volcano",
       filename = "volcano_plot",
       figure = reactive({
@@ -2124,7 +2124,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       print(ma_plot())
     })
 
-    download_ma <- ottoPlots::mod_download_figure_server(
+    download_ma <- mod_download_figure_server(
       "download_ma",
       filename = "ma_plot",
       figure = reactive({
@@ -2162,7 +2162,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       print(scatter_plot())
     })
 
-    download_scatter <- ottoPlots::mod_download_figure_server(
+    download_scatter <- mod_download_figure_server(
       "download_scatter",
       filename = "scatter_plot",
       figure = reactive({

@@ -28,13 +28,13 @@ mod_12_heatmap_ui <- function(id) {
         fluidRow(
           column(
             width = 6,
-            ottoPlots::mod_download_figure_ui(
+            mod_download_figure_ui(
               ns("dl_heatmap_main")
             )
           ),
           column(
             width = 6,
-            ottoPlots::mod_download_figure_ui(
+            mod_download_figure_ui(
               ns("dl_heatmap_sub")
             ),
             align = "right"
@@ -108,7 +108,7 @@ mod_12_heatmap_server <- function(id,
       })
     })
 
-    dl_heatmap_main <- ottoPlots::mod_download_figure_server(
+    dl_heatmap_main <- mod_download_figure_server(
       id = "dl_heatmap_main",
       filename = "heatmap_main",
       figure = reactive({
@@ -294,7 +294,7 @@ mod_12_heatmap_server <- function(id,
       }
     })
 
-    dl_heatmap_sub <- ottoPlots::mod_download_figure_server(
+    dl_heatmap_sub <- mod_download_figure_server(
       id = "dl_heatmap_sub",
       filename = "heatmap_zoom",
       figure = reactive({

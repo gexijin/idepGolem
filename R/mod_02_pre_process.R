@@ -295,7 +295,7 @@ mod_02_pre_process_ui <- function(id) {
               width = "100%",
               height = "500px"
             ),
-            ottoPlots::mod_download_figure_ui(
+            mod_download_figure_ui(
               id = ns("dl_raw_counts_gg")
             ),
             br(),
@@ -364,7 +364,7 @@ mod_02_pre_process_ui <- function(id) {
                 width = "100%",
                 height = "500px"
               ),
-              ottoPlots::mod_download_figure_ui(
+              mod_download_figure_ui(
                 id = ns("dl_eda_boxplot")
               ),
               ns = ns
@@ -377,7 +377,7 @@ mod_02_pre_process_ui <- function(id) {
                 width = "100%",
                 height = "500px"
               ),
-              ottoPlots::mod_download_figure_ui(
+              mod_download_figure_ui(
                 id = ns("dl_eda_density")
               ),
               ns = ns
@@ -390,7 +390,7 @@ mod_02_pre_process_ui <- function(id) {
                 width = "100%",
                 height = "500px"
               ),
-              ottoPlots::mod_download_figure_ui(
+              mod_download_figure_ui(
                 id = ns("dl_dev_transform")
               ),
               ns = ns
@@ -430,7 +430,7 @@ mod_02_pre_process_ui <- function(id) {
               width = "100%",
               height = "500px"
             ),
-            ottoPlots::mod_download_figure_ui(
+            mod_download_figure_ui(
               id = ns("dl_eda_scatter")
             )
           ),
@@ -455,7 +455,7 @@ mod_02_pre_process_ui <- function(id) {
               fluidRow(
                 column(
                   2, 
-                  ottoPlots::mod_download_figure_ui(
+                  mod_download_figure_ui(
                     id = ns("dl_gene_counts_gg")
                   )
                 ),
@@ -490,7 +490,7 @@ mod_02_pre_process_ui <- function(id) {
                     2,
                     div(
                       style = "display: flex; gap: 6px; align-items: center; flex-wrap: wrap;",
-                      ottoPlots::mod_download_figure_ui(
+                      mod_download_figure_ui(
                         id = ns("dl_rRNA_counts_gg")
                       )                      
                     )
@@ -525,7 +525,7 @@ mod_02_pre_process_ui <- function(id) {
                 fluidRow(
                   column(
                     2,
-                    ottoPlots::mod_download_figure_ui(
+                    mod_download_figure_ui(
                       id = ns("dl_chr_counts_gg")
                     )
                   ),
@@ -554,7 +554,7 @@ mod_02_pre_process_ui <- function(id) {
               fluidRow(
                 column(
                   2,
-                  ottoPlots::mod_download_figure_ui(
+                  mod_download_figure_ui(
                     id = ns("dl_chr_normalized_gg")
                   )
                 ),
@@ -666,7 +666,7 @@ mod_02_pre_process_ui <- function(id) {
             ),
             div(
               style = "display: flex; gap: 10px",
-              ottoPlots::mod_download_figure_ui(
+              mod_download_figure_ui(
                 id = ns("dl_gene_plot")
               ),
               downloadButton(
@@ -875,7 +875,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       print(raw_counts())
     })
     
-    dl_raw_counts_gg <- ottoPlots::mod_download_figure_server(
+    dl_raw_counts_gg <- mod_download_figure_server(
       id = "dl_raw_counts_gg",
       filename = "raw_counts_barplot",
       figure = reactive({
@@ -931,7 +931,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       print(gene_counts())
     })
 
-    dl_gene_counts_gg <- ottoPlots::mod_download_figure_server(
+    dl_gene_counts_gg <- mod_download_figure_server(
       id = "dl_gene_counts_gg",
       filename = "gene_counts_barplot",
       figure = reactive({
@@ -993,7 +993,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       }
     })
 
-    dl_rRNA_counts_gg <- ottoPlots::mod_download_figure_server(
+    dl_rRNA_counts_gg <- mod_download_figure_server(
       id = "dl_rRNA_counts_gg",
       filename = "rRNA_counts_barplot",
       figure = reactive({
@@ -1143,7 +1143,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       }
     })
 
-    dl_chr_counts_gg <- ottoPlots::mod_download_figure_server(
+    dl_chr_counts_gg <- mod_download_figure_server(
       id = "dl_chr_counts_gg",
       filename = "Chr_counts_barplot",
       figure = reactive({
@@ -1226,7 +1226,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       }
     })
 
-    dl_chr_counts_gg <- ottoPlots::mod_download_figure_server(
+    dl_chr_counts_gg <- mod_download_figure_server(
       id = "dl_chr_normalized_gg",
       filename = "Chr_normalized_expression_barplot",
       figure = reactive({
@@ -1342,7 +1342,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     output$eda_scatter <- renderPlot({
       print(scatter())
     })
-    dl_eda_scatter <- ottoPlots::mod_download_figure_server(
+    dl_eda_scatter <- mod_download_figure_server(
       id = "dl_eda_scatter",
       filename = "scatter_plot",
       figure = reactive({
@@ -1377,7 +1377,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     output$eda_boxplot <- renderPlot({
       print(eda_box())
     })
-    dl_eda_boxplot <- ottoPlots::mod_download_figure_server(
+    dl_eda_boxplot <- mod_download_figure_server(
       id = "dl_eda_boxplot",
       filename = "transformed_boxplot",
       figure = reactive({
@@ -1406,7 +1406,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     output$eda_density <- renderPlot({
       print(density())
     })
-    dl_eda_density <- ottoPlots::mod_download_figure_server(
+    dl_eda_density <- mod_download_figure_server(
       id = "dl_eda_density",
       filename = "density_plot",
       figure = reactive({
@@ -1459,7 +1459,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     output$dev_transfrom <- renderPlot({
       print(dev())
     })
-    dl_dev_transform <- ottoPlots::mod_download_figure_server(
+    dl_dev_transform <- mod_download_figure_server(
       id = "dl_dev_transform",
       filename = "transform_plot",
       figure = reactive({
@@ -1679,7 +1679,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       print(gene_plot())
     })
 
-    dl_gene_plot <- ottoPlots::mod_download_figure_server(
+    dl_gene_plot <- mod_download_figure_server(
       id = "dl_gene_plot",
       filename = "gene_plot",
       figure = reactive({

@@ -74,8 +74,25 @@ load_data → pre_process → [clustering, pca, deg, pathway, genome, bicluster,
 - **Color palettes**: `R/aaa_palette_utils.R` (prefixed `aaa_` to ensure early loading)
 - **KEGG pathway rendering**: `R/utils_kegg_pathview.R` — internal replacements for the pathview Bioconductor package (removed as a dependency). Entry point is `mypathview()`, called from `fct_06_pathway.R`. Species validation uses `KEGGREST::keggInfo()` instead of pathview's static `korg` data.
 
+### Global Session-Shared State
+`run_app.R` initializes these globals once via Shiny's `onStart` (shared across all user sessions):
+- `db_ver` — database version string (e.g. `"data113"`)
+- `DATAPATH` — resolved path to the database directory
+- `org_info_file` — path to `orgInfo.db`
+- `idep_data` — species/demo data loaded by `get_idep_data()`
+
+### Input Data Format Types
+The app handles 4 input data types (set in `load_data` module), which drive tab visibility in `app_server.R`:
+1. Raw read counts — all tabs visible
+2. Normalized expression — all tabs visible
+3. Fold-change + FDR — hides Prep, Cluster, PCA, Bicluster, Network for single-comparison; hides PCA, Bicluster, Network for multi-comparison
+4. Fold-change only (no FDR) — same as type 3 but also hides Volcano Plot
+
+### Downloadable Reports
+RMarkdown templates in `inst/app/www/RMD/` generate downloadable HTML workflow reports (pre-process, clustering, PCA, DEG, pathway). The Prep tab bundles parameters into an `.RData` file so reports can be regenerated locally.
+
 ### Database Integration
-- Uses environment variable `IDEP_DATABASE` or falls back to relative paths
+- Uses environment variable `IDEP_DATABASE` or falls back to `../../data` relative path, then `./data113`
 - Database version controlled via `db_ver` variable (currently "data113")
 - Species and pathway data loaded via `get_idep_data()` function
 
