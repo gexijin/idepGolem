@@ -49,12 +49,12 @@ applied to normalized expression data}
 \code{min_counts} if \code{data_file_format} is read counts}
 
 \item{counts_transform}{Integer to indicate which transformation to make if
+
 \code{data_file_format} is read counts. This should be one of 1 for
-log2(CPM+c) (EdgeR), 2 for variance stabilizing transformation (VST), or 3
+edgeR log-CPM transformation with prior.count, 2 for variance stabilizing transformation (VST), or 3
 for regularized log (rlog)}
 
-\item{counts_log_start}{Integer added to log if \code{counts_transform} is
-log2(CPM + 2)}
+\item{counts_log_start}{Value of prior.count used in edgeR's log-CPM transformation, which adapts to library size to stabilize low counts}
 
 \item{no_fdr}{TRUE/FALSE to indicate fold-changes-only data with no p-values
 if \code{data_file_format} is fold changes}
