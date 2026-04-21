@@ -160,7 +160,7 @@ mod_01_load_data_ui <- function(id) {
           ns = ns
         ),
 
-        # Experiment design file input ----------
+        # Experiment design file input and interactive builder button ----------
         conditionalPanel(
           condition = "input.data_file_format != 0",
           uiOutput(ns("design_file_ui")),
@@ -430,6 +430,9 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
     selected_demo <- reactiveVal(NULL)
     demo_preview_content <- reactiveVal(NULL)
+
+    # Stores a sample_info matrix built via the interactive design builder GUI
+    gui_design <- reactiveVal(NULL)
 
     demo_preview_tables <- list(
       `1` = data.frame(
@@ -1190,6 +1193,10 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       req(go_button_count() == 0)
 
       tagList(
+        tags$style(HTML(paste0(
+          "#", ns("experiment_file_container"), " .form-group { margin-bottom: 4px; }",
+          "#", ns("experiment_file_progress"), " { display: none; }"
+        ))),
         strong("4. Optional: Experiment Design (CSV or text)"),
         fluidRow(
           column(
@@ -1234,13 +1241,230 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
               theme = "light"
             )
           )
+        ),
+        if (!is.null(input$expression_file) &&
+            is.null(input$experiment_file)) {
+          div(
+            style = "margin-top: 4px;margin-bottom: 9px;",
+            actionButton(
+              inputId = ns("build_design_btn"),
+              label = "Or build design interactively",
+              icon = icon("table"),
+              class = "btn-xs btn-default"
+            ),
+            if (!is.null(gui_design())) {
+              tags$span(
+                icon("check-circle"),
+                " Design applied",
+                style = "color: #2e7d32; font-size: 12px; margin-left: 8px;"
+              )
+            }
+          )
+        }
+      )
+    })
+
+    # Open design builder modal ----
+    observeEvent(input$build_design_btn, {
+      req(!is.null(loaded_data()$data))
+      sample_names <- colnames(loaded_data()$data)
+
+      shiny::showModal(shiny::modalDialog(
+        title = "Build Experimental Design",
+        size = "l",
+        tags$p(
+          style = "color: #555; font-size: 13px; margin-bottom: 8px;",
+          "Each row is one experimental factor. Fill in the group label each sample belongs to.",
+          "Row 1 is pre-filled from sample name patterns.",
+          "Leave a factor name blank to skip that row."
+        ),
+        tags$style(HTML(
+          ".design-grid-table .form-group { margin-bottom: 2px; }
+           .design-grid-table input.form-control { font-size: 12px; padding: 2px 4px; height: 26px; }"
+        )),
+        div(style = "overflow-x: auto;", uiOutput(ns("design_grid_ui"))),
+        tags$small(
+          style = "color: #888; display: block; margin-top: 4px;",
+          shiny::icon("info-circle"),
+          " Labels will be converted to uppercase and spaces removed on apply."
+        ),
+        easyClose = FALSE,
+        footer = tagList(
+          downloadButton(ns("download_design_template"), "Download CSV",
+                         class = "btn-sm btn-default"),
+          shiny::modalButton("Cancel"),
+          shiny::actionButton(ns("apply_design"), "Apply Design",
+                              class = "btn-primary btn-sm")
+        )
+      ))
+    })
+
+    # Render the editable design grid inside the modal ----
+    output$design_grid_ui <- renderUI({
+      req(!is.null(loaded_data()$data))
+      sample_names <- colnames(loaded_data()$data)
+      n <- length(sample_names)
+      n_factors <- 3L
+
+      initial_groups <- detect_groups(sample_names)
+
+      cell_px <- max(70L, min(110L, as.integer(660L / n)))
+      cell_style <- paste0("min-width: ", cell_px, "px; padding: 2px;")
+
+      header <- tags$tr(
+        tags$th(
+          "Factor Name",
+          style = "min-width: 120px; background: #f0f0f0; font-size: 12px; padding: 4px;"
+        ),
+        lapply(sample_names, function(s) {
+          tags$th(
+            s,
+            style = paste0(
+              "background: #f0f0f0; font-size: 11px; padding: 4px; ",
+              "word-break: break-all; ", cell_style
+            )
+          )
+        })
+      )
+
+      factor_rows <- lapply(seq_len(n_factors), function(i) {
+        default_name <- if (i == 1L) "group" else ""
+        default_cells <- if (i == 1L) initial_groups else rep("", n)
+
+        name_td <- tags$td(
+          style = "vertical-align: middle; padding: 2px;",
+          textInput(ns(paste0("factor_name_", i)), label = NULL,
+                    value = default_name, width = "100%")
+        )
+        cell_tds <- lapply(seq_len(n), function(j) {
+          tags$td(
+            style = cell_style,
+            textInput(ns(paste0("cell_", i, "_", j)), label = NULL,
+                      value = default_cells[[j]], width = "100%")
+          )
+        })
+        do.call(tags$tr, c(list(name_td), cell_tds))
+      })
+
+      tagList(
+        div(
+          class = "design-grid-table",
+          tags$table(
+            class = "table table-bordered table-condensed",
+            style = "margin-bottom: 4px; font-size: 12px;",
+            tags$thead(header),
+            tags$tbody(factor_rows)
+          )
         )
       )
     })
 
-    # Disables expression_file input to prevent multiple uploads
+    # Apply GUI-built design ----
+    observeEvent(input$apply_design, {
+      req(!is.null(loaded_data()$data))
+      sample_names <- colnames(loaded_data()$data)
+      n <- length(sample_names)
+      n_factors <- 3L
+
+      rows <- list()
+      row_names <- character(0)
+
+      for (i in seq_len(n_factors)) {
+        factor_name <- input[[paste0("factor_name_", i)]]
+        if (is.null(factor_name) || nchar(trimws(factor_name)) == 0L) next
+
+        cell_values <- vapply(seq_len(n), function(j) {
+          v <- input[[paste0("cell_", i, "_", j)]]
+          if (is.null(v)) "" else v
+        }, character(1L))
+
+        rows[[length(rows) + 1L]] <- cell_values
+        row_names <- c(row_names, trimws(factor_name))
+      }
+
+      if (length(rows) == 0L) {
+        shiny::showNotification(
+          "No factors defined. Fill in at least one factor name and group labels.",
+          type = "warning", duration = 5
+        )
+        return()
+      }
+
+      if (anyDuplicated(row_names) > 0L) {
+        shiny::showNotification(
+          "Factor names must be unique. Please rename duplicate factors.",
+          type = "warning", duration = 5
+        )
+        return()
+      }
+
+      design_df <- as.data.frame(
+        do.call(rbind, rows),
+        stringsAsFactors = FALSE
+      )
+      colnames(design_df) <- sample_names
+      rownames(design_df) <- row_names
+
+      si <- build_sample_info_from_df(
+        design_df, sample_names, input$max_group_name_length
+      )
+
+      if (is.null(si)) {
+        shiny::showNotification(
+          "Design not applied — ensure at least one factor has two or more distinct group labels.",
+          type = "error", duration = 6
+        )
+        return()
+      }
+
+      gui_design(si)
+      shiny::removeModal()
+      shiny::showNotification(
+        "Experimental design applied.", type = "message", duration = 4
+      )
+    })
+
+    # Download current grid state as a CSV template ----
+    output$download_design_template <- downloadHandler(
+      filename = function() "experimental_design.csv",
+      content = function(file) {
+        req(!is.null(loaded_data()$data))
+        sample_names <- colnames(loaded_data()$data)
+        n <- length(sample_names)
+        n_factors <- 3L
+        initial_groups <- detect_groups(sample_names)
+
+        rows <- list()
+        row_names <- character(0)
+        for (i in seq_len(n_factors)) {
+          factor_name <- input[[paste0("factor_name_", i)]]
+          if (is.null(factor_name) || nchar(trimws(factor_name)) == 0L) {
+            factor_name <- if (i == 1L) "group" else paste0("factor", i)
+          }
+          cell_values <- vapply(seq_len(n), function(j) {
+            v <- input[[paste0("cell_", i, "_", j)]]
+            if (is.null(v)) {
+              if (i == 1L) initial_groups[[j]] else ""
+            } else {
+              v
+            }
+          }, character(1L))
+          rows[[i]] <- cell_values
+          row_names <- c(row_names, factor_name)
+        }
+
+        row_names <- make.unique(row_names)
+        df <- as.data.frame(do.call(rbind, rows), stringsAsFactors = FALSE)
+        colnames(df) <- sample_names
+        rownames(df) <- row_names
+        write.csv(df, file)
+      }
+    )
+
+    # Disables expression_file input to prevent multiple uploads; reset GUI design
     observeEvent(input$expression_file, {
       shinyjs::disable("expression_file")
+      gui_design(NULL)
     })
 
     show_gene_ids_modal <- function() {
@@ -1506,7 +1730,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
     # Reactive element to load the data from the user or demo data ---------
     loaded_data <- reactive({
-      input_data(
+      base <- input_data(
         expression_file = input$expression_file,
         experiment_file = input$experiment_file,
         go_button = go_button_count(),
@@ -1514,6 +1738,13 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         demo_metadata_file = demo_data_file()[2],
         max_group_name_length = input$max_group_name_length
       )
+      # Inject GUI-built design when no file is uploaded and not using demo data
+      if (!is.null(gui_design()) &&
+          is.null(input$experiment_file) &&
+          go_button_count() == 0) {
+        base$sample_info <- gui_design()
+      }
+      base
     })
 
     # Sample information table -----------

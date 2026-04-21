@@ -1009,12 +1009,84 @@ showGeneIDs <- function(species, db, nGenes = 10){
 #   FROM TempExampleIds AS t
 #   WHERE t.id = i.id
 # );
-# 
+#
 # -- Drop the temporary table
 # DROP  TABLE TempExampleIds;
-# 
+#
 # -- View results
 # SELECT * FROM idIndex
+
+#' Create a design file template data frame from sample names
+#'
+#' Uses detect_groups() to auto-detect the first factor from sample name
+#' patterns (e.g. "Control_1" -> "Control"). Returns a data frame with
+#' factors as rows and samples as columns, ready for the GUI design builder.
+#'
+#' @param sample_names Character vector of sample column names from expression matrix.
+#' @return Data frame: 1 pre-filled row named "group", one column per sample.
+#' @export
+create_design_template <- function(sample_names) {
+  groups <- detect_groups(sample_names)
+  df <- as.data.frame(
+    matrix(groups, nrow = 1),
+    stringsAsFactors = FALSE
+  )
+  colnames(df) <- sample_names
+  rownames(df) <- "group"
+  df
+}
+
+#' Build a sample_info matrix from a GUI-constructed design data frame
+#'
+#' Applies the same sanitization pipeline as file-uploaded designs and returns
+#' the transposed matrix (rows = samples, columns = factors) expected by
+#' downstream modules. Returns NULL if the design is invalid.
+#'
+#' @param design_df Data frame with factors as rows and sample names as columns.
+#' @param sample_names Character vector of sample names from the expression matrix.
+#' @param max_group_name_length Integer maximum length for labels before truncation.
+#' @return Character matrix rows = samples, columns = factors, or NULL if invalid.
+#' @export
+build_sample_info_from_df <- function(design_df, sample_names,
+                                      max_group_name_length = 30) {
+  if (is.null(design_df) || nrow(design_df) == 0 || ncol(design_df) == 0) {
+    return(NULL)
+  }
+
+  rownames(design_df) <- sanitize_names(rownames(design_df))
+
+  # Drop rows with empty factor names
+  valid_rows <- nchar(rownames(design_df)) > 0
+  design_df <- design_df[valid_rows, , drop = FALSE]
+  if (nrow(design_df) == 0) return(NULL)
+
+  # Sanitize, uppercase, and truncate all cell values
+  for (i in seq_len(nrow(design_df))) {
+    design_df[i, ] <- toupper(sanitize_names(as.character(design_df[i, ])))
+    design_df[i, ] <- truncate_labels_safely(
+      as.character(design_df[i, ]), max_group_name_length
+    )
+  }
+
+  # Drop factors with no variation across samples
+  has_variation <- vapply(seq_len(nrow(design_df)), function(i) {
+    length(unique(as.character(design_df[i, ]))) > 1
+  }, logical(1L))
+  if (!any(has_variation)) return(NULL)
+  design_df <- design_df[has_variation, , drop = FALSE]
+
+  rownames(design_df) <- truncate_labels_safely(
+    rownames(design_df), max_group_name_length
+  )
+
+  # Reorder columns to match expression matrix sample order
+  matches <- match(toupper(sample_names), toupper(colnames(design_df)))
+  if (any(is.na(matches))) return(NULL)
+  design_df <- design_df[, matches, drop = FALSE]
+
+  # Return transposed: rows = samples, columns = factors
+  t(as.matrix(design_df))
+}
 
 
 
