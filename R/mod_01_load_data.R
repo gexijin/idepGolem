@@ -1274,9 +1274,12 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         size = "l",
         tags$p(
           style = "color: #555; font-size: 13px; margin-bottom: 8px;",
-          "Each row is one experimental factor. Fill in the group label each sample belongs to.",
-          "Row 1 is pre-filled from sample name patterns.",
-          "Leave a factor name blank to skip that row."
+          "Each row represents an experimental factor (e.g., Treatment or Batch), ",
+          "and each column represents a sample (pre-filled). Enter a factor name ",
+          "in the first column, then assign a group label to each sample across ",
+          "that row (e.g., Control, Treated). Use consistent labels within each ",
+          "row. Leave the factor name blank to skip a row. The first row is ",
+          "automatically filled based on sample names and can be edited."
         ),
         tags$style(HTML(
           ".design-grid-table .form-group { margin-bottom: 2px; }
