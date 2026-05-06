@@ -1010,3 +1010,53 @@ pathway_source_info <- function(pathway_file, go, select_org, idep_data) {
     return(pathway_info)
   }
 }
+
+
+#' Look up gene transcript lengths from the species database.
+#'
+#' Queries the geneInfo table for transcript_length values keyed by
+#' ensembl_gene_id. Used by the TPM download in the pre-process module.
+#'
+#' @param ensembl_ids Character vector of Ensembl gene IDs.
+#' @param select_org String designating the species (e.g., the value of
+#'   input$select_org from the load-data module).
+#' @param idep_data Data object returned by \code{\link{get_idep_data}()}.
+#'
+#' @export
+#' @return Named numeric vector of transcript lengths in base pairs, named by
+#'   ensembl_gene_id. Returns \code{NULL} if the DB connection fails or the
+#'   species has no geneInfo table.
+get_gene_lengths <- function(ensembl_ids, select_org, idep_data) {
+  if (length(ensembl_ids) == 0) {
+    return(NULL)
+  }
+
+  conn_db <- connect_convert_db_org(
+    select_org = select_org,
+    idep_data = idep_data
+  )
+  if (is.null(conn_db) || inherits(conn_db, "try-error")) {
+    return(NULL)
+  }
+  on.exit(DBI::dbDisconnect(conn_db), add = TRUE)
+
+  if (!"geneInfo" %in% DBI::dbListTables(conn_db)) {
+    return(NULL)
+  }
+
+  ids <- gsub("\"|\'", "", ensembl_ids)
+  query <- paste0(
+    "SELECT ensembl_gene_id, transcript_length FROM geneInfo ",
+    "WHERE ensembl_gene_id IN ('",
+    paste(ids, collapse = "', '"),
+    "')"
+  )
+  result <- DBI::dbGetQuery(conn_db, query)
+  if (nrow(result) == 0) {
+    return(NULL)
+  }
+
+  lengths <- as.numeric(result$transcript_length)
+  names(lengths) <- result$ensembl_gene_id
+  lengths
+}
