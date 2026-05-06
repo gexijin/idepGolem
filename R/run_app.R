@@ -59,6 +59,13 @@ run_app <- function(onStart = NULL,
 
     idep_data <<- get_idep_data()
 
+    # Warm the GitHub version-check cache so per-session lookups are free.
+    # Skipped on deployed Shiny Server / Docker (interactive() is FALSE there)
+    # so visitors to a hosted iDEP aren't nagged about updates they can't apply.
+    if (interactive()) {
+      try(check_idep_version_remote(), silent = TRUE)
+    }
+
     # Call user's onStart if provided
     if (!is.null(onStart)) {
       if (is.function(onStart)) {

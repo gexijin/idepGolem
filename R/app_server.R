@@ -10,6 +10,13 @@ app_server <- function(input, output, session) {
   options(warn = -1) # turn off warning
   pdf(file = NULL)
 
+  # Notify locally-installed users when a newer iDEP release is on GitHub.
+  # The actual network fetch is cached and warmed in run_app()'s init_app(),
+  # so this is essentially free per session.
+  if (interactive()) {
+    try(show_outdated_version_notification(), silent = TRUE)
+  }
+
   # Database configuration and idep_data are now loaded globally in run_app()
   # This means all user sessions share the same species database (13,391 species)
   # saving ~6.4 MB of memory and ~0.3 seconds of startup time per user
