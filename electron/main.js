@@ -1,10 +1,16 @@
 // main.js
-const { app, BrowserWindow, dialog } = require('electron');
+const { app, BrowserWindow, dialog, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { spawn } = require('child_process');
 const net = require('net');
 const { fetch } = require('undici');
+
+// URL of the canonical electron/package.json on the master branch — its
+// `version` field is the source of truth for "what is the latest shipped build".
+const UPDATE_CHECK_URL =
+  'https://raw.githubusercontent.com/gexijin/idepGolem/master/electron/package.json';
+const RELEASES_URL = 'https://github.com/gexijin/idepGolem/releases/latest';
 
 let childProc = null;
 
@@ -149,6 +155,77 @@ async function waitForHttp(url, { timeoutMs = 120000, intervalMs = 500 } = {}) {
     await new Promise(r => setTimeout(r, intervalMs));
   }
   throw new Error(`Timeout waiting for ${url}`);
+}
+
+function isNewerVersion(remote, local) {
+  // True iff `remote` > `local` by dotted-number compare. Non-numeric
+  // segments coerce to 0 so pre-release suffixes (e.g. "1.2.0-beta") don't
+  // explode — they simply compare equal at that position.
+  const parse = v => String(v).split('.').map(p => parseInt(p, 10) || 0);
+  const a = parse(remote);
+  const b = parse(local);
+  const len = Math.max(a.length, b.length);
+  for (let i = 0; i < len; i++) {
+    const ai = a[i] || 0;
+    const bi = b[i] || 0;
+    if (ai > bi) return true;
+    if (ai < bi) return false;
+  }
+  return false;
+}
+
+async function checkForUpdate() {
+  // Only nag users running shipped builds — not developers running `npm start`.
+  if (!app.isPackaged) return;
+  // Need a parent window for the dialog and to avoid prompting on a crashed app.
+  if (!global.win || global.win.isDestroyed()) return;
+
+  let remoteVersion;
+  try {
+    const ctrl = new AbortController();
+    const to = setTimeout(() => ctrl.abort(), 5000);
+    const res = await fetch(UPDATE_CHECK_URL, { signal: ctrl.signal });
+    clearTimeout(to);
+    if (!res.ok) {
+      log('[updateCheck] HTTP', res.status);
+      return;
+    }
+    const remote = await res.json();
+    remoteVersion = remote && remote.version;
+  } catch (err) {
+    // Offline / firewall / GitHub unreachable — degrade silently.
+    log('[updateCheck] fetch failed:', err && err.message ? err.message : String(err));
+    return;
+  }
+
+  const localVersion = app.getVersion();
+  if (!remoteVersion) {
+    log('[updateCheck] no version field in remote package.json');
+    return;
+  }
+  log(`[updateCheck] local=${localVersion} remote=${remoteVersion}`);
+  if (!isNewerVersion(remoteVersion, localVersion)) return;
+
+  try {
+    const choice = await dialog.showMessageBox(global.win, {
+      type: 'info',
+      title: 'Update Available',
+      message: `A new version of iDEP (${remoteVersion}) is available.`,
+      detail:
+        `You are running ${localVersion}.\n\n` +
+        'Open the GitHub Releases page to download the new version? ' +
+        'You can keep using iDEP — the update will not interrupt this session.',
+      buttons: ['Download', 'Later'],
+      defaultId: 0,
+      cancelId: 1,
+      noLink: true,
+    });
+    if (choice.response === 0) {
+      shell.openExternal(RELEASES_URL);
+    }
+  } catch (err) {
+    log('[updateCheck] dialog error:', err && err.message ? err.message : String(err));
+  }
 }
 
 function getFreePort(start = 7777, end = 7999) {
@@ -591,4 +668,10 @@ quit(status = if (ok) 0L else 1L, save = "no")
   app.on('window-all-closed', () => app.quit());
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  createWindow();
+  // Background update check 5s after launch — gives the splash time to
+  // resolve into the main window before any dialog appears, and the call
+  // itself is fire-and-forget so a slow GitHub response can't block startup.
+  setTimeout(checkForUpdate, 5000);
+});
