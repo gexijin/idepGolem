@@ -918,7 +918,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           req(input$pathway_method == 1)
 
           if (ncol(res_pathway()) > 4) {
-            res_pathway()[c(1, 10, 4, 6:9)]
+            res_pathway()[pathway_table_display_cols(res_pathway())]
           } else {
             res_pathway()
           }
@@ -1252,7 +1252,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         req(!is.null(fgsea_pathway_data()))
         req(input$pathway_method == 3)
         if (ncol(res_pathway()) > 4) {
-          res_pathway()[c(1, 10, 4, 6:9)]
+          res_pathway()[pathway_table_display_cols(res_pathway())]
         } else {
           res_pathway()
         }

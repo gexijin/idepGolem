@@ -809,9 +809,14 @@ read_gene_sets <- function(converted,
   }
 
   # retrieve all pathways for the category
-  sql_query <- "SELECT  gene, pathwayID FROM pathway "
+  # When go == "All", also pull category so we can label each pathway's
+  # source database in the results table (issue #678).
   if (go != "All") {
-    sql_query <- paste0(sql_query, " WHERE category = '", go, "'")
+    sql_query <- paste0(
+      "SELECT  gene, pathwayID FROM pathway WHERE category = '", go, "'"
+    )
+  } else {
+    sql_query <- "SELECT  gene, pathwayID, category FROM pathway "
   }
 
   # since there are so many genes, this takes a long time
@@ -852,6 +857,13 @@ read_gene_sets <- function(converted,
       sep = ""
     )
   )
+  # When go == "All", attach the source database (category) for each pathway
+  if (go == "All" && "category" %in% colnames(result)) {
+    id_to_category <- result[!duplicated(result$pathwayID), c("pathwayID", "category")]
+    pathway_info$category <- id_to_category$category[
+      match(pathway_info$id, id_to_category$pathwayID)
+    ]
+  }
   # add pathway name to gene sets
   ix <- match(names(gene_sets), pathway_info[, 1])
   names(gene_sets) <- pathway_info[ix, 2]
