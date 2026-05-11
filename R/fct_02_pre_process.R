@@ -736,9 +736,14 @@ chr_counts_ggplot <- function(counts_data,
     df <- subset(df, gene_biotype == "protein_coding")
   }
 
+  not_enough_msg <- paste0(
+    "Not enough mapped genes for this plot. Few of the loaded gene IDs ",
+    "matched a chromosome in the species database."
+  )
+
   # If no chromosomes found. For example if user do not convert gene IDs.
   if (dim(df)[1] < 5) {
-    return(NULL)
+    return(list(plot = NULL, warning = not_enough_msg))
   }
 
   # gather info on chrosomes
@@ -749,6 +754,11 @@ chr_counts_ggplot <- function(counts_data,
     ch <- names(tem[tem >= 5])
   } else {
     ch <- names(tem[tem >= 1])
+  }
+
+  # No chromosome has enough genes (e.g., custom data with few mapped genes)
+  if (length(ch) == 0) {
+    return(list(plot = NULL, warning = not_enough_msg))
   }
 
   if (length(ch) > 50) {
@@ -770,6 +780,12 @@ chr_counts_ggplot <- function(counts_data,
 
   df <- df[which(df$chromosome_name %in% names(ch)), ]
   df <- droplevels(df)
+
+  # All remaining genes were filtered out (no chromosome survived nchar cutoff)
+  if (nrow(df) == 0 || length(ch) == 0) {
+    return(list(plot = NULL, warning = not_enough_msg))
+  }
+
   # Numeric encoding
   df$chNum <- 1
   df$chNum <- ch[df$chromosome_name]
@@ -976,9 +992,14 @@ chr_normalized_ggplot <- function(counts_data,
     df <- subset(df, gene_biotype == "protein_coding")
   }
 
+  not_enough_msg <- paste0(
+    "Not enough mapped genes for this plot. Few of the loaded gene IDs ",
+    "matched a chromosome in the species database."
+  )
+
   # If no chromosomes found. For example if user do not convert gene IDs.
   if (dim(df)[1] < 5) {
-    return(NULL)
+    return(list(plot = NULL, warning = not_enough_msg))
   }
 
   # gather info on chrosomes
@@ -989,6 +1010,11 @@ chr_normalized_ggplot <- function(counts_data,
     ch <- names(tem[tem >= 5])
   } else {
     ch <- names(tem[tem >= 1])
+  }
+
+  # No chromosome has enough genes (e.g., custom data with few mapped genes)
+  if (length(ch) == 0) {
+    return(list(plot = NULL, warning = not_enough_msg))
   }
 
   if (length(ch) > 50) {
@@ -1010,6 +1036,12 @@ chr_normalized_ggplot <- function(counts_data,
 
   df <- df[which(df$chromosome_name %in% names(ch)), ]
   df <- droplevels(df)
+
+  # All remaining genes were filtered out (no chromosome survived nchar cutoff)
+  if (nrow(df) == 0 || length(ch) == 0) {
+    return(list(plot = NULL, warning = not_enough_msg))
+  }
+
   # Numeric encoding
   df$chNum <- 1
   df$chNum <- ch[df$chromosome_name]
@@ -1974,5 +2006,359 @@ generate_colors <- function(n, palette_name = "Set1") {
     additional_colors <- grDevices::colorRampPalette(base_colors)(n)
     return(additional_colors)
   }
+}
+
+
+#' Plot mean gene counts versus GC content per sample to detect GC bias
+#'
+#' Mirrors NOIseq / iSeqQC GC-bias diagnostics described in Sheng et al. 2020
+#' (BMC Bioinformatics, doi:10.1186/s12859-020-3399-8). Genes are binned by
+#' their GC content; for each sample the mean log10(count + 1) per bin is
+#' plotted as a line. Outlier samples whose line diverges from the rest
+#' indicate GC bias introduced by library preparation. When sample groups are
+#' well-defined, a per-bin ANOVA flags bins where groups differ significantly.
+#'
+#' @param counts_data Matrix of raw counts (rows = ensembl_gene_id).
+#' @param sample_info Matrix of experiment design information for grouping.
+#' @param all_gene_info Gene info table containing `ensembl_gene_id` and
+#'   `percentage_gc_content` columns.
+#' @param plots_color_select Vector / name of color palette for sample groups.
+#' @export
+#' @return A list with `plot` (a \code{ggplot} object or NULL when no GC data
+#'   is available) and `warning` (character message or NULL).
+#'
+#' @family preprocess functions
+#' @family plots
+gc_bias_ggplot <- function(counts_data,
+                           sample_info,
+                           all_gene_info,
+                           plots_color_select = "Set1") {
+  if (is.null(counts_data) || is.null(all_gene_info)) {
+    return(list(plot = NULL, warning = NULL))
+  }
+  if (!"percentage_gc_content" %in% colnames(all_gene_info)) {
+    return(list(
+      plot = NULL,
+      warning = "GC content not available for this organism."
+    ))
+  }
+
+  groups <- as.factor(detect_groups(colnames(counts_data), sample_info))
+
+  merged <- merge(
+    counts_data,
+    all_gene_info[, c("ensembl_gene_id", "percentage_gc_content")],
+    by.x = "row.names",
+    by.y = "ensembl_gene_id"
+  )
+  merged <- merged[
+    !is.na(merged$percentage_gc_content) & merged$percentage_gc_content > 0,
+  ]
+
+  sample_cols <- colnames(counts_data)
+  count_mat <- as.matrix(merged[, sample_cols, drop = FALSE])
+  # only expressed genes
+  expressed <- rowSums(count_mat, na.rm = TRUE) > 0
+  merged <- merged[expressed, ]
+  count_mat <- count_mat[expressed, , drop = FALSE]
+
+  if (nrow(count_mat) < 20) {
+    return(list(
+      plot = NULL,
+      warning = paste0(
+        "Not enough mapped genes with GC content data for this plot ",
+        "(need >=20 expressed genes)."
+      )
+    ))
+  }
+
+  gc <- pmin(pmax(merged$percentage_gc_content, 20), 70)
+  breaks <- seq(20, 70, by = 2.5) # 20 bins of 2.5%
+  bin <- cut(gc, breaks = breaks, include.lowest = TRUE)
+  bin_midpoint <- (head(breaks, -1) + tail(breaks, -1)) / 2
+
+  log_counts <- log10(count_mat + 1)
+  bin_means <- vapply(
+    sample_cols,
+    function(s) {
+      tapply(log_counts[, s], bin, mean, na.rm = TRUE)
+    },
+    numeric(length(levels(bin)))
+  )
+
+  plot_data <- data.frame(
+    bin = rep(levels(bin), times = length(sample_cols)),
+    gc_midpoint = rep(bin_midpoint, times = length(sample_cols)),
+    sample = rep(sample_cols, each = length(levels(bin))),
+    mean_log_count = as.vector(bin_means),
+    stringsAsFactors = FALSE
+  )
+  plot_data$groups <- groups[match(plot_data$sample, sample_cols)]
+  plot_data <- plot_data[!is.na(plot_data$mean_log_count), ]
+
+  n_samples <- length(sample_cols)
+  n_groups <- length(unique(groups))
+  groups_well_defined <- (n_groups > 1) &&
+    (n_groups <= 20) &&
+    (n_samples >= 2 * n_groups)
+
+  color_palette <- generate_colors(
+    n = max(n_groups, 1),
+    palette_name = plots_color_select
+  )
+
+  if (groups_well_defined) {
+    plot <- ggplot2::ggplot(
+      plot_data,
+      ggplot2::aes(
+        x = gc_midpoint,
+        y = mean_log_count,
+        color = groups,
+        group = sample
+      )
+    ) +
+      ggplot2::geom_line(alpha = 0.8, linewidth = 0.7) +
+      ggplot2::scale_color_manual(values = color_palette) +
+      ggplot2::labs(color = NULL)
+  } else {
+    plot <- ggplot2::ggplot(
+      plot_data,
+      ggplot2::aes(
+        x = gc_midpoint,
+        y = mean_log_count,
+        color = sample,
+        group = sample
+      )
+    ) +
+      ggplot2::geom_line(alpha = 0.8, linewidth = 0.7) +
+      ggplot2::labs(color = NULL)
+    if (n_samples > 20) {
+      plot <- plot + ggplot2::guides(color = "none")
+    }
+  }
+
+  plot <- plot +
+    ggplot2::labs(
+      x = "GC content (%)",
+      y = "Mean log10(count + 1)",
+      title = "Gene counts by GC content"
+    ) +
+    ggplot2::theme_light() +
+    ggplot2::theme(
+      legend.position = "right",
+      axis.title = ggplot2::element_text(color = "black", size = 14),
+      axis.text = ggplot2::element_text(size = 12),
+      plot.title = ggplot2::element_text(
+        color = "black",
+        size = 16,
+        face = "bold",
+        hjust = 0.5
+      )
+    )
+
+  warning_message <- NULL
+  if (groups_well_defined) {
+    significant_bins <- c()
+    for (b in levels(bin)) {
+      bin_data <- plot_data[plot_data$bin == b, ]
+      bin_data <- bin_data[!is.na(bin_data$groups), ]
+      if (nrow(bin_data) == 0 || length(unique(bin_data$groups)) < 2) next
+      tryCatch({
+        anova_result <- summary(aov(mean_log_count ~ groups, data = bin_data))
+        p_value <- anova_result[[1]][["Pr(>F)"]][1]
+        group_means <- aggregate(
+          mean_log_count ~ groups,
+          data = bin_data,
+          mean
+        )
+        diff_log <- max(group_means$mean_log_count) -
+          min(group_means$mean_log_count)
+        # significant if p < 0.01 and at least 2x difference (log10(2) ~ 0.30)
+        if (!is.na(p_value) && p_value < 0.01 && diff_log > log10(2)) {
+          significant_bins <- c(
+            significant_bins,
+            sprintf("%.1f%%", bin_midpoint[match(b, levels(bin))])
+          )
+        }
+      }, error = function(e) {})
+    }
+    if (length(significant_bins) > 0) {
+      warning_message <- paste0(
+        "GC-bias detected: gene counts differ significantly across groups ",
+        "at GC bins: ",
+        paste(significant_bins, collapse = ", "),
+        " (P < 0.01, >2-fold difference)."
+      )
+    }
+  }
+
+  list(plot = plot, warning = warning_message)
+}
+
+
+#' Plot normalized expression of housekeeping genes (GAPDH, ACTB) per sample
+#'
+#' Reproduces iSeqQC's housekeeping-gene QC plot (Sheng et al. 2020, Fig 2e):
+#' a stacked bar of log2(CPM + 1) for GAPDH and ACTB per sample. Globally low
+#' bars indicate a degraded or low-input library. When sample groups are
+#' well-defined, an ANOVA per gene flags genes whose expression differs
+#' significantly across groups.
+#'
+#' @param counts_data Matrix of raw counts (rows = ensembl_gene_id).
+#' @param sample_info Matrix of experiment design information for grouping.
+#' @param all_gene_info Gene info table containing `ensembl_gene_id` and
+#'   `symbol` columns.
+#' @param plots_color_select Vector / name of color palette (used for the
+#'   2 housekeeping-gene fill colors).
+#' @export
+#' @return A list with `plot` (a \code{ggplot} object or NULL when no
+#'   housekeeping genes are matched) and `warning` (character message or NULL).
+#'
+#' @family preprocess functions
+#' @family plots
+housekeeping_ggplot <- function(counts_data,
+                                sample_info,
+                                all_gene_info,
+                                plots_color_select = "Set1") {
+  if (is.null(counts_data) || is.null(all_gene_info)) {
+    return(list(plot = NULL, warning = NULL))
+  }
+  if (!"symbol" %in% colnames(all_gene_info)) {
+    return(list(
+      plot = NULL,
+      warning = "Gene symbols not available for this organism."
+    ))
+  }
+
+  target_symbols <- c("GAPDH", "ACTB")
+  symbols_upper <- toupper(trimws(as.character(all_gene_info$symbol)))
+  matches <- all_gene_info[symbols_upper %in% target_symbols, , drop = FALSE]
+  matches$symbol_upper <- toupper(trimws(as.character(matches$symbol)))
+  matches <- matches[!duplicated(matches$symbol_upper), ]
+
+  if (nrow(matches) == 0) {
+    return(list(
+      plot = NULL,
+      warning = paste0(
+        "GAPDH and ACTB not found in this organism's gene info; ",
+        "housekeeping-gene QC unavailable."
+      )
+    ))
+  }
+
+  sample_cols <- colnames(counts_data)
+  lib_sizes <- colSums(counts_data, na.rm = TRUE)
+  lib_sizes[lib_sizes == 0] <- NA_real_
+
+  ids <- matches$ensembl_gene_id
+  present <- ids %in% rownames(counts_data)
+  if (!any(present)) {
+    return(list(
+      plot = NULL,
+      warning = paste0(
+        "GAPDH/ACTB ensembl IDs not found in the counts matrix; ",
+        "housekeeping-gene QC unavailable."
+      )
+    ))
+  }
+  matches <- matches[present, ]
+  ids <- matches$ensembl_gene_id
+
+  hk_counts <- counts_data[ids, , drop = FALSE]
+  cpm <- sweep(hk_counts, 2, lib_sizes, "/") * 1e6
+  log2_cpm <- log2(cpm + 1)
+
+  plot_data <- data.frame(
+    sample = rep(sample_cols, each = nrow(log2_cpm)),
+    gene = rep(matches$symbol_upper, times = ncol(log2_cpm)),
+    log2_cpm = as.vector(log2_cpm),
+    stringsAsFactors = FALSE
+  )
+  plot_data$sample <- factor(plot_data$sample, levels = sample_cols)
+  plot_data$gene <- factor(plot_data$gene, levels = target_symbols)
+
+  groups <- as.factor(detect_groups(sample_cols, sample_info))
+  plot_data$groups <- groups[match(plot_data$sample, sample_cols)]
+
+  n_samples <- length(sample_cols)
+  n_groups <- length(unique(groups))
+  groups_well_defined <- (n_groups > 1) &&
+    (n_groups <= 20) &&
+    (n_samples >= 2 * n_groups)
+
+  x_axis_labels <- get_x_axis_label_size(n_samples)
+  # brewer.pal requires n >= 3; request 3 and slice to the gene count
+  fill_palette <- generate_colors(
+    n = max(nlevels(plot_data$gene), 3),
+    palette_name = plots_color_select
+  )[seq_len(nlevels(plot_data$gene))]
+
+  plot <- ggplot2::ggplot(
+    plot_data,
+    ggplot2::aes(x = sample, y = log2_cpm, fill = gene)
+  ) +
+    ggplot2::geom_bar(
+      stat = "identity",
+      position = ggplot2::position_stack(reverse = TRUE)
+    ) +
+    ggplot2::scale_fill_manual(values = fill_palette, drop = FALSE) +
+    ggplot2::labs(
+      x = NULL,
+      y = "log2(CPM + 1)",
+      title = "Housekeeping gene expression",
+      fill = NULL
+    ) +
+    ggplot2::theme_light() +
+    ggplot2::theme(
+      legend.position = "right",
+      axis.title.y = ggplot2::element_text(color = "black", size = 14),
+      axis.text.x = ggplot2::element_text(angle = 90, size = x_axis_labels),
+      axis.text.y = ggplot2::element_text(size = 14),
+      plot.title = ggplot2::element_text(
+        color = "black",
+        size = 16,
+        face = "bold",
+        hjust = 0.5
+      )
+    )
+
+  warning_message <- NULL
+  if (groups_well_defined) {
+    significant_genes <- c()
+    for (gene_name in levels(plot_data$gene)) {
+      gene_data <- plot_data[
+        plot_data$gene == gene_name & !is.na(plot_data$groups),
+      ]
+      if (nrow(gene_data) == 0 || length(unique(gene_data$groups)) < 2) next
+      tryCatch({
+        anova_result <- summary(aov(log2_cpm ~ groups, data = gene_data))
+        p_value <- anova_result[[1]][["Pr(>F)"]][1]
+        group_means <- aggregate(log2_cpm ~ groups, data = gene_data, mean)
+        diff_log2 <- max(group_means$log2_cpm) - min(group_means$log2_cpm)
+        # at least 2x (log2 diff > 1) and p < 0.01
+        if (!is.na(p_value) && p_value < 0.01 && diff_log2 > 1) {
+          significant_genes <- c(
+            significant_genes,
+            paste0(
+              gene_name,
+              " (P = ",
+              format(p_value, scientific = TRUE, digits = 2),
+              ")"
+            )
+          )
+        }
+      }, error = function(e) {})
+    }
+    if (length(significant_genes) > 0) {
+      warning_message <- paste0(
+        "Housekeeping-gene expression differs significantly across sample ",
+        "groups for: ",
+        paste(significant_genes, collapse = ", "),
+        ". This may indicate library-quality or input differences."
+      )
+    }
+  }
+
+  list(plot = plot, warning = warning_message)
 }
 
