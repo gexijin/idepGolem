@@ -228,7 +228,7 @@ mod_02_pre_process_ui <- function(id) {
         ),
         fluidRow(
           column(
-            width = 6,
+            width = 4,
             downloadButton(
               outputId = ns("download_processed_data"),
               label = "Processed data"
@@ -240,12 +240,9 @@ mod_02_pre_process_ui <- function(id) {
             )
           ),
           column(
-            width = 6,
-            # Conditional panel for read count data ------------
+            width = 4,
             conditionalPanel(
               condition = "output.data_file_format == 1",
-
-              # Download the counts data with converted IDs
               downloadButton(
                 outputId = ns("download_converted_counts"),
                 label = "Converted counts"
@@ -253,6 +250,27 @@ mod_02_pre_process_ui <- function(id) {
               tippy::tippy_this(
                 ns("download_converted_counts"),
                 "Download counts with gene IDs converted to Ensembl.",
+                theme = "light"
+              ),
+              ns = ns
+            )
+          ),
+          column(
+            width = 4,
+            conditionalPanel(
+              condition = "output.data_file_format == 1 && output.select_org != 'NEW'",
+              downloadButton(
+                outputId = ns("download_tpm"),
+                label = "TPM"
+              ),
+              tippy::tippy_this(
+                ns("download_tpm"),
+                paste(
+                  "Download TPM (Transcripts Per Million) computed from",
+                  "raw counts and Ensembl transcript lengths. Note: TPM",
+                  "values will not exactly match upstream effective TPM ",
+                  "lengths."
+                ),
                 theme = "light"
               ),
               ns = ns
@@ -1495,6 +1513,34 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       )
     })
 
+    # TPM is only meaningful for raw read counts (data_file_format == 1).
+    tpm_result <- reactive({
+      req(load_data$data_file_format() == 1)
+      req(!is.null(processed_data()$raw_counts))
+
+      counts <- processed_data()$raw_counts
+      gene_lengths <- get_gene_lengths(
+        ensembl_ids = rownames(counts),
+        select_org = load_data$select_org(),
+        idep_data = idep_data
+      )
+      if (is.null(gene_lengths)) {
+        return(NULL)
+      }
+      compute_tpm(counts, gene_lengths)
+    })
+
+    merged_tpm_data <- reactive({
+      result <- tpm_result()
+      req(!is.null(result))
+
+      merge_data(
+        load_data$all_gene_names(),
+        result$tpm,
+        merge_ID = "ensembl_ID"
+      )
+    })
+
     # Pre-Process Data Table ----------
     output$examine_data <- DT::renderDataTable({
       req(!is.null(merged_processed_data()))
@@ -1720,6 +1766,45 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       },
       content = function(file) {
         write.csv(merged_raw_counts_data(), file, row.names = FALSE)
+      }
+    )
+    output$download_tpm <- downloadHandler(
+      filename = function() {
+        "tpm_data.csv"
+      },
+      content = function(file) {
+        result <- tpm_result()
+        if (is.null(result)) {
+          showNotification(
+            paste(
+              "TPM cannot be computed: no transcript-length data available",
+              "for the selected species."
+            ),
+            type = "error",
+            duration = 8
+          )
+          writeLines(
+            paste(
+              "TPM could not be computed for this dataset: no transcript-",
+              "length data is available for the selected species.",
+              "TPM is supported for read-counts data when an iDEP-supported",
+              "species is selected."
+            ),
+            con = file
+          )
+          return(invisible())
+        }
+        if (result$n_dropped > 0) {
+          showNotification(
+            paste0(
+              result$n_dropped,
+              " gene(s) excluded from TPM due to missing transcript lengths."
+            ),
+            type = "warning",
+            duration = 8
+          )
+        }
+        write.csv(merged_tpm_data(), file, row.names = FALSE)
       }
     )
 

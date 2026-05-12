@@ -1975,3 +1975,51 @@ generate_colors <- function(n, palette_name = "Set1") {
   }
 }
 
+
+#' Compute Transcripts Per Million (TPM) from a counts matrix.
+#'
+#' Pure function. Genes with missing or non-positive lengths are dropped, and
+#' genes present in only one of the inputs are dropped. Library-size scaling
+#' is applied per sample (column).
+#'
+#' @param counts Numeric matrix with genes in rows and samples in columns.
+#'   Row names must be gene identifiers matching \code{names(gene_lengths)}.
+#' @param gene_lengths Named numeric vector of per-gene transcript lengths in
+#'   base pairs.
+#'
+#' @export
+#' @return A list with two elements:
+#' \describe{
+#'   \item{tpm}{Numeric matrix of TPM values, same orientation as \code{counts}.
+#'     Column sums equal 1e6 (within floating-point tolerance) for any sample
+#'     in which at least one surviving gene has non-zero counts. Samples
+#'     where every surviving gene has zero counts produce a column of zeros.}
+#'   \item{n_dropped}{Integer count of input rows excluded due to missing or
+#'     non-positive lengths or no length match.}
+#' }
+compute_tpm <- function(counts, gene_lengths) {
+  if (is.null(counts) || nrow(counts) == 0 || ncol(counts) == 0) {
+    return(list(tpm = counts, n_dropped = 0L))
+  }
+
+  shared <- intersect(rownames(counts), names(gene_lengths))
+  lengths <- gene_lengths[shared]
+  valid <- !is.na(lengths) & lengths > 0
+  shared <- shared[valid]
+  lengths <- lengths[valid]
+
+  n_dropped <- nrow(counts) - length(shared)
+
+  if (length(shared) == 0) {
+    empty <- counts[integer(0), , drop = FALSE]
+    return(list(tpm = empty, n_dropped = n_dropped))
+  }
+
+  counts_sub <- counts[shared, , drop = FALSE]
+  rpk <- counts_sub / (lengths / 1000)
+  scaling <- colSums(rpk)
+  scaling[scaling == 0] <- 1  # avoid division by zero in empty samples
+  tpm <- t(t(rpk) / scaling) * 1e6
+
+  list(tpm = tpm, n_dropped = as.integer(n_dropped))
+}
