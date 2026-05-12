@@ -1272,15 +1272,46 @@ pathway_data_transform <- function(data,
                         data2[,-c(1,2)],
                         check.names = FALSE
     )
-    
+
     if (method %in% c("GSEA", "GAGE")){
       data2[, 7:9] <- lapply(data2[, 7:9], as.character)
     }
-    
+
+    # When all gene sets are queried, label each pathway with its source
+    # database (issue #678). Insert second-to-last so the existing
+    # "strip hypertext via -ncol" CSV download still works.
+    if (go == "All" && !is.null(genes$pathway_info$category)) {
+      hyper_name <- colnames(data2)[ncol(data2)]
+      hyper_col <- data2[, ncol(data2)]
+      data2 <- data2[, -ncol(data2), drop = FALSE]
+      data2$Database <- genes$pathway_info$category[ix]
+      data2[[hyper_name]] <- hyper_col
+    }
+
   }
-  
+
   return(data2)
-  
+
+}
+
+#' Pick display columns for the GAGE / FGSEA result tables
+#'
+#' Mirrors the legacy `[c(1, 10, 4, 6:9)]` selection but is robust to a
+#' possible inserted "Database" column (issue #678): hypertext is always
+#' the last column, and "Database" — when present — is appended.
+#'
+#' @param df A `pathway_data_transform()` result with at least the
+#'   legacy 10-column layout.
+#' @return Integer column indices in display order.
+#' @export
+pathway_table_display_cols <- function(df) {
+  hyper_idx <- ncol(df)
+  cols <- c(1, hyper_idx, 4, 6:9)
+  db_idx <- which(colnames(df) == "Database")
+  if (length(db_idx) > 0) {
+    cols <- c(cols, db_idx)
+  }
+  cols
 }
 
 #' Get data from genes in selected pathway
