@@ -886,9 +886,15 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     
     output$counts_table <- renderTable({
       req(!is.null(processed_data()))
+      raw_counts_data <- processed_data()$raw_counts
+      converted_data  <- load_data$converted_data()
+      # Need at least a 2-D matrix to call colSums
+      if (is.null(dim(raw_counts_data)) || is.null(dim(converted_data))) {
+        return(NULL)
+      }
       # Sums of counts by sample
-      filtered <- as.data.frame(colSums(processed_data()$raw_counts))
-      original <- as.data.frame(colSums(load_data$converted_data()))
+      filtered <- as.data.frame(colSums(raw_counts_data))
+      original <- as.data.frame(colSums(converted_data))
       
       # Merge and rename columns
       df <- merge(x = original, y = filtered, by = "row.names")
