@@ -162,7 +162,7 @@ mod_09_network_ui <- function(id) {
                 "Import this file into Cytoscape or VisANT for further analysis.",
                 theme = "light"
               ),
-              ottoPlots::mod_download_figure_ui(
+              mod_download_figure_ui(
                 id = ns("dl_network_plot")
               )
             )
@@ -377,7 +377,7 @@ mod_09_network_server <- function(id, pre_process, idep_data, tab) {
       network$network_plot
     })
 
-    dl_network_plot <- ottoPlots::mod_download_figure_server(
+    dl_network_plot <- mod_download_figure_server(
      id = "dl_network_plot",
      filename = "module_network_plot",
      figure = reactive({

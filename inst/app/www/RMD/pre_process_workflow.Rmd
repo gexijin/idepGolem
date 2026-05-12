@@ -82,7 +82,7 @@ Ge, S.X., Son, E.W. & Yao, R. iDEP: an integrated web application for differenti
 
 <!-- "rlog: regularized log (slow) " = 3 -->
 
-<!-- "EdgeR: log2(CPM+c)" = 1 -->
+<!-- "edgeR: log-CPM (prior.count)" = 1 -->
 
 ```{r, include = FALSE}
 # devtools::load_all()
@@ -112,7 +112,7 @@ processed_data <- idepGolem::pre_process(
 )
 ```
 
-```{r }
+```{r, results='asis'}
 if (params$data_file_format == 1) {
   idepGolem::total_counts_ggplot(
     counts_data = processed_data$raw_counts,
@@ -120,6 +120,10 @@ if (params$data_file_format == 1) {
     type = "RAW",
     plots_color_select = params$plots_color_select
   )
+} else {
+  cat("Total counts plot requires raw count data (integer read counts). ",
+      "Your data was loaded as a normalized/FPKM/TPM expression matrix, which does not have ",
+      "meaningful total-count sums per sample.\n")
 }
 ```
 
@@ -140,6 +144,11 @@ if (params$data_file_format == 1 && !is.null(processed_data$raw_counts)) {
     df,
     caption = "Total reads per sample before and after filtering."
   )
+} else if (params$data_file_format != 1) {
+  cat("Read counts table not shown: filtering statistics are only meaningful for raw count data. ",
+      "Your data was loaded as a normalized/FPKM/TPM expression matrix.\n")
+} else if (is.null(processed_data$raw_counts)) {
+  cat("Read counts table not shown: raw counts were not available after pre-processing.\n")
 }
 ```
 
@@ -187,22 +196,30 @@ idepGolem::mean_sd_plot(
 
 <br>
 
-```{r}
-idepGolem::gene_counts_ggplot(
-  counts_data = params$loaded_data,
-  sample_info = params$sample_info,
-  type = "Raw",
-  all_gene_info = params$all_gene_info,
-  plots_color_select = params$plots_color_select
-)
+```{r, results='asis'}
+if (!is.null(params$all_gene_info) && "ensembl_gene_id" %in% colnames(params$all_gene_info)) {
+  idepGolem::gene_counts_ggplot(
+    counts_data = params$loaded_data,
+    sample_info = params$sample_info,
+    type = "Raw",
+    all_gene_info = params$all_gene_info,
+    plots_color_select = params$plots_color_select
+  )
+} else if (is.null(params$all_gene_info)) {
+  cat("Gene biotype plot not shown: gene annotation data is unavailable. ",
+      "This plot requires gene IDs that iDEP can map to Ensembl records.\n")
+} else {
+  cat("Gene biotype plot not shown: the gene annotation table does not contain an `ensembl_gene_id` column. ",
+      "iDEP was unable to map your gene IDs to Ensembl records.\n")
+}
 ```
 
 <br>
 
 ## QC Plots
 
-```{r qc_gene_type, fig.height=6, fig.width=10}
-if (params$data_file_format == 1 && !is.null(params$all_gene_info)) {
+```{r qc_gene_type, fig.height=6, fig.width=10, results='asis'}
+if (params$data_file_format == 1 && !is.null(params$all_gene_info) && "ensembl_gene_id" %in% colnames(params$all_gene_info)) {
   rrna <- idepGolem::rRNA_counts_ggplot(
     counts_data = params$loaded_data,
     sample_info = params$sample_info,
@@ -214,13 +231,22 @@ if (params$data_file_format == 1 && !is.null(params$all_gene_info)) {
   if (!is.null(rrna$warning)) {
     cat("\n\n**Warning:** ", rrna$warning, "\n")
   }
+} else if (params$data_file_format != 1 && (is.null(params$all_gene_info) || !"ensembl_gene_id" %in% colnames(params$all_gene_info))) {
+  cat("rRNA/gene type QC plot requires both raw count data and ",
+      "Ensembl-mappable gene IDs. Your data is normalized and gene IDs could not be mapped to Ensembl.\n")
+} else if (params$data_file_format != 1) {
+  cat("rRNA/gene type QC plot requires raw count data (integer read counts). ",
+      "Proportions of rRNA and other biotypes are only interpretable from un-normalized counts.\n")
+} else {
+  cat("rRNA/gene type QC plot not shown: gene IDs could not be mapped to Ensembl records. ",
+      "Provide Ensembl IDs or standard gene symbols.\n")
 }
 ```
 
 <br>
 
-```{r qc_chr_counts, fig.height=12, fig.width=10}
-if (params$data_file_format == 1 && !is.null(params$all_gene_info)) {
+```{r qc_chr_counts, fig.height=12, fig.width=10, results='asis'}
+if (params$data_file_format == 1 && !is.null(params$all_gene_info) && "ensembl_gene_id" %in% colnames(params$all_gene_info)) {
   use_boxplot <- isTRUE(params$chr_use_boxplot)
   chr_counts <- idepGolem::chr_counts_ggplot(
     counts_data = params$loaded_data,
@@ -234,13 +260,22 @@ if (params$data_file_format == 1 && !is.null(params$all_gene_info)) {
   if (!is.null(chr_counts$warning)) {
     cat("\n\n**Warning:** ", chr_counts$warning, "\n")
   }
+} else if (params$data_file_format != 1 && (is.null(params$all_gene_info) || !"ensembl_gene_id" %in% colnames(params$all_gene_info))) {
+  cat("Chromosome raw counts plot requires both raw count data and ",
+      "Ensembl-mappable gene IDs for chromosomal assignment. Neither condition is met.\n")
+} else if (params$data_file_format != 1) {
+  cat("Chromosome raw counts plot requires raw count data. ",
+      "Per-chromosome read distributions are not meaningful for normalized expression values.\n")
+} else {
+  cat("Chromosome raw counts plot not shown: gene IDs could not be mapped to Ensembl records.",
+      "Provide Ensembl IDs or standard gene symbols.\n")
 }
 ```
 
 <br>
 
-```{r qc_chr_normalized, fig.height=12, fig.width=10}
-if (!is.null(processed_data$data) && !is.null(params$all_gene_info)) {
+```{r qc_chr_normalized, fig.height=12, fig.width=10, results='asis'}
+if (!is.null(processed_data$data) && !is.null(params$all_gene_info) && "ensembl_gene_id" %in% colnames(params$all_gene_info)) {
   use_boxplot_norm <- isTRUE(params$chr_normalized_use_boxplot)
   chr_normalized <- idepGolem::chr_normalized_ggplot(
     counts_data = processed_data$data,
@@ -254,6 +289,11 @@ if (!is.null(processed_data$data) && !is.null(params$all_gene_info)) {
   if (!is.null(chr_normalized$warning)) {
     cat("\n\n**Warning:** ", chr_normalized$warning, "\n")
   }
+} else if (is.null(processed_data$data)) {
+  cat("Chromosome normalized expression plot not shown: processed expression data is unavailable.\n")
+} else {
+  cat("Chromosome normalized expression plot not shown: gene IDs could not be mapped to Ensembl records",
+      "Provide Ensembl IDs or standard gene symbols.\n")
 }
 ```
 
@@ -271,7 +311,12 @@ marker_payloads <- idepGolem::marker_gene_plot_payloads(
 )
 
 if (length(marker_payloads) == 0) {
-  cat("No marker gene plots could be generated for this dataset.\n")
+  if (is.null(params$all_gene_info) || !"ensembl_gene_id" %in% colnames(params$all_gene_info)) {
+    cat("Marker gene plots not shown: gene IDs could not be mapped to Ensembl records. ",
+        "Provide Ensembl IDs or standard gene symbols.\n")
+  } else {
+    cat("Marker gene plots not shown: no marker genes from the reference sets were detected in this dataset.\n")
+  }
 } else {
   counts_flag <- !is.null(processed_data$raw_counts)
   for (payload in marker_payloads) {

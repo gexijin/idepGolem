@@ -257,7 +257,7 @@ mod_04_pca_ui <- function(id) {
               width = "100%",
               height = "600px"
             ),
-            ottoPlots::mod_download_figure_ui(ns("download_interactive_pca")),
+            mod_download_figure_ui(ns("download_interactive_pca")),
             br(),
             br(),
             shiny::textOutput(
@@ -286,7 +286,7 @@ mod_04_pca_ui <- function(id) {
               width = "100%",
               height = "500px"
             ),
-            ottoPlots::mod_download_figure_ui(ns("download_biplot")),
+            mod_download_figure_ui(ns("download_biplot")),
             br(),
             br(),
             br(),
@@ -295,7 +295,7 @@ mod_04_pca_ui <- function(id) {
               width = "100%",
               height = "500px"
             ),
-            ottoPlots::mod_download_figure_ui(ns("download_scree")),
+            mod_download_figure_ui(ns("download_scree")),
             br(),
             br(),
             br(),
@@ -304,7 +304,7 @@ mod_04_pca_ui <- function(id) {
               width = "100%",
               height = "500px"
             ),
-            ottoPlots::mod_download_figure_ui(ns("download_imp_x")),
+            mod_download_figure_ui(ns("download_imp_x")),
             br(),
             br(),
             br(),
@@ -313,7 +313,7 @@ mod_04_pca_ui <- function(id) {
               width = "100%",
               height = "500px"
             ),
-            ottoPlots::mod_download_figure_ui(ns("download_imp_y")),
+            mod_download_figure_ui(ns("download_imp_y")),
             br(),
             br(),
             br(),
@@ -322,7 +322,7 @@ mod_04_pca_ui <- function(id) {
               width = "100%",
               height = "500px"
             ),
-            ottoPlots::mod_download_figure_ui(ns("download_eigencor")),
+            mod_download_figure_ui(ns("download_eigencor")),
             br(),
             br()
           ),
@@ -334,7 +334,7 @@ mod_04_pca_ui <- function(id) {
               width = "100%",
               height = "500px"
             ),
-            ottoPlots::mod_download_figure_ui(ns("download_mds")),
+            mod_download_figure_ui(ns("download_mds")),
           ),
           tabPanel(
             "t-SNE",
@@ -345,7 +345,7 @@ mod_04_pca_ui <- function(id) {
               height = "500px"
             ),
             br(),
-            ottoPlots::mod_download_figure_ui(ns("download_t_sne")),
+            mod_download_figure_ui(ns("download_t_sne")),
             br()
           ),
           tabPanel(
@@ -398,7 +398,7 @@ mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
       plotly::ggplotly(p, tooltip = "text")
     })
     # Download Button
-    download_interactive_pca <- ottoPlots::mod_download_figure_server(
+    download_interactive_pca <- mod_download_figure_server(
       id = "download_interactive_pca",
       filename = "pca_plot",
       figure = reactive({
@@ -485,7 +485,7 @@ mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
       )
     })
     # Download Button
-    download_t_sne <- ottoPlots::mod_download_figure_server(
+    download_t_sne <- mod_download_figure_server(
       id = "download_t_sne",
       filename = "t_sne_plot",
       figure = reactive({
@@ -521,7 +521,7 @@ mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
     })
     
     # Download Button
-    download_mds <- ottoPlots::mod_download_figure_server(
+    download_mds <- mod_download_figure_server(
       id = "download_mds",
       filename = "mds_plot",
       figure = reactive({
@@ -561,7 +561,7 @@ mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
 
 
     # Download Button
-    download_biplot <- ottoPlots::mod_download_figure_server(
+    download_biplot <- mod_download_figure_server(
       id = "download_biplot",
       filename = "biplot",
       figure = reactive({
@@ -587,7 +587,7 @@ mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
     })
 
     # Download Button
-    download_scree <- ottoPlots::mod_download_figure_server(
+    download_scree <- mod_download_figure_server(
       id = "download_scree",
       filename = "scree",
       figure = reactive({
@@ -619,7 +619,7 @@ mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
     })
 
     # Download Button
-    download_eigencor <- ottoPlots::mod_download_figure_server(
+    download_eigencor <- mod_download_figure_server(
       id = "download_eigencor",
       filename = "eigencor",
       figure = reactive({
@@ -646,7 +646,7 @@ mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
     })
     
     # Download Button
-    download_imp_x <- ottoPlots::mod_download_figure_server(
+    download_imp_x <- mod_download_figure_server(
       id = "download_imp_x",
       filename = "var_imp_x",
       figure = reactive({
@@ -675,7 +675,7 @@ mod_04_pca_server <- function(id, load_data, pre_process, idep_data) {
     })
     
     # Download Button
-    download_imp_y <- ottoPlots::mod_download_figure_server(
+    download_imp_y <- mod_download_figure_server(
       id = "download_imp_y",
       filename = "var_imp_y",
       figure = reactive({

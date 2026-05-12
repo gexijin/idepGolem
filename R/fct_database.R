@@ -809,9 +809,14 @@ read_gene_sets <- function(converted,
   }
 
   # retrieve all pathways for the category
-  sql_query <- "SELECT  gene, pathwayID FROM pathway "
+  # When go == "All", also pull category so we can label each pathway's
+  # source database in the results table (issue #678).
   if (go != "All") {
-    sql_query <- paste0(sql_query, " WHERE category = '", go, "'")
+    sql_query <- paste0(
+      "SELECT  gene, pathwayID FROM pathway WHERE category = '", go, "'"
+    )
+  } else {
+    sql_query <- "SELECT  gene, pathwayID, category FROM pathway "
   }
 
   # since there are so many genes, this takes a long time
@@ -852,6 +857,13 @@ read_gene_sets <- function(converted,
       sep = ""
     )
   )
+  # When go == "All", attach the source database (category) for each pathway
+  if (go == "All" && "category" %in% colnames(result)) {
+    id_to_category <- result[!duplicated(result$pathwayID), c("pathwayID", "category")]
+    pathway_info$category <- id_to_category$category[
+      match(pathway_info$id, id_to_category$pathwayID)
+    ]
+  }
   # add pathway name to gene sets
   ix <- match(names(gene_sets), pathway_info[, 1])
   names(gene_sets) <- pathway_info[ix, 2]
@@ -1009,4 +1021,54 @@ pathway_source_info <- function(pathway_file, go, select_org, idep_data) {
   } else {
     return(pathway_info)
   }
+}
+
+
+#' Look up gene transcript lengths from the species database.
+#'
+#' Queries the geneInfo table for transcript_length values keyed by
+#' ensembl_gene_id. Used by the TPM download in the pre-process module.
+#'
+#' @param ensembl_ids Character vector of Ensembl gene IDs.
+#' @param select_org String designating the species (e.g., the value of
+#'   input$select_org from the load-data module).
+#' @param idep_data Data object returned by \code{\link{get_idep_data}()}.
+#'
+#' @export
+#' @return Named numeric vector of transcript lengths in base pairs, named by
+#'   ensembl_gene_id. Returns \code{NULL} if the DB connection fails or the
+#'   species has no geneInfo table.
+get_gene_lengths <- function(ensembl_ids, select_org, idep_data) {
+  if (length(ensembl_ids) == 0) {
+    return(NULL)
+  }
+
+  conn_db <- connect_convert_db_org(
+    select_org = select_org,
+    idep_data = idep_data
+  )
+  if (is.null(conn_db) || inherits(conn_db, "try-error")) {
+    return(NULL)
+  }
+  on.exit(DBI::dbDisconnect(conn_db), add = TRUE)
+
+  if (!"geneInfo" %in% DBI::dbListTables(conn_db)) {
+    return(NULL)
+  }
+
+  ids <- gsub("\"|\'", "", ensembl_ids)
+  query <- paste0(
+    "SELECT ensembl_gene_id, transcript_length FROM geneInfo ",
+    "WHERE ensembl_gene_id IN ('",
+    paste(ids, collapse = "', '"),
+    "')"
+  )
+  result <- DBI::dbGetQuery(conn_db, query)
+  if (nrow(result) == 0) {
+    return(NULL)
+  }
+
+  lengths <- as.numeric(result$transcript_length)
+  names(lengths) <- result$ensembl_gene_id
+  lengths
 }

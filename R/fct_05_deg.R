@@ -1554,6 +1554,7 @@ deg_limma <- function(processed_data,
       ix <- which(colnames(top_genes_table) == "logFC")
       colnames(top_genes_table)[ix] <- "log2FC"
       top_genes[[1]] <- top_genes_table
+      names(top_genes)[1] <- comparisons[1]
     }
 
     # Log fold change is actually subtract of means. So if the data is natral log
@@ -2523,6 +2524,7 @@ prep_venn <- function(limma,
                       up_down_regulated,
                       select_comparisons_venn) {
   results <- limma$results
+  if (is.null(results) || is.null(dim(results))) return(NULL)
 
   # Split by up or down regulation
   if (up_down_regulated) {
@@ -2555,7 +2557,9 @@ prep_venn <- function(limma,
     }
     ixa <- c(ixa, ix)
   }
-  # Only use selected comparisons
+  # Only use selected comparisons (drop any unmatched NAs)
+  ixa <- ixa[!is.na(ixa)]
+  if (length(ixa) == 0) return(NULL)
   results <- results[, ixa, drop = FALSE]
 
   colnames(results) <- gsub("^I-", "I:", colnames(results))
@@ -2604,6 +2608,7 @@ plot_venn <- function(results,
 #' @export
 #'
 plot_upset <- function(results) {
+  if (is.null(results) || ncol(results) == 0 || nrow(results) == 0) return(NULL)
   # get the groups of data by category
   data <- results |>
     tidyr::as_tibble() |>
@@ -2622,6 +2627,8 @@ plot_upset <- function(results) {
       )
     ) |>
     dplyr::filter(!is.na(Group))
+
+  if (nrow(data) == 0) return(NULL)
 
   plot <- ggplot2::ggplot(data, ggplot2::aes(x = Group)) +
     ggplot2::geom_bar(fill = "grey") +
@@ -3476,4 +3483,249 @@ mod_label_server <- function(id, data_list, method = c("volcano", "ma", "scatter
       gene_labels()
     }))
   })
+}
+
+
+#' Build gene table data for the DEG gene list tab
+#'
+#' Extracts, filters, annotates, and formats the top-gene list for a selected
+#' contrast. Used by the \code{deg_gene_table_data} reactive in
+#' \code{mod_05_deg_server()} and directly testable as a pure function.
+#'
+#' @param top_list Named list of top-gene data frames (one per comparison),
+#'   as returned by \code{deg_limma()$top_genes}.
+#' @param select_contrast String naming the comparison to display,
+#'   e.g. \code{"A-B"}.
+#' @param limma_p_val Numeric adjusted p-value threshold (0–1).
+#' @param limma_fc Numeric fold-change threshold (on the original scale,
+#'   e.g. 1.5 means \eqn{|log2FC| \ge log2(1.5)}).
+#' @param gene_direction_filter String, one of \code{"Up-regulated genes"},
+#'   \code{"Down-regulated genes"}, or \code{"All genes"}.
+#'   Defaults to \code{"Up-regulated genes"}.
+#' @param gene_names Optional data frame with at least columns
+#'   \code{ensembl_ID} and \code{symbol} for annotation.
+#' @param gene_info Optional data frame with at least columns
+#'   \code{ensembl_gene_id}, \code{entrezgene_id}, and \code{description}
+#'   for additional annotation.
+#'
+#' @return A list with three elements:
+#' \describe{
+#'   \item{display}{Data frame with columns \code{ID}, \code{Ensembl ID},
+#'     \code{log2 FC}, \code{Adj. Pval}, \code{Description} — suitable for
+#'     \code{DT::renderDataTable()}.}
+#'   \item{meta}{Data frame with columns \code{ensembl_ID}, \code{symbol},
+#'     \code{entrezgene_id}, \code{log2FC}, \code{Adjusted_P_value},
+#'     \code{description} — written to the download CSV.}
+#'   \item{order_dir}{String, either \code{"asc"} or \code{"desc"}.}
+#' }
+#' @export
+build_deg_gene_table <- function(top_list,
+                                 select_contrast,
+                                 limma_p_val,
+                                 limma_fc,
+                                 gene_direction_filter = "Up-regulated genes",
+                                 gene_names = NULL,
+                                 gene_info = NULL) {
+  empty_tbl <- list(
+    display = data.frame(
+      `ID`         = character(0),
+      `Ensembl ID` = character(0),
+      `log2 FC`    = character(0),
+      `Adj. Pval`  = character(0),
+      Description  = character(0),
+      stringsAsFactors = FALSE,
+      check.names = FALSE
+    ),
+    meta = data.frame(
+      ensembl_ID       = character(0),
+      symbol           = character(0),
+      entrezgene_id    = character(0),
+      log2FC           = numeric(0),
+      Adjusted_P_value = numeric(0),
+      description      = character(0),
+      stringsAsFactors = FALSE
+    ),
+    order_dir = "desc"
+  )
+
+  if (is.null(top_list) || length(top_list) == 0) {
+    return(empty_tbl)
+  }
+
+  idx <- match(select_contrast, names(top_list))
+  if (is.na(idx)) {
+    idx <- 1
+  }
+
+  top_df <- top_list[[idx]]
+
+  if (is.null(top_df) || nrow(top_df) == 0) {
+    return(empty_tbl)
+  }
+
+  top_df <- as.data.frame(top_df)
+
+  if (ncol(top_df) < 2) {
+    return(empty_tbl)
+  }
+
+  top_df <- top_df[, 1:2, drop = FALSE]
+  colnames(top_df) <- c("log2FC", "Adjusted_P_value")
+  top_df$ensembl_ID <- rownames(top_df)
+
+  top_df <- top_df |>
+    dplyr::filter(
+      is.finite(log2FC),
+      is.finite(Adjusted_P_value)
+    )
+
+  fc_cutoff <- limma_fc
+  if (is.null(fc_cutoff) || !is.finite(fc_cutoff) || fc_cutoff <= 0) {
+    fc_cutoff <- 1
+  }
+
+  top_df <- top_df |>
+    dplyr::filter(
+      Adjusted_P_value <= limma_p_val,
+      abs(log2FC) >= log2(fc_cutoff)
+    )
+
+  direction <- gene_direction_filter
+  if (is.null(direction)) {
+    direction <- "Up-regulated genes"
+  }
+
+  if (identical(direction, "Up-regulated genes")) {
+    top_df <- top_df |>
+      dplyr::filter(log2FC > 0)
+  } else if (identical(direction, "Down-regulated genes")) {
+    top_df <- top_df |>
+      dplyr::filter(log2FC < 0)
+  }
+
+  order_dir <- if (identical(direction, "Down-regulated genes")) "asc" else "desc"
+
+  if (nrow(top_df) == 0) {
+    empty_tbl$order_dir <- order_dir
+    return(empty_tbl)
+  }
+
+  if (!is.null(gene_names) && "ensembl_ID" %in% colnames(gene_names)) {
+    gene_names <- gene_names |>
+      dplyr::distinct(ensembl_ID, .keep_all = TRUE)
+    top_df <- top_df |>
+      dplyr::left_join(
+        gene_names |>
+          dplyr::select(ensembl_ID, symbol),
+        by = "ensembl_ID"
+      )
+  } else {
+    top_df$symbol <- NA_character_
+  }
+
+  if (!is.null(gene_info) &&
+    "ensembl_gene_id" %in% colnames(gene_info)) {
+    keep_cols <- c("ensembl_gene_id", "entrezgene_id", "description")
+    keep_cols <- keep_cols[keep_cols %in% colnames(gene_info)]
+    gene_info <- gene_info |>
+      dplyr::select(dplyr::all_of(keep_cols)) |>
+      dplyr::distinct(ensembl_gene_id, .keep_all = TRUE)
+    top_df <- top_df |>
+      dplyr::left_join(
+        gene_info,
+        by = c("ensembl_ID" = "ensembl_gene_id")
+      )
+  }
+
+  if (!"entrezgene_id" %in% colnames(top_df)) {
+    top_df$entrezgene_id <- NA_character_
+  }
+  if (!"description" %in% colnames(top_df)) {
+    top_df$description <- NA_character_
+  }
+
+  top_df <- top_df |>
+    dplyr::mutate(
+      symbol        = dplyr::coalesce(symbol, ensembl_ID),
+      entrezgene_id = as.character(entrezgene_id),
+      description   = as.character(description),
+      description   = gsub(";.*|\\[.*", "", description),
+      description   = dplyr::na_if(trimws(description), "")
+    )
+
+  if (identical(order_dir, "asc")) {
+    top_df <- top_df |>
+      dplyr::arrange(log2FC, Adjusted_P_value)
+  } else {
+    top_df <- top_df |>
+      dplyr::arrange(dplyr::desc(log2FC), Adjusted_P_value)
+  }
+
+  meta_df <- top_df |>
+    dplyr::transmute(
+      ensembl_ID,
+      symbol,
+      entrezgene_id,
+      log2FC,
+      Adjusted_P_value,
+      description
+    )
+
+  display_df <- top_df |>
+    dplyr::mutate(
+      symbol_display = ifelse(
+        is.na(symbol),
+        "",
+        htmltools::htmlEscape(symbol)
+      ),
+      ensembl_display = ifelse(
+        is.na(ensembl_ID),
+        "",
+        htmltools::htmlEscape(ensembl_ID)
+      ),
+      description_display = ifelse(
+        is.na(description),
+        NA_character_,
+        htmltools::htmlEscape(description)
+      ),
+      `ID` = dplyr::if_else(
+        !is.na(entrezgene_id) & entrezgene_id != "",
+        sprintf(
+          "<a href='https://www.ncbi.nlm.nih.gov/gene/%s' target='_blank'>%s</a>",
+          entrezgene_id,
+          symbol_display
+        ),
+        symbol_display
+      ),
+      `Ensembl ID` = dplyr::if_else(
+        !is.na(ensembl_ID) & grepl("^ENS", ensembl_ID),
+        sprintf(
+          "<a href='https://www.ensembl.org/id/%s' target='_blank'>%s</a>",
+          ensembl_ID,
+          ensembl_display
+        ),
+        ensembl_display
+      ),
+      `log2 FC` = sprintf("%.3f", log2FC),
+      `Adj. Pval` = {
+        formatted <- formatC(Adjusted_P_value, format = "e", digits = 2)
+        formatted <- gsub("e([+-])0*(\\d+)", "e\\1\\2", formatted)
+        formatted
+      },
+      Description = dplyr::coalesce(description_display, "")
+    ) |>
+    dplyr::transmute(
+      `ID`,
+      `Ensembl ID`,
+      `log2 FC`,
+      `Adj. Pval`,
+      Description
+    ) |>
+    as.data.frame(stringsAsFactors = FALSE)
+
+  list(
+    display   = display_df,
+    meta      = meta_df,
+    order_dir = order_dir
+  )
 }

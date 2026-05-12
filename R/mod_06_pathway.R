@@ -276,7 +276,7 @@ mod_06_pathway_ui <- function(id) {
             window can render figure differently and
             resolve the \"Figure margin too wide\" error. "),
             br(),
-            ottoPlots::mod_download_figure_ui(ns("download_pathway_tree"))
+            mod_download_figure_ui(ns("download_pathway_tree"))
           ),
           tabPanel(
             title = "Network",
@@ -918,7 +918,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
           req(input$pathway_method == 1)
 
           if (ncol(res_pathway()) > 4) {
-            res_pathway()[c(1, 10, 4, 6:9)]
+            res_pathway()[pathway_table_display_cols(res_pathway())]
           } else {
             res_pathway()
           }
@@ -1252,7 +1252,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
         req(!is.null(fgsea_pathway_data()))
         req(input$pathway_method == 3)
         if (ncol(res_pathway()) > 4) {
-          res_pathway()[c(1, 10, 4, 6:9)]
+          res_pathway()[pathway_table_display_cols(res_pathway())]
         } else {
           res_pathway()
         }
@@ -1538,7 +1538,7 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       req(!is.null(enrichment_tree_p()))
       print(enrichment_tree_p())
     })
-    download_pathway_tree <- ottoPlots::mod_download_figure_server(
+    download_pathway_tree <- mod_download_figure_server(
       id = "download_pathway_tree",
       filename = "pathway_tree",
       figure = reactive({

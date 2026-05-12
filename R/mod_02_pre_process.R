@@ -57,7 +57,7 @@ mod_02_pre_process_ui <- function(id) {
             choices = c(
               "VST: variance stabilizing transform" = 2,
               "rlog: regularized log (slow) " = 3,
-              "EdgeR: log2(CPM+c)" = 1
+              "edgeR: log-CPM (prior.count)" = 1
             ),
             selected = 1,
             selectize = FALSE
@@ -90,7 +90,8 @@ mod_02_pre_process_ui <- function(id) {
                 ),
                 tippy::tippy_this(
                   ns("counts_log_start"),
-                  "Constant c in the log2(CPM + c) transformation; higher values reduce noise but decrease sensitivity. Typically between 1 and 10.",
+                  "dge <- DGEList(counts = mat, lib.size = colSums(mat))
+                  log2cpm <- cpm(dge, log = TRUE, prior.count = 1) Uses edgeR log-CPM transformation with prior.count, which adapts to library size to stabilize low counts and improve comparability across samples.",
                   theme = "light"
                 )
               )
@@ -227,7 +228,7 @@ mod_02_pre_process_ui <- function(id) {
         ),
         fluidRow(
           column(
-            width = 6,
+            width = 4,
             downloadButton(
               outputId = ns("download_processed_data"),
               label = "Processed data"
@@ -239,12 +240,9 @@ mod_02_pre_process_ui <- function(id) {
             )
           ),
           column(
-            width = 6,
-            # Conditional panel for read count data ------------
+            width = 4,
             conditionalPanel(
               condition = "output.data_file_format == 1",
-
-              # Download the counts data with converted IDs
               downloadButton(
                 outputId = ns("download_converted_counts"),
                 label = "Converted counts"
@@ -252,6 +250,27 @@ mod_02_pre_process_ui <- function(id) {
               tippy::tippy_this(
                 ns("download_converted_counts"),
                 "Download counts with gene IDs converted to Ensembl.",
+                theme = "light"
+              ),
+              ns = ns
+            )
+          ),
+          column(
+            width = 4,
+            conditionalPanel(
+              condition = "output.data_file_format == 1 && output.select_org != 'NEW'",
+              downloadButton(
+                outputId = ns("download_tpm"),
+                label = "TPM"
+              ),
+              tippy::tippy_this(
+                ns("download_tpm"),
+                paste(
+                  "Download TPM (Transcripts Per Million) computed from",
+                  "raw counts and Ensembl transcript lengths. Note: TPM",
+                  "values will not exactly match upstream effective TPM ",
+                  "lengths."
+                ),
                 theme = "light"
               ),
               ns = ns
@@ -295,7 +314,7 @@ mod_02_pre_process_ui <- function(id) {
               width = "100%",
               height = "500px"
             ),
-            ottoPlots::mod_download_figure_ui(
+            mod_download_figure_ui(
               id = ns("dl_raw_counts_gg")
             ),
             br(),
@@ -364,7 +383,7 @@ mod_02_pre_process_ui <- function(id) {
                 width = "100%",
                 height = "500px"
               ),
-              ottoPlots::mod_download_figure_ui(
+              mod_download_figure_ui(
                 id = ns("dl_eda_boxplot")
               ),
               ns = ns
@@ -377,7 +396,7 @@ mod_02_pre_process_ui <- function(id) {
                 width = "100%",
                 height = "500px"
               ),
-              ottoPlots::mod_download_figure_ui(
+              mod_download_figure_ui(
                 id = ns("dl_eda_density")
               ),
               ns = ns
@@ -390,7 +409,7 @@ mod_02_pre_process_ui <- function(id) {
                 width = "100%",
                 height = "500px"
               ),
-              ottoPlots::mod_download_figure_ui(
+              mod_download_figure_ui(
                 id = ns("dl_dev_transform")
               ),
               ns = ns
@@ -430,7 +449,7 @@ mod_02_pre_process_ui <- function(id) {
               width = "100%",
               height = "500px"
             ),
-            ottoPlots::mod_download_figure_ui(
+            mod_download_figure_ui(
               id = ns("dl_eda_scatter")
             )
           ),
@@ -455,7 +474,7 @@ mod_02_pre_process_ui <- function(id) {
               fluidRow(
                 column(
                   2, 
-                  ottoPlots::mod_download_figure_ui(
+                  mod_download_figure_ui(
                     id = ns("dl_gene_counts_gg")
                   )
                 ),
@@ -540,7 +559,7 @@ mod_02_pre_process_ui <- function(id) {
                     2,
                     div(
                       style = "display: flex; gap: 6px; align-items: center; flex-wrap: wrap;",
-                      ottoPlots::mod_download_figure_ui(
+                      mod_download_figure_ui(
                         id = ns("dl_rRNA_counts_gg")
                       )                      
                     )
@@ -575,7 +594,7 @@ mod_02_pre_process_ui <- function(id) {
                 fluidRow(
                   column(
                     2,
-                    ottoPlots::mod_download_figure_ui(
+                    mod_download_figure_ui(
                       id = ns("dl_chr_counts_gg")
                     )
                   ),
@@ -604,7 +623,7 @@ mod_02_pre_process_ui <- function(id) {
               fluidRow(
                 column(
                   2,
-                  ottoPlots::mod_download_figure_ui(
+                  mod_download_figure_ui(
                     id = ns("dl_chr_normalized_gg")
                   )
                 ),
@@ -716,7 +735,7 @@ mod_02_pre_process_ui <- function(id) {
             ),
             div(
               style = "display: flex; gap: 10px",
-              ottoPlots::mod_download_figure_ui(
+              mod_download_figure_ui(
                 id = ns("dl_gene_plot")
               ),
               downloadButton(
@@ -925,7 +944,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       print(raw_counts())
     })
     
-    dl_raw_counts_gg <- ottoPlots::mod_download_figure_server(
+    dl_raw_counts_gg <- mod_download_figure_server(
       id = "dl_raw_counts_gg",
       filename = "raw_counts_barplot",
       figure = reactive({
@@ -936,9 +955,15 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     
     output$counts_table <- renderTable({
       req(!is.null(processed_data()))
+      raw_counts_data <- processed_data()$raw_counts
+      converted_data  <- load_data$converted_data()
+      # Need at least a 2-D matrix to call colSums
+      if (is.null(dim(raw_counts_data)) || is.null(dim(converted_data))) {
+        return(NULL)
+      }
       # Sums of counts by sample
-      filtered <- as.data.frame(colSums(processed_data()$raw_counts))
-      original <- as.data.frame(colSums(load_data$converted_data()))
+      filtered <- as.data.frame(colSums(raw_counts_data))
+      original <- as.data.frame(colSums(converted_data))
       
       # Merge and rename columns
       df <- merge(x = original, y = filtered, by = "row.names")
@@ -981,7 +1006,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       print(gene_counts())
     })
 
-    dl_gene_counts_gg <- ottoPlots::mod_download_figure_server(
+    dl_gene_counts_gg <- mod_download_figure_server(
       id = "dl_gene_counts_gg",
       filename = "gene_counts_barplot",
       figure = reactive({
@@ -1043,7 +1068,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       }
     })
 
-    dl_rRNA_counts_gg <- ottoPlots::mod_download_figure_server(
+    dl_rRNA_counts_gg <- mod_download_figure_server(
       id = "dl_rRNA_counts_gg",
       filename = "rRNA_counts_barplot",
       figure = reactive({
@@ -1194,7 +1219,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       }
     })
 
-    dl_chr_counts_gg <- ottoPlots::mod_download_figure_server(
+    dl_chr_counts_gg <- mod_download_figure_server(
       id = "dl_chr_counts_gg",
       filename = "Chr_counts_barplot",
       figure = reactive({
@@ -1278,7 +1303,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       }
     })
 
-    dl_chr_counts_gg <- ottoPlots::mod_download_figure_server(
+    dl_chr_counts_gg <- mod_download_figure_server(
       id = "dl_chr_normalized_gg",
       filename = "Chr_normalized_expression_barplot",
       figure = reactive({
@@ -1537,7 +1562,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     output$eda_scatter <- renderPlot({
       print(scatter())
     })
-    dl_eda_scatter <- ottoPlots::mod_download_figure_server(
+    dl_eda_scatter <- mod_download_figure_server(
       id = "dl_eda_scatter",
       filename = "scatter_plot",
       figure = reactive({
@@ -1572,7 +1597,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     output$eda_boxplot <- renderPlot({
       print(eda_box())
     })
-    dl_eda_boxplot <- ottoPlots::mod_download_figure_server(
+    dl_eda_boxplot <- mod_download_figure_server(
       id = "dl_eda_boxplot",
       filename = "transformed_boxplot",
       figure = reactive({
@@ -1601,7 +1626,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     output$eda_density <- renderPlot({
       print(density())
     })
-    dl_eda_density <- ottoPlots::mod_download_figure_server(
+    dl_eda_density <- mod_download_figure_server(
       id = "dl_eda_density",
       filename = "density_plot",
       figure = reactive({
@@ -1654,7 +1679,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     output$dev_transfrom <- renderPlot({
       print(dev())
     })
-    dl_dev_transform <- ottoPlots::mod_download_figure_server(
+    dl_dev_transform <- mod_download_figure_server(
       id = "dl_dev_transform",
       filename = "transform_plot",
       figure = reactive({
@@ -1679,6 +1704,34 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       merged_data <- merge_data(
         load_data$all_gene_names(),
         processed_data()$raw_counts,
+        merge_ID = "ensembl_ID"
+      )
+    })
+
+    # TPM is only meaningful for raw read counts (data_file_format == 1).
+    tpm_result <- reactive({
+      req(load_data$data_file_format() == 1)
+      req(!is.null(processed_data()$raw_counts))
+
+      counts <- processed_data()$raw_counts
+      gene_lengths <- get_gene_lengths(
+        ensembl_ids = rownames(counts),
+        select_org = load_data$select_org(),
+        idep_data = idep_data
+      )
+      if (is.null(gene_lengths)) {
+        return(NULL)
+      }
+      compute_tpm(counts, gene_lengths)
+    })
+
+    merged_tpm_data <- reactive({
+      result <- tpm_result()
+      req(!is.null(result))
+
+      merge_data(
+        load_data$all_gene_names(),
+        result$tpm,
         merge_ID = "ensembl_ID"
       )
     })
@@ -1874,7 +1927,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       print(gene_plot())
     })
 
-    dl_gene_plot <- ottoPlots::mod_download_figure_server(
+    dl_gene_plot <- mod_download_figure_server(
       id = "dl_gene_plot",
       filename = "gene_plot",
       figure = reactive({
@@ -1908,6 +1961,45 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       },
       content = function(file) {
         write.csv(merged_raw_counts_data(), file, row.names = FALSE)
+      }
+    )
+    output$download_tpm <- downloadHandler(
+      filename = function() {
+        "tpm_data.csv"
+      },
+      content = function(file) {
+        result <- tpm_result()
+        if (is.null(result)) {
+          showNotification(
+            paste(
+              "TPM cannot be computed: no transcript-length data available",
+              "for the selected species."
+            ),
+            type = "error",
+            duration = 8
+          )
+          writeLines(
+            paste(
+              "TPM could not be computed for this dataset: no transcript-",
+              "length data is available for the selected species.",
+              "TPM is supported for read-counts data when an iDEP-supported",
+              "species is selected."
+            ),
+            con = file
+          )
+          return(invisible())
+        }
+        if (result$n_dropped > 0) {
+          showNotification(
+            paste0(
+              result$n_dropped,
+              " gene(s) excluded from TPM due to missing transcript lengths."
+            ),
+            type = "warning",
+            duration = 8
+          )
+        }
+        write.csv(merged_tpm_data(), file, row.names = FALSE)
       }
     )
 

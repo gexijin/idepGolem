@@ -118,7 +118,7 @@ are no `log(0)` errors. All other parameters can be set to `NULL`
 
 Input (`counts_transform`)   Description
 ---------------------------  --------------------------------------------------
-`1`                          EdgeR: log2(CPM+c) (Counts per Million + constant) (Visit https://www.rdocumentation.org/packages/SparkR/versions/2.1.2/topics/log2)
+`1`                          edgeR: log-CPM with prior.count (library-size adjusted pseudocount) (Visit https://www.rdocumentation.org/packages/SparkR/versions/2.1.2/topics/log2)
 `2`                          VST: variance stabilizing transform (Visit https://www.rdocumentation.org/packages/DESeq2/versions/1.12.3/topics/vst)
 `3`                          rlog: regularized log (slow) (Visit https://www.rdocumentation.org/packages/DESeq2/versions/1.12.3/topics/rlog)
 

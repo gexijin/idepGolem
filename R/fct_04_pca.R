@@ -24,12 +24,19 @@ get_pc <- function(data,
   npc <- min(5, ncol(data))
   pcaData <- as.data.frame(pca.object$x[, 1:npc])
 
-  groups <- detect_groups(sample_names = colnames(data), sample_info = sample_info)
+  # Preserve every original group label so downstream plots (and the PCA data
+  # download) show all conditions instead of collapsing rare groups into
+  # "Other" (issue #866).
+  groups <- detect_groups(
+    sample_names = colnames(data),
+    sample_info = sample_info,
+    preserve_original = TRUE
+  )
   # Missing design clause
   if (is.null(sample_info)) {
-    pcaData <- cbind(pcaData, detect_groups(colnames(data), sample_info))
+    pcaData <- cbind(pcaData, groups)
   } else {
-    pcaData <- cbind(pcaData, detect_groups(colnames(data), sample_info), sample_info)
+    pcaData <- cbind(pcaData, groups, sample_info)
   }
   # dim(pcaData)[2]
   colnames(pcaData)[npc + 1] <- "Names"
@@ -100,26 +107,25 @@ PCA_plot <- function(data,
     x_axis_labels <- 12
   }
 
-  # get groups
-  groups <- detect_groups(sample_names = colnames(data), sample_info = sample_info)
-
-  # get data
+  # get data (Names column already uses every original group, no "Other" cap)
   pcaData <- get_pc(data, sample_info)
 
-  levels <- length(unique(groups))
-  # plot color scheme
-  color_palette <- generate_colors(n = levels, palette_name = plots_color_select)
-  
-  nshapes <- (length(unique(groups)) / 8) + 1
+  # Build a named color palette keyed by the unique levels of the chosen color
+  # factor, so each group gets a distinct color even when there are many
+  # groups (issue #866).
+  color_levels <- sort(unique(as.character(pcaData[, selected_color])))
+  color_palette <- generate_colors(
+    n = length(color_levels),
+    palette_name = plots_color_select
+  )
+  names(color_palette) <- color_levels
 
-  # hide legend for large or no groups levels
-  if (levels <= 1 | levels > 20) {
-    group_fill <- NULL
-    legend <- "none"
-  } else {
-    group_fill <- groups
-    legend <- "right"
-  }
+  # nshapes is a multiplier for the recycled shape vector. Base it on the
+  # actual shape factor so we always have enough shapes regardless of which
+  # column was chosen, and ensure it's an integer (rep silently truncates).
+  nshapes <- ceiling(
+    length(unique(as.character(pcaData[, selected_shape]))) / 8
+  ) + 1
 
   # adjust axis label size
   if (ncol(data) < 31) {
@@ -261,24 +267,42 @@ PCA_plot_3d <- function(data,
   npc <- min(5, ncol(data))
   pcaData <- as.data.frame(pca.object$x[, 1:npc])
 
-  groups <- detect_groups(sample_names = colnames(data), sample_info = sample_info)
-  
-  levels <- length(unique(groups))
-  
+  # 3D PCA is interactive (rotate/zoom/legend toggle), so show every original
+  # group instead of collapsing rare ones into "Other" (issue #866).
+  groups <- detect_groups(
+    sample_names = colnames(data),
+    sample_info = sample_info,
+    preserve_original = TRUE
+  )
+
   # Missing design clause
   if (is.null(sample_info)) {
-    pcaData <- cbind(pcaData, detect_groups(colnames(data), sample_info))
+    pcaData <- cbind(pcaData, groups)
   } else {
-    pcaData <- cbind(pcaData, detect_groups(colnames(data), sample_info), sample_info)
+    pcaData <- cbind(pcaData, groups, sample_info)
   }
   colnames(pcaData)[npc + 1] <- "Names"
-  
-  nshapes <- (length(unique(groups)) / 8) + 1
 
-  # plot color scheme
-  color_palette <- generate_colors(n = levels, palette_name = plots_color_select)
+  # Build a named color palette keyed by the unique levels of the chosen color
+  # factor. Passing a named vector to plotly's `colors` argument guarantees a
+  # one-to-one group→color mapping (the previous code indexed the palette by
+  # every sample's factor code, which left most groups grey when there were
+  # many groups).
+  color_levels <- sort(unique(as.character(pcaData[, selected_color])))
+  color_palette <- generate_colors(
+    n = length(color_levels),
+    palette_name = plots_color_select
+  )
+  names(color_palette) <- color_levels
+
+  # Build a symbol palette matching the number of unique shape levels.
+  shape_levels <- sort(unique(as.character(pcaData[, selected_shape])))
+  available_symbols <- c("square", "circle", "diamond", "square-open",
+                         "circle-open", "cross", "x", "diamond-open")
+  symbol_palette <- rep(available_symbols, length.out = length(shape_levels))
+
   legend_title <- if (identical(selected_color, "Names")) "" else selected_color
-  
+
   # selected principal components
   PCAxyz <- c(as.integer(PCAx), as.integer(PCAy), as.integer(PCAz))
   percentVar <- get_pc_variance(data)[PCAxyz]
@@ -287,10 +311,9 @@ PCA_plot_3d <- function(data,
     y = pcaData[, as.integer(PCAy)],
     z = pcaData[, as.integer(PCAz)],
     color = pcaData[, selected_color],
-    colors = color_palette[sort(as.factor(pcaData[, selected_color]))],
-    symbol = pcaData[,selected_shape],
-    symbols = rep(c("square", "circle", "diamond", "square-open", "circle-open",
-                    "cross", "x", "diamond-open"), nshapes),
+    colors = color_palette,
+    symbol = pcaData[, selected_shape],
+    symbols = symbol_palette,
     text = rownames(pcaData),
     hovertemplate = ~paste(
       "<b>",rownames(pcaData),"</b><br><br>",
@@ -373,32 +396,48 @@ t_SNE_plot <- function(data,
   tsne <- Rtsne::Rtsne(t(x), dims = 2, perplexity = 1, verbose = FALSE, max_iter = 400)
   pcaData <- as.data.frame(tsne$Y)
   rownames(pcaData) <- rownames(t(x))
-  
+
+  # Preserve every original group so all conditions are visible (issue #866).
+  groups <- detect_groups(
+    sample_names = colnames(x),
+    sample_info = y,
+    preserve_original = TRUE
+  )
   # Missing design clause
   if (is.null(sample_info)) {
-    pcaData <- cbind(pcaData, detect_groups(colnames(x), y))
+    pcaData <- cbind(pcaData, groups)
   } else {
-    pcaData <- cbind(pcaData, detect_groups(colnames(x), y), sample_info)
+    pcaData <- cbind(pcaData, groups, sample_info)
   }
 
   colnames(pcaData)[1:3] <- c("x1", "x2", "Names")
-  
+
   pcaData$tooltip_text <- paste0(
     "Name: ", rownames(pcaData),
     "<br>Dimension 1: ", round(pcaData$x1, 2),
     "<br>Dimension 2: ", round(pcaData$x2, 2)
   )
 
-  nshapes <- (length(unique(as.factor(pcaData$Names))) / 8) + 1
-  
+  # nshapes is a multiplier for the recycled shape vector. Base it on the
+  # selected shape factor, and ensure it's an integer.
+  nshapes <- ceiling(
+    length(unique(as.character(pcaData[, selected_shape]))) / 8
+  ) + 1
+
   # Set point size based on number of sample
   point_size <- 6
   if (ncol(x) >= 40) {
     point_size <- 3
   }
 
-  # plot color scheme
-  color_palette <- generate_colors(n = nlevels(as.factor(pcaData$Names)), palette_name = plots_color_select)
+  # Build a named color palette keyed to the unique levels of the chosen color
+  # factor so each group gets a distinct color even when there are many groups.
+  color_levels <- sort(unique(as.character(pcaData[, selected_color])))
+  color_palette <- generate_colors(
+    n = length(color_levels),
+    palette_name = plots_color_select
+  )
+  names(color_palette) <- color_levels
   legend_color_title <- if (identical(selected_color, "Names")) NULL else selected_color
   legend_shape_title <- if (identical(selected_shape, "Names")) NULL else selected_shape
 
@@ -507,21 +546,31 @@ MDS_plot <- function(data,
   )
   pcaData <- as.data.frame(fit$points[, 1:2])
 
+  # Preserve every original group so all conditions are visible (issue #866).
+  groups <- detect_groups(
+    sample_names = colnames(x),
+    sample_info = y,
+    preserve_original = TRUE
+  )
   # Missing design clause
   if (is.null(sample_info)) {
-    pcaData <- cbind(pcaData, detect_groups(colnames(x), y))
+    pcaData <- cbind(pcaData, groups)
   } else {
-    pcaData <- cbind(pcaData, detect_groups(colnames(x), y), sample_info)
+    pcaData <- cbind(pcaData, groups, sample_info)
   }
   colnames(pcaData)[1:3] <- c("x1", "x2", "Names")
-  
+
   pcaData$tooltip_text <- paste0(
     "Name: ", rownames(pcaData),
     "<br>Dimension 1: ", round(pcaData$x1, 2),
     "<br>Dimension 2: ", round(pcaData$x2, 2)
   )
-  
-  nshapes <- (length(unique(as.factor(pcaData$Names))) / 8) + 1
+
+  # nshapes is a multiplier for the recycled shape vector. Base it on the
+  # selected shape factor, and ensure it's an integer.
+  nshapes <- ceiling(
+    length(unique(as.character(pcaData[, selected_shape]))) / 8
+  ) + 1
 
   # Set point & text size based on number of sample
   point_size <- 6
@@ -531,8 +580,14 @@ MDS_plot <- function(data,
     # text_size <- 16
   }
 
-  # plot color scheme
-  color_palette <- generate_colors(n = nlevels(as.factor(pcaData$Names)), palette_name = plots_color_select)
+  # Build a named color palette keyed to the unique levels of the chosen color
+  # factor so each group gets a distinct color even when there are many groups.
+  color_levels <- sort(unique(as.character(pcaData[, selected_color])))
+  color_palette <- generate_colors(
+    n = length(color_levels),
+    palette_name = plots_color_select
+  )
+  names(color_palette) <- color_levels
   legend_color_title <- if (identical(selected_color, "Names")) NULL else selected_color
   legend_shape_title <- if (identical(selected_shape, "Names")) NULL else selected_shape
 

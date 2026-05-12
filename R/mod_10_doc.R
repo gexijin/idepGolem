@@ -86,11 +86,6 @@ mod_10_doc_ui <- function(id) {
         ),
         " and many others.",
         " If you use the KEGG diagram, please also cite ",
-        a("pathview, ",
-          href = "https://doi.org/10.1093/bioinformatics/btt285",
-          target = "_blank"
-        ),
-        "and ",
         a("KEGG.",
           href = "https://doi.org/10.1093/nar/gkaa970",
           target = "_blank"

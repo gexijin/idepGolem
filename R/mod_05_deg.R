@@ -203,7 +203,7 @@ mod_05_deg_1_ui <- function(id) {
               outputId = ns("sig_gene_stats")
             ),
             br(),
-            ottoPlots::mod_download_figure_ui(ns("download_sig_gene_stats")),
+            mod_download_figure_ui(ns("download_sig_gene_stats")),
             br(),
             h5(
               "Numbers of differentially expressed genes for all comparisons.
@@ -228,11 +228,11 @@ mod_05_deg_1_ui <- function(id) {
           ),
             htmlOutput(outputId = ns("list_comparisons_venn")),
             plotOutput(outputId = ns("venn_plot")),
-            ottoPlots::mod_download_figure_ui(
+            mod_download_figure_ui(
               id = ns("dl_venn")
             ),
             plotOutput(outputId = ns("upset_plot")),
-            ottoPlots::mod_download_figure_ui(id = ns("dl_upset")),
+            mod_download_figure_ui(id = ns("dl_upset")),
             tags$p("The above graph is an UpSet plot that is an alternative to a
             venn diagram. The plot shows the intersections of the data in the
             combination matrix (bottom) and the columns show how many genes are
@@ -311,6 +311,18 @@ mod_05_deg_2_ui <- function(id) {
         h4("Investigate DEGs"),
         br(),
         htmlOutput(outputId = ns("list_comparisons")),
+        conditionalPanel("input.step_2 == 'Genes'",
+          downloadButton(
+            outputId = ns("download_deg_gene_list"),
+            label = "Gene List"
+          ),
+          tippy::tippy_this(
+            ns("download_deg_gene_list"),
+            "Download the filtered gene list (symbol, Ensembl ID, log2 FC, adjusted p-value, description) as a CSV.",
+            theme = "light"
+          ),
+          ns = ns
+        ),
         conditionalPanel("input.step_2 == 'Heatmap'",
           selectInput(
             inputId = ns("heatmap_gene_number"),
@@ -430,7 +442,7 @@ mod_05_deg_2_ui <- function(id) {
               height = "500px",
               width = "100%"
             ),
-            ottoPlots::mod_download_figure_ui(ns("download_volcano"))
+            mod_download_figure_ui(ns("download_volcano"))
           ),
           tabPanel(
             title = "MA Plot",
@@ -440,7 +452,7 @@ mod_05_deg_2_ui <- function(id) {
               height = "500px",
               width = "100%"
             ),
-            ottoPlots::mod_download_figure_ui(ns("download_ma"))
+            mod_download_figure_ui(ns("download_ma"))
           ),
           tabPanel(
             title = "Scatter Plot",
@@ -450,7 +462,7 @@ mod_05_deg_2_ui <- function(id) {
               height = "500px",
               width = "100%"
             ),
-            ottoPlots::mod_download_figure_ui(ns("download_scatter"))
+            mod_download_figure_ui(ns("download_scatter"))
           ),
           tabPanel(
             title = "Enrichment",
@@ -754,6 +766,33 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     )
 
     deg <- reactiveValues(limma = NULL)
+
+    # Reset DEG results whenever the data format changes so stale results
+    # from a previous data type cannot be viewed or downloaded.
+    observeEvent(
+      pre_process$data_file_format(),
+      {
+        deg$limma <- NULL
+      },
+      ignoreNULL = TRUE,
+      ignoreInit = TRUE
+    )
+
+    # Notify user when DEG results cannot support Venn/Upset diagram —
+    # specifically when limma$results is NULL or has no dimensions,
+    # which happens with too few samples (e.g. 2 total, no replicates).
+    observeEvent(deg$limma, {
+      if (
+        !is.null(deg$limma) &&
+        (is.null(deg$limma$results) || is.null(dim(deg$limma$results)))
+      ) {
+        showNotification(
+          "Venn/Upset diagram requires at least 2 replicates per group. Not enough samples in the current comparison.",
+          type = "warning",
+          duration = 8
+        )
+      }
+    }, ignoreNULL = TRUE)
 
     # Show design file tip in sidebar when no design file uploaded
     output$design_file_tip <- renderUI({
@@ -1113,7 +1152,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       )
     })
 
-    download_sig_gene_stats <- ottoPlots::mod_download_figure_server(
+    download_sig_gene_stats <- mod_download_figure_server(
       id = "download_sig_gene_stats",
       filename = "sig_gene_stats",
       figure = reactive({
@@ -1142,8 +1181,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         paste0("Up_and_down_genes_", file_name())
       },
       content = function(file) {
-        # Convert the matrix to a data frame and replace values
-        list_genes_df <- dplyr::mutate_all(
+        # Convert the calls matrix to Up/Down/None labels
+        calls_df <- dplyr::mutate_all(
           as.data.frame(deg$limma$results),
           ~ dplyr::case_when(
             . == -1 ~ "Down",
@@ -1151,22 +1190,44 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
             . == 0 ~ "None"
           )
         )
+        calls_df$gene_id <- rownames(calls_df)
 
-        # Add rownames as a new column
-        list_genes_df$gene_id <- rownames(list_genes_df)
+        comp_cols <- setdiff(names(calls_df), "gene_id")
 
-        # Make gene_id the first column
-        list_genes_df <- list_genes_df[,
-          c("gene_id", setdiff(names(list_genes_df), "gene_id"))
-        ]
-        
-        # Filter out unenriched genes (not up or down regulated)
-        list_genes_df <- list_genes_df[apply(
-          as.data.frame(list_genes_df[ , -1]), 1, 
+        # Keep only genes regulated in at least one comparison
+        keep <- apply(
+          as.data.frame(calls_df[, comp_cols, drop = FALSE]), 1,
           function(row) any(row %in% c("Up", "Down"))
-        ), ]
-        
-        write.csv(list_genes_df, file, row.names = FALSE)
+        )
+        calls_df <- calls_df[keep, , drop = FALSE]
+
+        # Build output: gene_id, then for each comparison the status,
+        # log2FC, and adjusted p-value. top_genes elements always have
+        # col 1 = log2 fold change and col 2 = adjusted p-value (this
+        # convention is used elsewhere in this module, e.g. line ~1642).
+        top_genes <- deg$limma$top_genes
+        out <- data.frame(
+          gene_id = calls_df$gene_id,
+          stringsAsFactors = FALSE
+        )
+
+        for (comp in comp_cols) {
+          out[[comp]] <- calls_df[[comp]]
+
+          stats_df <- top_genes[[comp]]
+          if (!is.null(stats_df) &&
+              is.data.frame(stats_df) &&
+              ncol(stats_df) >= 2) {
+            idx <- match(out$gene_id, rownames(stats_df))
+            out[[paste0(comp, ".log2FC")]] <- stats_df[idx, 1]
+            out[[paste0(comp, ".adjPval")]] <- stats_df[idx, 2]
+          } else {
+            out[[paste0(comp, ".log2FC")]] <- NA_real_
+            out[[paste0(comp, ".adjPval")]] <- NA_real_
+          }
+        }
+
+        write.csv(out, file, row.names = FALSE)
       }
     )
 
@@ -1182,7 +1243,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       req(!is.null(deg$limma$results))
       tippy::tippy_this(
         elementId = ns("sig_genes_download"),
-        tooltip = "Download the up- and down-regulated gene lists for each comparison.",
+        tooltip = "Download the up- and down-regulated gene lists for each comparison, including log2 fold change and adjusted p-value per gene.",
         theme = "light"
       )
     })
@@ -1269,6 +1330,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     venn <- reactive({
       req(!is.null(deg$limma))
       req(!is.null(input$select_comparisons_venn))
+      req(!is.null(venn_data()))
 
       venn <- plot_venn(
         results = venn_data(),
@@ -1280,7 +1342,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
     output$venn_plot <- renderPlot({
       print(venn())
     })
-    dl_venn <- ottoPlots::mod_download_figure_server(
+    dl_venn <- mod_download_figure_server(
       id = "dl_venn",
       filename = "venn_diagram",
       figure = reactive({
@@ -1293,6 +1355,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       p <- plot_upset(
         results = venn_data()
       )
+      req(!is.null(p))
       refine_ggplot2(
         p = p,
         gridline = pre_process$plot_grid_lines(),
@@ -1304,7 +1367,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       print(upset())
     })
 
-    dl_upset <- ottoPlots::mod_download_figure_server(
+    dl_upset <- mod_download_figure_server(
       id = "dl_upset",
       filename = "upset_plot",
       figure = reactive({
@@ -1595,216 +1658,14 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       req(!is.null(deg$limma$top_genes))
       req(input$select_contrast, input$limma_p_val, input$limma_fc)
 
-      empty_tbl <- list(
-        display = data.frame(
-          `ID` = character(0),
-          `Ensembl ID` = character(0),
-          `log2 FC` = character(0),
-          `Adj. Pval` = character(0),
-          Description = character(0),
-          stringsAsFactors = FALSE
-        ),
-        meta = data.frame(
-          ensembl_ID = character(0),
-          symbol = character(0),
-          entrezgene_id = character(0),
-          log2FC = numeric(0),
-          Adjusted_P_value = numeric(0),
-          description = character(0),
-          stringsAsFactors = FALSE
-        ),
-        order_dir = "desc"
-      )
-
-      top_list <- deg$limma$top_genes
-      if (length(top_list) == 0) {
-        return(empty_tbl)
-      }
-
-      idx <- match(input$select_contrast, names(top_list))
-      if (is.na(idx)) {
-        idx <- 1
-      }
-
-      top_df <- top_list[[idx]]
-
-      if (is.null(top_df) || nrow(top_df) == 0) {
-        return(empty_tbl)
-      }
-
-      top_df <- as.data.frame(top_df)
-
-      if (ncol(top_df) < 2) {
-        return(empty_tbl)
-      }
-
-      top_df <- top_df[, 1:2, drop = FALSE]
-      colnames(top_df) <- c("log2FC", "Adjusted_P_value")
-      top_df$ensembl_ID <- rownames(top_df)
-
-      top_df <- top_df |>
-        dplyr::filter(
-          is.finite(log2FC),
-          is.finite(Adjusted_P_value)
-        )
-
-      fc_cutoff <- input$limma_fc
-      if (is.null(fc_cutoff) || !is.finite(fc_cutoff) || fc_cutoff <= 0) {
-        fc_cutoff <- 1
-      }
-
-      top_df <- top_df |>
-        dplyr::filter(
-          Adjusted_P_value <= input$limma_p_val,
-          abs(log2FC) >= log2(fc_cutoff)
-        )
-
-      direction <- input$gene_direction_filter
-      if (is.null(direction)) {
-        direction <- "Up-regulated genes"
-      }
-
-      if (identical(direction, "Up-regulated genes")) {
-        top_df <- top_df |>
-          dplyr::filter(log2FC > 0)
-      } else if (identical(direction, "Down-regulated genes")) {
-        top_df <- top_df |>
-          dplyr::filter(log2FC < 0)
-      }
-
-      order_dir <- if (identical(direction, "Down-regulated genes")) "asc" else "desc"
-
-      if (nrow(top_df) == 0) {
-        empty_tbl$order_dir <- order_dir
-        return(empty_tbl)
-      }
-
-      gene_names <- pre_process$all_gene_names()
-
-      if (!is.null(gene_names) && "ensembl_ID" %in% colnames(gene_names)) {
-        gene_names <- gene_names |>
-          dplyr::distinct(ensembl_ID, .keep_all = TRUE)
-        top_df <- top_df |>
-          dplyr::left_join(
-            gene_names |>
-              dplyr::select(ensembl_ID, symbol),
-            by = "ensembl_ID"
-          )
-      } else {
-        top_df$symbol <- NA_character_
-      }
-
-      gene_info <- pre_process$all_gene_info()
-      if (!is.null(gene_info) &&
-        "ensembl_gene_id" %in% colnames(gene_info)) {
-        keep_cols <- c("ensembl_gene_id", "entrezgene_id", "description")
-        keep_cols <- keep_cols[keep_cols %in% colnames(gene_info)]
-        gene_info <- gene_info |>
-          dplyr::select(dplyr::all_of(keep_cols)) |>
-          dplyr::distinct(ensembl_gene_id, .keep_all = TRUE)
-        top_df <- top_df |>
-          dplyr::left_join(
-            gene_info,
-            by = c("ensembl_ID" = "ensembl_gene_id")
-          )
-      }
-
-      if (!"entrezgene_id" %in% colnames(top_df)) {
-        top_df$entrezgene_id <- NA_character_
-      }
-      if (!"description" %in% colnames(top_df)) {
-        top_df$description <- NA_character_
-      }
-
-      top_df <- top_df |>
-        dplyr::mutate(
-          symbol = dplyr::coalesce(symbol, ensembl_ID),
-          entrezgene_id = as.character(entrezgene_id),
-          description = as.character(description),
-          description = gsub(";.*|\\[.*", "", description),
-          description = dplyr::na_if(trimws(description), "")
-        )
-
-      if (identical(order_dir, "asc")) {
-        top_df <- top_df |>
-          dplyr::arrange(
-            log2FC,
-            Adjusted_P_value
-          )
-      } else {
-        top_df <- top_df |>
-          dplyr::arrange(
-            dplyr::desc(log2FC),
-            Adjusted_P_value
-          )
-      }
-
-      meta_df <- top_df |>
-        dplyr::transmute(
-          ensembl_ID,
-          symbol,
-          entrezgene_id,
-          log2FC,
-          Adjusted_P_value,
-          description
-        )
-
-      display_df <- top_df |>
-        dplyr::mutate(
-          symbol_display = ifelse(
-            is.na(symbol),
-            "",
-            htmltools::htmlEscape(symbol)
-          ),
-          ensembl_display = ifelse(
-            is.na(ensembl_ID),
-            "",
-            htmltools::htmlEscape(ensembl_ID)
-          ),
-          description_display = ifelse(
-            is.na(description),
-            NA_character_,
-            htmltools::htmlEscape(description)
-          ),
-          `ID` = dplyr::if_else(
-            !is.na(entrezgene_id) & entrezgene_id != "",
-            sprintf(
-              "<a href='https://www.ncbi.nlm.nih.gov/gene/%s' target='_blank'>%s</a>",
-              entrezgene_id,
-              symbol_display
-            ),
-            symbol_display
-          ),
-          `Ensembl ID` = dplyr::if_else(
-            !is.na(ensembl_ID) & grepl("^ENS", ensembl_ID),
-            sprintf(
-              "<a href='https://www.ensembl.org/id/%s' target='_blank'>%s</a>",
-              ensembl_ID,
-              ensembl_display
-            ),
-            ensembl_display
-          ),
-          `log2 FC` = sprintf("%.3f", log2FC),
-          `Adj. Pval` = {
-            formatted <- formatC(Adjusted_P_value, format = "e", digits = 2)
-            formatted <- gsub("e([+-])0*(\\d+)", "e\\1\\2", formatted)
-            formatted
-          },
-          Description = dplyr::coalesce(description_display, "")
-        ) |>
-        dplyr::transmute(
-          `ID`,
-          `Ensembl ID`,
-          `log2 FC`,
-          `Adj. Pval`,
-          Description
-        ) |>
-        as.data.frame(stringsAsFactors = FALSE)
-
-      list(
-        display = display_df,
-        meta = meta_df,
-        order_dir = order_dir
+      build_deg_gene_table(
+        top_list              = deg$limma$top_genes,
+        select_contrast       = input$select_contrast,
+        limma_p_val           = input$limma_p_val,
+        limma_fc              = input$limma_fc,
+        gene_direction_filter = input$gene_direction_filter,
+        gene_names            = pre_process$all_gene_names(),
+        gene_info             = pre_process$all_gene_info()
       )
     })
 
@@ -1836,6 +1697,18 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         rownames = FALSE
       )
     })
+
+    output$download_deg_gene_list <- downloadHandler(
+      filename = function() {
+        contrast <- input$select_contrast
+        if (is.null(contrast) || contrast == "") contrast <- "genes"
+        paste0("DEG_gene_list_", gsub("[^A-Za-z0-9_.-]", "_", contrast), ".csv")
+      },
+      content = function(file) {
+        req(deg_gene_table_data())
+        write.csv(deg_gene_table_data()$meta, file, row.names = FALSE)
+      }
+    )
 
     observeEvent(deg_gene_table_data(), {
       table_data <- deg_gene_table_data()
@@ -1918,7 +1791,10 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       raw_data_matrix <- NULL
       if (!is.null(pre_process$raw_counts())) {
         raw_data_matrix <- pre_process$raw_counts()
-      } else if (!is.null(load_data$converted_data())) {
+      } else if (
+        isTRUE(pre_process$data_file_format() == 1) &&
+        !is.null(load_data$converted_data())
+      ) {
         raw_data_matrix <- load_data$converted_data()
       }
       if (!is.null(raw_data_matrix)) {
@@ -2094,7 +1970,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       print(vol_plot())
     })
 
-    download_volcano <- ottoPlots::mod_download_figure_server(
+    download_volcano <- mod_download_figure_server(
       "download_volcano",
       filename = "volcano_plot",
       figure = reactive({
@@ -2124,7 +2000,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       print(ma_plot())
     })
 
-    download_ma <- ottoPlots::mod_download_figure_server(
+    download_ma <- mod_download_figure_server(
       "download_ma",
       filename = "ma_plot",
       figure = reactive({
@@ -2162,7 +2038,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       print(scatter_plot())
     })
 
-    download_scatter <- ottoPlots::mod_download_figure_server(
+    download_scatter <- mod_download_figure_server(
       "download_scatter",
       filename = "scatter_plot",
       figure = reactive({

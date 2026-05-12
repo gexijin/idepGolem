@@ -562,7 +562,6 @@ heatmap_main <- function(data,
 
     heat <- do.call(ComplexHeatmap::Heatmap, heat_args)
   } else if (cluster_meth == 2) {
-    set.seed(re_run)
     if (k_clusters > 10) {
       row_title <- 8
     } else {
@@ -712,6 +711,12 @@ heatmap_main <- function(data,
         labels_gp = grid::gpar(fontsize = 9)
       )
     )
+  }
+
+  # Set seed immediately before draw() so k-means always gets a clean,
+  # reproducible RNG state regardless of annotations built above.
+  if (cluster_meth == 2) {
+    set.seed(re_run)
   }
 
   ht <- ComplexHeatmap::draw(
