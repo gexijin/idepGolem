@@ -498,6 +498,56 @@ mod_02_pre_process_ui <- function(id) {
               conditionalPanel(
                 condition = "output.data_file_format == 1",
                 br(),
+                hr(),
+                scrollable_plot_output(
+                  outputId = ns("housekeeping_gg"),
+                  width = "100%",
+                  height = "400px"
+                ),
+                br(),
+                fluidRow(
+                  column(
+                    2,
+                    ottoPlots::mod_download_figure_ui(
+                      id = ns("dl_housekeeping_gg")
+                    )
+                  ),
+                  column(
+                    10,
+                    align = "right",
+                    p(
+                      "Normalized expression of housekeeping genes (GAPDH, ACTB). ",
+                      "Globally low bars suggest a degraded or low-input library."
+                    )
+                  )
+                ),
+                uiOutput(ns("housekeeping_warning")),
+                br(),
+                hr(),
+                scrollable_plot_output(
+                  outputId = ns("gc_bias_gg"),
+                  width = "100%",
+                  height = "500px"
+                ),
+                br(),
+                fluidRow(
+                  column(
+                    2,
+                    ottoPlots::mod_download_figure_ui(
+                      id = ns("dl_gc_bias_gg")
+                    )
+                  ),
+                  column(
+                    10,
+                    align = "right",
+                    p(
+                      "Mean gene counts vs GC content per sample. ",
+                      "A line that diverges from the others indicates GC bias from library prep."
+                    )
+                  )
+                ),
+                uiOutput(ns("gc_bias_warning")),
+                br(),
                 scrollable_plot_output(
                   outputId = ns("rRNA_counts_gg"),
                   width = "100%",
@@ -563,7 +613,7 @@ mod_02_pre_process_ui <- function(id) {
                 hr(),
                 ns = ns
               ),
-            
+
               scrollable_plot_output(
                 outputId = ns("chr_normalized_gg"),
                 width = "100%",
@@ -1135,6 +1185,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     chr_counts <- reactive({
       req(!is.null(chr_counts_result()))
       result <- chr_counts_result()
+      req(!is.null(result$plot))
       plot <- refine_ggplot2(
         p = result$plot,
         gridline = load_data$plot_grid_lines(),
@@ -1219,6 +1270,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
     chr_normalized <- reactive({
       req(!is.null(chr_normalized_result()))
       result <- chr_normalized_result()
+      req(!is.null(result$plot))
       plot <- refine_ggplot2(
         p = result$plot,
         gridline = load_data$plot_grid_lines(),
@@ -1256,6 +1308,149 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       filename = "Chr_normalized_expression_barplot",
       figure = reactive({
         chr_normalized()
+      }),
+      label = ""
+    )
+
+    # Housekeeping genes plot (GAPDH, ACTB) ----------
+    housekeeping_result <- reactive({
+      req(load_data$data_file_format() == 1)
+      req(!is.null(processed_data()$raw_counts))
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Plotting housekeeping genes",
+        color = "#000000"
+      )
+      # Guarantee the spinner is removed even if the plotting function throws
+      on.exit(shinybusy::remove_modal_spinner(), add = TRUE)
+      result <- tryCatch(
+        housekeeping_ggplot(
+          counts_data = load_data$converted_data(),
+          sample_info = load_data$sample_info(),
+          all_gene_info = load_data$all_gene_info(),
+          plots_color_select = load_data$plots_color_select()
+        ),
+        error = function(e) {
+          list(
+            plot = NULL,
+            warning = paste0("Housekeeping plot failed: ", conditionMessage(e))
+          )
+        }
+      )
+      return(result)
+    })
+
+    housekeeping <- reactive({
+      req(!is.null(housekeeping_result()))
+      result <- housekeeping_result()
+      req(!is.null(result$plot))
+      plot <- refine_ggplot2(
+        p = result$plot,
+        gridline = load_data$plot_grid_lines(),
+        ggplot2_theme = load_data$ggplot2_theme()
+      )
+      converted <- load_data$converted_data()
+      req(!is.null(converted))
+      update_scrollable_plot_width(
+        session = session,
+        output_id = "housekeeping_gg",
+        n_samples = ncol(converted)
+      )
+      plot
+    })
+
+    output$housekeeping_gg <- renderPlot({
+      print(housekeeping())
+    })
+
+    output$housekeeping_warning <- renderUI({
+      req(!is.null(housekeeping_result()))
+      result <- housekeeping_result()
+      if (!is.null(result$warning)) {
+        tags$div(
+          style = "padding: 10px; margin: 10px 0; background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; color: #856404;",
+          tags$strong("⚠ Warning: "),
+          result$warning
+        )
+      }
+    })
+
+    dl_housekeeping_gg <- ottoPlots::mod_download_figure_server(
+      id = "dl_housekeeping_gg",
+      filename = "housekeeping_barplot",
+      figure = reactive({
+        housekeeping()
+      }),
+      label = ""
+    )
+
+    # GC bias plot ----------
+    gc_bias_result <- reactive({
+      req(load_data$data_file_format() == 1)
+      req(!is.null(processed_data()$raw_counts))
+      shinybusy::show_modal_spinner(
+        spin = "orbit",
+        text = "Plotting GC bias",
+        color = "#000000"
+      )
+      on.exit(shinybusy::remove_modal_spinner(), add = TRUE)
+      result <- tryCatch(
+        gc_bias_ggplot(
+          counts_data = load_data$converted_data(),
+          sample_info = load_data$sample_info(),
+          all_gene_info = load_data$all_gene_info(),
+          plots_color_select = load_data$plots_color_select()
+        ),
+        error = function(e) {
+          list(
+            plot = NULL,
+            warning = paste0("GC-bias plot failed: ", conditionMessage(e))
+          )
+        }
+      )
+      return(result)
+    })
+
+    gc_bias <- reactive({
+      req(!is.null(gc_bias_result()))
+      result <- gc_bias_result()
+      req(!is.null(result$plot))
+      plot <- refine_ggplot2(
+        p = result$plot,
+        gridline = load_data$plot_grid_lines(),
+        ggplot2_theme = load_data$ggplot2_theme()
+      )
+      converted <- load_data$converted_data()
+      req(!is.null(converted))
+      update_scrollable_plot_width(
+        session = session,
+        output_id = "gc_bias_gg",
+        n_samples = ncol(converted)
+      )
+      plot
+    })
+
+    output$gc_bias_gg <- renderPlot({
+      print(gc_bias())
+    })
+
+    output$gc_bias_warning <- renderUI({
+      req(!is.null(gc_bias_result()))
+      result <- gc_bias_result()
+      if (!is.null(result$warning)) {
+        tags$div(
+          style = "padding: 10px; margin: 10px 0; background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; color: #856404;",
+          tags$strong("⚠ Warning: "),
+          result$warning
+        )
+      }
+    })
+
+    dl_gc_bias_gg <- ottoPlots::mod_download_figure_server(
+      id = "dl_gc_bias_gg",
+      filename = "gc_bias_lineplot",
+      figure = reactive({
+        gc_bias()
       }),
       label = ""
     )
