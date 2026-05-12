@@ -30,6 +30,7 @@ mod_03_clustering_ui <- function(id) {
         ".more-options summary::before { content: '+'; margin-right: 6px; font-size: 14px; line-height: 1; }",
         ".more-options[open] summary::before { content: '\\2212'; }",
         ".more-options-body { margin-top: 10px; padding: 10px 0; background-color: #f7f9fc; border-radius: 0; width: 100%; }",
+        ".shiny-notification-panel { bottom: 20px; right: auto; left: 20px; }",
         sep = "\n"
       )
     ),
@@ -37,6 +38,18 @@ mod_03_clustering_ui <- function(id) {
       # Heatmap Panel Sidebar ----------
       sidebarPanel(
         width = 3,
+        actionButton(
+          inputId = ns("submit_heatmap"),
+          label = "Submit",
+          style = "float:right; font-size: 16px; color: red;"
+        ),
+        tippy::tippy_this(
+          ns("submit_heatmap"),
+          "Apply current settings and render the heatmap.",
+          theme = "light"
+        ),
+        br(),
+        br(),
         # Select Clustering Method ----------
         conditionalPanel(
           condition = "input.cluster_panels == 'Heatmap' |
@@ -67,7 +80,7 @@ mod_03_clustering_ui <- function(id) {
                 min = 10,
                 max = 12000,
                 value = 1000,
-                step = 100
+                step = 10
               ),
               tippy::tippy_this(
                 ns("n_genes"),
@@ -416,6 +429,12 @@ mod_03_clustering_ui <- function(id) {
           tabPanel(
             title = "Heatmap",
             br(),
+            conditionalPanel(
+              condition = "input.submit_heatmap == 0",
+              ns = ns,
+              br(),
+              h3("Adjust parameters and click Submit.")
+            ),
             fluidRow(
               column(
                 width = 5,
@@ -574,6 +593,95 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     # Track the last rendered clustering configuration
     last_config <- reactiveVal(NULL)
 
+    # Holds all sidebar input values captured at Submit time.
+    # All fields are NULL until the user clicks Submit for the first time,
+    # which gates all heatmap-related reactives until then.
+    submitted <- reactiveValues(
+      cluster_meth              = NULL,
+      n_genes                   = NULL,
+      dendrogram_display        = NULL,
+      k_clusters                = NULL,
+      k_means_re_run            = NULL,
+      dist_function             = NULL,
+      hclust_function           = NULL,
+      select_factors_heatmap    = NULL,
+      selected_genes            = NULL,
+      gene_centering            = NULL,
+      gene_normalize            = NULL,
+      letter_overlay            = NULL,
+      show_color_key            = NULL,
+      sample_color              = NULL,
+      heatmap_cutoff            = NULL,
+      cluster_enrichment_label  = NULL
+    )
+
+    # Helper to snapshot all gated inputs into submitted
+    capture_submitted_inputs <- function() {
+      n_genes_val <- input$n_genes
+      if (is.null(n_genes_val) || is.na(n_genes_val) || n_genes_val < 1) {
+        showNotification(
+          "Please enter a valid number of genes (minimum 1) before submitting.",
+          type = "warning",
+          duration = 5
+        )
+        return(invisible(FALSE))
+      }
+      submitted$cluster_meth              <- input$cluster_meth
+      submitted$n_genes                   <- as.integer(n_genes_val)
+      submitted$dendrogram_display        <- input$dendrogram_display
+      submitted$k_clusters                <- input$k_clusters
+      submitted$k_means_re_run            <- input$k_means_re_run
+      submitted$dist_function             <- input$dist_function
+      submitted$hclust_function           <- input$hclust_function
+      submitted$select_factors_heatmap    <- input$select_factors_heatmap
+      submitted$selected_genes            <- input$selected_genes
+      submitted$gene_centering            <- input$gene_centering
+      submitted$gene_normalize            <- input$gene_normalize
+      submitted$letter_overlay            <- input$letter_overlay
+      submitted$show_color_key            <- input$show_color_key
+      submitted$sample_color              <- input$sample_color
+      submitted$heatmap_cutoff            <- input$heatmap_cutoff
+      submitted$cluster_enrichment_label  <- input$cluster_enrichment_label
+      invisible(TRUE)
+    }
+
+    # Submit button: capture all sidebar inputs and dismiss notification
+    observeEvent(input$submit_heatmap, {
+      if (isTRUE(capture_submitted_inputs())) {
+        removeNotification("heatmap_settings_changed")
+      }
+    })
+
+    # "New Seed" acts as its own submit for k-means
+    observeEvent(input$k_means_re_run, {
+      if (isTRUE(capture_submitted_inputs())) {
+        removeNotification("heatmap_settings_changed")
+      }
+    }, ignoreInit = TRUE)
+
+    # Show a bottom-left notification when gated inputs change after first submit
+    observe({
+      # Create reactive dependency on all gated inputs (except k_means_re_run
+      # which is handled by its own observeEvent above)
+      input$cluster_meth; input$n_genes; input$dendrogram_display
+      input$k_clusters; input$dist_function; input$hclust_function
+      input$select_factors_heatmap; input$selected_genes
+      input$gene_centering; input$gene_normalize; input$letter_overlay
+      input$show_color_key; input$sample_color; input$heatmap_cutoff
+      input$cluster_enrichment_label
+
+      # Only notify after the user has submitted at least once
+      if (!is.null(submitted$cluster_meth)) {
+        showNotification(
+          "Settings changed \u2014 click Submit to update the heatmap.",
+          duration = 6,
+          closeButton = TRUE,
+          type = "message",
+          id = "heatmap_settings_changed"
+        )
+      }
+    })
+
     observeEvent(pre_process$data(),
       {
         data_mat <- pre_process$data()
@@ -607,11 +715,17 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     observe({
       req(tab() == "Cluster")
       req(!is.null(pre_process$data()))
+      req(nrow(pre_process$data()) > 0)  # add this
+
       if (nrow(pre_process$data()) > 12000) {
         max_genes <- 12000
       } else {
         max_genes <- round(nrow(pre_process$data()), -2)
       }
+
+      # round() can return 0 if nrow is < 50, floor it at 1
+      max_genes <- max(max_genes, 1)
+
       updateNumericInput(
         inputId = "n_genes",
         max = max_genes
@@ -632,7 +746,8 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     })
 
     dendrogram_selection <- reactive({
-      selection <- req(input$dendrogram_display)
+      req(!is.null(submitted$cluster_meth))
+      selection <- req(submitted$dendrogram_display)
       list(
         sample = selection %in% c("column", "both"),
         row = selection %in% c("row", "both")
@@ -746,9 +861,13 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     sd_density_plot <- reactive({
       req(!is.null(pre_process$data()))
 
+      n_genes <- input$n_genes
+      req(!is.null(n_genes) && !is.na(n_genes) && n_genes >= 1)
+      n_genes <- as.integer(n_genes)
+
       p <- sd_density(
         data = pre_process$data(),
-        n_genes_max = input$n_genes
+        n_genes_max = n_genes
       )
       refine_ggplot2(
         p = p,
@@ -774,12 +893,13 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     # Heatmap Data -----------
     heatmap_data <- reactive({
       req(!is.null(pre_process$data()))
+      req(!is.null(submitted$cluster_meth))
 
       process_heatmap_data(
         data = pre_process$data(),
-        n_genes_max = input$n_genes,
-        gene_centering = input$gene_centering,
-        gene_normalize = input$gene_normalize,
+        n_genes_max = submitted$n_genes,
+        gene_centering = submitted$gene_centering,
+        gene_normalize = submitted$gene_normalize,
         sample_centering = FALSE,
         sample_normalize = FALSE,
         all_gene_names = pre_process$all_gene_names(),
@@ -789,6 +909,12 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
 
 
     # Heatmap Click Value ---------
+    # Use bindEvent so this only fires when heatmap_data() actually changes
+    # (i.e. when n_genes / centering / etc. change), NOT on every
+    # input$selected_genes change.  isolate() on `selected` ensures we read
+    # the current selection without creating a reactive dependency that would
+    # cause the observer to loop: updateSelectizeInput briefly resets the
+    # widget → input$selected_genes changes → observer fires → repeat.
     observe({
       req(!is.null(pre_process$all_gene_names()))
       req(!is.null(pre_process$data()))
@@ -799,9 +925,9 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         inputId = "selected_genes",
         label = NULL,
         choices = c("Top 5", "Top 10", "Top 15", row.names(heatmap_data())),
-        selected = input$selected_genes
+        selected = isolate(input$selected_genes)
       )
-    })
+    }) |> bindEvent(heatmap_data(), ignoreNULL = TRUE)
 
     # split "green-white-red" to c("green", "white", "red")
     heatmap_color_select <- reactive({
@@ -814,13 +940,13 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     row_dendrogram <- eventReactive(
       list(
         heatmap_data(),
-        input$cluster_meth,
-        input$dist_function,
-        input$hclust_function,
+        submitted$cluster_meth,
+        submitted$dist_function,
+        submitted$hclust_function,
         dendrogram_selection()$row
       ),
       {
-        if (isolate(input$cluster_meth) != 1 ||
+        if (isolate(submitted$cluster_meth) != 1 ||
           !isolate(dendrogram_selection()$row)) {
           return(NULL)
         }
@@ -828,8 +954,8 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         if (is.null(mat) || nrow(mat) < 2) {
           return(NULL)
         }
-        dist_fun <- dist_funs[[as.numeric(isolate(input$dist_function))]]
-        h_fun <- hclust_funs[[isolate(input$hclust_function)]]
+        dist_fun <- dist_funs[[as.numeric(isolate(submitted$dist_function))]]
+        h_fun <- hclust_funs[[isolate(submitted$hclust_function)]]
         stats::as.dendrogram(h_fun(dist_fun(mat)))
       },
       ignoreNULL = FALSE
@@ -838,13 +964,13 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     column_dendrogram <- eventReactive(
       list(
         heatmap_data(),
-        input$cluster_meth,
-        input$dist_function,
-        input$hclust_function,
+        submitted$cluster_meth,
+        submitted$dist_function,
+        submitted$hclust_function,
         dendrogram_selection()$sample
       ),
       {
-        if (isolate(input$cluster_meth) != 1 ||
+        if (isolate(submitted$cluster_meth) != 1 ||
           !isolate(dendrogram_selection()$sample)) {
           return(NULL)
         }
@@ -852,8 +978,8 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
         if (is.null(mat) || ncol(mat) < 2) {
           return(NULL)
         }
-        dist_fun <- dist_funs[[as.numeric(isolate(input$dist_function))]]
-        h_fun <- hclust_funs[[isolate(input$hclust_function)]]
+        dist_fun <- dist_funs[[as.numeric(isolate(submitted$dist_function))]]
+        h_fun <- hclust_funs[[isolate(submitted$hclust_function)]]
         stats::as.dendrogram(h_fun(dist_fun(t(mat))))
       },
       ignoreNULL = FALSE
@@ -865,12 +991,16 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     output$heatmap_main <- renderPlot(
       {
         req(!is.null(heatmap_data()))
-        req(!is.null(input$select_factors_heatmap))
+        req(!is.null(submitted$select_factors_heatmap))
 
         withProgress(message = "Creating Heatmap", value = 0, {
           incProgress(0.3, detail = "Processing data")
 
           shiny_env$ht <- heatmap_main_object()
+          # Store the matrix that was used for THIS render so kmeans_gene_lists
+          # always reads a matrix consistent with shiny_env$ht (HeatmapList
+          # objects don't expose @matrix directly).
+          shiny_env$ht_matrix <- isolate(heatmap_data())
 
           incProgress(0.4, detail = "Calculating positions")
 
@@ -890,15 +1020,19 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
           incProgress(0.3, detail = "Finalizing")
 
           # Store current configuration and signal render completion
-          # Use isolate to prevent creating reactive dependency loops
-          if (isolate(input$cluster_meth) == 2) {
+          # submitted$X already hold the values that triggered this render
+          if (isTRUE(submitted$cluster_meth == 2)) {
             current_config <- list(
-              k = isolate(input$k_clusters),
-              seed = isolate(input$k_means_re_run),
-              n_genes = isolate(input$n_genes)
+              k              = submitted$k_clusters,
+              seed           = submitted$k_means_re_run,
+              n_genes        = submitted$n_genes,
+              heatmap_cutoff = submitted$heatmap_cutoff,
+              gene_centering = submitted$gene_centering,
+              gene_normalize = submitted$gene_normalize
             )
             # Only increment if configuration actually changed
-            if (!identical(current_config, isolate(last_config()))) {
+            config_changed <- !identical(current_config, isolate(last_config()))
+            if (config_changed) {
               isolate(last_config(current_config))
               isolate(heatmap_rendered(heatmap_rendered() + 1))
             }
@@ -914,37 +1048,32 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
     # Color palette for experiment groups on heatmap
     group_pal <- reactive({
       req(!is.null(pre_process$sample_info()))
-      req(!is.na(input$sample_color))
+      req(!is.null(submitted$cluster_meth))
+      req(!is.na(submitted$sample_color))
 
       groups <- as.vector(as.matrix(pre_process$sample_info()))
-      pal <- build_annotation_colors(unique(groups), input$sample_color)
+      pal <- build_annotation_colors(unique(groups), submitted$sample_color)
       sample_list <- as.list(as.data.frame(pre_process$sample_info()))
 
       lapply(sample_list, function(x) {
-        setNames(
-          pal[unique(x)],
-          unique(x)
-        )
+        setNames(pal[unique(x)], unique(x))
       })
     })
 
     main_heatmap_group_info <- reactive({
       req(!is.null(heatmap_data()))
-      req(!is.null(input$select_factors_heatmap))
-      req(input$select_factors_heatmap != "")
-      req(!is.null(input$letter_overlay))
-      req(!is.null(input$sample_color))
+      req(!is.null(submitted$select_factors_heatmap))
+      req(submitted$select_factors_heatmap != "")
+      req(!is.null(submitted$letter_overlay))
+      req(!is.null(submitted$sample_color))
 
-      if (identical(input$select_factors_heatmap, "None")) {
+      if (identical(submitted$select_factors_heatmap, "None")) {
         groups <- rep("None", ncol(heatmap_data()))
-        return(list(
-          groups = groups,
-          group_colors = NULL
-        ))
+        return(list(groups = groups, group_colors = NULL))
       }
 
       group_pal_val <- NULL
-      if (input$select_factors_heatmap == "All factors") {
+      if (submitted$select_factors_heatmap == "All factors") {
         req(!is.null(pre_process$sample_info()))
         req(!is.null(group_pal()))
         group_pal_val <- group_pal()
@@ -953,27 +1082,29 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       info <- sub_heat_ann(
         data = heatmap_data(),
         sample_info = pre_process$sample_info(),
-        select_factors_heatmap = input$select_factors_heatmap,
+        select_factors_heatmap = submitted$select_factors_heatmap,
         group_pal = group_pal_val,
-        sample_color = input$sample_color,
-        use_letter_overlay = isTRUE(input$letter_overlay)
+        sample_color = submitted$sample_color,
+        use_letter_overlay = isTRUE(submitted$letter_overlay)
       )
 
-      list(
-        groups = info$groups,
-        group_colors = info$group_colors
-      )
+      list(groups = info$groups, group_colors = info$group_colors)
     })
 
     # Reactive for heatmap generation with double-render prevention
     heatmap_main_object <- reactive({
       req(!is.null(heatmap_data()))
-      req(!is.null(input$select_factors_heatmap))
-      req(input$select_factors_heatmap != "")
-      req(!is.null(input$letter_overlay))
+      req(isTRUE(nrow(heatmap_data()) > 0))
+      # k-means requires strictly more rows than cluster centres
+      if (isTRUE(submitted$cluster_meth == 2)) {
+        req(nrow(heatmap_data()) > submitted$k_clusters)
+      }
+      req(!is.null(submitted$select_factors_heatmap))
+      req(submitted$select_factors_heatmap != "")
+      req(!is.null(submitted$letter_overlay))
 
       # Wait for enrichment labels when labeling is enabled for k-means
-      label_clusters <- isTRUE(input$cluster_enrichment_label) && input$cluster_meth == 2
+      label_clusters <- isTRUE(submitted$cluster_enrichment_label) && submitted$cluster_meth == 2
       cluster_label_data <- NULL
       if (label_clusters) {
         cluster_label_data <- tryCatch(
@@ -984,8 +1115,7 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
 
       # Ensure stable state before proceeding
       if (!is.null(pre_process$sample_info())) {
-        # For "All factors", ensure group_pal is ready
-        if (input$select_factors_heatmap == "All factors") {
+        if (submitted$select_factors_heatmap == "All factors") {
           req(!is.null(group_pal()))
         }
       }
@@ -994,38 +1124,34 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       try(
         obj <- heatmap_main(
           data = heatmap_data(),
-          cluster_meth = input$cluster_meth,
-          heatmap_cutoff = input$heatmap_cutoff,
+          cluster_meth = submitted$cluster_meth,
+          heatmap_cutoff = submitted$heatmap_cutoff,
           sample_info = pre_process$sample_info(),
-          select_factors_heatmap = input$select_factors_heatmap,
+          select_factors_heatmap = submitted$select_factors_heatmap,
           dist_funs = dist_funs,
-          dist_function = input$dist_function,
-          hclust_function = input$hclust_function,
+          dist_function = submitted$dist_function,
+          hclust_function = submitted$hclust_function,
           sample_clustering = dendrogram_selection()$sample,
           heatmap_color_select = heatmap_color_select(),
           row_dend = dendrogram_selection()$row,
-          k_clusters = input$k_clusters,
-          re_run = input$k_means_re_run,
-          selected_genes = input$selected_genes,
-          group_pal = if (input$select_factors_heatmap == "All factors") {
-            group_pal()
-          } else {
-            NULL
-          },
-          sample_color = input$sample_color,
+          k_clusters = submitted$k_clusters,
+          re_run = submitted$k_means_re_run,
+          selected_genes = submitted$selected_genes,
+          group_pal = if (submitted$select_factors_heatmap == "All factors") group_pal() else NULL,
+          sample_color = submitted$sample_color,
           show_column_names = TRUE,
-          show_heatmap_legend = isTRUE(input$show_color_key),
-          row_dend_obj = if (input$cluster_meth == 1 && dendrogram_selection()$row) {
+          show_heatmap_legend = isTRUE(submitted$show_color_key),
+          row_dend_obj = if (submitted$cluster_meth == 1 && dendrogram_selection()$row) {
             row_dendrogram()
           } else {
             NULL
           },
-          col_dend_obj = if (input$cluster_meth == 1 && dendrogram_selection()$sample) {
+          col_dend_obj = if (submitted$cluster_meth == 1 && dendrogram_selection()$sample) {
             column_dendrogram()
           } else {
             NULL
           },
-          use_letter_overlay = isTRUE(input$letter_overlay),
+          use_letter_overlay = isTRUE(submitted$letter_overlay),
           show_cluster_labels = label_clusters && !is.null(cluster_label_data),
           custom_cluster_labels = cluster_label_data
         )
@@ -1457,16 +1583,24 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
       req(input$cluster_meth == 2)
       req(!is.null(pre_process$select_gene_id()))
       req(!is.null(pre_process$all_gene_names()))
-      req(!is.null(heatmap_data()))
 
       # Depend on heatmap_rendered to ensure we only run after heatmap renders
-      # This prevents reading stale cluster assignments
+      # This prevents reading stale cluster assignments.
+      # NOTE: do NOT depend on heatmap_data() here — that would cause
+      # kmeans_gene_lists to re-run on every transient n_genes change (e.g.
+      # while the user is typing), producing wrong cluster IDs against a
+      # mismatched heatmap matrix.  All data is sourced from shiny_env$ht
+      # which is only updated after a confirmed render.
       req(heatmap_rendered() > 0)
 
       # Wait for heatmap to be rendered first
       req(!is.null(shiny_env$ht))
+      req(!is.null(shiny_env$ht_matrix))
 
-      heatmap_mat <- as.matrix(heatmap_data())
+      # Use the matrix saved alongside the drawn heatmap object in renderPlot.
+      # HeatmapList (returned by draw()) has no @matrix slot; storing it
+      # separately guarantees row indices from row_order() are always valid.
+      heatmap_mat <- shiny_env$ht_matrix
 
       # Extract row order from the rendered heatmap
       # This ensures cluster IDs match the displayed heatmap slices
@@ -1593,18 +1727,19 @@ mod_03_clustering_server <- function(id, pre_process, load_data, idep_data, tab)
 
     # Sample Tree ----------
     sample_tree <- reactive({
-      req(!is.null(pre_process$data()), input$cluster_meth == 1)
+      req(!is.null(pre_process$data()))
+      req(!is.null(submitted$cluster_meth), submitted$cluster_meth == 1)
 
       draw_sample_tree(
         tree_data = pre_process$data(),
-        gene_centering = input$gene_centering,
-        gene_normalize = input$gene_normalize,
+        gene_centering = submitted$gene_centering,
+        gene_normalize = submitted$gene_normalize,
         sample_centering = FALSE,
         sample_normalize = FALSE,
         hclust_funs = hclust_funs,
-        hclust_function = input$hclust_function,
+        hclust_function = submitted$hclust_function,
         dist_funs = dist_funs,
-        dist_function = input$dist_function
+        dist_function = submitted$dist_function
       )
       p <- recordPlot()
       return(p)
