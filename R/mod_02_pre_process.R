@@ -57,7 +57,7 @@ mod_02_pre_process_ui <- function(id) {
             choices = c(
               "VST: variance stabilizing transform" = 2,
               "rlog: regularized log (slow) " = 3,
-              "EdgeR: log2(CPM+c)" = 1
+              "edgeR: log-CPM (prior.count)" = 1
             ),
             selected = 1,
             selectize = FALSE
@@ -90,7 +90,8 @@ mod_02_pre_process_ui <- function(id) {
                 ),
                 tippy::tippy_this(
                   ns("counts_log_start"),
-                  "Constant c in the log2(CPM + c) transformation; higher values reduce noise but decrease sensitivity. Typically between 1 and 10.",
+                  "dge <- DGEList(counts = mat, lib.size = colSums(mat))
+                  log2cpm <- cpm(dge, log = TRUE, prior.count = 1) Uses edgeR log-CPM transformation with prior.count, which adapts to library size to stabilize low counts and improve comparability across samples.",
                   theme = "light"
                 )
               )

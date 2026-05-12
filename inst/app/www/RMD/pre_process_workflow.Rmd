@@ -82,7 +82,7 @@ Ge, S.X., Son, E.W. & Yao, R. iDEP: an integrated web application for differenti
 
 <!-- "rlog: regularized log (slow) " = 3 -->
 
-<!-- "EdgeR: log2(CPM+c)" = 1 -->
+<!-- "edgeR: log-CPM (prior.count)" = 1 -->
 
 ```{r, include = FALSE}
 # devtools::load_all()
