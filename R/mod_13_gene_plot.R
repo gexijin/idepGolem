@@ -19,7 +19,7 @@ mod_gene_expression_plot_ui <- function(id,
   if (isTRUE(show_download)) {
     download_col <- column(
       width = 2,
-      ottoPlots::mod_download_figure_ui(
+      mod_download_figure_ui(
         id = ns("download_plot")
       )
     )
@@ -195,7 +195,7 @@ mod_gene_expression_plot_server <- function(id,
       print(plot_object())
     })
 
-    ottoPlots::mod_download_figure_server(
+    mod_download_figure_server(
       id = "download_plot",
       filename = download_filename,
       figure = reactive({

@@ -142,7 +142,7 @@ mod_11_enrichment_ui <- function(id) {
         title = "Tree",
         plotOutput(ns("enrichment_tree")),
         br(),
-        ottoPlots::mod_download_figure_ui(
+        mod_download_figure_ui(
           id = ns("dl_treeplot")
         )
       ),
@@ -385,7 +385,7 @@ mod_11_enrichment_ui <- function(id) {
           column(
             width = 3,
             style = "margin-top: 30px;",
-            ottoPlots::mod_download_figure_ui(
+            mod_download_figure_ui(
               id = ns("dl_barplot")
             )
           )
@@ -848,7 +848,7 @@ mod_11_enrichment_server <- function(id,
       enrichment_tree_object()
     })
 
-    dl_treeplot <- ottoPlots::mod_download_figure_server(
+    dl_treeplot <- mod_download_figure_server(
       id = "dl_treeplot",
       filename = "enrichment_tree",
       figure = reactive({
@@ -1029,7 +1029,7 @@ mod_11_enrichment_server <- function(id,
       }
     )
 
-    dl_barplot <- ottoPlots::mod_download_figure_server(
+    dl_barplot <- mod_download_figure_server(
       id = "dl_barplot",
       filename = "enrichment_barplot",
       figure = reactive({
