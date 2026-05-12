@@ -1181,8 +1181,8 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
         paste0("Up_and_down_genes_", file_name())
       },
       content = function(file) {
-        # Convert the matrix to a data frame and replace values
-        list_genes_df <- dplyr::mutate_all(
+        # Convert the calls matrix to Up/Down/None labels
+        calls_df <- dplyr::mutate_all(
           as.data.frame(deg$limma$results),
           ~ dplyr::case_when(
             . == -1 ~ "Down",
@@ -1190,22 +1190,44 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
             . == 0 ~ "None"
           )
         )
+        calls_df$gene_id <- rownames(calls_df)
 
-        # Add rownames as a new column
-        list_genes_df$gene_id <- rownames(list_genes_df)
+        comp_cols <- setdiff(names(calls_df), "gene_id")
 
-        # Make gene_id the first column
-        list_genes_df <- list_genes_df[,
-          c("gene_id", setdiff(names(list_genes_df), "gene_id"))
-        ]
-        
-        # Filter out unenriched genes (not up or down regulated)
-        list_genes_df <- list_genes_df[apply(
-          as.data.frame(list_genes_df[ , -1]), 1, 
+        # Keep only genes regulated in at least one comparison
+        keep <- apply(
+          as.data.frame(calls_df[, comp_cols, drop = FALSE]), 1,
           function(row) any(row %in% c("Up", "Down"))
-        ), ]
-        
-        write.csv(list_genes_df, file, row.names = FALSE)
+        )
+        calls_df <- calls_df[keep, , drop = FALSE]
+
+        # Build output: gene_id, then for each comparison the status,
+        # log2FC, and adjusted p-value. top_genes elements always have
+        # col 1 = log2 fold change and col 2 = adjusted p-value (this
+        # convention is used elsewhere in this module, e.g. line ~1642).
+        top_genes <- deg$limma$top_genes
+        out <- data.frame(
+          gene_id = calls_df$gene_id,
+          stringsAsFactors = FALSE
+        )
+
+        for (comp in comp_cols) {
+          out[[comp]] <- calls_df[[comp]]
+
+          stats_df <- top_genes[[comp]]
+          if (!is.null(stats_df) &&
+              is.data.frame(stats_df) &&
+              ncol(stats_df) >= 2) {
+            idx <- match(out$gene_id, rownames(stats_df))
+            out[[paste0(comp, ".log2FC")]] <- stats_df[idx, 1]
+            out[[paste0(comp, ".adjPval")]] <- stats_df[idx, 2]
+          } else {
+            out[[paste0(comp, ".log2FC")]] <- NA_real_
+            out[[paste0(comp, ".adjPval")]] <- NA_real_
+          }
+        }
+
+        write.csv(out, file, row.names = FALSE)
       }
     )
 
@@ -1221,7 +1243,7 @@ mod_05_deg_server <- function(id, pre_process, idep_data, load_data, tab) {
       req(!is.null(deg$limma$results))
       tippy::tippy_this(
         elementId = ns("sig_genes_download"),
-        tooltip = "Download the up- and down-regulated gene lists for each comparison.",
+        tooltip = "Download the up- and down-regulated gene lists for each comparison, including log2 fold change and adjusted p-value per gene.",
         theme = "light"
       )
     })

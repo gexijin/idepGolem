@@ -1554,6 +1554,7 @@ deg_limma <- function(processed_data,
       ix <- which(colnames(top_genes_table) == "logFC")
       colnames(top_genes_table)[ix] <- "log2FC"
       top_genes[[1]] <- top_genes_table
+      names(top_genes)[1] <- comparisons[1]
     }
 
     # Log fold change is actually subtract of means. So if the data is natral log
