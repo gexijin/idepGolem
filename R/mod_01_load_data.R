@@ -160,10 +160,11 @@ mod_01_load_data_ui <- function(id) {
           ns = ns
         ),
 
-        # Experiment design file input ----------
+        # Experiment design file input and interactive builder button ----------
         conditionalPanel(
           condition = "input.data_file_format != 0",
           uiOutput(ns("design_file_ui")),
+          uiOutput(ns("wizard_btn_ui")),
           ns = ns
         ),
         tags$details(
@@ -430,6 +431,14 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
     selected_demo <- reactiveVal(NULL)
     demo_preview_content <- reactiveVal(NULL)
+
+    # Stores a sample_info matrix built via the interactive design builder GUI
+    gui_design <- reactiveVal(NULL)
+
+    n_guided_factors <- reactiveVal(2L)
+    guided_factor_defs <- reactiveVal(NULL)
+    # Named list: factor index (character) → character vector of level per sample
+    sample_assignments <- reactiveVal(list())
 
     demo_preview_tables <- list(
       `1` = data.frame(
@@ -1190,6 +1199,10 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       req(go_button_count() == 0)
 
       tagList(
+        tags$style(HTML(paste0(
+          "#", ns("experiment_file_container"), " .form-group { margin-bottom: 4px; }",
+          "#", ns("experiment_file_progress"), " { display: none; }"
+        ))),
         strong("4. Optional: Experiment Design (CSV or text)"),
         fluidRow(
           column(
@@ -1238,9 +1251,857 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       )
     })
 
-    # Disables expression_file input to prevent multiple uploads
+    # Interactive design builder button (no go_button_count guard — must render for demo data too)
+    output$wizard_btn_ui <- renderUI({
+      req(!is.null(loaded_data()$data))
+      req(is.null(input$experiment_file))
+      div(
+        style = "margin-top: 4px;margin-bottom: 9px;",
+        actionButton(
+          inputId = ns("build_design_btn"),
+          label = "Or build design interactively",
+          icon = icon("table"),
+          class = "btn-xs btn-default"
+        ),
+        if (!is.null(gui_design())) {
+          tags$span(
+            icon("check-circle"),
+            " Design applied",
+            style = "color: #2e7d32; font-size: 12px; margin-left: 8px;"
+          )
+        }
+      )
+    })
+
+    # Helper: build one guided factor row div (used on open and on insertUI)
+    make_guided_factor_row <- function(i, default_name = "", default_levels = "") {
+      div(
+        id = ns(paste0("guided_factor_row_", i)),
+        class = "well well-sm",
+        style = "margin-bottom: 8px; padding: 10px;",
+        fluidRow(
+          column(
+            4,
+            textInput(
+              ns(paste0("gf_name_", i)),
+              label = paste("Factor", i, "name:"),
+              value = default_name,
+              placeholder = "e.g. Treatment"
+            )
+          ),
+          column(
+            5,
+            div(
+              id = ns(paste0("gf_levels_container_", i)),
+              textInput(
+                ns(paste0("gf_levels_", i)),
+                label = "Levels (comma-separated):",
+                value = default_levels,
+                placeholder = "e.g. ctrl, treated"
+              )
+            ),
+            div(
+              id = ns(paste0("gf_blocking_note_", i)),
+              style = "display: none;",
+              tags$small(
+                style = "color: #666; margin-top: 5px; display: block;",
+                shiny::icon("info-circle"),
+                " Pair indices (1, 2, 3 \u2026) will be assigned per sample in the next step."
+              )
+            )
+          ),
+          column(
+            3,
+            tags$label("Options:"),
+            tags$br(),
+            checkboxInput(
+              ns(paste0("gf_blocking_", i)),
+              label = "Paired / blocking",
+              value = FALSE
+            )
+          )
+        )
+      )
+    }
+
+    # Open design builder modal ----
+    observeEvent(input$build_design_btn, {
+      req(!is.null(loaded_data()$data))
+      sample_names <- colnames(loaded_data()$data)
+
+      n_guided_factors(2L)
+      guided_factor_defs(NULL)
+      initial_groups <- detect_groups(sample_names)
+      level_suggestion <- paste(unique(initial_groups), collapse = ", ")
+
+      shiny::showModal(shiny::modalDialog(
+        title = "Build Experimental Design",
+        size = "l",
+        tabsetPanel(
+          id = ns("design_builder_tab"),
+          tabPanel(
+            "Guided Builder",
+            br(),
+            # Step 1: define factors and levels
+            div(
+              id = ns("guided_step1"),
+              tags$p(
+                style = "color: #555; font-size: 13px; margin-bottom: 12px;",
+                "Step 1: Name each factor (e.g. Treatment, Genotype, Batch) and ",
+                "its levels. Check \u2018Paired / blocking\u2019 for pair/replicate index factors.",
+                "Up to 5 factors."
+              ),
+              div(
+                id = ns("guided_factor_rows_container"),
+                make_guided_factor_row(1L, "group", level_suggestion),
+                make_guided_factor_row(2L)
+              ),
+              hr(),
+              fluidRow(
+                column(
+                  6,
+                  actionButton(
+                    ns("add_guided_factor"), "+ Add another factor",
+                    class = "btn-xs btn-default"
+                  ),
+                  actionButton(
+                    ns("remove_guided_factor"), "- Remove last factor",
+                    class = "btn-xs btn-default",
+                    style = "margin-left: 6px;"
+                  )
+                ),
+                column(
+                  6, align = "right",
+                  actionButton(
+                    ns("guided_next_btn"), "Next: Assign samples \u2192",
+                    class = "btn-primary btn-sm"
+                  )
+                )
+              )
+            ),
+            # Step 2: assign samples (hidden until Next clicked)
+            shinyjs::hidden(
+              div(
+                id = ns("guided_step2"),
+                style = "max-height: 60vh; overflow-y: auto;",
+                uiOutput(ns("guided_step2_ui")),
+                hr(),
+                fluidRow(
+                  column(
+                    4,
+                    actionButton(
+                      ns("guided_back_btn"), "← Back to factors",
+                      class = "btn-default btn-sm"
+                    )
+                  ),
+                  column(
+                    4, align = "center",
+                    downloadButton(
+                      ns("download_guided_design"), "Download CSV",
+                      class = "btn-sm btn-default"
+                    )
+                  ),
+                  column(
+                    4, align = "right",
+                    actionButton(
+                      ns("apply_guided_design"), "Apply Design",
+                      class = "btn-primary btn-sm"
+                    )
+                  )
+                )
+              )
+            )
+          ),
+          tabPanel(
+            "Manual Fill-in",
+            br(),
+            tags$p(
+              style = "color: #555; font-size: 13px; margin-bottom: 8px;",
+              "Each row is a factor; each column is a sample. Enter a factor name, ",
+              "then type a group label for each sample. Leave the factor name blank ",
+              "to skip a row. The first row is pre-filled from sample names."
+            ),
+            tags$style(HTML(
+              ".design-grid-table .form-group { margin-bottom: 2px; }
+               .design-grid-table input.form-control { font-size: 12px; padding: 2px 4px; height: 26px; }"
+            )),
+            div(style = "overflow-x: auto;", uiOutput(ns("design_grid_ui"))),
+            tags$small(
+              style = "color: #888; display: block; margin-top: 4px;",
+              shiny::icon("info-circle"),
+              " Labels will be converted to uppercase and spaces removed on apply."
+            ),
+            hr(),
+            fluidRow(
+              column(
+                6,
+                downloadButton(
+                  ns("download_design_template"), "Download CSV",
+                  class = "btn-sm btn-default"
+                )
+              ),
+              column(
+                6, align = "right",
+                shiny::actionButton(
+                  ns("apply_design"), "Apply Design",
+                  class = "btn-primary btn-sm"
+                )
+              )
+            )
+          )
+        ),
+        easyClose = FALSE,
+        footer = shiny::modalButton("Cancel")
+      ))
+
+      # Inject JS helper so onclick attributes in chip spans can call assignChip()
+      shinyjs::runjs(sprintf(
+        "window.IDEP_DESIGN_NS = '%s';
+         window.assignChip = function(fi, j) {
+           var checked = $(\"input[name='\" + IDEP_DESIGN_NS + \"active_level_\" + fi + \"']:checked\");
+           if (!checked.length) return;
+           Shiny.setInputValue(IDEP_DESIGN_NS + 'chip_clicked',
+             {factor: fi, sample: j, level: checked.val()},
+             {priority: 'event'}
+           );
+         };",
+        ns("")
+      ))
+    })
+
+    # Add a factor row to the guided builder ----
+    observeEvent(input$add_guided_factor, {
+      current_n <- n_guided_factors()
+      if (current_n >= 5L) return()
+      new_i <- current_n + 1L
+      n_guided_factors(new_i)
+      insertUI(
+        selector = paste0("#", ns("guided_factor_rows_container")),
+        where = "beforeEnd",
+        ui = make_guided_factor_row(new_i),
+        immediate = TRUE
+      )
+      if (new_i >= 5L) shinyjs::disable("add_guided_factor")
+      shinyjs::enable("remove_guided_factor")
+    })
+
+    # Remove the last factor row from the guided builder ----
+    observeEvent(input$remove_guided_factor, {
+      current_n <- n_guided_factors()
+      if (current_n <= 1L) return()
+      removeUI(
+        selector = paste0("#", ns(paste0("guided_factor_row_", current_n))),
+        immediate = TRUE
+      )
+      n_guided_factors(current_n - 1L)
+      if (current_n - 1L <= 1L) shinyjs::disable("remove_guided_factor")
+      shinyjs::enable("add_guided_factor")
+    })
+
+    # Toggle levels input vs. blocking note for each factor slot ----
+    lapply(seq_len(5L), function(i) {
+      observeEvent(input[[paste0("gf_blocking_", i)]], {
+        if (isTRUE(input[[paste0("gf_blocking_", i)]])) {
+          shinyjs::hide(paste0("gf_levels_container_", i))
+          shinyjs::show(paste0("gf_blocking_note_", i))
+        } else {
+          shinyjs::show(paste0("gf_levels_container_", i))
+          shinyjs::hide(paste0("gf_blocking_note_", i))
+        }
+      }, ignoreNULL = TRUE, ignoreInit = TRUE)
+    })
+
+    # Validate step 1 and advance to step 2 ----
+    observeEvent(input$guided_next_btn, {
+      n <- n_guided_factors()
+      factor_defs <- list()
+      errors <- character(0)
+
+      for (i in seq_len(n)) {
+        fname_raw <- input[[paste0("gf_name_", i)]]
+        # Sanitize factor name: remove spaces/hyphens (matches build_sample_info_from_df)
+        fname <- sanitize_names(trimws(if (is.null(fname_raw)) "" else fname_raw))
+
+        is_blocking <- isTRUE(input[[paste0("gf_blocking_", i)]])
+
+        if (nchar(fname) == 0L) {
+          errors <- c(errors, paste0("Factor ", i, " has no name."))
+          next
+        }
+
+        if (is_blocking) {
+          factor_defs[[length(factor_defs) + 1L]] <- list(
+            name = fname, levels = NULL, is_blocking = TRUE
+          )
+        } else {
+          raw_levels_input <- input[[paste0("gf_levels_", i)]]
+          raw_levels <- if (is.null(raw_levels_input)) "" else raw_levels_input
+          levels_vec <- trimws(strsplit(raw_levels, ",", fixed = TRUE)[[1L]])
+          # Sanitize + uppercase level names (matches build_sample_info_from_df cell treatment)
+          levels_vec <- toupper(sanitize_names(levels_vec))
+          levels_vec <- levels_vec[nchar(levels_vec) > 0L]
+          # Deduplicate after sanitization (e.g. "ctrl" and "Ctrl" both become "CTRL")
+          levels_vec <- unique(levels_vec)
+          if (length(levels_vec) < 2L) {
+            errors <- c(errors, paste0(
+              "Factor '", fname, "' needs at least 2 distinct levels ",
+              "(after removing spaces and uppercasing)."
+            ))
+            next
+          }
+          factor_defs[[length(factor_defs) + 1L]] <- list(
+            name = fname, levels = levels_vec, is_blocking = FALSE
+          )
+        }
+      }
+
+      if (length(errors) > 0L) {
+        shiny::showNotification(
+          paste(errors, collapse = " "),
+          type = "warning", duration = 6L
+        )
+        return()
+      }
+      if (length(factor_defs) == 0L) {
+        shiny::showNotification(
+          "Define at least one factor before continuing.",
+          type = "warning", duration = 5L
+        )
+        return()
+      }
+
+      guided_factor_defs(factor_defs)
+      sample_assignments(list())
+      shinyjs::hide("guided_step1")
+      shinyjs::show("guided_step2")
+    })
+
+    # Return from step 2 to step 1 ----
+    observeEvent(input$guided_back_btn, {
+      shinyjs::show("guided_step1")
+      shinyjs::hide("guided_step2")
+    })
+
+    # Colors for chip backgrounds (one per level slot, cycled if >5 levels) ----
+    .guided_level_bg  <- c('#d0e9ff', '#d4edda', '#fff3cd', '#f8d7da', '#e8d5f5')
+    .guided_level_bdr <- c('#9ecfff', '#a5d6a7', '#ffe082', '#f5c6cb', '#ce93d8')
+
+    # Render sample-assignment UI for step 2 ----
+    output$guided_step2_ui <- renderUI({
+      fdefs <- guided_factor_defs()
+      req(!is.null(fdefs), !is.null(loaded_data()$data))
+      sample_names <- colnames(loaded_data()$data)
+
+      tagList(
+        tags$p(
+          style = 'color: #555; font-size: 13px; margin-bottom: 12px;',
+          'Step 2: Select a level on the left, then click sample names on the right to assign them.'
+        ),
+        lapply(seq_along(fdefs), function(fi) {
+          fdef <- fdefs[[fi]]
+          if (fdef$is_blocking) {
+            sample_inputs <- lapply(seq_along(sample_names), function(j) {
+              div(
+                style = paste0(
+                  'display: inline-block; margin: 4px; ',
+                  'text-align: center; vertical-align: top; min-width: 80px;'
+                ),
+                tags$div(
+                  style = 'font-size: 11px; color: #555; word-break: break-all;',
+                  sample_names[j]
+                ),
+                numericInput(
+                  ns(paste0('gs_', fi, '_', j)),
+                  label = NULL,
+                  value = j,
+                  min = 1L, max = length(sample_names), step = 1L,
+                  width = '70px'
+                )
+              )
+            })
+            div(
+              class = 'well well-sm',
+              style = 'margin-bottom: 12px; padding: 10px;',
+              tags$h5(
+                style = 'margin-top: 0; margin-bottom: 6px;',
+                tags$strong(fdef$name),
+                tags$span(
+                  class = 'label label-info',
+                  style = 'margin-left: 6px; font-size: 11px;',
+                  'Paired / Blocking'
+                )
+              ),
+              tags$p(
+                style = 'font-size: 12px; color: #666; margin-bottom: 8px;',
+                'Assign a pair index to each sample.',
+                'Samples sharing the same index are paired.'
+              ),
+              div(style = 'overflow-x: auto;', do.call(tagList, sample_inputs))
+            )
+          } else {
+            div(
+              class = 'well well-sm',
+              style = 'margin-bottom: 12px; padding: 10px;',
+              tags$h5(
+                style = 'margin-top: 0; margin-bottom: 6px;',
+                tags$strong(fdef$name)
+              ),
+              fluidRow(
+                column(
+                  4,
+                  tags$p(
+                    style = 'font-size: 12px; color: #555; margin-bottom: 6px;',
+                    'Select active level, then click samples:'
+                  ),
+                  radioButtons(
+                    ns(paste0('active_level_', fi)),
+                    label = NULL,
+                    choiceValues = fdef$levels,
+                    choiceNames  = lapply(seq_along(fdef$levels), function(k) {
+                      tags$span(
+                        tags$span(
+                          style = paste0(
+                            'display:inline-block; width:12px; height:12px; ',
+                            'border-radius:2px; margin-right:6px; ',
+                            'vertical-align:middle; border:1px solid; ',
+                            'background:', .guided_level_bg[((k - 1L) %% 5L) + 1L], ';',
+                            'border-color:', .guided_level_bdr[((k - 1L) %% 5L) + 1L], ';'
+                          )
+                        ),
+                        fdef$levels[k]
+                      )
+                    }),
+                    selected = fdef$levels[1L]
+                  ),
+                  if (length(fdef$levels) == 2L) {
+                    actionButton(
+                      ns(paste0('assign_rest_', fi)),
+                      'Assign remaining samples \u2192',
+                      class = 'btn-xs btn-info'
+                    )
+                  }
+                ),
+                column(
+                  8,
+                  tags$p(
+                    style = 'font-size: 12px; color: #555; margin-bottom: 4px;',
+                    paste0('Levels: ', paste(fdef$levels, collapse = ', '), '.'),
+                    tags$br(),
+                    'Click a chip to assign it to the selected level.'
+                  ),
+                  div(
+                    style = paste0(
+                      'max-height: 160px; overflow-y: auto; ',
+                      'border: 1px solid #ddd; border-radius: 4px; ',
+                      'padding: 8px; background: #fafafa;'
+                    ),
+                    uiOutput(ns(paste0('guided_chips_', fi)))
+                  ),
+                  uiOutput(ns(paste0('guided_assign_count_', fi)))
+                )
+              )
+            )
+          }
+        })
+      )
+    })
+
+    # Chip renderers - re-render sample chips when assignments change ----
+    lapply(seq_len(5L), function(fi) {
+      output[[paste0('guided_chips_', fi)]] <- renderUI({
+        fdefs <- guided_factor_defs()
+        if (is.null(fdefs) || fi > length(fdefs) || fdefs[[fi]]$is_blocking) {
+          return(NULL)
+        }
+        req(!is.null(loaded_data()$data))
+        sample_names <- colnames(loaded_data()$data)
+        fdef         <- fdefs[[fi]]
+        assignments  <- sample_assignments()
+        fi_asgn      <- assignments[[as.character(fi)]]
+        if (is.null(fi_asgn)) fi_asgn <- rep('', length(sample_names))
+
+        lapply(seq_along(sample_names), function(j) {
+          assigned <- fi_asgn[j]
+          lvl_idx  <- match(assigned, fdef$levels)
+          if (!is.na(lvl_idx) && nchar(assigned) > 0L) {
+            k   <- ((lvl_idx - 1L) %% 5L) + 1L
+            sty <- paste0(
+              'background:', .guided_level_bg[k], ';',
+              'border-color:', .guided_level_bdr[k], ';'
+            )
+            tip <- paste0('Assigned to: ', assigned)
+          } else {
+            sty <- 'background:#f5f5f5; border-color:#ccc;'
+            tip <- 'Unassigned - select a level then click'
+          }
+          tags$span(
+            sample_names[j],
+            onclick = sprintf('window.assignChip(%d,%d)', fi, j),
+            title   = tip,
+            style   = paste0(
+              'display:inline-block; margin:2px; padding:4px 10px; ',
+              'border-radius:12px; cursor:pointer; font-size:12px; ',
+              'border:1px solid; user-select:none; ',
+              sty
+            )
+          )
+        })
+      })
+    })
+
+    # Live assignment counters per factor slot ----
+    lapply(seq_len(5L), function(fi) {
+      output[[paste0('guided_assign_count_', fi)]] <- renderUI({
+        fdefs <- guided_factor_defs()
+        if (is.null(fdefs) || fi > length(fdefs) || fdefs[[fi]]$is_blocking) {
+          return(NULL)
+        }
+        req(!is.null(loaded_data()$data))
+        sample_names <- colnames(loaded_data()$data)
+        assignments  <- sample_assignments()
+        fi_asgn      <- assignments[[as.character(fi)]]
+        if (is.null(fi_asgn)) fi_asgn <- rep('', length(sample_names))
+        assigned <- sum(nchar(fi_asgn) > 0L)
+        color    <- if (assigned == length(sample_names)) '#2e7d32' else '#e65100'
+        tags$small(
+          style = paste0(
+            'color: ', color, '; font-weight: bold; ',
+            'margin-top: 4px; display: block;'
+          ),
+          shiny::icon(
+            if (assigned == length(sample_names)) 'check-circle' else 'exclamation-circle'
+          ),
+          paste0(' ', assigned, ' / ', length(sample_names), ' samples assigned')
+        )
+      })
+    })
+
+    # Single chip-click handler (one observer handles all chips) ----
+    observeEvent(input$chip_clicked, {
+      req(!is.null(loaded_data()$data))
+      fi    <- input$chip_clicked$factor
+      j     <- input$chip_clicked$sample
+      level <- input$chip_clicked$level
+      sample_names <- colnames(loaded_data()$data)
+      # Guard: JS index could be stale if data changed while modal was open
+      if (!is.numeric(j) || j < 1L || j > length(sample_names)) return()
+      asgn  <- sample_assignments()
+      key   <- as.character(fi)
+      if (is.null(asgn[[key]])) asgn[[key]] <- rep('', length(sample_names))
+      asgn[[key]][j] <- level
+      sample_assignments(asgn)
+    }, ignoreInit = TRUE)
+
+    # 'Assign remaining' buttons (2-level factors only) ----
+    lapply(seq_len(5L), function(fi) {
+      observeEvent(input[[paste0('assign_rest_', fi)]], {
+        fdefs <- guided_factor_defs()
+        if (is.null(fdefs) || fi > length(fdefs)) return()
+        fdef <- fdefs[[fi]]
+        if (fdef$is_blocking || length(fdef$levels) != 2L) return()
+        req(!is.null(loaded_data()$data))
+        sample_names <- colnames(loaded_data()$data)
+        active_level <- input[[paste0('active_level_', fi)]]
+        other_level  <- setdiff(fdef$levels, active_level)[1L]
+        asgn         <- sample_assignments()
+        key          <- as.character(fi)
+        current      <- if (is.null(asgn[[key]])) rep('', length(sample_names)) else asgn[[key]]
+        current[current == ''] <- other_level
+        asgn[[key]]  <- current
+        sample_assignments(asgn)
+      }, ignoreNULL = TRUE)
+    })
+
+    # Apply design built via the guided wizard ----
+    observeEvent(input$apply_guided_design, {
+      req(!is.null(loaded_data()$data))
+      fdefs <- guided_factor_defs()
+      req(!is.null(fdefs))
+      sample_names <- colnames(loaded_data()$data)
+      asgn  <- sample_assignments()
+
+      rows      <- list()
+      row_names <- character(0)
+      errors    <- character(0)
+      all_level_values <- character(0)
+
+      for (fi in seq_along(fdefs)) {
+        fdef <- fdefs[[fi]]
+        if (fdef$is_blocking) {
+          cell_values <- vapply(seq_along(sample_names), function(j) {
+            v <- input[[paste0('gs_', fi, '_', j)]]
+            if (is.null(v)) as.character(j) else as.character(v)
+          }, character(1L))
+        } else {
+          fi_asgn     <- asgn[[as.character(fi)]]
+          if (is.null(fi_asgn)) fi_asgn <- rep('', length(sample_names))
+          cell_values  <- fi_asgn
+          n_unassigned <- sum(nchar(cell_values) == 0L)
+          if (n_unassigned > 0L) {
+            errors <- c(errors, paste0(
+              "Factor '", fdef$name, "': ", n_unassigned,
+              " sample(s) not yet assigned."
+            ))
+          }
+          all_level_values <- c(
+            all_level_values, unique(cell_values[nchar(cell_values) > 0L])
+          )
+        }
+        rows[[fi]]  <- cell_values
+        row_names   <- c(row_names, fdef$name)
+      }
+
+      if (length(errors) > 0L) {
+        shiny::showNotification(
+          paste(errors, collapse = ' | '),
+          type = 'error', duration = 8L
+        )
+        return()
+      }
+
+      level_counts <- table(tolower(all_level_values))
+      dup_levels   <- names(level_counts[level_counts > 1L])
+      if (length(dup_levels) > 0L) {
+        shiny::showNotification(
+          paste0(
+            'Level names shared across factors (',
+            paste(dup_levels, collapse = ', '),
+            ') \u2014 iDEP will add factor prefixes to avoid confusion.'
+          ),
+          type = 'warning', duration = 5L
+        )
+      }
+
+      design_df <- as.data.frame(
+        do.call(rbind, rows),
+        stringsAsFactors = FALSE
+      )
+      colnames(design_df) <- sample_names
+      rownames(design_df) <- row_names
+
+      si <- build_sample_info_from_df(
+        design_df, sample_names, input$max_group_name_length
+      )
+
+      if (is.null(si)) {
+        shiny::showNotification(
+          paste0(
+            'Design not applied \u2014 ensure each factor ',
+            'has at least two distinct group labels.'
+          ),
+          type = 'error', duration = 6L
+        )
+        return()
+      }
+
+      gui_design(si)
+      shiny::removeModal()
+      shiny::showNotification(
+        'Experimental design applied.', type = 'message', duration = 4L
+      )
+    })
+
+    # Download guided design as CSV ----
+    output$download_guided_design <- downloadHandler(
+      filename = function() 'experimental_design.csv',
+      content = function(file) {
+        req(!is.null(loaded_data()$data))
+        fdefs        <- guided_factor_defs()
+        req(!is.null(fdefs))
+        sample_names <- colnames(loaded_data()$data)
+        asgn         <- sample_assignments()
+
+        rows      <- list()
+        row_names <- character(0)
+        for (fi in seq_along(fdefs)) {
+          fdef <- fdefs[[fi]]
+          if (fdef$is_blocking) {
+            cell_values <- vapply(seq_along(sample_names), function(j) {
+              v <- input[[paste0('gs_', fi, '_', j)]]
+              if (is.null(v)) as.character(j) else as.character(v)
+            }, character(1L))
+          } else {
+            fi_asgn     <- asgn[[as.character(fi)]]
+            cell_values <- if (is.null(fi_asgn)) rep('', length(sample_names)) else fi_asgn
+          }
+          rows[[fi]] <- cell_values
+          row_names  <- c(row_names,
+            if (nchar(fdef$name) > 0L) fdef$name else paste0('factor', fi))
+        }
+        row_names    <- make.unique(row_names)
+        df           <- as.data.frame(do.call(rbind, rows), stringsAsFactors = FALSE)
+        colnames(df) <- sample_names
+        rownames(df) <- row_names
+        write.csv(df, file)
+      }
+    )
+
+    # Render the editable design grid inside the modal ----
+    output$design_grid_ui <- renderUI({
+      req(!is.null(loaded_data()$data))
+      sample_names <- colnames(loaded_data()$data)
+      n <- length(sample_names)
+      n_factors <- 3L
+
+      initial_groups <- detect_groups(sample_names)
+
+      cell_px <- max(70L, min(110L, as.integer(660L / n)))
+      cell_style <- paste0("min-width: ", cell_px, "px; padding: 2px;")
+
+      header <- tags$tr(
+        tags$th(
+          "Factor Name",
+          style = "min-width: 120px; background: #f0f0f0; font-size: 12px; padding: 4px;"
+        ),
+        lapply(sample_names, function(s) {
+          tags$th(
+            s,
+            style = paste0(
+              "background: #f0f0f0; font-size: 11px; padding: 4px; ",
+              "word-break: break-all; ", cell_style
+            )
+          )
+        })
+      )
+
+      factor_rows <- lapply(seq_len(n_factors), function(i) {
+        default_name <- if (i == 1L) "group" else ""
+        default_cells <- if (i == 1L) initial_groups else rep("", n)
+
+        name_td <- tags$td(
+          style = "vertical-align: middle; padding: 2px;",
+          textInput(ns(paste0("factor_name_", i)), label = NULL,
+                    value = default_name, width = "100%")
+        )
+        cell_tds <- lapply(seq_len(n), function(j) {
+          tags$td(
+            style = cell_style,
+            textInput(ns(paste0("cell_", i, "_", j)), label = NULL,
+                      value = default_cells[[j]], width = "100%")
+          )
+        })
+        do.call(tags$tr, c(list(name_td), cell_tds))
+      })
+
+      tagList(
+        div(
+          class = "design-grid-table",
+          tags$table(
+            class = "table table-bordered table-condensed",
+            style = "margin-bottom: 4px; font-size: 12px;",
+            tags$thead(header),
+            tags$tbody(factor_rows)
+          )
+        )
+      )
+    })
+
+    # Apply GUI-built design ----
+    observeEvent(input$apply_design, {
+      req(!is.null(loaded_data()$data))
+      sample_names <- colnames(loaded_data()$data)
+      n <- length(sample_names)
+      n_factors <- 3L
+
+      rows <- list()
+      row_names <- character(0)
+
+      for (i in seq_len(n_factors)) {
+        factor_name <- input[[paste0("factor_name_", i)]]
+        if (is.null(factor_name) || nchar(trimws(factor_name)) == 0L) next
+
+        cell_values <- vapply(seq_len(n), function(j) {
+          v <- input[[paste0("cell_", i, "_", j)]]
+          if (is.null(v)) "" else v
+        }, character(1L))
+
+        rows[[length(rows) + 1L]] <- cell_values
+        row_names <- c(row_names, trimws(factor_name))
+      }
+
+      if (length(rows) == 0L) {
+        shiny::showNotification(
+          "No factors defined. Fill in at least one factor name and group labels.",
+          type = "warning", duration = 5
+        )
+        return()
+      }
+
+      if (anyDuplicated(row_names) > 0L) {
+        shiny::showNotification(
+          "Factor names must be unique. Please rename duplicate factors.",
+          type = "warning", duration = 5
+        )
+        return()
+      }
+
+      design_df <- as.data.frame(
+        do.call(rbind, rows),
+        stringsAsFactors = FALSE
+      )
+      colnames(design_df) <- sample_names
+      rownames(design_df) <- row_names
+
+      si <- build_sample_info_from_df(
+        design_df, sample_names, input$max_group_name_length
+      )
+
+      if (is.null(si)) {
+        shiny::showNotification(
+          "Design not applied — ensure at least one factor has two or more distinct group labels.",
+          type = "error", duration = 6
+        )
+        return()
+      }
+
+      gui_design(si)
+      shiny::removeModal()
+      shiny::showNotification(
+        "Experimental design applied.", type = "message", duration = 4
+      )
+    })
+
+    # Download current grid state as a CSV template ----
+    output$download_design_template <- downloadHandler(
+      filename = function() "experimental_design.csv",
+      content = function(file) {
+        req(!is.null(loaded_data()$data))
+        sample_names <- colnames(loaded_data()$data)
+        n <- length(sample_names)
+        n_factors <- 3L
+        initial_groups <- detect_groups(sample_names)
+
+        rows <- list()
+        row_names <- character(0)
+        for (i in seq_len(n_factors)) {
+          factor_name <- input[[paste0("factor_name_", i)]]
+          if (is.null(factor_name) || nchar(trimws(factor_name)) == 0L) {
+            factor_name <- if (i == 1L) "group" else paste0("factor", i)
+          }
+          cell_values <- vapply(seq_len(n), function(j) {
+            v <- input[[paste0("cell_", i, "_", j)]]
+            if (is.null(v)) {
+              if (i == 1L) initial_groups[[j]] else ""
+            } else {
+              v
+            }
+          }, character(1L))
+          rows[[i]] <- cell_values
+          row_names <- c(row_names, factor_name)
+        }
+
+        row_names <- make.unique(row_names)
+        df <- as.data.frame(do.call(rbind, rows), stringsAsFactors = FALSE)
+        colnames(df) <- sample_names
+        rownames(df) <- row_names
+        write.csv(df, file)
+      }
+    )
+
+    # Disables expression_file input to prevent multiple uploads; reset GUI design
     observeEvent(input$expression_file, {
       shinyjs::disable("expression_file")
+      gui_design(NULL)
     })
 
     show_gene_ids_modal <- function() {
@@ -1506,7 +2367,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
 
     # Reactive element to load the data from the user or demo data ---------
     loaded_data <- reactive({
-      input_data(
+      base <- input_data(
         expression_file = input$expression_file,
         experiment_file = input$experiment_file,
         go_button = go_button_count(),
@@ -1514,6 +2375,11 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         demo_metadata_file = demo_data_file()[2],
         max_group_name_length = input$max_group_name_length
       )
+      # Inject GUI-built design when no experiment file is uploaded
+      if (!is.null(gui_design()) && is.null(input$experiment_file)) {
+        base$sample_info <- gui_design()
+      }
+      base
     })
 
     # Sample information table -----------
