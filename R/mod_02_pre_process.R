@@ -508,7 +508,7 @@ mod_02_pre_process_ui <- function(id) {
                 fluidRow(
                   column(
                     2,
-                    ottoPlots::mod_download_figure_ui(
+                    mod_download_figure_ui(
                       id = ns("dl_housekeeping_gg")
                     )
                   ),
@@ -533,7 +533,7 @@ mod_02_pre_process_ui <- function(id) {
                 fluidRow(
                   column(
                     2,
-                    ottoPlots::mod_download_figure_ui(
+                    mod_download_figure_ui(
                       id = ns("dl_gc_bias_gg")
                     )
                   ),
@@ -1375,7 +1375,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       }
     })
 
-    dl_housekeeping_gg <- ottoPlots::mod_download_figure_server(
+    dl_housekeeping_gg <- mod_download_figure_server(
       id = "dl_housekeeping_gg",
       filename = "housekeeping_barplot",
       figure = reactive({
@@ -1446,7 +1446,7 @@ mod_02_pre_process_server <- function(id, load_data, tab) {
       }
     })
 
-    dl_gc_bias_gg <- ottoPlots::mod_download_figure_server(
+    dl_gc_bias_gg <- mod_download_figure_server(
       id = "dl_gc_bias_gg",
       filename = "gc_bias_lineplot",
       figure = reactive({
