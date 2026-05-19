@@ -469,19 +469,16 @@ mod_11_enrichment_server <- function(id,
     output$select_go_selector <- renderUI({
       req(!is.null(gmt_choices()))
 
-      selected <- gmt_choices()[1] # default, overwrite by below
-      if ("GOBP" %in% gmt_choices()) {
-        selected <- "GOBP"
-      }
-      if ("KEGG" %in% gmt_choices()) {
-        selected <- "KEGG"
-      }
-      selectInput(
+      selectizeInput(
         inputId = ns("select_go"),
         label = NULL,
         choices = gmt_choices(),
-        selected = selected,
-        selectize = FALSE
+        selected = NULL,
+        options = list(
+          placeholder = "Type to search pathway databases",
+          searchField = c("label", "value"),
+          onInitialize = I('function() { this.setValue(""); }')
+        )
       )
     })
 
