@@ -441,21 +441,17 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
     output$select_go_selector <- renderUI({
       req(!is.null(pre_process$gmt_choices()))
 
-      # This make it reactive: every time method changes, it reset to KEGG.
-      # req(input$pathway_method != 5)
-
-      # if there is KEGG, use KEGG as default
-      selected <- "GOBP"
-      if ("KEGG" %in% pre_process$gmt_choices()) {
-        selected <- "KEGG"
-      }
       tagList(
-        selectInput(
+        selectizeInput(
           inputId = ns("select_go"),
           label = "Pathway database:",
           choices = pre_process$gmt_choices(),
-          selected = selected,
-          selectize = FALSE
+          selected = NULL,
+          options = list(
+            placeholder = "Type to search pathway databases",
+            searchField = c("label", "value"),
+            onInitialize = I('function() { this.setValue(""); }')
+          )
         ),
         tippy::tippy_this(
           ns("select_go"),
