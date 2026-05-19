@@ -90,7 +90,10 @@
     <li>
         <strong>GSEA (fgsea):</strong> runs fast preranked enrichment by ordering genes on
         fold change. Scores reflect whether pathway members accumulate toward the top or
-        bottom of the ranked list.
+        bottom of the ranked list. The dedicated <strong>GSEA Plot</strong> tab visualizes
+        this for a chosen pathway using the exact same FDR-filtered ranked list and
+        enrichment score (ES) as the significant-pathways table, so the figure and table
+        stay consistent.
     </li>
     <li>
         <strong>PGSEA:</strong> computes average expression shifts for pathways on a
@@ -118,6 +121,16 @@
     <li>
         <strong>Significant pathways:</strong> table of enriched pathways with download
         links for the CSV summary and leading-edge gene lists.
+    </li>
+    <li>
+        <strong>GSEA Plot:</strong> available when the method is
+        <em>GSEA (preranked fgsea)</em>. Pick a significant pathway to see the classic
+        three-panel enrichment plot: the green running enrichment-score curve (top),
+        black tick marks for each pathway gene's position in the ranked list (middle),
+        and the ranked-list metric (log2 fold change) as gray columns with a
+        red-to-blue phenotype-correlation strip (bottom). The subtitle shows the
+        pathway's ES and FDR so the figure can be matched to its table row, and the
+        figure is downloadable. Click the "i" button for an in-app reading guide.
     </li>
     <li>
         <strong>Tree:</strong> hierarchical clustering of pathways based on shared genes.
@@ -156,6 +169,14 @@
     <li>
         Use the Network and Tree tabs to spot clusters of related pathways that may point
         to overarching processes (for example, immune activation or metabolism).
+    </li>
+    <li>
+        On the GSEA Plot, a curve that peaks early on the left (with ticks clustered
+        toward the left edge) means the pathway is enriched among up-regulated genes; a
+        trough on the right (ticks clustered right) means enrichment among down-regulated
+        genes. Ticks spread evenly across the ranked list indicate little enrichment.
+        The dashed line marks where the ranking metric crosses zero, and the red-to-blue
+        strip shows which phenotype each gene is correlated with.
     </li>
     <li>
         When Pathview is slow, queue it after other analyses or limit the number of

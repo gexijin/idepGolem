@@ -265,6 +265,45 @@ mod_06_pathway_ui <- function(id) {
             )
           ),
           tabPanel(
+            title = "GSEA Plot",
+            br(),
+            conditionalPanel(
+              condition = "input.pathway_method != 3",
+              h4("The GSEA enrichment plot is available when the pathway
+                  analysis method is set to \"GSEA (preranked fgsea)\".
+                  Select it on the left and click Submit."),
+              ns = ns
+            ),
+            conditionalPanel(
+              condition = "input.pathway_method == 3",
+              fluidRow(
+                column(
+                  width = 10,
+                  uiOutput(outputId = ns("gsea_plot_pathway_selector"))
+                ),
+                column(
+                  width = 1,
+                  align = "right",
+                  style = "padding-top: 26px;",
+                  actionButton(
+                    inputId = ns("gsea_plot_info"),
+                    label = icon("info-circle", class = "fa-xl"),
+                    style = "border: none;background: transparent;
+                      box-shadow: none;padding-right: 20px;"
+                  )
+                )
+              ),
+              plotOutput(
+                outputId = ns("gsea_enrichment_plot"),
+                height = "650px",
+                width = "100%"
+              ),
+              mod_download_figure_ui(ns("download_gsea_plot")),
+              br(),
+              ns = ns
+            )
+          ),
+          tabPanel(
             title = "Tree",
             br(),
             plotOutput(
@@ -931,6 +970,104 @@ mod_06_pathway_server <- function(id, pre_process, deg, idep_data, tab) {
       width = "auto",
       hover = TRUE,
       sanitize.text.function = function(x) x
+    )
+
+    # GSEA enrichment plot (preranked fgsea only) -----------------
+    # Capture the ranking parameters at Submit so the plot uses the
+    # same ranked gene list as the significant-pathway table above.
+    gsea_plot_params <- eventReactive(input$submit_pathway_button, {
+      req(input$pathway_method == 3)
+      req(!is.null(deg$limma()))
+      req(!is.null(gene_sets()))
+      list(
+        select_contrast = input$select_contrast,
+        limma = deg$limma(),
+        gene_p_val_cutoff = input$gene_p_val_cutoff,
+        gene_sets = gene_sets()$gene_lists,
+        absolute_fold = input$absolute_fold
+      )
+    })
+
+    output$gsea_plot_pathway_selector <- renderUI({
+      req(input$pathway_method == 3)
+      req(!is.null(path_choices()))
+
+      selectInput(
+        inputId = ns("gsea_plot_pathway"),
+        label = "Select a significant pathway:",
+        choices = path_choices(),
+        width = "100%",
+        selectize = FALSE
+      )
+    })
+
+    observeEvent(input$gsea_plot_info, {
+      showModal(
+        modalDialog(
+          title = "Three-Panel GSEA Enrichment Plot Interpretation",
+          tags$ul(
+            tags$li(
+              tags$b("Top: "),
+              "the green running enrichment score as you walk down
+               the ranked gene list."
+            ),
+            tags$li(
+              tags$b("Middle: "),
+              "black ticks marking where each gene of the selected
+               pathway falls in the ranking."
+            ),
+            tags$li(
+              tags$b("Bottom: "),
+              "the ranked-list metric (limma log2 fold change, on the
+               same FDR-filtered gene list used for the GSEA table)
+               as gray columns, with a red-to-blue strip indicating
+               which phenotype each gene is correlated with."
+            )
+          ),
+          tags$p(
+            "A peak on the left indicates a pathway enriched among
+             up-regulated genes; a trough on the right indicates a
+             pathway enriched among down-regulated genes."
+          ),
+          easyClose = TRUE,
+          size = "m",
+          footer = modalButton("Close")
+        )
+      )
+    })
+
+    gsea_enrichment_p <- reactive({
+      req(input$pathway_method == 3)
+      req(!is.null(gsea_plot_params()))
+      req(!is.null(input$gsea_plot_pathway))
+
+      p <- gsea_plot_params()
+      gsea_enrichment_plot(
+        select_contrast = p$select_contrast,
+        limma = p$limma,
+        gene_p_val_cutoff = p$gene_p_val_cutoff,
+        gene_sets = p$gene_sets,
+        absolute_fold = p$absolute_fold,
+        pathway_name = input$gsea_plot_pathway,
+        gsea_table = fgsea_pathway_data()
+      )
+    })
+
+    output$gsea_enrichment_plot <- renderPlot({
+      validate(need(
+        !is.null(gsea_enrichment_p()),
+        "No GSEA enrichment plot available for this pathway."
+      ))
+      gsea_enrichment_p()
+    })
+
+    download_gsea_plot <- mod_download_figure_server(
+      id = "download_gsea_plot",
+      filename = "gsea_enrichment_plot",
+      figure = reactive({
+        gsea_enrichment_p()
+      }),
+      label = ""
     )
 
     # Capture analysis option values when Submit is clicked
