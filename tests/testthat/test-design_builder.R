@@ -185,3 +185,147 @@ test_that("build_sample_info_from_df returns NULL for empty input", {
     data.frame(), c("s1", "s2")
   ))
 })
+
+# --- near_duplicate_pairs() ---------------------------------------------------
+
+test_that("near_duplicate_pairs flags distance-1 typos", {
+  result <- near_duplicate_pairs(c("CTRL", "CTR", "TREATED"))
+  expect_length(result, 1L)
+  expect_true(grepl("CTRL", result) && grepl("CTR", result))
+})
+
+test_that("near_duplicate_pairs ignores exact duplicates and distance >= 2", {
+  expect_length(near_duplicate_pairs(c("CTRL", "CTRL", "TREATED")), 0L)
+  expect_length(near_duplicate_pairs(c("CTRL", "DRUG", "TREATED")), 0L)
+})
+
+test_that("near_duplicate_pairs is case-insensitive", {
+  expect_length(near_duplicate_pairs(c("Ctrl", "ctr")), 1L)
+})
+
+test_that("near_duplicate_pairs handles edge inputs", {
+  expect_length(near_duplicate_pairs(character(0)), 0L)
+  expect_length(near_duplicate_pairs("ALONE"), 0L)
+  expect_length(near_duplicate_pairs(c(NA_character_, "")), 0L)
+  expect_length(near_duplicate_pairs(c("CTRL", NA_character_, "")), 0L)
+})
+
+test_that("near_duplicate_pairs honors max_dist argument", {
+  # "kitten" -> "kitin" has distance 2
+  expect_length(near_duplicate_pairs(c("kitten", "kitin"), max_dist = 1L), 0L)
+  expect_length(near_duplicate_pairs(c("kitten", "kitin"), max_dist = 2L), 1L)
+})
+
+test_that("near_duplicate_pairs reports multiple pair hits", {
+  # Distance-1 pairs: CTRL↔CTR, CTR↔TR, TRT↔TR
+  # CTR↔TR and TRT↔TR are suppressed because max(nchar) <= 3 is OK but
+  # actually max here is 3 which is > 2, so they're flagged. CTRL↔CTR has
+  # max length 4, no shared digit-suffix root → also flagged. All 3 kept.
+  result <- near_duplicate_pairs(c("CTRL", "CTR", "TRT", "TR"))
+  expect_length(result, 3L)
+})
+
+test_that("near_duplicate_pairs skips numbered-series patterns", {
+  # Common lab labeling — these are intentional, not typos.
+  expect_length(near_duplicate_pairs(c("S1", "S2", "S3")), 0L)
+  expect_length(near_duplicate_pairs(c("Rep1", "Rep2", "Rep3")), 0L)
+  expect_length(near_duplicate_pairs(c("Sample1", "Sample10")), 0L)
+  expect_length(near_duplicate_pairs(c("D1", "D2")), 0L)
+  # Pure pair indices.
+  expect_length(near_duplicate_pairs(c("1", "2", "3")), 0L)
+})
+
+test_that("near_duplicate_pairs skips very short labels (max length <= 2)", {
+  # Length-2 strings: distance 1 = 50% mismatch, far past typo signal.
+  expect_length(near_duplicate_pairs(c("WT", "KT")), 0L)
+  expect_length(near_duplicate_pairs(c("A", "B")), 0L)
+})
+
+test_that("near_duplicate_pairs still flags genuine typos in longer labels", {
+  expect_length(near_duplicate_pairs(c("CTRL", "CTR")), 1L)
+  expect_length(near_duplicate_pairs(c("treated", "treatd")), 1L)
+  # Different root, both length >= 3 → real typo signal.
+  expect_length(near_duplicate_pairs(c("Day1", "Bay1")), 1L)
+})
+
+# --- has_non_ascii() ----------------------------------------------------------
+
+test_that("has_non_ascii returns FALSE for pure-ASCII input", {
+  expect_false(has_non_ascii(c("CTRL", "TREATED", "WT_REP1")))
+  expect_false(has_non_ascii("hello123"))
+})
+
+test_that("has_non_ascii detects accented Latin, CJK, and emoji", {
+  expect_true(has_non_ascii("café"))
+  expect_true(has_non_ascii("北京"))
+  expect_true(has_non_ascii("a🙂"))
+  expect_true(has_non_ascii(c("CTRL", "café")))
+})
+
+test_that("has_non_ascii handles edge inputs", {
+  expect_false(has_non_ascii(NULL))
+  expect_false(has_non_ascii(character(0)))
+  expect_false(has_non_ascii(NA_character_))
+  expect_false(has_non_ascii(""))
+  expect_false(has_non_ascii(c(NA_character_, "")))
+})
+
+# --- sanitize_created_names() (strict wizard sanitizer) ----------------------
+
+test_that("sanitize_created_names keeps ASCII alphanumerics and underscores", {
+  expect_equal(sanitize_created_names("WT_Rep1"), "WT_Rep1")
+  expect_equal(sanitize_created_names("abc123"), "abc123")
+  expect_equal(sanitize_created_names("foo_BAR_42"), "foo_BAR_42")
+})
+
+test_that("sanitize_created_names strips punctuation that sanitize_names preserves", {
+  expect_equal(sanitize_created_names('what?'), "what")
+  expect_equal(sanitize_created_names('say "hi"'), "sayhi")
+  expect_equal(sanitize_created_names("ctrl(rep1)"), "ctrlrep1")
+  expect_equal(sanitize_created_names("a!b@c#d$"), "abcd")
+  expect_equal(sanitize_created_names("foo:bar"), "foobar")
+})
+
+test_that("sanitize_created_names strips spaces, hyphens, dots", {
+  expect_equal(sanitize_created_names("Sample 1"), "Sample1")
+  expect_equal(sanitize_created_names("Sample-1"), "Sample1")
+  expect_equal(sanitize_created_names("Sample.1"), "Sample1")
+})
+
+test_that("sanitize_created_names strips non-ASCII characters", {
+  expect_equal(sanitize_created_names("café"), "caf")
+  expect_equal(sanitize_created_names("北京"), "")
+  expect_equal(sanitize_created_names("a🙂b"), "ab")
+})
+
+test_that("sanitize_created_names preserves NA and handles edge inputs", {
+  expect_equal(sanitize_created_names(NA_character_), NA_character_)
+  expect_equal(
+    sanitize_created_names(c("ok", NA_character_, "bad?")),
+    c("ok", NA_character_, "bad")
+  )
+  expect_null(sanitize_created_names(NULL))
+  expect_equal(sanitize_created_names(character(0)), character(0))
+})
+
+# --- sanitize_names() (original gentle behavior — unchanged contract) --------
+
+test_that("sanitize_names preserves punctuation that the strict variant strips", {
+  # The original sanitize_names only strips control chars, zero-width, NBSP,
+  # hyphens, dots, and whitespace. Everything else passes through.
+  expect_equal(sanitize_names('what?'), "what?")
+  expect_equal(sanitize_names("ctrl(rep1)"), "ctrl(rep1)")
+  expect_equal(sanitize_names("foo:bar"), "foo:bar")
+})
+
+test_that("sanitize_names still strips spaces, hyphens, dots (legacy behavior)", {
+  expect_equal(sanitize_names("Sample 1"), "Sample1")
+  expect_equal(sanitize_names("Sample-1"), "Sample1")
+  expect_equal(sanitize_names("Sample.1"), "Sample1")
+})
+
+test_that("sanitize_names preserves non-ASCII characters", {
+  # Uploaded-file sanitizer is intentionally permissive on Unicode.
+  expect_equal(sanitize_names("café"), "café")
+  expect_equal(sanitize_names("北京"), "北京")
+})
