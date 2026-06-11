@@ -791,6 +791,366 @@ fgsea_data <- function(select_contrast,
   return(top_1)
 }
 
+  #' Ranked gene-level statistics used for preranked GSEA
+  #'
+  #' Reconstructs the named, fold-change vector that
+  #' \code{\link{fgsea_data}()} feeds to \code{fgsea::fgsea()}, so the
+  #' GSEA enrichment plot is computed from the exact same ranked list as
+  #' the significant-pathway table.
+  #'
+  #' @param select_contrast String designating the comparison from DEG
+  #'  analysis. See the 'comparison' element from \code{\link{limma_value}()}.
+  #' @param limma Results list from the \code{\link{limma_value}()}.
+  #' @param gene_p_val_cutoff Significant p-value to filter the top genes by.
+  #' @param absolute_fold TRUE/FALSE to use the absolute value of the fold
+  #'  change.
+  #'
+  #' @return A named numeric vector of fold changes (names are gene IDs),
+  #'  or NULL when no genes are available.
+  #'
+  #' @noRd
+gsea_ranked_stats <- function(select_contrast,
+                              limma,
+                              gene_p_val_cutoff,
+                              absolute_fold) {
+  if (length(limma$top_genes) == 0) {
+    return(NULL)
+  }
+  if (length(limma$comparisons) == 1) {
+    top_1 <- limma$top_genes[[1]]
+  } else {
+    top <- limma$top_genes
+    ix <- match(select_contrast, names(top))
+    if (is.na(ix)) {
+      return(NULL)
+    }
+    top_1 <- top[[ix]]
+  }
+  if (dim(top_1)[1] == 0) {
+    return(NULL)
+  }
+  colnames(top_1) <- c("Fold", "FDR")
+  top_1 <- top_1[which(top_1$FDR < gene_p_val_cutoff), ]
+  if (dim(top_1)[1] == 0) {
+    return(NULL)
+  }
+
+  fold <- top_1[, 1]
+  names(fold) <- rownames(top_1)
+
+  if (absolute_fold) {
+    fold <- abs(fold)
+  }
+
+  return(fold)
+}
+
+#' Classic three-panel GSEA enrichment plot for a single gene set
+#'
+#' Produces the canonical Gene Set Enrichment Analysis enrichment plot
+#' for one pathway, stacked as three aligned panels sharing one x-axis
+#' (rank in the ordered gene list):
+#' \enumerate{
+#'   \item Running enrichment score (green curve).
+#'   \item Gene-set hit positions (black tick marks).
+#'   \item Ranked-list metric distribution (gray columns) with a
+#'     red-to-blue phenotype-correlation strip.
+#' }
+#' The ranking metric is the limma log2 fold change on the same
+#' FDR-filtered gene list that \code{\link{fgsea_data}()} used, so the
+#' curve and significance are consistent with the GSEA results table.
+#'
+#' @param select_contrast String designating the comparison from DEG
+#'  analysis. See the 'comparison' element from \code{\link{limma_value}()}.
+#'  Also used to label the two phenotypes on the metric strip.
+#' @param limma Results list from the \code{\link{limma_value}()}.
+#' @param gene_p_val_cutoff Significant p-value to filter the top genes by.
+#' @param gene_sets List of gene-set vectors keyed by pathway name. See
+#'  the results list from \code{\link{read_gene_sets}()}.
+#' @param absolute_fold TRUE/FALSE to use the absolute value of the fold
+#'  change.
+#' @param pathway_name Name of the gene set to plot. Must be a key in
+#'  \code{gene_sets}.
+#' @param gsea_table Optional data frame returned by
+#'  \code{\link{fgsea_data}()}. When supplied, the enrichment score
+#'  (ES) and FDR for \code{pathway_name} are shown in the plot subtitle
+#'  so the figure can be matched to its row in the results table.
+#'
+#' @return A ggpubr/ggplot composite object, or NULL when the ranked
+#'  list or gene set is unavailable.
+#'
+#' @noRd
+gsea_enrichment_plot <- function(select_contrast,
+                                 limma,
+                                 gene_p_val_cutoff,
+                                 gene_sets,
+                                 absolute_fold,
+                                 pathway_name,
+                                 gsea_table = NULL) {
+  fold <- gsea_ranked_stats(
+    select_contrast = select_contrast,
+    limma = limma,
+    gene_p_val_cutoff = gene_p_val_cutoff,
+    absolute_fold = absolute_fold
+  )
+
+  if (is.null(fold) ||
+    is.null(pathway_name) ||
+    !(pathway_name %in% names(gene_sets))) {
+    return(NULL)
+  }
+
+  genes <- gene_sets[[pathway_name]]
+  if (length(intersect(genes, names(fold))) == 0) {
+    return(NULL)
+  }
+
+  # Rank genes the same way fgsea does: most up-regulated first.
+  ranked <- sort(fold, decreasing = TRUE)
+  n_genes <- length(ranked)
+  hit_ranks <- which(names(ranked) %in% genes)
+  if (length(hit_ranks) == 0) {
+    return(NULL)
+  }
+
+  # Running enrichment-score curve, taken directly from fgsea so the
+  # curve and its sign match the NES/adj.P in the results table.
+  enrich <- tryCatch(
+    fgsea::plotEnrichment(genes, fold),
+    error = function(e) NULL
+  )
+  if (is.null(enrich)) {
+    return(NULL)
+  }
+  curve <- enrich$data
+  if (is.null(curve) || nrow(curve) == 0 ||
+    any(!is.finite(curve$ES))) {
+    return(NULL)
+  }
+
+  metric_df <- data.frame(
+    rank = seq_len(n_genes),
+    value = as.numeric(ranked)
+  )
+  hit_df <- data.frame(rank = hit_ranks)
+
+  # Phenotype names, parsed from the contrast like find_contrast_samples.
+  left_pheno <- gsub("-.*", "", select_contrast)
+  right_pheno <- gsub(".*-", "", select_contrast)
+  if (is.null(select_contrast) || nchar(left_pheno) == 0) {
+    left_pheno <- "Group A"
+  }
+  if (is.null(select_contrast) || nchar(right_pheno) == 0 ||
+    identical(left_pheno, right_pheno)) {
+    right_pheno <- "Group B"
+  }
+  n_pos <- sum(ranked > 0)
+
+  # Optional ES / FDR subtitle, looked up from the fgsea results
+  # table so the figure can be matched to its table row. fgsea_data()
+  # returns columns: Direction, <pathway>, <score>, Genes, adj.Pval.
+  # Note: that score column is the enrichment score (ES); iDEP's table
+  # header calls it "NES" but it is fgsea's ES, so label it ES here.
+  es_subtitle <- NULL
+  if (!is.null(gsea_table) &&
+    is.data.frame(gsea_table) &&
+    ncol(gsea_table) >= 5) {
+    row_ix <- which(gsea_table[[2]] == pathway_name)
+    if (length(row_ix) >= 1) {
+      es_subtitle <- sprintf(
+        "ES = %s, FDR = %s",
+        gsea_table[row_ix[1], 3],
+        gsea_table[row_ix[1], 5]
+      )
+    }
+  }
+
+  x_scale <- ggplot2::scale_x_continuous(expand = c(0, 0))
+  x_coord <- ggplot2::coord_cartesian(xlim = c(0, n_genes))
+  blank_x <- ggplot2::theme(
+    axis.title.x = ggplot2::element_blank(),
+    axis.text.x = ggplot2::element_blank(),
+    axis.ticks.x = ggplot2::element_blank()
+  )
+
+  # Panel 1: running enrichment score (green curve).
+  p_es <- ggplot2::ggplot(
+    curve,
+    ggplot2::aes(x = rank, y = ES)
+  ) +
+    ggplot2::geom_hline(
+      yintercept = 0,
+      color = "grey70",
+      linewidth = 0.3
+    ) +
+    ggplot2::geom_line(color = "#0E9B46", linewidth = 0.9) +
+    x_scale +
+    x_coord +
+    ggplot2::labs(
+      title = paste0("Enrichment Plot\n", pathway_name),
+      subtitle = es_subtitle,
+      y = "Enrichment Score (ES)"
+    ) +
+    ggplot2::theme_bw(base_size = 13) +
+    blank_x
+
+  # Panel 2: gene-set hit positions (black ticks).
+  p_hits <- ggplot2::ggplot(hit_df) +
+    ggplot2::geom_segment(
+      ggplot2::aes(
+        x = rank,
+        xend = rank,
+        y = 0,
+        yend = 1
+      ),
+      color = "black",
+      linewidth = 0.5,
+      alpha = 0.75,
+      lineend = "butt"
+    ) +
+    x_scale +
+    x_coord +
+    ggplot2::scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+    ggplot2::theme_void() +
+    ggplot2::theme(
+      plot.margin = ggplot2::margin(2, 5, 2, 5)
+    )
+
+  # Panel 3: phenotype-correlation color strip (red high -> blue low).
+  p_strip <- ggplot2::ggplot(
+    metric_df,
+    ggplot2::aes(x = rank, y = 1, fill = value)
+  ) +
+    ggplot2::geom_tile() +
+    ggplot2::scale_fill_gradient2(
+      low = "#3B4CC0",
+      mid = "white",
+      high = "#B40426",
+      midpoint = 0
+    ) +
+    x_scale +
+    x_coord +
+    ggplot2::theme_void() +
+    ggplot2::theme(
+      legend.position = "none",
+      plot.margin = ggplot2::margin(0, 5, 0, 5)
+    )
+
+  # Panel 4: ranked-list metric distribution + phenotype labels.
+  y_top <- max(metric_df$value)
+  y_bottom <- min(metric_df$value)
+  p_metric <- ggplot2::ggplot(
+    metric_df,
+    ggplot2::aes(x = rank, y = value)
+  ) +
+    ggplot2::geom_col(width = 1, fill = "grey55") +
+    ggplot2::geom_hline(
+      yintercept = 0,
+      color = "grey30",
+      linewidth = 0.3
+    ) +
+    ggplot2::geom_vline(
+      xintercept = n_pos,
+      linetype = "dashed",
+      color = "grey40"
+    ) +
+    ggplot2::annotate(
+      "text",
+      x = n_pos + n_genes * 0.01,
+      y = y_top * 0.45,
+      hjust = 0,
+      vjust = 1,
+      size = 4.2,
+      color = "grey30",
+      label = sprintf("Zero cross at %d", n_pos)
+    ) +
+    ggplot2::annotate(
+      "text",
+      x = n_genes * 0.02,
+      y = y_top,
+      hjust = 0,
+      vjust = 1,
+      size = 4.3,
+      label = sprintf("'%s' (positively correlated)", left_pheno)
+    ) +
+    ggplot2::annotate(
+      "text",
+      x = n_genes * 0.98,
+      y = y_bottom,
+      hjust = 1,
+      vjust = 0,
+      size = 4.3,
+      label = sprintf("'%s' (negatively correlated)", right_pheno)
+    ) +
+    x_scale +
+    x_coord +
+    ggplot2::labs(
+      x = "Rank in Ordered Dataset",
+      y = "Ranked List Metric\n(Log2 Fold Change)"
+    ) +
+    ggplot2::theme_bw(base_size = 13)
+
+  # Panel 5: manual legend for the three plotted elements.
+  legend_line <- data.frame(x = 2, xend = 7, y = 0.5)
+  legend_ticks <- data.frame(x = c(38, 39.5, 41))
+  legend_rect <- data.frame(
+    xmin = 64, xmax = 69, ymin = 0.3, ymax = 0.7
+  )
+  p_legend <- ggplot2::ggplot() +
+    ggplot2::geom_segment(
+      data = legend_line,
+      ggplot2::aes(x = x, xend = xend, y = y, yend = y),
+      color = "#0E9B46",
+      linewidth = 1
+    ) +
+    ggplot2::annotate(
+      "text",
+      x = 8, y = 0.5, hjust = 0, size = 4.3,
+      label = "Enrichment Profile"
+    ) +
+    ggplot2::geom_segment(
+      data = legend_ticks,
+      ggplot2::aes(x = x, xend = x, y = 0.25, yend = 0.75),
+      color = "black",
+      linewidth = 0.5
+    ) +
+    ggplot2::annotate(
+      "text",
+      x = 43, y = 0.5, hjust = 0, size = 4.3,
+      label = "Hits"
+    ) +
+    ggplot2::geom_rect(
+      data = legend_rect,
+      ggplot2::aes(
+        xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax
+      ),
+      fill = "grey55"
+    ) +
+    ggplot2::annotate(
+      "text",
+      x = 70, y = 0.5, hjust = 0, size = 4.3,
+      label = "Ranking Metric Scores"
+    ) +
+    ggplot2::coord_cartesian(
+      xlim = c(0, 100),
+      ylim = c(0, 1),
+      expand = FALSE
+    ) +
+    ggplot2::theme_void()
+
+  ggpubr::ggarrange(
+    p_es,
+    p_hits,
+    p_strip,
+    p_metric,
+    p_legend,
+    ncol = 1,
+    nrow = 5,
+    align = "v",
+    heights = c(3, 0.45, 0.3, 2, 0.35)
+  )
+}
+
 #' Pathway analysis with reactome package
 #'
 #' Run pathway analysis with the reactome package using the results
