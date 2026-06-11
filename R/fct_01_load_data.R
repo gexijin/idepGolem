@@ -145,6 +145,35 @@ sanitize_names <- function(values) {
   values
 }
 
+#' Strict sanitizer for labels created in the design-builder wizard
+#'
+#' Keeps only ASCII alphanumerics and underscore \u2014 strips all other
+#' punctuation, whitespace, control characters, and non-ASCII (accented Latin,
+#' CJK, emoji). Underscore is preserved so that sample-name patterns like
+#' "WT_Rep1" still parse correctly in [detect_groups()].
+#'
+#' Use this for labels the user typed in the GUI wizard (factor names, level
+#' names, cell values), where we want a clean canonical form. For uploaded
+#' files use [sanitize_names()] to preserve more of the original text.
+#'
+#' @param values Character vector to clean.
+#' @return Cleaned character vector containing only \[A-Za-z0-9_\].
+#' @export
+sanitize_created_names <- function(values) {
+  if (is.null(values)) {
+    return(values)
+  }
+
+  na_mask <- is.na(values)
+  if (!is.character(values)) {
+    values <- as.character(values)
+  }
+
+  values <- gsub("[^A-Za-z0-9_]", "", values, perl = TRUE)
+  values[na_mask] <- NA_character_
+  values
+}
+
 clean_design_table <- function(tbl) {
   if (is.null(tbl)) {
     return(tbl)
@@ -1009,12 +1038,13 @@ showGeneIDs <- function(species, db, nGenes = 10){
 #   FROM TempExampleIds AS t
 #   WHERE t.id = i.id
 # );
-#
+# 
 # -- Drop the temporary table
 # DROP  TABLE TempExampleIds;
-#
+# 
 # -- View results
 # SELECT * FROM idIndex
+
 
 #' Create a design file template data frame from sample names
 #'
@@ -1053,7 +1083,7 @@ build_sample_info_from_df <- function(design_df, sample_names,
     return(NULL)
   }
 
-  rownames(design_df) <- sanitize_names(rownames(design_df))
+  rownames(design_df) <- sanitize_created_names(rownames(design_df))
 
   # Drop rows with empty factor names
   valid_rows <- nchar(rownames(design_df)) > 0
@@ -1062,7 +1092,7 @@ build_sample_info_from_df <- function(design_df, sample_names,
 
   # Sanitize, uppercase, and truncate all cell values
   for (i in seq_len(nrow(design_df))) {
-    design_df[i, ] <- toupper(sanitize_names(as.character(design_df[i, ])))
+    design_df[i, ] <- toupper(sanitize_created_names(as.character(design_df[i, ])))
     design_df[i, ] <- truncate_labels_safely(
       as.character(design_df[i, ]), max_group_name_length
     )
@@ -1088,5 +1118,57 @@ build_sample_info_from_df <- function(design_df, sample_names,
   t(as.matrix(design_df))
 }
 
+#' Find pairs of near-duplicate strings (case-insensitive)
+#'
+#' Catches likely typos in user-entered labels (e.g. "CTRL" vs "CTR"). Returns
+#' formatted pair strings for use in user notifications. NA, empty, and exact
+#' duplicates are removed before comparison.
+#'
+#' @param values Character vector of labels.
+#' @param max_dist Maximum Levenshtein distance to flag (default 1).
+#' @return Character vector of pair labels like "'CTRL' ↔ 'CTR'"; empty if none.
+#' @export
+near_duplicate_pairs <- function(values, max_dist = 1L) {
+  v <- as.character(values)
+  v <- v[!is.na(v) & nchar(v) > 0L]
+  v <- unique(v)
+  if (length(v) < 2L) return(character(0))
 
+  d <- as.matrix(utils::adist(v, ignore.case = TRUE))
+  hits <- which(d > 0L & d <= max_dist & upper.tri(d), arr.ind = TRUE)
+  if (nrow(hits) == 0L) return(character(0))
 
+  # Suppress likely-intentional patterns that look like typos by edit distance:
+  #   - Very short labels (max length <= 2): distance 1 = half the string,
+  #     too noisy to flag reliably (e.g. "WT" vs "KO").
+  #   - Numbered series: stripping trailing digits leaves the same root
+  #     (e.g. "S1"/"S2", "Rep1"/"Rep10", "1"/"2").
+  keep <- vapply(seq_len(nrow(hits)), function(k) {
+    a <- v[hits[k, 1L]]
+    b <- v[hits[k, 2L]]
+    if (max(nchar(a), nchar(b)) <= 2L) return(FALSE)
+    if (sub("[0-9]+$", "", a) == sub("[0-9]+$", "", b)) return(FALSE)
+    TRUE
+  }, logical(1L))
+  hits <- hits[keep, , drop = FALSE]
+  if (nrow(hits) == 0L) return(character(0))
+
+  sprintf("'%s' ↔ '%s'", v[hits[, 1L]], v[hits[, 2L]])
+}
+
+#' Detect any non-ASCII characters in user-entered labels
+#'
+#' Accented Latin, CJK, Cyrillic, emoji etc. survive sanitize_names() but may
+#' get rewritten downstream when limma/DESeq2 build contrast strings. Use this
+#' to warn the user before the design is applied.
+#'
+#' @param values Character vector.
+#' @return Single logical: TRUE if any element contains a non-ASCII codepoint.
+#' @export
+has_non_ascii <- function(values) {
+  if (is.null(values) || length(values) == 0L) return(FALSE)
+  v <- as.character(values)
+  v <- v[!is.na(v) & nchar(v) > 0L]
+  if (length(v) == 0L) return(FALSE)
+  any(grepl("[^\x01-\x7f]", v, perl = TRUE))
+}

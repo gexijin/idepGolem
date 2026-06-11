@@ -1259,8 +1259,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         style = "margin-top: 4px;margin-bottom: 9px;",
         actionButton(
           inputId = ns("build_design_btn"),
-          label = "Or build design interactively",
-          icon = icon("table"),
+          label = "+ Create design",
           class = "btn-xs btn-default"
         ),
         if (!is.null(gui_design())) {
@@ -1306,7 +1305,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
               tags$small(
                 style = "color: #666; margin-top: 5px; display: block;",
                 shiny::icon("info-circle"),
-                " Pair indices (1, 2, 3 \u2026) will be assigned per sample in the next step."
+                " Pair indices assigned per sample in the next step."
               )
             )
           ),
@@ -1329,43 +1328,87 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       req(!is.null(loaded_data()$data))
       sample_names <- colnames(loaded_data()$data)
 
-      n_guided_factors(2L)
-      guided_factor_defs(NULL)
-      initial_groups <- detect_groups(sample_names)
-      level_suggestion <- paste(unique(initial_groups), collapse = ", ")
+      # If a design was previously applied, pre-fill the wizard from it so the
+      # user can tweak a cell or download the CSV without rebuilding. Treat all
+      # factors as non-blocking — blocking metadata is not stored in the
+      # applied matrix.
+      applied_design <- gui_design()
+      has_applied <- !is.null(applied_design) && ncol(applied_design) > 0L
+
+      if (has_applied) {
+        applied_factor_defs <- lapply(seq_len(ncol(applied_design)), function(i) {
+          col_values <- as.character(applied_design[, i])
+          list(
+            name = colnames(applied_design)[i],
+            levels = unique(col_values),
+            is_blocking = FALSE
+          )
+        })
+        applied_assignments <- setNames(
+          lapply(seq_along(applied_factor_defs), function(i) {
+            as.character(applied_design[, i])
+          }),
+          as.character(seq_along(applied_factor_defs))
+        )
+        n_guided_factors(length(applied_factor_defs))
+        guided_factor_defs(applied_factor_defs)
+        sample_assignments(applied_assignments)
+
+        factor_rows_init <- lapply(
+          seq_along(applied_factor_defs),
+          function(i) {
+            make_guided_factor_row(
+              i,
+              default_name = applied_factor_defs[[i]]$name,
+              default_levels = paste(
+                applied_factor_defs[[i]]$levels,
+                collapse = ", "
+              )
+            )
+          }
+        )
+      } else {
+        n_guided_factors(2L)
+        guided_factor_defs(NULL)
+        sample_assignments(list())
+        initial_groups <- detect_groups(sample_names)
+        level_suggestion <- paste(unique(initial_groups), collapse = ", ")
+        factor_rows_init <- list(
+          make_guided_factor_row(1L, "group", level_suggestion),
+          make_guided_factor_row(2L)
+        )
+      }
 
       shiny::showModal(shiny::modalDialog(
-        title = "Build Experimental Design",
+        title = "Experiment Design",
         size = "l",
         tabsetPanel(
           id = ns("design_builder_tab"),
           tabPanel(
-            "Guided Builder",
+            "Guided",
             br(),
             # Step 1: define factors and levels
             div(
               id = ns("guided_step1"),
+              style = "overflow-x: hidden;",
               tags$p(
                 style = "color: #555; font-size: 13px; margin-bottom: 12px;",
-                "Step 1: Name each factor (e.g. Treatment, Genotype, Batch) and ",
-                "its levels. Check \u2018Paired / blocking\u2019 for pair/replicate index factors.",
-                "Up to 5 factors."
+                "Name each factor and its levels. Up to 5 factors can be defined. Check 'Paired/blocking' for pair/replicate index factors."
               ),
               div(
                 id = ns("guided_factor_rows_container"),
-                make_guided_factor_row(1L, "group", level_suggestion),
-                make_guided_factor_row(2L)
+                factor_rows_init
               ),
               hr(),
               fluidRow(
                 column(
                   6,
                   actionButton(
-                    ns("add_guided_factor"), "+ Add another factor",
+                    ns("add_guided_factor"), "+ Factor",
                     class = "btn-xs btn-default"
                   ),
                   actionButton(
-                    ns("remove_guided_factor"), "- Remove last factor",
+                    ns("remove_guided_factor"), "- Factor",
                     class = "btn-xs btn-default",
                     style = "margin-left: 6px;"
                   )
@@ -1373,7 +1416,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
                 column(
                   6, align = "right",
                   actionButton(
-                    ns("guided_next_btn"), "Next: Assign samples \u2192",
+                    ns("guided_next_btn"), "Next \u2192",
                     class = "btn-primary btn-sm"
                   )
                 )
@@ -1383,28 +1426,21 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             shinyjs::hidden(
               div(
                 id = ns("guided_step2"),
-                style = "max-height: 60vh; overflow-y: auto;",
+                style = "max-height: 60vh; overflow-y: auto; overflow-x: hidden;",
                 uiOutput(ns("guided_step2_ui")),
                 hr(),
                 fluidRow(
                   column(
-                    4,
+                    6,
                     actionButton(
-                      ns("guided_back_btn"), "← Back to factors",
+                      ns("guided_back_btn"), "← Back",
                       class = "btn-default btn-sm"
                     )
                   ),
                   column(
-                    4, align = "center",
-                    downloadButton(
-                      ns("download_guided_design"), "Download CSV",
-                      class = "btn-sm btn-default"
-                    )
-                  ),
-                  column(
-                    4, align = "right",
+                    6, align = "right",
                     actionButton(
-                      ns("apply_guided_design"), "Apply Design",
+                      ns("apply_guided_design"), "Apply",
                       class = "btn-primary btn-sm"
                     )
                   )
@@ -1413,39 +1449,47 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             )
           ),
           tabPanel(
-            "Manual Fill-in",
+            "Manual",
             br(),
-            tags$p(
-              style = "color: #555; font-size: 13px; margin-bottom: 8px;",
-              "Each row is a factor; each column is a sample. Enter a factor name, ",
-              "then type a group label for each sample. Leave the factor name blank ",
-              "to skip a row. The first row is pre-filled from sample names."
+            fluidRow(
+              column(
+                9,
+                tags$p(
+                  style = "color: #555; font-size: 13px; margin-bottom: 8px;",
+                  "Rows are factors, columns are samples. Type a label per cell. Use consistent labels within each row. Row 1 is automatically filled based on sample names, but can be edited."
+                )
+              ),
+              column(
+                3, align = "right",
+
+                tags$div(
+                  id = ns("download_design_template_tip"),
+                  style = "display: inline-block;",
+                  downloadButton(
+                    ns("download_design_template"), " ",
+                    class = "btn-sm btn-default"
+                  )
+                ),
+
+                tippy::tippy_this(
+                  ns("download_design_template_tip"),
+                  "Download CSV",
+                  theme = "light-border",
+                  placement = "top"
+                )
+              )
             ),
             tags$style(HTML(
               ".design-grid-table .form-group { margin-bottom: 2px; }
                .design-grid-table input.form-control { font-size: 12px; padding: 2px 4px; height: 26px; }"
             )),
             div(style = "overflow-x: auto;", uiOutput(ns("design_grid_ui"))),
-            tags$small(
-              style = "color: #888; display: block; margin-top: 4px;",
-              shiny::icon("info-circle"),
-              " Labels will be converted to uppercase and spaces removed on apply."
-            ),
             hr(),
-            fluidRow(
-              column(
-                6,
-                downloadButton(
-                  ns("download_design_template"), "Download CSV",
-                  class = "btn-sm btn-default"
-                )
-              ),
-              column(
-                6, align = "right",
-                shiny::actionButton(
-                  ns("apply_design"), "Apply Design",
-                  class = "btn-primary btn-sm"
-                )
+            div(
+              style = "text-align: right;",
+              shiny::actionButton(
+                ns("apply_design"), "Apply",
+                class = "btn-primary btn-sm"
               )
             )
           )
@@ -1467,6 +1511,13 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
          };",
         ns("")
       ))
+
+      # If a design is already applied, skip directly to step 2 so the user
+      # sees chips colored per the current assignments.
+      if (has_applied) {
+        shinyjs::hide("guided_step1")
+        shinyjs::show("guided_step2")
+      }
     })
 
     # Add a factor row to the guided builder ----
@@ -1516,11 +1567,15 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       n <- n_guided_factors()
       factor_defs <- list()
       errors <- character(0)
+      typo_warnings <- character(0)
+      non_ascii_seen <- FALSE
 
       for (i in seq_len(n)) {
         fname_raw <- input[[paste0("gf_name_", i)]]
-        # Sanitize factor name: remove spaces/hyphens (matches build_sample_info_from_df)
-        fname <- sanitize_names(trimws(if (is.null(fname_raw)) "" else fname_raw))
+        # Strict sanitizer (matches build_sample_info_from_df): keep [A-Za-z0-9_]
+        fname <- sanitize_created_names(
+          trimws(if (is.null(fname_raw)) "" else fname_raw)
+        )
 
         is_blocking <- isTRUE(input[[paste0("gf_blocking_", i)]])
 
@@ -1537,8 +1592,8 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           raw_levels_input <- input[[paste0("gf_levels_", i)]]
           raw_levels <- if (is.null(raw_levels_input)) "" else raw_levels_input
           levels_vec <- trimws(strsplit(raw_levels, ",", fixed = TRUE)[[1L]])
-          # Sanitize + uppercase level names (matches build_sample_info_from_df cell treatment)
-          levels_vec <- toupper(sanitize_names(levels_vec))
+          # Strict sanitizer (matches build_sample_info_from_df cell treatment)
+          levels_vec <- toupper(sanitize_created_names(levels_vec))
           levels_vec <- levels_vec[nchar(levels_vec) > 0L]
           # Deduplicate after sanitization (e.g. "ctrl" and "Ctrl" both become "CTRL")
           levels_vec <- unique(levels_vec)
@@ -1549,6 +1604,14 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
             ))
             next
           }
+          near_dups <- near_duplicate_pairs(levels_vec)
+          if (length(near_dups) > 0L) {
+            typo_warnings <- c(typo_warnings, paste0(
+              "Factor '", fname, "': possible typo — ",
+              paste(near_dups, collapse = ", ")
+            ))
+          }
+          if (has_non_ascii(c(fname, levels_vec))) non_ascii_seen <- TRUE
           factor_defs[[length(factor_defs) + 1L]] <- list(
             name = fname, levels = levels_vec, is_blocking = FALSE
           )
@@ -1568,6 +1631,19 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           type = "warning", duration = 5L
         )
         return()
+      }
+
+      if (length(typo_warnings) > 0L) {
+        shiny::showNotification(
+          paste(typo_warnings, collapse = " | "),
+          type = "warning", duration = 7L
+        )
+      }
+      if (non_ascii_seen) {
+        shiny::showNotification(
+          "Non-ASCII characters detected — downstream tools may rewrite them.",
+          type = "warning", duration = 6L
+        )
       }
 
       guided_factor_defs(factor_defs)
@@ -1593,9 +1669,33 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       sample_names <- colnames(loaded_data()$data)
 
       tagList(
-        tags$p(
-          style = 'color: #555; font-size: 13px; margin-bottom: 12px;',
-          'Step 2: Select a level on the left, then click sample names on the right to assign them.'
+        fluidRow(
+          column(
+            9,
+            tags$p(
+              style = 'color: #555; font-size: 13px; margin-bottom: 12px;',
+              'Pick a level, then click samples to assign.'
+            )
+          ),
+          column(
+            3, align = "right",
+
+            tags$div(
+              id = ns("download_guided_design_tip"),
+              style = "display: inline-block;",
+              downloadButton(
+                ns("download_guided_design"), " ",
+                class = "btn-sm btn-default"
+              )
+            ),
+
+            tippy::tippy_this(
+              ns("download_guided_design_tip"),
+              "Download CSV",
+              theme = "light-border",
+              placement = "top"
+            )
+          )
         ),
         lapply(seq_along(fdefs), function(fi) {
           fdef <- fdefs[[fi]]
@@ -1633,8 +1733,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
               ),
               tags$p(
                 style = 'font-size: 12px; color: #666; margin-bottom: 8px;',
-                'Assign a pair index to each sample.',
-                'Samples sharing the same index are paired.'
+                'Same index = same pair.'
               ),
               div(style = 'overflow-x: auto;', do.call(tagList, sample_inputs))
             )
@@ -1651,7 +1750,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
                   4,
                   tags$p(
                     style = 'font-size: 12px; color: #555; margin-bottom: 6px;',
-                    'Select active level, then click samples:'
+                    'Active level:'
                   ),
                   radioButtons(
                     ns(paste0('active_level_', fi)),
@@ -1685,9 +1784,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
                   8,
                   tags$p(
                     style = 'font-size: 12px; color: #555; margin-bottom: 4px;',
-                    paste0('Levels: ', paste(fdef$levels, collapse = ', '), '.'),
-                    tags$br(),
-                    'Click a chip to assign it to the selected level.'
+                    paste0('Levels: ', paste(fdef$levels, collapse = ', '))
                   ),
                   div(
                     style = paste0(
@@ -1783,7 +1880,10 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       j     <- input$chip_clicked$sample
       level <- input$chip_clicked$level
       sample_names <- colnames(loaded_data()$data)
-      # Guard: JS index could be stale if data changed while modal was open
+      fdefs <- guided_factor_defs()
+      # Guard: JS indices could be stale if factors/data changed mid-interaction
+      if (!is.numeric(fi) || fi < 1L ||
+          is.null(fdefs) || fi > length(fdefs)) return()
       if (!is.numeric(j) || j < 1L || j > length(sample_names)) return()
       asgn  <- sample_assignments()
       key   <- as.character(fi)
@@ -1872,6 +1972,13 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         )
       }
 
+      if (has_non_ascii(c(row_names, unlist(rows)))) {
+        shiny::showNotification(
+          'Non-ASCII characters detected \u2014 downstream tools may rewrite them.',
+          type = 'warning', duration = 6L
+        )
+      }
+
       design_df <- as.data.frame(
         do.call(rbind, rows),
         stringsAsFactors = FALSE
@@ -1941,9 +2048,11 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       req(!is.null(loaded_data()$data))
       sample_names <- colnames(loaded_data()$data)
       n <- length(sample_names)
-      n_factors <- 3L
+      n_factors <- 5L
 
       initial_groups <- detect_groups(sample_names)
+      applied_design <- gui_design()
+      n_applied <- if (is.null(applied_design)) 0L else ncol(applied_design)
 
       cell_px <- max(70L, min(110L, as.integer(660L / n)))
       cell_style <- paste0("min-width: ", cell_px, "px; padding: 2px;")
@@ -1965,8 +2074,19 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       )
 
       factor_rows <- lapply(seq_len(n_factors), function(i) {
-        default_name <- if (i == 1L) "group" else ""
-        default_cells <- if (i == 1L) initial_groups else rep("", n)
+        # Row defaults priority:
+        #   1. Pre-fill from applied design if this row is within it.
+        #   2. Otherwise row 1 gets detect_groups guess; rest are blank.
+        if (i <= n_applied) {
+          default_name <- colnames(applied_design)[i]
+          default_cells <- as.character(applied_design[, i])
+        } else if (is.null(applied_design) && i == 1L) {
+          default_name <- "group"
+          default_cells <- initial_groups
+        } else {
+          default_name <- ""
+          default_cells <- rep("", n)
+        }
 
         name_td <- tags$td(
           style = "vertical-align: middle; padding: 2px;",
@@ -2001,7 +2121,7 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       req(!is.null(loaded_data()$data))
       sample_names <- colnames(loaded_data()$data)
       n <- length(sample_names)
-      n_factors <- 3L
+      n_factors <- 5L
 
       rows <- list()
       row_names <- character(0)
@@ -2033,6 +2153,37 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
           type = "warning", duration = 5
         )
         return()
+      }
+
+      # Block on near-duplicate cell labels within the same factor row.
+      # Compare on the sanitized form (what becomes the design label).
+      typo_errors <- character(0)
+      for (k in seq_along(rows)) {
+        sanitized <- toupper(sanitize_created_names(rows[[k]]))
+        near_dups <- near_duplicate_pairs(sanitized)
+        if (length(near_dups) > 0L) {
+          typo_errors <- c(typo_errors, paste0(
+            "Factor '", row_names[k], "': ",
+            paste(near_dups, collapse = ", ")
+          ))
+        }
+      }
+      if (length(typo_errors) > 0L) {
+        shiny::showNotification(
+          paste0(
+            "Possible typos — fix or confirm before applying: ",
+            paste(typo_errors, collapse = " | ")
+          ),
+          type = "error", duration = 10
+        )
+        return()
+      }
+
+      if (has_non_ascii(c(row_names, unlist(rows)))) {
+        shiny::showNotification(
+          "Non-ASCII characters detected — downstream tools may rewrite them.",
+          type = "warning", duration = 6
+        )
       }
 
       design_df <- as.data.frame(
@@ -2068,16 +2219,16 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         req(!is.null(loaded_data()$data))
         sample_names <- colnames(loaded_data()$data)
         n <- length(sample_names)
-        n_factors <- 3L
+        n_factors <- 5L
         initial_groups <- detect_groups(sample_names)
 
         rows <- list()
         row_names <- character(0)
         for (i in seq_len(n_factors)) {
-          factor_name <- input[[paste0("factor_name_", i)]]
-          if (is.null(factor_name) || nchar(trimws(factor_name)) == 0L) {
-            factor_name <- if (i == 1L) "group" else paste0("factor", i)
-          }
+          factor_name_raw <- input[[paste0("factor_name_", i)]]
+          name_provided <- !is.null(factor_name_raw) &&
+            nchar(trimws(factor_name_raw)) > 0L
+
           cell_values <- vapply(seq_len(n), function(j) {
             v <- input[[paste0("cell_", i, "_", j)]]
             if (is.null(v)) {
@@ -2086,8 +2237,32 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
               v
             }
           }, character(1L))
-          rows[[i]] <- cell_values
+          cells_provided <- any(nchar(trimws(cell_values)) > 0L)
+
+          # Skip rows where the user has provided neither a name nor any cell;
+          # otherwise the download would carry "factor2", "factor3"... empties.
+          if (!name_provided && !cells_provided) next
+
+          factor_name <- if (name_provided) {
+            trimws(factor_name_raw)
+          } else if (i == 1L) {
+            "group"
+          } else {
+            paste0("factor", i)
+          }
+          rows[[length(rows) + 1L]] <- cell_values
           row_names <- c(row_names, factor_name)
+        }
+
+        if (length(rows) == 0L) {
+          # Empty grid: write a header-only template so the user gets a usable file.
+          df <- as.data.frame(
+            matrix("", nrow = 0L, ncol = n),
+            stringsAsFactors = FALSE
+          )
+          colnames(df) <- sample_names
+          write.csv(df, file)
+          return()
         }
 
         row_names <- make.unique(row_names)
@@ -2169,9 +2344,11 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
       )
     })
 
-    # Disables experiment_file input to prevent multiple uploads
+    # Disables experiment_file input to prevent multiple uploads;
+    # clears any GUI-built design so the uploaded file is the source of truth.
     observeEvent(input$experiment_file, {
       shinyjs::disable("experiment_file")
+      gui_design(NULL)
     })
 
     # Notification for data type selection (species is now always selected)
@@ -2375,8 +2552,12 @@ mod_01_load_data_server <- function(id, idep_data, tab) {
         demo_metadata_file = demo_data_file()[2],
         max_group_name_length = input$max_group_name_length
       )
-      # Inject GUI-built design when no experiment file is uploaded
-      if (!is.null(gui_design()) && is.null(input$experiment_file)) {
+      # Inject GUI-built design when no experiment file is uploaded.
+      # Skip if input_data returned NULL — assigning into a NULL base would
+      # silently create list(sample_info = ...) and drop $data, $raw_counts, etc.
+      if (!is.null(base) &&
+          !is.null(gui_design()) &&
+          is.null(input$experiment_file)) {
         base$sample_info <- gui_design()
       }
       base
