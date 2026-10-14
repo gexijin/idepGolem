@@ -1302,7 +1302,7 @@ deg_limma <- function(processed_data,
   # Data prep -----------------------------------------------------------------
   # if normalized data, construct ExpressionSet directly
   if (data_file_format == 2 | counts_deg_method == 1) {
-    eset <- methods::new("ExpressionSet", exprs = as.matrix(processed_data))
+    eset <- Biobase::ExpressionSet(assayData = as.matrix(processed_data))
     expr <- paste0(
       expr,
       "# Use normalized data downloaded by clicking the \"Processed Data\"\n",
@@ -1311,7 +1311,7 @@ deg_limma <- function(processed_data,
       "row.names(df) <- df$User_ID\n",
       "df <- df[, -(1:3)] # delete 3 columns of IDs\n",
       "str(df)\n",
-      "eset <- methods::new(\"ExpressionSet\", exprs = as.matrix(df))\n"
+      "eset <- ExpressionSet(assayData = as.matrix(df))\n"
     )
 
     # "DESeq2" = 3,
